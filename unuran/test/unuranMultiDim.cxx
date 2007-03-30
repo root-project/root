@@ -1,5 +1,9 @@
-// test using Multi-dim (3D)  Distribution object interface
-// and compare results and CPU performances using TF3::GetRandom
+// test using Multi-dim   Distribution object interface
+// and compare results and CPU performances using TF3::GetRandom in case of 3D 
+// and test also case of dim = 10 and 100
+//
+// run within ROOT (.x unuranMultiDim.cxx+) or pass any extra parameter in the command line to get  
+// a graphics output 
 
 
 #include "TStopwatch.h"
@@ -32,7 +36,7 @@ double gaus3d(double *x, double *p) {
    double sigma_x = p[0]; 
    double sigma_y = p[1];
    double sigma_z = p[2];
-   double rho = p[2]; 
+   double rho = p[3]; 
    double u = x[0] / sigma_x ;
    double v = x[1] / sigma_y ;
    double w = x[2] / sigma_z ;
@@ -45,9 +49,27 @@ double log_gaus3d(double *x, double *p) {
    return std::log(gaus3d(x,p) );
 }
 
+double gaus10d(double * x, double *) {
+  int i;
+  double tmp = 0.;
+  for (i=0; i<10; i++)
+    tmp -= x[i] * x[i];
+  return exp(tmp/2.);
+} 
 
-int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href ) { 
+double gaus100d(double * x, double *) {
+  int i;
+  double tmp = 0.;
+  for (i=0; i<100; i++)
+    tmp -= x[i] * x[i];
+  return exp(tmp/2.);
+} 
 
+
+
+int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href = 0, const int dim = 3 ) { 
+
+   assert (dim >=3);
 
    // init unuran 
    bool ret =   unr.Init(dist,method); 
@@ -63,7 +85,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    TStopwatch w; 
 
    w.Start(); 
-   double x[3]; 
+   double x[dim]; 
    for (int i = 0; i < n; ++i) {
       unr.SampleMulti(x);
       h1->Fill(x[0],x[1],x[2]);
@@ -72,13 +94,19 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    w.Stop(); 
    double time = w.CpuTime()*1.E9/n; 
 
-   double prob = href->Chi2Test(h1,"UU");
-   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << endl;
-   if (prob < 1E-06) { 
-      std::cout << "Chi2 Test failed ! " << std::endl;
-      href->Chi2Test(h1,"UUP"); // print all chi2 test info
-      return 1;
+   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call";
+   if (href != 0)  { 
+      double prob = href->Chi2Test(h1,"UU");
+      std::cout << "\t\tChi2 Prob = "<< prob << endl;
+      if (prob < 1E-06) { 
+         std::cout << "Chi2 Test failed ! " << std::endl;
+         href->Chi2Test(h1,"UUP"); // print all chi2 test info
+         return 1;
+      }
    }
+   else 
+      std::cout << std::endl;
+
    return 0; 
 }  
 
@@ -115,7 +143,7 @@ int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
 }  
 
 
-int  unuranMulti3D() { 
+int  unuranMultiDim() { 
 
 
    gSystem->Load("libMathCore");
@@ -133,10 +161,10 @@ int  unuranMulti3D() {
    TH3D * h4 = new TH3D("h4","TF1::GetRandom truncated gaussian 3D distribution",50,-1,1,50,-1,1,50,-1,1);
   
 
-   TF3 * f = new TF3("g3d",gaus3d,-10,10,-10,10,-10,10,3); 
-   double par[3] = {2,2,0.5}; 
+   TF3 * f = new TF3("g3d",gaus3d,-10,10,-10,10,-10,10,4); 
+   double par[4] = {2,2,2,0.5}; 
    f->SetParameters(par); 
-   TF3 * flog = new TF3("logg3d",log_gaus3d,-10,10,-10,10,-10,10,3); 
+   TF3 * flog = new TF3("logg3d",log_gaus3d,-10,10,-10,10,-10,10,4); 
    flog->SetParameters(par); 
 
 
@@ -191,7 +219,7 @@ int  unuranMulti3D() {
 #ifdef USE_GIBBS
    method = "gibbs";
    // need to create a new  multi-dim distribution with log of pdf
-   TUnuranMultiContDist logdist(flog,true); 
+   TUnuranMultiContDist logdist(flog,0,true); 
    iret |= testUnuran(unr, method, logdist, h1, href);
 #endif
 
@@ -254,6 +282,69 @@ int  unuranMulti3D() {
    c1->cd(3);   h3->Draw();
    c1->cd(4);   h4->Draw();
 
+   // make a ref histo for 10 dim using first 3 dim
+   c1->Update();
+
+
+ 
+   TH3D * hrefN = new TH3D("hrefN","UNURAN gaussian ref N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
+   TH3D * h10v    = new TH3D("h10v","UNURAN gaussian N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
+   TH3D * h10h    = new TH3D("h10h","UNURAN gaussian N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
+   TH3D * h100    = new TH3D("h100","UNURAN gaussian N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
+
+   double scale = 5;
+
+   double par2[4] = {1,1,1,0.}; 
+   f->SetParameters(par2); 
+   TUnuranMultiContDist dist3(f); 
+   method = "vnrou";
+   n/= scale;
+   iret |= testUnuran(unr, method, dist3, hrefN);
+
+   cout << "\nTest 10 dimension:       (be patient , it takes time....)\n\n"; 
+
+   TF1 * f10 = new TF1("g10d",gaus10d,-10,10,0); 
+   TUnuranMultiContDist dist10(f10,10); 
+
+
+   TCanvas * c2 = new TCanvas("c2_unuranMulti","Multidimensional distribution",100,10,900,900); 
+   c2->Divide(2,2);
+   
+   c2->cd(1);   hrefN->Draw();
+   
+   //n/= scale;
+   method = "vnrou";
+   iret |= testUnuran(unr, method, dist10, h10v, hrefN,10);
+   c2->cd(2);   h10v->Draw();
+   c2->Update();
+
+   //n*=scale;
+   method = "hitro;thinning=20";
+   iret |= testUnuran(unr, method, dist10, h10h, hrefN,10);
+   c2->cd(3);   h10h->Draw();
+   c2->Update();
+
+
+   // 100 dim
+   cout << "\nTest 100 dimension: (  be patient , it takes time....)\n\n"; 
+   TF1 * f100 = new TF1("g100d",gaus100d,-10,10,0); 
+   TUnuranMultiContDist dist100(f100,100); 
+   
+   //   scale = 5;
+   //  n/=scale;
+   std::cout << "number of events to be generated  = " << n << endl;
+   method = "hitro;thinning=200";
+   iret |= testUnuran(unr, method, dist100, h100, hrefN,100);
+//    n/= 100;
+//    method = "vnrou";
+//    iret |= testUnuran(unr, method, dist100, hN, hrefN,100);
+
+
+   c2->cd(4);   h100->Draw();
+   c2->Update();
+
+
+
    return iret; 
 
 }
@@ -264,11 +355,11 @@ int main(int argc, char **argv)
    int iret = 0; 
    if (argc > 1) { 
       TApplication theApp("App",&argc,argv);
-      iret =  unuranMulti3D();
+      iret =  unuranMultiDim();
       theApp.Run();
    } 
    else 
-      iret =  unuranMulti3D();
+      iret =  unuranMultiDim();
    
    if (iret != 0) 
       std::cerr <<"\n\nUnuRan 3D Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;

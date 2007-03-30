@@ -1,5 +1,8 @@
 // test using 1D Distribution object interface
 // and compare results and CPU performances using TF1::GetRandom
+//
+// run within ROOT (.x unuranDistr.cxx+) or pass any extra parameter in the command line to get  
+// a graphics output 
 
 
 #include "TStopwatch.h"

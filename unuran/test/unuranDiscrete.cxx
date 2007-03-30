@@ -1,3 +1,12 @@
+// test using discrete distribution. 
+// Generate numbers from a given probability vector or from a discrete distribution like 
+// the Poisson distribution. 
+// Compare also the Unuran method for generating Poisson numbers with TRandom::Poisson
+//
+// run within ROOT (.x unuranDiscrete.cxx+) or pass any extra parameter in the command line to get  
+// a graphics output (./unuranDiscrete 1 )
+
+
 #include "TUnuran.h"
 #include "TUnuranDiscrDist.h"
 
@@ -8,6 +17,11 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TStopwatch.h"
+
+#ifdef WRITE_OUTPUT
+#include "TFile.h"
+#include "TGraph.h"
+#endif
 
 #include "Math/DistFunc.h"
 
@@ -27,7 +41,7 @@ double pmf(double * x, double * p) {
    return y; 
 }
 
-int testUnuran(TUnuran & unr, TH1 * h1, const TH1 * href, bool weightHist = false ) { 
+int testUnuran(TUnuran & unr, double & time, TH1 * h1, const TH1 * href,  bool weightHist = false ) { 
 
 
    // test first the time
@@ -38,7 +52,7 @@ int testUnuran(TUnuran & unr, TH1 * h1, const TH1 * href, bool weightHist = fals
       unr.SampleDiscr(); 
 
    w.Stop(); 
-   double time = w.CpuTime()*1.E9/n; 
+   time = w.CpuTime()*1.E9/n; 
 
 
    // test quality (use cdf to avoid zero bins)
@@ -67,6 +81,26 @@ int testUnuran(TUnuran & unr, TH1 * h1, const TH1 * href, bool weightHist = fals
    return 0; 
 }  
 
+int testRootPoisson(double mu, double &time, TH1 * h2) { 
+   TStopwatch w; 
+
+   w.Start(); 
+   for (int i = 0; i < n; ++i) 
+      gRandom->Poisson(mu);
+
+   w.Stop(); 
+   time = w.CpuTime()*1.E9/n; 
+
+   // make ref histo
+   int n2 = n/10;
+   for (int i = 0; i< n2; ++i) { 
+      h2->Fill ( gRandom->Poisson(mu) );
+   }
+
+   std::cout << "Time using TRandom::Poisson(" << int(mu) << ") \t=\t " << time << std::endl;
+   return 0;
+}
+
 
 int unuranDiscrete() {
 
@@ -84,7 +118,7 @@ int unuranDiscrete() {
       h0->SetBinError(i,0.0);
    }
    double sum = h0->GetSumOfWeights();
-   //std::cout << " prob sum = " << sum << std::endl; 
+   std::cout << " prob sum = " << sum << std::endl; 
       
    TRandom3 r; 
    r.SetSeed(0);
@@ -97,21 +131,22 @@ int unuranDiscrete() {
 //    std::cout << fDDist.ProbVec().size() << std::endl;
 
    std::cout << "Test  generation with a PV :\n\n";
-
+   
+   double time;
 
    bool ret = unr.Init(dist,"method=dau");
    if (!ret) iret = -1;
-   iret |= testUnuran(unr,h1,h0,true);
+   iret |= testUnuran(unr,time,h1,h0,true);
 
    ret = unr.Init(dist,"method=dgt");
    if (!ret) iret = -1;
-   iret |= testUnuran(unr,h1,h0,true);
+   iret |= testUnuran(unr,time,h1,h0,true);
 
    // dss require the sum
    dist.SetProbSum(sum);
    ret = unr.Init(dist,"method=dss");
    if (!ret) iret = -1;
-   iret |= testUnuran(unr,h1,h0,true);
+   iret |= testUnuran(unr,time,h1,h0,true);
 
    
 
@@ -131,40 +166,81 @@ int unuranDiscrete() {
 
    TF1 * f = new TF1("f",pmf,1,0,1);
 
-   const double mu = 5; 
-   f->SetParameter(0,mu);
+   // loop on mu values for Nmu times 
 
-   // make reference histo
-   TStopwatch w; 
-   w.Start(); 
-   int n2 = n/10;
-   for (int i = 0; i< n2; ++i) { 
-      h2->Fill ( gRandom->Poisson(mu) );
+   const int Nmu = 5;
+   double muVal[Nmu] = {5,10,20,50,100};
+   double tR[Nmu]; 
+   double tU[Nmu]; 
+   double tUdari[Nmu];
+   double tUdsrou[Nmu];
+   
+   for (int imu = 0; imu < Nmu; ++imu) {  
+
+
+      const double mu = muVal[imu]; 
+
+      testRootPoisson(mu,tR[imu],h2);
+
+      // test UNURAN with standard method
+      ret = unr.InitPoisson(mu);
+      if (!ret) iret = -1;
+      testUnuran(unr,tU[imu],h3,h2);
+
+      if (imu == 0) { 
+         // test changing all the time the mu
+         TStopwatch w;
+         w.Start(); 
+         for (int i = 0; i < n/100; ++i) {
+            unr.InitPoisson(mu);
+            unr.SampleDiscr(); 
+         }
+         w.Stop(); 
+         time = w.CpuTime()*1.E9/n; 
+         std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call" << std::endl;
+      }
+
+      f->SetParameter(0,mu);
+      TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
+
+      // dari method (needs mode)
+      dist2.SetMode(int(mu) );
+      ret = unr.Init(dist2,"method=dari");
+      if (!ret) iret = -1;
+
+      iret |= testUnuran(unr,tUdari[imu],h3,h2);
+
+      // dsrou method (needs mode and sum)
+
+      dist2.SetProbSum(1);
+      ret = unr.Init(dist2,"method=dsrou");
+      if (!ret) iret = -1;
+
+      iret |= testUnuran(unr,tUdsrou[imu],h3,h2);
+
+
+      if (imu == 0) { 
+         c1->cd(2);
+         h2->Draw();
+         h3->Draw("Esame");
+      }
    }
-   double time = w.CpuTime()*1.E9/n2;
-   std::cout << "Time using TRandom::Poisson = \t\t\t " << time << "\tns/call\n";
 
+#ifdef WRITE_OUTPUT
 
-   TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
+   TFile * file = new TFile("unuranPoisson.root","RECREATE");
+   // create graphs with results
+   TGraph * gR = new TGraph(Nmu,muVal,tR);   
+   TGraph * gU = new TGraph(Nmu,muVal,tU);
+   TGraph * gU2 = new TGraph(Nmu,muVal,tUdari);
+   TGraph * gU3 = new TGraph(Nmu,muVal,tUdsrou);
+   gR->Write();
+   gU->Write();
+   gU2->Write();
+   gU3->Write();
+   file->Close();
 
-   // dari method (needs mode)
-   dist2.SetMode(int(mu) );
-   ret = unr.Init(dist2,"method=dari");
-   if (!ret) iret = -1;
-
-   iret |= testUnuran(unr,h3,h2);
-
-   // dsrou method (needs mode and sum)
-
-   dist2.SetProbSum(1);
-   ret = unr.Init(dist2,"method=dsrou");
-   if (!ret) iret = -1;
-
-   iret |= testUnuran(unr,h3,h2);
-
-   c1->cd(2);
-   h2->Draw();
-   h3->Draw("Esame");
+#endif
 
    return iret; 
 }

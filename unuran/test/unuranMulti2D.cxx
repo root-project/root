@@ -1,5 +1,8 @@
 // test using Multi-dim (2D)  Distribution object interface
 // and compare results and CPU performances using TF2::GetRandom
+//
+// run within ROOT (.x unuranMulti2D.cxx+) or pass any extra parameter in the command line to get  
+// a graphics output 
 
 #include "TStopwatch.h"
 #include "TUnuran.h"
@@ -183,10 +186,11 @@ int unuranMulti2D() {
    iret |= testUnuran(unr, method, dist, h1, href);
    
    //gibbs requires log of pdf and derivative
+//#define USE_GIBBS   
 #ifdef USE_GIBBS
    method = "gibbs";
    // need to create a new  multi-dim distribution with log of pdf
-   TUnuranMultiContDist logdist(flog,true); 
+   TUnuranMultiContDist logdist(flog,0,true); 
    iret |= testUnuran(unr, method, logdist, h1, href);
 #endif
 

@@ -14,23 +14,32 @@ include $(ROOTSYS)/test/Makefile.arch
 
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib" "$(ROOTSYS)/lib/libMinuit.lib"
+EXTRALIBS        = "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib" "$(ROOTSYS)/lib/libMinuit.lib"
 else
-CXXFLAGS += -g 
-EXTRALIBS        =  -lUnuran -lMathCore -lMathMore  -lMinuit
+CXXFLAGS       += -g 
+EXTRALIBS      =  -lUnuran -lMathCore -lMinuit
 endif
 
-#UNURANBASE=/Users/moneta/mathlibs/Unuran
-#CXXFLAGS+=  -I$(UNURANBASE)/include 
-#EXTRALIBS+=  $(UNURANBASE)/lib/libunuran.a 
 
 ifneq ($(CLHEPBASE),)
 CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+ifeq ($(PLATFORM),win32)
+EXTRALIBS += "$(CLHEPBASE)/lib/CLHEP.lib"
+else
 EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+endif
+endif
+
+ifneq ($(BUILDMATHMORE),)
+CXXFLAGS+= -DHAVE_MATHMORE
+ifeq ($(PLATFORM),win32)
+EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib"
+else
+EXTRALIBS += -lMathMore
+endif
 endif
 
 
-#endif
 
 TESTUNURANOBJ      = test_unuran.$(ObjSuf)
 TESTUNURANSRC      = test_unuran.$(SrcSuf)
@@ -52,9 +61,9 @@ UNURANMULTI2DOBJ      = unuranMulti2D.$(ObjSuf)
 UNURANMULTI2DSRC      = unuranMulti2D.$(SrcSuf)
 UNURANMULTI2D         = unuranMulti2D$(ExeSuf)
 
-UNURANMULTI3DOBJ      = unuranMulti3D.$(ObjSuf)
-UNURANMULTI3DSRC      = unuranMulti3D.$(SrcSuf)
-UNURANMULTI3D         = unuranMulti3D$(ExeSuf)
+UNURANMULTIDIMOBJ      = unuranMultiDim.$(ObjSuf)
+UNURANMULTIDIMSRC      = unuranMultiDim.$(SrcSuf)
+UNURANMULTIDIM         = unuranMultiDim$(ExeSuf)
 
 UNURANDISCROBJ      = unuranDiscrete.$(ObjSuf)
 UNURANDISCRSRC      = unuranDiscrete.$(SrcSuf)
@@ -67,10 +76,10 @@ UNURANHIST         = unuranHist$(ExeSuf)
 
 
 
-OBJS          = $(UNURANDISTROBJ)  $(UNURANSIMPLEOBJ) $(UNURANMULTI2DOBJ) $(UNURANMULTI3DOBJ) $(UNURANDISCROBJ) $(UNURANHISTOBJ)
+OBJS          = $(UNURANDISTROBJ)  $(UNURANSIMPLEOBJ) $(UNURANMULTI2DOBJ) $(UNURANMULTIDIMOBJ) $(UNURANDISCROBJ) $(UNURANHISTOBJ)
 
 
-PROGRAMS      =  $(UNURANDISTR)  $(UNURANSIMPLE) $(UNURANMULTI2D) $(UNURANMULTI3D) $(UNURANDISCR) $(UNURANHIST)
+PROGRAMS      =  $(UNURANDISTR)  $(UNURANSIMPLE) $(UNURANMULTI2D) $(UNURANMULTIDIM) $(UNURANDISCR) $(UNURANHIST)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -92,7 +101,7 @@ $(UNURANMULTI2D): $(UNURANMULTI2DOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(UNURANMULTI3D): $(UNURANMULTI3DOBJ)
+$(UNURANMULTIDIM): $(UNURANMULTIDIMOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
