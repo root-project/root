@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFileStager.h,v 1.1 2007/02/14 18:25:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFileStager.h,v 1.2 2007/03/08 12:09:09 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -43,10 +43,10 @@ public:
    virtual ~TFileStager() { }
 
    TList                  *GetStaged(TList *pathlist);
-   virtual Bool_t          IsStaged(const char *) { MayNotUse("IsStaged"); return kFALSE; }
-   virtual Int_t           Locate(const char *, TString &) { MayNotUse("Locate"); return -1; }
+   virtual Bool_t          IsStaged(const char *);
+   virtual Int_t           Locate(const char *u, TString &f);
    virtual Bool_t          Matches(const char *s) { return ((s && (fName == s)) ? kTRUE : kFALSE); }
-   virtual Bool_t          Stage(const char *, Option_t *) { MayNotUse("Stage");  return kFALSE; }
+   virtual Bool_t          Stage(const char *, Option_t *) { return kTRUE; }
    virtual Bool_t          Stage(TList *pathlist, Option_t *opt = 0);
 
    virtual Bool_t          IsValid() const { return kTRUE; }

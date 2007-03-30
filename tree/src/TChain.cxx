@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.162 2007/03/15 11:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.163 2007/03/16 08:15:29 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1412,6 +1412,10 @@ void TChain::Lookup()
       if (!stg || !stg->Matches(eurl)) {
          SafeDelete(stg);
          stg = TFileStager::Open(eurl);
+         if (!stg) {
+            Error("Lookup", "TFileStager instance cannot be instantiated");
+            break;
+         }
       }
       Int_t n2 = (nelements > 50) ? (Int_t) nelements / 50 : 1;
       if (stg->Locate(eurl.Data(), eurl) == 0) {

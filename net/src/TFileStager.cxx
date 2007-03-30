@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id:$
+// @(#)root/net:$Name:  $:$Id: TFileStager.cxx,v 1.1 2007/02/14 18:25:22 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TObjString.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TUrl.h"
 
 //_____________________________________________________________________________
@@ -45,31 +46,36 @@ TList* TFileStager::GetStaged(TList *pathlist)
       return 0;
    }
 
-   TList* stagedlist = new TList();
-   stagedlist->SetOwner(kTRUE);
+   TList* stagedlist = 0;
+   if (strcmp(GetName(), "local")) {
+      // If a local instance, evrything is staged by definition;
+      // we neede to copy the input list as the user expects a new list
+      stagedlist = (TList *)pathlist->Clone();
 
-   TIter nxt(pathlist);
-   TObject* obj = 0;
-   while ((obj = nxt()))  {
-      const char* pathname = 0;
-      if (TString(obj->ClassName()) == "TUrl") {
-         pathname = ((TUrl*)obj)->GetUrl();
-      }
-      if (TString(obj->ClassName()) == "TObjString") {
-         pathname = ((TObjString*)obj)->GetName();
-      }
-      if (!pathname) {
-         Warning("GetStaged", "object is of type %s : expecting TUrl or TObjString - ignoring",
-                              obj->ClassName());
-         continue;
-      }
+   } else {
 
-      if (IsStaged(pathname)) {
-         stagedlist->Add(new TObjString(pathname));
+      stagedlist = new TList();
+
+      TIter nxt(pathlist);
+      TObject* obj = 0;
+      while ((obj = nxt()))  {
+         const char* pathname = 0;
+         if (TString(obj->ClassName()) == "TUrl")
+            pathname = ((TUrl*)obj)->GetUrl();
+         if (TString(obj->ClassName()) == "TObjString")
+            pathname = ((TObjString*)obj)->GetName();
+         if (!pathname) {
+            Warning("GetStaged", "object is of type %s : expecting TUrl"
+                                 " or TObjString - ignoring", obj->ClassName());
+            continue;
+         }
+         if (IsStaged(pathname))
+            stagedlist->Add(new TObjString(pathname));
       }
    }
 
    // List of online files
+   stagedlist->SetOwner(kTRUE);
    return stagedlist;
 }
 
@@ -124,7 +130,27 @@ TFileStager *TFileStager::Open(const char *stager)
       if (h->LoadPlugin() == -1)
          return 0;
       s = (TFileStager *) h->ExecPlugin(1, stager);
-   }
+   } else
+      s = new TFileStager("local");
 
    return s;
+}
+
+//______________________________________________________________________________
+Bool_t TFileStager::IsStaged(const char *f)
+{
+   // Just check if the local file exists locally
+
+   return gSystem->AccessPathName(f) ? kFALSE : kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TFileStager::Locate(const char *u, TString &f)
+{
+   // Just check if the local file exists locally
+
+   if (gSystem->AccessPathName(u))
+      return -1;
+   f = u;
+   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.5 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.6 2007/03/08 12:09:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -469,9 +469,10 @@ void TDSetElement::Lookup(Bool_t force)
    if (doit) {
       if (!xStager || !xStager->Matches(name)) {
          SafeDelete(xStager);
-         xStager = TFileStager::Open(name);
+         if (!(xStager = TFileStager::Open(name)))
+            Error("Lookup", "TFileStager instance cannot be instantiated");
       }
-      if (xStager->Locate(name.Data(), name) == 0) {
+      if (xStager && xStager->Locate(name.Data(), name) == 0) {
          // Get the effective end-point Url
          url.SetUrl(name);
          // Restore original options and anchor, if any
