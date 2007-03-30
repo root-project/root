@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.2 2007/01/22 11:18:55 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************
@@ -69,7 +69,7 @@ void RpdSetMethInitFlag(int methinit);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
 void RpdInit(EService serv, int pid, int sproto,
              unsigned int opts, int rumsk, int sshp,
-             const char *tmpd, const char *asrpp);
+             const char *tmpd, const char *asrpp, int login = 0);
 
 void SrvSetSocket(TSocket *socket);
 
