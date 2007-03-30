@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.34 2007/01/30 11:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.35 2007/02/05 18:11:29 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -967,7 +967,7 @@ Bool_t TFormLeafInfoNumerical::Update()
    // information has changed (for example when changing from the 'emulated'
    // class to the real class.
 
-   R__ASSERT(fNext==0);
+   //R__ASSERT(fNext==0);
 
    if (fCounter) return fCounter->Update();
    return kFALSE;
@@ -2505,7 +2505,7 @@ TFormLeafInfoCast::TFormLeafInfoCast(TClass* classptr, TClass* casted) :
 
    if (casted) { fCastedName = casted->GetName(); }
    fMultiplicity = -1;
-   fIsTObject = fClass->InheritsFrom(TObject::Class());
+   fIsTObject = fClass->InheritsFrom(TObject::Class()) && fCasted->IsLoaded();
 }
 
 //______________________________________________________________________________

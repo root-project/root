@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.212 2007/02/05 18:11:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.213 2007/02/06 15:20:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1047,7 +1047,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
       }
       else if ( cl && cl->GetReferenceProxy() )  {
-         if ( fullExpression[0] == '@' || fullExpression[strlen(scratch)] == '@' ) {
+         if ( useLeafCollectionObject || fullExpression[0] == '@' || fullExpression[strlen(scratch)] == '@' ) {
             useLeafReferenceObject = true;
          }
          else  {
@@ -1115,11 +1115,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       // Let see if the leaf was attempted to be casted.
       // Since there would have been something like
       // ((cast_class*)leafname)->....  we need to use
-      // paran_level+2
+      // paran_level+1
       // Also we disable this functionality in case of TClonesArray
       // because it is not yet allowed to have 'inheritance' (or virtuality)
       // in play in a TClonesArray.
-      TClass * casted = (TClass*) castqueue.At(paran_level+2);
+      TClass * casted = (TClass*) castqueue.At(paran_level+1);
       if (casted && cl != TClonesArray::Class()) {
          if ( ! casted->InheritsFrom(cl) ) {
             Error("DefinedVariable","%s does not inherit from %s.  Casting not possible!",
@@ -1154,7 +1154,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             do {
                *current++ = right[i++];
             } while(right[i]!=')' && right[i]);
-            *current++ = right[i++];
+            *current++ = right[i];
             *current='\0';
             char *params = strchr(work,'(');
             if (params) {
@@ -1235,6 +1235,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                else if (cl->GetCollectionProxy()->GetType()>0) {
                   Warning("DefinedVariable","Can not call method on content of %s in %s\n",
                            cl->GetName(),name.Data());
+                  return -2;
                }
             }
             TMethodCall *method  = 0;
@@ -1936,6 +1937,23 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
       // We will treated the terminator as a token.
       *current++ = cname[i];
 
+      if (cname[i] == '(') {
+         ++paran_level;
+
+         if (current==work+1) {
+            // If the expression starts with a paranthesis, we are likely
+            // to have a cast operator inside.
+            current--;
+         }
+         continue;
+         //i++;
+         //while( cname[i]!=')' && cname[i] ) {
+         //   *current++ = cname[i++];
+         //}
+         //*current++ = cname[i];
+         ////*current = 0;
+         //continue;
+      }
       if (cname[i] == ')') {
          if (paran_level==0) {
             Error("DefinedVariable","Unmatched paranthesis in %s",fullExpression);
@@ -1943,6 +1961,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          }
          // Let's see if work is a classname.
          *(--current) = 0;
+         paran_level--;
          TString cast_name = gInterpreter->TypeName(work);
          TClass *cast_cl = TClass::GetClass(cast_name);
          if (cast_cl) {
@@ -1951,34 +1970,17 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             current = &(work[0]);
             *current = 0;
             //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
-            paran_level--;
             continue;
          } else if (gROOT->GetType(cast_name)) {
             // We reset work
             current = &(work[0]);
             *current = 0;
             Warning("DefinedVariable",
-                    "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
-            paran_level--;
+               "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
             continue;
          }
-         // if it is not a cast, we just ignore the closing paranthesis.
-         paran_level--;
-      }
-      if (cname[i] == '(') {
-         if (current==work+1) {
-            // If the expression starts with a paranthesis, we are likely
-            // to have a cast operator inside.
-            paran_level++;
-            current--;
-            continue;
-         }
-         // Right now we do not allow nested paranthesis
-         i++;
-         while( cname[i]!=')' && cname[i] ) {
-            *current++ = cname[i++];
-         }
-         *current++ = cname[i++];
+
+         *(current++)=')';
          *current='\0';
          char *params = strchr(work,'(');
          if (params) {
@@ -2104,6 +2106,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             }
             if ( cl )  {  // We have a reference class here....
                final = kTRUE;
+               useLeafCollectionObject = foundAtSign;
                // we reset work
                current = &(work[0]);
                *current = 0;
