@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.29 2007/03/01 01:09:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.30 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -231,5 +231,10 @@ const char *TGWindow::GetName()const
       w->fName = cname + w->fName;
    }
 
+   if (w->fName.Contains(" "))
+      w->fName.ReplaceAll(" ", "");
+   if (w->fName.Contains(":"))
+      w->fName.ReplaceAll(":", "");
+      
    return fName.Data();
 }
