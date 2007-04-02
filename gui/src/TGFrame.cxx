@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.147 2007/03/02 10:24:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.148 2007/03/29 10:12:29 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2692,7 +2692,16 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out << endl;
    gListOfHiddenFrames->Clear();
 
-   out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   Bool_t usexy = kFALSE;
+   TGLayoutManager * lm = GetLayoutManager();
+   if (lm->InheritsFrom("TGXYLayout"))
+      usexy = kTRUE;
+
+   if (!usexy)
+      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   else
+      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+      
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
 
    GetWMPosition(fWMX, fWMY);
@@ -2702,7 +2711,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    // needed in case the frame was resized
    // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
-   out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+   if (!usexy) out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
    out << "}  " << endl;
 
    // writing slots
@@ -3179,9 +3188,18 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out << endl;
    gListOfHiddenFrames->Clear();
 
-   out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   Bool_t usexy = kFALSE;
+   TGLayoutManager * lm = GetLayoutManager();
+   if (lm->InheritsFrom("TGXYLayout"))
+      usexy = kTRUE;
+
+   if (!usexy)
+      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+   else
+      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
-   out << "   " <<GetName()<< "->Resize();" << endl;
+   if (!usexy) out << "   " <<GetName()<< "->Resize();" << endl;
    out << "}  " << endl;
 
    // writing slots
