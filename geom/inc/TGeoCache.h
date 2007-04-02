@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.24 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.25 2006/05/23 04:47:36 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -23,6 +23,11 @@
 
 #ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
+#endif
+
+#ifdef WIN32
+// On Windows, GetFreeSpace is defined as a macro...
+#undef GetFreeSpace
 #endif
 
 // forward declarations
