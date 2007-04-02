@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.337 2007/03/01 17:22:57 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.338 2007/03/12 08:52:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3318,7 +3318,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
          }
       }
       if (GetDimension() < 2) {
-         fnew1 = new TF1();
+         fnew1 = (TF1*)f1->IsA()->New();
          f1->Copy(*fnew1);
          fFunctions->Add(fnew1);
          fnew1->SetParent(this);
@@ -3326,16 +3326,18 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
          if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
          fnew1->SetBit(TFormula::kNotGlobal);
       } else if (GetDimension() < 3) {
-         fnew2 = new TF2();
+         fnew2 = (TF2*)f1->IsA()->New();
          f1->Copy(*fnew2);
+         fnew2 = (TF2*)f1->Clone();
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
          fnew2->Save(xmin,xmax,ymin,ymax,0,0);
          if (fitOption.Nograph) fnew2->SetBit(TF1::kNotDraw);
          fnew2->SetBit(TFormula::kNotGlobal);
       } else {
-         fnew3 = new TF3();
+         fnew3 = (TF3*)f1->IsA()->New();
          f1->Copy(*fnew3);
+         fnew3 = (TF3*)f1->Clone();
          fFunctions->Add(fnew3);
          fnew3->SetParent(this);
          fnew3->SetBit(TFormula::kNotGlobal);
