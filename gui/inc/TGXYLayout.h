@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.2 2003/03/17 16:38:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.3 2006/05/23 04:47:38 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -127,6 +127,8 @@ public:
    void      SetH(Double_t h) { fH = h; }
    void      SetFlag(UInt_t flag) { fFlag = flag; }
 
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
+
    ClassDef(TGXYLayoutHints,0)  // Hits for the X / Y - layout manager
 };
 
@@ -152,6 +154,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    void NewSize() { fFirst = kTRUE; }
 

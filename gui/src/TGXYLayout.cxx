@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.3 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.4 2006/07/09 05:27:54 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 //              factor as the height of the frame increases.            //
 // - kLRubberW: The width of the widget is increased by the same        //
 //              factor as the width of the frame increases.             //
-// - kLRubberY: The height of the widget is increased by the same       //
+// - kLRubberH: The height of the widget is increased by the same       //
 //              factor as the height of the frame increases.            //
 // But the size never becomes smaller than defined by the               //
 // TGXYLayoutHints and the X and Y coordinates becomes never smaller    //
@@ -99,6 +99,7 @@
 #include "TGXYLayout.h"
 #include "TGFrame.h"
 #include "TGLabel.h"
+#include "Riostream.h"
 
 
 ClassImp(TGXYLayout)
@@ -120,6 +121,34 @@ TGXYLayoutHints::TGXYLayoutHints(Double_t x, Double_t y, Double_t w, Double_t h,
    fW    = w;
    fH    = h;
    fFlag = rubberFlag;
+}
+
+//______________________________________________________________________________
+void TGXYLayoutHints::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
+{
+   // Save XY layout hints as a C++ statement(s) on output stream.
+   
+   TString flag;
+   if (fFlag & kLRubberX) {
+      if (flag.Length() == 0)  flag  = "TGXYLayoutHints::kLRubberX";
+      else                     flag += " | TGXYLayoutHints::kLRubberX";
+   }
+   if (fFlag & kLRubberY) {
+      if  (flag.Length() == 0) flag  = "TGXYLayoutHints::kLRubberY";
+      else                      flag += " | TGXYLayoutHints::kLRubberY";
+   }
+   if (fFlag & kLRubberW) {
+      if (flag.Length() == 0) flag  = "TGXYLayoutHints::kLRubberW";
+      else                     flag += " | TGXYLayoutHints::kLRubberW";
+   }
+   if (fFlag & kLRubberH) {
+      if (flag.Length() == 0) flag  = "TGXYLayoutHints::kLRubberH";
+      else                     flag += " | TGXYLayoutHints::kLRubberH";
+   }
+
+   out << ", new TGXYLayoutHints(" << GetX() << ", " << GetY() << ", " 
+       << GetW() << ", " << GetH() << ", " << flag << ")";
+
 }
 
 //______________________________________________________________________________
@@ -251,4 +280,13 @@ TGDimension TGXYLayout::GetDefaultSize() const
    TGDimension size(fFirstWidth, fFirstHeight);
 
    return size;
+}
+
+//______________________________________________________________________________
+void TGXYLayout::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
+{
+   // Save XY layout manager as a C++ statement(s) on output stream.
+   
+   out << "new TGXYLayout(" << fMain->GetName() << ")";
+
 }
