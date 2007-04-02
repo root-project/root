@@ -24,10 +24,12 @@ MINUITO      := $(MINUITS:.cxx=.o)
 MINUITDEP    := $(MINUITO:.o=.d) $(MINUITDO:.o=.d)
 
 MINUITLIB    := $(LPATH)/libMinuit.$(SOEXT)
+MINUITMAP    := $(MINUITLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUITH))
 ALLLIBS     += $(MINUITLIB)
+ALLMAPS     += $(MINUITMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MINUITDEP)
@@ -45,13 +47,11 @@ $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
 
-all-minuit:     $(MINUITLIB)
+$(MINUITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MINUITL)
+		$(RLIBMAP) -o $(MINUITMAP) -l $(MINUITLIB) \
+		   -d $(MINUITLIBDEPM) -c $(MINUITL)
 
-map-minuit:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MINUITLIB) \
-		   -d $(MINUITLIBDEP) -c $(MINUITL)
-
-map::           map-minuit
+all-minuit:     $(MINUITLIB) $(MINUITMAP)
 
 clean-minuit:
 		@rm -f $(MINUITO) $(MINUITDO)
@@ -59,6 +59,6 @@ clean-minuit:
 clean::         clean-minuit
 
 distclean-minuit: clean-minuit
-		@rm -f $(MINUITDEP) $(MINUITDS) $(MINUITDH) $(MINUITLIB)
+		@rm -f $(MINUITDEP) $(MINUITDS) $(MINUITDH) $(MINUITLIB) $(MINUITMAP)
 
 distclean::     distclean-minuit

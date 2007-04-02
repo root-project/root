@@ -24,10 +24,12 @@ PGSQLO       := $(PGSQLS:.cxx=.o)
 PGSQLDEP     := $(PGSQLO:.o=.d) $(PGSQLDO:.o=.d)
 
 PGSQLLIB     := $(LPATH)/libPgSQL.$(SOEXT)
+PGSQLMAP     := $(PGSQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PGSQLH))
 ALLLIBS     += $(PGSQLLIB)
+ALLMAPS     += $(PGSQLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PGSQLDEP)
@@ -45,13 +47,11 @@ $(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PGSQLH) $(PGSQLL)
 
-all-pgsql:      $(PGSQLLIB)
+$(PGSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PGSQLL)
+		$(RLIBMAP) -o $(PGSQLMAP) -l $(PGSQLLIB) \
+		   -d $(PGSQLLIBDEPM) -c $(PGSQLL)
 
-map-pgsql:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PGSQLLIB) \
-		   -d $(PGSQLLIBDEP) -c $(PGSQLL)
-
-map::           map-pgsql
+all-pgsql:      $(PGSQLLIB) $(PGSQLMAP)
 
 clean-pgsql:
 		@rm -f $(PGSQLO) $(PGSQLDO)
@@ -59,7 +59,7 @@ clean-pgsql:
 clean::         clean-pgsql
 
 distclean-pgsql: clean-pgsql
-		@rm -f $(PGSQLDEP) $(PGSQLDS) $(PGSQLDH) $(PGSQLLIB)
+		@rm -f $(PGSQLDEP) $(PGSQLDS) $(PGSQLDH) $(PGSQLLIB) $(PGSQLMAP)
 
 distclean::     distclean-pgsql
 

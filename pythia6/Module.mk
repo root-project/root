@@ -24,10 +24,12 @@ PYTHIA6O     := $(PYTHIA6S:.cxx=.o)
 PYTHIA6DEP   := $(PYTHIA6O:.o=.d) $(PYTHIA6DO:.o=.d)
 
 PYTHIA6LIB   := $(LPATH)/libEGPythia6.$(SOEXT)
+PYTHIA6MAP   := $(PYTHIA6LIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA6H))
 ALLLIBS     += $(PYTHIA6LIB)
+ALLMAPS     += $(PYTHIA6MAP)
 
 # include all dependency files
 INCLUDEFILES += $(PYTHIA6DEP)
@@ -46,13 +48,11 @@ $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYTHIA6H) $(PYTHIA6L)
 
-all-pythia6:    $(PYTHIA6LIB)
+$(PYTHIA6MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA6L)
+		$(RLIBMAP) -o $(PYTHIA6MAP) -l $(PYTHIA6LIB) \
+		   -d $(PYTHIA6LIBDEPM) -c $(PYTHIA6L)
 
-map-pythia6:    $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PYTHIA6LIB) \
-		   -d $(PYTHIA6LIBDEP) -c $(PYTHIA6L)
-
-map::           map-pythia6
+all-pythia6:    $(PYTHIA6LIB) $(PYTHIA6MAP)
 
 clean-pythia6:
 		@rm -f $(PYTHIA6O) $(PYTHIA6DO)
@@ -60,7 +60,7 @@ clean-pythia6:
 clean::         clean-pythia6
 
 distclean-pythia6: clean-pythia6
-		@rm -f $(PYTHIA6DEP) $(PYTHIA6DS) $(PYTHIA6DH) $(PYTHIA6LIB)
+		@rm -f $(PYTHIA6DEP) $(PYTHIA6DS) $(PYTHIA6DH) $(PYTHIA6LIB) $(PYTHIA6MAP)
 
 distclean::     distclean-pythia6
 

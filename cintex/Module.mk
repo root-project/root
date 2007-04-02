@@ -1,4 +1,4 @@
-# Module.mk for reflex module 
+# Module.mk for reflex module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
@@ -20,6 +20,7 @@ CINTEXO      := $(CINTEXS:.cxx=.o)
 CINTEXDEP    := $(CINTEXO:.o=.d)
 
 CINTEXLIB    := $(LPATH)/libCintex.$(SOEXT)
+CINTEXMAP    := $(CINTEXLIB:.$(SOEXT)=.rootmap)
 
 CINTEXPYS    := $(wildcard $(MODDIR)/python/*.py)
 ifeq ($(PLATFORM),win32)
@@ -37,6 +38,7 @@ endif
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Cintex/%.h,include/Cintex/%.h,$(CINTEXH))
 ALLLIBS      += $(CINTEXLIB)
+ALLMAPS      += $(CINTEXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(CINTEXDEP)
@@ -51,10 +53,10 @@ else
 REFLEXLL = -Llib -lReflex
 CINTEXLL = -Llib -lCintex
 SHEXT    = .sh
-ifneq ($(PLATFORM),fbsd) 
+ifneq ($(PLATFORM),fbsd)
 ifneq ($(PLATFORM),obsd)
-REFLEXLL   += -ldl 
-endif 
+REFLEXLL   += -ldl
+endif
 endif
 ifeq ($(PLATFORM),macosx)
 DICTEXT  = so
@@ -63,7 +65,7 @@ DICTEXT  = $(SOEXT)
 endif
 endif
 
-GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py 
+GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py
 
 CINTEXTESTD    = $(CINTEXDIR)/test
 CINTEXTESTDICTD = $(CINTEXTESTD)/dict
@@ -88,13 +90,11 @@ $(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) \
 		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"
 
-all-cintex:     $(CINTEXLIB)
+$(CINTEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CINTEXL)
+		$(RLIBMAP) -o $(CINTEXMAP) -l $(CINTEXLIB) \
+		   -d $(CINTEXLIBDEPM) -c $(CINTEXL)
 
-map-cintex:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(CINTEXLIB) \
-		-d $(CINTEXLIBDEP) -c $(CINTEXL)
-
-map::           map-cintex
+all-cintex:     $(CINTEXLIB) $(CINTEXMAP)
 
 clean-cintex: clean-check-cintex
 		@rm -f $(CINTEXO)
@@ -105,7 +105,7 @@ clean-check-cintex:
 clean::         clean-cintex
 
 distclean-cintex: clean-cintex
-		@rm -f $(CINTEXDEP) $(CINTEXLIB) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
+		@rm -f $(CINTEXDEP) $(CINTEXLIB) $(CINTEXMAP) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
 		@rm -rf include/Cintex
 
 distclean::     distclean-cintex
@@ -113,7 +113,7 @@ distclean::     distclean-cintex
 
 #### test suite ####
 
-check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT) 
+check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
 		@echo "Running all Cintex tests"
 		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
 

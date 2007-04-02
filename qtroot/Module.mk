@@ -24,10 +24,12 @@ QTROOTO      := $(QTROOTS:.cxx=.o)
 QTROOTDEP    := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
 
 QTROOTLIB    := $(LPATH)/libQtRoot.$(SOEXT)
+QTROOTMAP    := $(QTROOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTROOTH))
 ALLLIBS     += $(QTROOTLIB)
+ALLMAPS     += $(QTROOTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(QTROOTDEP)
@@ -45,13 +47,11 @@ $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
 
-all-qtroot:     $(QTROOTLIB)
+$(QTROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QTROOTL)
+		$(RLIBMAP) -o $(QTROOTMAP) -l $(QTROOTLIB) \
+		   -d $(QTROOTLIBDEPM) -c $(QTROOTL)
 
-map-qtroot:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(QTROOTLIB) \
-                  -d $(QTROOTLIBDEP) -c $(QTROOTL)
-
-map::           map-qtroot
+all-qtroot:     $(QTROOTLIB) $(QTROOTMAP)
 
 clean-qtroot:
 		@rm -f $(QTROOTO) $(QTROOTDO)
@@ -59,7 +59,7 @@ clean-qtroot:
 clean::         clean-qtroot
 
 distclean-qtroot:  clean-qtroot
-		@rm -f $(QTROOTDEP) $(QTROOTDS) $(QTROOTDH) $(QTROOTLIB)
+		@rm -f $(QTROOTDEP) $(QTROOTDS) $(QTROOTDH) $(QTROOTLIB) $(QTROOTMAP)
 
 distclean::     distclean-qtroot
 

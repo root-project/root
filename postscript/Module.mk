@@ -24,10 +24,12 @@ POSTSCRIPTO  := $(POSTSCRIPTS:.cxx=.o)
 POSTSCRIPTDEP := $(POSTSCRIPTO:.o=.d) $(POSTSCRIPTDO:.o=.d)
 
 POSTSCRIPTLIB := $(LPATH)/libPostscript.$(SOEXT)
+POSTSCRIPTMAP := $(POSTSCRIPTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(POSTSCRIPTH))
 ALLLIBS       += $(POSTSCRIPTLIB)
+ALLMAPS       += $(POSTSCRIPTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(POSTSCRIPTDEP)
@@ -46,13 +48,11 @@ $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(POSTSCRIPTH) $(POSTSCRIPTL)
 
-all-postscript: $(POSTSCRIPTLIB)
+$(POSTSCRIPTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(POSTSCRIPTL)
+		$(RLIBMAP) -o $(POSTSCRIPTMAP) -l $(POSTSCRIPTLIB) \
+		   -d $(POSTSCRIPTLIBDEPM) -c $(POSTSCRIPTL)
 
-map-postscript: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(POSTSCRIPTLIB) \
-		   -d $(POSTSCRIPTLIBDEP) -c $(POSTSCRIPTL)
-
-map::           map-postscript
+all-postscript: $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
 
 clean-postscript:
 		@rm -f $(POSTSCRIPTO) $(POSTSCRIPTDO)
@@ -61,7 +61,7 @@ clean::         clean-postscript
 
 distclean-postscript: clean-postscript
 		@rm -f $(POSTSCRIPTDEP) $(POSTSCRIPTDS) $(POSTSCRIPTDH) \
-		   $(POSTSCRIPTLIB)
+		   $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
 
 distclean::     distclean-postscript
 

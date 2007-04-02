@@ -24,10 +24,12 @@ ORACLEO       := $(ORACLES:.cxx=.o)
 ORACLEDEP     := $(ORACLEO:.o=.d) $(ORACLEDO:.o=.d)
 
 ORACLELIB     := $(LPATH)/libOracle.$(SOEXT)
+ORCALEMAP     := $(ORACLELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ORACLEH))
 ALLLIBS      += $(ORACLELIB)
+ALLMAPS      += $(ORACLEMAP)
 
 # include all dependency files
 INCLUDEFILES += $(ORACLEDEP)
@@ -45,13 +47,11 @@ $(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ORACLEH) $(ORACLEL)
 
-all-oracle:     $(ORACLELIB)
+$(ORACLEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ORACLEL)
+		$(RLIBMAP) -o $(ORACLEMAP) -l $(ORACLELIB) \
+		   -d $(ORACLELIBDEPM) -c $(ORACLEL)
 
-map-oracle:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ORACLELIB) \
-		   -d $(ORACLELIBDEP) -c $(ORACLEL)
-
-map::           map-oracle
+all-oracle:     $(ORACLELIB) $(ORACLEMAP)
 
 clean-oracle:
 		@rm -f $(ORACLEO) $(ORACLEDO)
@@ -59,7 +59,7 @@ clean-oracle:
 clean::         clean-oracle
 
 distclean-oracle: clean-oracle
-		@rm -f $(ORACLEDEP) $(ORACLEDS) $(ORACLEDH) $(ORACLELIB)
+		@rm -f $(ORACLEDEP) $(ORACLEDS) $(ORACLEDH) $(ORACLELIB) $(ORACLEMAP)
 
 distclean::     distclean-oracle
 

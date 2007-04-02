@@ -25,10 +25,12 @@ VMCO         := $(VMCS:.cxx=.o)
 VMCDEP       := $(VMCO:.o=.d) $(VMCDO:.o=.d)
 
 VMCLIB       := $(LPATH)/libVMC.$(SOEXT)
+VMCMAP       := $(VMCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(VMCH))
 ALLLIBS     += $(VMCLIB)
+ALLMAPS     += $(VMCMAP)
 
 # include all dependency files
 INCLUDEFILES += $(VMCDEP)
@@ -46,13 +48,11 @@ $(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VMCH1) $(VMCL)
 
-all-vmc:        $(VMCLIB)
+$(VMCMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(VMCL)
+		$(RLIBMAP) -o $(VMCMAP) -l $(VMCLIB) \
+		   -d $(VMCLIBDEPM) -c $(VMCL)
 
-map-vmc:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(VMCLIB) \
-		   -d $(VMCLIBDEP) -c $(VMCL)
-
-map::           map-vmc
+all-vmc:        $(VMCLIB) $(VMCMAP)
 
 clean-vmc:
 		@rm -f $(VMCO) $(VMCDO)
@@ -60,6 +60,6 @@ clean-vmc:
 clean::         clean-vmc
 
 distclean-vmc:   clean-vmc
-		@rm -f $(VMCDEP) $(VMCDS) $(VMCDH) $(VMCLIB)
+		@rm -f $(VMCDEP) $(VMCDS) $(VMCDH) $(VMCLIB) $(VMCMAP)
 
 distclean::     distclean-vmc

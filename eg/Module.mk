@@ -25,10 +25,12 @@ EGO          := $(EGS:.cxx=.o)
 EGDEP        := $(EGO:.o=.d) $(EGDO:.o=.d)
 
 EGLIB        := $(LPATH)/libEG.$(SOEXT)
+EGMAP        := $(EGLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(EGH))
 ALLLIBS     += $(EGLIB)
+ALLMAPS     += $(EGMAP)
 
 # include all dependency files
 INCLUDEFILES += $(EGDEP)
@@ -46,13 +48,11 @@ $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
 
-all-eg:         $(EGLIB)
+$(EGMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(EGL)
+		$(RLIBMAP) -o $(EGMAP) -l $(EGLIB) \
+		   -d $(EGLIBDEPM) -c $(EGL)
 
-map-eg:         $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(EGLIB) \
-		   -d $(EGLIBDEP) -c $(EGL)
-
-map::           map-eg
+all-eg:         $(EGLIB) $(EGMAP)
 
 clean-eg:
 		@rm -f $(EGO) $(EGDO)
@@ -60,6 +60,6 @@ clean-eg:
 clean::         clean-eg
 
 distclean-eg:   clean-eg
-		@rm -f $(EGDEP) $(EGDS) $(EGDH) $(EGLIB)
+		@rm -f $(EGDEP) $(EGDS) $(EGDH) $(EGLIB) $(EGMAP)
 
 distclean::     distclean-eg

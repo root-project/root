@@ -43,10 +43,12 @@ GEOMO        := $(GEOMS:.cxx=.o)
 GEOMDEP      := $(GEOMO:.o=.d) $(GEOMDO:.o=.d)
 
 GEOMLIB      := $(LPATH)/libGeom.$(SOEXT)
+GEOMMAP      := $(GEOMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMH))
 ALLLIBS     += $(GEOMLIB)
+ALLMAPS     += $(GEOMMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GEOMDEP)
@@ -68,13 +70,11 @@ $(GEOMDS2):     $(GEOMH2) $(GEOML2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMH2) $(GEOML2)
 
-all-geom:       $(GEOMLIB)
+$(GEOMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GEOML1) $(GEOML2)
+		$(RLIBMAP) -o $(GEOMMAP) -l $(GEOMLIB) \
+		   -d $(GEOMLIBDEPM) -c $(GEOML1) $(GEOML2)
 
-map-geom:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMLIB) \
-		   -d $(GEOMLIBDEP) -c $(GEOML1) $(GEOML2)
-
-map::           map-geom
+all-geom:       $(GEOMLIB) $(GEOMMAP)
 
 clean-geom:
 		@rm -f $(GEOMO) $(GEOMDO)
@@ -82,6 +82,6 @@ clean-geom:
 clean::         clean-geom
 
 distclean-geom: clean-geom
-		@rm -f $(GEOMDEP) $(GEOMDS) $(GEOMDH) $(GEOMLIB)
+		@rm -f $(GEOMDEP) $(GEOMDS) $(GEOMDH) $(GEOMLIB) $(GEOMMAP)
 
 distclean::     distclean-geom

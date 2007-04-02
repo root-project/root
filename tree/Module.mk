@@ -31,10 +31,12 @@ TREEO        := $(TREES:.cxx=.o)
 TREEDEP      := $(TREEO:.o=.d) $(TREEDO:.o=.d)
 
 TREELIB      := $(LPATH)/libTree.$(SOEXT)
+TREEMAP      := $(TREELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEH))
 ALLLIBS     += $(TREELIB)
+ALLMAPS     += $(TREEMAP)
 
 # include all dependency files
 INCLUDEFILES += $(TREEDEP)
@@ -58,13 +60,11 @@ $(TREEDS2):
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEDH2) $(TREEL2)
 
-all-tree:       $(TREELIB)
+$(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
+		$(RLIBMAP) -o $(TREEMAP) -l $(TREELIB) \
+		   -d $(TREELIBDEPM) -c $(TREEL)
 
-map-tree:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(TREELIB) \
-		   -d $(TREELIBDEP) -c $(TREEL)
-
-map::           map-tree
+all-tree:       $(TREELIB) $(TREEMAP)
 
 clean-tree:
 		@rm -f $(TREEO) $(TREEDO)
@@ -72,6 +72,6 @@ clean-tree:
 clean::         clean-tree
 
 distclean-tree: clean-tree
-		@rm -f $(TREEDEP) $(TREEDS) $(TREEDH) $(TREELIB)
+		@rm -f $(TREEDEP) $(TREEDS) $(TREEDH) $(TREELIB) $(TREEMAP)
 
 distclean::     distclean-tree

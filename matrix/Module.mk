@@ -24,10 +24,12 @@ MATRIXO      := $(MATRIXS:.cxx=.o)
 MATRIXDEP    := $(MATRIXO:.o=.d) $(MATRIXDO:.o=.d)
 
 MATRIXLIB    := $(LPATH)/libMatrix.$(SOEXT)
+MATRIXMAP    := $(MATRIXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATRIXH))
 ALLLIBS     += $(MATRIXLIB)
+ALLMAPS     += $(MATRIXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MATRIXDEP)
@@ -45,13 +47,11 @@ $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATRIXH) $(MATRIXL)
 
-all-matrix:     $(MATRIXLIB)
+$(MATRIXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MATRIXL)
+		$(RLIBMAP) -o $(MATRIXMAP) -l $(MATRIXLIB) \
+		   -d $(MATRIXLIBDEPM) -c $(MATRIXL)
 
-map-matrix:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MATRIXLIB) \
-		   -d $(MATRIXLIBDEP) -c $(MATRIXL)
-
-map::           map-matrix
+all-matrix:     $(MATRIXLIB) $(MATRIXMAP)
 
 clean-matrix:
 		@rm -f $(MATRIXO) $(MATRIXDO)
@@ -59,6 +59,6 @@ clean-matrix:
 clean::         clean-matrix
 
 distclean-matrix: clean-matrix
-		@rm -f $(MATRIXDEP) $(MATRIXDS) $(MATRIXDH) $(MATRIXLIB)
+		@rm -f $(MATRIXDEP) $(MATRIXDS) $(MATRIXDH) $(MATRIXLIB) $(MATRIXMAP)
 
 distclean::     distclean-matrix

@@ -12,7 +12,7 @@ MATHMOREDIRS := $(MATHMOREDIR)/src
 MATHMOREDIRI := $(MATHMOREDIR)/inc
 
 
-###pre-compiled GSL DLL require Mathmore to be compiled with -DGSL_DLL 
+###pre-compiled GSL DLL require Mathmore to be compiled with -DGSL_DLL
 #ifeq ($(PLATFORM),win32)
 #GSLFLAGS += "-DGSL_DLL"
 #endif
@@ -50,10 +50,12 @@ MATHMOREO    := $(MATHMORES:.cxx=.o)
 MATHMOREDEP  := $(MATHMOREO:.o=.d) $(MATHMOREDO:.o=.d)
 
 MATHMORELIB  := $(LPATH)/libMathMore.$(SOEXT)
+MATHMOREMAP  := $(MATHMORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
 ALLLIBS      += $(MATHMORELIB)
+ALLMAPS      += $(MATHMOREMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MATHMOREDEP)
@@ -75,13 +77,11 @@ $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP)  -f  $@ -c $(MATHMOREDH1)  $(MATHMOREL)
 
-all-mathmore:   $(MATHMORELIB)
+$(MATHMOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MATHMOREL) $(MATHMORELINC)
+		$(RLIBMAP) -o $(MATHMOREMAP) -l $(MATHMORELIB) \
+		   -d $(MATHMORELIBDEPM) -c $(MATHMOREL) $(MATHMORELINC)
 
-map-mathmore:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHMORELIB) \
-		   -d $(MATHMORELIBDEP) -c $(MATHMOREL) $(MATHMORELINC)
-
-map::           map-mathmore
+all-mathmore:   $(MATHMORELIB) $(MATHMOREMAP)
 
 clean-mathmore:
 		@rm -f $(MATHMOREO) $(MATHMOREDO)
@@ -89,7 +89,8 @@ clean-mathmore:
 clean::         clean-mathmore
 
 distclean-mathmore: clean-mathmore
-		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
+		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) \
+		   $(MATHMORELIB) $(MATHMOREMAP)
 		@rm -rf include/Math
 
 distclean::     distclean-mathmore

@@ -24,10 +24,12 @@ ALIENO       := $(ALIENS:.cxx=.o)
 ALIENDEP     := $(ALIENO:.o=.d) $(ALIENDO:.o=.d)
 
 ALIENLIB     := $(LPATH)/libRAliEn.$(SOEXT)
+ALIENMAP     := $(ALIENLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ALIENH))
 ALLLIBS     += $(ALIENLIB)
+ALLMAPS     += $(ALIENMAP)
 
 # include all dependency files
 INCLUDEFILES += $(ALIENDEP)
@@ -36,7 +38,7 @@ INCLUDEFILES += $(ALIENDEP)
 include/%.h:    $(ALIENDIRI)/%.h
 		cp $< $@
 
-$(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP) 
+$(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRAliEn.$(SOEXT) $@ "$(ALIENO) $(ALIENDO)" \
 		   "$(ALIENLIBEXTRA) $(ALIENLIBDIR) $(ALIENCLILIB)"
@@ -45,13 +47,11 @@ $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ALIENH) $(ALIENL)
 
-all-alien:      $(ALIENLIB)
+$(ALIENMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(ALIENL)
+		$(RLIBMAP) -o $(ALIENMAP) -l $(ALIENLIB) \
+		   -d $(ALIENLIBDEPM) -c $(ALIENL)
 
-map-alien :     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ALIENLIB) \
-		   -d $(ALIENLIBDEP) -c $(ALIENL)
-
-map::           map-alien
+all-alien:      $(ALIENLIB) $(ALIENMAP)
 
 clean-alien:
 		@rm -f $(ALIENO) $(ALIENDO)
@@ -59,7 +59,7 @@ clean-alien:
 clean::         clean-alien
 
 distclean-alien: clean-alien
-		@rm -f $(ALIENDEP) $(ALIENDS) $(ALIENDH) $(ALIENLIB)
+		@rm -f $(ALIENDEP) $(ALIENDS) $(ALIENDH) $(ALIENLIB) $(ALIENMAP)
 
 distclean::     distclean-alien
 

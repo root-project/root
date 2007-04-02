@@ -48,10 +48,12 @@ GLO1         := $(GLS1:.c=.o)
 GLDEP        := $(GLO:.o=.d) $(GLDO:.o=.d) $(GLO1:.o=.d)
 
 GLLIB        := $(LPATH)/libRGL.$(SOEXT)
+GLMAP        := $(GLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
 ALLLIBS      += $(GLLIB)
+ALLMAPS      += $(GLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GLDEP)
@@ -69,12 +71,11 @@ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
-all-gl:         $(GLLIB)
+$(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
+		$(RLIBMAP) -o $(GLMAP) -l $(GLLIB) \
+		   -d $(GLLIBDEPM) -c $(GLL)
 
-map-gl:         $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GLLIB) -d $(GLLIBDEP) -c $(GLL)
-
-map::           map-gl
+all-gl:         $(GLLIB) $(GLMAP)
 
 clean-gl:
 		@rm -f $(GLO) $(GLO1) $(GLDO)
@@ -82,7 +83,7 @@ clean-gl:
 clean::         clean-gl
 
 distclean-gl:   clean-gl
-		@rm -f $(GLDEP) $(GLLIB) $(GLDS) $(GLDH)
+		@rm -f $(GLDEP) $(GLLIB) $(GLDS) $(GLDH) $(GLMAP)
 
 distclean::     distclean-gl
 

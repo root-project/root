@@ -24,10 +24,12 @@ RINTO        := $(RINTS:.cxx=.o)
 RINTDEP      := $(RINTO:.o=.d) $(RINTDO:.o=.d)
 
 RINTLIB      := $(LPATH)/libRint.$(SOEXT)
+RINTMAP      := $(RINTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RINTH))
 ALLLIBS     += $(RINTLIB)
+ALLMAPS     += $(RINTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(RINTDEP)
@@ -45,13 +47,11 @@ $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
 
-all-rint:       $(RINTLIB)
+$(RINTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RINTL)
+		$(RLIBMAP) -o $(RINTMAP) -l $(RINTLIB) \
+		   -d $(RINTLIBDEPM) -c $(RINTL)
 
-map-rint:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(RINTLIB) \
-		   -d $(RINTLIBDEP) -c $(RINTL)
-
-map::           map-rint
+all-rint:       $(RINTLIB) $(RINTMAP)
 
 clean-rint:
 		@rm -f $(RINTO) $(RINTDO)
@@ -59,6 +59,6 @@ clean-rint:
 clean::         clean-rint
 
 distclean-rint: clean-rint
-		@rm -f $(RINTDEP) $(RINTDS) $(RINTDH) $(RINTLIB)
+		@rm -f $(RINTDEP) $(RINTDS) $(RINTDH) $(RINTLIB) $(RINTMAP)
 
 distclean::     distclean-rint

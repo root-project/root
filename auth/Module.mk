@@ -36,6 +36,7 @@ DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
 RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d) $(DAEMONUTILSO:.o=.d)
 
 RAUTHLIB     := $(LPATH)/libRootAuth.$(SOEXT)
+RAUTHMAP     := $(RAUTHLIB:.$(SOEXT)=.rootmap)
 
 ##### libAFSAuth #####
 ifneq ($(AFSLIB),)
@@ -52,6 +53,7 @@ AFSAUTHO     := $(AFSAUTHS:.cxx=.o)
 AFSAUTHDEP   := $(AFSAUTHO:.o=.d) $(AFSAUTHDO:.o=.d)
 
 AFSAUTHLIB   := $(LPATH)/libAFSAuth.$(SOEXT)
+AFSAUTHMAP   := $(AFSAUTHLIB:.$(SOEXT)=.rootmap)
 endif
 
 #### for libSrvAuth (built in rpdutils/Module.mk) ####
@@ -75,9 +77,11 @@ endif
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH)) \
                 include/DaemonUtils.h
 ALLLIBS      += $(RAUTHLIB)
+ALLMAPS      += $(RAUTHMAP)
 ifneq ($(AFSLIB),)
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(AFSAUTHH))
 ALLLIBS      += $(AFSAUTHLIB)
+ALLMAPS      += $(AFSAUTHMAP)
 endif
 
 # include all dependency files
@@ -99,6 +103,10 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RAUTHH) $(RAUTHL)
 
+$(RAUTHMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(RAUTHL)
+		$(RLIBMAP) -o $(RAUTHMAP) -l $(RAUTHLIB) \
+		   -d $(RAUTHLIBDEPM) -c $(RAUTHL)
+
 $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libAFSAuth.$(SOEXT) $@ \
@@ -109,21 +117,11 @@ $(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(AFSAUTHH) $(AFSAUTHL)
 
-all-auth:       $(RAUTHLIB) $(AFSAUTHLIB)
+$(AFSAUTHMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(AFSAUTHL)
+		$(RLIBMAP) -o $(AFSAUTHMAP) -l $(AFSAUTHLIB) \
+		   -d $(AFSAUTHLIBDEPM) -c $(AFSAUTHL)
 
-map-auth:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(RAUTHLIB) \
-		   -d $(RAUTHLIBDEP) -c $(RAUTHL)
-
-ifneq ($(AFSLIB),)
-map-afs:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(AFSAUTHLIB) \
-		   -d $(AFSAUTHLIBDEP) -c $(AFSAUTHL)
-
-map::           map-afs
-endif
-
-map::           map-auth
+all-auth:       $(RAUTHLIB) $(AFSAUTHLIB) $(RAUTHMAP) $(AFSAUTHMAP)
 
 clean-auth:
 		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) \
@@ -132,8 +130,9 @@ clean-auth:
 clean::         clean-auth
 
 distclean-auth: clean-auth
-		@rm -f $(RAUTHDEP) $(RAUTHDS) $(RAUTHDH) $(RAUTHLIB)\
-		       $(AFSAUTHDEP) $(AFSAUTHDS) $(AFSAUTHLIB)
+		@rm -f $(RAUTHDEP) $(RAUTHDS) $(RAUTHDH) $(RAUTHLIB) \
+		       $(AFSAUTHDEP) $(AFSAUTHDS) $(AFSAUTHLIB) \
+		       $(RAUTHMAP) $(AFSAUTHMAP)
 
 distclean::     distclean-auth
 

@@ -32,10 +32,12 @@ GRAFO        := $(GRAFS:.cxx=.o)
 GRAFDEP      := $(GRAFO:.o=.d) $(GRAFDO:.o=.d)
 
 GRAFLIB      := $(LPATH)/libGraf.$(SOEXT)
+GRAFMAP      := $(GRAFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GRAFH))
 ALLLIBS     += $(GRAFLIB)
+ALLMAPS     += $(GRAFMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GRAFDEP)
@@ -57,13 +59,11 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(GRAFH) $(GRAFL2)
 
-all-graf:       $(GRAFLIB)
+$(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL1) $(GRAFL2)
+		$(RLIBMAP) -o $(GRAFMAP) -l $(GRAFLIB) \
+		   -d $(GRAFLIBDEPM) -c $(GRAFL1) $(GRAFL2)
 
-map-graf:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GRAFLIB) \
-		   -d $(GRAFLIBDEP) -c $(GRAFL1) $(GRAFL2)
-
-map::           map-graf
+all-graf:       $(GRAFLIB) $(GRAFMAP)
 
 clean-graf:
 		@rm -f $(GRAFO) $(GRAFDO)
@@ -71,7 +71,7 @@ clean-graf:
 clean::         clean-graf
 
 distclean-graf: clean-graf
-		@rm -f $(GRAFDEP) $(GRAFDS) $(GRAFDH) $(GRAFLIB)
+		@rm -f $(GRAFDEP) $(GRAFDS) $(GRAFDH) $(GRAFLIB) $(GRAFMAP)
 
 distclean::     distclean-graf
 

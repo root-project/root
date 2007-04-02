@@ -24,10 +24,12 @@ MLPO         := $(MLPS:.cxx=.o)
 MLPDEP       := $(MLPO:.o=.d) $(MLPDO:.o=.d)
 
 MLPLIB       := $(LPATH)/libMLP.$(SOEXT)
+MLPMAP       := $(MLPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MLPH))
 ALLLIBS     += $(MLPLIB)
+ALLMAPS     += $(MLPMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MLPDEP)
@@ -45,13 +47,10 @@ $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MLPH) $(MLPL)
 
-all-mlp:        $(MLPLIB)
+$(MLPMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(MLPL)
+		$(RLIBMAP) -o $(MLPMAP) -l $(MLPLIB) -d $(MLPLIBDEPM) -c $(MLPL)
 
-map-mlp:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MLPLIB) \
-		   -d $(MLPLIBDEP) -c $(MLPL)
-
-map::           map-mlp
+all-mlp:        $(MLPLIB) $(MLPMAP)
 
 clean-mlp:
 		@rm -f $(MLPO) $(MLPDO)
@@ -59,6 +58,6 @@ clean-mlp:
 clean::         clean-mlp
 
 distclean-mlp:  clean-mlp
-		@rm -f $(MLPDEP) $(MLPDS) $(MLPDH) $(MLPLIB)
+		@rm -f $(MLPDEP) $(MLPDS) $(MLPDH) $(MLPLIB) $(MLPMAP)
 
 distclean::     distclean-mlp

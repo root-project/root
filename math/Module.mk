@@ -24,10 +24,12 @@ MATHO        := $(MATHS:.cxx=.o)
 MATHDEP      := $(MATHO:.o=.d) $(MATHDO:.o=.d)
 
 MATHLIB      := $(LPATH)/libRMath.$(SOEXT)
+MATHMAP      := $(MATHLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHH))
 #ALLLIBS     += $(MATHLIB)
+#ALLMAPS     += $(MATHMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MATHDEP)
@@ -45,14 +47,12 @@ $(MATHDS):      $(MATHH) $(MATHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHH) $(MATHL)
 
-#all-math:       $(MATHLIB)
+$(MATHMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(MATHL)
+		$(RLIBMAP) -o $(MATHMAP) -l $(MATHLIB) \
+		   -d $(MATHLIBDEPM) -c $(MATHL)
+
+#all-math:       $(MATHLIB) $(MATHMAP)
 all-math:       $(MATHO) $(MATHDO)
-
-#map-math:       $(RLIBMAP)
-#		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHLIB) \
-#		   -d $(MATHLIBDEP) -c $(MATHL)
-
-#map::           map-tree
 
 clean-math:
 		@rm -f $(MATHO) $(MATHDO)
@@ -60,6 +60,6 @@ clean-math:
 clean::         clean-math
 
 distclean-math: clean-math
-		@rm -f $(MATHDEP) $(MATHDS) $(MATHDH)
+		@rm -f $(MATHDEP) $(MATHDS) $(MATHDH) $(MATHLIB) $(MATHMAP)
 
 distclean::     distclean-math

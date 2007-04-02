@@ -30,10 +30,12 @@ G4ROOTO      := $(G4ROOTS:.cxx=.o)
 G4ROOTDEP    := $(G4ROOTO:.o=.d) $(G4ROOTDO:.o=.d)
 
 G4ROOTLIB    := $(LPATH)/libG4root.$(SOEXT)
+G4ROOTMAP    := $(G4ROOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(G4ROOTH))
 ALLLIBS     += $(G4ROOTLIB)
+ALLMAPS     += $(G4ROOTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(G4ROOTDEP)
@@ -52,13 +54,11 @@ $(G4ROOTDS1):   $(G4ROOTH1) $(G4ROOTL1) $(ROOTCINTTMPEXE)
 		$(ROOTCINTTMP) -f $@ -c $(CXXFLAGS) -I$(G4ROOTINCDIR) \
 		   $(G4ROOTH2) $(G4ROOTL1)
 
-all-g4root:     $(G4ROOTLIB)
+$(G4ROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(G4ROOTL)
+		$(RLIBMAP) -o $(G4ROOTMAP) -l $(G4ROOTLIB) \
+		   -d $(G4ROOTLIBDEPM) -c $(G4ROOTL)
 
-map-g4root:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(G4ROOTLIB) \
-		   -d $(G4ROOTLIBDEP) -c $(G4ROOTL)
-
-map::           map-g4root
+all-g4root:     $(G4ROOTLIB) $(G4ROOTMAP)
 
 clean-g4root:
 		@rm -f $(G4ROOTO) $(G4ROOTDO)
@@ -66,7 +66,7 @@ clean-g4root:
 clean::         clean-g4root
 
 distclean-g4root: clean-g4root
-		@rm -f $(G4ROOTDEP) $(G4ROOTDS) $(G4ROOTDH) $(G4ROOTLIB)
+		@rm -f $(G4ROOTDEP) $(G4ROOTDS) $(G4ROOTDH) $(G4ROOTLIB) $(G4ROOTMAP)
 
 distclean::     distclean-g4root
 

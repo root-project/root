@@ -24,10 +24,12 @@ PROOFPLAYERO  := $(PROOFPLAYERS:.cxx=.o)
 PROOFPLAYERDEP := $(PROOFPLAYERO:.o=.d) $(PROOFPLAYERDO:.o=.d)
 
 PROOFPLAYERLIB := $(LPATH)/libProofPlayer.$(SOEXT)
+PROOFPLAYERMAP := $(PROOFPLAYERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFPLAYERH))
 ALLLIBS       += $(PROOFPLAYERLIB)
+ALLMAPS       += $(PROOFPLAYERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PROOFPLAYERDEP)
@@ -47,13 +49,11 @@ $(PROOFPLAYERDS): $(PROOFPLAYERH) $(PROOFPLAYERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFPLAYERH) $(PROOFPLAYERL)
 
-all-proofplayer: $(PROOFPLAYERLIB)
+$(PROOFPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFPLAYERL)
+		$(RLIBMAP) -o $(PROOFPLAYERMAP) -l $(PROOFPLAYERLIB) \
+		   -d $(PROOFPLAYERLIBDEPM) -c $(PROOFPLAYERL)
 
-map-proofplayer: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFPLAYERLIB) \
-		   -d $(PROOFPLAYERLIBDEP) -c $(PROOFPLAYERL)
-
-map::           map-proofplayer
+all-proofplayer: $(PROOFPLAYERLIB) $(PROOFPLAYERMAP)
 
 clean-proofplayer:
 		@rm -f $(PROOFPLAYERO) $(PROOFPLAYERDO)
@@ -62,7 +62,7 @@ clean::         clean-proofplayer
 
 distclean-proofplayer: clean-proofplayer
 		@rm -f $(PROOFPLAYERDEP) $(PROOFPLAYERDS) $(PROOFPLAYERDH) \
-		   $(PROOFPLAYERLIB)
+		   $(PROOFPLAYERLIB) $(PROOFPLAYERMAP)
 
 distclean::     distclean-proofplayer
 

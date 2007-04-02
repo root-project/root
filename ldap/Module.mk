@@ -24,10 +24,12 @@ LDAPO        := $(LDAPS:.cxx=.o)
 LDAPDEP      := $(LDAPO:.o=.d) $(LDAPDO:.o=.d)
 
 LDAPLIB      := $(LPATH)/libRLDAP.$(SOEXT)
+LDAPMAP      := $(LDAPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(LDAPH))
 ALLLIBS     += $(LDAPLIB)
+ALLMAPS     += $(LDAPMAP)
 
 # include all dependency files
 INCLUDEFILES += $(LDAPDEP)
@@ -45,13 +47,11 @@ $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(LDAPH) $(LDAPL)
 
-all-ldap:       $(LDAPLIB)
+$(LDAPMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(LDAPL)
+		$(RLIBMAP) -o $(LDAPMAP) -l $(LDAPLIB) \
+		   -d $(LDAPLIBDEPM) -c $(LDAPL)
 
-map-ldap:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(LDAPLIB) \
-		   -d $(LDAPLIBDEP) -c $(LDAPL)
-
-map::           map-ldap
+all-ldap:       $(LDAPLIB) $(LDAPMAP)
 
 clean-ldap:
 		@rm -f $(LDAPO) $(LDAPDO)
@@ -59,7 +59,7 @@ clean-ldap:
 clean::         clean-ldap
 
 distclean-ldap: clean-ldap
-		@rm -f $(LDAPDEP) $(LDAPDS) $(LDAPDH) $(LDAPLIB)
+		@rm -f $(LDAPDEP) $(LDAPDS) $(LDAPDH) $(LDAPLIB) $(LDAPMAP)
 
 distclean::     distclean-ldap
 

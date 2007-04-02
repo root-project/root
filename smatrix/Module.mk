@@ -22,10 +22,10 @@ SMATRIXDO32 := $(SMATRIXDS32:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
 
 SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h \
-		$(MODDIRI)/Math/SVector.h 
+		$(MODDIRI)/Math/SVector.h
 #		$(MODDIRI)/Math/SMatrixDfwd.h \
 #		$(MODDIRI)/Math/SMatrixFfwd.h \
-#		$(MODDIRI)/Math/SMatrixD32fwd.h 
+#		$(MODDIRI)/Math/SMatrixD32fwd.h
 
 
 
@@ -38,11 +38,13 @@ SMATRIXO    := $(SMATRIXS:.cxx=.o)
 SMATRIXDEP  := $(SMATRIXO:.o=.d)  $(SMATRIXDO:.o=.d)
 
 SMATRIXLIB  := $(LPATH)/libSmatrix.$(SOEXT)
+SMATRIXMAP  := $(SMATRIXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(SMATRIXH1))
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.icc,include/Math/%.icc,$(SMATRIXH2))
 ALLLIBS      += $(SMATRIXLIB)
+ALLMAPS      += $(SMATRIXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SMATRIXDEP)
@@ -77,6 +79,9 @@ $(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
 		@echo "for files $(SMATRIXDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
 
+$(SMATRIXMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(SMATRIXL) $(SMATRIXLINC)
+		$(RLIBMAP) -o $(SMATRIXMAP) -l $(SMATRIXLIB) \
+		   -d $(SMATRIXLIBDEPM) -c $(SMATRIXL) $(SMATRIXLINC)
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
@@ -85,13 +90,7 @@ else
 $(SMATRIXDO): CXXFLAGS += -I$(SMATRIXDIRI)
 endif
 
-all-smatrix:   $(SMATRIXLIB)
-
-map-smatrix:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SMATRIXLIB) \
-		   -d $(SMATRIXLIBDEP) -c $(SMATRIXL) $(SMATRIXLINC)
-
-map::           map-smatrix
+all-smatrix:   $(SMATRIXLIB) $(SMATRIXMAP)
 
 clean-smatrix:
 		@rm -f $(SMATRIXO) $(SMATRIXDO)
@@ -99,7 +98,7 @@ clean-smatrix:
 clean::         clean-smatrix
 
 distclean-smatrix: clean-smatrix
-		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDH) $(SMATRIXLIB)
+		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDH) $(SMATRIXLIB) $(SMATRIXMAP)
 		@rm -rf include/Math
 		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean
 

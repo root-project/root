@@ -24,10 +24,12 @@ TABLEO       := $(TABLES:.cxx=.o)
 TABLEDEP     := $(TABLEO:.o=.d) $(TABLEDO:.o=.d)
 
 TABLELIB     := $(LPATH)/libTable.$(SOEXT)
+TABLEMAP     := $(TABLELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TABLEH))
 ALLLIBS     += $(TABLELIB)
+ALLMAPS     += $(TABLEMAP)
 
 # include all dependency files
 INCLUDEFILES += $(TABLEDEP)
@@ -45,13 +47,11 @@ $(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TABLEH) $(TABLEL)
 
-all-table:      $(TABLELIB)
+$(TABLEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(TABLEL)
+		$(RLIBMAP) -o $(TABLEMAP) -l $(TABLELIB) \
+		   -d $(TABLELIBDEPM) -c $(TABLEL)
 
-map-table:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(TABLELIB) \
-		   -d $(TABLELIBDEP) -c $(TABLEL)
-
-map::           map-table
+all-table:      $(TABLELIB) $(TABLEMAP)
 
 clean-table:
 		@rm -f $(TABLEO) $(TABLEDO)
@@ -59,6 +59,6 @@ clean-table:
 clean::         clean-table
 
 distclean-table: clean-table
-		@rm -f $(TABLEDEP) $(TABLEDS) $(TABLEDH) $(TABLELIB)
+		@rm -f $(TABLEDEP) $(TABLEDS) $(TABLEDH) $(TABLELIB) $(TABLEMAP)
 
 distclean::     distclean-table

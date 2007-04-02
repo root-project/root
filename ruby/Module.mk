@@ -24,10 +24,12 @@ RUBYROOTO      := $(RUBYROOTS:.cxx=.o)
 RUBYROOTDEP    := $(RUBYROOTO:.o=.d) $(RUBYROOTDO:.o=.d)
 
 RUBYROOTLIB    := $(LPATH)/libRuby.$(SOEXT)
+RUBYROOTMAP    := $(RUBYROOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS        += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RUBYROOTH))
 ALLLIBS        += $(RUBYROOTLIB)
+ALLMAPS        += $(RUBYROOTMAP)
 
 # include all dependency files
 INCLUDEFILES   += $(RUBYROOTDEP)
@@ -46,13 +48,11 @@ $(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RUBYROOTH) $(RUBYROOTL)
 
-all-ruby:       $(RUBYROOTLIB)
+$(RUBYROOTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(RUBYROOTL)
+		$(RLIBMAP) -o $(RUBYROOTMAP) -l $(RUBYROOTLIB) \
+		   -d $(RUBYROOTLIBDEPM) -c $(RUBYROOTL)
 
-map-ruby:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(RUBYROOTLIB) \
-		   -d $(RUBYROOTLIBDEP) -c $(RUBYROOTL)
-
-map::           map-ruby
+all-ruby:       $(RUBYROOTLIB) $(RUBYROOTMAP)
 
 clean-ruby:
 		@rm -f $(RUBYROOTO) $(RUBYROOTDO)
@@ -60,7 +60,8 @@ clean-ruby:
 clean::         clean-ruby
 
 distclean-ruby: clean-ruby
-		@rm -f $(RUBYROOTDEP) $(RUBYROOTDS) $(RUBYROOTDH) $(RUBYROOTLIB)
+		@rm -f $(RUBYROOTDEP) $(RUBYROOTDS) $(RUBYROOTDH) \
+		   $(RUBYROOTLIB) $(RUBYROOTMAP)
 
 distclean::     distclean-ruby
 

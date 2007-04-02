@@ -24,10 +24,12 @@ XMLO         := $(XMLS:.cxx=.o)
 XMLDEP       := $(XMLO:.o=.d) $(XMLDO:.o=.d)
 
 XMLLIB       := $(LPATH)/libXMLIO.$(SOEXT)
+XMLMAP       := $(XMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLH))
 ALLLIBS     += $(XMLLIB)
+ALLMAPS     += $(XMLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(XMLDEP)
@@ -45,12 +47,11 @@ $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLH) $(XMLL)
 
-all-xml:        $(XMLLIB)
+$(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
+		$(RLIBMAP) -o $(XMLMAP) -l $(XMLLIB) \
+		   -d $(XMLLIBDEPM) -c $(XMLL)
 
-map-xml:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(XMLLIB) -d $(XMLLIBDEP) -c $(XMLL)
-
-map::           map-xml
+all-xml:        $(XMLLIB) $(XMLMAP)
 
 clean-xml:
 		@rm -f $(XMLO) $(XMLDO)
@@ -58,7 +59,7 @@ clean-xml:
 clean::         clean-xml
 
 distclean-xml:  clean-xml
-		@rm -f $(XMLDEP) $(XMLDS) $(XMLDH) $(XMLLIB)
+		@rm -f $(XMLDEP) $(XMLDS) $(XMLDH) $(XMLLIB) $(XMLMAP)
 
 distclean::     distclean-xml
 

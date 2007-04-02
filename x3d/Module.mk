@@ -27,10 +27,12 @@ X3DO         := $(X3DS1:.cxx=.o) $(X3DS2:.c=.o)
 X3DDEP       := $(X3DO:.o=.d) $(X3DDO:.o=.d)
 
 X3DLIB       := $(LPATH)/libX3d.$(SOEXT)
+X3DMAP       := $(X3DLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X3DH))
 ALLLIBS     += $(X3DLIB)
+ALLMAPS     += $(X3DMAP)
 
 # include all dependency files
 INCLUDEFILES += $(X3DDEP)
@@ -48,13 +50,11 @@ $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
 
-all-x3d:        $(X3DLIB)
+$(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
+		$(RLIBMAP) -o $(X3DMAP) -l $(X3DLIB) \
+		   -d $(X3DLIBDEPM) -c $(X3DL)
 
-map-x3d:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(X3DLIB) \
-		   -d $(X3DLIBDEP) -c $(X3DL)
-
-map::           map-x3d
+all-x3d:        $(X3DLIB) $(X3DMAP)
 
 clean-x3d:
 		@rm -f $(X3DO) $(X3DDO)
@@ -62,6 +62,6 @@ clean-x3d:
 clean::         clean-x3d
 
 distclean-x3d:  clean-x3d
-		@rm -f $(X3DDEP) $(X3DDS) $(X3DDH) $(X3DLIB)
+		@rm -f $(X3DDEP) $(X3DDS) $(X3DDH) $(X3DLIB) $(X3DMAP)
 
 distclean::     distclean-x3d

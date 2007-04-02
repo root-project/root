@@ -24,10 +24,12 @@ CLARENSO     := $(CLARENSS:.cxx=.o)
 CLARENSDEP   := $(CLARENSO:.o=.d) $(CLARENSDO:.o=.d)
 
 CLARENSLIB   := $(LPATH)/libClarens.$(SOEXT)
+CLARENSMAP   := $(CLARENSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CLARENSH))
 ALLLIBS     += $(CLARENSLIB)
+ALLMAPS     += $(CLARENSMAP)
 
 # include all dependency files
 INCLUDEFILES += $(CLARENSDEP)
@@ -46,13 +48,11 @@ $(CLARENSDS):   $(CLARENSH) $(CLARENSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CLARENSH) $(CLARENSL)
 
-all-clarens:    $(CLARENSLIB)
+$(CLARENSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(CLARENSL)
+		$(RLIBMAP) -o $(CLARENSMAP) -l $(CLARENSLIB) \
+		   -d $(CLARENSLIBDEPM) -c $(CLARENSL)
 
-map-clarens:    $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(CLARENSLIB) \
-		   -d $(CLARENSLIBDEP) -c $(CLARENSL)
-
-map::           map-clarens
+all-clarens:    $(CLARENSLIB) $(CLARENSMAP)
 
 clean-clarens:
 		@rm -f $(CLARENSO) $(CLARENSDO)
@@ -60,7 +60,7 @@ clean-clarens:
 clean::         clean-clarens
 
 distclean-clarens: clean-clarens
-		@rm -f $(CLARENSDEP) $(CLARENSDS) $(CLARENSDH) $(CLARENSLIB)
+		@rm -f $(CLARENSDEP) $(CLARENSDS) $(CLARENSDH) $(CLARENSLIB) $(CLARENSMAP)
 
 distclean::     distclean-clarens
 

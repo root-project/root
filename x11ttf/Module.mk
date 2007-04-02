@@ -24,10 +24,12 @@ X11TTFO      := $(X11TTFS:.cxx=.o)
 X11TTFDEP    := $(X11TTFO:.o=.d) $(X11TTFDO:.o=.d)
 
 X11TTFLIB    := $(LPATH)/libGX11TTF.$(SOEXT)
+X11TTFMAP    := $(X11TTFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11TTFH))
 ALLLIBS     += $(X11TTFLIB)
+ALLMAPS     += $(X11TTFMAP)
 
 #ifeq ($(XFTLIB),yes)
 XLIBS       += $(X11LIBDIR) -lXft
@@ -51,13 +53,11 @@ $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
-all-x11ttf:     $(X11TTFLIB)
+$(X11TTFMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(X11TTFL)
+		$(RLIBMAP) -o $(X11TTFMAP) -l $(X11TTFLIB) \
+		   -d $(X11TTFLIBDEPM) -c $(X11TTFL)
 
-map-x11ttf:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(X11TTFLIB) \
-		   -d $(X11TTFLIBDEP) -c $(X11TTFL)
-
-map::           map-x11ttf
+all-x11ttf:     $(X11TTFLIB) $(X11TTFMAP)
 
 clean-x11ttf:
 		@rm -f $(X11TTFO) $(X11TTFDO)
@@ -65,7 +65,7 @@ clean-x11ttf:
 clean::         clean-x11ttf
 
 distclean-x11ttf: clean-x11ttf
-		@rm -f $(X11TTFDEP) $(X11TTFDS) $(X11TTFDH) $(X11TTFLIB)
+		@rm -f $(X11TTFDEP) $(X11TTFDS) $(X11TTFDH) $(X11TTFLIB) $(X11TTFMAP)
 
 distclean::     distclean-x11ttf
 

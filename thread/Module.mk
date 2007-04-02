@@ -49,10 +49,12 @@ THREADO      := $(THREADS:.cxx=.o)
 THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 
 THREADLIB    := $(LPATH)/libThread.$(SOEXT)
+THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
 ALLLIBS      += $(THREADLIB)
+ALLMAPS      += $(THREADMAP)
 
 CXXFLAGS     += $(OSTHREADFLAG)
 CFLAGS       += $(OSTHREADFLAG)
@@ -79,13 +81,11 @@ $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
 
-all-thread:     $(THREADLIB)
+$(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
+		$(RLIBMAP) -o $(THREADMAP) -l $(THREADLIB) \
+		   -d $(THREADLIBDEPM) -c $(THREADL)
 
-map-thread:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(THREADLIB) \
-		   -d $(THREADLIBDEP) -c $(THREADL)
-
-map::           map-thread
+all-thread:     $(THREADLIB) $(THREADMAP)
 
 clean-thread:
 		@rm -f $(THREADO) $(THREADDO)
@@ -93,7 +93,7 @@ clean-thread:
 clean::         clean-thread
 
 distclean-thread: clean-thread
-		@rm -f $(THREADDEP) $(THREADDS) $(THREADDH) $(THREADLIB)
+		@rm -f $(THREADDEP) $(THREADDS) $(THREADDH) $(THREADLIB) $(THREADMAP)
 
 distclean::     distclean-thread
 

@@ -1,4 +1,4 @@
-# Module.mk for reflex module 
+# Module.mk for reflex module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
@@ -22,10 +22,12 @@ REFLEXO      := $(REFLEXS:.cxx=.o)
 REFLEXDEP    := $(REFLEXO:.o=.d)
 
 REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
+REFLEXMAP    := $(REFLEXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Reflex/%.h,include/Reflex/%.h,$(REFLEXH))
 ALLLIBS      += $(REFLEXLIB)
+#ALLMAPS      += $(REFLEXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(REFLEXDEP)
@@ -82,7 +84,7 @@ ifeq ($(PLATFORM),solaris)
 RFLX_REFLEXLL   += -ldemangle
 endif
 
-RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
+RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py
 
 RFLX_TESTD      = $(REFLEXDIR)/test
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
@@ -160,13 +162,11 @@ $(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIB
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
 
-all-reflex:     $(REFLEXLIB)
+$(REFLEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
+		$(RLIBMAP) -o $(REFLEXMAP) -l $(REFLEXLIB) \
+		   -d $(REFLEXLIBDEPM) -c $(REFLEXL)
 
-map-reflex:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(REFLEXLIB) \
-		-d $(REFLEXLIBDEP) -c $(REFLEXL)
-
-map::           map-reflex
+all-reflex:     $(REFLEXLIB) $(REFLEXMAP)
 
 clean-genreflex:
 		@rm -f bin/genreflex*
@@ -182,7 +182,7 @@ clean-reflex: clean-genreflex clean-check-reflex
 clean::         clean-reflex
 
 distclean-reflex: clean-reflex
-		@rm -f $(REFLEXDEP) $(REFLEXLIB)
+		@rm -f $(REFLEXDEP) $(REFLEXLIB) $(REFLEXMAP)
 		@rm -rf include/Reflex lib/python
 
 distclean::     distclean-reflex
@@ -221,6 +221,6 @@ $(RFLX_TESTLIBS2) : $(RFLX_TESTLIBD2)/Class2Dict.h $(RFLX_TESTLIBD2)/selection.x
 $(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cxx
 		$(CXX) $(OPT) $(CXXFLAGS) -I$(RFLX_CPPUNITI) -Ireflex -c $< $(CXXOUT)$@
 
-$(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o 
+$(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o
 		$(LD) $(LDFLAGS) -o $@ $< $(RFLX_CPPUNITLL) $(RFLX_REFLEXLL)
 

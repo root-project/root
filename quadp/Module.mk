@@ -24,10 +24,12 @@ QUADPO       := $(QUADPS:.cxx=.o)
 QUADPDEP     := $(QUADPO:.o=.d) $(QUADPDO:.o=.d)
 
 QUADPLIB     := $(LPATH)/libQuadp.$(SOEXT)
+QUADPMAP     := $(QUADPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QUADPH))
 ALLLIBS     += $(QUADPLIB)
+ALLMAPS     += $(QUADPMAP)
 
 # include all dependency files
 INCLUDEFILES += $(QUADPDEP)
@@ -45,13 +47,11 @@ $(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QUADPH) $(QUADPL)
 
-all-quadp:      $(QUADPLIB)
+$(QUADPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QUADPL)
+		$(RLIBMAP) -o $(QUADPMAP) -l $(QUADPLIB) \
+		   -d $(QUADPLIBDEPM) -c $(QUADPL)
 
-map-quadp:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(QUADPLIB) \
-		   -d $(QUADPLIBDEP) -c $(QUADPL)
-
-map::           map-quadp
+all-quadp:      $(QUADPLIB) $(QUADPMAP)
 
 clean-quadp:
 		@rm -f $(QUADPO) $(QUADPDO)
@@ -59,6 +59,6 @@ clean-quadp:
 clean::         clean-quadp
 
 distclean-quadp: clean-quadp
-		@rm -f $(QUADPDEP) $(QUADPDS) $(QUADPDH) $(QUADPLIB)
+		@rm -f $(QUADPDEP) $(QUADPDS) $(QUADPDH) $(QUADPLIB) $(QUADPMAP)
 
 distclean::     distclean-quadp

@@ -59,7 +59,7 @@ ROOFITH3     := RooNameSet.h RooNLLVar.h RooNonCPEigenDecay.h RooNormListManager
                 RooSharedProperties.h RooSharedPropertiesList.h RooSimGenContext.h RooSimPdfBuilder.h RooSimultaneous.h \
                 RooStreamParser.h RooStringVar.h RooSuperCategory.h RooTable.h RooThreshEntry.h RooThresholdCategory.h \
                 RooTObjWrap.h RooTrace.h RooTreeData.h RooTruthModel.h RooUnblindCPAsymVar.h RooUnblindOffset.h RooUnblindPrecision.h \
-                RooUnblindUniform.h RooUniformBinning.h RooVoigtian.h 
+                RooUnblindUniform.h RooUniformBinning.h RooVoigtian.h
 
 ROOFITH1     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH1))
 ROOFITH2     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH2))
@@ -69,12 +69,15 @@ ROOFITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ROOFITO      := $(ROOFITS:.cxx=.o)
 
 ROOFITDEP    := $(ROOFITO:.o=.d) $(ROOFITDO:.o=.d)
+
 ROOFITLIB    := $(LPATH)/libRooFit.$(SOEXT)
+ROOFITMAP    := $(ROOFITLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ROOFITINCH   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOFITH))
 ALLHDRS      += $(ROOFITINCH)
 ALLLIBS      += $(ROOFITLIB)
+ALLMAPS      += $(ROOFITMAP)
 
 # include all dependency files
 ifeq ($(findstring $(MAKECMDGOALS),clean-roofit distclean-roofit),)
@@ -124,13 +127,11 @@ $(ROOFITDS3):   $(ROOFITETAG) $(ROOFITH3) $(ROOFITL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH3) $(ROOFITL3)
 
-all-roofit:     $(ROOFITLIB)
+$(ROOFITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITL1) $(ROOFITL2) $(ROOFITL3)
+		$(RLIBMAP) -o $(ROOFITMAP) -l $(ROOFITLIB) \
+		   -d $(ROOFITLIBDEPM) -c $(ROOFITL1) $(ROOFITL2) $(ROOFITL3)
 
-map-roofit:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ROOFITLIB) \
-		   -d $(ROOFITLIBDEP) -c $(ROOFITL1) $(ROOFITL2) $(ROOFITL3)
-
-map::           map-roofit
+all-roofit:     $(ROOFITLIB) $(ROOFITMAP)
 
 clean-roofit:
 		@rm -f $(ROOFITO) $(ROOFITDO)
@@ -138,7 +139,7 @@ clean-roofit:
 clean::         clean-roofit
 
 distclean-roofit: clean-roofit
-		@rm -rf $(ROOFITETAG) $(ROOFITDEP) $(ROOFITLIB) \
+		@rm -rf $(ROOFITETAG) $(ROOFITDEP) $(ROOFITLIB) $(ROOFITMAP) \
 		   $(ROOFITDIRS) $(ROOFITDIRI)
 
 distclean::     distclean-roofit

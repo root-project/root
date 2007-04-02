@@ -24,12 +24,14 @@ NETO         := $(NETS:.cxx=.o)
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
 NETLIB       := $(LPATH)/libNet.$(SOEXT)
+NETMAP       := $(NETLIB:.$(SOEXT)=.rootmap)
 
 EXTRANETFLAGS =
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
 ALLLIBS      += $(NETLIB)
+ALLMAPS      += $(NETMAP)
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)
@@ -47,13 +49,10 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
-all-net:        $(NETLIB)
+$(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
+		$(RLIBMAP) -o $(NETMAP) -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)
 
-map-net:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(NETLIB) \
-		   -d $(NETLIBDEP) -c $(NETL)
-
-map::           map-net
+all-net:        $(NETLIB) $(NETMAP)
 
 clean-net:
 		@rm -f $(NETO) $(NETDO)
@@ -61,6 +60,6 @@ clean-net:
 clean::         clean-net
 
 distclean-net:  clean-net
-		@rm -f $(NETDEP) $(NETDS) $(NETDH) $(NETLIB)
+		@rm -f $(NETDEP) $(NETDS) $(NETDH) $(NETLIB) $(NETMAP)
 
 distclean::     distclean-net

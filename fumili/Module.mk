@@ -24,10 +24,12 @@ FUMILIO      := $(FUMILIS:.cxx=.o)
 FUMILIDEP    := $(FUMILIO:.o=.d) $(FUMILIDO:.o=.d)
 
 FUMILILIB    := $(LPATH)/libFumili.$(SOEXT)
+FUMILIMAP    := $(FUMILILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FUMILIH))
 ALLLIBS     += $(FUMILILIB)
+ALLMAPS     += $(FUMILIMAP)
 
 # include all dependency files
 INCLUDEFILES += $(FUMILIDEP)
@@ -45,13 +47,11 @@ $(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FUMILIH) $(FUMILIL)
 
-all-fumili:     $(FUMILILIB)
+$(FUMILIMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FUMILIL)
+		$(RLIBMAP) -o $(FUMILIMAP) -l $(FUMILILIB) \
+		   -d $(FUMILILIBDEPM) -c $(FUMILIL)
 
-map-fumili:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(FUMILILIB) \
-		   -d $(FUMILILIBDEP) -c $(FUMILIL)
-
-map::           map-fumili
+all-fumili:     $(FUMILILIB) $(FUMILIMAP)
 
 clean-fumili:
 		@rm -f $(FUMILIO) $(FUMILIDO)
@@ -59,6 +59,6 @@ clean-fumili:
 clean::         clean-fumili
 
 distclean-fumili: clean-fumili
-		@rm -f $(FUMILIDEP) $(FUMILIDS) $(FUMILIDH) $(FUMILILIB)
+		@rm -f $(FUMILIDEP) $(FUMILIDS) $(FUMILIDH) $(FUMILILIB) $(FUMILIMAP)
 
 distclean::     distclean-fumili

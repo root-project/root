@@ -24,10 +24,12 @@ FFTWO        := $(FFTWS:.cxx=.o)
 FFTWDEP      := $(FFTWO:.o=.d) $(FFTWDO:.o=.d)
 
 FFTWLIB      := $(LPATH)/libFFTW.$(SOEXT)
+FFTWMAP      := $(FFTWLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FFTWH))
 ALLLIBS      += $(FFTWLIB)
+ALLMAPS      += $(FFTWLIB)
 
 # include all dependency files
 INCLUDEFILES += $(FFTWDEP)
@@ -45,13 +47,11 @@ $(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FFTWH) $(FFTWL)
 
-all-fft:        $(FFTWLIB)
+$(FFTWMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FFTWL)
+		$(RLIBMAP) -o $(FFTWMAP) -l $(FFTWLIB) \
+		   -d $(FFTWLIBDEPM) -c $(FFTWL)
 
-map-fft:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(FFTWLIB) \
-		   -d $(FFTWLIBDEP) -c $(FFTWL)
-
-map::           map-fft
+all-fft:        $(FFTWLIB) $(FFTWMAP)
 
 clean-fft:
 		@rm -f $(FFTWO) $(FFTWDO)
@@ -59,7 +59,7 @@ clean-fft:
 clean::         clean-fft
 
 distclean-fft:  clean-fft
-		@rm -f $(FFTWDEP) $(FFTWDS) $(FFTWDH) $(FFTWLIB)
+		@rm -f $(FFTWDEP) $(FFTWDS) $(FFTWDH) $(FFTWLIB) $(FFTWMAP)
 
 distclean::     distclean-fft
 

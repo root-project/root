@@ -24,10 +24,12 @@ GPADO        := $(GPADS:.cxx=.o)
 GPADDEP      := $(GPADO:.o=.d) $(GPADDO:.o=.d)
 
 GPADLIB      := $(LPATH)/libGpad.$(SOEXT)
+GPADMAP      := $(GPADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GPADH))
 ALLLIBS     += $(GPADLIB)
+ALLMAPS     += $(GPADMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GPADDEP)
@@ -45,13 +47,11 @@ $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
 
-all-gpad:       $(GPADLIB)
+$(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
+		$(RLIBMAP) -o $(GPADMAP) -l $(GPADLIB) \
+		   -d $(GPADLIBDEPM) -c $(GPADL)
 
-map-gpad:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GPADLIB) \
-		   -d $(GPADLIBDEP) -c $(GPADL)
-
-map::           map-gpad
+all-gpad:       $(GPADLIB) $(GPADMAP)
 
 clean-gpad:
 		@rm -f $(GPADO) $(GPADDO)
@@ -59,6 +59,6 @@ clean-gpad:
 clean::         clean-gpad
 
 distclean-gpad: clean-gpad
-		@rm -f $(GPADDEP) $(GPADDS) $(GPADDH) $(GPADLIB)
+		@rm -f $(GPADDEP) $(GPADDS) $(GPADDH) $(GPADLIB) $(GPADMAP)
 
 distclean::     distclean-gpad

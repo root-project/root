@@ -24,10 +24,12 @@ TREEPLAYERO  := $(TREEPLAYERS:.cxx=.o)
 TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
 TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
+TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH))
 ALLLIBS       += $(TREEPLAYERLIB)
+ALLMAPS       += $(TREEPLAYERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(TREEPLAYERDEP)
@@ -47,13 +49,11 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEPLAYERH) $(TREEPLAYERL)
 
-all-treeplayer: $(TREEPLAYERLIB)
+$(TREEPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(TREEPLAYERL)
+		$(RLIBMAP) -o $(TREEPLAYERMAP) -l $(TREEPLAYERLIB) \
+		   -d $(TREEPLAYERLIBDEPM) -c $(TREEPLAYERL)
 
-map-treeplayer: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(TREEPLAYERLIB) \
-		   -d $(TREEPLAYERLIBDEP) -c $(TREEPLAYERL)
-
-map::           map-treeplayer
+all-treeplayer: $(TREEPLAYERLIB) $(TREEPLAYERMAP)
 
 clean-treeplayer:
 		@rm -f $(TREEPLAYERO) $(TREEPLAYERDO)
@@ -62,7 +62,7 @@ clean::         clean-treeplayer
 
 distclean-treeplayer: clean-treeplayer
 		@rm -f $(TREEPLAYERDEP) $(TREEPLAYERDS) $(TREEPLAYERDH) \
-		   $(TREEPLAYERLIB)
+		   $(TREEPLAYERLIB) $(TREEPLAYERMAP)
 
 distclean::     distclean-treeplayer
 

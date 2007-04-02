@@ -26,10 +26,12 @@ KRB5AUTHO    := $(KRB5AUTHS:.cxx=.o)
 KRB5AUTHDEP  := $(KRB5AUTHO:.o=.d)
 
 KRB5AUTHLIB  := $(LPATH)/libKrb5Auth.$(SOEXT)
+KRB5AUTHMAP  := $(KRB5AUTHLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(KRB5AUTHH))
 ALLLIBS     += $(KRB5AUTHLIB)
+ALLMAPS     += $(KRB5AUTHMAP)
 
 # include all dependency files
 INCLUDEFILES += $(KRB5AUTHDEP)
@@ -50,13 +52,11 @@ $(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)
 
-all-krb5auth:   $(KRB5AUTHLIB)
+$(KRB5AUTHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(KRB5AUTHL)
+		$(RLIBMAP) -o $(KRB5AUTHMAP) -l $(KRB5AUTHLIB) \
+		   -d $(KRB5AUTHLIBDEPM) -c $(KRB5AUTHL)
 
-map-krb5auth:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(KRB5AUTHLIB) \
-		   -d $(KRB5AUTHLIBDEP) -c $(KRB5AUTHL)
-
-map::           map-krb5auth
+all-krb5auth:   $(KRB5AUTHLIB) $(KRB5AUTHMAP)
 
 clean-krb5auth:
 		@rm -f $(KRB5AUTHO) $(KRB5AUTHDO)
@@ -64,7 +64,8 @@ clean-krb5auth:
 clean::         clean-krb5auth
 
 distclean-krb5auth: clean-krb5auth
-		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHDS) $(KRB5AUTHDH) $(KRB5AUTHLIB)
+		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHDS) $(KRB5AUTHDH) \
+		   $(KRB5AUTHLIB) $(KRB5AUTHMAP)
 
 distclean::     distclean-krb5auth
 

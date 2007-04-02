@@ -25,10 +25,12 @@ GEOMPAINTERO  := $(GEOMPAINTERS:.cxx=.o)
 GEOMPAINTERDEP := $(GEOMPAINTERO:.o=.d) $(GEOMPAINTERDO:.o=.d)
 
 GEOMPAINTERLIB := $(LPATH)/libGeomPainter.$(SOEXT)
+GEOMPAINTERMAP := $(GEOMPAINTERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMPAINTERH))
 ALLLIBS       += $(GEOMPAINTERLIB)
+ALLMAPS       += $(GEOMPAINTERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GEOMPAINTERDEP)
@@ -48,13 +50,11 @@ $(GEOMPAINTERDS): $(GEOMPAINTERH1) $(GEOMPAINTERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMPAINTERH1) $(GEOMPAINTERL)
 
-all-geompainter: $(GEOMPAINTERLIB)
+$(GEOMPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMPAINTERL)
+		$(RLIBMAP) -o $(GEOMPAINTERMAP) -l $(GEOMPAINTERLIB) \
+		   -d $(GEOMPAINTERLIBDEPM) -c $(GEOMPAINTERL)
 
-map-geompainter: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMPAINTERLIB) \
-		   -d $(GEOMPAINTERLIBDEP) -c $(GEOMPAINTERL)
-
-map::           map-geompainter
+all-geompainter: $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)
 
 clean-geompainter:
 		@rm -f $(GEOMPAINTERO) $(GEOMPAINTERDO)
@@ -63,6 +63,6 @@ clean::         clean-geompainter
 
 distclean-geompainter: clean-geompainter
 		@rm -f $(GEOMPAINTERDEP) $(GEOMPAINTERDS) $(GEOMPAINTERDH) \
-		   $(GEOMPAINTERLIB)
+		   $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)
 
 distclean::     distclean-geompainter

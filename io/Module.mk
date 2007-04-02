@@ -24,10 +24,12 @@ IOO          := $(IOS:.cxx=.o)
 IODEP        := $(IOO:.o=.d) $(IODO:.o=.d)
 
 IOLIB        := $(LPATH)/libRIO.$(SOEXT)
+IOMAP        := $(IOLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
 ALLLIBS      += $(IOLIB)
+ALLMAPS      += $(IOMAP)
 
 # include all dependency files
 INCLUDEFILES += $(IODEP)
@@ -45,13 +47,10 @@ $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
 
-all-io:         $(IOLIB)
+$(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
+		$(RLIBMAP) -o $(IOMAP) -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)
 
-map-io:         $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(IOLIB) \
-		   -d $(IOLIBDEP) -c $(IOL)
-
-map::           map-io
+all-io:         $(IOLIB) $(IOMAP)
 
 clean-io:
 		@rm -f $(IOO) $(IODO)
@@ -59,6 +58,6 @@ clean-io:
 clean::         clean-io
 
 distclean-io:   clean-io
-		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB)
+		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB) $(IOMAP)
 
 distclean::     distclean-io

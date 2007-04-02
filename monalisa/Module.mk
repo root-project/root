@@ -24,10 +24,12 @@ MONALISAO    := $(MONALISAS:.cxx=.o)
 MONALISADEP  := $(MONALISAO:.o=.d) $(MONALISADO:.o=.d)
 
 MONALISALIB  := $(LPATH)/libMonaLisa.$(SOEXT)
+MONALISAMAP  := $(MONALISALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MONALISAH))
 ALLLIBS      += $(MONALISALIB)
+ALLMAPS      += $(MONALISAMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MONALISADEP)
@@ -46,13 +48,11 @@ $(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MONALISAH) $(MONALISAL)
 
-all-monalisa:   $(MONALISALIB)
+$(MONALISAMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MONALISAL)
+		$(RLIBMAP) -o $(MONALISAMAP) -l $(MONALISALIB) \
+		   -d $(MONALISALIBDEPM) -c $(MONALISAL)
 
-map-monalisa:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MONALISALIB) \
-		   -d $(MONALISALIBDEP) -c $(MONALISAL)
-
-map::           map-monalisa
+all-monalisa:   $(MONALISALIB) $(MONALISAMAP)
 
 clean-monalisa:
 		@rm -f $(MONALISAO) $(MONALISADO)
@@ -60,7 +60,8 @@ clean-monalisa:
 clean::         clean-monalisa
 
 distclean-monalisa: clean-monalisa
-		@rm -f $(MONALISADEP) $(MONALISADS) $(MONALISADH) $(MONALISALIB)
+		@rm -f $(MONALISADEP) $(MONALISADS) $(MONALISADH) \
+		   $(MONALISALIB) $(MONALISAMAP)
 
 distclean::     distclean-monalisa
 

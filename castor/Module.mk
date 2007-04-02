@@ -24,10 +24,12 @@ CASTORO      := $(CASTORS:.cxx=.o)
 CASTORDEP    := $(CASTORO:.o=.d) $(CASTORDO:.o=.d)
 
 CASTORLIB    := $(LPATH)/libRCastor.$(SOEXT)
+CASTORFMAP   := $(CASTORLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CASTORH))
 ALLLIBS     += $(CASTORLIB)
+ALLMAPS     += $(CASTORMAP)
 
 # include all dependency files
 INCLUDEFILES += $(CASTORDEP)
@@ -46,13 +48,11 @@ $(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CASTORH) $(CASTORL)
 
-all-castor:     $(CASTORLIB)
+$(CASTORMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CASTORL)
+		$(RLIBMAP) -o $(CASTORMAP) -l $(CASTORLIB) \
+		   -d $(CASTORLIBDEPM) -c $(CASTORL)
 
-map-castor:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(CASTORLIB) \
-		   -d $(CASTORLIBDEP) -c $(CASTORL)
-
-map::           map-castor
+all-castor:     $(CASTORLIB) $(CASTORMAP)
 
 clean-castor:
 		@rm -f $(CASTORO) $(CASTORDO)
@@ -60,7 +60,7 @@ clean-castor:
 clean::         clean-castor
 
 distclean-castor: clean-castor
-		@rm -f $(CASTORDEP) $(CASTORDS) $(CASTORDH) $(CASTORLIB)
+		@rm -f $(CASTORDEP) $(CASTORDS) $(CASTORDH) $(CASTORLIB) $(CASTORMAP)
 
 distclean::     distclean-castor
 

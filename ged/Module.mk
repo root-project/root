@@ -24,10 +24,12 @@ GEDO      := $(GEDS:.cxx=.o)
 GEDDEP    := $(GEDO:.o=.d) $(GEDDO:.o=.d)
 
 GEDLIB    := $(LPATH)/libGed.$(SOEXT)
+GEDMAP    := $(GEDLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEDH))
 ALLLIBS     += $(GEDLIB)
+ALLMAPS     += $(GEDMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GEDDEP)
@@ -45,13 +47,11 @@ $(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEDH) $(GEDL)
 
-all-ged:        $(GEDLIB)
+$(GEDMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GEDL)
+		$(RLIBMAP) -o $(GEDMAP) -l $(GEDLIB) \
+		   -d $(GEDLIBDEPM) -c $(GEDL)
 
-map-ged:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GEDLIB) \
-		   -d $(GEDLIBDEP) -c $(GEDL)
-
-map::           map-ged
+all-ged:        $(GEDLIB) $(GEDMAP)
 
 clean-ged:
 		@rm -f $(GEDO) $(GEDDO)
@@ -59,6 +59,6 @@ clean-ged:
 clean::         clean-ged
 
 distclean-ged: clean-ged
-		@rm -f $(GEDDEP) $(GEDDS) $(GEDDH) $(GEDLIB)
+		@rm -f $(GEDDEP) $(GEDDS) $(GEDDH) $(GEDLIB) $(GEDMAP)
 
 distclean::     distclean-ged

@@ -24,10 +24,12 @@ SPECTRUMO    := $(SPECTRUMS:.cxx=.o)
 SPECTRUMDEP  := $(SPECTRUMO:.o=.d) $(SPECTRUMDO:.o=.d)
 
 SPECTRUMLIB  := $(LPATH)/libSpectrum.$(SOEXT)
+SPECTRUMMAP  := $(SPECTRUMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMH))
 ALLLIBS      += $(SPECTRUMLIB)
+ALLMAPS      += $(SPECTRUMMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SPECTRUMDEP)
@@ -45,13 +47,11 @@ $(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPECTRUMH) $(SPECTRUML)
 
-all-spectrum:   $(SPECTRUMLIB)
+$(SPECTRUMMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUML)
+		$(RLIBMAP) -o $(SPECTRUMMAP) -l $(SPECTRUMLIB) \
+		   -d $(SPECTRUMLIBDEPM) -c $(SPECTRUML)
 
-map-spectrum:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SPECTRUMLIB) \
-		   -d $(SPECTRUMLIBDEP) -c $(SPECTRUML)
-
-map::           map-spectrum
+all-spectrum:   $(SPECTRUMLIB) $(SPECTRUMMAP)
 
 clean-spectrum:
 		@rm -f $(SPECTRUMO) $(SPECTRUMDO)
@@ -59,6 +59,6 @@ clean-spectrum:
 clean::         clean-spectrum
 
 distclean-spectrum: clean-spectrum
-		@rm -f $(SPECTRUMDEP) $(SPECTRUMDS) $(SPECTRUMDH) $(SPECTRUMLIB)
+		@rm -f $(SPECTRUMDEP) $(SPECTRUMDS) $(SPECTRUMDH) $(SPECTRUMLIB) $(SPECTRUMMAP)
 
 distclean::     distclean-spectrum

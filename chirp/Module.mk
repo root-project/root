@@ -23,10 +23,12 @@ CHIRPO      := $(CHIRPS:.cxx=.o)
 CHIRPDEP    := $(CHIRPO:.o=.d) $(CHIRPDO:.o=.d)
 
 CHIRPLIB    := $(LPATH)/libChirp.$(SOEXT)
+CHIRPMAP    := $(CHIRPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CHIRPH))
 ALLLIBS     += $(CHIRPLIB)
+ALLMAPS     += $(CHIRPMAP)
 
 # include all dependency files
 INCLUDEFILES += $(CHIRPDEP)
@@ -44,13 +46,11 @@ $(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CHIRPH) $(CHIRPL)
 
-all-chirp:      $(CHIRPLIB)
+$(CHIRPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CHIRPL)
+		$(RLIBMAP) -o $(CHIRPMAP) -l $(CHIRPLIB) \
+		   -d $(CHIRPLIBDEPM) -c $(CHIRPL)
 
-map-chirp:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(CHIRPLIB) \
-		   -d $(CHIRPLIBDEP) -c $(CHIRPL)
-
-map::           map-chirp
+all-chirp:      $(CHIRPLIB) $(CHIRPMAP)
 
 clean-chirp:
 		@rm -f $(CHIRPO) $(CHIRPDO)
@@ -58,7 +58,7 @@ clean-chirp:
 clean::         clean-chirp
 
 distclean-chirp: clean-chirp
-		@rm -f $(CHIRPDEP) $(CHIRPDS) $(CHIRPDH) $(CHIRPLIB)
+		@rm -f $(CHIRPDEP) $(CHIRPDS) $(CHIRPDH) $(CHIRPLIB) $(CHIRPMAP)
 
 distclean::     distclean-chirp
 

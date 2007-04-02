@@ -25,10 +25,12 @@ TMVAO        := $(TMVAS:.cxx=.o)
 TMVADEP      := $(TMVAO:.o=.d) $(TMVADO:.o=.d)
 
 TMVALIB      := $(LPATH)/libTMVA.$(SOEXT)
+TMVAMAP      := $(TMVALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/TMVA/%.h,$(TMVAH))
 ALLLIBS      += $(TMVALIB)
+ALLMAPS      += $(TMVAMAP)
 
 # include all dependency files
 INCLUDEFILES += $(TMVADEP)
@@ -49,13 +51,11 @@ $(TMVADS):      $(TMVAH) $(TMVAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TMVAH) $(TMVAL)
 
-all-tmva:       $(TMVALIB)
+$(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
+		$(RLIBMAP) -o $(TMVAMAP) -l $(TMVALIB) \
+		   -d $(TMVALIBDEPM) -c $(TMVAL)
 
-map-tmva:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(TMVALIB) \
-		   -d $(TMVALIBDEP) -c $(TMVAL)
-
-map::           map-tmva
+all-tmva:       $(TMVALIB) $(TMVAMAP)
 
 clean-tmva:
 		@rm -f $(TMVAO) $(TMVADO)
@@ -63,7 +63,7 @@ clean-tmva:
 clean::         clean-tmva
 
 distclean-tmva: clean-tmva
-		@rm -f $(TMVADEP) $(TMVADS) $(TMVADH) $(TMVALIB)
+		@rm -f $(TMVADEP) $(TMVADS) $(TMVADH) $(TMVALIB) $(TMVAMAP)
 		@rm -rf include/TMVA
 
 distclean::     distclean-tmva

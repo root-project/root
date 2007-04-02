@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.20 2007/01/26 07:51:08 brun Exp $
+# $Id: Module.mk,v 1.21 2007/01/29 07:38:36 brun Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -35,7 +35,7 @@ GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h \
                  $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h \
                  $(MODDIRI)/TQtRootSlot.h
 
-GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
+GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH)))
 GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
@@ -43,6 +43,7 @@ GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 GQTCXXFLAGS   := -DQT_DLL  -DQT_NO_DEBUG -DQT_SHARED -DQT_THREAD_SUPPORT -I$(QTDIR)/mkspecs/default -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
+GQTMAP        := $(GQTLIB:.$(SOEXT)=.rootmap)
 
 # Qt project header files
 
@@ -55,6 +56,7 @@ ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GQTH))
 ALLHDRS       += $(patsubst $(MODDIRI)/%.cw,include/%.cw,$(QCUSTOMWIDGETS))
 ALLHDRS       += $(patsubst $(MODDIRI)/%.pri,include/%.pri,$(QMAKERULES))
 ALLLIBS       += $(GQTLIB)
+ALLMAPS       += $(GQTMAP)
 
 # include all dependency files
 INCLUDEFILES  += $(GQTDEP)
@@ -79,21 +81,19 @@ $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GQTH1) $(GQTL)
 
-all-qt:         $(GQTLIB)
+$(GQTMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GQTL)
+		$(RLIBMAP) -o $(GQTMAP) -l $(GQTLIB) \
+		   -d $(GQTLIBDEPM) -c $(GQTL)
 
-map-qt:         $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GQTLIB) \
-		   -d $(GQTLIBDEP) -c $(GQTL)
-
-map::           map-qt
+all-qt:         $(GQTLIB) $(GQTMAP)
 
 clean-qt:
-		@rm  -f $(GQTO) $(GQTDO) $(GQTMOCO) $(GQTMOC) 
+		@rm  -f $(GQTO) $(GQTDO) $(GQTMOCO) $(GQTMOC)
 
 clean::         clean-qt
 
 distclean-qt: clean-qt
-		@rm -f $(GQTDEP) $(GQTDS) $(GQTDH) $(GQTMOC) $(GQTLIB)
+		@rm -f $(GQTDEP) $(GQTDS) $(GQTDH) $(GQTMOC) $(GQTLIB) $(GQTMAP)
 
 distclean::     distclean-qt
 

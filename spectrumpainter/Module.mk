@@ -24,10 +24,12 @@ SPECTRUMPAINTERO  := $(SPECTRUMPAINTERS:.cxx=.o)
 SPECTRUMPAINTERDEP := $(SPECTRUMPAINTERO:.o=.d) $(SPECTRUMPAINTERDO:.o=.d)
 
 SPECTRUMPAINTERLIB := $(LPATH)/libSpectrumPainter.$(SOEXT)
+SPECTRUMPAINTERMAP := $(SPECTRUMPAINTERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPECTRUMPAINTERH))
 ALLLIBS       += $(SPECTRUMPAINTERLIB)
+ALLMAPS       += $(SPECTRUMPAINTERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SPECTRUMPAINTERDEP)
@@ -47,13 +49,11 @@ $(SPECTRUMPAINTERDS): $(SPECTRUMPAINTERH) $(SPECTRUMPAINTERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPECTRUMPAINTERH) $(SPECTRUMPAINTERL)
 
-all-spectrumpainter: $(SPECTRUMPAINTERLIB)
+$(SPECTRUMPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUMPAINTERL)
+		$(RLIBMAP) -o $(SPECTRUMPAINTERMAP) -l $(SPECTRUMPAINTERLIB) \
+		   -d $(SPECTRUMPAINTERLIBDEPM) -c $(SPECTRUMPAINTERL)
 
-map-spectrumpainter: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SPECTRUMPAINTERLIB) \
-		   -d $(SPECTRUMPAINTERLIBDEP) -c $(SPECTRUMPAINTERL)
-
-map::           map-spectrumpainter
+all-spectrumpainter: $(SPECTRUMPAINTERLIB) $(SPECTRUMPAINTERMAP)
 
 clean-spectrumpainter:
 		@rm -f $(SPECTRUMPAINTERO) $(SPECTRUMPAINTERDO)
@@ -62,6 +62,6 @@ clean::         clean-spectrumpainter
 
 distclean-spectrumpainter: clean-spectrumpainter
 		@rm -f $(SPECTRUMPAINTERDEP) $(SPECTRUMPAINTERDS) \
-		   $(SPECTRUMPAINTERDH) $(SPECTRUMPAINTERLIB)
+		   $(SPECTRUMPAINTERDH) $(SPECTRUMPAINTERLIB) $(SPECTRUMPAINTERMAP)
 
 distclean::     distclean-spectrumpainter

@@ -23,10 +23,12 @@ DCACHEO      := $(DCACHES:.cxx=.o)
 DCACHEDEP    := $(DCACHEO:.o=.d) $(DCACHEDO:.o=.d)
 
 DCACHELIB    := $(LPATH)/libDCache.$(SOEXT)
+DCACHEMAP    := $(DCACHELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(DCACHEH))
 ALLLIBS     += $(DCACHELIB)
+ALLMAPS     += $(DCACHEMAP)
 
 # include all dependency files
 INCLUDEFILES += $(DCACHEDEP)
@@ -44,13 +46,11 @@ $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPEXE)
 	@echo "Generating dictionary $@..."
 	$(ROOTCINTTMP) -f $@ -c $(DCACHEH) $(DCACHEL)
 
-all-dcache:     $(DCACHELIB)
+$(DCACHEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(DCACHEL)
+		$(RLIBMAP) -o $(DCACHEMAP) -l $(DCACHELIB) \
+		   -d $(DCACHELIBDEPM) -c $(DCACHEL)
 
-map-dcache:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(DCACHELIB) \
-		   -d $(DCACHELIBDEP) -c $(DCACHEL)
-
-map::           map-dcache
+all-dcache:     $(DCACHELIB) $(DCACHEMAP)
 
 clean-dcache:
 	@rm -f $(DCACHEO) $(DCACHEDO)
@@ -58,7 +58,7 @@ clean-dcache:
 clean::         clean-dcache
 
 distclean-dcache: clean-dcache
-	@rm -f $(DCACHEDEP) $(DCACHEDS) $(DCACHEDH) $(DCACHELIB)
+	@rm -f $(DCACHEDEP) $(DCACHEDS) $(DCACHEDH) $(DCACHELIB) $(DCACHEMAP)
 
 distclean::     distclean-dcache
 

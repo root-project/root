@@ -24,10 +24,12 @@ SESSIONVIEWERO  := $(SESSIONVIEWERS:.cxx=.o)
 SESSIONVIEWERDEP := $(SESSIONVIEWERO:.o=.d) $(SESSIONVIEWERDO:.o=.d)
 
 SESSIONVIEWERLIB := $(LPATH)/libSessionViewer.$(SOEXT)
+SESSIONVIEWERMAP := $(SESSIONVIEWERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SESSIONVIEWERH))
 ALLLIBS       += $(SESSIONVIEWERLIB)
+ALLMAPS       += $(SESSIONVIEWERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SESSIONVIEWERDEP)
@@ -47,13 +49,11 @@ $(SESSIONVIEWERDS): $(SESSIONVIEWERH) $(SESSIONVIEWERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SESSIONVIEWERH) $(SESSIONVIEWERL)
 
-all-sessionviewer: $(SESSIONVIEWERLIB)
+$(SESSIONVIEWERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SESSIONVIEWERL)
+		$(RLIBMAP) -o $(SESSIONVIEWERMAP) -l $(SESSIONVIEWERLIB) \
+		   -d $(SESSIONVIEWERLIBDEPM) -c $(SESSIONVIEWERL)
 
-map-sessionviewer: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SESSIONVIEWERLIB) \
-		   -d $(SESSIONVIEWERLIBDEP) -c $(SESSIONVIEWERL)
-
-map::           map-sessionviewer
+all-sessionviewer: $(SESSIONVIEWERLIB) $(SESSIONVIEWERMAP)
 
 clean-sessionviewer:
 		@rm -f $(SESSIONVIEWERO) $(SESSIONVIEWERDO)
@@ -62,6 +62,6 @@ clean::         clean-sessionviewer
 
 distclean-sessionviewer: clean-sessionviewer
 		@rm -f $(SESSIONVIEWERDEP) $(SESSIONVIEWERDS) \
-		   $(SESSIONVIEWERDH) $(SESSIONVIEWERLIB)
+		   $(SESSIONVIEWERDH) $(SESSIONVIEWERLIB) $(SESSIONVIEWERMAP)
 
 distclean::     distclean-sessionviewer

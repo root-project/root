@@ -24,10 +24,12 @@ GUIBLDO      := $(GUIBLDS:.cxx=.o)
 GUIBLDDEP    := $(GUIBLDO:.o=.d) $(GUIBLDDO:.o=.d)
 
 GUIBLDLIB    := $(LPATH)/libGuiBld.$(SOEXT)
+GUIBLDMAP    := $(GUIBLDLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIBLDH))
 ALLLIBS     += $(GUIBLDLIB)
+ALLMAPS     += $(GUIBLDMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GUIBLDDEP)
@@ -45,13 +47,11 @@ $(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIBLDH) $(GUIBLDL)
 
-all-guibuilder: $(GUIBLDLIB)
+$(GUIBLDMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GUIBLDL)
+		$(RLIBMAP) -o $(GUIBLDMAP) -l $(GUIBLDLIB) \
+		   -d $(GUIBLDLIBDEPM) -c $(GUIBLDL)
 
-map-guibuilder: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GUIBLDLIB) \
-		   -d $(GUIBLDLIBDEP) -c $(GUIBLDL)
-
-map::           map-guibuilder
+all-guibuilder: $(GUIBLDLIB) $(GUIBLDMAP)
 
 clean-guibuilder:
 		@rm -f $(GUIBLDO) $(GUIBLDDO)
@@ -59,6 +59,6 @@ clean-guibuilder:
 clean::         clean-guibuilder
 
 distclean-guibuilder: clean-guibuilder
-		@rm -f $(GUIBLDDEP) $(GUIBLDDS) $(GUIBLDDH) $(GUIBLDLIB)
+		@rm -f $(GUIBLDDEP) $(GUIBLDDS) $(GUIBLDDH) $(GUIBLDLIB) $(GUIBLDMAP)
 
 distclean::     distclean-guibuilder

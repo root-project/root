@@ -24,10 +24,12 @@ SQLO         := $(SQLS:.cxx=.o)
 SQLDEP       := $(SQLO:.o=.d) $(SQLDO:.o=.d)
 
 SQLLIB       := $(LPATH)/libSQL.$(SOEXT)
+SQLMAP       := $(SQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SQLH))
 ALLLIBS      += $(SQLLIB)
+ALLMAPS      += $(SQLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SQLDEP)
@@ -45,13 +47,11 @@ $(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SQLH) $(SQLL)
 
-all-sql:        $(SQLLIB)
+$(SQLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(SQLL)
+		$(RLIBMAP) -o $(SQLMAP) -l $(SQLLIB) \
+		   -d $(SQLLIBDEPM) -c $(SQLL)
 
-map-sql:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SQLLIB) \
-		   -d $(SQLLIBDEP) -c $(SQLL)
-
-map::           map-sql
+all-sql:        $(SQLLIB) $(SQLMAP)
 
 clean-sql:
 		@rm -f $(SQLO) $(SQLDO)
@@ -59,6 +59,6 @@ clean-sql:
 clean::         clean-sql
 
 distclean-sql: clean-sql
-		@rm -f $(SQLDEP) $(SQLDS) $(SQLDH) $(SQLLIB)
+		@rm -f $(SQLDEP) $(SQLDS) $(SQLDH) $(SQLLIB) $(SQLMAP)
 
 distclean::     distclean-sql

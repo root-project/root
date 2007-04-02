@@ -24,10 +24,12 @@ PROOFO       := $(PROOFS:.cxx=.o)
 PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
+PROOFMAP     := $(PROOFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFH))
 ALLLIBS     += $(PROOFLIB)
+ALLMAPS     += $(PROOFMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PROOFDEP)
@@ -45,13 +47,11 @@ $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 
-all-proof:      $(PROOFLIB)
+$(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
+		$(RLIBMAP) -o $(PROOFMAP) -l $(PROOFLIB) \
+		   -d $(PROOFLIBDEPM) -c $(PROOFL)
 
-map-proof:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFLIB) \
-		   -d $(PROOFLIBDEP) -c $(PROOFL)
-
-map::           map-proof
+all-proof:      $(PROOFLIB) $(PROOFMAP)
 
 clean-proof:
 		@rm -f $(PROOFO) $(PROOFDO)
@@ -59,6 +59,6 @@ clean-proof:
 clean::         clean-proof
 
 distclean-proof: clean-proof
-		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB)
+		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB) $(PROOFMAP)
 
 distclean::     distclean-proof

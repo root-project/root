@@ -24,10 +24,12 @@ FOAMO      := $(FOAMS:.cxx=.o)
 FOAMDEP    := $(FOAMO:.o=.d) $(FOAMDO:.o=.d)
 
 FOAMLIB    := $(LPATH)/libFoam.$(SOEXT)
+FOAMMAP    := $(FOAMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FOAMH))
 ALLLIBS     += $(FOAMLIB)
+ALLMAPS     += $(FOAMMAP)
 
 # include all dependency files
 INCLUDEFILES += $(FOAMDEP)
@@ -45,13 +47,11 @@ $(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FOAMH) $(FOAML)
 
-all-foam:       $(FOAMLIB)
+$(FOAMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FOAML)
+		$(RLIBMAP) -o $(FOAMMAP) -l $(FOAMLIB) \
+		   -d $(FOAMLIBDEPM) -c $(FOAML)
 
-map-foam:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(FOAMLIB) \
-		   -d $(FOAMLIBDEP) -c $(FOAML)
-
-map::           map-foam
+all-foam:       $(FOAMLIB) $(FOAMMAP)
 
 clean-foam:
 		@rm -f $(FOAMO) $(FOAMDO)
@@ -59,6 +59,6 @@ clean-foam:
 clean::         clean-foam
 
 distclean-foam: clean-foam
-		@rm -f $(FOAMDEP) $(FOAMDS) $(FOAMDH) $(FOAMLIB)
+		@rm -f $(FOAMDEP) $(FOAMDS) $(FOAMDH) $(FOAMLIB) $(FOAMMAP)
 
 distclean::     distclean-foam

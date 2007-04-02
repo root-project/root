@@ -33,10 +33,12 @@ PROOFXO      := $(PROOFXS:.cxx=.o)
 PROOFXDEP    := $(PROOFXO:.o=.d) $(PROOFXDO:.o=.d)
 
 PROOFXLIB    := $(LPATH)/libProofx.$(SOEXT)
+PROOFXMAP    := $(PROOFXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFXH))
 ALLLIBS      += $(PROOFXLIB)
+ALLMAPS      += $(PROOFXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PROOFXDEP)
@@ -82,13 +84,11 @@ $(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(ROOTCINTTMPEXE) $(XROOTDETAG)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
-all-proofx:     $(PROOFXLIB)
+$(PROOFXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PROOFXL)
+		$(RLIBMAP) -o $(PROOFXMAP) -l $(PROOFXLIB) \
+		   -d $(PROOFXLIBDEPM) -c $(PROOFXL)
 
-map-proofx:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFXLIB) \
-		   -d $(PROOFXLIBDEP) -c $(PROOFXL)
-
-map::           map-proofx
+all-proofx:     $(PROOFXLIB) $(PROOFXMAP)
 
 clean-proofx:
 		@rm -f $(PROOFXO) $(PROOFXDO)
@@ -96,7 +96,7 @@ clean-proofx:
 clean::         clean-proofx
 
 distclean-proofx: clean-proofx
-		@rm -f $(PROOFXDEP) $(PROOFXDS) $(PROOFXDH) $(PROOFXLIB)
+		@rm -f $(PROOFXDEP) $(PROOFXDS) $(PROOFXDH) $(PROOFXLIB) $(PROOFXMAP)
 
 distclean::     distclean-proofx
 

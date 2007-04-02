@@ -24,10 +24,12 @@ GFALO        := $(GFALS:.cxx=.o)
 GFALDEP      := $(GFALO:.o=.d) $(GFALDO:.o=.d)
 
 GFALLIB      := $(LPATH)/libGFAL.$(SOEXT)
+GFALMAP      := $(GFALLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GFALH))
 ALLLIBS     += $(GFALLIB)
+ALLMAPS     += $(GFALMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GFALDEP)
@@ -45,13 +47,11 @@ $(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GFALH) $(GFALL)
 
-all-gfal:       $(GFALLIB)
+$(GFALMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GFALL)
+		$(RLIBMAP) -o $(GFALMAP) -l $(GFALLIB) \
+		   -d $(GFALLIBDEPM) -c $(GFALL)
 
-map-gfal:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GFALLIB) \
-		   -d $(GFALLIBDEP) -c $(GFALL)
-
-map::           map-gfal
+all-gfal:       $(GFALLIB) $(GFALMAP)
 
 clean-gfal:
 		@rm -f $(GFALO) $(GFALDO)
@@ -59,7 +59,7 @@ clean-gfal:
 clean::         clean-gfal
 
 distclean-gfal: clean-gfal
-		@rm -f $(GFALDEP) $(GFALDS) $(GFALDH) $(GFALLIB)
+		@rm -f $(GFALDEP) $(GFALDS) $(GFALDH) $(GFALLIB) $(GFALMAP)
 
 distclean::     distclean-gfal
 

@@ -29,10 +29,12 @@ G3DO         := $(G3DS1:.cxx=.o) $(G3DS2:.c=.o)
 G3DDEP       := $(G3DO:.o=.d) $(G3DDO:.o=.d)
 
 G3DLIB       := $(LPATH)/libGraf3d.$(SOEXT)
+G3DMAP       := $(G3DLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(G3DH))
 ALLLIBS     += $(G3DLIB)
+ALLMAPS     += $(G3DMAP)
 
 # include all dependency files
 INCLUDEFILES += $(G3DDEP)
@@ -50,13 +52,11 @@ $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
 
-all-g3d:        $(G3DLIB)
+$(G3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(G3DL)
+		$(RLIBMAP) -o $(G3DMAP) -l $(G3DLIB) \
+		   -d $(G3DLIBDEPM) -c $(G3DL)
 
-map-g3d:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(G3DLIB) \
-		   -d $(G3DLIBDEP) -c $(G3DL)
-
-map::           map-g3d
+all-g3d:        $(G3DLIB) $(G3DMAP)
 
 clean-g3d:
 		@rm -f $(G3DO) $(G3DDO)
@@ -64,6 +64,6 @@ clean-g3d:
 clean::         clean-g3d
 
 distclean-g3d:  clean-g3d
-		@rm -f $(G3DDEP) $(G3DDS) $(G3DDH) $(G3DLIB)
+		@rm -f $(G3DDEP) $(G3DDS) $(G3DDH) $(G3DLIB) $(G3DMAP)
 
 distclean::     distclean-g3d

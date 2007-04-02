@@ -24,10 +24,12 @@ GDMLO        := $(GDMLS:.cxx=.o)
 GDMLDEP      := $(GDMLO:.o=.d) $(GDMLDO:.o=.d)
 
 GDMLLIB      := $(LPATH)/libGdml.$(SOEXT)
+GDMLMAP      := $(GDMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GDMLH))
 ALLLIBS      += $(GDMLLIB)
+ALLMAPS      += $(GDMLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GDMLDEP)
@@ -45,13 +47,11 @@ $(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GDMLH) $(GDMLL)
 
-all-gdml:       $(GDMLLIB)
+$(GDMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GDMLL)
+		$(RLIBMAP) -o $(GDMLMAP) -l $(GDMLLIB) \
+		   -d $(GDMLLIBDEPM) -c $(GDMLL)
 
-map-gdml:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GDMLLIB) \
-		   -d $(GDMLLIBDEP) -c $(GDMLL)
-
-map::           map-gdml
+all-gdml:       $(GDMLLIB) $(GDMLMAP)
 
 clean-gdml:
 		@rm -f $(GDMLO) $(GDMLDO)
@@ -59,6 +59,6 @@ clean-gdml:
 clean::         clean-gdml
 
 distclean-gdml: clean-gdml
-		@rm -f $(GDMLDEP) $(GDMLDS) $(GDMLDH) $(GDMLLIB)
+		@rm -f $(GDMLDEP) $(GDMLDS) $(GDMLDH) $(GDMLLIB) $(GDMLMAP)
 
 distclean::     distclean-gdml

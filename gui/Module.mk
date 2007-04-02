@@ -59,10 +59,12 @@ GUIO         := $(GUIS:.cxx=.o)
 GUIDEP       := $(GUIO:.o=.d) $(GUIDO:.o=.d)
 
 GUILIB       := $(LPATH)/libGui.$(SOEXT)
+GUIMAP       := $(GUILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIH))
 ALLLIBS     += $(GUILIB)
+ALLMAPS     += $(GUIMAP)
 
 # include all dependency files
 INCLUDEFILES += $(GUIDEP)
@@ -86,13 +88,11 @@ $(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 
-all-gui:        $(GUILIB)
+$(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL1) $(GUIL2) $(GUIL3)
+		$(RLIBMAP) -o $(GUIMAP) -l $(GUILIB) \
+		   -d $(GUILIBDEPM) -c $(GUIL1) $(GUIL2) $(GUIL3)
 
-map-gui:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GUILIB) \
-		   -d $(GUILIBDEP) -c $(GUIL1) $(GUIL2) $(GUIL3)
-
-map::           map-gui
+all-gui:        $(GUILIB) $(GUIMAP)
 
 clean-gui:
 		@rm -f $(GUIO) $(GUIDO)
@@ -100,6 +100,6 @@ clean-gui:
 clean::         clean-gui
 
 distclean-gui:  clean-gui
-		@rm -f $(GUIDEP) $(GUIDS) $(GUIDH) $(GUILIB)
+		@rm -f $(GUIDEP) $(GUIDS) $(GUIDH) $(GUILIB) $(GUIMAP)
 
 distclean::     distclean-gui

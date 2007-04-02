@@ -24,10 +24,12 @@ FITPANELO    := $(FITPANELS:.cxx=.o)
 FITPANELDEP  := $(FITPANELO:.o=.d) $(FITPANELDO:.o=.d)
 
 FITPANELLIB  := $(LPATH)/libFitPanel.$(SOEXT)
+FITPANELMAP  := $(FITPANELLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FITPANELH))
 ALLLIBS      += $(FITPANELLIB)
+ALLMAPS      += $(FITPANELMAP)
 
 # include all dependency files
 INCLUDEFILES += $(FITPANELDEP)
@@ -45,13 +47,11 @@ $(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FITPANELH) $(FITPANELL)
 
-all-fitpanel:   $(FITPANELLIB)
+$(FITPANELMAP): $(RLIBMAP) $(MAKEFILEDEP) $(FITPANELL)
+		$(RLIBMAP) -o $(FITPANELMAP) -l $(FITPANELLIB) \
+		   -d $(FITPANELLIBDEPM) -c $(FITPANELL)
 
-map-fitpanel:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(FITPANELLIB) \
-		   -d $(FITPANELLIBDEP) -c $(FITPANELL)
-
-map::           map-fitpanel
+all-fitpanel:   $(FITPANELLIB) $(FITPANELMAP)
 
 clean-fitpanel:
 		@rm -f $(FITPANELO) $(FITPANELDO)
@@ -59,6 +59,6 @@ clean-fitpanel:
 clean::         clean-fitpanel
 
 distclean-fitpanel: clean-fitpanel
-		@rm -f $(FITPANELDEP) $(FITPANELDS) $(FITPANELDH) $(FITPANELLIB)
+		@rm -f $(FITPANELDEP) $(FITPANELDS) $(FITPANELDH) $(FITPANELLIB) $(FITPANELMAP)
 
 distclean::     distclean-fitpanel

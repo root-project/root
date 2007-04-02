@@ -24,10 +24,12 @@ SPLOTO      := $(SPLOTS:.cxx=.o)
 SPLOTDEP    := $(SPLOTO:.o=.d) $(SPLOTDO:.o=.d)
 
 SPLOTLIB    := $(LPATH)/libSPlot.$(SOEXT)
+SPLOTMAP    := $(SPLOTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SPLOTH))
 ALLLIBS     += $(SPLOTLIB)
+ALLMAPS     += $(SPLOTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SPLOTDEP)
@@ -36,22 +38,20 @@ INCLUDEFILES += $(SPLOTDEP)
 include/%.h:    $(SPLOTDIRI)/%.h
 		cp $< $@
 
-$(SPLOTLIB):   $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
+$(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSPlot.$(SOEXT) $@ "$(SPLOTO) $(SPLOTDO)" \
 		   "$(SPLOTLIBEXTRA)"
 
-$(SPLOTDS):    $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPEXE)
+$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPLOTH) $(SPLOTL)
 
-all-splot:     $(SPLOTLIB)
+$(SPLOTMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SPLOTL)
+		$(RLIBMAP) -o $(SPLOTMAP) -l $(SPLOTLIB) \
+		   -d $(SPLOTLIBDEPM) -c $(SPLOTL)
 
-map-splot:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SPLOTLIB) \
-		   -d $(SPLOTLIBDEP) -c $(SPLOTL)
-
-map::           map-splot
+all-splot:     $(SPLOTLIB) $(SPLOTMAP)
 
 clean-splot:
 		@rm -f $(SPLOTO) $(SPLOTDO)
@@ -59,6 +59,6 @@ clean-splot:
 clean::         clean-splot
 
 distclean-splot: clean-splot
-		@rm -f $(SPLOTDEP) $(SPLOTDS) $(SPLOTDH) $(SPLOTLIB)
+		@rm -f $(SPLOTDEP) $(SPLOTDS) $(SPLOTDH) $(SPLOTLIB) $(SPLOTMAP)
 
 distclean::     distclean-splot

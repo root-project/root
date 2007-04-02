@@ -64,6 +64,7 @@ ASIMAGEO     := $(ASIMAGES:.cxx=.o)
 ASIMAGEDEP   := $(ASIMAGEO:.o=.d) $(ASIMAGEDO:.o=.d)
 
 ASIMAGELIB   := $(LPATH)/libASImage.$(SOEXT)
+ASIMAGEMAP   := $(ASIMAGELIB:.$(SOEXT)=.rootmap)
 
 ##### libASImageGui #####
 ASIMAGEGUIL  := $(MODDIRI)/LinkDefGui.h
@@ -78,6 +79,7 @@ ASIMAGEGUIO  := $(ASIMAGEGUIS:.cxx=.o)
 ASIMAGEGUIDEP := $(ASIMAGEGUIO:.o=.d) $(ASIMAGEGUIDO:.o=.d)
 
 ASIMAGEGUILIB := $(LPATH)/libASImageGui.$(SOEXT)
+ASIMAGEGUIMAP := $(ASIMAGEGUILIB:.$(SOEXT)=.rootmap)
 
 ##### libASPluginGS #####
 ASIMAGEGSL  := $(MODDIRI)/LinkDefGS.h
@@ -92,12 +94,14 @@ ASIMAGEGSO  := $(ASIMAGEGSS:.cxx=.o)
 ASIMAGEGSDEP := $(ASIMAGEGSO:.o=.d) $(ASIMAGEGSDO:.o=.d)
 
 ASIMAGEGSLIB := $(LPATH)/libASPluginGS.$(SOEXT)
+ASIMAGEGSMAP := $(ASIMAGEGSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEH))
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGUIH))
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGSH))
 ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB)
+ALLMAPS     += $(ASIMAGEMAP) $(ASIMAGEGUIMAP) $(ASIMAGEGSMAP)
 
 # include all dependency files
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP) $(ASIMAGEGSDEP)
@@ -211,6 +215,10 @@ $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEH) $(ASIMAGEL)
 
+$(ASIMAGEMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEL)
+		$(RLIBMAP) -o $(ASIMAGEMAP) -l $(ASIMAGELIB) \
+		   -d $(ASIMAGELIBDEPM) -c $(ASIMAGEL)
+
 ##### libASImageGui #####
 $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
                    $(ORDER_) $(MAINLIBS) $(ASIMAGEGUILIBDEP)
@@ -224,6 +232,10 @@ $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
 $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEGUIH) $(ASIMAGEGUIL)
+
+$(ASIMAGEGUIMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEGUIL)
+		$(RLIBMAP) -o $(ASIMAGEGUIMAP) -l $(ASIMAGEGUILIB) \
+		   -d $(ASIMAGEGUILIBDEPM) -c $(ASIMAGEGUIL)
 
 ##### libASPluginGS #####
 $(ASIMAGEGSLIB):  $(ASIMAGEGSO) $(ASIMAGEGSDO) $(ASTEPDEP) $(FREETYPEDEP) \
@@ -239,21 +251,12 @@ $(ASIMAGEGSDS): $(ASIMAGEGSH) $(ASIMAGEGSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEGSH) $(ASIMAGEGSL)
 
-all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB)
+$(ASIMAGEGSMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEGSL)
+		$(RLIBMAP) -o $(ASIMAGEGSMAP) -l $(ASIMAGEGSLIB) \
+		   -d $(ASIMAGEGSLIBDEPM) -c $(ASIMAGEGSL)
 
-map-asimage:    $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGELIB) \
-		   -d $(ASIMAGELIBDEP) -c $(ASIMAGEL)
-
-map-asimagegui: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGEGUILIB) \
-		   -d $(ASIMAGEGUILIBDEP) -c $(ASIMAGEGUIL)
-
-map-asimagegs: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGEGSLIB) \
-		   -d $(ASIMAGEGSLIBDEP) -c $(ASIMAGEGSL)
-
-map::           map-asimage map-asimagegui map-asimagegs
+all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB) \
+		$(ASIMAGEMAP) $(ASIMAGEGUIMAP) $(ASIMAGEGSMAP)
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO) \
@@ -277,11 +280,12 @@ endif
 clean::         clean-asimage
 
 distclean-asimage: clean-asimage
-		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB) \
+		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) \
+		   $(ASIMAGELIB) $(ASIMAGEMAP) \
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
-		   $(ASIMAGEGUILIB) \
+		   $(ASIMAGEGUILIB) $(ASIMAGEGUIMAP) \
 		   $(ASIMAGEGSDEP) $(ASIMAGEGSDS) $(ASIMAGEGSDH) \
-		   $(ASIMAGEGSLIB)
+		   $(ASIMAGEGSLIB) $(ASIMAGEGSMAP)
 ifeq ($(BUILTINASIMAGE),yes)
 		@rm -f $(ASTEPLIB) $(ASTEPETAG)
 		@rm -rf $(ASIMAGEDIRS)/$(ASTEPVERS)

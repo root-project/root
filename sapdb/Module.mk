@@ -24,10 +24,12 @@ SAPDBO       := $(SAPDBS:.cxx=.o)
 SAPDBDEP     := $(SAPDBO:.o=.d) $(SAPDBDO:.o=.d)
 
 SAPDBLIB     := $(LPATH)/libSapDB.$(SOEXT)
+SAPDBMAP     := $(SAPDBLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(SAPDBH))
 ALLLIBS     += $(SAPDBLIB)
+ALLMAPS     += $(SAPDBMAP)
 
 # include all dependency files
 INCLUDEFILES += $(SAPDBDEP)
@@ -45,13 +47,11 @@ $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SAPDBH) $(SAPDBL)
 
-all-sapdb:      $(SAPDBLIB)
+$(SAPDBMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SAPDBL)
+		$(RLIBMAP) -o $(SAPDBMAP) -l $(SAPDBLIB) \
+		   -d $(SAPDBLIBDEPM) -c $(SAPDBL)
 
-map-sapdb:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(SAPDBLIB) \
-		   -d $(SAPDBLIBDEP) -c $(SAPDBL)
-
-map::           map-sapdb
+all-sapdb:      $(SAPDBLIB) $(SAPDBMAP)
 
 clean-sapdb:
 		@rm -f $(SAPDBO) $(SAPDBDO)
@@ -59,7 +59,7 @@ clean-sapdb:
 clean::         clean-sapdb
 
 distclean-sapdb: clean-sapdb
-		@rm -f $(SAPDBDEP) $(SAPDBDS) $(SAPDBDH) $(SAPDBLIB)
+		@rm -f $(SAPDBDEP) $(SAPDBDS) $(SAPDBDH) $(SAPDBLIB) $(SAPDBMAP)
 
 distclean::     distclean-sapdb
 

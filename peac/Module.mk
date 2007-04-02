@@ -24,6 +24,7 @@ PEACO        := $(PEACS:.cxx=.o)
 PEACDEP      := $(PEACO:.o=.d) $(PEACDO:.o=.d)
 
 PEACLIB      := $(LPATH)/libPeac.$(SOEXT)
+PEACMAP      := $(PEACLIB:.$(SOEXT)=.rootmap)
 
 ##### libPeacGui #####
 PEACGUIL     := $(MODDIRI)/LinkDefGui.h
@@ -38,6 +39,7 @@ PEACGUIO     := $(PEACGUIS:.cxx=.o)
 PEACGUIDEP   := $(PEACGUIO:.o=.d) $(PEACGUIDO:.o=.d)
 
 PEACGUILIB   := $(LPATH)/libPeacGui.$(SOEXT)
+PEACGUIMAP   := $(PEACGUILIB:.$(SOEXT)=.rootmap)
 
 # remove GUI files from PEAC files
 PEACH        := $(filter-out $(PEACGUIH),$(PEACH))
@@ -49,6 +51,7 @@ PEACDEP      := $(filter-out $(PEACGUIDEP),$(PEACDEP))
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PEACH))
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PEACGUIH))
 ALLLIBS     += $(PEACLIB) $(PEACGUILIB)
+ALLMAPS     += $(PEACMAP) $(PEACGUIMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PEACDEP) $(PEACGUIDEP)
@@ -66,6 +69,10 @@ $(PEACDS):      $(PEACH) $(PEACL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACH) $(PEACL)
 
+$(PEACMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(PEACL)
+		$(RLIBMAP) -o $(PEACMAP) -l $(PEACLIB) \
+		   -d $(PEACLIBDEPM) -c $(PEACL)
+
 $(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPeacGui.$(SOEXT) $@ \
@@ -76,17 +83,11 @@ $(PEACGUIDS):   $(PEACGUIH) $(PEACGUIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACGUIH) $(PEACGUIL)
 
-all-peac:       $(PEACLIB) $(PEACGUILIB)
+$(PEACGUIMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PEACGUIL)
+		$(RLIBMAP) -o $(PEACGUIMAP) -l $(PEACGUILIB) \
+		   -d $(PEACGUILIBDEPM) -c $(PEACGUIL)
 
-map-peac:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PEACLIB) \
-		   -d $(PEACLIBDEP) -c $(PEACL)
-
-map-peacgui:    $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PEACGUILIB) \
-		   -d $(PEACGUILIBDEP) -c $(PEACGUIL)
-
-map::           map-peac map-peacgui
+all-peac:       $(PEACLIB) $(PEACGUILIB) $(PEACMAP) $(PEACGUIMAP)
 
 clean-peac:
 		@rm -f $(PEACO) $(PEACDO) $(PEACGUIO) $(PEACGUIDO)
@@ -95,7 +96,8 @@ clean::         clean-peac
 
 distclean-peac: clean-peac
 		@rm -f $(PEACDEP) $(PEACDS) $(PEACDH) $(PEACLIB) \
-		   $(PEACGUIDEP) $(PEACGUIDS) $(PEACGUIDH) $(PEACGUILIB)
+		   $(PEACGUIDEP) $(PEACGUIDS) $(PEACGUIDH) $(PEACGUILIB) \
+		   $(PEACMAP) $(PEACGUIMAP)
 
 distclean::     distclean-peac
 

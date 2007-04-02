@@ -38,12 +38,8 @@ endif
 
 ##### Include library dependencies for explicit linking #####
 
-ifeq ($(EXPLICITLINK),yes)
-include config/Makefile.depend
-endif
-ifneq ($(findstring map, $(MAKECMDGOALS)),)
-include config/Makefile.depend
-endif
+MAKEFILEDEP = config/Makefile.depend
+include $(MAKEFILEDEP)
 
 ##### Allow local macros #####
 
@@ -383,13 +379,14 @@ ROOTMAP       = etc/system.rootmap
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL)  $(MATHL)
+                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(MATHL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO)  $(MATHO)
+                $(METAUTILSO) $(MATHO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
                 $(METAUTILSDO) $(MATHDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
+COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
 ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA += $(ZLIBCLILIB)
 endif
@@ -415,6 +412,7 @@ endif
 
 ALLHDRS      :=
 ALLLIBS      := $(CORELIB)
+ALLMAPS      := $(COREMAP)
 ALLEXECS     :=
 INCLUDEFILES :=
 
@@ -511,7 +509,7 @@ endif
 
 rootcint:       all-cint all-utils
 
-rootlibs:       rootcint compiledata $(ALLLIBS)
+rootlibs:       rootcint compiledata $(ALLLIBS) $(ALLMAPS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
@@ -568,8 +566,10 @@ else
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 endif
 
-map::   $(RLIBMAP)
-	$(RLIBMAP) -r $(ROOTMAP) -l $(CORELIB) -d $(CORELIBDEP) -c $(COREL)
+$(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)
+	$(RLIBMAP) -o $(COREMAP) -l $(CORELIB) -d $(CORELIBDEPM) -c $(COREL)
+
+map::   $(ALLMAPS)
 
 dist:
 	@rm -f $(ROOTMAP)
@@ -710,7 +710,7 @@ endif
 
 distclean:: clean
 	-@mv -f include/RConfigure.h include/RConfigure.h-
-	@rm -f include/*.h $(ROOTMAP) $(CORELIB)
+	@rm -f include/*.h $(ROOTMAP) $(CORELIB) $(COREMAP)
 	-@mv -f include/RConfigure.h- include/RConfigure.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
@@ -891,7 +891,7 @@ uninstall:
 	      test "x`ls $(DESTDIR)$(BINDIR)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(BINDIR); \
 	   fi ; \
-	   for lib in $(ALLLIBS) $(CINTLIB); do \
+	   for lib in $(ALLLIBS) $(CINTLIB) $(ALLMAPS); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
 	   done ; \
 	   if test -d $(DESTDIR)$(LIBDIR) && \

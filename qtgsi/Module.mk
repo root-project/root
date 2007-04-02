@@ -30,6 +30,7 @@ QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIDO:.o=.d) $(QTGSIMOCO:.o=.d)
 QTGSICXXFLAGS := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 
 QTGSILIB      := $(LPATH)/libQtGSI.$(SOEXT)
+QTGSIMAP      := $(QTGSILIB:.$(SOEXT)=.rootmap)
 
 ifeq ($(PLATFORM),win32)
 QTTESTOPTS    := -f Makefile.win
@@ -40,6 +41,7 @@ endif
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTGSIH))
 ALLLIBS       += $(QTGSILIB)
+ALLMAPS       += $(QTGSIMAP)
 
 # include all dependency files
 INCLUDEFILES  += $(QTGSIDEP)
@@ -58,16 +60,14 @@ $(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTGSIH) $(QTGSIL)
 
-all-qtgsi:      $(QTGSILIB)
+$(QTGSIMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QTGSIL)
+		$(RLIBMAP) -o $(QTGSIMAP) -l $(QTGSILIB) \
+		   -d $(QTGSILIBDEPM) -c $(QTGSIL)
+
+all-qtgsi:      $(QTGSILIB) $(QTGSIMAP)
 
 test-qtgsi: 	$(QTGSILIB)
 		cd $(QTGSIDIR)/test; make $(QTTESTOPTS)
-
-map-qtgsi:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(QTGSILIB) \
-		   -d $(QTGSILIBDEP) -c $(QTGSIL)
-
-map::           map-qtgsi
 
 clean-qtgsi:
 		@rm -f $(QTGSIO) $(QTGSIMOCO)
@@ -76,7 +76,7 @@ clean-qtgsi:
 clean::         clean-qtgsi
 
 distclean-qtgsi: clean-qtgsi
-		@rm -f $(QTGSIDEP) $(QTGSIMOC) $(QTGSILIB)
+		@rm -f $(QTGSIDEP) $(QTGSIMOC) $(QTGSILIB) $(QTGSIMAP)
 		@rm -f $(QTGSIDS) $(QTGSIDH)
 
 distclean::     distclean-qtgsi

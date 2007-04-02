@@ -42,7 +42,7 @@ UNURANDS     := $(MODDIRS)/G__Unuran.cxx
 UNURANDO     := $(UNURANDS:.cxx=.o)
 UNURANDH     := $(UNURANDS:.cxx=.h)
 UNURANDH1    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-                
+
 
 UNURANH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -52,10 +52,12 @@ UNURANO      := $(UNURANS:.cxx=.o)
 UNURANDEP    := $(UNURANO:.o=.d) $(UNURANDO:.o=.d)
 
 UNURANLIB    := $(LPATH)/libUnuran.$(SOEXT)
+UNURANMAP    := $(UNURANLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(UNURANH))
 ALLLIBS      += $(UNURANLIB)
+ALLMAPS      += $(UNURANMAP)
 
 # include all dependency files
 INCLUDEFILES += $(UNURANDEP)
@@ -116,13 +118,11 @@ $(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
-all-unuran:     $(UNURANLIB)
+$(UNURANMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(UNURANL) $(UNURANLINC)
+		$(RLIBMAP) -o $(UNURANMAP) -l $(UNURANLIB) \
+		   -d $(UNURANLIBDEPM) -c $(UNURANL) $(UNURANLINC)
 
-map-unuran:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(UNURANLIB) \
-		   -d $(UNURANLIBDEP) -c $(UNURANL) $(UNURANLINC)
-
-map::           map-unuran
+all-unuran:     $(UNURANLIB) $(UNURANMAP)
 
 clean-unuran:
 		@rm -f $(UNURANO) $(UNURANDO)
@@ -135,7 +135,7 @@ clean-unuran:
 clean::         clean-unuran
 
 distclean-unuran: clean-unuran
-		@rm -f $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB)
+		@rm -f $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
 		@rm -rf $(UNURANDIRS)/$(UNRVERS)
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)

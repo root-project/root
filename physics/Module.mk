@@ -24,10 +24,12 @@ PHYSICSO     := $(PHYSICSS:.cxx=.o)
 PHYSICSDEP   := $(PHYSICSO:.o=.d) $(PHYSICSDO:.o=.d)
 
 PHYSICSLIB   := $(LPATH)/libPhysics.$(SOEXT)
+PHYSICSMAP   := $(PHYSICSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PHYSICSH))
 ALLLIBS     += $(PHYSICSLIB)
+ALLMAPS     += $(PHYSICSMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PHYSICSDEP)
@@ -45,13 +47,11 @@ $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PHYSICSH) $(PHYSICSL)
 
-all-physics:    $(PHYSICSLIB)
+$(PHYSICSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PHYSICSL)
+		$(RLIBMAP) -o $(PHYSICSMAP) -l $(PHYSICSLIB) \
+		   -d $(PHYSICSLIBDEPM) -c $(PHYSICSL)
 
-map-physics:    $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PHYSICSLIB) \
-		   -d $(PHYSICSLIBDEP) -c $(PHYSICSL)
-
-map::           map-physics
+all-physics:    $(PHYSICSLIB) $(PHYSICSMAP)
 
 clean-physics:
 		@rm -f $(PHYSICSO) $(PHYSICSDO)
@@ -59,6 +59,6 @@ clean-physics:
 clean::         clean-physics
 
 distclean-physics: clean-physics
-		@rm -f $(PHYSICSDEP) $(PHYSICSDS) $(PHYSICSDH) $(PHYSICSLIB)
+		@rm -f $(PHYSICSDEP) $(PHYSICSDS) $(PHYSICSDH) $(PHYSICSLIB) $(PHYSICSMAP)
 
 distclean::     distclean-physics

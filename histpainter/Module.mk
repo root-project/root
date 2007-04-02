@@ -25,10 +25,12 @@ HISTPAINTERO  := $(HISTPAINTERS:.cxx=.o)
 HISTPAINTERDEP := $(HISTPAINTERO:.o=.d) $(HISTPAINTERDO:.o=.d)
 
 HISTPAINTERLIB := $(LPATH)/libHistPainter.$(SOEXT)
+HISTPAINTERMAP := $(HISTPAINTERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTPAINTERH))
 ALLLIBS       += $(HISTPAINTERLIB)
+ALLMAPS       += $(HISTPAINTERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(HISTPAINTERDEP)
@@ -48,13 +50,11 @@ $(HISTPAINTERDS): $(HISTPAINTERH1) $(HISTPAINTERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTPAINTERH1) $(HISTPAINTERL)
 
-all-histpainter: $(HISTPAINTERLIB)
+$(HISTPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTPAINTERL)
+		$(RLIBMAP) -o $(HISTPAINTERMAP) -l $(HISTPAINTERLIB) \
+		   -d $(HISTPAINTERLIBDEPM) -c $(HISTPAINTERL)
 
-map-histpainter: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(HISTPAINTERLIB) \
-		   -d $(HISTPAINTERLIBDEP) -c $(HISTPAINTERL)
-
-map::           map-histpainter
+all-histpainter: $(HISTPAINTERLIB) $(HISTPAINTERMAP)
 
 clean-histpainter:
 		@rm -f $(HISTPAINTERO) $(HISTPAINTERDO)
@@ -63,6 +63,6 @@ clean::         clean-histpainter
 
 distclean-histpainter: clean-histpainter
 		@rm -f $(HISTPAINTERDEP) $(HISTPAINTERDS) $(HISTPAINTERDH) \
-		   $(HISTPAINTERLIB)
+		   $(HISTPAINTERLIB) $(HISTPAINTERMAP)
 
 distclean::     distclean-histpainter

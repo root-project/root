@@ -35,10 +35,12 @@ TREEVIEWERO  := $(TREEVIEWERS:.cxx=.o)
 TREEVIEWERDEP := $(TREEVIEWERO:.o=.d) $(TREEVIEWERDO:.o=.d)
 
 TREEVIEWERLIB := $(LPATH)/libTreeViewer.$(SOEXT)
+TREEVIEWERMAP := $(TREEVIEWERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEVIEWERH))
 ALLLIBS       += $(TREEVIEWERLIB)
+ALLMAPS       += $(TREEVIEWERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(TREEVIEWERDEP)
@@ -58,13 +60,11 @@ $(TREEVIEWERDS): $(TREEVIEWERH) $(TREEVIEWERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEVIEWERH) $(TREEVIEWERL)
 
-all-treeviewer: $(TREEVIEWERLIB)
+$(TREEVIEWERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(TREEVIEWERL)
+		$(RLIBMAP) -o $(TREEVIEWERMAP) -l $(TREEVIEWERLIB) \
+		   -d $(TREEVIEWERLIBDEPM) -c $(TREEVIEWERL)
 
-map-treeviewer: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(TREEVIEWERLIB) \
-		   -d $(TREEVIEWERLIBDEP) -c $(TREEVIEWERL)
-
-map::           map-treeviewer
+all-treeviewer: $(TREEVIEWERLIB) $(TREEVIEWERMAP)
 
 clean-treeviewer:
 		@rm -f $(TREEVIEWERO) $(TREEVIEWERDO)
@@ -73,6 +73,6 @@ clean::         clean-treeviewer
 
 distclean-treeviewer: clean-treeviewer
 		@rm -f $(TREEVIEWERDEP) $(TREEVIEWERDS) $(TREEVIEWERDH) \
-		   $(TREEVIEWERLIB)
+		   $(TREEVIEWERLIB) $(TREEVIEWERMAP)
 
 distclean::     distclean-treeviewer

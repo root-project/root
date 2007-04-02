@@ -24,10 +24,12 @@ MYSQLO       := $(MYSQLS:.cxx=.o)
 MYSQLDEP     := $(MYSQLO:.o=.d) $(MYSQLDO:.o=.d)
 
 MYSQLLIB     := $(LPATH)/libRMySQL.$(SOEXT)
+MYSQLMAP     := $(MYSQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MYSQLH))
 ALLLIBS     += $(MYSQLLIB)
+ALLMAPS     += $(MYSQLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(MYSQLDEP)
@@ -45,13 +47,12 @@ $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-all-mysql:      $(MYSQLLIB)
 
-map-mysql:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(MYSQLLIB) \
-		   -d $(MYSQLLIBDEP) -c $(MYSQLL)
+$(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
+		$(RLIBMAP) -o $(MYSQLMAP) -l $(MYSQLLIB) \
+		   -d $(MYSQLLIBDEPM) -c $(MYSQLL)
 
-map::           map-mysql
+all-mysql:      $(MYSQLLIB) $(MYSQLMAP)
 
 clean-mysql:
 		@rm -f $(MYSQLO) $(MYSQLDO)
@@ -59,7 +60,7 @@ clean-mysql:
 clean::         clean-mysql
 
 distclean-mysql: clean-mysql
-		@rm -f $(MYSQLDEP) $(MYSQLDS) $(MYSQLDH) $(MYSQLLIB)
+		@rm -f $(MYSQLDEP) $(MYSQLDS) $(MYSQLDH) $(MYSQLLIB) $(MYSQLMAP)
 
 distclean::     distclean-mysql
 

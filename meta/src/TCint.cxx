@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.142 2007/03/13 15:02:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.143 2007/03/28 21:56:10 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1036,10 +1036,6 @@ Int_t TCint::LoadLibraryMap()
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
-
-      if (!fMapfile->GetTable()->GetEntries())
-         Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
-               "found. ROOT not properly installed (run \"make install\").");
 
       fRootMapFiles = new TObjArray;
       fRootMapFiles->SetOwner();

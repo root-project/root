@@ -26,10 +26,12 @@ X11O         := $(X11S1:.cxx=.o) $(X11S2:.c=.o)
 X11DEP       := $(X11O:.o=.d) $(X11DO:.o=.d)
 
 X11LIB       := $(LPATH)/libGX11.$(SOEXT)
+X11MAP       := $(X11LIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11H))
 ALLLIBS     += $(X11LIB)
+ALLMAPS     += $(X11MAP)
 
 # include all dependency files
 INCLUDEFILES += $(X11DEP)
@@ -47,13 +49,11 @@ $(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
 
-all-x11:        $(X11LIB)
+$(X11MAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X11L)
+		$(RLIBMAP) -o $(X11MAP) -l $(X11LIB) \
+		   -d $(X11LIBDEPM) -c $(X11L)
 
-map-x11:        $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(X11LIB) \
-		   -d $(X11LIBDEP) -c $(X11L)
-
-map::           map-x11
+all-x11:        $(X11LIB) $(X11MAP)
 
 clean-x11:
 		@rm -f $(X11O) $(X11DO)
@@ -61,6 +61,6 @@ clean-x11:
 clean::         clean-x11
 
 distclean-x11:  clean-x11
-		@rm -f $(X11DEP) $(X11DS) $(X11DH) $(X11LIB)
+		@rm -f $(X11DEP) $(X11DS) $(X11DH) $(X11LIB) $(X11MAP)
 
 distclean::     distclean-x11

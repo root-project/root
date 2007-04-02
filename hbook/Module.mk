@@ -27,10 +27,12 @@ HBOOKO       := $(HBOOKO1) $(HBOOKO2)
 HBOOKDEP     := $(HBOOKS1:.cxx=.d) $(HBOOKDO:.o=.d)
 
 HBOOKLIB     := $(LPATH)/libHbook.$(SOEXT)
+HBOOKMAP     := $(HBOOKLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HBOOKH))
 ALLLIBS     += $(HBOOKLIB)
+ALLMAPS     += $(HBOOKMAP)
 
 # include all dependency files
 INCLUDEFILES += $(HBOOKDEP)
@@ -49,13 +51,11 @@ $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HBOOKH) $(HBOOKL)
 
-all-hbook:      $(HBOOKLIB)
+$(HBOOKMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(HBOOKL)
+		$(RLIBMAP) -o $(HBOOKMAP) -l $(HBOOKLIB) \
+		   -d $(HBOOKLIBDEPM) -c $(HBOOKL)
 
-map-hbook:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(HBOOKLIB) \
-		   -d $(HBOOKLIBDEP) -c $(HBOOKL)
-
-map::           map-hbook
+all-hbook:      $(HBOOKLIB) $(HBOOKMAP)
 
 clean-hbook:
 		@rm -f $(HBOOKO) $(HBOOKDO)
@@ -63,7 +63,6 @@ clean-hbook:
 clean::         clean-hbook
 
 distclean-hbook: clean-hbook
-		@rm -f $(HBOOKDEP) $(HBOOKDS) $(HBOOKDH) $(HBOOKLIB)
+		@rm -f $(HBOOKDEP) $(HBOOKDS) $(HBOOKDH) $(HBOOKLIB) $(HBOOKMAP)
 
 distclean::     distclean-hbook
-

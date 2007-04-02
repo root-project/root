@@ -24,10 +24,12 @@ RFIOO        := $(RFIOS:.cxx=.o)
 RFIODEP      := $(RFIOO:.o=.d) $(RFIODO:.o=.d)
 
 RFIOLIB      := $(LPATH)/libRFIO.$(SOEXT)
+RFIOMAP      := $(RFIOLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RFIOH))
 ALLLIBS     += $(RFIOLIB)
+ALLMAPS     += $(RFIOMAP)
 
 # include all dependency files
 INCLUDEFILES += $(RFIODEP)
@@ -45,13 +47,11 @@ $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
 
-all-rfio:       $(RFIOLIB)
+$(RFIOMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RFIOL)
+		$(RLIBMAP) -o $(RFIOMAP) -l $(RFIOLIB) \
+		   -d $(RFIOLIBDEPM) -c $(RFIOL)
 
-map-rfio:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(RFIOLIB) \
-		   -d $(RFIOLIBDEP) -c $(RFIOL)
-
-map::           map-rfio
+all-rfio:       $(RFIOLIB) $(RFIOMAP)
 
 clean-rfio:
 		@rm -f $(RFIOO) $(RFIODO)
@@ -59,7 +59,7 @@ clean-rfio:
 clean::         clean-rfio
 
 distclean-rfio: clean-rfio
-		@rm -f $(RFIODEP) $(RFIODS) $(RFIODH) $(RFIOLIB)
+		@rm -f $(RFIODEP) $(RFIODS) $(RFIODH) $(RFIOLIB) $(RFIOMAP)
 
 distclean::     distclean-rfio
 

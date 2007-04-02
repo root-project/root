@@ -31,10 +31,12 @@ GEOMBUILDERO     := $(GEOMBUILDERS:.cxx=.o)
 GEOMBUILDERDEP   := $(GEOMBUILDERO:.o=.d) $(GEOMBUILDERDO:.o=.d)
 
 GEOMBUILDERLIB   := $(LPATH)/libGeomBuilder.$(SOEXT)
+GEOMBUILDERMAP   := $(GEOMBUILDERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS          += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMBUILDERH))
 ALLLIBS          += $(GEOMBUILDERLIB)
+ALLMAPS          += $(GEOMBUILDERMAP)
 
 # include all dependency files
 INCLUDEFILES     += $(GEOMBUILDERDEP)
@@ -54,13 +56,11 @@ $(GEOMBUILDERDS): $(GEOMBUILDERH) $(GEOMBUILDERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMBUILDERH) $(GEOMBUILDERL)
 
-all-geombuilder: $(GEOMBUILDERLIB)
+$(GEOMBUILDERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMBUILDERL)
+		$(RLIBMAP) -o $(GEOMBUILDERMAP) -l $(GEOMBUILDERLIB) \
+		   -d $(GEOMBUILDERLIBDEPM) -c $(GEOMBUILDERL)
 
-map-geombuilder: $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(GEOMBUILDERLIB) \
-		   -d $(GEOMBUILDERLIBDEP) -c $(GEOMBUILDERL)
-
-map::           map-geombuilder
+all-geombuilder: $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)
 
 clean-geombuilder:
 		@rm -f $(GEOMBUILDERO) $(GEOMBUILDERDO)
@@ -69,6 +69,6 @@ clean::         clean-geombuilder
 
 distclean-geombuilder: clean-geombuilder
 		@rm -f $(GEOMBUILDERDEP) $(GEOMBUILDERDS) $(GEOMBUILDERDH) \
-		   $(GEOMBUILDERLIB)
+		   $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)
 
 distclean::     distclean-geombuilder

@@ -24,10 +24,12 @@ HISTO        := $(HISTS:.cxx=.o)
 HISTDEP      := $(HISTO:.o=.d) $(HISTDO:.o=.d)
 
 HISTLIB      := $(LPATH)/libHist.$(SOEXT)
+HISTMAP      := $(HISTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTH))
 ALLLIBS     += $(HISTLIB)
+ALLMAPS     += $(HISTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(HISTDEP)
@@ -45,13 +47,11 @@ $(HISTDS):      $(HISTH) $(HISTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTL)
 
-all-hist:       $(HISTLIB)
+$(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
+		$(RLIBMAP) -o $(HISTMAP) -l $(HISTLIB) \
+		   -d $(HISTLIBDEPM) -c $(HISTL)
 
-map-hist:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(HISTLIB) \
-		   -d $(HISTLIBDEP) -c $(HISTL)
-
-map::           map-hist
+all-hist:       $(HISTLIB) $(HISTMAP)
 
 clean-hist:
 		@rm -f $(HISTO) $(HISTDO)
@@ -59,6 +59,6 @@ clean-hist:
 clean::         clean-hist
 
 distclean-hist: clean-hist
-		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB)
+		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB) $(HISTMAP)
 
 distclean::     distclean-hist

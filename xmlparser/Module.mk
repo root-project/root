@@ -24,10 +24,12 @@ XMLPARSERO    := $(XMLPARSERS:.cxx=.o)
 XMLPARSERDEP  := $(XMLPARSERO:.o=.d) $(XMLPARSERDO:.o=.d)
 
 XMLPARSERLIB  := $(LPATH)/libXMLParser.$(SOEXT)
+XMLPARSERMAP  := $(XMLPARSERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLPARSERH))
 ALLLIBS      += $(XMLPARSERLIB)
+ALLMAPS      += $(XMLPARSERMAP)
 
 # include all dependency files
 INCLUDEFILES += $(XMLPARSERDEP)
@@ -46,13 +48,11 @@ $(XMLPARSERDS): $(XMLPARSERH) $(XMLPARSERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLPARSERH) $(XMLPARSERL)
 
-all-xmlparser:  $(XMLPARSERLIB)
+$(XMLPARSERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(XMLPARSERL)
+		$(RLIBMAP) -o $(XMLPARSERMAP) -l $(XMLPARSERLIB) \
+		   -d $(XMLPARSERLIBDEPM) -c $(XMLPARSERL)
 
-map-xmlparser:  $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(XMLPARSERLIB) \
-		   -d $(XMLPARSERLIBDEP) -c $(XMLPARSERL)
-
-map::           map-xmlparser
+all-xmlparser:  $(XMLPARSERLIB) $(XMLPARSERMAP)
 
 clean-xmlparser:
 		@rm -f $(XMLPARSERO) $(XMLPARSERDO)
@@ -61,7 +61,7 @@ clean::         clean-xmlparser
 
 distclean-xmlparser: clean-xmlparser
 		@rm -f $(XMLPARSERDEP) $(XMLPARSERDS) $(XMLPARSERDH) \
-		   $(XMLPARSERLIB)
+		   $(XMLPARSERLIB) $(XMLPARSERMAP)
 
 distclean::     distclean-xmlparser
 

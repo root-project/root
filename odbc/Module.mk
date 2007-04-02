@@ -24,10 +24,12 @@ ODBCO       := $(ODBCS:.cxx=.o)
 ODBCDEP     := $(ODBCO:.o=.d) $(ODBCDO:.o=.d)
 
 ODBCLIB     := $(LPATH)/libRODBC.$(SOEXT)
+ODBCMAP      := $(ODBCLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ODBCH))
 ALLLIBS     += $(ODBCLIB)
+ALLMAPS     += $(ODBCMAP)
 
 # include all dependency files
 INCLUDEFILES += $(ODBCDEP)
@@ -45,13 +47,11 @@ $(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
-all-odbc:      $(ODBCLIB)
+$(ODBCMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(ODBCL)
+		$(RLIBMAP) -o $(ODBCMAP) -l $(ODBCLIB) \
+		   -d $(ODBCLIBDEPM) -c $(ODBCL)
 
-map-odbc:      $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(ODBCLIB) \
-		   -d $(ODBCLIBDEP) -c $(ODBCL)
-
-map::           map-odbc
+all-odbc:      $(ODBCLIB) $(ODBCMAP)
 
 clean-odbc:
 		@rm -f $(ODBCO) $(ODBCDO)
@@ -59,7 +59,7 @@ clean-odbc:
 clean::         clean-odbc
 
 distclean-odbc: clean-odbc
-		@rm -f $(ODBCDEP) $(ODBCDS) $(ODBCDH) $(ODBCLIB)
+		@rm -f $(ODBCDEP) $(ODBCDS) $(ODBCDH) $(ODBCLIB) $(ODBCMAP)
 
 distclean::     distclean-odbc
 

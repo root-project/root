@@ -24,6 +24,7 @@ PYROOTO      := $(PYROOTS:.cxx=.o)
 PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
 
 PYROOTLIB    := $(LPATH)/libPyROOT.$(SOEXT)
+PYROOTMAP    := $(PYROOTLIB:.$(SOEXT)=.rootmap)
 
 ROOTPYS      := $(wildcard $(MODDIR)/*.py)
 ifeq ($(PLATFORM),win32)
@@ -39,6 +40,7 @@ ROOTPYO      := $(ROOTPY:.py=.pyo)
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS     += $(PYROOTLIB)
+ALLMAPS     += $(PYROOTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -63,13 +65,11 @@ $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYROOTH) $(PYROOTL)
 
-all-pyroot:     $(PYROOTLIB)
+$(PYROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PYROOTL)
+		$(RLIBMAP) -o $(PYROOTMAP) -l $(PYROOTLIB) \
+		   -d $(PYROOTLIBDEPM) -c $(PYROOTL)
 
-map-pyroot:     $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PYROOTLIB) \
-		   -d $(PYROOTLIBDEP) -c $(PYROOTL)
-
-map::           map-pyroot
+all-pyroot:     $(PYROOTLIB) $(PYROOTMAP)
 
 clean-pyroot:
 		@rm -f $(PYROOTO) $(PYROOTDO)
@@ -78,7 +78,7 @@ clean::         clean-pyroot
 
 distclean-pyroot: clean-pyroot
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
-		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO)
+		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP)
 
 distclean::     distclean-pyroot
 

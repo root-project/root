@@ -24,10 +24,12 @@ HTMLO        := $(HTMLS:.cxx=.o)
 HTMLDEP      := $(HTMLO:.o=.d) $(HTMLDO:.o=.d)
 
 HTMLLIB      := $(LPATH)/libHtml.$(SOEXT)
+HTMLMAP      := $(HTMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTMLH))
 ALLLIBS     += $(HTMLLIB)
+ALLMAPS     += $(HTMLMAP)
 
 # include all dependency files
 INCLUDEFILES += $(HTMLDEP)
@@ -45,13 +47,11 @@ $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
 
-all-html:       $(HTMLLIB)
+$(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
+		$(RLIBMAP) -o $(HTMLMAP) -l $(HTMLLIB) \
+		   -d $(HTMLLIBDEPM) -c $(HTMLL)
 
-map-html:       $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(HTMLLIB) \
-		   -d $(HTMLLIBDEP) -c $(HTMLL)
-
-map::           map-html
+all-html:       $(HTMLLIB) $(HTMLMAP)
 
 clean-html:
 		@rm -f $(HTMLO) $(HTMLDO)
@@ -59,6 +59,6 @@ clean-html:
 clean::         clean-html
 
 distclean-html: clean-html
-		@rm -f $(HTMLDEP) $(HTMLDS) $(HTMLDH) $(HTMLLIB)
+		@rm -f $(HTMLDEP) $(HTMLDS) $(HTMLDH) $(HTMLLIB) $(HTMLMAP)
 
 distclean::     distclean-html

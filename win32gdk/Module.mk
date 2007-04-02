@@ -46,6 +46,7 @@ WIN32GDKO    := $(WIN32GDKO1) $(WIN32GDKO2)
 WIN32GDKDEP  := $(WIN32GDKO:.o=.d) $(WIN32GDKDO:.o=.d)
 
 WIN32GDKLIB  := $(LPATH)/libWin32gdk.$(SOEXT)
+WIN32GDKMAP  := $(WIN32GDKLIB:.$(SOEXT)=.rootmap)
 
 # GDK libraries and DLL's
 GDKLIBS      := lib/glib-1.3.lib
@@ -54,6 +55,7 @@ GDKDLLS      := bin/glib-1.3.dll bin/iconv-1.3.dll
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WIN32GDKH))
 ALLLIBS     += $(WIN32GDKLIB)
+ALLMAPS     += $(WIN32GDKMAP)
 
 # include all dependency files
 INCLUDEFILES += $(WIN32GDKDEP)
@@ -95,13 +97,11 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
-all-win32gdk:   $(WIN32GDKLIB)
+$(WIN32GDKMAP): $(RLIBMAP) $(MAKEFILEDEP) $(WIN32GDKL)
+		$(RLIBMAP) -o $(WIN32GDKMAP) -l $(WIN32GDKLIB) \
+		   -d $(WIN32GDKLIBDEPM) -c $(WIN32GDKL)
 
-map-win32gdk:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(WIN32GDKLIB) \
-		   -d $(WIN32GDKLIBDEP) -c $(WIN32GDKL)
-
-map::           map-win32gdk
+all-win32gdk:   $(WIN32GDKLIB) $(WIN32GDKMAP)
 
 clean-win32gdk:
 		@rm -f $(WIN32GDKO) $(WIN32GDKDO)
@@ -110,7 +110,7 @@ clean::         clean-win32gdk
 
 distclean-win32gdk: clean-win32gdk
 		@rm -f $(WIN32GDKDEP) $(WIN32GDKDS) $(WIN32GDKDH) \
-		   $(WIN32GDKLIB) $(GDKLIBS) $(GDKDLLS)
+		   $(WIN32GDKLIB) $(WIN32GDKMAP) $(GDKLIBS) $(GDKDLLS)
 ifeq ($(PLATFORM),win32)
 		-@(cd $(GDKDIRS); unset MAKEFLAGS; \
 		nmake -nologo -f makefile.msc clean VC_MAJOR=$(VC_MAJOR))
