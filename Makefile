@@ -572,16 +572,12 @@ $(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)
 map::   $(ALLMAPS)
 
 dist:
-	@rm -f $(ROOTMAP)
-	@$(MAKE) map
 	@$(MAKEDIST) $(GCC_VERS)
 
 distsrc:
 	@$(MAKEDISTSRC)
 
 distmsi: build/package/msi/makemsi$(EXEEXT)
-	@rm -f $(ROOTMAP)
-	@$(MAKE) map
 	$(MAKEDIST) -msi
 
 build/package/msi/makemsi$(EXEEXT): build/package/msi/makemsi.cxx build/version_number
@@ -771,8 +767,6 @@ html: $(ROOTEXE) changelog
 	@$(MAKEHTML)
 
 install: all
-	@rm -f $(ROOTMAP)
-	@$(MAKE) map
 	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
