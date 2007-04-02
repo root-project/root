@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.168 2007/03/05 14:26:12 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.169 2007/03/05 20:38:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -318,6 +318,15 @@ namespace {
             dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
          }
       }
+#ifdef ROOTLIBDIR
+      if (!dynpath.Contains(ROOTLIBDIR)) {
+         dynpath += ";"; dynpath += ROOTLIBDIR;
+      }
+#else
+      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
+         dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
+      }
+#endif
       return dynpath;
    }
 
