@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.134 2007/02/26 16:20:20 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.135 2007/02/27 16:08:25 couet Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1030,7 +1030,7 @@ TF1 *TF1::DrawCopy(Option_t *option) const
    // Note that the default value is "L". Therefore to draw on top
    // of an existing picture, specify option "LSAME"
 
-   TF1 *newf1 = new TF1();
+   TF1 *newf1 = (TF1*)this->IsA()->New();
    Copy(*newf1);
    newf1->AppendPad(option);
    newf1->SetBit(kCanDelete);
