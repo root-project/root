@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.14 2007/02/21 17:13:05 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.15 2007/03/16 18:21:13 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -198,7 +198,7 @@ Bool_t TGLDisplayListCache::CloseCapture()
 void TGLDisplayListCache::Purge()
 {
    // Purge all entries for all drawable/LOD pairs from cache
-   if (gVirtualGL)
+   if (gVirtualGL && fDLBase != fgInvalidDLName)
       gVirtualGL->DeleteGLLists(fDLBase,fSize);
    fCacheDLMap.erase(fCacheDLMap.begin(), fCacheDLMap.end());
    fInit = kFALSE;

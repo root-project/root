@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.44 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.45 2006/12/09 23:05:17 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -350,10 +350,12 @@ void TGLScene::BeginSmartRefresh()
    LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
    while (i != fSmartRefreshCache.end()) {
       if (i->second->KeepDuringSmartRefresh() == false) {
-         delete i->second;
-         fSmartRefreshCache.erase(i);
+         LogicalShapeMapIt_t j = i++;
+         delete j->second;
+         fSmartRefreshCache.erase(j);
+      } else {
+         ++i;
       }
-      ++i;
    }
    fInSmartRefresh = true;
 }
