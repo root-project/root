@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.10 2005/11/21 08:49:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 
 //____________________________________________________________________________
 TLegendEntry::TLegendEntry(TObject* obj, const char* label, Option_t* option )
-             :TAttText(12,0,1,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
+             :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
    // TLegendEntry normal constructor for one entry in a TLegend
    //   obj is the object this entry will represent. If obj has
