@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.27 2007/02/06 14:35:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.28 2007/03/21 17:30:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -22,21 +22,19 @@
 
 ClassImp(TBox)
 
+
 //______________________________________________________________________________
-//
-// A box is defined by :
-//   - Its bottom left coordinates x1,y1
-//   - Its top right coordinates x2,y2
-//
-// A box has line attributes (see TAttLine)
-//   and fill area attributes (see TAttFill).
-//
-//Begin_Html
-/*
-<img src="gif/tg_classtree.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>Box class</h2></center>
+A box is defined by :
+<ul>
+<li> Its bottom left coordinates x1,y1
+<li> Its top right coordinates x2,y2
+</ul>
+A box has line attributes (see TAttLine) and fill area attributes
+(see TAttFill).
+End_Html */
+
 
 //______________________________________________________________________________
 TBox::TBox(): TObject(), TAttLine(), TAttFill()
@@ -45,6 +43,7 @@ TBox::TBox(): TObject(), TAttLine(), TAttFill()
 
    fTip = 0;
 }
+
 
 //______________________________________________________________________________
 TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
@@ -60,6 +59,7 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fTip = 0;
 }
 
+
 //______________________________________________________________________________
 TBox::~TBox()
 {
@@ -71,6 +71,7 @@ TBox::~TBox()
    }
 }
 
+
 //______________________________________________________________________________
 TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
 {
@@ -79,10 +80,12 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
    ((TBox&)box).TBox::Copy(*this);
 }
 
+
 //______________________________________________________________________________
 TBox& TBox::operator=(const TBox& b) 
 {
-   //assignement operator
+   // Assignment operator.
+
    if(this!=&b) {
       TObject::operator=(b);
       TAttLine::operator=(b);
@@ -96,6 +99,7 @@ TBox& TBox::operator=(const TBox& b)
    } 
    return *this;
 }
+
 
 //______________________________________________________________________________
 void TBox::Copy(TObject &obj) const
@@ -112,6 +116,7 @@ void TBox::Copy(TObject &obj) const
    ((TBox&)obj).fResizing = fResizing;
    ((TBox&)obj).fTip = 0;   //FIXME
 }
+
 
 //______________________________________________________________________________
 Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
@@ -156,6 +161,7 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
    return distance - Int_t(0.5*fLineWidth);
 }
 
+
 //______________________________________________________________________________
 void TBox::Draw(Option_t *option)
 {
@@ -167,6 +173,7 @@ void TBox::Draw(Option_t *option)
    AppendPad(option);
 
 }
+
 
 //______________________________________________________________________________
 TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
@@ -180,6 +187,7 @@ TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
    newbox->AppendPad();
    return newbox;
 }
+
 
 //______________________________________________________________________________
 void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
@@ -527,6 +535,7 @@ again:
    }
 }
 
+
 //______________________________________________________________________________
 void TBox::HideToolTip(Int_t event)
 {
@@ -538,6 +547,7 @@ void TBox::HideToolTip(Int_t event)
       gPad->CloseToolTip(fTip);
 }
 
+
 //______________________________________________________________________________
 void TBox::ls(Option_t *) const
 {
@@ -547,6 +557,7 @@ void TBox::ls(Option_t *) const
    printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
+
 //______________________________________________________________________________
 void TBox::Paint(Option_t *option)
 {
@@ -554,6 +565,7 @@ void TBox::Paint(Option_t *option)
 
    PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
+
 
 //______________________________________________________________________________
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
@@ -572,6 +584,7 @@ void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       gPad->PaintBox(x1,y1,x2,y2);
    }
 }
+
 
 //______________________________________________________________________________
 void TBox::Print(Option_t *) const
@@ -606,6 +619,7 @@ void TBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out<<"   box->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 void TBox::SetToolTipText(const char *text, Long_t delayms)
 {
@@ -626,6 +640,7 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
    if (text && strlen(text))
       fTip = gPad->CreateToolTip(this, text, delayms);
 }
+
 
 //______________________________________________________________________________
 void TBox::Streamer(TBuffer &R__b)

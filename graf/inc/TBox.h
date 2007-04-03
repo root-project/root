@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.9 2006/07/03 16:10:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.10 2007/03/21 17:30:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,8 +43,6 @@ protected:
    Double_t     fY2;           //Y of 2nd point
    Bool_t       fResizing;     //!True if box is being resized
 
-   TBox& operator=(const TBox&);
-
 public:
    //----- Private bits, clients can only test but not change them
    enum {
@@ -53,6 +51,7 @@ public:
    TBox();
    TBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TBox(const TBox &box);
+   TBox& operator=(const TBox&);
    virtual ~TBox();
    void Copy(TObject &box) const;
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
