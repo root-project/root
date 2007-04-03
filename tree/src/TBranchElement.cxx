@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.220 2007/03/08 23:29:01 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.221 2007/03/26 16:02:09 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -663,7 +663,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectio
    //
    // If splitlevel > 0 this branch in turn is split into sub branches.
 
-  Init(tree, 0, bname, cont, basketsize, splitlevel, compress);
+   Init(tree, 0, bname, cont, basketsize, splitlevel, compress);
 }
 
 //______________________________________________________________________________
