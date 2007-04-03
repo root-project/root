@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.4 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.cxx,v 1.5 2007/04/02 16:53:05 antcheva Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -128,7 +128,7 @@ void TGXYLayoutHints::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
 {
    // Save XY layout hints as a C++ statement(s) on output stream.
    
-   TString flag;
+   TString flag = "";
    if (fFlag & kLRubberX) {
       if (flag.Length() == 0)  flag  = "TGXYLayoutHints::kLRubberX";
       else                     flag += " | TGXYLayoutHints::kLRubberX";
@@ -147,7 +147,12 @@ void TGXYLayoutHints::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
    }
 
    out << ", new TGXYLayoutHints(" << GetX() << ", " << GetY() << ", " 
-       << GetW() << ", " << GetH() << ", " << flag << ")";
+       << GetW() << ", " << GetH();
+
+   if (!flag.Length()) 
+      out << ")";
+   else
+      out << ", " << flag << ")";
 
 }
 
