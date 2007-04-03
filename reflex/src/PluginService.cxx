@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PluginService.cxx,v 1.2 2006/12/01 08:10:02 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PluginService.cxx,v 1.3 2006/12/01 09:09:37 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -8,6 +8,10 @@
 // permissions notice appear in all copies and derivatives.
 //
 // This software is provided "as is" without express or implied warranty.
+
+#ifndef REFLEX_BUILD
+#define REFLEX_BUILD
+#endif
 
 #include "Reflex/PluginService.h"
 #include "Reflex/SharedLibrary.h"
