@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.107 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.108 2007/03/01 10:32:31 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1684,17 +1684,16 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 
    //
    // Fill the profile histogram
-   Double_t cont, err;
+   Double_t cont;
    for (Int_t binx =0;binx<=nx+1;binx++) {
       for (Int_t biny=firstybin;biny<=lastybin;biny++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          cont =  GetCellContent(binx,biny);
-         err = GetCellError(binx, biny);
 
          if (cont) {
-            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), err*err);
+            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont );
          }
       }
    }
@@ -1794,16 +1793,15 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    h1->SetMarkerStyle(this->GetMarkerStyle());
 
    // Fill the profile histogram
-   Double_t cont, err;
+   Double_t cont;
    for (Int_t biny =0;biny<=ny+1;biny++) {
       for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          cont =  GetCellContent(binx,biny);
-         err = GetCellError(binx, biny);
          if (cont) {
-            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), err*err);
+            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
          }
       }
    }
@@ -1896,7 +1894,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
       } else {
          h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
       }
-      if (opt.Contains("e")) h1->Sumw2();
+      if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
    }
    if (pname != name)  delete [] pname;
 
@@ -1919,7 +1917,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    h1->SetMarkerStyle(this->GetMarkerStyle());
 
    // Fill the projected histogram
-   Double_t cont,err,err2;
+   Double_t cont,err2;
+   Double_t entries = 0;
    for (Int_t binx =0;binx<=nx+1;binx++) {
       err2 = 0;
       cont = 0; 
@@ -1927,15 +1926,18 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont  += GetCellContent(binx,biny);
-         err   = GetCellError(binx,biny);
-         err2 += err*err;
+         Double_t cxy = GetCellContent(binx,biny);
+         Double_t exy = GetCellError(binx,biny);
+         Double_t exy2 = exy*exy; 
+         cont  += cxy;
+         err2 += exy2;
+         // count all effective entries bin by bin   
+         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
       }
       h1->SetBinContent(binx,cont);
       if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
    }
-   // use effective entries as set entries 
-   h1->SetEntries( Int_t( h1->GetEffectiveEntries() ) + 0.5);
+   h1->SetEntries( Int_t( entries + 0.5 ) );
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
@@ -2025,7 +2027,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
       } else {
          h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
       }
-      if (opt.Contains("e")) h1->Sumw2();
+      if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
    }
    if (pname != name)  delete [] pname;
 
@@ -2048,7 +2050,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    h1->SetMarkerStyle(this->GetMarkerStyle());
 
    // Fill the projected histogram
-   Double_t cont,err,err2;
+   Double_t cont,err2;
+   Double_t entries  = 0;
    for (Int_t biny =0;biny<=ny+1;biny++) {
       err2 = 0;
       cont = 0; 
@@ -2056,15 +2059,18 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont  += GetCellContent(binx,biny);
-         err   = GetCellError(binx,biny);
-         err2 += err*err;
+         Double_t cxy = GetCellContent(binx,biny);
+         Double_t exy = GetCellError(binx,biny);
+         Double_t exy2 = exy*exy; 
+         cont  += cxy;
+         err2 += exy2;
+         // count all effective entries bin by bin   
+         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
       }
       h1->SetBinContent(biny,cont);
       if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
    }
-   // use effective entries as set entries 
-   h1->SetEntries( Int_t( h1->GetEffectiveEntries() ) + 0.5);
+   h1->SetEntries( Int_t( entries + 0.5 ));
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
