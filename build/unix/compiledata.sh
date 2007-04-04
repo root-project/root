@@ -59,6 +59,8 @@ elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
 fi
 
+# Remove -Iinclude since it is 'location' depedent
+CXXFLAGS=`echo $CXXFLAGS | sed 's/-Iinclude //' `
 
 rm -f __compiledata
 
