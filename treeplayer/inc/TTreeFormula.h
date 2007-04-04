@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.54 2007/01/22 07:57:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.55 2007/04/04 12:43:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -69,7 +69,7 @@ protected:
    enum {
       kIsCharacter = BIT(12),
       kMissingLeaf = BIT(15), // true if some of the needed leaves are missing in the current TTree
-      kIsInteger   = BIT(17), // true if the branch contains an integer variable
+      kIsInteger   = BIT(17)  // true if the branch contains an integer variable
    };
    enum { 
       kDirect, kDataMember, kMethod, 
