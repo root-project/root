@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.12 2007/01/15 13:24:03 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.13 2007/02/06 15:20:31 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -252,7 +252,7 @@ Double_t TVector3::Mag() const
 //______________________________________________________________________________
 Double_t TVector3::Perp() const 
 { 
-   //return the transverse component squared (R^2 in cylindrical coordinate system)
+   //return the transverse component  (R in cylindrical coordinate system)
 
    return TMath::Sqrt(Perp2()); 
 }
@@ -261,7 +261,7 @@ Double_t TVector3::Perp() const
 //______________________________________________________________________________
 Double_t TVector3::Perp(const TVector3 & p) const
 { 
-   //return the transverse component squared (R^2 in cylindrical coordinate system)
+   //return the transverse component (R in cylindrical coordinate system)
 
    return TMath::Sqrt(Perp2(p)); 
 }
