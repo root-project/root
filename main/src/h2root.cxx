@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.28 2007/02/09 08:27:44 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.29 2007/02/19 08:20:01 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -64,7 +64,7 @@ extern "C" int hcbook[51];
 extern "C" int rzcl[11];
 #endif
 
-char *bigbuf = 0; //this variable must be global for amd64
+char bigbuf[4000000]; //this variable must be global for amd64
 int *iq, *lq;
 float *q;
 char idname[128];
@@ -668,7 +668,7 @@ void convert_cwn(Int_t id)
    Int_t *lenbool  = new Int_t[nvar];
    UChar_t *boolarr = new UChar_t[10000];
    x = new float[nvar];
-   bigbuf = new char[2500000];
+   //bigbuf = new char[2500000];
 
    chtag_out[nvar*kNchar]=0;
    for (i=0;i<80;i++)chtitl[i]=0;
@@ -884,7 +884,7 @@ void convert_cwn(Int_t id)
    tree->Write();
    delete tree;
    delete [] x;
-   delete [] bigbuf;
+   //delete [] bigbuf;
    delete [] charflag;
    delete [] lenchar;
    delete [] boolflag;
