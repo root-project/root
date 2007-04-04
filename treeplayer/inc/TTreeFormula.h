@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.53 2006/09/07 07:31:34 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.54 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -68,7 +68,8 @@ friend class TTreeFormulaManager;
 protected:
    enum {
       kIsCharacter = BIT(12),
-      kMissingLeaf = BIT(15) // true if some of the needed leaves are missing in the current TTree
+      kMissingLeaf = BIT(15), // true if some of the needed leaves are missing in the current TTree
+      kIsInteger   = BIT(17), // true if the branch contains an integer variable
    };
    enum { 
       kDirect, kDataMember, kMethod, 
@@ -172,7 +173,7 @@ public:
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword.
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
-   virtual Bool_t      IsInteger() const;
+   virtual Bool_t      IsInteger(Bool_t fast=kTRUE) const;
            Bool_t      IsQuickLoad() const { return fQuickLoad; }
    virtual Bool_t      IsString() const;
    virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }

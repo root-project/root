@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.213 2007/02/06 15:20:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.214 2007/03/30 21:37:47 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -284,6 +284,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
       fBranches.AddAtAndExpand(branch,k);
    }
+   
+   if (IsInteger(kFALSE)) SetBit(kIsInteger);
 
    if(savedir) savedir->cd();
 }
@@ -3944,13 +3946,18 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
 }
 
 //______________________________________________________________________________
-Bool_t TTreeFormula::IsInteger() const
+Bool_t TTreeFormula::IsInteger(Bool_t fast) const
 {
    // return TRUE if the formula corresponds to one single Tree leaf
    // and this leaf is short, int or unsigned short, int
    // When a leaf is of type integer, the generated histogram is forced
    // to have an integer bin width
 
+   if (fast) {
+      if (TestBit(kIsInteger)) return kTRUE;
+      else                     return kFALSE;
+   }
+   
    if (fNoper==2 && GetAction(0)==kAlternate) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
