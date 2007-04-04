@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVAnalysis.C,v 1.63 2006/11/19 00:43:59 stelzer Exp $
+// @(#)root/tmva $Id: TMVAnalysis.C,v 1.8 2006/11/20 15:35:28 brun Exp $
 /**********************************************************************************
  * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
  * Package   : TMVA                                                               *
@@ -22,6 +22,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TMVA/Factory.h"
 
 #include "TMVAGui.C"
 

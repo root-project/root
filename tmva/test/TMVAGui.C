@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "TROOT.h"
 #include "TControlBar.h"
 
 void TMVAGui( const char* fName = "TMVA.root" ) 
