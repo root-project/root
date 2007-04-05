@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.92 2007/03/27 15:30:55 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.93 2007/04/04 15:46:45 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -2025,9 +2025,9 @@ TH1 *TH3::Project3D(Option_t *option) const
                   e   = GetBinError(bin);
                   Double_t e2 = e * e; 
                   if (e2 > 0) entries += cont*cont/e2;
-                }
-                else 
-                   entries += cont;
+               }
+               else 
+                  entries += cont;
             }
          }
       }
