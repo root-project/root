@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.23 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.24 2006/10/05 17:00:04 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -580,7 +580,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    pname += (pname[pname.length()-1]=='>') ? " >" : ">";
    i->SetName(pname.c_str());
    i->SetClass(0);
-   i->GetElements()->Clear();
+   i->GetElements()->Delete();
    TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);  
    i->GetElements()->Add( fel );
    Int_t size = 0;
