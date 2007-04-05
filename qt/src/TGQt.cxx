@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.35 2006/12/12 20:12:47 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.36 2007/01/26 07:51:09 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
+#ifdef R__HAVE_CONFIG
 # include "config.h"
 #endif
 #ifdef R__QTWIN32
@@ -701,7 +701,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.147 2007/01/18 01:20:02 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.36 2007/01/26 07:51:09 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
