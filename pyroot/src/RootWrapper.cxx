@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.50 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.51 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -720,8 +720,12 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       if ( clActual && klass != clActual ) {
        // root/meta base class offset fails in the case of virtual inheritance
        //   Long_t offset = clActual->GetBaseClassOffset( klass );
-         Long_t offset = G__isanybase(
-            klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (Long_t)address );
+         Long_t offset;
+         if (klass->GetClassInfo() &&  clActual->GetClassInfo()) {
+            offset = G__isanybase(klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (Long_t)address );
+         } else {
+            offset = clActual->GetBaseClassOffset( klass ); 
+         }
          (Long_t&)address -= offset;
          klass = clActual;
       }
