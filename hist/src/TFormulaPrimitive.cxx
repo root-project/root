@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.3 2005/07/18 20:25:53 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.4 2006/05/17 16:37:25 couet Exp $
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************
@@ -224,6 +224,7 @@ Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
 
    if (fgListOfFunction == 0) BuildBasicFormulas();
    if (FindFormula(formula->GetName())){
+      delete formula;
       return 0;
    }
    fgListOfFunction->AddLast(formula);
