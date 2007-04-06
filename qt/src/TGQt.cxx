@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.36 2007/01/26 07:51:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.37 2007/04/05 18:03:56 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
+#if defined(HAVE_CONFIG) || defined (R__HAVE_CONFIG) 
 # include "config.h"
 #endif
 #ifdef R__QTWIN32
@@ -701,7 +701,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.36 2007/01/26 07:51:09 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.148 2007/04/06 17:49:52 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1635,6 +1635,7 @@ void  TGQt::GetRGB(int index, float &r, float &g, float &b)
 const QTextCodec *TGQt::GetTextDecoder()
 {
    static  QTextCodec  *fGreekCodec = 0;
+   QTextCodec  *codec = 0;
    if (!fCodec) {
       fCodec =  QTextCodec::codecForName(fFontTextCode); //CP1251
       if (!fCodec)
@@ -1642,17 +1643,20 @@ const QTextCodec *TGQt::GetTextDecoder()
       else
          QTextCodec::setCodecForLocale(fCodec);
    }
+   codec = fCodec;
    if (fTextFont/10 == 12 ) {
-        // We expect the Greek letters and should apply the right Code
+        // We expect the Greek letters and should apply the right Codec
       if (!fGreekCodec) {
-         if (QString(fSymbolFontFamily).contains("Symbol"))
-            fGreekCodec  = fCodec;
-         else
+         if (QString(fSymbolFontFamily).contains("Symbol")) {
+            fGreekCodec = (fFontTextCode == "ISO8859-1") ? fCodec:
+                          QTextCodec::codecForName("ISO8859-1"); //iso8859-1
+         } else {
             fGreekCodec  = QTextCodec::codecForName("symbol"); // ISO8859-7
       }
-      return fGreekCodec;
    }
-   return fCodec;
+      if (fGreekCodec) codec=fGreekCodec;
+   }
+   return codec;
 }
 
 //______________________________________________________________________________
@@ -1780,12 +1784,17 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
      }
      res = reqDialog.exec();
      if (res == QDialog::Accepted ) {
+        // save the correct text font to select the proper codec
+        Font_t textFontSave =  fTextFont;
+        fTextFont = 62;
 #if QT_VERSION < 0x40000
         QCString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
 #else /* QT_VERSION */
         Q3CString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
 #endif /* QT_VERSION */
         qstrcpy(text, (const char *)r);
+        // restore the font
+        fTextFont = textFontSave;
      }
      reqDialog.hide();
      if (QClientFilter() && QClientFilter()->PointerGrabber()) {
