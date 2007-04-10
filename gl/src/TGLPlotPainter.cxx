@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.12 2007/01/26 14:06:54 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.13 2007/03/29 12:08:32 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -1335,11 +1335,15 @@ void TGLTH3Slice::SetSliceWidth(Int_t width)
 void TGLTH3Slice::DrawSlice(Double_t pos)const
 {
    // Draw slice.
+   Int_t bin = 0;
+   for (Int_t i = fAxis->GetFirst(), e = fAxis->GetLast(); i <= e; ++i) {
+      if (pos >= fAxis->GetBinLowEdge(i) && pos <= fAxis->GetBinUpEdge(i)) {
+         bin = i;
+         break;
+      }
+   }
 
-   const Int_t bin = fAxis->FindBin(pos);
- //  TGLDisableGuard depthGuard(GL_DEPTH_TEST);
-
-   if (bin && bin < fAxis->GetNbins() + 1) {
+   if (bin) {
       Int_t low = 1, up = 2;
       if (bin - fSliceWidth + 1 >= fAxis->GetFirst()) {
          low = bin - fSliceWidth + 1;

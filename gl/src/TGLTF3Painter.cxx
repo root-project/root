@@ -696,7 +696,7 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
                                      fHist->GetBinContent(ir + 1, jr + 1, kr + 1), fHist->GetBinContent(ir, jr + 1, kr + 1)};
             Int_t start  = Int_t(mesh.size());
             MarchingCube(xMin + i * xStep, yMin + j * yStep, zMin + k * zStep, xStep, yStep, zStep,
-                         fCoord->GetXScale(), fCoord->GetXScale(), fCoord->GetZScale(), cube, mesh,
+                         fCoord->GetXScale(), fCoord->GetYScale(), fCoord->GetZScale(), cube, mesh,
                          isoValue);
             Int_t finish = Int_t(mesh.size());
             if (start != finish)
