@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.13 2005/11/29 19:02:58 brun Exp $
+// @(#)root/minuit:$Name: v5-11-02 $:$Id: TFitter.h,v 1.14 2006/03/20 08:22:40 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -34,8 +34,11 @@ private:
    Double_t  *fCovar;      //Covariance matrix
    Double_t  *fSumLog;     //Sum of logs (array of fNlog elements)
    TMinuit   *fMinuit;     //pointer to the TMinuit object
-   
-   public:
+
+   TFitter(const TFitter&); // Not implemented
+   TFitter& operator=(const TFitter&); // Not implemented
+
+public:
    TFitter(Int_t maxpar = 25);
    virtual ~TFitter();
    virtual Double_t   Chisquare(Int_t npar, Double_t *params) const ;
