@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.6 2006/06/08 15:42:01 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.6 2006/06/08 15:42:01 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -129,8 +129,29 @@ namespace ROOT {
         return *this;
       }
 
-      // needed A(), B() , C() , D() ??? for the moment skip them
+      /**
+         Return the a coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the  
+         x-component of the vector perpendicular to the plane. 
+      */ 
+       Scalar A() { return fA; }
 
+      /**
+         Return the b coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the 
+         y-component of the vector perpendicular to the plane  
+      */ 
+       Scalar B() { return fB; }
+
+      /**
+         Return the c coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also the
+         z-component of the vector perpendicular to the plane  
+      */ 
+       Scalar C() { return fC; }
+
+      /**
+         Return the d coefficient of the plane equation \f$ a*x + b*y + c*z + d = 0 \f$. It is also 
+         the distance from the origin (HesseDistance)
+      */ 
+       Scalar D() { return fD; }
 
       /**
          Return normal vector to the plane as Cartesian DisplacementVector 
