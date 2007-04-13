@@ -248,7 +248,7 @@ void testMT_S(const A & a, double & time, C & result) {
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
       atmp(0,0) = gV[l];
-      result  = Transpose(a);
+      result  = Transpose(atmp);
     }
 }
 
@@ -446,7 +446,7 @@ double testDot_C(const V & v1, const V & v2, double & time) {
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
       vtmp[0] = gV[l];
-      result = dot(v1,v2);  
+      result = dot(v1,vtmp);  
     }
   return result; 
 }
