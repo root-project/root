@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.27 2007/01/23 08:20:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.28 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -302,7 +302,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->SetTextAlign(22);
             xtext = 0.5*(fX1+fX2);
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                          titlesize,
+                                          latex->GetTextSize(),
                                           sl);
             gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
          }
