@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.53 2007/01/29 10:06:50 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.54 2007/01/30 11:49:14 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2146,10 +2146,9 @@ Bool_t TGuiBldDragManager::HandleButtonPress(Event_t *event)
    }
 
    // keep color dialog on the top
-   TGColorDialog *cd = GetGlobalColorDialog(kFALSE);
-   if (cd && cd->IsMapped()) {
-      cd->RaiseWindow();
-      return kTRUE;
+   if (fgGlobalColorDialog && fgGlobalColorDialog->IsMapped()) {
+      fgGlobalColorDialog->RaiseWindow();
+      return kFALSE;
    }
 
    if ( ((event->fCode != kButton1) && (event->fCode != kButton3)) ||
