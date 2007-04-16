@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.11 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.12 2006/12/12 14:19:18 couet Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -67,9 +67,8 @@ Double_t TGenPhaseSpace::Generate()
 {
    //  Generate a random final state.
    //  The function returns the weigth of the current event.
-   //  The TLorentzVector of each decay product can be get using GetDecay(n).
-   //  The maximum weigth can be get using GetWtMax().
-   // 
+   //  The TLorentzVector of each decay product can be obtained using GetDecay(n).
+
    Double_t rno[kMAXP];
    rno[0] = 0;
    Int_t n;
