@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.18 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.19 2006/11/09 13:50:51 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -639,7 +639,7 @@ void ReflexBuilderUnitTest::freefunctionbuilder()
   CPPUNIT_ASSERT(m);
   Member f = m;
   CPPUNIT_ASSERT(f);
-  CPPUNIT_ASSERT(f.IsStatic());
+  CPPUNIT_ASSERT(!f.IsStatic());
   int a = 3;
   Object ret = f.Invoke(Tools::MakeVector((void*)&a));
   CPPUNIT_ASSERT( ret.Address() );
@@ -654,7 +654,7 @@ void ReflexBuilderUnitTest::freefunctionbuilder()
   Member m2 = g.MemberByName("func2");
   Member f2 = m2;
   CPPUNIT_ASSERT(f2);
-  CPPUNIT_ASSERT(f2.IsStatic());
+  CPPUNIT_ASSERT(!f2.IsStatic());
 }
 
 void ReflexBuilderUnitTest::freevariablebuilder() {
@@ -964,7 +964,7 @@ void ReflexBuilderUnitTest::member_template() {
   CPPUNIT_ASSERT( mt3i2 );
   CPPUNIT_ASSERT( mt3i2.IsTemplateInstance());
   CPPUNIT_ASSERT("foo<std::string>" == mt3i2.Name(SCOPED));
-  CPPUNIT_ASSERT("static foo<std::string>" == mt3i2.Name(SCOPED|FINAL|QUALIFIED));
+  CPPUNIT_ASSERT("foo<std::string>" == mt3i2.Name(SCOPED|FINAL|QUALIFIED));
   CPPUNIT_ASSERT_EQUAL(1, (int)mt3i2.TemplateArgumentSize());
   CPPUNIT_ASSERT( mt3i2.TemplateArgumentAt(0) );
   CPPUNIT_ASSERT("std::string" == mt3i2.TemplateArgumentAt(0).Name(SCOPED|QUALIFIED|FINAL));

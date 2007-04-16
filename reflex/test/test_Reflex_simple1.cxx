@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.15 2006/09/14 13:35:58 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.16 2006/10/09 09:27:17 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -77,7 +77,7 @@ void ReflexSimple1Test::testSizeT() {
   Type t = Type::ByName("size_t");
   CPPUNIT_ASSERT(t);
 #if defined(__GNUC__)
-#if __GNUC__ <= 3
+#if (__GNUC__ <= 3) && (!__x86_64__)
   std::string size_t_T = "j";
 #else 
   std::string size_t_T = "m";
