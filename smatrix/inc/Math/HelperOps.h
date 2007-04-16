@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.12 2006/07/03 14:30:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.13 2007/03/06 10:15:18 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps
@@ -18,6 +18,7 @@
  *  and used to throw static assert.
  */
 #include "Math/StaticCheck.h"
+#include <algorithm>  // required by std::copy
 
 namespace ROOT { 
 
