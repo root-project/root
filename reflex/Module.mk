@@ -207,7 +207,7 @@ else
 endif
 
 lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(RFLX_REFLEXLL)
+		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< $(RFLX_REFLEXLL)
 
 %_rflx.o : %_rflx.cpp
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< $(CXXOUT)$@
