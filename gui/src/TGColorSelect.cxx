@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.23 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.24 2007/03/17 12:03:00 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -350,9 +350,10 @@ void TGColorPopup::PreviewColor(Pixel_t color)
 {
    // Emit a signal to see preview.
    
+   if (fClient->IsEditable()) return;
+   
    fCurrentColor = color;
    SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), -1, color);     
-
 }
 
 //________________________________________________________________________________
