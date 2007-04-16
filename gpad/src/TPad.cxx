@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.264 2007/03/13 16:46:05 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.265 2007/03/29 13:10:36 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1404,6 +1404,9 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 
    if (!IsEditable()) return 0;
 
+   TPad *padsav = (TPad*)gPad;
+   cd();
+
    TH1F *hframe = (TH1F*)FindObject("hframe");
    if (hframe) delete hframe;
    Int_t nbins = 1000;
@@ -1431,6 +1434,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetDirectory(0);
    hframe->Draw(" ");
    Update();
+   if (padsav) padsav->cd();
    return hframe;
 }
 
