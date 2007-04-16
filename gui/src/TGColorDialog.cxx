@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.25 2007/03/19 09:56:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.26 2007/03/22 13:07:57 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -103,41 +103,6 @@ enum EColorImage {
    kIMG_HS,
    kIMG_L
 };
-
-/*
-// "Basic" colors:
-
-static UChar_t bcolor[48][3] = {
-   { 0xff, 0x80, 0x80 }, { 0xff, 0xff, 0x80 },
-   { 0x80, 0xff, 0x80 }, { 0x00, 0xff, 0x80 },
-   { 0x80, 0xff, 0xff }, { 0x00, 0x80, 0xff },
-   { 0xff, 0x80, 0xc0 }, { 0xff, 0x80, 0xff },
-
-   { 0xff, 0x00, 0x00 }, { 0xff, 0xff, 0x00 },
-   { 0x80, 0xff, 0x00 }, { 0x00, 0xff, 0x40 },
-   { 0x00, 0xff, 0xff }, { 0x00, 0x80, 0xc0 },
-   { 0x80, 0x80, 0xc0 }, { 0xff, 0x00, 0xff },
-
-   { 0x80, 0x40, 0x40 }, { 0xff, 0x80, 0x40 },
-   { 0x00, 0xff, 0x00 }, { 0x00, 0x80, 0x80 },
-   { 0x00, 0x40, 0x80 }, { 0x80, 0x80, 0xff },
-   { 0x80, 0x00, 0x40 }, { 0xff, 0x00, 0x80 },
-
-   { 0x80, 0x00, 0x00 }, { 0xff, 0x80, 0x00 },
-   { 0x00, 0x80, 0x00 }, { 0x00, 0x80, 0x40 },
-   { 0x00, 0x00, 0xff }, { 0x00, 0x00, 0xa0 },
-   { 0x80, 0x00, 0x80 }, { 0x80, 0x00, 0xff },
-
-   { 0x40, 0x00, 0x00 }, { 0x80, 0x40, 0x00 },
-   { 0x00, 0x40, 0x00 }, { 0x00, 0x40, 0x40 },
-   { 0x00, 0x00, 0x80 }, { 0x00, 0x00, 0x40 },
-   { 0x40, 0x00, 0x40 }, { 0x40, 0x00, 0x80 },
-
-   { 0x00, 0x00, 0x00 }, { 0x80, 0x80, 0x00 },
-   { 0x80, 0x80, 0x40 }, { 0x80, 0x80, 0x80 },
-   { 0x40, 0x80, 0x80 }, { 0xc0, 0xc0, 0xc0 },
-   { 0x40, 0x00, 0x40 }, { 0xff, 0xff, 0xff }
-}; */
 
 // "User" defined colors
 
@@ -1284,8 +1249,6 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    if (color)
       fColors->SetColor(*color);
 
-
-
    TGTextButton *add = new TGTextButton(vf2, new TGHotString("&Add to Custom Colors"),
                                         kCDLG_ADD);
    vf2->AddFrame(add, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
@@ -1343,7 +1306,7 @@ TGColorDialog::~TGColorDialog()
 //________________________________________________________________________________
 void TGColorDialog::SetCurrentColor(Pixel_t col)
 {
-   // Change current color
+   // Change current color.
 
    if (fCurrentColor == col) {
       return;
@@ -1352,12 +1315,13 @@ void TGColorDialog::SetCurrentColor(Pixel_t col)
    fCurrentColor = col;
    fColors->SetColor(col);
    fSample->SetBackgroundColor(col);
+   ColorSelected(col);
 }
 
 //________________________________________________________________________________
 void TGColorDialog::ColorSelected(Pixel_t color)
 {
-   // emit signal when color was selected
+   // Emit signal about selected color.
 
    Emit("ColorSelected(Pixel_t)", color);
 }
@@ -1462,8 +1426,10 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      CloseWindow();
                      break;
                   case kCDLG_CANCEL:
-                     TGColorPopup *p = (TGColorPopup *)GetMain();
-                     p->PreviewColor(fSampleOld->GetBackground());
+                     if (!fClient->IsEditable()) {
+                        TGColorPopup *p = (TGColorPopup *)GetMain();
+                        p->PreviewColor(fSampleOld->GetBackground());
+                     }
                      CloseWindow();
                      break;
                }
@@ -1552,7 +1518,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
          }
          break;
    }
-
+   
    return kTRUE;
 }
 
@@ -1560,9 +1526,8 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *object)
 {
    //  Set the color info in RGB and HLS parts
-  
-   if (object->InheritsFrom(TColorWheel::Class())) {
-      
+
+   if (object == fColorWheel) {
       Int_t n = fColorWheel->GetColor(px,py);
       if (n < 0) return;
       TColor *color = gROOT->GetColor(n);
@@ -1578,7 +1543,6 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
          fCurrentColor = pcolor;
          fColors->SetColor(pcolor);
          ColorSelected(pcolor);
-      //printf("event %d colorInfo: %s\n",event, object->GetObjectInfo(px,py));
       }
    }
 }
@@ -1588,6 +1552,11 @@ void TGColorDialog::DoPreview()
 {
    // Slot method called when Preview button is clicked.
 
+   if (fClient->IsEditable()) {
+      ColorSelected(fSample->GetBackground());
+      return;
+   }
    TGColorPopup *p = (TGColorPopup *)GetMain();
    p->PreviewColor(fSample->GetBackground());
 }
+
