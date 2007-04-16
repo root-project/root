@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.5 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.6 2006/06/27 14:02:26 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -84,11 +84,11 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
     const unsigned int jj = j + ji;
 
     k = j;
-    p = std::fabs(rhs[jj + arrayOffset]);
+    p = std::abs(rhs[jj + arrayOffset]);
 
     if (j != n) {
       for (i = j + 1; i <= n; ++i) {
-	q = std::fabs(rhs[i + ji + arrayOffset]);
+	q = std::abs(rhs[i + ji + arrayOffset]);
 	if (q > p) {
 	  k = i;
 	  p = q;
@@ -114,7 +114,7 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
     det *= rhs[jj + arrayOffset];
 #ifdef XXX
-    t = std::fabs(det);
+    t = std::abs(det);
     if (t < 1e-19 || t > 1e19) {
       det = 0;
       return false;

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfactir.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfactir.h,v 1.3 2006/06/02 15:04:54 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfactir
@@ -75,11 +75,11 @@ bool Dfactir(Matrix& rhs, typename Matrix::value_type& det, unsigned int* ir)
     const unsigned int jj = j + ji;
 
     k = j;
-    p = std::fabs(a[jj]);
+    p = std::abs(a[jj]);
 
     if (j != n) {
       for (i = j + 1; i <= n; ++i) {
-	q = std::fabs(a[i + ji]);
+	q = std::abs(a[i + ji]);
 	if (q > p) {
 	  k = i;
 	  p = q;
@@ -107,7 +107,7 @@ bool Dfactir(Matrix& rhs, typename Matrix::value_type& det, unsigned int* ir)
 
     det *= a[jj];
 #ifdef XXX
-    t = std::fabs(det);
+    t = std::abs(det);
     if (t < 1e-19 || t > 1e19) {
       det = 0;
       return false;

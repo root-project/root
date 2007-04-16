@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.3 2006/06/02 15:04:54 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.4 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_UnaryOperators
@@ -117,7 +117,7 @@ template <class T>
 class Fabs {
 public:
   static inline T apply(const T& rhs) {
-    return std::fabs(rhs);
+    return std::abs(rhs);
   }
 };
 

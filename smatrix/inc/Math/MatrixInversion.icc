@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.4 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.5 2006/06/30 22:36:55 moneta Exp $
 // Authors: CLHEP authors, L. Moneta    2006  
 
 #include "Math/SVector.h"
@@ -88,9 +88,9 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 	  pivrow = j+1;
 	  ip = rhs.Array() + (j+1)*j/2 + j-1;
 	  for (i=j+1; i <= nrow ; ip += i++)
-	    if (std::fabs(*ip) > lambda)
+	    if (std::abs(*ip) > lambda)
 	      {
-		lambda = std::fabs(*ip);
+		lambda = std::abs(*ip);
 		pivrow = i;
 	      }
 	  
@@ -106,7 +106,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 	    }
 	  else
 	    {
-	      if (std::fabs(*mjj) >= lambda*alpha)
+	      if (std::abs(*mjj) >= lambda*alpha)
 		{
 		  s=1;
 		  pivrow=j;
@@ -117,16 +117,16 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		  ip = rhs.Array() + pivrow*(pivrow-1)/2+j-1;
 		  for (k=j; k < pivrow; k++)
 		    {
-		      if (std::fabs(*ip) > sigma)
-			sigma = std::fabs(*ip);
+		      if (std::abs(*ip) > sigma)
+			sigma = std::abs(*ip);
 		      ip++;
 		    }
-		  if (sigma * std::fabs(*mjj) >= alpha * lambda * lambda)
+		  if (sigma * std::abs(*mjj) >= alpha * lambda * lambda)
 		    {
 		      s=1;
 		      pivrow = j;
 		    }
-		  else if (std::fabs(*(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1)) 
+		  else if (std::abs(*(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1)) 
 				>= alpha * sigma)
 		    s=1;
 		  else
@@ -150,7 +150,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		      for (k=j+1; k<=i; k++)
 			{
 			  *ip -= temp1 * *(rhs.Array() + k*(k-1)/2 + j-1);
-			  if (std::fabs(*ip) <= epsilon)
+			  if (std::abs(*ip) <= epsilon)
 			    *ip=0;
 			  ip++;
 			}
@@ -200,7 +200,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		      for (k=j+1; k<=i; k++)
 			{
 			  *ip -= temp1 * *(rhs.Array() + k*(k-1)/2 + j-1);
-			  if (std::fabs(*ip) <= epsilon)
+			  if (std::abs(*ip) <= epsilon)
 			    *ip=0;
 			  ip++;
 			}
@@ -263,17 +263,17 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			{
 			  ip = rhs.Array() + i*(i-1)/2 + j-1;
 			  temp1 = *ip * *mjj + *(ip + 1) * *(mjj + j);
-			  if (std::fabs(temp1 ) <= epsilon)
+			  if (std::abs(temp1 ) <= epsilon)
 			    temp1 = 0;
 			  temp2 = *ip * *(mjj + j) + *(ip + 1) * *(mjj + j + 1);
-			  if (std::fabs(temp2 ) <= epsilon)
+			  if (std::abs(temp2 ) <= epsilon)
 			    temp2 = 0;
 			  for (k = j+2; k <= i ; k++)
 			    {
 			      ip = rhs.Array() + i*(i-1)/2 + k-1;
 			      iq = rhs.Array() + k*(k-1)/2 + j-1;
 			      *ip -= temp1 * *iq + temp2 * *(iq+1);
-			      if (std::fabs(*ip) <= epsilon)
+			      if (std::abs(*ip) <= epsilon)
 				*ip = 0;
 			    }
 			}
@@ -282,11 +282,11 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			{
 			  ip = rhs.Array() + i*(i-1)/2 + j-1;
 			  temp1 = *ip * *mjj + *(ip+1) * *(mjj + j);
-			  if (std::fabs(temp1) <= epsilon)
+			  if (std::abs(temp1) <= epsilon)
 			    temp1 = 0;
 			  *(ip+1) = *ip * *(mjj + j) 
 			    + *(ip+1) * *(mjj + j + 1);
-			  if (std::fabs(*(ip+1)) <= epsilon)
+			  if (std::abs(*(ip+1)) <= epsilon)
 			    *(ip+1) = 0;
 			  *ip = temp1;
 			}
@@ -462,11 +462,11 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
   mIter mjj = mj;
   for (unsigned int j=1;j<=n;j++) {
     unsigned int k = j;
-    p = (std::fabs(*mjj));
+    p = (std::abs(*mjj));
     if (j!=n) {
       mIter mij = mj + n + j - 1; 
       for (unsigned int i=j+1;i<=n;i++) {
-	q = (std::fabs(*(mij)));
+	q = (std::abs(*(mij)));
 	if (q > p) {
 	  k = i;
 	  p = q;
@@ -502,7 +502,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
     }
     det *= *mjj;
     *mjj = 1.0 / *mjj;
-    t = (std::fabs(det));
+    t = (std::abs(det));
     if (t < g1) {
       det = 0.0;
       if (jfail == jrange) jfail = junder;

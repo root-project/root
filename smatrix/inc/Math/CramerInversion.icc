@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: CramerInversion.icc,v 1.4 2006/06/08 15:23:33 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: CramerInversion.icc,v 1.5 2007/03/22 10:36:52 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -55,9 +55,9 @@ bool Inverter<3>::Dinv(MatrixRep & rhs) {
   const Scalar c21 = rhs[2] * rhs[3] - rhs[0] * rhs[5];
   const Scalar c22 = rhs[0] * rhs[4] - rhs[1] * rhs[3];
 
-  const Scalar t0 = std::fabs(rhs[0]);
-  const Scalar t1 = std::fabs(rhs[3]);
-  const Scalar t2 = std::fabs(rhs[6]);
+  const Scalar t0 = std::abs(rhs[0]);
+  const Scalar t1 = std::abs(rhs[3]);
+  const Scalar t2 = std::abs(rhs[6]);
   Scalar det;
   Scalar tmp;
   if (t0 >= t1) {
