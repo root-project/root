@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.194 2007/03/19 14:43:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.195 2007/03/22 10:18:50 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4329,7 +4329,7 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
+Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -4348,17 +4348,22 @@ Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
 
    if (!IsValid()) return -1;
 
-   TString par = tpar;
-   if (!par.EndsWith(".par")) {
-      Error("UploadPackage", "package %s must have extension .par", tpar);
-      return -1;
-   }
+   TString par = pack;
+   if (!par.EndsWith(".par"))
+      // The client specified only the name: add the extension
+      par += ".par";
 
+   // Default location is the local working dir; then the package dir
    gSystem->ExpandPathName(par);
-
    if (gSystem->AccessPathName(par, kReadPermission)) {
-      Error("UploadPackage", "package %s does not exist", par.Data());
-      return -1;
+      TString tried = par;
+      // Try the package dir
+      par = Form("%s/%s", fPackageDir.Data(), gSystem->BaseName(par));
+      if (gSystem->AccessPathName(par, kReadPermission)) {
+         Error("UploadPackage", "PAR file '%s' not found; paths tried: %s, %s",
+                           gSystem->BaseName(par), tried.Data(), par.Data());
+         return -1;
+      }
    }
 
    // Strategy:
@@ -4819,10 +4824,10 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
    Float_t evtrti = (procTime > 0. && processed > 0) ? processed / procTime : -1.;
    if (evtrti > 0.)
       fprintf(stderr, "| %.02f %% [%.1f evts/s]\r",
-              100.0*(total ? (processed/total) : 1), evtrti);
+              (total ? ((100.0*processed)/total) : 100.0), evtrti);
    else
       fprintf(stderr, "| %.02f %%\r",
-              100.0*(total ? (processed/total) : 1));
+              (total ? ((100.0*processed)/total) : 100.0));
    if (processed >= total)
       fprintf(stderr, "\n");
 }
