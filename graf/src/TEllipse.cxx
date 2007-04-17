@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.28 2007/02/06 14:35:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.29 2007/03/22 09:18:52 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -30,7 +30,8 @@ The ellipse can be truncated and rotated.
 It is defined by its center <tt>(x1,y1)</tt> and two radius 
 <tt>r1</tt> and <tt>r2</tt>.
 A minimum and maximum angle may be specified <tt>(phimin, phimax)</tt>.
-The ellipse may be rotated with an angle <tt>theta</tt>.
+The ellipse may be rotated with an angle <tt>theta</tt>. All these
+angles are in degrees.
 The attributes of the outline line are given via <tt>TAttLine</tt>.
 The attributes of the fill area are given via <tt>TAttFill</tt>.
 The picture below illustrates different types of ellipses.
@@ -38,7 +39,8 @@ The picture below illustrates different types of ellipses.
 When an ellipse sector only is drawn, the lines connecting the center
 of the ellipse to the edges are drawn by default. One can specify
 the drawing option "only" to not draw these lines or alternatively
-call the function <tt>SetNoEdges()</tt>.
+call the function <tt>SetNoEdges()</tt>. To remove completely the ellipse
+outline it is enough to specify 0 as line style.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphics/ellipse.C
