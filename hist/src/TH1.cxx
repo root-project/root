@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.338 2007/03/12 08:52:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.339 2007/04/02 15:24:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1649,11 +1649,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       chi2 /= sum1*sum2;
       if (m) {
          igood = 1;
-         printf("There is bin in Hist1 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 1 exp number of events.\n");
       }
       if (n) {
          igood = 2;
-         printf("There is bin in Hist2 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 1 exp number of events.\n");
       }
       
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -1674,7 +1674,6 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin2 = h2->GetBinContent(i,j,k);
                err2 = h2->GetBinError(i,j,k);
 
-               err1 *= err1;
                err2 *= err2;
        
                var1 = sum2*bin2 - sum1*err2;
@@ -1732,11 +1731,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       
       if (m) {
          igood = 1;
-         printf("There is bin in Hist1 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 1 exp number of events.\n");
       }
       if (n) {
          igood = 2;
-         printf("There is bin in Hist2 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 10 eff number of events.\n");
       }
       
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -1777,11 +1776,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       }
       if (m) {
          igood = 1;
-         printf("There is bin in Hist1 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 10 eff number of events.\n");
       }
       if (n) {
          igood = 2;
-         printf("There is bin in Hist2 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 10 eff number of events.\n");
       }
       Double_t prob = TMath::Prob(chi2,ndf);
       return prob;
