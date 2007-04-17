@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.34 2006/11/23 13:49:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.35 2007/01/10 17:43:14 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGFSContainer.h"
-#include "TGPicture.h"
+#include "TGIcon.h"
 #include "TGMsgBox.h"
 #include "TGMimeTypes.h"
 #include "TRegexp.h"

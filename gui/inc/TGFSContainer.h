@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.18 2006/08/09 16:11:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.19 2006/11/22 14:16:54 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -24,15 +24,6 @@
 #ifndef ROOT_TGListView
 #include "TGListView.h"
 #endif
-#ifndef ROOT_TGIcon
-#include "TGIcon.h"
-#endif
-#ifndef ROOT_TTimer
-#include "TTimer.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 
 //----- file sort mode
@@ -52,6 +43,8 @@ class TGFileContainer;
 class TViewUpdateTimer;
 class TGFileIcon;
 class TGFileItem;
+class TTimer;
+class TString;
 
 
 class TGFileItem : public TGLVEntry {
