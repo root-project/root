@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.50 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.51 2007/02/01 15:53:52 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1466,7 +1466,7 @@ void *TGContainer::FindItem(const TString& name, Bool_t direction,
          if (beginWith) {
             if (idx == 0) return el;
          } else {
-            return el;
+            if (str.Length() == name.Length()) return el;
          }
       }
 
