@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.4 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.5 2007/02/12 13:05:31 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -54,13 +54,14 @@ class TCut;
 class TDSet;
 class TEventList;
 class TFileInfo;
+class THashList;
 class TIter;
 class TList;
 class TProof;
 class TProofChain;
 class TTree;
 
-class TDSetElement : public TObject {
+class TDSetElement : public TNamed {
 public:
    typedef  std::list<std::pair<TDSetElement*, TString> > FriendsList_t;
 private:
@@ -69,8 +70,6 @@ private:
       kHasBeenLookedUp = BIT(15)
    };
 
-   TString          fFileName;   // physical or logical file name
-   TString          fObjName;    // name of objects to be analyzed in this file
    TString          fDirectory;  // directory in file where to look for objects
    Long64_t         fFirst;      // first entry to process
    Long64_t         fNum;        // number of entries to process
@@ -98,7 +97,7 @@ public:
    virtual FriendsList_t *GetListOfFriends() const { return fFriends; }
    virtual void     AddFriend(TDSetElement *friendElement, const char *alias);
    virtual void     DeleteFriends();
-   const char      *GetFileName() const { return fFileName; }
+   const char      *GetFileName() const { return GetName(); }
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
    Long64_t         GetNum() const { return fNum; }
@@ -107,7 +106,7 @@ public:
    const char      *GetMsd() const { return fMsd; }
    void             SetNum(Long64_t num) { fNum = num; }
    Bool_t           GetValid() const { return fValid; }
-   const char      *GetObjName() const;
+   const char      *GetObjName() const { return GetTitle(); }
    const char      *GetDirectory() const;
    void             Print(Option_t *options="") const;
    Long64_t         GetTDSetOffset() const { return fTDSetOffset; }
@@ -122,17 +121,18 @@ public:
    void             Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
 
-   ClassDef(TDSetElement,3)  // A TDSet element
+   ClassDef(TDSetElement,4)  // A TDSet element
 };
 
 
 class TDSet : public TNamed {
 
 private:
+
    TString        fDir;         // name of the directory
    TString        fType;        // type of objects (e.g. TTree);
    TString        fObjName;     // name of objects to be analyzed (e.g. TTree name)
-   TList         *fElements;    //-> list of TDSetElements
+   THashList     *fElements;    //-> list of TDSetElements
    Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
    TIter         *fIterator;    //! iterator on fElements
    TEventList    *fEventList;   //! event list for processing
@@ -182,7 +182,7 @@ public:
    const char           *GetType() const { return fType; }
    const char           *GetObjName() const { return fObjName; }
    const char           *GetDirectory() const { return fDir; }
-   TList                *GetListOfElements() const { return fElements; }
+   TList                *GetListOfElements() const { return (TList *)fElements; }
 
    Int_t                 Remove(TDSetElement *elem);
 
@@ -208,7 +208,7 @@ public:
    void                  Lookup();
    void                  SetLookedUp();
 
-   ClassDef(TDSet,3)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,4)  // Data set for remote processing (PROOF)
 };
 
 #endif

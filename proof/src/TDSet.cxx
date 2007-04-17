@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.6 2007/03/08 12:09:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.7 2007/03/30 16:44:33 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -51,7 +51,7 @@
 #include "TFileStager.h"
 #include "TFriendElement.h"
 #include "TKey.h"
-#include "TList.h"
+#include "THashList.h"
 #include "TMap.h"
 #include "TROOT.h"
 #include "TTimeStamp.h"
@@ -73,9 +73,7 @@ ClassImp(TDSetElement)
 ClassImp(TDSet)
 
 //______________________________________________________________________________
-TDSetElement::TDSetElement() :
-   fFileName(),
-   fObjName(),
+TDSetElement::TDSetElement() : TNamed("",""),
    fDirectory(),
    fFirst(0),
    fNum(0),
@@ -93,11 +91,10 @@ TDSetElement::TDSetElement() :
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,
                            Long64_t first, Long64_t num,
-                           const char *msd)
+                           const char *msd) : TNamed(file, objname)
 {
    // Create a TDSet element.
 
-   fFileName = file;
    if (first < 0) {
       Warning("TDSetElement", "first must be >= 0, %d is not allowed - setting to 0", first);
       fFirst = 0;
@@ -117,18 +114,15 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    fValid       = kFALSE;
    fEntries     = -1;
 
-   if (objname)
-      fObjName = objname;
    if (dir)
       fDirectory = dir;
 }
 
 //______________________________________________________________________________
-TDSetElement::TDSetElement(const TDSetElement& elem) : TObject()
+TDSetElement::TDSetElement(const TDSetElement& elem)
+             : TNamed(elem.GetFileName(), elem.GetObjName())
 {
    // copy constructor
-   fFileName = elem.GetFileName();
-   fObjName = elem.GetObjName();
    fDirectory = elem.GetDirectory();
    fFirst = elem.fFirst;
    fNum = elem.fNum;
@@ -149,14 +143,6 @@ TDSetElement::~TDSetElement()
 }
 
 //______________________________________________________________________________
-const char *TDSetElement::GetObjName() const
-{
-   // Return object name.
-
-   return fObjName;
-}
-
-//______________________________________________________________________________
 const char *TDSetElement::GetDirectory() const
 {
    // Return directory where to look for object.
@@ -171,15 +157,15 @@ void TDSetElement::Print(Option_t *opt) const
 
    if (opt && opt[0] == 'a') {
       cout << IsA()->GetName()
-           << " file=\"" << fFileName
+           << " file=\"" << GetName()
            << "\" dir=\"" << fDirectory
-           << "\" obj=\"" << fObjName
+           << "\" obj=\"" << GetTitle()
            << "\" first=" << fFirst
            << " num=" << fNum
            << " msd=\"" << fMsd
            << "\"" << endl;
    } else
-      cout << "\tLFN: " << fFileName << endl;
+      cout << "\tLFN: " << GetName() << endl;
 }
 
 //______________________________________________________________________________
@@ -266,11 +252,11 @@ Int_t TDSetElement::Compare(const TObject *obj) const
    const TDSetElement *elem = dynamic_cast<const TDSetElement*>(obj);
    if (!elem) {
       if (obj)
-         return fFileName.CompareTo(obj->GetName());
+         return (strncmp(GetName(),obj->GetName(),strlen(GetName()))) ? 1 : 0;
       return -1;
    }
 
-   Int_t order = fFileName.CompareTo(elem->GetFileName());
+   Int_t order = strncmp(GetName(),elem->GetFileName(),strlen(GetName()));
    if (order == 0) {
       if (GetFirst() < elem->GetFirst())
          return -1;
@@ -335,19 +321,19 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   TFile *file = TFile::Open(fFileName);
+   TFile *file = TFile::Open(GetName());
 
    if (gPerfStats != 0) {
-      gPerfStats->FileOpenEvent(file, fFileName, double(TTimeStamp())-start);
+      gPerfStats->FileOpenEvent(file, GetName(), double(TTimeStamp())-start);
    }
 
    if (file == 0) {
-      ::SysError("TDSet::GetEntries", "cannot open file %s", fFileName.Data());
+      ::SysError("TDSet::GetEntries", "cannot open file %s", GetName());
       return -1;
    }
 
    // Record end-point Url and mark has looked-up
-   fFileName = ((TUrl *)file->GetEndpointUrl())->GetUrl();
+   fName = ((TUrl *)file->GetEndpointUrl())->GetUrl();
    SetBit(kHasBeenLookedUp);
 
    TDirectory *dirsave = gDirectory;
@@ -362,8 +348,8 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
 
    if (isTree) {
 
-      TString on(fObjName);
-      TString sreg(fObjName);
+      TString on(GetTitle());
+      TString sreg(GetTitle());
       // If a wild card we will use the first object of the type
       // requested compatible with the reg expression we got
       if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
@@ -396,7 +382,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
       TKey *key = dir->GetKey(on);
       if (key == 0) {
          Error("GetEntries", "cannot find tree \"%s\" in %s",
-               fObjName.Data(), fFileName.Data());
+               GetTitle(), GetName());
          delete file;
          return -1;
       }
@@ -431,7 +417,7 @@ void TDSetElement::Lookup(Bool_t force)
       return;
 
    // Open the file as raw to avoid the (slow) initialization
-   TUrl url(fFileName);
+   TUrl url(GetName());
    // Save current options and anchor
    TString anch = url.GetAnchor();
    TString opts = url.GetOptions();
@@ -456,7 +442,7 @@ void TDSetElement::Lookup(Bool_t force)
       // The server may not be redirector: we might know this from the past
       // experience, if any
       if (xNotRedir.Length() > 0) {
-         TUrl u(fFileName);
+         TUrl u(GetName());
          TString hp(Form("|%s:%d|", u.GetHostFQDN(), u.GetPort()));
          if (xNotRedir.Contains(hp))
             doit = kFALSE;
@@ -479,7 +465,7 @@ void TDSetElement::Lookup(Bool_t force)
          url.SetOptions(opts);
          url.SetAnchor(anch);
          // Save it into the element
-         fFileName = url.GetUrl();
+         fName = url.GetUrl();
       } else {
          // Failure
          Error("Lookup", "couldn't lookup %s\n", name.Data());
@@ -495,7 +481,7 @@ TDSet::TDSet()
 {
    // Default ctor.
 
-   fElements = new TList;
+   fElements = new THashList;
    fElements->SetOwner();
    fIsTree    = kFALSE;
    fIterator  = 0;
@@ -526,7 +512,7 @@ TDSet::TDSet(const char *name,
    // For backward compatibility the type can also be passed via 'name',
    // in which case 'type' is ignored.
 
-   fElements = new TList;
+   fElements = new THashList;
    fElements->SetOwner();
    fIterator = 0;
    fCurrent  = 0;
@@ -586,7 +572,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    // This constructor substitutes for the static methods TChain::MakeTDSet
    // allowing to keep all PROOF references in 'proof'.
 
-   fElements = new TList;
+   fElements = new THashList;
    fElements->SetOwner();
    fIterator = 0;
    fCurrent  = 0;
@@ -769,13 +755,10 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    }
 
    // check, if it already exists in the TDSet
-   TDSetElement *el;
-   Reset();
-   while ((el = Next())) {
-      if (!(strcmp(el->GetFileName(), file))) {
-         Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
-         return kFALSE;
-      }
+   TDSetElement *el = (TDSetElement *) fElements->FindObject(file);
+   if (el) {
+      Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
+      return kFALSE;
    }
    if (!objname)
       objname = GetObjName();
