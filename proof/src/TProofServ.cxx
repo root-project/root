@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.171 2007/03/22 10:19:14 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.172 2007/03/23 13:08:44 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3003,7 +3003,6 @@ void TProofServ::HandleProcess(TMessage *mess)
          //
          // Set not idle
          fIdle = kFALSE;
-         Reset("");
          //
          // Get query info
          pq = (TProofQueryResult *)(fWaitingQueries->First());
