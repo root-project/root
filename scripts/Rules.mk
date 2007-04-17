@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.68 2006/12/07 17:35:54 pcanal Exp $
+# $Id: Rules.mk,v 1.69 2007/03/17 15:08:25 axel Exp $
 #
 
 all: tests
@@ -298,9 +298,9 @@ $(ROOTMAP):
 
 check: $(ROOT_LOC)/lib/libCore.$(DllSuf)
 
-UTILS_PREREQ =  $(UTILS_LIBS) $(ROOTMAP)
+UTILS_PREREQ =  $(UTILS_LIBS) 
 
-utils:  $(UTILS_LIBS) $(ROOTMAP)
+utils:  $(UTILS_LIBS) 
 
 copiedEvent$(ExeSuf): $(EVENTDIR)/$(SUCCESS_FILE)
 	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h .
