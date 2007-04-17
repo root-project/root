@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.32 2007/03/17 18:02:24 rdm Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.33 2007/03/19 15:14:10 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -226,8 +226,14 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    }
 
    // set dialog title
-   fDialog->SetWindowName(Form("PROOF Query Progress: %s",
-                          (fProof ? fProof->GetMaster() : "<dummy>")));
+   if (fProof) {
+      if (strlen(fProof->GetUser()) > 0) 
+         fDialog->SetWindowName(Form("PROOF Query Progress: %s@%s",
+                                     fProof->GetUser(), fProof->GetMaster()));
+      else
+         fDialog->SetWindowName(Form("PROOF Query Progress: %s", fProof->GetMaster()));
+   } else
+      fDialog->SetWindowName("PROOF Query Progress: <dummy>");
 
    // map all widgets and calculate size of dialog
    fDialog->MapSubwindows();
