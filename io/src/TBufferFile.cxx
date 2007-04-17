@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.10 2007/02/10 04:10:11 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.11 2007/03/16 19:56:03 pcanal Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -2157,8 +2157,13 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
             if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
                version = cl->GetClassVersion();
             } else {
-               Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
+               if (fParent) {
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                   checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+               } else {
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\"( buffer with no parent)",
+                  checksum, cl->GetName());
+               }
                return 0;
             }
          }
