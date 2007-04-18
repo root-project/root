@@ -20,6 +20,8 @@
 #include "common.h"
 #include "dllrev.h"
 #include "Api.h"
+#include <stack>
+
 #ifndef G__TESTMAIN
 #include <sys/stat.h>
 #endif
@@ -127,34 +129,62 @@ static int G__privateaccess = 0;
 #define G__GENWINDEF
 #endif
 
-
-
-
 /**************************************************************************
-* Following static variables must be protected by semaphoe for
+* Following static variables must be protected by semaphore for
 * multi-threading.
 **************************************************************************/
-static struct G__ifunc_table_internal *G__incset_p_ifunc;
-static int G__incset_tagnum;
-static int G__incset_func_now;
-static int G__incset_func_page;
-static struct G__var_array *G__incset_p_local;
-static int G__incset_def_struct_member;
-static int G__incset_tagdefining;
-static int G__incset_def_tagnum;
-static long G__incset_globalvarpointer;
-static int G__incset_var_type;
-static int G__incset_typenum;
-static int G__incset_static_alloc;
-static int G__incset_access;
-static int G__suppress_methods = 0;
-static int G__nestedclass = 0;
-static int G__nestedtypedef = 0;
-static int G__store_asm_noverflow;
-static int G__store_no_exec_compile;
-static int G__store_asm_exec;
-static int G__extra_inc_n = 0;
-static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
+
+// Class to store several dictsetup context variables
+// Due to recursion problems these variables are not global anymore
+   class G__IncSetupStack {
+
+   public:
+
+      struct G__ifunc_table_internal *G__incset_p_ifunc;
+      int G__incset_tagnum;
+      int G__incset_func_now;
+      int G__incset_func_page;
+      struct G__var_array *G__incset_p_local;
+      int G__incset_def_struct_member;
+      int G__incset_tagdefining;
+      int G__incset_def_tagnum;
+      long G__incset_globalvarpointer;
+      int G__incset_var_type;
+      int G__incset_typenum;
+      int G__incset_static_alloc;
+      int G__incset_access;
+
+  };
+
+/**************************************************************************
+* G__stack_instance
+* Several problems in the mefunc_setup recursive calling, due to global variables using,
+* was introduced. Now a stack stores the variables (G__IncSetupStack class)
+* Each memfunc_setup call will have its own copy of the variables in the stack
+* RETURN: This function return a pointer to the static variable stack
+**************************************************************************/
+   std::stack<G__IncSetupStack>* G__stack_instance(){
+
+      // Variables Stack
+      static std::stack<G__IncSetupStack>* G__stack = 0;
+
+      // If the stack has not been initialized yet
+      if (G__stack==0)
+         G__stack = new std::stack<G__IncSetupStack>();
+
+      return G__stack;
+
+   }
+
+  // Supress Stub Functions
+  static int G__suppress_methods = 0;
+  static int G__nestedclass = 0;
+  static int G__nestedtypedef = 0;
+  static int G__store_asm_noverflow;
+  static int G__store_no_exec_compile;
+  static int G__store_asm_exec;
+  static int G__extra_inc_n = 0;
+  static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
 
 /**************************************************************************
 * G__CurrentCall
@@ -358,13 +388,6 @@ int G__debug_compiledfunc_arg(FILE *fout,G__ifunc_table_internal *ifunc,int ifn,
   G__in_pause=0;
   return(G__pause());
 }
-
-/**************************************************************************
-**************************************************************************
-* Calling C++ compiled function
-**************************************************************************
-**************************************************************************/
-
 
 /**************************************************************************
 * G__call_cppfunc()
@@ -708,6 +731,8 @@ void G__gen_cpplink()
 
   fprintf(hfp,"\n#ifndef G__MEMFUNCBODY\n");
 
+  // Member Function Interface Method Ej: G__G__Hist_95_0_2()
+  // Stub Functions
   if (!G__suppress_methods) {
     G__cppif_memfunc(fp,hfp);
   }
@@ -732,6 +757,7 @@ void G__gen_cpplink()
   G__cpplink_typetable(fp,hfp);
   G__cpplink_memvar(fp);
 
+  // Member functions information setup for each class ( G__memfunc_setup() )
   if (!G__suppress_methods) {
     G__cpplink_memfunc(fp);
   }
@@ -1073,7 +1099,7 @@ char *G__map_cpp_funcname(int tagnum,char * /* funcname */,int ifn,int page)
   char *dllid;
 
   if(G__DLLID[0]) dllid=G__DLLID;
-  else if(G__PROJNAME[0]) dllid=G__PROJNAME;
+  else if (G__PROJNAME[0]) dllid=G__PROJNAME;
   else dllid="";
 
   if(-1==tagnum) {
@@ -2848,14 +2874,14 @@ static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *i
          break;
       case 'u':
          switch (G__struct.type[tagnum]) {
-	    case 'c':
-	    case 's':
-	    case 'u':
+            case 'c':
+            case 's':
+            case 'u':
                typestring = G__type2string(type, tagnum, typenum, 0, 0);
                if (reftype) {
                   fprintf(fp, "(%s&) u[0].lval", typestring);
                } else {
- 	          if (G__globalcomp == G__CPPLINK) {
+                  if (G__globalcomp == G__CPPLINK) {
                      fprintf(fp, "*(%s*) u[0].lval", typestring);
                   } else {
                      fprintf(fp, "(%s*) u[0].lval", typestring);
@@ -3990,11 +4016,64 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 }
 
 /**************************************************************************
+* G__method_inbase()
+* This function search for the method ifn (index in ifunc) in the ifunc->tagnum's
+* base classes
+* RETURN -> NULL Method not found
+*           NOT NULL Method Found. Method's ifunc table pointer
+**************************************************************************/
+
+G__ifunc_table_internal* G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
+{
+
+   // tagnum's Base Classes structure
+   G__inheritance* cbases = G__struct.baseclass[ifunc->tagnum];
+
+   // if Method 'ifn' exists in any Base Class -> base not null
+   G__ifunc_table_internal* found = 0;
+
+  int base=0;
+
+   // If there are still base classes
+   if (cbases){
+
+     // Go through the base tagnums (tagnum = index in G__struct structure)
+     for (int idx=0; idx < cbases->basen; ++idx){
+
+        // Current tagnum
+        int basetagnum=cbases->herit[idx]->basetagnum;
+
+        // Current tagnum's ifunc table
+        G__ifunc_table_internal * ifunct = G__struct.memfunc[basetagnum];
+
+        // Continue if there are still ifuncs and the method 'ifn' is not found yet
+        while(ifunct&&!found){
+
+           // Does the Method 'ifn' (in ifunc) exist in the current ifunct?
+           found = G__ifunc_exist(ifunc, ifn, ifunct, &base, 0xffff);
+
+           // Next ifunct
+           ifunct=ifunct->next;
+        }
+     }
+   }
+
+   return found;
+}
+
+
+/**************************************************************************
 * G__cppif_genfunc()
 *
 **************************************************************************/
 void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table_internal *ifunc)
 {
+
+  // If the virtual method 'ifn' (in ifunc) exists in any Base Clase then we have
+  // an overridden virtual method,so the stub function for it is not generated
+   if ((ifunc->isvirtual[ifn])&&(G__method_inbase(ifn, ifunc)))
+      return;
+
 #ifndef G__SMALLOBJECT
   int k, m;
 
@@ -4321,18 +4400,18 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
     switch (type) {
       case 'd':
       case 'f':
-	sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.d = (double) (obj);\n%s}", indent, indent, indent);
-	break;
+         sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.d = (double) (obj);\n%s}", indent, indent, indent);
+         break;
       case 'u':
-	if (G__struct.type[tagnum] == 'e') {
-	  sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
+         if (G__struct.type[tagnum] == 'e') {
+            sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
         } else {
-	  sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (&obj);\n%s}", indent, indent, indent);
+           sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (&obj);\n%s}", indent, indent, indent);
         }
-	break;
+         break;
       default:
-	sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
-	break;
+         sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
+         break;
     }
     return 0;
   }
@@ -5648,7 +5727,20 @@ void G__cpplink_memfunc(FILE *fp)
                     (G__PRIVATEACCESS&G__struct.protectedaccess[i])) &&
                    '~'!=ifunc->funcname[j][0])
                ) {
-              fprintf(fp, "%s, ", G__map_cpp_funcname(i, ifunc->funcname[j], j, ifunc->page));
+
+               // If the method is virtual. Is it overridden? -> Does it exist in the base classes? 
+               //  Virtual method found in the base classes(we have an overridden virtual method)so it
+               //  has not stub function in its dictionary
+               if ((ifunc->isvirtual[j])&&(G__method_inbase(j, ifunc)))
+
+                  // Null Stub Pointer
+                  fprintf(fp, "(G__InterfaceMethod) NULL," );
+
+               else
+                  // If the method isn't virtual or it belongs to a base class. 
+                  // The method has its own Stub Function in its dictionary
+                  // Normal Stub Pointer
+                  fprintf(fp, "%s, ", G__map_cpp_funcname(i, ifunc->funcname[j], j, ifunc->page));
             }
             else {
               fprintf(fp, "(G__InterfaceMethod) NULL, ");
@@ -5656,9 +5748,9 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, "%d, ", ifunc->type[j]);
 
             if (-1 != ifunc->p_tagtable[j])
-              fprintf(fp, "G__get_linked_tagnum(&%s), ", G__mark_linked_tagnum(ifunc->p_tagtable[j]));
+               fprintf(fp, "G__get_linked_tagnum(&%s), ", G__mark_linked_tagnum(ifunc->p_tagtable[j]));
             else
-              fprintf(fp, "-1, ");
+               fprintf(fp, "-1, ");
 
             if (-1 != ifunc->p_typetable[j])
               fprintf(fp, "G__defined_typename(\"%s\"), ", G__fulltypename(ifunc->p_typetable[j]));
@@ -5826,7 +5918,9 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, "   // automatic default constructor\n");
             fprintf(fp, "   G__memfunc_setup(");
             fprintf(fp, "\"%s\", %d, ", funcname, hash);
-            fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+	
+	    fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+	      
             fprintf(fp, "(int) ('i'), ");
             if (strlen(G__struct.name[i]) > 25) fprintf(fp,"\n");
             fprintf(fp, "G__get_linked_tagnum(&%s), ", G__mark_linked_tagnum(i));
@@ -5860,8 +5954,11 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, "   // automatic copy constructor\n");
             fprintf(fp, "   G__memfunc_setup(");
             fprintf(fp, "\"%s\", %d, ", funcname, hash);
-            fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
-            fprintf(fp, "(int) ('i'), ");
+	    
+	    fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+	    
+	    fprintf(fp, "(int) ('i'), ");      
+           
             if (strlen(G__struct.name[i]) > 20) fprintf(fp, "\n");
             fprintf(fp, "G__get_linked_tagnum(&%s), ", G__mark_linked_tagnum(i));
             fprintf(fp,"-1, "); /* typenum */
@@ -5894,7 +5991,9 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, "   G__memfunc_setup(");
             fprintf(fp, "\"%s\", %d, ", funcname, hash);
             if (0 == isdestructor)
-              fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+
+	      fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+              
             else
               fprintf(fp, "(G__InterfaceMethod) NULL, ");
             fprintf(fp, "(int) ('y'), ");
@@ -5929,8 +6028,10 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, "   // automatic assignment operator\n");
             fprintf(fp, "   G__memfunc_setup(");
             fprintf(fp, "\"%s\", %d, ", funcname, hash);
-            fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
-            fprintf(fp, "(int) ('u'), ");
+
+	    fprintf(fp, "%s, ", G__map_cpp_funcname(i, funcname, j, page));
+            
+	    fprintf(fp, "(int) ('u'), ");
             fprintf(fp, "G__get_linked_tagnum(&%s), ", G__mark_linked_tagnum(i));
             fprintf(fp, "-1, "); /* typenum */
             fprintf(fp, "1, "); /* reftype */
@@ -6572,24 +6673,34 @@ int G__inheritance_setup(int tagnum,int basetagnum
 **************************************************************************/
 int G__tag_memvar_setup(int tagnum)
 {
+
 #ifndef G__OLDIMPLEMENTATON285
-  G__incset_tagnum = G__tagnum;
-  G__incset_p_local = G__p_local;
-  G__incset_def_struct_member = G__def_struct_member;
-  G__incset_tagdefining = G__tagdefining;
-  G__incset_globalvarpointer = G__globalvarpointer ;
-  G__incset_var_type = G__var_type ;
-  G__incset_typenum = G__typenum ;
-  G__incset_static_alloc = G__static_alloc ;
-  G__incset_access = G__access ;
+  
+   /* Variables stack storing */
+   G__IncSetupStack incsetup_stack;
+   std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+
+   incsetup_stack.G__incset_tagnum = G__tagnum;
+   incsetup_stack.G__incset_p_local = G__p_local;
+   incsetup_stack.G__incset_def_struct_member = G__def_struct_member;
+   incsetup_stack.G__incset_tagdefining = G__tagdefining;
+   incsetup_stack.G__incset_globalvarpointer = G__globalvarpointer;
+   incsetup_stack.G__incset_var_type = G__var_type ;
+   incsetup_stack.G__incset_typenum = G__typenum ;
+   incsetup_stack.G__incset_static_alloc = G__static_alloc ;
+   incsetup_stack.G__incset_access = G__access ;
+ 
 #endif
-  G__tagnum = tagnum;
-  G__p_local=G__struct.memvar[G__tagnum];
-  G__def_struct_member = 1;
-  G__incset_def_tagnum = G__def_tagnum;
-  G__def_tagnum = G__struct.parent_tagnum[G__tagnum];
-  G__tagdefining=G__tagnum;
-  return(0);
+   G__tagnum = tagnum;
+   G__p_local=G__struct.memvar[G__tagnum];
+   G__def_struct_member = 1;
+   incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
+   G__def_tagnum = G__struct.parent_tagnum[G__tagnum];
+   G__tagdefining=G__tagnum;
+
+   var_stack->push(incsetup_stack);
+
+   return(0);
 }
 
 /**************************************************************************
@@ -6657,17 +6768,26 @@ int G__memvar_setup(void *p,int type
 **************************************************************************/
 int G__tag_memvar_reset()
 {
-  G__p_local = G__incset_p_local ;
-  G__def_struct_member = G__incset_def_struct_member ;
-  G__tagdefining = G__incset_tagdefining ;
-  G__def_tagnum = G__incset_def_tagnum;
 
-  G__globalvarpointer = G__incset_globalvarpointer ;
-  G__var_type = G__incset_var_type ;
-  G__tagnum = G__incset_tagnum ;
-  G__typenum = G__incset_typenum ;
-  G__static_alloc = G__incset_static_alloc ;
-  G__access = G__incset_access ;
+   /* Variables stack restoring */
+  std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+
+  G__IncSetupStack *incsetup_stack = &var_stack->top();
+  
+  G__p_local = incsetup_stack->G__incset_p_local ;
+  G__def_struct_member = incsetup_stack->G__incset_def_struct_member ;
+  G__tagdefining = incsetup_stack->G__incset_tagdefining ;
+  G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
+
+  G__globalvarpointer = incsetup_stack->G__incset_globalvarpointer ;
+  G__var_type = incsetup_stack->G__incset_var_type ;
+  G__tagnum = incsetup_stack->G__incset_tagnum ;
+  G__typenum = incsetup_stack->G__incset_typenum ;
+  G__static_alloc = incsetup_stack->G__incset_static_alloc ;
+  G__access = incsetup_stack->G__incset_access ;
+
+  var_stack->pop();
+
   return(0);
 }
 
@@ -6701,13 +6821,21 @@ int G__usermemfunc_setup(char *funcname,int hash,int (*funcp)(),int type,
 **************************************************************************/
 int G__tag_memfunc_setup(int tagnum)
 {
-  G__incset_tagnum = G__tagnum;
-  G__incset_p_ifunc = G__p_ifunc;
-  G__incset_func_now = G__func_now;
-  G__incset_func_page = G__func_page;
-  G__incset_var_type = G__var_type;
-  G__incset_tagdefining = G__tagdefining;
-  G__incset_def_tagnum = G__def_tagnum;
+
+/* Variables stack storing */
+  G__IncSetupStack incsetup_stack;
+  std::stack<G__IncSetupStack>* var_stack = G__stack_instance(); 
+
+  incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
+  incsetup_stack.G__incset_tagnum = G__tagnum;
+  incsetup_stack.G__incset_func_now = G__func_now;
+  incsetup_stack.G__incset_func_page = G__func_page;
+  incsetup_stack.G__incset_tagdefining = G__tagdefining;
+  incsetup_stack.G__incset_var_type = G__var_type;
+  incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
+
+  var_stack->push(incsetup_stack);
+  
   G__tagdefining = G__struct.parent_tagnum[tagnum];
   G__def_tagnum = G__tagdefining;
   G__tagnum = tagnum;
@@ -6735,13 +6863,14 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 #endif
                      )
 {
+
 #ifndef G__SMALLOBJECT
 #ifndef G__OLDIMPLEMENTATION2027
   int store_func_now = -1;
   struct G__ifunc_table_internal *store_p_ifunc = 0;
   int dtorflag=0;
 #endif
-   
+
   if (G__p_ifunc->allifunc == G__MAXIFUNC) {
      G__fprinterr(G__serr, "Attempt to add function %s failed - ifunc_table overflow!\n",
          funcname);
@@ -6761,9 +6890,6 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   G__savestring(&G__p_ifunc->funcname[G__func_now],(char*)funcname);
   G__p_ifunc->hash[G__func_now] = hash;
 
-  /* set entry pointer */
-  G__p_ifunc->pentry[G__func_now] = &G__p_ifunc->entry[G__func_now];
-  G__p_ifunc->entry[G__func_now].p=(void*)funcp;
 #ifndef G__OLDIMLEMENTATION2012
   if(-1!=G__p_ifunc->tagnum)
     G__p_ifunc->entry[G__func_now].filenum=G__struct.filenum[G__p_ifunc->tagnum];
@@ -6820,6 +6946,70 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   else        G__p_ifunc->comment[G__func_now].filenum = -1;
 
   /* end */
+
+  /* set entry pointer */
+  G__p_ifunc->pentry[G__func_now] = &G__p_ifunc->entry[G__func_now];
+  G__p_ifunc->entry[G__func_now].p=(void*)funcp;
+
+  // Warning: Global G__p_ifunc is modified in G__incsetup_memfunc
+  // We save and later we restore the G__p_ifunc's value
+  G__ifunc_table_internal* store_ifunc = G__p_ifunc;
+
+  // Stub Pointer initialisation.
+  // If funcp parameter is null. It means that the stub is in a base class.
+  // We have to look for the stub pointer in the base classes.
+  if (!funcp&&(G__p_ifunc->isvirtual[G__func_now])){
+
+     // tagnum's Base Classes structure
+     G__inheritance* cbases = G__struct.baseclass[G__p_ifunc->tagnum];
+     
+     // If there's any base class
+     if (cbases){
+
+        // Ifunc Method's index in the base class
+        int base = 0;
+
+        // if Method 'ifn' exists in any Base Class -> base not null
+        G__ifunc_table_internal* found = 0;
+
+        // Stub function pointer
+        void * basefuncp = 0;
+
+        // Go through the bases tagnums if there are base classes and a valid stub is not found yet
+        for (int idx=0; (idx < cbases->basen)&&(!basefuncp); ++idx){
+
+           // Current tagnum
+           int basetagnum=cbases->herit[idx]->basetagnum;
+
+           // We force memfunc_setup for the base classes
+           G__incsetup_memfunc(basetagnum);
+
+           // Current Base Class ifunc table
+           G__ifunc_table_internal* ifunct = G__struct.memfunc[basetagnum];
+
+           // Look for the method in the base class
+           found = G__ifunc_exist(G__p_ifunc, G__func_now, ifunct, &base, 0xffff); 
+
+           // Method found
+           if(found){
+
+              // Method's stub pointer
+              basefuncp = found->entry[base].p;
+
+              // Method's stub pointer found.
+              // We update the current method stub pointer
+              G__p_ifunc->entry[G__func_now].p= (void *) basefuncp;
+
+           }
+
+        }
+
+     }
+     
+     // Restore G__p_ifunc
+     G__p_ifunc = store_ifunc;
+
+  }
 
 #ifndef G__OLDIMPLEMENTATION1702
  {
@@ -7164,13 +7354,21 @@ int G__memfunc_next()
 **************************************************************************/
 int G__tag_memfunc_reset()
 {
-  G__tagnum = G__incset_tagnum;
-  G__p_ifunc = G__incset_p_ifunc;
-  G__func_now = G__incset_func_now;
-  G__func_page = G__incset_func_page;
-  G__var_type = G__incset_var_type;
-  G__tagdefining = G__incset_tagdefining;
-  G__def_tagnum = G__incset_def_tagnum;
+
+  /* Variables stack restoring */
+  std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+  G__IncSetupStack *incsetup_stack = &var_stack->top();
+
+  G__tagnum = incsetup_stack->G__incset_tagnum;
+  G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
+  G__func_now = incsetup_stack->G__incset_func_now;
+  G__func_page = incsetup_stack->G__incset_func_page;
+  G__var_type = incsetup_stack->G__incset_var_type;
+  G__tagdefining = incsetup_stack->G__incset_tagdefining;
+  G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
+
+  var_stack->pop();
+
   return(0);
 }
 #ifdef G__NEVER
@@ -8548,16 +8746,21 @@ void G__setgvp(long gvp)
 **************************************************************************/
 void G__resetplocal()
 {
+  
+   /* Variables stack storing */
+  G__IncSetupStack incsetup_stack;
+  std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+
   if(G__def_struct_member && 'n'==G__struct.type[G__tagdefining]) {
-    G__incset_tagnum = G__tagnum;
-    G__incset_p_local = G__p_local;
-    G__incset_def_struct_member = G__def_struct_member;
-    G__incset_tagdefining = G__tagdefining;
-    G__incset_globalvarpointer = G__globalvarpointer ;
-    G__incset_var_type = G__var_type ;
-    G__incset_typenum = G__typenum ;
-    G__incset_static_alloc = G__static_alloc ;
-    G__incset_access = G__access ;
+    incsetup_stack.G__incset_tagnum = G__tagnum;
+    incsetup_stack.G__incset_p_local = G__p_local;
+    incsetup_stack.G__incset_def_struct_member = G__def_struct_member;
+    incsetup_stack.G__incset_tagdefining = G__tagdefining;
+    incsetup_stack.G__incset_globalvarpointer = G__globalvarpointer ;
+    incsetup_stack.G__incset_var_type = G__var_type ;
+    incsetup_stack.G__incset_typenum = G__typenum ;
+    incsetup_stack.G__incset_static_alloc = G__static_alloc ;
+    incsetup_stack.G__incset_access = G__access ;
 
     G__tagnum = G__tagdefining;
     G__p_local=G__struct.memvar[G__tagnum];
@@ -8568,8 +8771,11 @@ void G__resetplocal()
   }
   else {
     G__p_local = (struct G__var_array*)NULL;
-    G__incset_def_struct_member =0;
+    incsetup_stack.G__incset_def_struct_member =0;
   }
+
+  var_stack->push(incsetup_stack);
+  
 }
 
 /**************************************************************************
@@ -8578,17 +8784,23 @@ void G__resetplocal()
 **************************************************************************/
 void G__resetglobalenv()
 {
-  if(G__incset_def_struct_member && 'n'==G__struct.type[G__incset_tagdefining]){
-    G__p_local = G__incset_p_local ;
-    G__def_struct_member = G__incset_def_struct_member ;
-    G__tagdefining = G__incset_tagdefining ;
 
-    G__globalvarpointer = G__incset_globalvarpointer ;
-    G__var_type = G__incset_var_type ;
-    G__tagnum = G__incset_tagnum ;
-    G__typenum = G__incset_typenum ;
-    G__static_alloc = G__incset_static_alloc ;
-    G__access = G__incset_access ;
+   /* Variables stack restoring */
+  std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+  G__IncSetupStack *incsetup_stack = &var_stack->top();
+
+  if(incsetup_stack->G__incset_def_struct_member && 'n'==G__struct.type[incsetup_stack->G__incset_tagdefining]){
+    G__p_local = incsetup_stack->G__incset_p_local;
+    G__def_struct_member = incsetup_stack->G__incset_def_struct_member ;
+    G__tagdefining = incsetup_stack->G__incset_tagdefining ;
+
+    G__globalvarpointer = incsetup_stack->G__incset_globalvarpointer ;
+    G__var_type = incsetup_stack->G__incset_var_type ;
+    G__tagnum = incsetup_stack->G__incset_tagnum ;
+    G__typenum = incsetup_stack->G__incset_typenum ;
+    G__static_alloc = incsetup_stack->G__incset_static_alloc ;
+    G__access = incsetup_stack->G__incset_access ;
+  
   }
   else {
     G__globalvarpointer = G__PVOID;
@@ -8598,6 +8810,8 @@ void G__resetglobalenv()
     G__static_alloc = 0;
     G__access = G__PUBLIC;
   }
+
+  var_stack->pop();
 }
 
 /**************************************************************************
@@ -8606,12 +8820,17 @@ void G__resetglobalenv()
 **************************************************************************/
 void G__lastifuncposition()
 {
+
+/* Variables stack storing */
+  std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+  G__IncSetupStack incsetup_stack;
+
   if(G__def_struct_member && 'n'==G__struct.type[G__tagdefining]) {
-    G__incset_tagnum = G__tagnum;
-    G__incset_p_ifunc = G__p_ifunc;
-    G__incset_func_now = G__func_now;
-    G__incset_func_page = G__func_page;
-    G__incset_var_type = G__var_type;
+    incsetup_stack.G__incset_tagnum = G__tagnum;
+    incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
+    incsetup_stack.G__incset_func_now = G__func_now;
+    incsetup_stack.G__incset_func_page = G__func_page;
+    incsetup_stack.G__incset_var_type = G__var_type;
     G__tagnum = G__tagdefining;
     G__p_ifunc = G__struct.memfunc[G__tagnum];
     while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
@@ -8619,8 +8838,11 @@ void G__lastifuncposition()
   else {
     G__p_ifunc = &G__ifunc;
     while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
-    G__incset_def_struct_member = 0;
+    incsetup_stack.G__incset_def_struct_member = 0;
   }
+  
+  var_stack->push(incsetup_stack);
+
 }
 
 /**************************************************************************
@@ -8629,12 +8851,17 @@ void G__lastifuncposition()
 **************************************************************************/
 void G__resetifuncposition()
 {
-  if(G__incset_def_struct_member && 'n'==G__struct.type[G__incset_tagdefining]){
-    G__tagnum = G__incset_tagnum;
-    G__p_ifunc = G__incset_p_ifunc;
-    G__func_now = G__incset_func_now;
-    G__func_page = G__incset_func_page;
-    G__var_type = G__incset_var_type;
+
+   /* Variables stack restoring */
+  std::stack<G__IncSetupStack>* var_stack = G__stack_instance(); 
+  G__IncSetupStack *incsetup_stack = &var_stack->top();
+
+  if(incsetup_stack->G__incset_def_struct_member && 'n'==G__struct.type[incsetup_stack->G__incset_tagdefining]){
+    G__tagnum = incsetup_stack->G__incset_tagnum;
+    G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
+    G__func_now = incsetup_stack->G__incset_func_now;
+    G__func_page = incsetup_stack->G__incset_func_page;
+    G__var_type = incsetup_stack->G__incset_var_type;
   }
   else {
     G__tagnum = -1;
@@ -8647,6 +8874,8 @@ void G__resetifuncposition()
   G__static_alloc = 0;
   G__access = G__PUBLIC;
   G__typenum = -1;
+
+  var_stack->pop();
 }
 
 /**************************************************************************
