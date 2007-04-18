@@ -1521,7 +1521,8 @@ void G__declare_template()
     }
     */
   }
- /* template<...> X() in class context could be a ctor. */
+  // template<...> X() in class context could be a ctor.
+  // template<...> X::X() outside class handled below
   else if (c == '(' && G__def_struct_member && G__tagdefining >= 0 &&
            strcmp (temp, G__struct.name[G__tagdefining]) == 0)
   {
@@ -1532,11 +1533,28 @@ void G__declare_template()
   else if(isspace(c) && strcmp(temp,"operator")==0) {
     temp[8] = ' ';
     c=G__fgetname_template(temp+9,"(");
-  }
-  else { /* if('<'==c) */
-    /* template<..> inline|const type A<T,S>::f() { ... }
-     * template<..> inline|const type f(T a,S b) { ... }
-     *                               ^              */
+  } 
+  else if (c == '(' && strstr(temp,"::")) {
+     // template<..> inline A::A(T a,S b) { ... }
+     //                          ^
+     std::string classname(temp);
+     size_t posLastScope = std::string::npos;
+     
+     for (size_t posScope = classname.find("::"); 
+          posScope != std::string::npos; 
+          posScope = classname.find("::", posScope + 2))
+        posLastScope = posScope;
+     std::string funcname(classname.substr(posLastScope + 2));
+     if (classname.compare(posLastScope - funcname.length(), funcname.length(), funcname) != 0) {
+        G__fprinterr(G__serr,"Error: expected templated constructor, got a templated function with a return type containing a '(': %s\n", temp);
+        // try to ignore it...
+     } else {
+        // do nothing, just like for the in-class case.
+     } // c'tor?
+  } else { /* if('<'==c) */
+    // template<..> inline|const type A<T,S>::f() { ... }
+    // template<..> inline|const type  f(T a,S b) { ... }
+    //                               ^
     do {
       c=G__fgetname_template(temp,"(<&*");
       if(strcmp(temp,"operator")==0) {
@@ -3313,6 +3331,12 @@ int G__createtemplatefunc(char *funcname,G__Templatearg *targ
   /**************************************************************
   * Parse template function parameter information
   **************************************************************/
+
+  int store_def_tagnum = G__def_tagnum;
+  int store_tagdefining = G__tagdefining;
+  G__def_tagnum = deftmpfunc->parent_tagnum; // for A::f(B) where B is A::B
+  G__tagdefining = G__def_tagnum;
+
   /*  template<class T,class E> type func(T a,E b,int a) {
    *                                      ^   */
   deftmpfunc->func_para.paran = tmp = 0;
@@ -3549,6 +3573,9 @@ int G__createtemplatefunc(char *funcname,G__Templatearg *targ
     ++tmp;
     deftmpfunc->func_para.paran = tmp;
   }
+
+   G__def_tagnum = store_def_tagnum;
+   G__tagdefining = store_tagdefining;
 
   /*Hack by Scott Snyder: try not to gag on forward decl of template memfunc*/
   {

@@ -653,6 +653,10 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
           strcat(oprtype,"::");
           strcat(oprtype,G__newtype.name[oprtypenum]);
 #endif
+        } else {
+           int oprtagnum = G__defined_tagname(oprtype, 2);
+           if (oprtagnum > -1) 
+              strcpy(oprtype, G__fulltagname(oprtagnum, 0));
         }
         strcat(oprtype,"(");
       }

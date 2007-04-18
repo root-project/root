@@ -35,6 +35,8 @@ class bad_exception : public exception {
   virtual const char* what() const /* throw() */ ;
 };
 
+class bad_cast: public exception {};
+
 typedef void (*unexpected_handler)();
 unexpected_handler set_unexpected(unexpected_handler f) /* throw() */ ;
 void unexpected();
