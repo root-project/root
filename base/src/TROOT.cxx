@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.208 2007/02/28 18:10:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.209 2007/03/13 15:35:00 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1259,16 +1259,10 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    Int_t err = -1;
 
    char *path;
-   char *lib = 0;
-   if (strncmp(libname, "lib", 3))
-      lib = Form("lib%s", libname);
-   if (lib && (path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else
-         err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else if ((path = gSystem->DynamicPathName(libname, kTRUE))) {
+   TString lib = libname;
+   if (!lib.BeginsWith("lib"))
+      lib = "lib" + lib;
+   if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
       if (check)
          err = 0;
       else
