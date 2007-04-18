@@ -1280,7 +1280,7 @@ class genDictionary(object) :
     for i in range(narg) :
       a = args[i]
       #arg = self.genArgument(a, 0);
-      arg = self.genTypeName(a['type'],colon=True)
+      arg = self.genTypeName(a['type'],colon=True,const=True)
       if arg[-1] == '*' :
          if arg[-2] == ':' :   # Pointer to data member
            s += '*(%s*)arg[%d]' % (arg, i )
