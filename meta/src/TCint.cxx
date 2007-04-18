@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.144 2007/04/02 09:42:27 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.145 2007/04/17 15:47:13 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1072,16 +1072,9 @@ Int_t TCint::LoadLibraryMap()
                      TString p;
                      p = d + "/" + f;
                      if (!gSystem->AccessPathName(p, kReadPermission)) {
-                        if (gDebug > 0) {
+                        if (gDebug > 0)
                            Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
-                           // generate warning in case of duplicate rootmap entries with
-                           // different values
-                           fMapfile->ReadFile(p, kEnvGlobal);
-                        } else {
-                           // allow duplicate entries, the value of the last entry
-                           // is taken
-                           fMapfile->ReadFile(p, kEnvChange);
-                        }
+                        fMapfile->ReadFile(p, kEnvGlobal);
                         fRootMapFiles->Add(new TObjString(p));
                      }
                   }
