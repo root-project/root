@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.178 2007/03/16 17:06:19 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.179 2007/03/17 11:02:01 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -526,13 +526,13 @@ Plugin.TProof:  ^condor:       TProofCondor Proof         "TProofCondor(const ch
 +Plugin.TProof: ^sm:           TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: ^peac:         TProofPEAC    Peac         "TProofPEAC(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: *              TProof        Proof        "TProof(const char*,const char*,const char*,Int_t,const char *)"
-Plugin.TVirtualProofPlayer:   base    TProofPlayer       Proof  "TProofPlayer(TProof*)"
-+Plugin.TVirtualProofPlayer:  remote  TProofPlayerRemote Proof  "TProofPlayerRemote(TProof*)"
-+Plugin.TVirtualProofPlayer:  local   TProofPlayerLocal  Proof  "TProofPlayerLocal(TProof*)"
-+Plugin.TVirtualProofPlayer:  slave   TProofPlayerSlave  Proof  "TProofPlayerSlave(TSocket*)"
-+Plugin.TVirtualProofPlayer:  sm TProofPlayerSuperMaster Proof  "TProofPlayerSuperMaster(TProof*)"
+Plugin.TVirtualProofPlayer:   base    TProofPlayer       ProofPlayer "TProofPlayer(TProof*)"
++Plugin.TVirtualProofPlayer:  remote  TProofPlayerRemote ProofPlayer "TProofPlayerRemote(TProof*)"
++Plugin.TVirtualProofPlayer:  local   TProofPlayerLocal  ProofPlayer "TProofPlayerLocal(TProof*)"
++Plugin.TVirtualProofPlayer:  slave   TProofPlayerSlave  ProofPlayer "TProofPlayerSlave(TSocket*)"
++Plugin.TVirtualProofPlayer:  sm TProofPlayerSuperMaster ProofPlayer "TProofPlayerSuperMaster(TProof*)"
 Plugin.TProofProgressDialog: * TProofProgressDialog SessionViewer "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
-Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TProof*,const char*,Int_t,Long64_t)"
+Plugin.TDataProgressDialog:  * TDataProgressDialog  PeacGui   "TDataProgressDialog(TProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"
 Plugin.TSlave: ^xpd  TXSlave Proofx  "TXSlave(const char *,const char *,Int_t,const char *, TProof *,Int_t,const char *,const char *)"
 Plugin.TChain:          ^proof TProofChain   Proof        "TProofChain(TChain *)"
