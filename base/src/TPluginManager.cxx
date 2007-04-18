@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.36 2007/02/14 18:08:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.37 2007/04/17 15:48:28 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 #include "TDataType.h"
 #include "TMethodCall.h"
 #include "TVirtualMutex.h"
+#include "TSystem.h"
 
 ClassImp(TPluginHandler)
 
@@ -434,8 +435,17 @@ void TPluginManager::Print(Option_t *opt) const
          exist = " [*]";
       Printf("%-20s %-13s %-18s %s%s", h->fBase.Data(), h->fRegexp.Data(),
              h->fClass.Data(), h->fPlugin.Data(), exist);
-      if (strchr(opt, 'a'))
+      if (strchr(opt, 'a')) {
+         if (strlen(exist) == 0) {
+            TString lib = h->fPlugin;
+            if (!lib.BeginsWith("lib"))
+               lib = "lib" + lib;
+            char *path = gSystem->DynamicPathName(lib, kTRUE);
+            if (path) Printf("  [Lib:  %s]", path);
+            delete [] path;
+         }
          Printf("  [Ctor: %s]", h->fCtor.Data());
+      }
    }
    Printf("=====================================================================");
    Printf("[*] plugin not available");
