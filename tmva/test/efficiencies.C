@@ -1,23 +1,19 @@
 #include "tmvaglob.C"
 
-
-
-void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
+void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
 {
    // input:   - Input file (result from TMVA),
    //          - type = 1 --> plot efficiency(B) versus eff(S)
    //                 = 2 --> plot rejection (B) versus efficiency (S)
 
-   Bool_t __PRINT_LOGO__ = kTRUE;
+   Bool_t __PLOT_LOGO__  = kTRUE;
    Bool_t __SAVE_IMAGE__ = kTRUE;
-
-   //   cout << "Bindir=" << BinDir->GetName() << endl;
 
    // the coordinates
    Float_t x1 = 0;
    Float_t x2 = 1;
    Float_t y1 = 0;
-   Float_t y2 = 0.5;
+   Float_t y2 = 0.8;
 
    // reverse order if "rejection"
    if (type == 2) {
@@ -31,12 +27,10 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
    }
    // create canvas
    TCanvas* c = new TCanvas( "c", "the canvas", 200, 0, 650, 500 );
-   c->SetBorderMode(0);
-   c->SetFillColor(10);
 
    // global style settings
-   gPad->SetGrid();
-   gPad->SetTicks();
+   c->SetGrid();
+   c->SetTicks();
 
    // legend
    Float_t x0L = 0.107,     y0H = 0.899;
@@ -46,11 +40,9 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
       y0H = 1 - y0H + dyH + 0.07;
    }
    TLegend *legend = new TLegend( x0L, y0H-dyH, x0L+dxL, y0H );
-   legend->SetBorderSize(1);
    legend->SetTextSize( 0.05 );
    legend->SetHeader( "MVA Method:" );
    legend->SetMargin( 0.4 );
-   legend->SetFillColor(0);
 
    TString xtit = "Signal efficiency";
    TString ytit = "Background efficiency";  
@@ -61,6 +53,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
       ftit += "  Bin: ";
       ftit += (BinDir->GetTitle());
    }
+
    // draw empty frame
    if(gROOT->FindObject("frame")!=0) gROOT->FindObject("frame")->Delete();
    TH2F* frame = new TH2F( "frame", ftit, 500, x1, x2, 500, y1, y2 );
@@ -73,7 +66,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
    Int_t color = 1;
    Int_t nmva  = 0;
    TIter next(file->GetListOfKeys());
-   TKey *key;
+   TKey *key, *hkey;
 
    TString hNameRef = "effBvsS";
    if (type == 2) hNameRef = "rejBvsS";
@@ -82,18 +75,29 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
 
    // loop over all histograms with that name
    while (key = (TKey*)next()) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;    
-      TH1 *h = (TH1*)key->ReadObj();    
-      TString hname = h->GetName();
-      
-      if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
-         h->SetLineWidth(3);
-         h->SetLineColor(color);
-         color++; if (color == 5 || color == 10 || color == 11) color++; 
-         h->Draw("csame");
-         hists.Add(h);
-         nmva++;
+      //      TClass *cl = gROOT->GetClass(key->GetClassName());
+
+      if (TString(key->GetClassName()) != "TDirectory" && TString(key->GetClassName()) != "TDirectoryFile") continue;
+      //      if (!cl->InheritsFrom("TDirectory")) continue;    
+      if(! TString(key->GetName()).BeginsWith("Method_") ) continue;
+
+      TDirectory * mDir = (TDirectory*)key->ReadObj();
+      TIter nextInMDir(mDir->GetListOfKeys());
+      while (hkey = (TKey*)nextInMDir()) {
+
+         TClass *cl = gROOT->GetClass(hkey->GetClassName());
+         if (!cl->InheritsFrom("TH1")) continue;    
+         TH1 *h = (TH1*)hkey->ReadObj();    
+         TString hname = h->GetName();
+         
+         if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
+            h->SetLineWidth(3);
+            h->SetLineColor(color);
+            color++; if (color == 5 || color == 10 || color == 11) color++; 
+            h->Draw("csame");
+            hists.Add(h);
+            nmva++;
+         }
       }
    }
 
@@ -130,7 +134,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2 , TDirectory* BinDir)
 
    // ============================================================
 
-   if (__PRINT_LOGO__) TMVAGlob::plot_logo();
+   if (__PLOT_LOGO__) TMVAGlob::plot_logo();
 
    // ============================================================
 
@@ -169,7 +173,7 @@ void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyl
       if (!cl->InheritsFrom("TDirectory")) continue;    
       TDirectory *d = (TDirectory*)key->ReadObj();    
       TString path(d->GetPath());
-      if ((TString(d->GetPath())).Contains("multicutMVA")){         
+      if (path.Contains("multicutMVA")){         
          multiMVA=kTRUE;
          plot_efficiencies( file, type, d );
       }

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSynapse.h,v 1.13 2006/10/15 22:34:22 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TSynapse.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -99,7 +99,6 @@ namespace TMVA {
       mutable MsgLogger fLogger;   // message logger
 
       ClassDef(TSynapse,0) // Synapse class used by MethodANNBase and derivatives
-         ;
    };
 
 } // namespace TMVA

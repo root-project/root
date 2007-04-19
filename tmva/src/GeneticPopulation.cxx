@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.18 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -37,7 +37,6 @@
 using namespace std;
 
 ClassImp(TMVA::GeneticPopulation)
-   ;
    
 //_______________________________________________________________________
 //                                                                      
@@ -121,6 +120,13 @@ void TMVA::GeneticPopulation::TrimPopulation( )
    fGenePool->erase( it, fGenePool->end()-- );
 }
 
+//_______________________________________________________________________
+void TMVA::GeneticPopulation::NextGeneration(){
+   fGenePool->swap( (*fNewGenePool) );
+   fNewGenePool->clear();
+}
+
+//_______________________________________________________________________
 void TMVA::GeneticPopulation::MakeChildren() 
 {
    // does what the name says,... it creates children out of members of the
@@ -141,8 +147,8 @@ void TMVA::GeneticPopulation::MakeChildren()
       } else continue;
       n++;
    }
-   fGenePool->swap( (*fNewGenePool) );
-   fNewGenePool->clear();
+//   fGenePool->swap( (*fNewGenePool) );
+//   fNewGenePool->clear();
 }
 
 //_______________________________________________________________________
@@ -166,6 +172,7 @@ TMVA::GeneticGenes TMVA::GeneticPopulation::MakeSex( TMVA::GeneticGenes male,
    return TMVA::GeneticGenes( child );
 }
 
+
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::MakeMutants( Double_t probability, Bool_t near, 
                                            Double_t spread, Bool_t mirror )
@@ -182,17 +189,67 @@ void TMVA::GeneticPopulation::MakeMutants( Double_t probability, Bool_t near,
    //                    (mirror = true seems more "natural")
    //
    multimap<Double_t, TMVA::GeneticGenes >::iterator it;
-   Int_t n = 0;
+   int n=0;
    for (it = fGenePool->begin(); it != fGenePool->end(); it++) {
       if (n< (fPopulationSize/2)) {
-         fNewGenePool->insert( entry(0, it->second) );
-         fNewGenePool->insert( entry(1, it->second) );
+          fNewGenePool->insert( entry(0, GeneticPopulation::Mutate(  it->second, probability, near, spread, mirror ) ) );
+          fNewGenePool->insert( entry(1, GeneticPopulation::Mutate(  it->second, probability, near, spread, mirror ) ) );
       } else continue;
       n++;
    }
-   fGenePool->swap( (*fNewGenePool) );
-   Mutate( probability, fPopulationSize/2, near, spread, mirror );
-   fNewGenePool->clear();
+}
+
+
+
+//_______________________________________________________________________
+void TMVA::GeneticPopulation::MakeCopies( int number )
+{
+   // produces offspring which is are copies of their parents
+   // Parameters:
+   //         int number : the number of the last individual to be copied
+   //
+   multimap<Double_t, TMVA::GeneticGenes >::iterator it;
+   Int_t n = 0;
+   for (it = fGenePool->begin(); it != fGenePool->end(); it++) {
+      if (n< number) {
+         fNewGenePool->insert( entry(0, it->second) );
+      } else continue;
+      n++;
+   }
+}
+
+
+//_______________________________________________________________________
+TMVA::GeneticGenes TMVA::GeneticPopulation::Mutate(  TMVA::GeneticGenes individual, 
+                                                     Double_t probability,
+                                                     Bool_t near,      
+                                                     Double_t spread,
+                                                     Bool_t mirror ){
+    // mutates one individual
+    // Parameters:
+    //         double probability : gives the probability (in percent) of a mutation of a coefficient
+    //         bool near : if true, the mutation will produce a new coefficient which is "near" the old one
+    //                     (gaussian around the current value)
+    //         double spread : if near==true, spread gives the sigma of the gaussian
+    //         bool mirror : if the new value obtained would be outside of the given constraints
+    //                    the value is mapped between the constraints again. This can be done either
+    //                    by a kind of periodic boundary conditions or mirrored at the boundary.
+    //                    (mirror = true seems more "natural")
+    //
+    vector< Double_t > child;
+    vector< Double_t >::iterator vec;
+    vector< TMVA::GeneticRange* >::iterator vecRange;
+    double val;
+
+    vecRange = fRanges.begin();
+    for (vec = individual.GetFactors().begin(); vec < (individual.GetFactors()).end(); vec++) {
+       if (fRandomGenerator->Uniform( 100 ) <= probability) {
+          val = (*vecRange)->Random( near, (*vec), spread, mirror );
+          child.push_back( val );
+       }
+       vecRange++;
+    }
+    return TMVA::GeneticGenes( child );
 }
 
 //_______________________________________________________________________
@@ -232,15 +289,15 @@ void TMVA::GeneticPopulation::Mutate( Double_t probability , Int_t startIndex,
    }
 }
 
+
 //_______________________________________________________________________
-void TMVA::GeneticPopulation::AddFactor( Double_t from, Double_t to )
+void TMVA::GeneticPopulation::AddFactor( TMVA::Interval *interval )
 {
    // adds a new coefficient to the individuals. 
    // Parameters:
-   //          double from : minimum value of the coefficient
-   //          double to : maximum value of the coefficient
+   //          Interval *interval : minimum value of the coefficient and maximum value of the coefficient
    //
-   fRanges.push_back( new TMVA::GeneticRange( fRandomGenerator, from, to ) );
+   fRanges.push_back( new TMVA::GeneticRange( fRandomGenerator, interval ) );
 }
 
 //_______________________________________________________________________
@@ -334,7 +391,7 @@ Bool_t TMVA::GeneticPopulation::SetFitness( TMVA::GeneticGenes *g, Double_t fitn
 }
 
 //_______________________________________________________________________
-void TMVA::GeneticPopulation::GiveHint( vector< Double_t > hint, Double_t fitness )
+void TMVA::GeneticPopulation::GiveHint( vector< Double_t >& hint, Double_t fitness )
 {
    // if there is some good configuration of coefficients one might give this Hint to
    // the genetic algorithm. 
@@ -362,6 +419,7 @@ void TMVA::GeneticPopulation::Print( Int_t untilIndex )
          untilIndex--;
       }
       n = 0;
+      fLogger << "fitness: " << it->first << "    ";
       for (vector< Double_t >::iterator vec = it->second.GetFactors().begin(); 
            vec < it->second.GetFactors().end(); vec++ ) {
          fLogger << "f_" << n++ << ": " << (*vec) << "     ";

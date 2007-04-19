@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.21 2006/11/16 22:51:59 helgevoss Exp $    
+// @(#)root/tmva $Id: Node.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,23 +44,36 @@
 #include <stdexcept>
 
 ClassImp(TMVA::Node)
-   ;
 
-int TMVA::Node::fgCount = 0;
+Int_t           TMVA::Node::fgCount = 0;
+
+
+TMVA::Node::Node() :
+   fParent ( NULL ),
+   fLeft( NULL),
+   fRight( NULL ),
+   fPos ('u'),
+   fDepth(0),
+   fParentTree(NULL)
+{
+   // default constructor
+   fgCount++;
+}
 
 //_______________________________________________________________________
-TMVA::Node::Node( Node* p, char pos ) : fParent ( p ), fLeft( NULL ), fRight( NULL ),  
-        fPos ( pos ), fDepth( p->GetDepth() + 1), fParentTree(p->GetParentTree()) 
+TMVA::Node::Node( Node* p, char pos ) 
+   : fParent ( p ), 
+     fLeft( NULL ), 
+     fRight( NULL ),  
+     fPos ( pos ), 
+     fDepth( p->GetDepth() + 1), 
+     fParentTree(p->GetParentTree()) 
 {
-      // constructor of a daughter node as a daughter of 'p'
+   // constructor of a daughter node as a daughter of 'p'
 
    fgCount++;
    if (fPos == 'l' ) p->SetLeft(this);
    else if (fPos == 'r' ) p->SetRight(this);
-   else {
-      cout << "Node:  Error, you have to specify if node becomes 'l' or 'r' daughter" <<endl;
-      exit(1);
-   }
 }
 
 //_______________________________________________________________________
@@ -71,7 +84,6 @@ TMVA::Node::Node (const Node &n ) : fParent ( NULL ), fLeft( NULL), fRight( NULL
    // that the parents/daugthers are initialized to 0 (and set by the copy 
    // constructors of the derived classes 
    fgCount++;
-   
 }
 
 //_______________________________________________________________________
@@ -79,9 +91,7 @@ TMVA::Node::~Node( void )
 {
    // node destructor
    fgCount--;
-   // cout << "the total number of nodes on the heap: " << count << endl; 
 }
-
 
 //_______________________________________________________________________
 Int_t TMVA::Node::CountMeAndAllDaughters( void ) const 
@@ -94,6 +104,15 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
       n+= this->GetRight()->CountMeAndAllDaughters(); 
   
    return n;
+}
+
+
+//_______________________________________________________________________
+Int_t TMVA::Node::GetMemSize() const { 
+   Int_t size = sizeof(*this);
+   if(fLeft!=0) size += fLeft->GetMemSize();
+   if(fRight!=0) size += fRight->GetMemSize();
+   return size;
 }
 
 
@@ -114,6 +133,5 @@ ostream& TMVA::operator<<(ostream& os, const TMVA::Node* node)
    if (node!=NULL) node->Print(os);
    return os;                // Return the output stream.
 }
-
 
 

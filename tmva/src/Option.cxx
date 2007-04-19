@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.cxx,v 1.15 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: Option.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -32,7 +32,7 @@
 #include "TString.h"
 
 //______________________________________________________________________
-Bool_t TMVA::OptionBase::SetValue(const TString& vs) 
+Bool_t TMVA::OptionBase::SetValue(const TString& vs, Int_t) 
 {
    // set value for option
    fIsSet = kTRUE;

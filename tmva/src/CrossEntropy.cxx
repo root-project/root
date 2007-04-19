@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.11 2006/11/16 22:51:58 helgevoss Exp $       
+// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $       
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,7 +38,6 @@
 #include "TMVA/CrossEntropy.h"
 
 ClassImp(TMVA::CrossEntropy)
-   ;
    
 //_______________________________________________________________________
 Double_t  TMVA::CrossEntropy::GetSeparationIndex( const Double_t &s, const Double_t &b )

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.21 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,8 +70,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN.h,v 1.21 2006/11/16 22:51:58 helgevoss Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN
@@ -118,6 +116,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -142,10 +143,9 @@ namespace TMVA {
       Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                            Double_t*, Int_t*, Int_t* );
   
-      virtual void WriteNNWeightsToStream( std::ostream&, Int_t, Int_t, const Double_t*, const Double_t*, 
-                                           Int_t, const Int_t*, const Double_t*, const Double_t*, const Double_t* ) const;
-
    private:
+
+      void PrintWeights( std::ostream & o ) const;
 
       // the option handling methods
       virtual void DeclareOptions();
@@ -162,14 +162,14 @@ namespace TMVA {
       Int_t*        fNodes;     // number of nodes per layer
 
       // additional member variables for the independent NN::Evaluation phase
-      Double_t*     fXmaxNN;    // maximum values of input variables
-      Double_t*     fXminNN;    // minimum values of input variables
-      Int_t         fLayermNN;  // number of layers (including input and output layers)
-      Int_t*        fNeuronNN;  // nodes per layer
-      Double_t***   fWNN;       // weights
-      Double_t**    fWwNN;      // weights
+//       Double_t*     fXmaxNN;    // maximum values of input variables
+//       Double_t*     fXminNN;    // minimum values of input variables
+//       Int_t         fLayermNN;  // number of layers (including input and output layers)
+//       Int_t*        fNeuronNN;  // nodes per layer
+//       Double_t***   fWNN;       // weights
+//       Double_t**    fWwNN;      // weights
       Double_t**    fYNN;       // weights
-      Double_t*     fTempNN;    // temperature (used in activation function)
+//       Double_t*     fTempNN;    // temperature (used in activation function)
       TString       fLayerSpec; // the hidden layer specification string
 
       // auxiliary member functions
@@ -181,7 +181,6 @@ namespace TMVA {
       void InitCFMlpANN( void );
 
       ClassDef(MethodCFMlpANN,0) // Interface for Clermond-Ferrand artificial neural network
-         ;
    };
 
 } // namespace TMVA

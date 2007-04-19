@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Tools.h,v 1.10 2007/01/16 09:37:03 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -41,8 +41,6 @@
 #include <vector>
 #include <string>
 
-#include "TList.h"
-
 #ifndef ROOT_TMVA_TMatrixDSymEigen
 #include "TMatrixDSymEigen.h"
 #endif
@@ -50,6 +48,7 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
+class TList;
 class TTree;
 class TString;
 class TH1;
@@ -76,8 +75,8 @@ namespace TMVA {
       // normalize histogram by its integral
       Double_t NormHist( TH1* theHist, Double_t norm = 1.0 );
 
-      // parser for TString phrase with items separated by ':'
-      TList* ParseFormatLine( TString theString );
+      // parser for TString phrase with items separated by a character
+      TList* ParseFormatLine( TString theString, const char * sep = ":" );
 
       // parse option string for ANN methods
       std::vector<Int_t>* ParseANNOptionString( TString theOptions, Int_t nvar,
@@ -86,14 +85,17 @@ namespace TMVA {
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
       void GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat );
 
-      // type-safe accessor to TTree elements
-      //      Double_t GetValue( TTree *theTree, Int_t entry, TString varname );
+      // turns covariance into correlation matrix
+      const TMatrixD* GetCorrelationMatrix( const TMatrixD* covMat );
 
       // check spline quality by comparison with initial histogram
       Bool_t CheckSplines( TH1*, TSpline* );
 
       // normalization of variable output
       Double_t NormVariable( Double_t x, Double_t xmin, Double_t xmax );
+
+      // return separation of two histograms
+      Double_t GetSeparation( TH1* S, TH1* B );
 
       // vector rescaling
       std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
@@ -116,16 +118,34 @@ namespace TMVA {
       TString ReplaceRegularExpressions( const TString& s, TString replace = "+" );
 
       // routines for formatted output -----------------
-      void FormattedOutput( const TMatrixD&, const std::vector<TString>&, 
-                            MsgLogger& logger );
+      void FormattedOutput( const std::vector<Double_t>&, const std::vector<TString>&, 
+                            const TString titleVars, const TString titleValues, MsgLogger& logger,
+                            TString format = "%+1.3f" );
+      void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
 
       // output logger
       MsgLogger& Logger();
 
       const TString __regexp__ = "!%^&()'<>?= ";
 
+      const TString& Color(const TString &);
+
       // print welcome message (to be called from, eg, .TMVAlogon)
+      enum EWelcomeMessage {
+         kStandardWelcomeMsg = 1,
+         kIsometricWelcomeMsg,
+         kBlockWelcomeMsg,
+         kLeanWelcomeMsg,
+         kLogoWelcomeMsg,
+         kSmall1WelcomeMsg,
+         kSmall2WelcomeMsg,
+         kOriginalWelcomeMsgColor,
+         kOriginalWelcomeMsgBW
+      };
+
       void TMVAWelcomeMessage();
+      void TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage m = kStandardWelcomeMsg );
+      void TMVAVersionMessage( MsgLogger& logger );
    }
 
 } // namespace TMVA

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.11 2007/01/30 10:19:25 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.12 2007/01/30 18:35:17 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -39,7 +39,13 @@
 #include "TMVA/MethodCFMlpANN_def.h"
 #endif
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+
+#include <iostream>
+using std::cout;
+using std::endl;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -71,10 +77,6 @@ namespace TMVA {
       virtual Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                                    Double_t*, Int_t*, Int_t* ) = 0;
   
-      virtual void WriteNNWeightsToStream( ostream &, Int_t, Int_t, const Double_t*, const Double_t*, 
-                                           Int_t, const Int_t*, 
-                                           const Double_t*, const Double_t*, const Double_t* ) const = 0;
-
       Double_t Fdecroi(Int_t *i__);
       Double_t Sen3a(void);
 
@@ -103,6 +105,21 @@ namespace TMVA {
       static Int_t fg_max_nNodes_;  // maximum number of nodes per variable
       static Int_t fg_999;          // constant
 
+      Double_t w_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
+         return wNN [(a_3*max_nNodes_ + a_2)*max_nLayers_ + a_1 - 187];
+      }
+      Double_t & w_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
+         return wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187];
+      }
+
+      
+      Double_t ww_ref(const Double_t wwNN[], Int_t a_1,Int_t a_2) const {
+         return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
+      }
+      Double_t & ww_ref(Double_t wwNN[], Int_t a_1,Int_t a_2) {
+         return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
+      }
+
       // ANN training parameters
       struct {
          Double_t epsmin, epsmax, eeps, eta;
@@ -117,23 +134,31 @@ namespace TMVA {
       } fVarn_1;
 
       // dynamic data table
-      struct {
+      struct fVARn2 {
+         fVARn2() { 
+            xx = 0;
+         }
+         ~fVARn2() {
+            Delete();
+         }
          void create( Int_t nevt, Int_t nvar ) {
             fNevt = nevt+1; fNvar = nvar+1; // fortran array style 1...N
             xx = new Double_t*[fNevt];
             for (Int_t i=0; i<fNevt; i++) xx[i] = new Double_t[fNvar];
          }
          Double_t operator=( Double_t val ) { return val; }
-            Double_t &operator()( Int_t ievt, Int_t ivar ) const { 
-               if (0 != xx && ievt < fNevt && ivar < fNvar) return xx[ievt][ivar];
-               else {
-                  printf( "*** ERROR in varn3_(): xx is zero pointer ==> abort ***\n") ;
-                  //exit(1);
-                  return xx[0][0];
-               }
+         Double_t &operator()( Int_t ievt, Int_t ivar ) const { 
+            if (0 != xx && ievt < fNevt && ivar < fNvar) return xx[ievt][ivar];
+            else {
+               printf( "*** ERROR in varn3_(): xx is zero pointer ==> abort ***\n") ;
+               // exit(1);
+               return xx[0][0];
             }
+         }
          void Delete( void ) {
             if (0 != xx) for (Int_t i=0; i<fNevt; i++) if (0 != xx[i]) delete [] xx[i];
+            delete[] xx;
+            xx=0;
          }
   
          Double_t** xx;
@@ -170,7 +195,6 @@ namespace TMVA {
       } fCost_1;
 
       ClassDef(MethodCFMlpANN_Utils,0)  // Implementation of Clermond-Ferrand artificial neural network
-         ;
    };
 
 } // namespace TMVA

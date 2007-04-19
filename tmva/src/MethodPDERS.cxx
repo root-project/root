@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.43 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -71,7 +71,6 @@
 #include "TFile.h"
 #include "TObjString.h"
 #include "TMath.h"
-#include <stdexcept>
 
 #define TMVA_MethodPDERS__countByHand__Debug__
 #undef  TMVA_MethodPDERS__countByHand__Debug__
@@ -83,12 +82,13 @@ namespace TMVA {
 using std::vector;
 
 ClassImp(TMVA::MethodPDERS)
-   ;
 
 //_______________________________________________________________________
 TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& theData, 
                                 TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ),
+     fBinaryTreeS(0),
+     fBinaryTreeB(0)
 {
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"
@@ -111,7 +111,9 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& t
 TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
                                 TString theWeightFile,
                                 TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
+   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ),
+     fBinaryTreeS(0),
+     fBinaryTreeB(0)
 {
    // construct MethodPDERS through from file
    InitPDERS();
@@ -126,8 +128,7 @@ void TMVA::MethodPDERS::InitPDERS( void )
    SetMethodType( TMVA::Types::kPDERS );
    SetTestvarName();
 
-   fBinaryTreeS   = fBinaryTreeB = NULL;
-   fReferenceTree = NULL;
+   fBinaryTreeS = fBinaryTreeB = NULL;
 
    UpdateThis();
 
@@ -144,18 +145,19 @@ void TMVA::MethodPDERS::InitPDERS( void )
    fGaussSigma      = 0.2;
 
    fInitializedVolumeEle = kFALSE;
+   fAverageRMS.clear();
+
+   // the minimum requirement to declare an event signal-like
+   SetSignalReferenceCut( 0.0 );
 }
 
 //_______________________________________________________________________
 TMVA::MethodPDERS::~MethodPDERS( void )
 {
    // destructor
-   if (NULL != fBinaryTreeS) delete fBinaryTreeS;
-   if (NULL != fBinaryTreeB) delete fBinaryTreeB;
-
-   if (NULL != fFin) { fFin->Close(); delete fFin; }
+   if (NULL != fBinaryTreeS) { delete fBinaryTreeS; fBinaryTreeS = 0; }
+   if (NULL != fBinaryTreeB) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 }
-
 
 //_______________________________________________________________________
 void TMVA::MethodPDERS::DeclareOptions() 
@@ -163,10 +165,10 @@ void TMVA::MethodPDERS::DeclareOptions()
    // define the options (their key words) that can be set in the option string 
    // know options:
    // VolumeRangeMode   <string>  Method to determine volume range
-   //    available values are:        MinMax <default>
+   //    available values are:        MinMax 
    //                                 Unscaled
    //                                 RMS
-   //                                 Adaptive
+   //                                 Adaptive <default>
    //
    // KernelEstimator   <string>  Kernel estimation function
    //    available values are:        Box <default>
@@ -190,7 +192,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    // InitialScale      <float>   Initial scale for adaptive volume range           
    // GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
 
-   DeclareOptionRef(fVolumeRange="MinMax", "VolumeRangeMode", "Method to determine volume range");
+   DeclareOptionRef(fVolumeRange="Adaptive", "VolumeRangeMode", "Method to determine volume size");
    AddPreDefVal(TString("Unscaled"));
    AddPreDefVal(TString("MinMax"));
    AddPreDefVal(TString("RMS"));
@@ -228,27 +230,27 @@ void TMVA::MethodPDERS::ProcessOptions()
 
    fVRangeMode = TMVA::MethodPDERS::kUnsupported;
 
-   if         (fVolumeRange == "MinMax"    ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
-   else if    (fVolumeRange == "RMS"       ) fVRangeMode = TMVA::MethodPDERS::kRMS;
-   else if    (fVolumeRange == "Adaptive"  ) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
-   else if    (fVolumeRange == "Unscaled"  ) fVRangeMode = TMVA::MethodPDERS::kUnscaled;
+   if      (fVolumeRange == "MinMax"    ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
+   else if (fVolumeRange == "RMS"       ) fVRangeMode = TMVA::MethodPDERS::kRMS;
+   else if (fVolumeRange == "Adaptive"  ) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
+   else if (fVolumeRange == "Unscaled"  ) fVRangeMode = TMVA::MethodPDERS::kUnscaled;
    else {
       fLogger << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
 
-   if        (fKernelString == "Box"      ) fKernelEstimator = TMVA::MethodPDERS::kBox;
-   else if   (fKernelString == "Sphere"   ) fKernelEstimator = TMVA::MethodPDERS::kSphere;
-   else if   (fKernelString == "Teepee"   ) fKernelEstimator = TMVA::MethodPDERS::kTeepee;
-   else if   (fKernelString == "Gauss"    ) fKernelEstimator = TMVA::MethodPDERS::kGauss;
-   else if   (fKernelString == "Sinc3"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc3;
-   else if   (fKernelString == "Sinc5"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc5;
-   else if   (fKernelString == "Sinc7"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc7;
-   else if   (fKernelString == "Sinc9"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc9;
-   else if   (fKernelString == "Sinc11"   ) fKernelEstimator = TMVA::MethodPDERS::kSinc11;
-   else if   (fKernelString == "Lanczos2" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
-   else if   (fKernelString == "Lanczos3" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
-   else if   (fKernelString == "Lanczos5" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
-   else if   (fKernelString == "Lanczos8" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
+   if      (fKernelString == "Box"      ) fKernelEstimator = TMVA::MethodPDERS::kBox;
+   else if (fKernelString == "Sphere"   ) fKernelEstimator = TMVA::MethodPDERS::kSphere;
+   else if (fKernelString == "Teepee"   ) fKernelEstimator = TMVA::MethodPDERS::kTeepee;
+   else if (fKernelString == "Gauss"    ) fKernelEstimator = TMVA::MethodPDERS::kGauss;
+   else if (fKernelString == "Sinc3"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc3;
+   else if (fKernelString == "Sinc5"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc5;
+   else if (fKernelString == "Sinc7"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc7;
+   else if (fKernelString == "Sinc9"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc9;
+   else if (fKernelString == "Sinc11"   ) fKernelEstimator = TMVA::MethodPDERS::kSinc11;
+   else if (fKernelString == "Lanczos2" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
+   else if (fKernelString == "Lanczos3" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
+   else if (fKernelString == "Lanczos5" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
+   else if (fKernelString == "Lanczos8" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
    else {
       fLogger << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
    }
@@ -279,20 +281,13 @@ void TMVA::MethodPDERS::Train( void )
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 
-   Data().GetTrainingTree()->ResetBranchAddresses(); 
-   Data().ResetCurrentTree();
-   TTree* refTree = (TTree*)Data().GetTrainingTree()->CloneTree(0);
-   refTree->SetName("referenceTree");
-   Data().Event().SetBranchAddresses( refTree );
+   CreateBinarySearchTrees( Data().GetTrainingTree() );
+   
+   CalcAverages();
+   
+   SetVolumeElement();
 
-   // fill the new ntuple (this is needed, since we may be in decorrelation or 
-   // similar preprocessing mode)
-   for (Int_t i=0; i<Data().GetNEvtTrain(); i++) {
-      ReadTrainingEvent(i);      
-      refTree->Fill();
-   }   
-
-   SetReferenceTree( refTree );
+   fInitializedVolumeEle = kTRUE;
 }
 
 //_______________________________________________________________________
@@ -302,28 +297,55 @@ Double_t TMVA::MethodPDERS::GetMvaValue()
    // volume containing the entire events
    if (fInitializedVolumeEle == kFALSE) {
       fInitializedVolumeEle = kTRUE;
-      SetVolumeElement();
 
       // create binary trees (global member variables) for signal and background
-      Int_t nS = 0, nB = 0;      
-      fBinaryTreeS = new TMVA::BinarySearchTree();
-      nS = fBinaryTreeS->Fill( Data(), GetReferenceTree(), 1, Types::kNone );
-      fBinaryTreeB = new TMVA::BinarySearchTree();
-      nB = fBinaryTreeB->Fill( Data(), GetReferenceTree(), 0, Types::kNone );
+      //if (!fBinaryTreeS || !fBinaryTreeB) CreateBinarySearchTrees( GetReferenceTree() );
 
-      // sanity check
-      if (NULL == fBinaryTreeS || NULL == fBinaryTreeB) {
-         fLogger << kFATAL << "<Train> Create(BinaryTree) returned zero "
-                 << "binaryTree pointer(s): " << fBinaryTreeS << "  " << fBinaryTreeB << Endl;
-      }
+      CalcAverages();
 
-      // these are the signal and background scales for the weights
-      fScaleS = 1.0/Float_t(nS);
-      fScaleB = 1.0/Float_t(nB);
-      fLogger << kVERBOSE << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+      SetVolumeElement();
    }
 
-   return this->RScalc( Data().Event() );
+   return this->RScalc( GetEvent() );
+}
+
+//_______________________________________________________________________
+void TMVA::MethodPDERS::CalcAverages()
+{
+   // compute also average RMS values required for adaptive Gaussian
+   if (fVRangeMode == kAdaptive) {
+      fAverageRMS.clear();
+      fBinaryTreeS->CalcStatistics();
+      fBinaryTreeB->CalcStatistics();
+
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {   
+         Float_t rmsS = fBinaryTreeS->RMS(Types::kSignal, ivar);
+         Float_t rmsB = fBinaryTreeB->RMS(Types::kBackground, ivar);
+         fAverageRMS.push_back( (rmsS + rmsB)*0.5 );
+      }
+   }
+}   
+
+
+
+//_______________________________________________________________________
+void TMVA::MethodPDERS::CreateBinarySearchTrees( TTree* tree ) 
+{
+   // create binary search trees for signal and background
+
+   if (NULL != fBinaryTreeS) delete fBinaryTreeS;
+   if (NULL != fBinaryTreeB) delete fBinaryTreeB;
+   fBinaryTreeS = new TMVA::BinarySearchTree();
+   fBinaryTreeB = new TMVA::BinarySearchTree();
+   fBinaryTreeS->Fill( *this, tree, 1 );
+   fBinaryTreeB->Fill( *this, tree, 0 );
+
+   // these are the signal and background scales for the weights
+   fScaleS = 1.0/fBinaryTreeS->GetSumOfWeights();
+   fScaleB = 1.0/fBinaryTreeB->GetSumOfWeights();
+
+   fLogger << kVERBOSE << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+
 }
 
 //_______________________________________________________________________
@@ -340,14 +362,14 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
 
          case kRMS:
          case kAdaptive:
-            Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-            TMVA::Tools::ComputeStat( GetReferenceTree(), (*fInputVars)[ivar],
-                                      meanS, meanB, rmsS, rmsB, xmin, xmax );
+            // sanity check
+            if ((Int_t)fAverageRMS.size() != GetNvar())
+               fLogger << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
 
-            (*fDelta)[ivar] = (rmsS + rmsB)*0.5*fDeltaFrac;
+            (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
             fLogger << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
-                    << "\t]: " << (rmsS + rmsB)*0.5
-                    << "\t  |  comp with d|norm|: " << (GetXmax( ivar ) - GetXmin( ivar ))
+                    << "\t]: " << fAverageRMS[ivar]
+                    << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
                     << Endl;
             break;
 
@@ -432,12 +454,12 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
       Data().ReadTrainEvent(ievt_);
       Bool_t inV;
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         Float_t x = Data().Event().GetVal(ivar);
+         Float_t x = GetEvent().GetVal(ivar);
          inV = (x > (*volume->Lower)[ivar] && x <= (*volume->Upper)[ivar]);
          if (!inV) break;
       }
       if (inV) {
-         if (Data().Event().IsSignal())
+         if (GetEvent().IsSignal())
             iS++;
          else
             iB++;
@@ -460,8 +482,8 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
       // starting values
       TMVA::Volume v( *volume );
       
-      std::vector<TMVA::Event*> eventsS;
-      std::vector<TMVA::Event*> eventsB;
+      std::vector<const BinarySearchTreeNode*> eventsS;
+      std::vector<const BinarySearchTreeNode*> eventsB;
       fBinaryTreeS->SearchVolume( &v, &eventsS );
       fBinaryTreeB->SearchVolume( &v, &eventsB );
       countS = KernelEstimate( e, eventsS, v );
@@ -479,17 +501,18 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
       if (TMVA::MethodPDERS_UseFindRoot) { 
          // that won't need to search through large volume, where the bottle neck probably is
 
-         fHelpVolume = new TMVA::Volume( *volume );
+         //fHelpVolume = new TMVA::Volume( *volume );
+         fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         TMVA::RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 50, 10 );
+         TMVA::RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          TMVA::Volume v( *volume );
          v.ScaleInterval( scale );
 
-         std::vector<TMVA::Event*> eventsS;
-         std::vector<TMVA::Event*> eventsB;
+         std::vector<const BinarySearchTreeNode*> eventsS;
+         std::vector<const BinarySearchTreeNode*> eventsB;
          fBinaryTreeS->SearchVolume( &v, &eventsS );
          fBinaryTreeB->SearchVolume( &v, &eventsB );
          countS = KernelEstimate( e, eventsS, v );
@@ -497,8 +520,9 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 
          v.Delete();
 
-         fHelpVolume->Delete();
-         delete fHelpVolume; fHelpVolume = NULL;
+         //          fHelpVolume->Delete();
+         //          delete fHelpVolume;
+         fHelpVolume = NULL;
 
       }
       // -----------------------------------------------------------------------
@@ -591,7 +615,7 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
-                                            vector<TMVA::Event*>& events, TMVA::Volume& v )
+                                            vector<const BinarySearchTreeNode*>& events, TMVA::Volume& v )
 {
    // Final estimate
    Double_t pdfSum = 0;
@@ -602,7 +626,7 @@ Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
       dim_normalization [ivar] = 2 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
    
    // Iteration over sample points
-   for (vector<TMVA::Event*>::iterator iev = events.begin(); iev != events.end(); iev++) {
+   for (vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
      
       // First switch to the one dimensional distance
       Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
@@ -708,12 +732,12 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::GetNormalizedDistance (   const TMVA::Event &base_event,
-                                                      const TMVA::Event &sample_event,
+                                                      const BinarySearchTreeNode &sample_event,
                                                       Double_t *dim_normalization) {
    // We use Euclidian metric here. Might not be best or most efficient.
    Double_t ret=0;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      Double_t dist = dim_normalization[ivar] * (sample_event.GetVal(ivar) - base_event.GetVal(ivar));
+      Double_t dist = dim_normalization[ivar] * (sample_event.GetEventV()[ivar] - base_event.GetVal(ivar));
       ret += dist*dist;
    }
    return TMath::Sqrt (ret);
@@ -782,41 +806,81 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 //_______________________________________________________________________
 void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
 {
-   // write training sample (TTree) to file
-   TString fname = GetWeightFileName() + ".root";
-   fLogger << kINFO << "creating weight file: " << fname << Endl;
-   TFile *fout = new TFile( fname, "RECREATE" );
+   // write only a short comment to file
+   if(TxtWeightsOnly()) {
+      if(fBinaryTreeS)
+         o << *fBinaryTreeS;
+      else
+         fLogger << kFATAL << "Signal binary search tree not available" << Endl; 
+      
+      if(fBinaryTreeB)
+         o << *fBinaryTreeB;
+      else
+         fLogger << kFATAL << "Background binary search tree not available" << Endl; 
 
-   // info in txt stream
-   o << "# weights stored in root i/o file: " << fname << endl;
 
-   // write trainingTree
-   GetReferenceTree()->Write();
 
-   fout->Close();
-
-   delete fout;
+   } else {
+      TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
+      o << "# weights stored in root i/o file: " << rfname << endl;  
+   }
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr )
+void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 {
-   // read training sample from file
-   if (istr.eof()); // dummy
+   // read weight info from file
+   if(TxtWeightsOnly()) {
+      if (NULL != fBinaryTreeS) { delete fBinaryTreeS; fBinaryTreeS = 0; }
+      if (NULL != fBinaryTreeB) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 
-   TString fname = GetWeightFileName();
-   if (!fname.EndsWith( ".root" )) fname += ".root";
+      fBinaryTreeS = new TMVA::BinarySearchTree();
+      fBinaryTreeB = new TMVA::BinarySearchTree();
+      fBinaryTreeS->SetRoot( fBinaryTreeS->CreateNode(&GetVarTransform().Variables()));
+      fBinaryTreeS->Read(istr);
+      fBinaryTreeB->SetRoot( fBinaryTreeB->CreateNode(&GetVarTransform().Variables()));
+      fBinaryTreeB->Read(istr);
 
-   fLogger << kINFO << "reading weight file: " << fname << Endl;
-   fFin = new TFile( fname );
+      fBinaryTreeS->SetPeriode( GetVarTransform().Variables().size() );
+      fBinaryTreeB->SetPeriode( GetVarTransform().Variables().size() );
 
-   // read the trainingTree
-   TTree* tree = (TTree*)fFin->Get( "referenceTree" );
-   SetReferenceTree( tree );
+      fBinaryTreeS->CalcStatistics();
+      fBinaryTreeB->CalcStatistics();
 
-   if (NULL == GetReferenceTree()) {
-      fLogger << kFATAL << "error while reading 'referenceTree': zero pointer " << Endl;
-   }   
+
+      fBinaryTreeS->CountNodes();
+      fBinaryTreeB->CountNodes();
+
+      // these are the signal and background scales for the weights
+      fScaleS = 1.0/fBinaryTreeS->GetSumOfWeights();
+      fScaleB = 1.0/fBinaryTreeB->GetSumOfWeights();
+
+      fLogger << kVERBOSE << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+
+      CalcAverages();
+
+      SetVolumeElement();
+
+      fInitializedVolumeEle = kTRUE;
+   }
 }
 
+//_______________________________________________________________________
+void TMVA::MethodPDERS::WriteWeightsToStream( TFile& ) const
+{
+   // write training sample (TTree) to file
+   //    if (NULL != fBinaryTreeS) fBinaryTreeS->Write( "SignalBST" );
+   //    if (NULL != fBinaryTreeB) fBinaryTreeB->Write( "BackgroundBST" );
+}
 
+//_______________________________________________________________________
+void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
+{
+   // read training sample from file
+
+   //    if (NULL != fBinaryTreeS) delete fBinaryTreeS;
+   //    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
+   //    fBinaryTreeS = (BinarySearchTree*)rf.Get( "SignalBST" );
+   //    fBinaryTreeB = (BinarySearchTree*)rf.Get( "BackgroundBST" );
+
+}

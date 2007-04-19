@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Timer.cxx,v 1.14 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: Timer.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -12,15 +12,13 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
  *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -54,34 +52,36 @@
 #include "TMVA/Timer.h"
 #include "Riostream.h"
 
-const TString BC_white  = "\033[1;37m" ;
-const TString BC_red    = "\033[0;31m" ;
-const TString BC_blue   = "\033[0;34m" ;
-const TString BC__b0    = "\033[47m"   ;
-const TString BC__b1    = "\033[1;42m" ;
-const TString BC__f1    = "\033[33m"   ;
-const TString EC__      = "\033[0m"    ;
+#ifndef ROOT_TMVA_Config
+#include "TMVA/Config.h"
+#endif
+#ifndef ROOT_TMVA_Tools
+#include "TMVA/Tools.h"
+#endif
 
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 24;  
+using namespace TMVA::Tools;
 
 ClassImp(TMVA::Timer)
-   ;
 
 //_______________________________________________________________________
-TMVA::Timer::Timer( Bool_t colourfulOutput )
+TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
    : fNcounts        ( 0 ),
      fPrefix         ( TMVA::Timer::fgClassName ),
      fColourfulOutput( colourfulOutput )
 {
    // constructor
+   if (prefix == "") fPrefix = TMVA::Timer::fgClassName;
+   else              fPrefix = prefix;
+
    fLogger = new MsgLogger( fPrefix.Data() );
 
    Reset();
 }
 
 //_______________________________________________________________________
-TMVA::Timer::Timer( Int_t ncounts, TString prefix, Bool_t colourfulOutput  )
+TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    : fNcounts        ( ncounts ),
      fColourfulOutput( colourfulOutput )
 {
@@ -145,6 +145,34 @@ TString TMVA::Timer::GetLeftTime( Int_t icounts )
 }
 
 //_______________________________________________________________________
+void TMVA::Timer::DrawProgressBar() 
+{
+   // draws the progressbar
+   fNcounts++;
+   if (fNcounts == 1) {
+      clog << fLogger->GetPrintedSource();
+      clog << "Please wait ";
+   }
+
+   clog << "." << flush;
+}
+
+//_______________________________________________________________________
+void TMVA::Timer::DrawProgressBar( TString theString ) 
+{
+   // draws a string in the progress bar
+   clog << fLogger->GetPrintedSource();
+
+   clog << Color("white_on_green") << Color("dyellow") << "[" << Color("reset");
+
+   clog << Color("white_on_green") << Color("dyellow") << theString << Color("reset");
+
+   clog << Color("white_on_green") << Color("dyellow") << "]" << Color("reset");
+
+   clog << "\r" << flush; 
+}
+
+//_______________________________________________________________________
 void TMVA::Timer::DrawProgressBar( Int_t icounts ) 
 {
    // draws progress bar in color or B&W
@@ -156,26 +184,26 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
    Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
    clog << fLogger->GetPrintedSource();
-   if (fColourfulOutput) clog << BC__b1 << BC__f1 << "[" << EC__;
+   if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "[" << Color("reset");
    else                  clog << "[";
    for (Int_t i=0; i<ic; i++) {
-      if (fColourfulOutput) clog << BC__b1 << BC__f1 << ">" << EC__; 
+      if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << ">" << Color("reset"); 
       else                  clog << ">";
    }
    for (Int_t i=ic+1; i<fgNbins; i++) {
-      if (fColourfulOutput) clog << BC__b1 << BC__f1 << "." << EC__; 
+      if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "." << Color("reset"); 
       else                  clog << ".";
    }
-   if (fColourfulOutput) clog << BC__b1 << BC__f1 << "]" << EC__;
+   if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "]" << Color("reset");
    else                  clog << "]" ;
 
    // timing information
    if (fColourfulOutput) {
-      clog << EC__ << " " ;
-      clog << "(" << BC_red << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << EC__
+      clog << Color("reset") << " " ;
+      clog << "(" << Color("dred") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << Color("reset")
                << ", " 
                << "time left: "
-               << this->GetLeftTime( icounts ) << EC__ << ") ";
+               << this->GetLeftTime( icounts ) << Color("reset") << ") ";
    }
    else {
       clog << "] " ;
@@ -186,7 +214,7 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
 }
 
 //_______________________________________________________________________
-TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) 
+TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) const
 {
    // pretty string output
    TString out = "";
@@ -206,6 +234,6 @@ TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific )
       else        out += Form( "%i mins", m );
    }
 
-   return (fColourfulOutput) ? BC_red + out + EC__ : out;
+   return (fColourfulOutput) ? Color("dred") + out + Color("reset") : out;
 }
 

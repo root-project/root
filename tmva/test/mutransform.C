@@ -32,19 +32,27 @@ void mutransform( TString fin = "TMVA.root", Bool_t logy = kFALSE, Bool_t useTMV
    // loop over all histograms with that name
    // search for maximum ordinate
    TIter   next(file->GetListOfKeys());
-   TKey *  key;
+   TKey   *key, *hkey;
    Int_t   nmva  = 0;
    TString hName = "muTransform_S"; // ignore background
    while (key = (TKey*)next()) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      TH1 *h = (TH1*)key->ReadObj();
-      Bool_t skip = !TString(h->GetName()).Contains( hName );
-      for (Int_t iskip=0; iskip<nskip; iskip++) 
-         if (TString(h->GetName()).Contains( hskip[iskip] )) skip = kTRUE;
-      if (!skip) {
-         if (h->GetMaximum() > y2) y2 = h->GetMaximum()*ys;
-         nmva++;
+
+      if (TString(key->GetClassName()) != "TDirectory" && TString(key->GetClassName()) != "TDirectoryFile") continue;
+      if(! TString(key->GetName()).BeginsWith("Method_") ) continue;
+      
+      TDirectory * mDir = (TDirectory*)key->ReadObj();
+      TIter nextInMDir(mDir->GetListOfKeys());
+      while (hkey = (TKey*)nextInMDir()) {
+         TClass *cl = gROOT->GetClass(hkey->GetClassName());
+         if (!cl->InheritsFrom("TH1")) continue;
+         TH1 *h = (TH1*)hkey->ReadObj();
+         Bool_t skip = !TString(h->GetName()).Contains( hName );
+         for (Int_t iskip=0; iskip<nskip; iskip++) 
+            if (TString(h->GetName()).Contains( hskip[iskip] )) skip = kTRUE;
+         if (!skip) {
+            if (h->GetMaximum() > y2) y2 = h->GetMaximum()*ys;
+            nmva++;
+         }
       }
    }
    if (y2 == -1) {
@@ -54,22 +62,19 @@ void mutransform( TString fin = "TMVA.root", Bool_t logy = kFALSE, Bool_t useTMV
 
    // create canvas
    TCanvas* c = new TCanvas( "c", "the canvas", 150, 0, 650, 500 );
-   c->SetBorderMode(0);
-   c->SetFillColor(10);
 
    // global style settings
-   gPad->SetTicks();
+   c->SetTicks();
    if (logy) {
       y1 = 0.1;
       ys = 2.0;
-      gPad->SetLogy();    
+      c->SetLogy();    
    }
 
    // legend
    Float_t x0L = 0.140, y0H = 0.86;
    Float_t dxL = 0.48,  dyH = 0.22;
    TLegend *legend = new TLegend( x0L, y0H-dyH, x0L+dxL, y0H );
-   legend->SetBorderSize(1);
    legend->SetTextSize( 0.05 );
    legend->SetHeader( "MVA Method:" );
    legend->SetMargin( 0.4 );
@@ -98,30 +103,37 @@ void mutransform( TString fin = "TMVA.root", Bool_t logy = kFALSE, Bool_t useTMV
    // plot
    Int_t color = 1;
    while (key = (TKey*)next()) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      TH1 *h = (TH1*)key->ReadObj();
-      Bool_t skip = !TString(h->GetName()).Contains( hName );
-      for (Int_t iskip=0; iskip<nskip; iskip++) 
-         if (TString(h->GetName()).Contains( hskip[iskip] )) skip = kTRUE;
-      if (!skip) {
-         // signal or background ?
-         if (TString(h->GetName()).Contains( "_S" )) {
-            h->SetLineStyle( 1 );
-            h->SetLineWidth( 3 );
+      if( TString(key->GetClassName()) != "TDirectory" ) continue;
+      if(! TString(key->GetName()).BeginsWith("Method_") ) continue;
+      
+      TDirectory * mDir = (TDirectory*)key->ReadObj();
+      TIter nextInMDir(mDir->GetListOfKeys());
+      while (hkey = (TKey*)nextInMDir()) {
+         TClass *cl = gROOT->GetClass(hkey->GetClassName());
+         if (!cl->InheritsFrom("TH1")) continue;
+         TH1 *h = (TH1*)hkey->ReadObj();
+         Bool_t skip = !TString(h->GetName()).Contains( hName );
+         for (Int_t iskip=0; iskip<nskip; iskip++) 
+            if (TString(h->GetName()).Contains( hskip[iskip] )) skip = kTRUE;
+         if (!skip) {
+            // signal or background ?
+            if (TString(h->GetName()).Contains( "_S" )) {
+               h->SetLineStyle( 1 );
+               h->SetLineWidth( 3 );
+            }
+            else {
+               h->SetLineStyle( 2 );
+               h->SetLineWidth( 3 );
+            }
+            h->SetLineColor(color);
+            color++;
+            TString tit = h->GetTitle();
+            tit.ReplaceAll( "mu-Transform", "" );
+            tit.ReplaceAll( "(S)", "" );
+            tit.ReplaceAll( ":", "" );
+            legend->AddEntry( h, tit, "l" );
+            h->Draw("same");
          }
-         else {
-            h->SetLineStyle( 2 );
-            h->SetLineWidth( 3 );
-         }
-         h->SetLineColor(color);
-         color++;
-         TString tit = h->GetTitle();
-         tit.ReplaceAll( "mu-Transform", "" );
-         tit.ReplaceAll( "(S)", "" );
-         tit.ReplaceAll( ":", "" );
-         legend->AddEntry( h, tit, "l" );
-         h->Draw("same");
       }
    }
   

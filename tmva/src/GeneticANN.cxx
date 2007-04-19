@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticANN.cxx,v 1.5 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: GeneticANN.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Helge Voss
 
 /**********************************************************************************
@@ -36,10 +36,9 @@
 #include "TMVA/MethodMLP.h"
 
 ClassImp(TMVA::GeneticANN)
-   ;
 
 //_______________________________________________________________________
-TMVA::GeneticANN::GeneticANN( Int_t size, std::vector<LowHigh_t*> ranges, TMVA::MethodMLP* methodMLP ) 
+TMVA::GeneticANN::GeneticANN( Int_t size, std::vector<Interval*> ranges, TMVA::MethodMLP* methodMLP ) 
    : TMVA::GeneticBase( size, ranges ) 
 {
    // constructor

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.h,v 1.21 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: MethodFisher.h,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -30,8 +30,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: MethodFisher.h,v 1.21 2006/11/17 14:59:24 stelzer Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -81,6 +79,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to stream
       virtual void WriteWeightsToStream( std::ostream & o) const;
 
@@ -103,8 +104,6 @@ namespace TMVA {
       // the option handling methods
       virtual void DeclareOptions();
       virtual void ProcessOptions();
-
-      TString fTheMethod;
   
       // Initialization and allocation of matrices
       void InitMatrices( void );
@@ -132,27 +131,29 @@ namespace TMVA {
 
       // matrix of variables means: S, B, S+B vs. variables
       TMatrixD *fMeanMatx;
+      
+      // method to be used
+      TString       fTheMethod;       // Fisher or Mahalanobis
+      EFisherMethod fFisherMethod;    // Fisher or Mahalanobis 
 
       // covariance matrices
-      TMatrixD *fBetw;  // between-class matrix
-      TMatrixD *fWith;  // within-class matrix
-      TMatrixD *fCov;   // full covariance matrix
+      TMatrixD *fBetw;                // between-class matrix
+      TMatrixD *fWith;                // within-class matrix
+      TMatrixD *fCov;                 // full covariance matrix
 
-      // discriminating power
-      vector<Double_t> *fDiscrimPow;
+      // number of events (sumOfWeights)
+      Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
+      Double_t fSumOfWeightsB;        // sum-of-weights for background training events
+      
+      vector<Double_t> *fDiscrimPow;  // discriminating power
+      vector<Double_t> *fFisherCoeff; // Fisher coefficients
+      Double_t fF0;                   // offset
 
-      // Fisher coefficients
-      vector<Double_t> *fFisherCoeff;
-      Double_t fF0;
-
-      // method to be used (Fisher or Mahalanobis)
-      EFisherMethod fFisherMethod;
 
       // default initialisation called by all constructors
       void InitFisher( void );
 
       ClassDef(MethodFisher,0) // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
-         ;
    };
 
 } // namespace TMVA

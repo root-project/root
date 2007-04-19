@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinaryTree.cxx,v 1.24 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: BinaryTree.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -39,7 +39,6 @@
 #include "TMVA/Event.h"
 
 ClassImp(TMVA::BinaryTree)
-   ;
 
 //_______________________________________________________________________
 TMVA::BinaryTree::BinaryTree( void )
@@ -56,6 +55,7 @@ TMVA::BinaryTree::~BinaryTree( void )
    //destructor (deletes the nodes and "events" if owned by the tree
 
    this->DeleteNode( fRoot );
+   fRoot=0;
 }
 
 //_______________________________________________________________________
@@ -65,11 +65,10 @@ void TMVA::BinaryTree::DeleteNode( TMVA::Node* node )
    if (node != NULL) { //If the node is not NULL...
       this->DeleteNode(node->GetLeft());  //Delete its left node.
       this->DeleteNode(node->GetRight()); //Delete its right node.
-      //      cout << "bla: delete node at depth " << node->GetDepth() <<endl;
-      delete node;                //Delete the node in memory....darf ich aber nicht
+
+      delete node;                // Delete the node in memory
    }
 }
-
 
 //_______________________________________________________________________
 TMVA::Node* TMVA::BinaryTree::GetLeftDaughter( Node *n)
@@ -85,6 +84,7 @@ TMVA::Node* TMVA::BinaryTree::GetRightDaughter( Node *n)
    return (Node*) n->GetRight();
 }
 
+//_______________________________________________________________________
 UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
 {
    // return the number of nodes in the tree. (make a new count --> takes time)
@@ -106,14 +106,12 @@ UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
    return fNNodes = countNodes;
 }
 
-
-
-
 //_______________________________________________________________________
 void TMVA::BinaryTree::Print(ostream & os) const
 {
    //recursively print the tree
    this->GetRoot()->PrintRec(os);
+   os << "-1" << endl;
 }
 
 //_______________________________________________________________________
@@ -122,4 +120,22 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
    //print the tree recursinvely using the << operator
    tree.Print(os);
    return os; // Return the output stream.
+}
+
+//_______________________________________________________________________
+void TMVA::BinaryTree::Read(istream & istr)
+{
+   // recursively read the tree
+   if(GetRoot()==0) SetRoot(CreateNode());
+   char pos='s';
+   UInt_t depth =0;
+   GetRoot()->ReadRec(istr,pos,depth);
+}
+
+//_______________________________________________________________________
+istream& TMVA::operator>> (istream& istr, TMVA::BinaryTree& tree)
+{ 
+   // read the tree from an istream
+   tree.Read(istr);
+   return istr;
 }

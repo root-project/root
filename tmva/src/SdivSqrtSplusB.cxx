@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.10 2007/01/12 16:03:17 brun Exp $   
+// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.11 2007/01/15 16:55:25 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -28,8 +28,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TMVA/SdivSqrtSplusB.h"
 #include "TMath.h"
+#include "TMVA/SdivSqrtSplusB.h"
 
 ClassImp(TMVA::SdivSqrtSplusB)
 
@@ -37,7 +37,7 @@ ClassImp(TMVA::SdivSqrtSplusB)
 Double_t  TMVA::SdivSqrtSplusB::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
    // Index = S/sqrt(S+B)  (statistical significance)                 
-   if (s+b > 0) return s / TMath::Sqrt(s+b);
+  if (s+b > 0) return s / TMath::Sqrt(s+b);
    else return 0;
 }
 

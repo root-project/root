@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.11 2007/01/12 17:02:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,8 +44,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN_Utils.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -61,13 +59,17 @@
 
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #include "TMVA/Timer.h"
+#include "TMath.h"
 #include <stdio.h>
 #include <string>
 #include <cmath>
 #include <stdlib.h>
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
-   ;
    
 Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
@@ -93,23 +95,23 @@ void TMVA::MethodCFMlpANN_Utils::Train_nn( Double_t *tin2, Double_t *tout2, Int_
 
    // sanity checks
    if (*ntrain + *ntest > max_Events_) {
-      printf( "*** TMVA::MethodCFMlpANN_f2c: Warning in Train_nn: number of training + testing" \
+      printf( "*** CFMlpANN_f2c: Warning in Train_nn: number of training + testing" \
               " events exceeds hardcoded maximum - reset to maximum allowed number");
       *ntrain = *ntrain*(max_Events_/(*ntrain + *ntest));
       *ntest  = *ntest *(max_Events_/(*ntrain + *ntest));
    }
    if (*nvar2 > max_nVar_) {
-      printf( "*** TMVA::MethodCFMlpANN_f2c: ERROR in Train_nn: number of variables" \
+      printf( "*** CFMlpANN_f2c: ERROR in Train_nn: number of variables" \
               " exceeds hardcoded maximum ==> abort");
       exit(1);
    }
    if (*nlayer > max_nLayers_) {
-      printf( "*** TMVA::MethodCFMlpANN_f2c: Warning in Train_nn: number of layers" \
+      printf( "*** CFMlpANN_f2c: Warning in Train_nn: number of layers" \
               " exceeds hardcoded maximum - reset to maximum allowed number");
       *nlayer = max_nLayers_;
    }
    if (*nodes > max_nNodes_) {
-      printf( "*** TMVA::MethodCFMlpANN_f2c: Warning in Train_nn: number of nodes" \
+      printf( "*** CFMlpANN_f2c: Warning in Train_nn: number of nodes" \
               " exceeds hardcoded maximum - reset to maximum allowed number");
       *nodes = max_nNodes_;
    }
@@ -557,12 +559,12 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
    }
    kkk = 0;
    i__3 = fParam_1.nblearn;
-   TMVA::Timer timer( i__3, "TMVA::MethodCFMlpANN" ); 
+   TMVA::Timer timer( i__3, "CFMlpANN" ); 
    Int_t num = i__3/100;
 
    for (i1 = 1; i1 <= i__3; ++i1) {
 
-      if ((i1-1)%num == 0 || i1 == i__3) timer.DrawProgressBar( i1-1 );
+      if( num>0 && (i1-1)%num == 0 || i1 == i__3) timer.DrawProgressBar( i1-1 );
 
       i__2 = fParam_1.nevl;
       for (i__ = 1; i__ <= i__2; ++i__) {
@@ -861,7 +863,7 @@ void TMVA::MethodCFMlpANN_Utils::Foncf( Int_t *i__, Double_t *u, Double_t *f )
       *f = -.99999999989999999;
    } 
    else {
-      yy = exp(-(*u) / fDel_1.temp[*i__ - 1]);
+     yy = TMath::Exp(-(*u) / fDel_1.temp[*i__ - 1]);
       *f = (1. - yy) / (yy + 1.);
    }
 }
@@ -1002,7 +1004,7 @@ void TMVA::MethodCFMlpANN_Utils::En_avant2( Int_t *ievent )
 void TMVA::MethodCFMlpANN_Utils::Arret( const char* mot )
 {
    // fatal error occurred: stop execution
-   printf("TMVA::MethodCFMlpANN: %s",mot);
+   printf("CFMlpANN: %s",mot);
    exit(1);
 }
 

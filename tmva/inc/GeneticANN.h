@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticANN.h,v 1.4 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: GeneticANN.h,v 1.6 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -52,7 +52,7 @@ namespace TMVA {
       
    public:
       
-      GeneticANN( Int_t size, std::vector<LowHigh_t*> ranges, TMVA::MethodMLP* methodMLP);
+      GeneticANN( Int_t size, std::vector<Interval*> ranges, TMVA::MethodMLP* methodMLP);
 
       virtual ~GeneticANN() {}
 
@@ -65,7 +65,6 @@ namespace TMVA {
       TMVA::MethodMLP* fMethodMLP; // pointer to method
 
       ClassDef(GeneticANN,0) // ANN interface class for genetic algorithm
-      ;
    };
    
 } // namespace TMVA

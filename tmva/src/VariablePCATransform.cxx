@@ -1,0 +1,261 @@
+// @(#)root/tmva $\Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+
+/**********************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : VariablePCATransform                                                  *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *      Implementation (see header for description)                               *
+ *                                                                                *
+ * Authors (alphabetical):                                                        *
+ *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ *                                                                                *
+ * Copyright (c) 2005:                                                            *
+ *      CERN, Switzerland,                                                        *
+ *      MPI-K Heidelberg, Germany ,                                               *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
+
+#include "assert.h"
+
+#include "TVectorF.h"
+#include "TVectorD.h"
+#include "TMatrixD.h"
+#include "TMatrixDBase.h"
+
+#include "TMVA/VariablePCATransform.h"
+#include "TMVA/Tools.h"
+
+ClassImp(TMVA::VariablePCATransform)
+
+//_______________________________________________________________________
+TMVA::VariablePCATransform::VariablePCATransform( std::vector<VariableInfo>& varinfo )
+   : VariableTransformBase( varinfo, Types::kPCA )
+{ 
+   // constructor
+   SetName("PCATransform");
+   fPCA[0] = fPCA[1] = 0;
+
+   // sanity check --> ROOT bug: TPrincipal crashes if dimension <=1
+   if (varinfo.size() <= 1) {
+      fLogger << kFATAL << "More than one input variables required for PCA to work ... sorry :-("
+              << Endl;
+   }
+
+   for (Int_t i=0; i<2; i++) { fMeanValues[i] = 0; fEigenVectors[i] = 0; }
+}
+
+//_______________________________________________________________________
+TMVA::VariablePCATransform::~VariablePCATransform() 
+{
+   // destructor
+   for (Int_t i=0; i<2; i++) {
+      if (fMeanValues[i]   != 0) delete fMeanValues[i];
+      if (fEigenVectors[i] != 0) delete fEigenVectors[i];
+   }
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::VariablePCATransform::PrepareTransformation( TTree* inputTree )
+{
+   // calculate the principal components using the ROOT class TPrincipal
+   // and the normalization
+   if (!IsEnabled() || IsCreated()) return kTRUE;
+
+   if (inputTree == 0) return kFALSE;
+
+   if (GetNVariables() > 200) { 
+      fLogger << kINFO << "----------------------------------------------------------------------------" 
+              << Endl;
+      fLogger << kINFO 
+              << ": More than 200 variables, will not calculate PCA "
+              << inputTree->GetName() << "!" << Endl;
+      fLogger << kINFO << "----------------------------------------------------------------------------" 
+              << Endl;
+      return kFALSE;
+   }   
+
+   CalculatePrincipalComponents( inputTree );
+
+   SetCreated( kTRUE );
+
+   CalcNorm( inputTree );
+
+   return kTRUE;
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) const
+{
+   // apply the principal component analysis
+   if(!IsCreated()) return;
+   const Int_t nvar = GetNVariables();
+
+   Double_t dv[nvar];
+   Double_t rv[nvar];
+   for (Int_t ivar=0; ivar<nvar; ivar++) dv[ivar] = GetEventRaw().GetVal(ivar);
+      
+   // Perform PCA and put it into PCAed events tree
+   this->X2P( dv, rv, type==Types::kSignal ? 0 : 1 );
+   for (Int_t ivar=0; ivar<nvar; ivar++) GetEvent().SetVal(ivar, rv[ivar]);
+   GetEvent().SetType       ( GetEventRaw().Type() );
+   GetEvent().SetWeight     ( GetEventRaw().GetWeight() );
+   GetEvent().SetBoostWeight( GetEventRaw().GetBoostWeight() );
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
+{
+   // calculate the principal components for the signal and the background data
+   // it uses the MakePrincipal method of ROOT's TPrincipal class
+
+   const Int_t nvar = GetNVariables();
+
+   for(Int_t i=0; i<2; i++ ) {
+      if (fPCA[i] != NULL) delete fPCA[i];
+      fPCA[i] = new TPrincipal( nvar, "" ); // note: following code assumes that option "N" is NOT set !
+   }
+   // !! Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization.
+
+   ResetBranchAddresses( tr );
+
+   Long64_t ievt, entries = tr->GetEntries();
+   Double_t dvec[nvar];
+
+   for (ievt=0; ievt<entries; ievt++) {
+      ReadEvent(tr, ievt, Types::kSignal);
+      for (Int_t i = 0; i < nvar; i++) dvec[i] = (Double_t) GetEventRaw().GetVal(i);
+      fPCA[GetEventRaw().IsSignal()?0:1]->AddRow( dvec );
+   }
+
+   for (Int_t i=0; i<2; i++ ) {
+      fPCA[i]->MakePrincipals();
+
+      // retrieve mean values, eigenvectors and sigmas
+      fMeanValues[i]   = const_cast<TVectorD*>( fPCA[i]->GetMeanValues() );
+      fEigenVectors[i] = const_cast<TMatrixD*>( fPCA[i]->GetEigenVectors() );
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::X2P( const Double_t* x, Double_t* p, Int_t index ) const
+{
+   // Calculate the principal components from the original data vector
+   // x, and return it in p (function extracted from TPrincipal::X2P)
+   // It's the users responsibility to make sure that both x and p are
+   // of the right size (i.e., memory must be allocated for p).
+   const Int_t nvar = GetNVariables();
+
+   // need this assert
+   assert( index >= 0 && index < 2 );   
+
+   for (Int_t i = 0; i < nvar; i++) {
+      p[i] = 0;
+      for (Int_t j = 0; j < nvar; j++) p[i] += (x[j] - (*fMeanValues[index])(j)) * (*fEigenVectors[index])(j,i);
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) const
+{
+   // write mean values to stream
+   for (Int_t sbType=0; sbType<2; sbType++) {
+      o << "# PCA mean values " << endl;
+      const TVectorD* means = fMeanValues[sbType];
+      o << (sbType==0 ? "signal" : "background") << " " << means->GetNrows() << endl;
+      for (Int_t row = 0; row<means->GetNrows(); row++) {
+         o << setw(15) << (*means)[row];
+      }
+      o << endl;
+   }
+   o << "##" << endl;
+
+   // write eigenvectors to stream
+   for (Int_t sbType=0; sbType<2; sbType++) {
+      o << "# PCA eigenvectors " << endl;
+      const TMatrixD* mat = fEigenVectors[sbType];
+      o << (sbType==0 ? "signal" : "background") << " " << mat->GetNrows() << " x " << mat->GetNcols() << endl;
+      for (Int_t row = 0; row<mat->GetNrows(); row++) {
+         for (Int_t col = 0; col<mat->GetNcols(); col++) {
+            o << setw(15) << (*mat)[row][col];
+         }
+         o << endl;
+      }
+   }
+   o << "##" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::ReadTransformationToStream( std::istream& istr )
+{
+   // Read mean values from input stream
+   char buf[512];
+   istr.getline(buf,512);
+   TString strvar, dummy;
+   Int_t nrows(0), ncols(0);
+
+   while (!(buf[0]=='#'&& buf[1]=='#')) { // if line starts with ## return
+      char* p = buf;
+      while(*p==' ' || *p=='\t') p++; // 'remove' leading whitespace
+      if (*p=='#' || *p=='\0') {
+         istr.getline(buf,512);
+         continue; // if comment or empty line, read the next line
+      }
+      std::stringstream sstr(buf);
+      sstr >> strvar;
+      if (strvar=="signal" || strvar=="background") {
+
+         sstr >> nrows;
+         Int_t sbType = (strvar=="signal" ? 0 : 1);
+        
+         if (fMeanValues[sbType] == 0) fMeanValues[sbType] = new TVectorD( nrows );
+         else                          fMeanValues[sbType]->ResizeTo( nrows );
+
+         // now read vector entries
+         for (Int_t row = 0; row<nrows; row++) istr >> (*fMeanValues[sbType])(row);
+
+      } // done reading vector
+
+      istr.getline(buf,512); // reading the next line
+   }
+
+   // Read eigenvectors from input stream
+   istr.getline(buf,512);
+   while (!(buf[0]=='#'&& buf[1]=='#')) { // if line starts with ## return
+      char* p = buf;
+      while(*p==' ' || *p=='\t') p++; // 'remove' leading whitespace
+      if (*p=='#' || *p=='\0') {
+         istr.getline(buf,512);
+         continue; // if comment or empty line, read the next line
+      }
+      std::stringstream sstr(buf);
+      sstr >> strvar;
+      if (strvar=="signal" || strvar=="background") {
+
+         sstr >> nrows >> dummy >> ncols;
+         Int_t sbType = (strvar=="signal" ? 0 : 1);
+
+         if (fEigenVectors[sbType] == 0) fEigenVectors[sbType] = new TMatrixD( nrows, ncols );
+         else                            fEigenVectors[sbType]->ResizeTo( nrows, ncols );
+
+         // now read matrix entries
+         for (Int_t row = 0; row<fEigenVectors[sbType]->GetNrows(); row++) {
+            for (Int_t col = 0; col<fEigenVectors[sbType]->GetNcols(); col++) {
+               istr >> (*fEigenVectors[sbType])[row][col];
+            }
+         }
+
+      } // done reading matrix
+      istr.getline(buf,512); // reading the next line
+   }
+
+   SetCreated();
+}

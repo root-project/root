@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.25 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -47,7 +47,7 @@
 using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
-   ;
+TMVA::MsgLogger* TMVA::DecisionTreeNode::fLogger = 0;
    
 //_______________________________________________________________________
 TMVA::DecisionTreeNode::DecisionTreeNode()
@@ -58,29 +58,37 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fNSigEvents ( 0 ),
      fNBkgEvents ( 0 ),
      fNEvents ( -1 ),
+     fNSigEvents_unweighted ( 0 ),
+     fNBkgEvents_unweighted ( 0 ),
+     fNEvents_unweighted ( 0 ),
      fSeparationIndex (-1 ),
      fSeparationGain ( -1 ),
      fNodeType (-99 ),
      fSequence ( 0 ) 
 {
    // constructor of an essentially "empty" node floating in space
+   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 }
 
 //_______________________________________________________________________
 TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    : TMVA::Node(p, pos), 
-     fCutValue(0),
+     fCutValue( 0 ),
      fCutType ( kTRUE ),
-     fSelector ( -1 ),  
+     fSelector( -1 ),  
      fNSigEvents ( 0 ),
      fNBkgEvents ( 0 ),
      fNEvents ( -1 ),
-     fSeparationIndex (-1 ),
+     fNSigEvents_unweighted ( 0 ),
+     fNBkgEvents_unweighted ( 0 ),
+     fNEvents_unweighted ( 0 ),
+     fSeparationIndex( -1 ),
      fSeparationGain ( -1 ),
-     fNodeType (-99 ),
-     fSequence ( 0 ) 
+     fNodeType( -99 ),
+     fSequence( 0 ) 
 {
    // constructor of a daughter node as a daughter of 'p'
+   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
    // get the sequence, depending on if it is a left or a right daughter
    if (pos == 'r' ){
@@ -98,17 +106,22 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    : TMVA::Node(n),
      fCutValue( n.fCutValue ),
      fCutType ( n.fCutType ),
-     fSelector ( n.fSelector ),  
+     fSelector( n.fSelector ),  
      fNSigEvents ( n.fNSigEvents ),
      fNBkgEvents ( n.fNBkgEvents ),
      fNEvents ( n.fNEvents ),
-     fSeparationIndex ( n.fSeparationIndex ),
+     fNSigEvents_unweighted ( n.fNSigEvents_unweighted ),
+     fNBkgEvents_unweighted ( n.fNBkgEvents_unweighted ),
+     fNEvents_unweighted ( n.fNEvents_unweighted ),
+     fSeparationIndex( n.fSeparationIndex ),
      fSeparationGain ( n.fSeparationGain ),
-     fNodeType ( n.fNodeType ),
-     fSequence ( n.fSequence )  
+     fNodeType( n.fNodeType ),
+     fSequence( n.fSequence )  
 {
    // copy constructor of a node. It will result in an explicit copy of
    // the node and recursively all it's daughters
+   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
+
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
    else this->SetLeft( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetLeft())),this));
@@ -141,53 +154,46 @@ Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
 
 
 //_______________________________________________________________________
-Double_t TMVA::DecisionTreeNode::GetSoverSB( void ) const  
-{
-   // return the S/(S+B) for the node
-   return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
-}
-
-//_______________________________________________________________________
 Double_t TMVA::DecisionTreeNode::GetPurity( void ) const  
 {
-   // return the purity of the node. that means  S/(S+B) for signal nodes 
-   // and B/(S+B) for nodes classified as background
-   Double_t p = this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents());  
-
-   p = p>0.5 ? p : 1-p ; 
-
-   return p;
-   
-   
+   // return the S/(S+B) (purity) for the node
+   // REM: even if nodes with purity 0.01 are very PURE background nodes, they still
+   //      get a small value of the purity.
+   if ( ( this->GetNSigEvents() + this->GetNBkgEvents() ) > 0 ) {
+      return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
+   }
+   else {
+      *fLogger << kINFO << "Zero events in purity calcuation , retrun purity=0.5" << Endl;
+      return 0.5;
+   }
 }
-
-
-
-
 
 // print a node
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::Print(ostream& os) const
 {
    //print the node
-   os << "< ***  " <<endl; 
-   os << " d: " << this->GetDepth()
-      << " seq: " << this->GetSequence()
-      << " ivar: " <<  this->GetSelector()
-      << " cut: " << this->GetCutValue() 
+   os << "< ***  "  << endl; 
+   os << " d: "     << this->GetDepth()
+      << " seq: "   << this->GetSequence()
+      << " ivar: "  << this->GetSelector()
+      << " cut: "   << this->GetCutValue() 
       << " cType: " << this->GetCutType() 
-      << " s: " << this->GetNSigEvents()
-      << " b: " << this->GetNBkgEvents()
-      << " nEv: " << this->GetNEvents()
-      << " sepI: " << this->GetSeparationIndex()
-      << " sepG: " << this->GetSeparationGain()
+      << " s: "     << this->GetNSigEvents()
+      << " b: "     << this->GetNBkgEvents()
+      << " nEv: "   << this->GetNEvents()
+      << " suw: "     << this->GetNSigEvents_unweighted()
+      << " buw: "     << this->GetNBkgEvents_unweighted()
+      << " nEvuw: "   << this->GetNEvents_unweighted()
+      << " sepI: "  << this->GetSeparationIndex()
+      << " sepG: "  << this->GetSeparationGain()
       << " nType: " << this->GetNodeType()
       <<endl;
    
    os << "My address is " << long(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
-   if (this->GetLeft() != NULL) os << " left daughter at addr: " << long(this->GetLeft());
-   if (this->GetRight() != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
+   if (this->GetParent() != NULL) os << " parent at addr: "         << long(this->GetParent()) ;
+   if (this->GetLeft()   != NULL) os << " left daughter at addr: "  << long(this->GetLeft());
+   if (this->GetRight()  != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
    
    os << " **** > "<< endl;
 }
@@ -198,80 +204,105 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
    //recursively print the node and its daughters (--> print the 'tree')
 
    os << this->GetDepth() 
-      << " " << this->GetPos() 
-      << " seq: " << this->GetSequence()
-      << " ivar: " <<  this->GetSelector()
-      << " cut: " << this->GetCutValue() 
-      << " cType: " << this->GetCutType() 
-      << " s: " << this->GetNSigEvents()
-      << " b: " << this->GetNBkgEvents()
-      << " nEv: " << this->GetNEvents()
-      << " sepI: " << this->GetSeparationIndex()
-      << " sepG: " << this->GetSeparationGain()
-      << " nType: " << this->GetNodeType()
+      << " "         << this->GetPos() 
+      << " seq: "    << this->GetSequence()
+      << " ivar: "   << this->GetSelector()
+      << " cut: "    << this->GetCutValue() 
+      << " cType: "  << this->GetCutType() 
+      << " s: "      << this->GetNSigEvents()
+      << " b: "      << this->GetNBkgEvents()
+      << " nEv: "    << this->GetNEvents()
+      << " suw: "     << this->GetNSigEvents_unweighted()
+      << " buw: "     << this->GetNBkgEvents_unweighted()
+      << " nEvuw: "   << this->GetNEvents_unweighted()
+      << " sepI: "   << this->GetSeparationIndex()
+      << " sepG: "   << this->GetSeparationGain()
+      << " nType: "  << this->GetNodeType()
       <<endl;
   
-   if(this->GetLeft() != NULL)this->GetLeft()->PrintRec(os) ;
-   if(this->GetRight() != NULL)this->GetRight()->PrintRec(os);
+   if(this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
+   if(this->GetRight() != NULL) this->GetRight()->PrintRec(os);
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::ReadRec(istream& is,  char &pos, UInt_t &depth,
-                                         TMVA::Node* parent )
+Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is ) 
 {
-   //recursively read the node and its daughters (--> read the 'tree')
+   // Read the data block
+
    string tmp;
-   Double_t dtmp1, dtmp2, dtmp3, dtmp4, dtmp5, dtmp6, dtmp7;
-   UInt_t itmp;
-   Int_t itmp1, itmp2;
+   Double_t dtmp1, dtmp2, dtmp3, dtmp4, dtmp5, dtmp6, dtmp7, dtmp8, dtmp9, dtmp10;
+   Int_t depth, itmp1, itmp2;
    ULong_t lseq;
+   char pos;
 
-   if (parent==NULL) {
-      is >> itmp >> pos ;
-      //      this->SetDepth(itmp);
-      this->SetPos(pos);
-   } else {
-      //      this->SetDepth(depth);
-      this->SetPos(pos);
-   }
-  
-   is >> tmp >> lseq
-      >> tmp >> itmp1 >> tmp >> dtmp1 >> tmp >> dtmp2 >> tmp >> dtmp3
-      >> tmp >> dtmp4 >> tmp >> dtmp5 >> tmp >> dtmp6 
-      >> tmp >> dtmp7 >> tmp >> itmp2 ;
+   // the format is
+   // 2 r seq: 2 ivar: 0 cut: -1.5324 cType: 0 s: 353 b: 1053 nEv: 1406 suw: 353 buw: 1053 nEvuw: 1406 sepI: 0.188032 sepG: 8.18513 nType: 0
 
-      
+   is >> depth;                                         // 2
+   if( depth==-1 ) { delete this; return kFALSE; }
+   is >> pos ;                                          // r
+   this->SetDepth(depth);
+   this->SetPos(pos);
+
+   is >> tmp >> lseq                                    // seq: 2
+      >> tmp >> itmp1                                   // ivar: 0
+      >> tmp >> dtmp1                                   // cut: -1.5324       
+      >> tmp >> dtmp2                                   // cType: 0           
+      >> tmp >> dtmp3                                   // s: 353             
+      >> tmp >> dtmp4                                   // b: 1053            
+      >> tmp >> dtmp5                                   // nEv: 1406          
+      >> tmp >> dtmp6                                   // suw: 353             
+      >> tmp >> dtmp7                                   // buw: 1053            
+      >> tmp >> dtmp8                                   // nEvuw: 1406          
+      >> tmp >> dtmp9                                   // sepI: 0.188032     
+      >> tmp >> dtmp10                                   // sepG: 8.18513      
+      >> tmp >> itmp2 ;                                 // nType: 0           
+
+   
    this->SetSelector((UInt_t)itmp1);
    this->SetCutValue(dtmp1);
    this->SetCutType(dtmp2);
    this->SetNSigEvents(dtmp3);
    this->SetNBkgEvents(dtmp4);
    this->SetNEvents(dtmp5);
-   this->SetSeparationIndex(dtmp6);
-   this->SetSeparationGain(dtmp7);
+   this->SetNSigEvents_unweighted(dtmp6);
+   this->SetNBkgEvents_unweighted(dtmp7);
+   this->SetNEvents_unweighted(dtmp8);
+   this->SetSeparationIndex(dtmp9);
+   this->SetSeparationGain(dtmp10);
    this->SetNodeType(itmp2);
    this->SetSequence(lseq);
 
-   UInt_t nextDepth;
-   char nextPos;
-   is >> itmp1 >> nextPos ;
-   nextDepth = UInt_t(itmp1);
-      
-   if ( UInt_t(nextDepth) == this->GetDepth()+1){
-      if (nextPos=='l') {
-         this->SetLeft(new TMVA::DecisionTreeNode(this,'l'));
-         this->GetLeft()->ReadRec(is,nextPos,nextDepth,this);
-      }
-   }
-   if ( UInt_t(nextDepth) == this->GetDepth()+1){
-      if (nextPos=='r') {
-         this->SetRight(new TMVA::DecisionTreeNode(this,'r'));
-         this->GetRight()->ReadRec(is,nextPos,nextDepth,this);
-      }
-   }
-   pos = nextPos;
-   depth= nextDepth;
+   return kTRUE;
 }
+
+
+
+//_______________________________________________________________________
+void TMVA::DecisionTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
+                                      TMVA::Node* parent )
+{
+   //recursively read the node and its daughters (--> read the 'tree')
+   if( ! ReadDataRecord(is) ) return;
+
+   depth = GetDepth();
+   pos   = GetPos();
+
+   // find parent node
+   while( parent!=0 && parent->GetDepth() != GetDepth()-1) parent=parent->GetParent();
+
+   if(parent!=0) {
+      SetParent(parent);
+      if(GetPos()=='l') parent->SetLeft(this);
+      if(GetPos()=='r') parent->SetRight(this);
+   }
+   
+   char childPos;
+   UInt_t childDepth;
+   TMVA::Node * newNode = new TMVA::DecisionTreeNode();
+   newNode->ReadRec(is, childPos, childDepth, this);
+}
+
 
 
 //_______________________________________________________________________
@@ -281,6 +312,9 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
    fNSigEvents=0;
    fNBkgEvents=0;
    fNEvents = 0;
+   fNSigEvents_unweighted=0;
+   fNBkgEvents_unweighted=0;
+   fNEvents_unweighted = 0;
    fSeparationIndex=-1;
    fSeparationGain=-1;
 

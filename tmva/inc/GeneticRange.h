@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.h,v 1.8 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticRange.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRandom.h"
+#include "Interval.h"
 
 namespace TMVA {
 
@@ -43,10 +44,11 @@ namespace TMVA {
 
    public:
 
-      GeneticRange( TRandom *rnd, Double_t f, Double_t t );
+      GeneticRange( TRandom *rnd, Interval *interval );
       virtual ~GeneticRange();
 
       Double_t Random( Bool_t near = kFALSE, Double_t value=0, Double_t spread=0.1, Bool_t mirror=kFALSE );
+      Double_t RandomDiscrete();
 
       Double_t GetFrom()        { return fFrom; }
       Double_t GetTo()          { return fTo; }
@@ -55,6 +57,9 @@ namespace TMVA {
    private:
 
       Double_t fFrom, fTo;    // the constraints of the coefficient
+      Int_t fNbins;
+      
+      Interval *fInterval;     // holds the complete information of the interval
       Double_t fTotalLength;  // the distance between the lower and upper constraints
 
       // maps the values thrown outside of the ]from,to] interval back to the interval
@@ -67,7 +72,6 @@ namespace TMVA {
       TRandom *fRandomGenerator;  // the randomGenerator for calculating the new values
 
       ClassDef(GeneticRange,0) // Range definition for genetic algorithm
-         ;
    };
 
 } // namespace TMVA

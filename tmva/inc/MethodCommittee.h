@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.h,v 1.7 2006/11/17 14:59:23 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.h,v 1.6 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -74,6 +74,9 @@ namespace TMVA {
       // the training
       void Train();
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -146,7 +149,6 @@ namespace TMVA {
       vector< Double_t > fVariableImportance; // the relative importance of the different variables 
 
       ClassDef(MethodCommittee,0)  // Analysis of Boosted MVA methods
-         ;
    };
 
 } // namespace TMVA

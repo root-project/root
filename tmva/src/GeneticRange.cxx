@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.12 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -24,7 +24,6 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: GeneticRange.cxx,v 1.12 2006/11/16 22:51:58 helgevoss Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -37,19 +36,30 @@
 #include "Riostream.h"
 
 ClassImp(TMVA::GeneticRange)
-   ;
 
 //_______________________________________________________________________
-TMVA::GeneticRange::GeneticRange( TRandom *rnd, Double_t f, Double_t t )
+TMVA::GeneticRange::GeneticRange( TRandom *rnd, Interval *interval )
 {
    // defines the "f" (from) and "t" (to) of the coefficient
    // and takes a randomgenerator
    //
-   fFrom = f;
-   fTo   = t;
-   fTotalLength = t-f;
+   fInterval = interval;
+   
+   fFrom = fInterval->GetMin();
+   fTo   = fInterval->GetMax();
+   fNbins= fInterval->GetNbins();
+   fTotalLength = fTo-fFrom;
 
    fRandomGenerator = rnd;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::GeneticRange::RandomDiscrete()
+{
+   // creates a new random value for the coefficient; returns a discrete value
+   //
+   Double_t value = fRandomGenerator->Uniform(0, 1);
+   return fInterval->GetElement( Int_t(value*fNbins) );
 }
 
 //_______________________________________________________________________
@@ -64,6 +74,10 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
    //               maps the value between the constraints by periodic boundary conditions.
    //               With mirror = true, the value gets "reflected" on the boundaries.
    //
+   if( fInterval->GetNbins() > 0 ){   // discrete interval
+       return RandomDiscrete();
+   }
+   
    if (near ){
       Double_t ret;
       ret = fRandomGenerator->Gaus( value, fTotalLength*spread );
@@ -79,8 +93,8 @@ Double_t TMVA::GeneticRange::ReMap( Double_t val )
    // remapping the value to the allowed space
    //
    if (fFrom >= fTo ) return val;
-   if (val <= fFrom ) return ReMap( (val-fFrom) + fTo );
-   if (val > fTo )    return ReMap( (val-fTo) + fFrom );
+   if (val < fFrom ) return ReMap( (val-fFrom) + fTo );
+   if (val >= fTo )    return ReMap( (val-fTo) + fFrom );
    return val;
 }
 
@@ -90,8 +104,8 @@ Double_t TMVA::GeneticRange::ReMapMirror( Double_t val )
    // remapping the value to the allowed space by reflecting on the 
    // boundaries
    if (fFrom >= fTo ) return val;
-   if (val <= fFrom ) return ReMap( fFrom - (val-fFrom) );
-   if (val > fTo )    return ReMap( fTo - (val-fTo)  );
+   if (val < fFrom ) return ReMap( fFrom - (val-fFrom) );
+   if (val >= fTo )    return ReMap( fTo - (val-fTo)  );
    return val;
 }
 

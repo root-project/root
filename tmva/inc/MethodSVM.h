@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodSVM.h,v 1.12 2006/11/16 22:51:58 helgevoss Exp $    
-// Author: Marcin ....
+// @(#)root/tmva $Id: MethodSVM.h,v 1.19 2007/04/17 20:49:54 andreas.hoecker Exp $    
+// Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -8,16 +8,17 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Support Vector Machines
+ *      Support Vector Machine                                                    *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Marcin ... and student                                                    *            
+ *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
+ *      Andrzej Zemla  <a_zemla@o2.pl>         - IFJ PAN, Krakow, Poland          *
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
+ *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -31,7 +32,7 @@
 //                                                                      //
 // MethodSVM                                                            //
 //                                                                      //
-// Friedman's SVM method -- not yet implemented -- dummy class --       //
+// SMO Platt's SVM classifier with Keerthi & Shavade improvements       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -66,11 +67,16 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      virtual void WriteWeightsToStream( std::ostream& o ) const;
+      virtual void WriteWeightsToStream( TFile& fout ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      virtual void ReadWeightsFromStream( std::istream& istr );
+      virtual void ReadWeightsFromStream( TFile& fFin );
 
       // calculate the MVA value
       virtual Double_t GetMvaValue();
@@ -78,7 +84,9 @@ namespace TMVA {
       void InitSVM( void );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return 0; } 
+
+      enum EKernelType { kLinear , kRBF, kPolynomial, kSigmoidal };
 
    private:
 
@@ -86,8 +94,56 @@ namespace TMVA {
       virtual void DeclareOptions();
       virtual void ProcessOptions();
 
-      ClassDef(MethodSVM,0)  // Friedman's SVM method 
-         ;
+      TString     fTheKernel;           // kernel name
+
+      EKernelType fKernelType;          // to be defined
+      Float_t     fC;                   // to be defined 
+      Float_t     fTolerance;           // treshold parameter
+      Int_t       fMaxIter;             // max number of training loops
+      
+      // Kernel parameters
+      Float_t     fDoubleSigmaSquered;  // for RBF Kernel
+      Int_t       fOrder;               // for Polynomial Kernel ( polynomial order )
+      Float_t     fTheta;               // for Sigmoidal Kernel
+      Float_t     fKappa;               // for Sigmoidal Kernel
+      
+      Float_t     fBparm;               // to be defined
+      Float_t     fB_up;                // to be defined
+      Float_t     fB_low;               // to be defined
+      Int_t       fI_up;                // to be defined
+      Int_t       fI_low;               // to be defined
+      Int_t       fNsupv;               // to be defined
+
+      Int_t   ExamineExample( Int_t  );
+      Int_t   TakeStep( Int_t , Int_t );
+      
+      Float_t LearnFunc( Int_t );
+      Float_t (MethodSVM::*KernelFunc)( Int_t, Int_t ) const;
+   
+      // kernel functions
+      Float_t LinearKernel    ( Int_t, Int_t ) const;
+      Float_t RBFKernel       ( Int_t, Int_t ) const;         
+      Float_t PolynomialKernel( Int_t, Int_t ) const;
+      Float_t SigmoidalKernel ( Int_t, Int_t ) const; 
+     
+      vector< Float_t >*  fAlphas;       // to be defined
+      vector< Float_t >*  fErrorCache;   // to be defined
+      vector< Float_t >*  fWeightVector; // weight vector for linear SVM
+      vector< Float_t* >* fVariables;    // data vectors
+      vector< Float_t >*  fNormVar;      // norm
+      vector< Int_t >*    fTypesVec;     // type vector
+      vector< Short_t >*  fI;            // to be defined
+      vector < Float_t >* fKernelDiag;   // to be defined
+
+      TVectorD* fMaxVars;                // to be defined
+      TVectorD* fMinVars;                // to be defined
+
+      void SetIndex( Int_t );
+      void PrepareDataToTrain();
+      void SetKernel();
+      void Results();
+
+      ClassDef(MethodSVM,0)  // Support Vector Machine
    };
 
 } // namespace TMVA

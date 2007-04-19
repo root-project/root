@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: DataSet.h,v 1.7 2006/11/23 17:43:38 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -15,7 +15,7 @@
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2006:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
  *      MPI-K Heidelberg, Germany ,                                               *
@@ -56,6 +56,9 @@
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
+#ifndef ROOT_TMVA_VariableTransformBase
+#include "TMVA/VariableTransformBase.h"
+#endif
 
 namespace TMVA {
    
@@ -85,19 +88,19 @@ namespace TMVA {
       const char* GetName() const { return "DataSet"; }
 
       // the tree data
-      void     AddSignalTree    ( TTree* tr, Double_t weight=1.0 );
-      void     AddBackgroundTree( TTree* tr, Double_t weight=1.0 );
-      UInt_t   NSignalTrees()                const { return fSignalTrees.size(); }
-      UInt_t   NBackgroundTrees()            const { return fBackgroundTrees.size(); }
-      TTree*   SignalTree(Int_t i)           const { return fSignalTrees[i].GetTree(); }
-      TTree*   BackgroundTree(Int_t i)       const { return fBackgroundTrees[i].GetTree(); }
-      Double_t SignalTreeWeight(Int_t i)     const { return fSignalTrees[i].GetWeight(); }
-      Double_t BackgroundTreeWeight(Int_t i) const { return fBackgroundTrees[i].GetWeight(); }
-      void     ClearSignalTreeList()     { fSignalTrees.clear(); }
-      void     ClearBackgroundTreeList() { fBackgroundTrees.clear(); }
+      void       AddSignalTree    ( TTree* tr, Double_t weight=1.0 );
+      void       AddBackgroundTree( TTree* tr, Double_t weight=1.0 );
+      UInt_t     NSignalTrees()                const { return fTreeCollection[Types::kSignal].size(); }
+      UInt_t     NBackgroundTrees()            const { return fTreeCollection[Types::kBackground].size(); }
+      const TreeInfo&  SignalTreeInfo(Int_t i)       const { return fTreeCollection[Types::kSignal][i]; }
+      const TreeInfo&  BackgroundTreeInfo(Int_t i)   const { return fTreeCollection[Types::kBackground][i]; }
+      void       ClearSignalTreeList()     { fTreeCollection[Types::kSignal].clear(); }
+      void       ClearBackgroundTreeList() { fTreeCollection[Types::kBackground].clear(); }
 
       // the variable data
       void     AddVariable( const TString& expression, char varType='F', void* external = 0 );
+      void     AddVariable( const TString& expression, Double_t min, Double_t max, char varType, void* external = 0 );
+      std::vector<VariableInfo>& GetVariableInfos() { return fVariables; }
       UInt_t   GetNVariables()               const { return fVariables.size(); }
       char     VarType(Int_t i)              const { return fVariables[i].VarType(); }
       char     VarTypeOriginal(Int_t i)      const { return fVariables[i].VarTypeOriginal(); }
@@ -132,103 +135,33 @@ namespace TMVA {
 
       // data preparation
       // prepare input tree for training
-      void PrepareForTrainingAndTesting( Int_t Ntrain = 0, Int_t Ntest = 0, TString TreeName="" );
+      void PrepareForTrainingAndTesting( const TString & splitOpt, TString TreeName="" );
 
-      // plot variables
-      // possible values for tree are 'training', 'multi'
-      void PlotVariables( TString tree, TString folderName, Types::EPreprocessingMethod corr = Types::kNone );
-
-      // auxiliary functions to compute decorrelation
+      // auxiliary functions to compute correlations
       void GetCorrelationMatrix( Bool_t isSignal, TMatrixDBase* mat );
       void GetCovarianceMatrix ( Bool_t isSignal, TMatrixDBase*, Bool_t norm = kFALSE );
-      void GetSQRMats( TMatrixD*& sqS, TMatrixD*& sqB, vector<TString>* theVars );
-      void CalculatePrincipalComponents( TTree* originalTree, TPrincipal *&sigPrincipal, 
-                                         TPrincipal *&bgdPrincipal, vector<TString>* theVars );
 
-      void SetVerbose(Bool_t v=kTRUE) { fVerbose = v; }
+      void SetVerbose( Bool_t v=kTRUE ) { fVerbose = v; }
+      
+      // finds transformation in map
+      VariableTransformBase* FindTransform( Types::EVariableTransform transform ) const;
 
-      // properties of the dataset
-      // normalisation init
-      void CalcNorm(Types::EPreprocessingMethod corr = Types::kNone);
-      // normalisation accessors      
-      Double_t GetRMS( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone) const {
-         return fVariables[ivar].GetRMS(corr); 
-      }
-      Double_t GetRMS( const TString& var, Types::EPreprocessingMethod corr = Types::kNone) const { 
-         return GetRMS(FindVar(var), corr); 
-      }
-      Double_t GetMean( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone) const {
-         return fVariables[ivar].GetMean(corr); 
-      }
-      Double_t GetMean( const TString& var, Types::EPreprocessingMethod corr = Types::kNone) const { 
-         return GetMean(FindVar(var), corr); 
-      }
-      Double_t GetXmin( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone) const {
-         return fVariables[ivar].GetMin(corr); 
-      }
-      Double_t GetXmax( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone) const {
-         return fVariables[ivar].GetMax(corr); 
-      }
-      Double_t GetXmin( const TString& var, Types::EPreprocessingMethod corr = Types::kNone) const { 
-         return GetXmin(FindVar(var), corr); 
-      }
-      Double_t GetXmax( const TString& var, Types::EPreprocessingMethod corr = Types::kNone) const { 
-         return GetXmax(FindVar(var), corr); 
-      }
-
-      void     SetRMS ( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) { 
-         SetRMS(FindVar(var), x, corr); 
-      }
-      void     SetRMS( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) {
-         fVariables[ivar].SetRMS(x, corr); 
-      }
-      void     SetMean ( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) { 
-         SetMean(FindVar(var), x, corr); 
-      }
-      void     SetMean( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) {
-         fVariables[ivar].SetMean(x, corr); 
-      }
-      void     SetXmin( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) { 
-         fVariables[ivar].SetMin(x, corr); 
-      }
-      void     SetXmax( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) {
-         fVariables[ivar].SetMax(x, corr); 
-      }
-      void     SetXmin( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) { 
-         SetXmin(FindVar(var), x, corr); 
-      }
-      void     SetXmax( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone) { 
-         SetXmax(FindVar(var), x, corr); 
-      }
-      void     UpdateNorm ( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone);
+      // finds transformation in map or creates new one
+      VariableTransformBase* GetTransform( Types::EVariableTransform transform );
 
       // event reading
-      Bool_t ReadEvent(TTree* tr, UInt_t evidx, Types::EPreprocessingMethod corr = Types::kNone, 
-                       Types::ESBType type = Types::kSignal) const;
-      Bool_t ReadTrainingEvent( UInt_t evidx, Types::EPreprocessingMethod corr = Types::kNone, 
-                                Types::ESBType type = Types::kSignal) const { 
-         return ReadEvent(GetTrainingTree(),evidx,corr,type); 
-      }
-      Bool_t ReadTestEvent( UInt_t evidx, Types::EPreprocessingMethod corr = Types::kNone, 
-                            Types::ESBType type = Types::kSignal) const { 
-         return ReadEvent(GetTestTree(),evidx, corr,type); 
-      }
+      Bool_t ReadEvent        ( TTree* tr, Long64_t evidx ) const;
+      Bool_t ReadTrainingEvent( Long64_t evidx ) const { return ReadEvent(GetTrainingTree(), evidx ); }
+      Bool_t ReadTestEvent    ( Long64_t evidx ) const { return ReadEvent(GetTestTree(), evidx ); }
 
-      TMVA::Event& Event() { if (fEvent==0) fEvent = new TMVA::Event(fVariables); return *fEvent; }
-      void BackupEvent() { 
-         if (fEventBackup==0) fEventBackup = new TMVA::Event(Event()); 
-         else fEventBackup->CopyVarValues( Event() );
-      }
+      TMVA::Event& GetEvent() { if (fEvent==0) fEvent = new TMVA::Event(fVariables); return *fEvent; }
 
-      void RestoreEvent() { Event().CopyVarValues( *fEventBackup ); }
+      UInt_t GetCurrentEvtIdx() const { return fCurrentEvtIdx; } // the current event (to avoid reading of the same event)
 
-      UInt_t  GetCurrentEvtIdx() const { return fCurrentEvtIdx; } // the current event (to avoid reading of the same event)
+      const TMVA::Event& GetEvent() const { return *fEvent; } // Warning, this requires an existing event object
 
-      const TMVA::Event& Event() const { return *fEvent; } // Warning, this requires an existing event object
-
-      // decorrelation Matrix accessors
-      const TMatrixD* CorrelationMatrix  (Types::ESBType sigbgd) const { return fDecorrMatrix[sigbgd]; }
-      TPrincipal*     PrincipalComponents(Types::ESBType sigbgd) const { return fPrincipal[sigbgd]; }
+      // correlation matrix 
+      const TMatrixD* CorrelationMatrix( Types::ESBType sigbgd ) const { return fDecorrMatrix[sigbgd]; }
 
       // the weight 
       void SetWeightExpression(const TString& expr) { fWeightExp = expr; }
@@ -241,60 +174,18 @@ namespace TMVA {
       Int_t GetNEvtSigTest()   const { return fDataStats[Types::kTesting][Types::kSignal]; }
       Int_t GetNEvtBkgdTest()  const { return fDataStats[Types::kTesting][Types::kBackground]; }
 
-      // write and read functions
-      void WriteVarsToStream    ( std::ostream& o, Types::EPreprocessingMethod corr ) const;
-      void ReadVarsFromStream   ( std::istream& istr, Types::EPreprocessingMethod corr );
-      void WriteCorrMatToStream ( std::ostream& o ) const;
-      void ReadCorrMatFromStream( std::istream& istr );
-
       // resets branch addresses to current event
       void ResetBranchAndEventAddresses( TTree* );
       void ResetCurrentTree() { fCurrentTree = 0; }
 
-      // transformation for preprocessing
-      Bool_t ApplyTransformation(Types::EPreprocessingMethod corr = Types::kNone, Bool_t useSignal = kTRUE) const;
-
-      // preprocessing flag
-      Bool_t DoPreprocessing() const { return fDoPreprocessing; }
-      Bool_t PreprocessingEnabled(Types::EPreprocessingMethod corr) { return fPreprocessingEnabled[corr]; }
-      void   SetPreprocessing( Bool_t doit ) { 
-         fDoPreprocessing = doit;
-         fPreprocessingEnabled[Types::kDecorrelated] = doit;
-      }
-      void EnablePreprocess( Types::EPreprocessingMethod corr ) { 
-         fPreprocessingEnabled[corr] = kTRUE;
-      }
-      Bool_t Preprocess(Types::EPreprocessingMethod);
-
    private:
-      
-      // data manipulation helper functions
-      // helper functions for writing decorrelated data
-      Bool_t PreparePreprocessing( Types::EPreprocessingMethod corr, TTree* originalTree );
-      Bool_t HasBeenPreprocessed( Types::EPreprocessingMethod corr ) const { 
-         return fFlagPreprocessed[corr];
-      }
-      void FlagAsPreprocessed( Types::EPreprocessingMethod corr ) { 
-         fFlagPreprocessed[corr] = kTRUE;
-      }
-
-      Bool_t                     fDoPreprocessing; // perform preprocesssing ?
-      Bool_t                     fPreprocessingEnabled[Types::kMaxPreprocessingMethod];
-      Bool_t                     fFlagPreprocessed[Types::kMaxPreprocessingMethod];
-      
 
       void ChangeToNewTree( TTree* tr );
       void PrintCorrelationMatrix( TTree* theTree );
 
-      Double_t GetSeparation( TH1* S, TH1* B ) const;
-
       // verbosity
       Bool_t Verbose() { return fVerbose; }
 
-      // plot variables
-      void PlotVariables( TTree* theTree, TString folderName = "input_variables", 
-                          Types::EPreprocessingMethod corr = Types::kDecorrelated );
-      
       // data members
 
       // ROOT stuff
@@ -302,8 +193,7 @@ namespace TMVA {
       TDirectory*                fBaseRootDir;      //! the base directory, usually the root dir of a ROOT-file
 
       // input trees
-      std::vector<TreeInfo>      fSignalTrees;      //! list of signal trees/weights
-      std::vector<TreeInfo>      fBackgroundTrees;  //! list of signal trees/weights
+      std::vector<TreeInfo>      fTreeCollection[2]; //! list of signal and background trees/weights
 
       // expressions/formulas
       std::vector<VariableInfo>  fVariables;        //! list of variable expressions/internal names
@@ -312,25 +202,25 @@ namespace TMVA {
       TCut                       fCut;              // the pretraining cut
       TCut                       fMultiCut;         // phase-space cut
 
-      // the internal trees always as correlated and decorrelated version
-      TTree*                    fTrainingTree;      //! tree used for training [correlated/decorrelated]
-      TTree*                    fTestTree;          //! tree used for testing [correlated/decorrelated]
-      TTree*                    fMultiCutTestTree;  //! tree used for testing of multicut method [correlated/decorrelated]
+      TTree*                     fTrainingTree;      //! tree used for training
+      TTree*                     fTestTree;          //! tree used for testing 
+      TTree*                     fMultiCutTestTree;  //! tree used for testing of multicut method
 
       // data stats
-      UInt_t                    fDataStats[Types::kMaxTreeType][Types::kMaxSBType]; //! statistics of the dataset for training/test tree
+      UInt_t                     fDataStats[Types::kMaxTreeType][Types::kMaxSBType]; //! statistics of the dataset for training/test tree
 
       // 
-      TMatrixD*                 fCovarianceMatrix[2]; //! Covariance matrix [signal/background]
-      TMatrixD*                 fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
-      TPrincipal*               fPrincipal[2];        //! Principal [signal/background]
+      /*       TMatrixD*                 fCovarianceMatrix[2]; //! Covariance matrix [signal/background] */
+      TMatrixD*                  fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
+      /*       TPrincipal*               fPrincipal[2];        //! Principal [signal/background] */
+
+      std::map<Types::EVariableTransform,VariableTransformBase*> fVarTransforms; //! Registered variable transformations
       
       // verbosity
       Bool_t                    fVerbose;           //! Verbosity
 
       // the event 
       mutable TMVA::Event*      fEvent;             //! the event
-      mutable TMVA::Event*      fEventBackup;       //! backup of non-preprocessed event (TEMPORARY !)
       mutable TTree*            fCurrentTree;       //! the tree, events are currently read from
       mutable UInt_t            fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
 

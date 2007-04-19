@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSynapse.cxx,v 1.16 2006/10/15 22:34:22 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TSynapse.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -38,7 +38,6 @@
 static const Int_t fgUNINITIALIZED = -1;
 
 ClassImp(TMVA::TSynapse)
-   ;
 
 //______________________________________________________________________________
 TMVA::TSynapse::TSynapse()

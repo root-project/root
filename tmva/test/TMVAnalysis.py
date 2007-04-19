@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# @(#)root/tmva $Id: TMVAnalysis.py,v 1.3 2006/11/20 15:35:28 brun Exp $
+# @(#)root/tmva $Id: TMVAnalysis.py,v 1.30 2007/04/17 22:04:23 andreas.hoecker Exp $
 # ------------------------------------------------------------------------------ #
 # Project      : TMVA - a Root-integrated toolkit for multivariate data analysis #
 # Package      : TMVA                                                            #
@@ -33,7 +33,7 @@ DEFAULT_OUTFNAME = "TMVA.root"
 DEFAULT_INFNAME  = "../examples/data/toy_sigbkg.root"
 DEFAULT_TREESIG  = "TreeS"
 DEFAULT_TREEBKG  = "TreeB"
-DEFAULT_METHODS  = "Cuts CutsD Likelihood LikelihoodD PDERS HMatrix Fisher MLP BDT"
+DEFAULT_METHODS  = "Cuts CutsD Likelihood LikelihoodD PDERS HMatrix Fisher MLP BDT SVM_Gauss SVM_Poly SVM_Lin"
 
 # print help
 def usage():
@@ -104,8 +104,8 @@ def main():
     # import ROOT classes
     from ROOT import gSystem, gROOT, gApplication, TFile, TTree, TCut
     
-    # load TMVA library and GUI
-    gSystem.Load( 'libTMVA' )
+    # logon not automatically loaded through PyROOT (logon loads TMVA library) load also GUI
+    gROOT.Macro( '../macros/TMVAlogon.C' )    
     gROOT.LoadMacro( '../macros/TMVAGui.C' )
     
     # import TMVA classes from ROOT
@@ -116,6 +116,7 @@ def main():
     
     # create einstance of factory
     factory = TMVA.Factory( "MVAnalysis", outputFile, "" )
+    print "**************** here "
 
     # set verbosity
     factory.SetVerbose( verbose )
@@ -137,11 +138,11 @@ def main():
         print "ERROR: could not set input trees\n"
         sys.exit(1)
         
-    # Define the input variables that shall be used for the MVA training
+    # Define the input variables that shall be used for the classifier training
     # note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
     # [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-    factory.AddVariable("var1", 'F')
-    factory.AddVariable("var2", 'F')
+    factory.AddVariable("var1+var2", 'F')
+    factory.AddVariable("var1-var2", 'F')
     factory.AddVariable("var3", 'F')
     factory.AddVariable("var4", 'F')
     
@@ -160,71 +161,105 @@ def main():
     
     # here, the relevant variables are copied over in new, slim trees that are
     # used for TMVA training and testing
-    factory.PrepareTrainingAndTestTree( mycut, 2000, 4000 )  
+    # "SplitMode=Random" means that the input events are randomly shuffled before
+    # splitting them into training and test samples
+    factory.PrepareTrainingAndTestTree( mycut, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:!V" )
+
+    # and alternative call to use a different number of signal and background training/test event is:
+    # factory.PrepareTrainingAndTestTree( mycut, "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" )
     
     # Cut optimisation
-    if methods.find( "Cuts" ) != -1:
-        factory.BookMethod( TMVA.Types.Cuts, "Cuts", "!V:MC:EffSel:MC_NRandCuts=100000:AllFSmart" )
-        
-    # Cut optimisation with a Genetic Algorithm
-    if methods.find( "Cuts" ) != -1:
-        factory.BookMethod( TMVA.Types.Cuts, "CutsGA",
-                            "!V:GA:EffSel:GA_nsteps=40:GA_cycles=30:GA_popSize=100:GA_SC_steps=10:GA_SC_offsteps=5:GA_SC_factor=0.95" )
-        
+    if "Cuts" in mlist:
+        factory.BookMethod( TMVA.Types.kCuts, "Cuts", "!V:MC:EffSel:MC_NRandCuts=100000:MC_VarProp=FSmart" )
+
     # Cut optimisation using decorrelated input variables
-    if methods.find( "CutsD" ) != -1:
-        factory.BookMethod( TMVA.Types.Cuts, "CutsD", "!V:MC:EffSel:MC_NRandCuts=200000:AllFSmart:Preprocess=Decorrelate" )
-            
+    if "CutsD" in mlist:
+        factory.BookMethod( TMVA.Types.kCuts, "CutsD",
+                            "!V:MC:EffSel:MC_NRandCuts=200000:MC_VarProp=FSmart:VarTransform=Decorrelate" )
+
+    # Cut optimisation with a Genetic Algorithm
+    if "CutsGA" in mlist:
+        factory.BookMethod( TMVA.Types.kCuts, "CutsGA",
+                            "!V:GA:EffSel:GA_nsteps=40:GA_cycles=3:GA_popSize=300:GA_SC_steps=10:GA_SC_rate=5:GA_SC_factor=0.95" )
+
     # Likelihood
-    if methods.find( "Likelihood" ) != -1:
-        factory.BookMethod( TMVA.Types.Likelihood, "Likelihood", "!V:!TransformOutput:Spline=2:NSmooth=5" ) 
+    if "Likelihood" in mlist:
+        factory.BookMethod( TMVA.Types.kLikelihood, "Likelihood",
+                            "!V:!TransformOutput:Spline=2:NSmooth=5:NAvEvtPerBin=50" )
         
     # test the decorrelated likelihood
-    if methods.find( "LikelihoodD" ) != -1:
-        factory.BookMethod( TMVA.Types.Likelihood, "LikelihoodD", "!V:!TransformOutput:Spline=2:NSmooth=5:Preprocess=Decorrelate") 
+    if "LikelihoodD" in mlist:
+        factory.BookMethod( TMVA.Types.kLikelihood, "LikelihoodD",
+                            "!V:!TransformOutput:Spline=2:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" )
 
-    # Fisher:
-    if methods.find( "Fisher" ) != -1:
-        factory.BookMethod( TMVA.Types.Fisher, "Fisher", "!V:Fisher" )    
+    if "LikelihoodPCA" in mlist:
+        factory.BookMethod( TMVA.Types.kLikelihood, "LikelihoodPCA",
+                            "!V:!TransformOutput:Spline=2:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" )
+
+    # likelihood method with unbinned kernel estimator
+    if "LikelihoodKDE" in mlist:
+        factory.BookMethod( TMVA.Types.kLikelihood, "LikelihoodKDE",
+                            "!V:!TransformOutput:UseKDE:KDEtype=Gauss:KDEiter=Adaptive:NAvEvtPerBin=50" )
+
+    # Fisher - also creates PDF for MVA output (here as an example, can be used for any other classifier)
+    if "Fisher" in mlist:
+        factory.BookMethod( TMVA.Types.kFisher, "Fisher", "!V:Fisher:CreateMVAPdfs:NbinsMVAPdf=50:NsmoothMVAPdf=1" )
 
     # the new TMVA ANN: MLP (recommended ANN)
-    if methods.find( "MLP" ) != -1:
-        factory.BookMethod( TMVA.Types.MLP, "MLP", "!V:NCycles=200:HiddenLayers=N+1,N:TestRate=5" )
+    if "MLP" in mlist:
+        factory.BookMethod( TMVA.Types.kMLP, "MLP", "!V:NCycles=200:HiddenLayers=N+1,N:TestRate=5" )
 
     # CF(Clermont-Ferrand)ANN
-    if methods.find( "CFMlpANN" ) != -1:
-        factory.BookMethod( TMVA.Types.CFMlpANN, "CFMlpANN", "!V:H:NCycles=5000:HiddenLayers=N,N"  ) # n_cycles:#nodes:#nodes:...  
+    if "CFMlpANN" in mlist:
+        factory.BookMethod( TMVA.Types.kCFMlpANN, "CFMlpANN", "!V:H:NCycles=500:HiddenLayers=N,N" ) 
 
     # Tmlp(Root)ANN
-    if methods.find( "TMlpANN" ) != -1:
-        factory.BookMethod( TMVA.Types.TMlpANN, "TMlpANN", "!V:NCycles=200:HiddenLayers=N+1,N"  ) # n_cycles:#nodes:#nodes:...
+    if "TMlpANN" in mlist:
+        factory.BookMethod( TMVA.Types.kTMlpANN, "TMlpANN", "!V:NCycles=200:HiddenLayers=N+1,N" )
 
-    # HMatrix
-    if methods.find( "HMatrix" ) != -1:
-        factory.BookMethod( TMVA.Types.HMatrix, "HMatrix", "!V" ) # H-Matrix (chi2-squared) method
+    # HMatrix (chi2-squared) method
+    if "HMatrix" in mlist:
+        factory.BookMethod( TMVA.Types.kHMatrix, "HMatrix", "!V" ) 
 
     # PDE - RS method
-    if methods.find( "PDERS" ) != -1:
-        factory.BookMethod( TMVA.Types.PDERS, "PDERS", 
-                            "!V:VolumeRangeMode=RMS:KernelEstimator=Teepee:MaxVIterations=50:InitialScale=0.99" ) 
-    if methods.find( "PDERSD" ) != -1:
-        factory.BookMethod( TMVA.Types.PDERS, "PDERSD", 
-                            "!V:VolumeRangeMode=RMS:KernelEstimator=Teepee:MaxVIterations=50:InitialScale=0.99:Preprocess=Decorrelate" ) 
+    if "PDERS" in mlist:
+        factory.BookMethod( TMVA.Types.kPDERS, "PDERS", 
+                            "!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99" )
+
+    if "PDERSD" in mlist:
+        factory.BookMethod( TMVA.Types.kPDERS, "PDERSD", 
+                            "!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=Decorrelate" )
+
+    if "PDERSPCA" in mlist:
+        factory.BookMethod( TMVA.Types.kPDERS, "PDERSPCA", 
+                            "!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=PCA" )
 
     # Boosted Decision Trees
-    if methods.find( "BDT" ) != -1:
-        factory.BookMethod( TMVA.Types.BDT, "BDT", 
-                            "!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nEventsMin=20:SignalFraction=0.:nCuts=20:PruneMethod=CostComplexity:PruneStrength=3.5" );
-   
+    if "BDT" in mlist:
+        factory.BookMethod( TMVA.Types.kBDT, "BDT", 
+                            "!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nEventsMin=20:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5")
+
+    # Decorrelated Boosted Decision Trees
+    if "BDTD" in mlist:
+        factory.BookMethod( TMVA.Types.kBDT, "BDTD", 
+                            "!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nEventsMin=20:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5:VarTransform=Decorrelate")
+
     # Friedman's RuleFit method
-    if methods.find( "RuleFit" ) != -1:
-        factory.BookMethod( TMVA.Types.RuleFit, "RuleFit", 
-                            "!V:NTrees=20:SampleFraction=-1:nEventsMin=60:nCuts=20:MinImp=0.001:Model=ModLinear:GDTau=0.6:GDStep=0.01:GDNSteps=100000:SeparationType=GiniIndex:RuleMaxDist=0.00001" )
+    if "RuleFit" in mlist:
+        factory.BookMethod( TMVA.Types.kRuleFit, "RuleFit",
+                            "!V:NTrees=20:SampleFraction=-1:fEventsMin=0.1:nCuts=20:SeparationType=GiniIndex:Model=ModRuleLinear:GDTau=0.6:GDTauMin=0.0:GDTauMax=1.0:GDNTau=20:GDStep=0.01:GDNSteps=5000:GDErrScale=1.1:RuleMinDist=0.0001:MinImp=0.001" )
 
-    # Bayesian classifier
-    if methods.find( "BayesClassifier" ) != -1:
-        factory.BookMethod( TMVA.Types.BayesClassifier, "BayesClassifier", "!V:myOptions" )
-
+    # Support Vector Machine with varying kernel functions
+    if "SVM_Gauss" in mlist:
+      factory.BookMethod( TMVA::Types::kSVM, "SVM_Gauss",
+                          "Sigma=2:C=1:Tol=0.001:Kernel=Gauss" )        
+    if "SVM_Poly" in mlist:
+        factory.BookMethod( TMVA::Types::kSVM, "SVM_Poly",
+                            "Order=4:Theta=1:C=0.1:Tol=0.001:Kernel=Polynomial" );
+    if "SVM_Lin" in mlist:
+        factory.BookMethod( TMVA::Types::kSVM, "SVM_Lin",
+                            "!V:Kernel=Linear:C=1:Tol=0.001" );
+        
     # ---- Now you can tell the factory to train, test, and evaluate the MVAs. 
 
     # Train MVAs

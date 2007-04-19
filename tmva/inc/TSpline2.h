@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline2.h,v 1.11 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: TSpline2.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -58,13 +58,12 @@ namespace TMVA {
    private:
 
       TGraph *fGraph;   // graph that is splined
-      Double_t Quadrax( const Float_t dm, const Float_t dm1,
-                        const Float_t dm2,const  Float_t dm3,
-                        const Float_t cos1, const Float_t cos2, 
-                        const Float_t cos3 ) const;
+      Double_t Quadrax( Float_t dm, Float_t dm1,
+                        Float_t dm2, Float_t dm3,
+                        Float_t cos1, Float_t cos2, 
+                        Float_t cos3 ) const;
   
       ClassDef(TSpline2,0) //Quadratic interpolation class (using quadrax)
-         ;
    };
 
 } // namespace TMVA

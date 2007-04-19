@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableInfo.h,v 1.15 2006/11/17 14:59:24 stelzer Exp $   
+// @(#)root/tmva $Id: VariableInfo.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -53,29 +53,32 @@ namespace TMVA {
 
    public:
 
-      VariableInfo(const TString& expression, int varCounter, char varTypeOriginal = 'F', void * external = 0);
+      VariableInfo( const TString& expression, int varCounter, char varTypeOriginal = 'F', void * external = 0,
+                    Double_t min = 0, Double_t max = 0 );
       VariableInfo();
+      VariableInfo( const VariableInfo& other );
       ~VariableInfo() {}
       const TString& GetExpression()       const { return fExpression; }
       const TString& GetInternalVarName()  const { return fInternalVarName; }
       char           VarType()             const { return fVarType; }
       char           VarTypeOriginal()     const { return fVarTypeOriginal; }
-      Double_t       GetMin (Types::EPreprocessingMethod corr = Types::kNone) const { return fXminNorm[(Int_t) corr]; }
-      Double_t       GetMax (Types::EPreprocessingMethod corr = Types::kNone) const { return fXmaxNorm[(Int_t) corr]; }
-      Double_t       GetMean(Types::EPreprocessingMethod corr = Types::kNone) const { return fXmeanNorm[(Int_t) corr]; }
-      Double_t       GetRMS (Types::EPreprocessingMethod corr = Types::kNone) const { return fXrmsNorm[(Int_t) corr]; }
+      Double_t       GetMin () const { return fXminNorm; }
+      Double_t       GetMax () const { return fXmaxNorm; }
+      Double_t       GetMean() const { return fXmeanNorm; }
+      Double_t       GetRMS () const { return fXrmsNorm; }
 
       void           SetExpression(const TString& s)      { fExpression = s; }
       void           SetInternalVarName(const TString& s) { fInternalVarName = s; }
       void           SetVarType(char c)                    { fVarType = c; }
-      void           SetMin (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXminNorm[(Int_t) corr] = v; }
-      void           SetMax (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXmaxNorm[(Int_t) corr] = v; }
-      void           SetMean(Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXmeanNorm[(Int_t) corr] = v; }
-      void           SetRMS (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXrmsNorm[(Int_t) corr] = v; }
+      void           SetMin (Double_t v) { fXminNorm  = v; }
+      void           SetMax (Double_t v) { fXmaxNorm  = v; }
+      void           SetMean(Double_t v) { fXmeanNorm = v; }
+      void           SetRMS (Double_t v) { fXrmsNorm  = v; }
       void           SetExternalLink(void* p) { fExternalData = p; }
+      void           ResetMinMax() {fXminNorm = 1e30; fXmaxNorm = -1e30; };
 
-      void           WriteToStream(std::ostream& o, Types::EPreprocessingMethod corr) const;
-      void           ReadFromStream(std::istream& istr, Types::EPreprocessingMethod corr);
+      void           WriteToStream(std::ostream& o) const;
+      void           ReadFromStream(std::istream& istr);
       void*          GetExternalLink() const { return fExternalData; }
 
       // assignment operator (does not copy external link)
@@ -86,10 +89,10 @@ namespace TMVA {
       TString  fInternalVarName; //! the internal variable name
       Char_t   fVarType;         //! the variable type to be used internally ('F'-default or 'I')
       Char_t   fVarTypeOriginal; //! the variable type to be used internally ('F'-default or 'I')
-      Double_t fXminNorm[3];     //! minimum value for correlated/decorrelated/PCA variable
-      Double_t fXmaxNorm[3];     //! maximum value for correlated/decorrelated/PCA variable
-      Double_t fXmeanNorm[3];    //! mean value for correlated/decorrelated/PCA variable
-      Double_t fXrmsNorm[3];     //! rms value for correlated/decorrelated/PCA variable
+      Double_t fXminNorm;     //! minimum value for correlated/decorrelated/PCA variable
+      Double_t fXmaxNorm;     //! maximum value for correlated/decorrelated/PCA variable
+      Double_t fXmeanNorm;    //! mean value for correlated/decorrelated/PCA variable
+      Double_t fXrmsNorm;     //! rms value for correlated/decorrelated/PCA variable
       void*    fExternalData;    //! if the variable content is linked to an external pointer      
       Int_t    fVarCounter;      //! dummy variable
    };

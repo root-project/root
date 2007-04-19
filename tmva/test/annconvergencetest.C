@@ -16,7 +16,7 @@ void annconvergencetest( TString fin = "TMVA.root", bool useTMVAStyle=kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TMVAGlob::OpenFile( fin );  
 
-   TDirectory * dir = (TDirectory*)gDirectory->Get("MLP");
+   TDirectory * dir = (TDirectory*)gDirectory->Get("Method_MLP");
    if (dir==0) {
       cout << "Could not locate directory MLP in file " << fin << endl;
       return;
@@ -35,7 +35,7 @@ void annconvergencetest( TString fin = "TMVA.root", bool useTMVAStyle=kTRUE )
    estimatorHistTrain->SetMinimum( min - 0.1*(max - min) );
    estimatorHistTrain->SetLineColor( 2 );
    estimatorHistTrain->SetLineWidth( 2 );
-   estimatorHistTrain->SetTitle( TString("MLP Convergence test") );
+   estimatorHistTrain->SetTitle( TString("MLP Convergence Test") );
   
    estimatorHistTest->SetLineColor( 4 );
    estimatorHistTest->SetLineWidth( 2 );
@@ -49,13 +49,12 @@ void annconvergencetest( TString fin = "TMVA.root", bool useTMVAStyle=kTRUE )
    estimatorHistTest ->Draw("same");
 
    // need a legend
-   TLegend *legend= new TLegend( 1 - gPad->GetRightMargin() - 0.45, 1-gPad->GetTopMargin() - 0.20, 
-                                 1 - gPad->GetRightMargin() - 0.05, 1-gPad->GetTopMargin() - 0.05 );
+   TLegend *legend= new TLegend( 1 - c->GetRightMargin() - 0.45, 1-c->GetTopMargin() - 0.20, 
+                                 1 - c->GetRightMargin() - 0.05, 1-c->GetTopMargin() - 0.05 );
 
    legend->AddEntry(estimatorHistTrain,"Training Sample","l");
    legend->AddEntry(estimatorHistTest,"Test sample","l");
    legend->Draw("same");
-   legend->SetBorderSize(1);
    legend->SetMargin( 0.3 );
 
    c->cd();

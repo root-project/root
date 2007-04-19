@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingBase.h,v 1.7 2007/01/16 14:28:35 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -39,11 +39,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+
 #include "TObject.h"
 #include "TRandom.h"
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
+#endif
+#ifndef ROOT_TMVA_Interval
+#include "TMVA/Interval.h"
 #endif
 
 namespace TMVA {
@@ -52,7 +56,7 @@ namespace TMVA {
 
    public:
 
-      SimulatedAnnealingBase( std::vector<LowHigh_t*>& ranges );
+      SimulatedAnnealingBase( std::vector<Interval*>& ranges );
       virtual ~SimulatedAnnealingBase();
 
       virtual Double_t MinimizeFunction( const std::vector<Double_t>& parameters ) = 0;
@@ -74,7 +78,7 @@ namespace TMVA {
    private:
 
       TRandom*                fRandom;                 // random generator
-      std::vector<LowHigh_t*> fRanges;                 // parameter ranges
+      std::vector<Interval*> fRanges;                 // parameter ranges
 
       // fitter setup 
       Int_t                   fMaxCalls;               // maximum number of minimisation calls
@@ -84,10 +88,9 @@ namespace TMVA {
       Double_t                fMinTemperature;         // mimimum temperature
       Double_t                fEps;                    // epsilon
       Int_t                   fNFunLoops;              // number of function loops
-      Int_t                   fNEps;                   // number of epsilons
+      Int_t                   fNEps;                   // number of epsilons                    
 
       ClassDef(SimulatedAnnealingBase,0)  // Base class for Simulated Annealing fitting
-         ;
    };   
 
 } // namespace TMVA

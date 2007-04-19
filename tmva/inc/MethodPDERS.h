@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.23 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: MethodPDERS.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -81,10 +81,12 @@ namespace TMVA {
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream & o ) const;
+      virtual void WriteWeightsToStream( ostream& o ) const;
+      virtual void WriteWeightsToStream( TFile& rf ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream & istr );
+      virtual void ReadWeightsFromStream( istream& istr );
+      virtual void ReadWeightsFromStream( TFile& istr );
 
       // calculate the MVA value
       virtual Double_t GetMvaValue();
@@ -107,11 +109,11 @@ namespace TMVA {
       BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }
       BinarySearchTree* GetBinaryTreeBkg( void ) const { return fBinaryTreeB; }
 
-      Double_t KernelEstimate( const Event&, std::vector<Event*>&, Volume& );
+      Double_t KernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume& );
       Double_t ApplyKernelFunction( Double_t normalized_distance );
       Double_t KernelNormalization( Double_t pdf );
       Double_t GetNormalizedDistance( const TMVA::Event &base_event, 
-                                      const TMVA::Event &sample_event, 
+                                      const BinarySearchTreeNode &sample_event, 
                                       Double_t *dim_normalization);
       Double_t NormSinc( Double_t x );
       Double_t LanczosFilter( Int_t level, Double_t x );
@@ -125,12 +127,15 @@ namespace TMVA {
       virtual void DeclareOptions();
       virtual void ProcessOptions();
 
-      TTree* GetReferenceTree() const { return fReferenceTree; }
-      void   SetReferenceTree( TTree* t ) { fReferenceTree = t; }
+      // calculate the averages of the input variables needed for adaptive training
+      void CalcAverages();
+
+      // create binary search trees for signal and background
+      void CreateBinarySearchTrees( TTree* tree );
 
       // option
       TString fVolumeRange;   // option volume range
-      TString fKernelString; // option kernel estimator
+      TString fKernelString;  // option kernel estimator
 
       enum EVolumeRangeMode {
          kUnsupported = 0,
@@ -156,21 +161,17 @@ namespace TMVA {
          kLanczos8
       } fKernelEstimator;
 
-      TTree*             fReferenceTree; // tree used to create binary search trees
-
       BinarySearchTree*  fBinaryTreeS;   // binary tree for signal
       BinarySearchTree*  fBinaryTreeB;   // binary tree for background
 
       vector<Float_t>*   fDelta;         // size of volume
       vector<Float_t>*   fShift;         // volume center
+      vector<Float_t>    fAverageRMS;    // average RMS of signal and background
 
       Float_t            fScaleS;        // weight for signal events
       Float_t            fScaleB;        // weight for background events
       Float_t            fDeltaFrac;     // fraction of RMS
       Double_t           fGaussSigma;    // size of Gauss in adaptive volume 
-
-      // global weight file -- (needed !)
-      TFile*             fFin;           // weight file
 
       // input for adaptive volume adjustment
       Float_t            fNEventsMin;    // minimum number of events in adaptive volume
@@ -192,7 +193,6 @@ namespace TMVA {
       void InitPDERS( void );
 
       ClassDef(MethodPDERS,0) // Multi-dimensional probability density estimator range search (PDERS) method
-         ;
    };
 
 } // namespace TMVA

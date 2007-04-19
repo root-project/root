@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline1.h,v 1.10 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: TSpline1.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -60,7 +60,6 @@ namespace TMVA {
       TGraph *fGraph;  // graph that is splined
 
       ClassDef(TSpline1,0) //Linear interpolation class
-         ;
    };
 
 } // namespace TMVA

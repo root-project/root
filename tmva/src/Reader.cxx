@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.cxx,v 1.35 2006/11/17 14:59:24 stelzer Exp $   
+// @(#)root/tmva $Id: Reader.cxx,v 1.12 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -95,29 +95,44 @@
 #include "TVector.h"
 #include <stdlib.h>
 
+#include <fstream>
+
 #include "TMVA/Reader.h"
+#include "TMVA/Config.h"
 #include "TMVA/Methods.h"
 
+#define TMVA_Reader_TestIO__
+#undef  TMVA_Reader_TestIO__
+
 ClassImp(TMVA::Reader)
-   ;
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( Bool_t verbose )
-   : fDataSet( new DataSet ),
+TMVA::Reader::Reader( TString theOption, Bool_t verbose )
+   : Configurable( theOption ),
+     fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fColor( kFALSE ),
      fLogger ( this )
 {
    // constructor
+   DeclareOptions();
+   ParseOptions();
+
    Init();
 }
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
-   : fDataSet( new DataSet ),
+TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verbose )
+   : Configurable( theOption ),
+     fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fColor( kFALSE ),
      fLogger ( this )
 {
    // constructor
+   DeclareOptions();
+   ParseOptions();
+
    // arguments: names of input variables (vector)
    //            verbose flag
    for (vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
@@ -127,12 +142,17 @@ TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
 }
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( vector<string>& inputVars, Bool_t verbose )
-   : fDataSet( new DataSet ),
+TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbose )
+   : Configurable( theOption ),
+     fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fColor( kFALSE ),
      fLogger ( this )
 {
    // constructor
+   DeclareOptions();
+   ParseOptions();
+
    // arguments: names of input variables (vector)
    //            verbose flag
    for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
@@ -142,12 +162,17 @@ TMVA::Reader::Reader( vector<string>& inputVars, Bool_t verbose )
 }
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( const string varNames, Bool_t verbose )
-   : fDataSet( new DataSet ),
+TMVA::Reader::Reader( const string varNames, TString theOption, Bool_t verbose )
+   : Configurable( theOption ),
+     fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fColor( kFALSE ),
      fLogger ( this )
 {
    // constructor
+   DeclareOptions();
+   ParseOptions();
+
    // arguments: names of input variables given in form: "name1:name2:name3"
    //            verbose flag
    this->DecodeVarNames(varNames);
@@ -155,16 +180,37 @@ TMVA::Reader::Reader( const string varNames, Bool_t verbose )
 }
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( const TString varNames, Bool_t verbose )
-   : fDataSet( new DataSet ),
+TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose )
+   : Configurable( theOption ),
+     fDataSet( new DataSet ),
      fVerbose( verbose ),
+     fColor( kFALSE ),
      fLogger ( this )
 {
    // constructor
+   DeclareOptions();
+   ParseOptions();
+
    // arguments: names of input variables given in form: "name1:name2:name3"
    //            verbose flag
    this->DecodeVarNames(varNames);
    Init();
+}
+
+//_______________________________________________________________________
+void TMVA::Reader::DeclareOptions() 
+{
+   // declaration of configuration options
+   DeclareOptionRef( fVerbose, "V", "verbose flag" );
+   DeclareOptionRef( fColor=kTRUE, "Color", "color flag (default on)" );
+   
+   ParseOptions(kFALSE);
+   
+   fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
+   
+   Config::Instance().SetUseColor(fColor);
+
+   if (fDataSet!=0) fDataSet->SetVerbose(Verbose());
 }
 
 //_______________________________________________________________________
@@ -180,14 +226,14 @@ void TMVA::Reader::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, float* datalink) 
+void TMVA::Reader::AddVariable( const TString& expression, float* datalink ) 
 {
    // Add a float variable or expression to the reader
    Data().AddVariable(expression, 'F', (void*)datalink);
 }
 
 //_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, int* datalink) 
+void TMVA::Reader::AddVariable( const TString& expression, int* datalink ) 
 {
    // Add a integer variable or expression to the reader
    Data().AddVariable(expression, 'I', (void*)datalink);
@@ -269,19 +315,30 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
       method = new TMVA::MethodRuleFit( Data(), weightfile );
       break; 
 
+   case (TMVA::Types::kSVM):
+      method = new TMVA::MethodSVM( Data(), weightfile );
+      break; 
+
    case (TMVA::Types::kBayesClassifier):
       method = new TMVA::MethodBayesClassifier( Data(), weightfile );
       break; 
 
    default: 
-      fLogger << kFATAL << "MVA method: " << methodType << " not implemented" << Endl;
+      fLogger << kFATAL << "Classifier: " << methodType << " not implemented" << Endl;
       return 0;
    }  
 
-   fLogger << kINFO << "booked MVA method: " << method->GetMethodName() << Endl;
+   fLogger << kINFO << "Booked classifier: " << ((MethodBase*)method)->GetMethodName() << Endl;
 
    // read weight file
-   method->ReadStateFromFile();
+   ((MethodBase*)method)->ReadStateFromFile();
+
+#ifdef TMVA_Reader_TestIO__
+   // testing the read/write procedure
+   std::ofstream tfile( weightfile+".control" );
+   ((MethodBase*)method)->WriteStateToStream(tfile);
+   tfile.close();
+#endif
 
    return method;
 }
@@ -292,8 +349,8 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TStrin
    // Evaluate a vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
-   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, inputVec[ivar] );
-   
+   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().GetEvent().SetVal( ivar, inputVec[ivar] );
+ 
    return EvaluateMVA( methodName, aux );
 }
 
@@ -301,10 +358,11 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TStrin
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodName, Double_t aux )
 {
    // Evaluate a vector<double> of input data for a given method
+
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
-   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, (Float_t)inputVec[ivar] );
-   
+   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().GetEvent().SetVal( ivar, (Float_t)inputVec[ivar] );
+
    return EvaluateMVA( methodName, aux );
 }
 
@@ -316,37 +374,53 @@ Double_t TMVA::Reader::EvaluateMVA( TString methodName, Double_t aux )
 
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodName );
    if (it == fMethodMap.end()) {
-      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << "M" << it->first << Endl;
-      fLogger << kFATAL << "<EvaluateMVA> unknown method in map: " << method << "; "
-              << "you looked for " << methodName<< " while the available methods are : " << Endl;
+      fLogger << kINFO << "<EvaluateMVA> unknown classifier in map; "
+              << "you looked for \"" << methodName << "\" within available methods: " << Endl;
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << " --> " << it->first << Endl;
+      fLogger << "Check calling string" << kFATAL << Endl;
    }
 
    else method = it->second;
 
-   return this->EvaluateMVA( method, aux );
+   return this->EvaluateMVA( (MethodBase*)method, aux );
 }  
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( IMethod* method, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
 {
    // evaluates the MVA
-  
-   if (method->GetPreprocessingMethod() != Types::kNone) Data().BackupEvent();
 
-   // NOTE: in likelihood the preprocessing transformations are inserted by hand in GetMvaValue()
+   // the event is currently stored in the DataSet [Data().GetEvent()]
+   method->GetVarTransform().GetEventRaw().CopyVarValues(Data().GetEvent());
+
+   // NOTE: in likelihood the variable transformations are inserted by hand in GetMvaValue()
    // (to distinguish signal and background transformations), and hence should not be applied here
    if (method->GetMethodType() != Types::kLikelihood) 
-      Data().ApplyTransformation( method->GetPreprocessingMethod(), kTRUE );
+      method->GetVarTransform().ApplyTransformation(Types::kSignal);
 
    // the aux value is only needed for MethodCuts: it sets the required signal efficiency 
    if (method->GetMethodType() == TMVA::Types::kCuts) 
       ((TMVA::MethodCuts*)method)->SetTestSignalEfficiency( aux );
 
-   Double_t mvaVal = method->GetMvaValue();
+   return method->GetMvaValue();
+}
+//_______________________________________________________________________
+Double_t TMVA::Reader::GetProba( TString methodName,  Double_t ap_sig, Double_t mvaVal )
+{
+  // evaluates MVA for given set of input variables
+   IMethod* method = 0;
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodName );
+   if (it == fMethodMap.end()) {
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << "M" << it->first << Endl;
+      fLogger << kFATAL << "<EvaluateMVA> unknown classifier in map: " << method << "; "
+              << "you looked for " << methodName<< " while the available methods are : " << Endl;
+   }
+   else method = it->second;
 
-   if (method->GetPreprocessingMethod() != Types::kNone) Data().RestoreEvent();   
+   MethodBase* kl = (MethodBase*)method;
+   if (mvaVal == -9999999) mvaVal = kl->GetMvaValue();
 
-   return mvaVal;
+   return kl->GetProba( mvaVal, ap_sig );
 }
 
 // ---------------------------------------------------------------------------------------

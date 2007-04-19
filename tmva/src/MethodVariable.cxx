@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodVariable.cxx,v 1.24 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id: MethodVariable.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -37,7 +37,6 @@
 #include <algorithm>
 
 ClassImp(TMVA::MethodVariable)
-   ;
  
 //_______________________________________________________________________
 TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, DataSet& theData, 
@@ -87,7 +86,7 @@ void TMVA::MethodVariable::Train( void )
 Double_t TMVA::MethodVariable::GetMvaValue()
 {
    // "MVA" value is variable value
-   return Data().Event().GetVal(0);
+   return GetEvent().GetVal(0);
 }
 
 //_______________________________________________________________________

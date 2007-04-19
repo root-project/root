@@ -1,10 +1,13 @@
 
 {
+   // --------- S t y l e ---------------------------
+   const Bool_t UsePaperStyle = 0;
+   // -----------------------------------------------
 
-   gSystem->Load("libMLP.so");
+   gSystem->Load("libMLP");
 
    // load TMVA shared library created in local release
-   TString libTMVA( "../lib/libTMVA.1.so" );
+   TString libTMVA( "../lib/libTMVA.1" );
    gSystem->Load( libTMVA );
  
    // welcome the user
@@ -22,11 +25,21 @@
    TMVAStyle->SetCanvasBorderMode(0);
    TMVAStyle->SetPadBorderMode(0);
    TMVAStyle->SetPadColor(0);
-   TMVAStyle->SetCanvasColor(0);
-   TMVAStyle->SetTitleFillColor(0);
    TMVAStyle->SetFillStyle(0);
+
    TMVAStyle->SetLegendBorderSize(0);
  
+   // title properties
+   // TMVAStyle->SetTitleW(.4);
+   // TMVAStyle->SetTitleH(.10);
+   // MVAStyle->SetTitleX(.5);
+   // TMVAStyle->SetTitleY(.9);
+   TMVAStyle->SetTitleFillColor(33 + 150);
+   if (!UsePaperStyle) {
+      TMVAStyle->SetFrameFillColor(19 + 150);
+      TMVAStyle->SetCanvasColor(21 + 150);
+   }
+
    // set the paper & margin sizes
    TMVAStyle->SetPaperSize(20,26);
    TMVAStyle->SetPadTopMargin(0.10);

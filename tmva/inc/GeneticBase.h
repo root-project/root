@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.h,v 1.15 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticBase.h,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -60,7 +60,7 @@ namespace TMVA {
    public:
     
       GeneticBase() {}
-      GeneticBase(Int_t populationSize, std::vector < TMVA::LowHigh_t * > ranges);
+      GeneticBase(Int_t populationSize, std::vector < TMVA::Interval * > ranges);
       virtual ~GeneticBase() {}
       void Init();
       virtual Bool_t   HasConverged(Int_t steps = 10, Double_t ratio = 0.1);
@@ -102,7 +102,6 @@ namespace TMVA {
       mutable MsgLogger fLogger; // message logger
 
       ClassDef(GeneticBase, 0)  // Base definition for genetic algorithm
-         ;
    };
    
 } // namespace TMVA

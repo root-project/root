@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.cxx,v 1.11 2006/11/17 00:21:35 stelzer Exp $   
+// @(#)root/tmva $Id: Types.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -26,6 +26,8 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
+#include <map>
+
 #include "TMVA/Types.h"
 
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
@@ -46,8 +48,21 @@ TMVA::Types::Types()
    fStr2type["TMlpANN"]         = Types::kTMlpANN;
    fStr2type["BDT"]             = Types::kBDT;
    fStr2type["RuleFit"]         = Types::kRuleFit;
+   fStr2type["RuleFitJF"]       = Types::kRuleFitJF;
    fStr2type["SVM"]             = Types::kSVM;
    fStr2type["MLP"]             = Types::kMLP;
    fStr2type["BayesClassifier"] = Types::kBayesClassifier;
    fStr2type["Committee"]       = Types::kCommittee;
+}
+
+
+TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const 
+{ 
+   // returns the method type (enum) for a given method (string)
+   std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
+   if (it == fStr2type.end()) {
+      fLogger << kFATAL << "unknown method in map: " << method << Endl;
+      return kVariable; // Inserted to get rid of GCC warning...
+   }
+   else return it->second;
 }

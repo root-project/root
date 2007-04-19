@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.cxx,v 1.32 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: MethodMLP.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -65,7 +65,6 @@ Bool_t MethodMLP_UseMinuit = kTRUE;
 using std::vector;
 
 ClassImp(TMVA::MethodMLP)
-   ;
 
 //______________________________________________________________________________
 TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theData, 
@@ -88,7 +87,6 @@ TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theDa
       Int_t numEvents = Data().GetNEvtTrain();
       if (fBatchSize < 1 || fBatchSize > numEvents) fBatchSize = numEvents;
    }
-
 }
 
 //______________________________________________________________________________
@@ -115,6 +113,9 @@ void TMVA::MethodMLP::InitMLP()
    SetMethodName( "MLP" );
    SetMethodType( TMVA::Types::kMLP );
    SetTestvarName();
+
+   // the minimum requirement to declare an event signal-like
+   SetSignalReferenceCut( 0.0 );
 }
 
 //_______________________________________________________________________
@@ -380,7 +381,7 @@ void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
    // should be good if set around 0.02 (a good value if all event weights are 1)
 
    ReadTrainingEvent(ievt);
-   Double_t eventWeight = Data().Event().GetWeight();
+   Double_t eventWeight = GetEvent().GetWeight();
    Double_t desired     = GetDesiredOutput();
    ForceNetworkInputs();
    ForceNetworkCalculations();
@@ -392,7 +393,7 @@ Double_t TMVA::MethodMLP::GetDesiredOutput()
 {
    // get the desired output of this event
    Double_t desired;
-   if (Data().Event().IsSignal()) desired = fActivation->GetMax(); // signal
+   if (GetEvent().IsSignal()) desired = fActivation->GetMax(); // signal
    else                           desired = fActivation->GetMin();
 
    return desired;
@@ -448,17 +449,17 @@ void TMVA::MethodMLP::GeneticMinimize()
    // define GA parameters
    fGA_preCalc        = 1;
    fGA_SC_steps       = 10;
-   fGA_SC_offsteps    = 5;
+   fGA_SC_rate    = 5;
    fGA_SC_factor      = 0.95;
    fGA_nsteps         = 30;
 
    // ranges
-   vector<LowHigh_t*> ranges;
+   vector<Interval*> ranges;
 
    Int_t numWeights = fSynapses->GetEntriesFast();
    for (Int_t ivar=0; ivar< numWeights; ivar++) {
-      ranges.push_back( new LowHigh_t( -3.0, 3.0 ) );
-      //ranges.push_back( new LowHigh_t( 0, GetXmax(ivar) - GetXmin(ivar) ));
+      ranges.push_back( new Interval( -3.0, 3.0 ) );
+      //ranges.push_back( new Interval( 0, GetXmax(ivar) - GetXmin(ivar) ));
    }
 
    GeneticANN *bestResultsStore = new GeneticANN( 0, ranges, this ); 
@@ -482,7 +483,7 @@ void TMVA::MethodMLP::GeneticMinimize()
       while (true) {
          ga.Init();
          ga.CalculateFitness();
-         ga.SpreadControl( fGA_SC_steps, fGA_SC_offsteps, fGA_SC_factor );
+         ga.SpreadControl( fGA_SC_steps, fGA_SC_rate, fGA_SC_factor );
          if (ga.HasConverged( Int_t(fGA_nsteps*0.67), 0.0001 )) break;
       }
       
@@ -513,7 +514,7 @@ void TMVA::MethodMLP::GeneticMinimize()
    while(true) {
       ga.Init();
       ga.CalculateFitness();
-      ga.SpreadControl( fGA_SC_steps, fGA_SC_offsteps, fGA_SC_factor );
+      ga.SpreadControl( fGA_SC_steps, fGA_SC_rate, fGA_SC_factor );
       if (ga.HasConverged( fGA_nsteps, 0.00001 )) break;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableInfo.cxx,v 1.14 2006/11/17 14:59:24 stelzer Exp $   
+// @(#)root/tmva $Id: VariableInfo.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -34,7 +34,8 @@
 
 //_______________________________________________________________________
 TMVA::VariableInfo::VariableInfo( const TString& expression, int varCounter, 
-                                  char varTypeOriginal, void* external ) 
+                                  char varTypeOriginal, void* external, 
+                                  Double_t min, Double_t max ) 
    : fExpression     ( expression ),
      fVarTypeOriginal( varTypeOriginal ),
      fExternalData   ( external ),
@@ -43,8 +44,14 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, int varCounter,
    // constructor
    fVarType = 'F'; 
 
-   fXminNorm[0] = fXminNorm[1] = fXminNorm[2] =  1e30;
-   fXmaxNorm[0] = fXmaxNorm[1] = fXmaxNorm[2] = -1e30;
+   if (min == max) {
+      fXminNorm =  1e30;
+      fXmaxNorm = -1e30;
+   } 
+   else {
+      fXminNorm =  min;
+      fXmaxNorm =  max;
+   }
    fInternalVarName = TMVA::Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
 }
 
@@ -54,10 +61,25 @@ TMVA::VariableInfo::VariableInfo()
      fVarType('\0'),
      fExternalData(0)
 {
-   // constructor
-   fXminNorm[0] = fXminNorm[1] = fXminNorm[2] =  1e30;
-   fXmaxNorm[0] = fXmaxNorm[1] = fXmaxNorm[2] = -1e30;
+   // default constructor
+   fXminNorm =  1e30;
+   fXmaxNorm = -1e30;
    fInternalVarName = TMVA::Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
+}
+
+TMVA::VariableInfo::VariableInfo( const VariableInfo& other )
+   : fExpression( other.fExpression ),
+     fInternalVarName( other.fInternalVarName ),
+     fVarType( other.fVarType ),
+     fVarTypeOriginal( other.fVarTypeOriginal ),
+     fXminNorm( other.fXminNorm ),
+     fXmaxNorm( other.fXmaxNorm ),
+     fXmeanNorm( other.fXmeanNorm ),
+     fXrmsNorm( other.fXrmsNorm ),
+     fExternalData( other.fExternalData ),
+     fVarCounter( other.fVarCounter )
+{
+   // copy constructor
 }
 
 //_______________________________________________________________________
@@ -68,18 +90,14 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const TMVA::VariableInfo& rhs)
       fExpression       = rhs.fExpression;
       fInternalVarName  = rhs.fInternalVarName;
       fVarType          = rhs.fVarType;
-      fXminNorm[0]      = rhs.fXminNorm[0];
-      fXminNorm[1]      = rhs.fXminNorm[1];
-      fXminNorm[2]      = rhs.fXminNorm[2];
-      fXmaxNorm[0]      = rhs.fXmaxNorm[0];
-      fXmaxNorm[1]      = rhs.fXmaxNorm[1];
-      fXmaxNorm[2]      = rhs.fXmaxNorm[2];
+      fXminNorm         = rhs.fXminNorm;
+      fXmaxNorm         = rhs.fXmaxNorm;
    }
    return *this;
 }
 
 //_______________________________________________________________________
-void TMVA::VariableInfo::WriteToStream(std::ostream& o, Types::EPreprocessingMethod corr) const
+void TMVA::VariableInfo::WriteToStream(std::ostream& o) const
 {
    // write VariableInfo to stream   
    UInt_t nc = TMath::Max( 30, TMath::Max( GetExpression().Length()+1, GetInternalVarName().Length()+1 ) );
@@ -87,11 +105,11 @@ void TMVA::VariableInfo::WriteToStream(std::ostream& o, Types::EPreprocessingMet
    o << setw(nc) << GetExpression();
    o << setw(nc) << GetInternalVarName();
    o << "    \'" << VarType() << "\'    ";
-   o << "[" << GetMin(corr) << "," << GetMax(corr) << "]" << std::endl;
+   o << "[" << GetMin() << "," << GetMax() << "]" << std::endl;
 }
 
 //_______________________________________________________________________
-void TMVA::VariableInfo::ReadFromStream(std::istream& istr, Types::EPreprocessingMethod corr)
+void TMVA::VariableInfo::ReadFromStream(std::istream& istr)
 {
    // write VariableInfo to stream
    TString exp, varname, vartype, minmax, minstr, maxstr;
@@ -109,6 +127,6 @@ void TMVA::VariableInfo::ReadFromStream(std::istream& istr, Types::EPreprocessin
    SetExpression(exp);
    SetInternalVarName(varname);
    SetVarType(vartype[1]);
-   SetMin(min,corr);
-   SetMax(max,corr);
+   SetMin(min);
+   SetMax(max);
 }

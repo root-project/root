@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline1.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: TSpline1.cxx,v 1.11 2007/01/15 16:10:11 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -33,11 +33,10 @@
 //_______________________________________________________________________
 
 #include "TMVA/TSpline1.h"
-#include "TMath.h"
 #include "Riostream.h"
+#include "TMath.h"
 
 ClassImp(TMVA::TSpline1)
-   ;
 
 //_______________________________________________________________________
 TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )

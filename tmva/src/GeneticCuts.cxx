@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.17 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,10 +38,9 @@
 #include "TMVA/MethodCuts.h"
 
 ClassImp(TMVA::GeneticCuts)
-   ;
 
 //_______________________________________________________________________
-TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges, 
+TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<Interval*> ranges, 
                                 TMVA::MethodCuts* methodCuts ) 
    : TMVA::GeneticBase( size, ranges ) 
 {

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodRuleFit.h,v 1.11 2006/11/23 17:43:38 rdm Exp $
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -24,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
- * $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $    
+ *                                                                                *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodRuleFit
@@ -91,6 +90,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -108,12 +110,15 @@ namespace TMVA {
       const Ranking* CreateRanking();
 
       // get training event in a std::vector
-      const std::vector<TMVA::Event*>         &GetTrainingEvents() const   { return fEventSample; }
-      const std::vector<TMVA::DecisionTree*>  &GetForest() const           { return fForest; }
-      Int_t                                    GetNTrees() const           { return fNTrees; }
-      Double_t                                 GetSampleFraction() const   { return fSampleFraction; }
-      const SeparationBase                    *GetSeparationBase() const   { return fSepType; }
-      Int_t                                    GetNCuts() const            { return fNCuts; }
+      const std::vector<TMVA::Event*>         &GetTrainingEvents() const    { return fEventSample; }
+      const std::vector<TMVA::DecisionTree*>  &GetForest() const            { return fForest; }
+      Int_t                                    GetNTrees() const            { return fNTrees; }
+      Double_t                                 GetSampleFraction() const    { return fSampleFraction; }
+      Double_t                                 GetSubSampleFraction() const { return fSubSampleFraction; }
+      const SeparationBase                    *GetSeparationBase() const    { return fSepType; }
+      Int_t                                    GetNCuts() const             { return fNCuts; }
+
+      TDirectory*      GetMethodBaseDir() const { return BaseDir(); }
 
    protected:
       // initialize rulefit
@@ -131,13 +136,18 @@ namespace TMVA {
       // make a forest of decision trees
       void MakeForest();
 
+      void MakeForestRnd();
+
       //
       std::vector< Event *>        fEventSample;   // the complete training sample
       std::vector<DecisionTree *>  fForest;        // the forest
       Int_t                        fNTrees;        // number of trees in forest
       Double_t                     fSampleFraction;// fraction of events used for traing each tree
+      Double_t                     fSubSampleFraction; // fraction of subsamples used for the fitting
       SeparationBase              *fSepType;       // the separation used in node splitting
-      Int_t                        fNodeMinEvents; // min number of events in node
+      Int_t                        fNodeMinEvents; // min number of events in node - NOT USED NOW!
+      Double_t                     fMinFracNEve;   // min fraction of number events
+      Double_t                     fMaxFracNEve;   // ditto max
       Int_t                        fNCuts;         // grid used in cut applied in node splitting
       RuleFit                      fRuleFit;       // RuleFit instance
 
@@ -165,17 +175,26 @@ namespace TMVA {
 
 
       // options
-      Double_t                     fGDTau;          // gradient directed path: threshhold fraction [0..1]
+      Double_t                     fGDTau;          // gradient directed path: def threshhold fraction [0..1]
+      Double_t                     fGDTauMin;       // gradient directed path: min threshhold fraction [0..1]
+      Double_t                     fGDTauMax;       // gradient directed path: max threshhold fraction [0..1]
+      UInt_t                       fGDNTau;         // gradient directed path: N(tau)
+      UInt_t                       fGDTauScan;      // gradient directed path: number of points to scan
       Double_t                     fGDPathStep;     // gradient directed path: step size in path
       Int_t                        fGDNPathSteps;   // gradient directed path: number of steps
-      Double_t                     fGDErrNsigma;    // gradient directed path: stop 
+      Double_t                     fGDErrScale;     // gradient directed path: stop 
       Double_t                     fMinimp;         // rule/linear: minimum importance
-      TString                      fSepTypeS;       // forest generation: separation type - see DecisionTree
+      //
+      TString                      fSepTypeS;        // forest generation: separation type - see DecisionTree
+      TString                      fPruneMethodS;    // forest generation: prune method - see DecisionTree
+      TMVA::DecisionTree::EPruneMethod fPruneMethod; // forest generation: method used for pruning - see DecisionTree 
+      Double_t                     fPruneStrength;   // forest generation: prune strength - see DecisionTree
+      //
       TString                      fModelTypeS;     // rule ensemble: which model (rule,linear or both)
-      Double_t                     fRuleMaxDist;    // rule max distance - see RuleEnsemble
+      Double_t                     fRuleMinDist;    // rule min distance - see RuleEnsemble
+      Double_t                     fLinQuantile;    // quantile cut to remove outliers - see RuleEnsemble
 
       ClassDef(MethodRuleFit,0)  // Friedman's RuleFit method
-
    };
 
 } // namespace TMVA

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.h,v 1.8 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: MsgLogger.h,v 1.4 2006/11/20 15:35:28 brun Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -30,7 +30,7 @@
 //                                                                      //
 // MsgLogger                                                            //
 //                                                                      //
-// ostreamstream derivative to redirect and format output               //
+// ostringstream derivative to redirect and format output               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -40,8 +40,9 @@
 #include <map>
 
 // ROOT include(s)
+#ifndef ROOT_TObject
 #include "TObject.h"
-#include "TString.h"
+#endif
 
 // Local include(s):
 
@@ -49,8 +50,8 @@ namespace TMVA {
 
    // define outside of class to facilite access
    enum EMsgType { 
-      kVERBOSE = 1, 
-      kDEBUG   = 2,
+      kDEBUG   = 1,
+      kVERBOSE = 2, 
       kINFO    = 3,
       kWARNING = 4,
       kERROR   = 5,
@@ -71,7 +72,7 @@ namespace TMVA {
       // Accessors
       void        SetSource ( const std::string& source ) { fStrSource = source; }
       EMsgType    GetMinType()                      const { return fMinType; }
-      void        SetMinType( EMsgType minType )           { fMinType = minType; }
+      void        SetMinType( EMsgType minType )          { fMinType = minType; }
       UInt_t      GetMaxSourceSize() const                { return (UInt_t)fMaxSourceSize; }
       std::string GetPrintedSource() const;
       std::string GetFormattedSource() const;
@@ -115,7 +116,6 @@ namespace TMVA {
       EMsgType                        fMinType;       // minimum type for output
 
       ClassDef(MsgLogger,0) // ostringstream derivative to redirect and format logging output  
-         ;
    }; // class MsgLogger
 
    inline MsgLogger& MsgLogger::operator<< ( MsgLogger& (*_f)( MsgLogger& ) ) 

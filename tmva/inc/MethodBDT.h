@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.h,v 1.36 2006/11/17 14:59:23 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodBDT.h,v 1.9 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -120,6 +120,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -211,7 +214,6 @@ namespace TMVA {
 
 
       ClassDef(MethodBDT,0)  // Analysis of Boosted Decision Trees 
-         ;
    };
 
 } // namespace TMVA

@@ -18,25 +18,37 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   file->cd("Likelihood");
+   // cehck if exists
+   TString dirs[] = { "Method_Likelihood", "Method_LikelihoodD", "Method_LikelihoodPCA", 
+                      "Method_LikelihoodNon", "Method_LikelihoodAda", "Method_LikelihoodKDE" }
+   TDirectory* dir = 0;
+   for (Int_t i=0; i<6; i++) {
+      dir = (TDirectory*)gDirectory->Get( dirs[i] );
+      if (dir) break;
+   }
+
+   if (dir==0) {
+      cout << "Could not locate directory 'Method_LikelihoodXYZ' in file " << fin << endl;
+      return;
+   }
+
+   dir->cd();  
    TDirectory *current_sourcedir = gDirectory;
    Int_t color=1;
    TIter next(current_sourcedir->GetListOfKeys());
    TKey *key;
-   TLegend *legS = new TLegend(0.14,0.7,0.87,0.87);
-   TLegend *legB = new TLegend(0.14,0.7,0.87,0.87);
 
    Bool_t newCanvas = kTRUE;
 
    const UInt_t maxCanvas = 200;
    TCanvas** c = new TCanvas*[maxCanvas];
-   Int_t width  = 500;
-   Int_t height = 500;
+   Int_t width  = 670;
+   Int_t height = 380;
 
    // avoid duplicated printing
    std::vector<std::string> hasBeenUsed;
   
-   UInt_t ic = -1;
+   UInt_t ic = -1;   
 
    while ((key = (TKey*)next())) {
       TClass *cl = gROOT->GetClass(key->GetClassName());
@@ -62,102 +74,106 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                TString n = hname;	  
                c[ic] = new TCanvas( cn, Form( "Likelihood reference for variable: %s", 
                                               (n.ReplaceAll("_sig","")).Data() ), 
-                                    ic*50+200, ic*20, width, height ); 
-               c[ic]->Divide(2,2);
+                                    ic*50+50, ic*20, width, height ); 
+               c[ic]->Divide(2,1);
                newCanvas = kFALSE;
             }      
 
             // signal
-            h->SetMaximum(h->GetMaximum()*1.1);
             color = 4; 
-            c[ic]->cd(1);
+            TPad * cPad = (TPad*)c[ic]->cd(1);
             TString plotname = hname;
-            legS->Clear();
-            legS->SetBorderSize(1);
+            h->Sumw2();
+            h->SetMaximum(h->GetMaximum()*1.3);
+            h->SetMinimum( 0 );
             h->SetMarkerColor(color);
             h->SetMarkerSize( 0.7 );
-            h->SetMarkerStyle( 20 );
+            h->SetMarkerStyle( 24 );
             h->SetLineWidth(1);
             h->SetLineColor(color);
             color++;
-            legS->AddEntry(h,"Input data (signal)","p");
             h->Draw("e1");
+            Double_t hSscale = 1.0/(h->GetSumOfWeights()*h->GetBinWidth(1));
+            cout << "compare: " << h->GetSumOfWeights() << " " << h->GetEntries() << endl;
+            TLegend *legS= new TLegend( cPad->GetLeftMargin(), 
+                                        1-cPad->GetTopMargin()-.14, 
+                                        cPad->GetLeftMargin()+.77, 
+                                        1-cPad->GetTopMargin() );
+            legS->SetBorderSize(1);
+            legS->AddEntry(h,"Input data (signal)","p");
 
             // background
             TString bname( hname );	
             b = (TH1F*)gDirectory->Get( bname.ReplaceAll("_sig","_bgd") );
-            c[ic]->cd(3);
+            cPad = (TPad*)c[ic]->cd(2);
             color = 2;
-            legB->Clear();
-            legB->SetBorderSize(1);
-            b->SetMaximum(b->GetMaximum()*1.1);
+            b->SetMaximum(b->GetMaximum()*1.3);
+            b->SetMinimum( 0 );
             b->SetLineWidth(1);
             b->SetLineColor(color);
             b->SetMarkerColor(color);
             b->SetMarkerSize( 0.7 );
-            b->SetMarkerStyle( 20 );
-            legB->AddEntry(b,"Input data (backgr.)","p");
+            b->SetMarkerStyle( 24 );
             b->Draw("e1");       
+            Double_t hBscale = 1.0/(b->GetSumOfWeights()*b->GetBinWidth(1));
+            TLegend *legB= new TLegend( cPad->GetLeftMargin(), 
+                                        1-cPad->GetTopMargin()-.14, 
+                                        cPad->GetLeftMargin()+.77, 
+                                        1-cPad->GetTopMargin() );
+            legB->SetBorderSize(1);
+            legB->AddEntry(b,"Input data (backgr.)","p");
 
             // register
             hasBeenUsed.push_back( bname.Data() );
 
-            // the smooth histograms
-            TString hsmooth = hname + "_smooth";
-            h = (TH1F*)gDirectory->Get( hsmooth );
-            if (h == 0) {
-               cout << "ERROR in likelihoodrefs.C: unknown histogram: " << hsmooth << endl;
-               return;
-            }
-            b = (TH1F*)gDirectory->Get( hsmooth.ReplaceAll("_sig","_bgd") );
-     
-            color = 1;
-            c[ic]->cd(1);
-            h->SetLineWidth(2);
-            h->SetLineColor(color);
-            h->SetMarkerColor(color);
-            color++;
-            legS->AddEntry(h,"Smoothed histogram (signal)","l");
-            h->Draw("histsame");
+            // the PDFs --------------
 
-            color = 1;
-            c[ic]->cd(3);
-            b->SetLineWidth(2);
-            b->Draw("histsame");
-            legB->AddEntry(b,"Smoothed histogram (backgr.)","l");
-
-            hasBeenUsed.push_back( hname.Data() );
-
-            // the splines
+            // check for splines
+            h = 0;
+            b = 0;
             for (int i=0; i<= 5; i++) {
-               TString hspline = hname + Form( "_smooth_hist_from_spline%i", i );
+               TString hspline = hname + Form( "_smooth_smoothed_hist_from_spline%i", i );
                h = (TH1F*)gDirectory->Get( hspline );
                if (h) {
                   b = (TH1F*)gDirectory->Get( hspline.ReplaceAll("_sig","_bgd") );
                   break;
                }
             }
+
+            // check for KDE
+            if (h == 0 && b == 0) {
+               TString hspline = hname + Form( "_KDE_smoothed_hist_from_KDE", i );
+               h = (TH1F*)gDirectory->Get( hspline );
+               if (h) {
+                  cout << "found KDE histogram: " << h->GetTitle() << endl;
+                  b = (TH1F*)gDirectory->Get( hspline.ReplaceAll("_sig","_bgd") );
+               }
+            }
+               
+            // found something ?
             if (h == 0 || b == 0) {
                cout << "--- likelihoodrefs.C: did not find spline for histogram: " << hname.Data() << endl;
             }
             else {
-
-               h->SetMaximum(h->GetMaximum()*1.5);
+               
+               Double_t pSscale = 1.0/(h->GetSumOfWeights()*h->GetBinWidth(1));
+               h->Scale( pSscale/hSscale );
                color = 4;
-               c[ic]->cd(2);
+               c[ic]->cd(1);
                h->SetLineWidth(2);
                h->SetLineColor(color);
-               legS->AddEntry(h,"Splined PDF (norm. signal)","l");
-               h->Draw("hist");
+               legS->AddEntry(h,"Estimated PDF (norm. signal)","l");
+               h->Draw("histsame");
                legS->Draw();
 	  
-               b->SetMaximum(b->GetMaximum()*1.5);
+               Double_t pBscale = 1.0/(b->GetSumOfWeights()*b->GetBinWidth(1));
+               b->Scale( pBscale/hBscale );
                color = 2;
-               c[ic]->cd(4);
+               c[ic]->cd(2);
                b->SetLineColor(color);
                b->SetLineWidth(2);
-               legB->AddEntry(b,"Splined PDF (norm. backgr.)","l");
-               b->Draw("hist");
+               legB->AddEntry(b,"Estimated PDF (norm. backgr.)","l");
+               b->Draw("histsame");
 
                // draw the legends
                legB->Draw();

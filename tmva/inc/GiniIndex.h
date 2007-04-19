@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GiniIndex.h,v 1.9 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: GiniIndex.h,v 1.9 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -84,7 +84,6 @@ namespace TMVA {
       
       
       ClassDef(GiniIndex,0) // Implementation of the GiniIndex as separation criterion
-         ;
    };  
 
 } // namespace TMVA

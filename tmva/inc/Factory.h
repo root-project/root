@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Factory.h,v 1.10 2007/01/23 10:21:24 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -49,6 +49,9 @@
 #include <map>
 #include "TCut.h"
 
+#ifndef ROOT_TMVA_Configurable
+#include "TMVA/Configurable.h"
+#endif
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
@@ -59,31 +62,25 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
-class TTreeFormula;
-class TDirectory;
 class TFile;
 class TTree;
 class TNtuple;
+class TTreeFormula;
+class TDirectory;
 
 namespace TMVA {
 
    class IMethod;
 
-   class Factory : public TObject {
+   class Factory : public Configurable {
 
    public:
 
       // no default  constructor
       Factory( TString theJobName, TFile* theTargetFile, TString theOption = "" );
 
-      // constructor used if no training, but only testing, application is desired
-      Factory( TFile*theTargetFile );
-
       // default destructor
       virtual ~Factory();
-
-      // the (colourfull) greeting
-      void Greeting( TString="" );
 
       // modified name (remove TMVA::)
       const char* GetName() const { return TString(TObject::GetName()).ReplaceAll( "TMVA::", "" ).Data(); }
@@ -112,19 +109,31 @@ namespace TMVA {
 
       // set signal tree
       void SetSignalTree(TTree* signal, Double_t weight=1.0);
+      void AddSignalTree(TTree* signal, Double_t weight=1.0);
 
       // set background tree
       void SetBackgroundTree(TTree* background, Double_t weight=1.0);
+      void AddBackgroundTree(TTree* background, Double_t weight=1.0);
 
       // set input variable
       void SetInputVariables( std::vector<TString>* theVariables );
-      void AddVariable( const TString& expression, char type='F' ) { Data().AddVariable(expression, type); }
+      void AddVariable( const TString& expression, char type='F',
+                        Double_t min = 0, Double_t max = 0 ) { 
+         Data().AddVariable( expression, min, max, type ); 
+      }
       void SetWeightExpression( const TString& variable)  { Data().SetWeightExpression(variable); }
 
 
       // prepare input tree for training
-      void PrepareTrainingAndTestTree(TCut cut = "",Int_t Ntrain = 0, Int_t Ntest = 0 , 
-                                      TString TreeName="");
+      void PrepareTrainingAndTestTree( TCut cut, 
+                                       Int_t Ntrain, Int_t Ntest = -1 );
+
+      void PrepareTrainingAndTestTree( TCut cut, 
+                                       Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
+                                       const TString& otherOpt="SplitMode=Random:!V" );
+
+      void PrepareTrainingAndTestTree( TCut cut, 
+                                       const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
 
       // book multiple MVAs 
       void BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *array);
@@ -136,9 +145,6 @@ namespace TMVA {
       Bool_t BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
       Bool_t BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString methodOption,
                          TMVA::Types::EMVA theCommittee, TString committeeOption = "" ); 
-
-      // booking the method with a given weight file --> testing or application only
-      //      Bool_t BookMethod( IMethod *theMethod );
 
       // training for all booked methods
       void TrainAllMethods( void );
@@ -166,11 +172,15 @@ namespace TMVA {
     
    private:
 
+      // the beautiful greeting message
+      void Greetings();
+
       // cd to local directory
       DataSet*         fDataSet;            // the dataset
       TFile*           fTargetFile;         // ROOT output file
       TString          fOptions;            // option string given by construction (presently only "V")
       Bool_t           fVerbose;            // verbose mode
+      Bool_t           fColor;              // color mode
 
       std::vector<TTreeFormula*> fInputVarFormulas; // local forulas of the same
       std::vector<IMethod*>      fMethods;          // all MVA methods
@@ -205,7 +215,6 @@ namespace TMVA {
       mutable MsgLogger fLogger;  // message logger
 
       ClassDef(Factory,0)  // The factory creates all MVA methods, and performs their training and testing
-         ;
    };
 
 } // namespace TMVA

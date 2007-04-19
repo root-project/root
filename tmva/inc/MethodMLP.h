@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.h,v 1.23 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id: MethodMLP.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -140,7 +140,7 @@ namespace TMVA {
       Int_t           fGA_nsteps;      // GA settings: number of steps
       Int_t           fGA_preCalc;     // GA settings: number of pre-calc steps
       Int_t           fGA_SC_steps;    // GA settings: SC_steps
-      Int_t           fGA_SC_offsteps; // GA settings: SC_offsteps
+      Int_t           fGA_SC_rate; // GA settings: SC_rate
       Double_t        fGA_SC_factor;   // GA settings: SC_factor
 
 #ifdef MethodMLP_UseMinuit__
@@ -155,7 +155,6 @@ namespace TMVA {
       static const Bool_t fgPRINT_BATCH         = kFALSE; // debug flags
 
       ClassDef(MethodMLP,0) // Multi-layer perceptron implemented specifically for TMVA
-         ;
    };
 
 } // namespace TMVA

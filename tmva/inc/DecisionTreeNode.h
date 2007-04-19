@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.11 2006/11/23 17:43:38 rdm Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.12 2007/01/16 09:37:03 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,9 +70,9 @@ namespace TMVA {
       virtual Bool_t GoesLeft ( const Event & ) const;
 
       // set index of variable used for discrimination at this node
-      inline void SetSelector( Short_t i) { fSelector = i; }
+      void SetSelector( Short_t i) { fSelector = i; }
       // return index of variable used for discrimination at this node 
-      inline Short_t GetSelector() const { return fSelector; }
+      Short_t GetSelector() const { return fSelector; }
 
 
       // set the cut value applied at this node 
@@ -90,11 +90,8 @@ namespace TMVA {
       // return node type: 1 signal node, -1 bkg leave, 0 intermediate Node 
       Int_t GetNodeType( void ) const { return fNodeType; }
 
-      //return  S/(S+B) at this node (from  training)
-      Double_t GetSoverSB( void ) const ;
-
-      //return  purity at this node (from  training) 
-      Double_t GetPurity ( void ) const ;
+      //return  S/(S+B) (purity) at this node (from  training)
+      Double_t GetPurity( void ) const ;
 
       // set the sum of the signal weights in the node
       void SetNSigEvents( Double_t s ) { fNSigEvents = s; }
@@ -105,6 +102,15 @@ namespace TMVA {
       // set the number of events that entered the node (during training)
       void SetNEvents( Double_t nev ){ fNEvents =nev ; }
 
+      // set the sum of the unweighted signal events in the node
+      void SetNSigEvents_unweighted( Double_t s ) { fNSigEvents_unweighted = s; }
+
+      // set the sum of the unweighted backgr events in the node
+      void SetNBkgEvents_unweighted( Double_t b ) { fNBkgEvents_unweighted = b; }
+
+      // set the number of unweighted events that entered the node (during training)
+      void SetNEvents_unweighted( Double_t nev ){ fNEvents_unweighted =nev ; }
+
       // increment the sum of the signal weights in the node
       void IncrementNSigEvents( Double_t s ) { fNSigEvents += s; }
 
@@ -114,6 +120,15 @@ namespace TMVA {
       // increment the number of events that entered the node (during training)
       void IncrementNEvents( Double_t nev ){ fNEvents +=nev ; }
 
+      // increment the sum of the signal weights in the node
+      void IncrementNSigEvents_unweighted( ) { fNSigEvents_unweighted += 1; }
+
+      // increment the sum of the backgr weights in the node
+      void IncrementNBkgEvents_unweighted( ) { fNBkgEvents_unweighted += 1; }
+
+      // increment the number of events that entered the node (during training)
+      void IncrementNEvents_unweighted( ){ fNEvents_unweighted +=1 ; }
+
       // return the sum of the signal weights in the node
       Double_t GetNSigEvents( void ) const  { return fNSigEvents; }
 
@@ -122,6 +137,16 @@ namespace TMVA {
 
       // return  the number of events that entered the node (during training)
       Double_t GetNEvents( void ) const  { return fNEvents; }
+
+      // return the sum of unweighted signal weights in the node
+      Double_t GetNSigEvents_unweighted( void ) const  { return fNSigEvents_unweighted; }
+
+      // return the sum of unweighted backgr weights in the node
+      Double_t GetNBkgEvents_unweighted( void ) const  { return fNBkgEvents_unweighted; }
+
+      // return  the number of unweighted events that entered the node (during training)
+      Double_t GetNEvents_unweighted( void ) const  { return fNEvents_unweighted; }
+
 
       // set the choosen index, measure of "purity" (separation between S and B) AT this node
       void SetSeparationIndex( Double_t sep ){ fSeparationIndex =sep ; }
@@ -152,6 +177,8 @@ namespace TMVA {
  
    private:
   
+      Bool_t ReadDataRecord( istream& is );
+
       Double_t fCutValue;        // cut value appplied on this node to discriminate bkg against sig
       Bool_t   fCutType;         // true: if event variable > cutValue ==> signal , false otherwise
       Short_t  fSelector;        // index of variable used in node selection (decision tree) 
@@ -159,16 +186,22 @@ namespace TMVA {
       Double_t fNSigEvents;      // sum of weights of signal event in the node
       Double_t fNBkgEvents;      // sum of weights of backgr event in the node
       Double_t fNEvents;         // number of events in that entered the node (during training)
+
+      Double_t fNSigEvents_unweighted;      // sum of signal event in the node
+      Double_t fNBkgEvents_unweighted;      // sum of backgr event in the node
+      Double_t fNEvents_unweighted;         // number of events in that entered the node (during training)
+
       Double_t fSeparationIndex; // measure of "purity" (separation between S and B) AT this node
       Double_t fSeparationGain;  // measure of "purity", separation, or information gained BY this nodes selection
       Int_t    fNodeType;        // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal 
 
       ULong_t  fSequence;        // bit coded left right sequence to reach the node
   
-      ClassDef(DecisionTreeNode,0) //Node for the Decision Tree 
-         
-   };
+      static MsgLogger* fLogger;    // static because there is a huge number of nodes...
 
+      ClassDef(DecisionTreeNode,0) //Node for the Decision Tree 
+
+   };
 } // namespace TMVA
 
 #endif 

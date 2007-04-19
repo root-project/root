@@ -5,8 +5,11 @@
 
 // input: - No. of tree
 //        - the weight file from which the tree is read
-void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt") {
- draw_tree(itree,fname);
+void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt", Bool_t useTMVAStyle = kTRUE) {
+   // set style and remove existing canvas'
+   TMVAGlob::Initialize( useTMVAStyle );
+ 
+   draw_tree(itree,fname);
 }
 
 
@@ -24,7 +27,7 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
 
    char buffer[100];
    sprintf (buffer, "Decision Tree No.: %d",itree);
-   TCanvas *c1=new TCanvas("c1",buffer,0,0,1000,600);
+   TCanvas *c1=new TCanvas("c1",buffer,200,0,1000,600);
    c1->Draw();
 
    draw_node( (TMVA::DecisionTreeNode*)d->GetRoot(), 0.5, 1.-0.5*ystep, 0.25, ystep ,vars);
@@ -70,12 +73,11 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
    backgroundleaf->AddText("Background Leaf Nodes");
    backgroundleaf->Draw();
 
-
-
+   c1->Update();
+   TString fname = Form("plots/BDT_%i", itree );
+   TMVAGlob::imgconv( c1, fname );   
 }   
-   
-
-   
+      
 //_______________________________________________________________________
 void draw_node(  TMVA::DecisionTreeNode *n, 
                  Double_t x, Double_t y, 
@@ -109,11 +111,15 @@ void draw_node(  TMVA::DecisionTreeNode *n,
    char buffer[25];
    sprintf(buffer,"N=%d",n->GetNEvents());
    t->AddText(buffer);
-   sprintf(buffer,"S/(S+B)=%4.3f",n->GetSoverSB());
+   sprintf(buffer,"S/(S+B)=%4.3f",n->GetPurity());
    t->AddText(buffer);
 
    if (n->GetNodeType() == 0){
-      t->AddText(TString(vars[n->GetSelector()]+">"+=::Form("%5.3g",n->GetCutValue())));
+      if (n->GetCutType()){
+         t->AddText(TString(vars[n->GetSelector()]+">"+=::Form("%5.3g",n->GetCutValue())));
+      }else{
+         t->AddText(TString(vars[n->GetSelector()]+"<"+=::Form("%5.3g",n->GetCutValue())));
+      }
    }
 
 //    sprintf(buffer,"seq=%d",n->GetSequence());
@@ -135,14 +141,13 @@ void draw_node(  TMVA::DecisionTreeNode *n,
    return;
 }
 
-
 TMVA::DecisionTree* read_tree(TString * &vars, Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt")
 {
    cout << "reading Tree " << itree << " from weight file: " << fname << endl;
    ifstream fin( fname );
    if (!fin.good( )) { // file not found --> Error
-      cout << "Error opening " << fname << endl;
-      exit(1);
+      cout << "Weight file: " << fname << " does not exist" << endl;
+      return;
    }
    
    Int_t   idummy;
@@ -166,7 +171,7 @@ TMVA::DecisionTree* read_tree(TString * &vars, Int_t itree=1, TString fname= "we
 
    char buffer[20];
    char line[256];
-   sprintf(buffer,"T %d",itree);
+   sprintf(buffer,"Tree %d",itree);
 
    while (!dummy.Contains(buffer)) {
       fin.getline(line,256);

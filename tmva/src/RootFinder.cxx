@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RootFinder.cxx,v 1.12 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: RootFinder.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -32,7 +32,6 @@
 #include "TMath.h"
 
 ClassImp(TMVA::RootFinder)
-   ;
 
 //_______________________________________________________________________
 TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
@@ -44,7 +43,7 @@ TMVA::RootFinder::RootFinder( Double_t (*rootVal)( Double_t ),
      fRootMax( rootMax ),
      fMaxIter( maxIterations ),
      fAbsTol ( absTolerance  ),
-     fLogger ( this )
+     fLogger ( "RootFinder" )
 {
    // constructor
    fGetRootVal = rootVal;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SeparationBase.cxx,v 1.12 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SeparationBase.cxx,v 1.9 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -45,7 +45,6 @@
 #include "TMVA/SeparationBase.h"
 
 ClassImp(TMVA::SeparationBase)
-   ;
 
 //_______________________________________________________________________
 Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 

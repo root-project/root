@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.20 2006/11/17 14:59:24 stelzer Exp $    
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.24 2007/04/03 22:37:21 andreas.hoecker Exp $    
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -76,6 +76,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -95,7 +98,7 @@ namespace TMVA {
       virtual void ProcessOptions();
 
       // returns chi2 estimator for given type (signal or background)
-      Double_t GetChi2( Event *e, Types::ESBType ) const;
+      Double_t GetChi2( Event* e, Types::ESBType ) const;
       Double_t GetChi2( Types::ESBType ) const;
 
       // compute correlation matrices
@@ -113,7 +116,6 @@ namespace TMVA {
       void InitHMatrix( void ); 
 
       ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
-         ;
    }; 
 
 } // namespace TMVA

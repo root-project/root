@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.h,v 1.37 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id: MethodCuts.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -82,6 +82,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -98,11 +101,12 @@ namespace TMVA {
       virtual void Test( TTree* theTestTree );
      
       // also overwrite:
-      virtual Double_t GetSignificance( void )   { return 0; }
-      virtual Double_t GetSeparation  ( void )   { return 0; }
-      virtual Double_t GetmuTransform ( TTree *) { return 0; }
-      virtual Double_t GetEfficiency  ( TString, TTree *);
-      virtual Double_t GetTrainingEfficiency  ( TString );
+      virtual Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
+      virtual Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB); return 0; }
+      virtual Double_t GetSignificance( void )       const { return 0; }
+      virtual Double_t GetmuTransform ( TTree *)           { return 0; }
+      virtual Double_t GetEfficiency  ( TString, TTree *, Double_t& );
+      virtual Double_t GetTrainingEfficiency( TString );
 
       // accessors for Minuit
       Double_t ComputeEstimator( const std::vector<Double_t> & );
@@ -161,11 +165,12 @@ namespace TMVA {
 
       // GA (genetic algorithm) options
       Int_t              fGA_nsteps;          // GA settings: number of steps
-      Int_t              fGA_cycles;          // GA settings: number of pre-calc steps
+      Int_t              fGA_cycles;          // GA settings: number of calculations
       Int_t              fGA_popSize;         // GA settings: population size
       Int_t              fGA_SC_steps;        // GA settings: SC_steps
-      Int_t              fGA_SC_offsteps;     // GA settings: SC_offsteps
+      Int_t              fGA_SC_rate;     // GA settings: SC_rate
       Double_t           fGA_SC_factor;       // GA settings: SC_factor
+      Double_t           fGA_convCrit;        // GA settings: GA_convCrit
  
       // SA (simulated annealing) options
       Int_t              fSA_MaxCalls;                // max number of FCN calls
@@ -184,8 +189,8 @@ namespace TMVA {
       Double_t*          fTmpCutMin;          // temporary minimum requirement
       Double_t*          fTmpCutMax;          // temporary maximum requirement
 
-      TString            fAllVars;
-      TString            fAllVarsI[10];
+      //TString            fAllVars;
+      TString*           fAllVarsI;
 
 
       // relevant for all methods
@@ -217,10 +222,11 @@ namespace TMVA {
 
       // the definition of fit parameters can be different from the actual 
       // cut requirements; these functions provide the matching
-      void     MatchParsToCuts( const std::vector<Double_t> &, Double_t*, Double_t* );
+      void     MatchParsToCuts( const std::vector<Double_t>&, Double_t*, Double_t* );
       void     MatchParsToCuts( Double_t*, Double_t*, Double_t* );
 
-      void     MatchCutsToPars( Double_t*, Double_t*, Double_t* );
+      void     MatchCutsToPars( std::vector<Double_t>&, Double_t*, Double_t* );
+      void     MatchCutsToPars( std::vector<Double_t>&, Double_t**, Double_t**, Int_t ibin );
 
       // creates PDFs in case these are used to compute efficiencies 
       // (corresponds to: EffMethod == kUsePDFs)
@@ -240,7 +246,6 @@ namespace TMVA {
       void     InitCuts( void );
 
       ClassDef(MethodCuts,0)  // Multivariate optimisation of signal efficiency
-         ;
    };
 
 } // namespace TMVA

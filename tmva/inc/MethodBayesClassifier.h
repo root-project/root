@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.3 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.4 2006/11/20 15:35:28 brun Exp $    
 // Author: Abhishek Narain
 
 /**********************************************************************************
@@ -61,6 +61,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -82,7 +85,6 @@ namespace TMVA {
       virtual void ProcessOptions();
 
       ClassDef(MethodBayesClassifier,0)  // Friedman's BayesClassifier method 
-         ;
    };
 
 } // namespace TMVA

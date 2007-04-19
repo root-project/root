@@ -24,17 +24,20 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
                                 Form("Correlations between MVA input variables (%s)", (ic==0?"signal":"background")), 
                                 ic*(width+5)+200, 0, width, width ); 
       Float_t newMargin1 = 0.13;
-      Float_t newMargin2 = 0.25;
+      Float_t newMargin2 = 0.15;
+      if (TMVAGlob::UsePaperStyle) newMargin2 = 0.13;
 
-      gPad->SetGrid();
-      gPad->SetTicks();
-      gPad->SetLeftMargin  ( newMargin2 );
-      gPad->SetBottomMargin( newMargin2 );
-      gPad->SetRightMargin ( newMargin1 );
-      gPad->SetTopMargin   ( newMargin1 );
+      c->SetGrid();
+      c->SetTicks();
+      c->SetLeftMargin  ( newMargin2 );
+      c->SetBottomMargin( newMargin2 );
+      c->SetRightMargin ( newMargin1 );
+      c->SetTopMargin   ( newMargin1 );
       gStyle->SetPalette( 1, 0 );
 
       TH2* h2 = file->Get( hName[ic] );
+
+      gStyle->SetPaintTextFormat( "3g" );
 
       h2->SetMarkerSize( 1.5 );
       h2->SetMarkerColor( 0 );
@@ -60,7 +63,7 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
       t->SetTextSize( 0.026 );
       t->AppendPad();    
 
-      TMVAGlob::plot_logo( );
+      // TMVAGlob::plot_logo( );
       c->Update();
 
       TString fname = "plots/";

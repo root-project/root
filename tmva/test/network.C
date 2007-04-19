@@ -13,7 +13,7 @@ void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TDirectory * dir = (TDirectory*)gDirectory->Get("MLP");
+   TDirectory * dir = (TDirectory*)gDirectory->Get("Method_MLP");
    if (dir==0) {
       cout << "Could not locate directory MLP in file " << fin << endl;
       return;
@@ -28,8 +28,6 @@ void draw_network(TDirectory* d)
 
    // create canvas
    TCanvas* c = new TCanvas( "c", "Neural Network Layout", 100, 0, 1000, 650 );
-   c->SetBorderMode(0);
-   c->SetFillColor(10);
 
    TIter next = d->GetListOfKeys();
    TKey *key;
@@ -58,7 +56,7 @@ void draw_network(TDirectory* d)
 
       TH2F* h = (TH2F*)key->ReadObj();    
       if (TString(h->GetName()).Contains( hName )){
- 	 
+ 
          Int_t n1 = h->GetNbinsX();
          Int_t n2 = h->GetNbinsY();
          for (Int_t i = 0; i < n1; i++) {
@@ -113,6 +111,8 @@ void draw_layer_labels(Int_t nLayers)
       Double_t y2 = margY + height;
 
       TPaveLabel *p = new TPaveLabel(x1, y1, x2, y2, label+"", "br");
+      p->SetFillColor(gStyle->GetTitleFillColor());
+      p->SetFillStyle(1001);
       p->Draw();
    }
 }
@@ -138,6 +138,8 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
       Double_t y2 = cy[i] + effHeight;
 
       TPaveLabel *p = new TPaveLabel(x1, y1, x2, y2, input+"", "br");
+      p->SetFillColor(gStyle->GetTitleFillColor());
+      p->SetFillStyle(1001);
       p->Draw();
       if (i == nInputs-1) p->SetTextColor(9);
    }
@@ -246,6 +248,8 @@ void draw_layer(TCanvas* c, TH2F* h, Int_t iHist,
          TEllipse *ellipse 
             = new TEllipse(cx1, cy1[nNeurons1-i-1], 
                            effRad1*ratio, effRad1, 0, 360, 0);
+         ellipse->SetFillColor(19+150);
+         ellipse->SetFillStyle(1001);
          ellipse->Draw();
 
          if (i == 0) ellipse->SetLineColor(9);
@@ -270,6 +274,8 @@ void draw_layer(TCanvas* c, TH2F* h, Int_t iHist,
 
       TEllipse *ellipse = 
          new TEllipse(cx2, cy2[nNeurons2-i-1], effRad2*ratio, effRad2, 0, 360, 0);
+      ellipse->SetFillColor(19+150);
+      ellipse->SetFillStyle(1001);
       ellipse->Draw();
 
       if (i == 0 && nNeurons2 > 1) ellipse->SetLineColor(9);
@@ -302,7 +308,7 @@ void draw_synapse(Double_t cx1, Double_t cy1, Double_t cx2, Double_t cy2,
 
    if (weightNormed == 0) return;
 
-   gStyle->SetPalette(100, NULL);
+   //   gStyle->SetPalette(100, NULL);
 
    TArrow *arrow = new TArrow(cx1+rad1, cy1, cx2-rad2, cy2, TIP_SIZE, ">");
    arrow->SetFillColor(1);

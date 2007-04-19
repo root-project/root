@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.h,v 1.36 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id: DecisionTree.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -79,6 +79,7 @@ namespace TMVA {
 
       virtual ~DecisionTree( void );
 
+      virtual Node * CreateNode() { return new DecisionTreeNode(); }
   
       // building of a tree by recursivly splitting the nodes 
       Int_t BuildTree( vector<TMVA::Event*> & eventSample, 
@@ -107,8 +108,8 @@ namespace TMVA {
       void ClearTree();
 
       // set pruning method
-      enum EPruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kMCC };
-      void SetPruneMethod( EPruneMethod m = kExpectedErrorPruning ) { fPruneMethod = m; }
+      enum EPruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kMCC, kNoPruning };
+      void SetPruneMethod( EPruneMethod m = kCostComplexityPruning ) { fPruneMethod = m; }
 
       // recursive pruning of the tree
       void PruneTree();
@@ -128,13 +129,13 @@ namespace TMVA {
       // retrieve node from the tree. Its position (up to a maximal tree depth of 64)
       // is coded as a sequence of left-right moves starting from the root, coded as
       // 0-1 bit patterns stored in the "long-integer" together with the depth
-      DecisionTreeNode* GetNode (ULong_t sequence, UInt_t depth);
+      DecisionTreeNode* GetNode( ULong_t sequence, UInt_t depth );
 
-      TH2D* DrawTree(TString hname);
+      TH2D* DrawTree( TString hname );
       void DrawNode( TH2D* h,  DecisionTreeNode *n, 
                      Double_t y, Double_t x, Double_t scale);
 
-      UInt_t GetDepth(){return fDepth;}
+      UInt_t GetDepth() { return fDepth; }
 
       multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
       multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
@@ -178,38 +179,37 @@ namespace TMVA {
                         Double_t xmin,
                         Double_t xmax,
                         Int_t num_gridpoints);
-      
-      
+            
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
       
       //calculates the purity S/(S+B) of a given event sample
       Double_t SamplePurity(vector<Event*> eventSample);
       
-      Int_t     fNvars; // number of variables used to separate S and B
-      Int_t     fNCuts; // number of grid point in variable cut scans
-      SeparationBase *fSepType; // the separation crition
+      Int_t     fNvars;          // number of variables used to separate S and B
+      Int_t     fNCuts;          // number of grid point in variable cut scans
+      SeparationBase *fSepType;  // the separation crition
       
-      Double_t  fMinSize;  // min number of events in node
-      Double_t  fMinSepGain;// min number of separation gain to perform node splitting
+      Double_t  fMinSize;        // min number of events in node
+      Double_t  fMinSepGain;     // min number of separation gain to perform node splitting
       
-      Bool_t    fUseSearchTree; //cut scan done with binary trees or simple event loop.
-      Double_t  fPruneStrength; //a parameter to set the "amount" of pruning..needs to be adjusted 
+      Bool_t    fUseSearchTree;  // cut scan done with binary trees or simple event loop.
+      Double_t  fPruneStrength;  // a parameter to set the "amount" of pruning..needs to be adjusted 
       
       EPruneMethod fPruneMethod; // method used for prunig 
 
       vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       
-      UInt_t     fDepth;  // maximal depth in tree reached
+      UInt_t     fDepth;         // maximal depth in tree reached
 
       SeparationBase *fQualityIndex;  // separation/quality criterio for CC-pruning
-      multimap<Double_t,TMVA::DecisionTreeNode* > fQualityGainMap; // the quality-gain of pre-leaf nodes
-      multimap<Double_t,TMVA::DecisionTreeNode* > fQualityMap; // the quality of leaf nodes
-      multimap<Double_t,TMVA::DecisionTreeNode* > fLinkStrengthMap;  // prunestrenghts at which the subtree below the node would be pruned 
+      multimap<Double_t,TMVA::DecisionTreeNode*> fQualityGainMap;  // the quality-gain of pre-leaf nodes
+      multimap<Double_t,TMVA::DecisionTreeNode*> fQualityMap;      // the quality of leaf nodes
+      multimap<Double_t,TMVA::DecisionTreeNode*> fLinkStrengthMap; // prunestrenghts at which the subtree below the node would be pruned 
 
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
-      ClassDef(DecisionTree,0) //Implementation of a Decision Tree
-         ;
+
+      ClassDef(DecisionTree,0)                  // Implementation of a Decision Tree
    };
 
 } // namespace TMVA

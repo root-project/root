@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.8 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.9 2006/11/23 17:43:39 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -47,6 +47,7 @@
 #include "Riostream.h"
 
 #include "TMVA/Event.h"
+#include "TMVA/RuleCut.h"
 #include "TMVA/Rule.h"
 #include "TMVA/RuleFit.h"
 #include "TMVA/RuleEnsemble.h"
@@ -54,8 +55,7 @@
 
 //_______________________________________________________________________
 TMVA::Rule::Rule( RuleEnsemble *re,
-                  const std::vector< const Node * >& nodes,
-                  const std::vector< Int_t >       & cutdirs )
+                  const std::vector< const Node * >& nodes )
    : fNorm          ( 1.0 )
    , fSupport       ( 0.0 )
    , fSigma         ( 0.0 )
@@ -63,7 +63,7 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    , fImportance    ( 0.0 )
    , fImportanceRef ( 1.0 )
    , fRuleEnsemble  ( re )
-   , fLogger( "Rule" )
+   , fLogger( "RuleFit" )
 {
    // the main constructor for a Rule
 
@@ -72,144 +72,45 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    //   nodes  - a vector of TMVA::Node; from these all possible rules will be created
    //
    //
-   SetNodes( nodes );
-   SetCutDirs( cutdirs );
+   
+   fCut     = new RuleCut( nodes );
+   fSSB     = fCut->GetPurity();
+   fSSBNeve = fCut->GetCutNeve();
 }
 
 //_______________________________________________________________________
-void TMVA::Rule::SetNodes( const std::vector< const TMVA::Node * >& nodes )
-{
-   // Sets the node list to be used for the rule generation.
-   // Checks that the list is OK:
-   // * it must contain the root node
-   // * it must have atleast 2 nodes
-   //
-   fNodes.clear();
-   //
-   // Return if node list is empty
-   //
-   if (nodes.size()<2) return;
-   //
-   // Set the nodes used for the rule
-   //
-   const TMVA::Node *firstNode = *(nodes.begin());
-   //
-   // First node must be root. Just a consistency check...
-   //
-   if (firstNode==0) fLogger << kFATAL << "<SetNodes> First node is NULL!" << Endl;
-   else {
-      if (firstNode->GetParent()!=0) {
-         fLogger << kFATAL << "<SetNodes> invalid Rule - first node in list is not root;"
-                 << " rule created but will not have any associated nodes." << Endl;
-         return;
-      }
-   }
-   fNodes   = nodes;
-   fSSB     = dynamic_cast<const TMVA::DecisionTreeNode*>(fNodes.back())->GetSoverSB();
-   fSSBNeve = dynamic_cast<const TMVA::DecisionTreeNode*>(fNodes.back())->GetNEvents();
-}
-
-//_______________________________________________________________________
-Int_t TMVA::Rule::GetNumVarsUsed() const
-{
-   //
-   // Get the number of different variables used for this Rule
-   //
-   std::vector<Int_t> counter;
-   Int_t maxind=0;
-   Int_t sel;
-   UInt_t nnodes = fNodes.size()-1;
-   //
-   // There exists probably a more elegant way using stl...
-   //
-   // Establish max variable index
-   //
-   for ( UInt_t i=0; i<nnodes; i++) {
-      sel = dynamic_cast<const TMVA::DecisionTreeNode*>(fNodes[i])->GetSelector();
-      if (sel>maxind) maxind=sel;
-   }
-   counter.resize(maxind+1);
-   //
-   // Count each index
-   //
-   for ( UInt_t i=0; i<nnodes; i++) {
-      sel = dynamic_cast<const TMVA::DecisionTreeNode*>(fNodes[i])->GetSelector();
-      counter[sel]++;
-   }
-   //
-   // Count the number of occuring variables
-   //
-   Int_t nvars=0;
-   for ( Int_t i=0; i<maxind+1; i++) {
-      if (counter[i]>0) nvars++;
-   }
-   return nvars;
-}
-
-//_______________________________________________________________________
-Bool_t TMVA::Rule::ContainsVariable(Int_t iv) const
+Bool_t TMVA::Rule::ContainsVariable(UInt_t iv) const
 {
    // check if variable in node
    Bool_t found    = kFALSE;
    Bool_t doneLoop = kFALSE;
-   UInt_t nnodes = fNodes.size();
-   UInt_t i=0;
+   UInt_t ncuts    = fCut->GetNcuts();
+   UInt_t i        = 0;
+   //
    while (!doneLoop) {
-      if (dynamic_cast<const TMVA::DecisionTreeNode*>(fNodes[i])->GetSelector() == iv){ 
-         found=kTRUE;
-      }
+      found = (fCut->GetSelector(i) == iv);
       i++;
-      doneLoop = (found || (i==nnodes));
+      doneLoop = (found || (i==ncuts));
    }
    return found;
 }
 
 //_______________________________________________________________________
-Int_t TMVA::Rule::EqualSingleNode( const Rule& other ) const
-{
-   // REMOVE
-   // Returns:
-   //   +1 : equal, one node, cutvalue(this) > cutvalue(other)
-   //   -1 : equal, one node, cutvalue(this) < cutvalue(other)
-   //    0 : they do not match
-   //
-   if (fNodes.size()!=2) return 0;
-   Bool_t almostEqual = Equal( other, kFALSE, 0 );
-   if (!almostEqual) return 0;
-   //
-   const TMVA::DecisionTreeNode *otherNode = static_cast< const TMVA::DecisionTreeNode *>(other.GetNode(0));
-   const TMVA::DecisionTreeNode *node      = static_cast< const TMVA::DecisionTreeNode *>(fNodes[0]);
-   return ( node->GetCutValue() > otherNode->GetCutValue() ? +1:-1 );
-}
-
-
-//_______________________________________________________________________
-Int_t TMVA::Rule::Equivalent( const Rule& other ) const
-{
-   // not used
-   if (&other); // dummy
-
-   fLogger << kFATAL << "Should not yet be called : Rule::Equivalent()" << Endl;
-
-   return 0;
-}
-
-//_______________________________________________________________________
-Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t maxdist ) const
+Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t mindist ) const
 {
    //
    // Compare two rules.
    // useCutValue: true -> calculate a distance between the two rules based on the cut values
    //                      if the rule cuts are not equal, the distance is < 0 (-1.0)
-   //                      return true if d<maxdist
-   //              false-> ignore maxdist, return true if rules are equal, ignoring cut values
-   // maxdist:     max distance allowed; if < 0 => set useCutValue=false;
+   //                      return true if d<mindist
+   //              false-> ignore mindist, return true if rules are equal, ignoring cut values
+   // mindist:     min distance allowed between rules; if < 0 => set useCutValue=false;
    //
    Bool_t rval=kFALSE;
-   if (maxdist<0) useCutValue=kFALSE;
+   if (mindist<0) useCutValue=kFALSE;
    Double_t d = RuleDist( other, useCutValue );
-   // cut value used - return true if 0<=d<maxdist
-   if (useCutValue) rval = ( (!(d<0)) && (d<maxdist) );
+   // cut value used - return true if 0<=d<mindist
+   if (useCutValue) rval = ( (!(d<0)) && (d<mindist) );
    else rval = (!(d<0));
    // cut value not used, return true if <> -1
    return rval;
@@ -223,148 +124,58 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
    //   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
    // If not useCutValue, the distance is exactly zero if they are equal
    //
-
-   // first get effective rules
-   std::vector<Int_t> ruleThis;
-   std::vector<Int_t> ruleOther;
-   GetEffectiveRule(ruleThis);
-   other.GetEffectiveRule(ruleOther);
-   if (ruleThis.size()!=ruleOther.size()) return -1.0; // check number of nodes
+   if (fCut->GetNcuts()!=other.GetRuleCut()->GetNcuts()) return -1.0; // check number of cuts
    //
-   const UInt_t nnodes = ruleThis.size();
-   const Double_t norm = 1.0; // TODO: the norm should be just unity - makes sense!?
-                              // 1.0/Double_t(nnodes-1); // just the number of equal nodes
-   UInt_t in = 0;
-   Bool_t equal = true;
-   const TMVA::DecisionTreeNode *node, *otherNode;
-   Double_t a,b,s,rms;
-   Double_t sumdc2=0;
-   Double_t sumw=0;
-   Int_t indThis, indOther;
+   const UInt_t ncuts  = fCut->GetNcuts();
+   //
+   Int_t    sel;         // cut variable
+   Double_t rms;         // rms of cut variable
+   Double_t smin;        // distance between the lower range
+   Double_t smax;        // distance between the upper range
+   Double_t vminA,vmaxA; // min,max range of cut A (cut from this Rule)
+   Double_t vminB,vmaxB; // idem from other Rule
+   //
    // compare nodes
    // A 'distance' is assigned if the two rules has exactly the same set of cuts but with
    // different cut values.
    // The distance is given in number of sigmas
    //
-   while ((equal) && (in<nnodes-1)) {
-      indThis  = ruleThis[in];
-      indOther = ruleOther[in];
-      if (fCutDirs[indThis]!=other.GetCutDir(indOther)) equal=false; // check cut type
+   UInt_t   in     = 0;    // cut index
+   Double_t sumdc2 = 0;    // sum of 'distances'
+   Bool_t   equal  = true; // flag if cut are equal
+   //
+   const RuleCut *otherCut = other.GetRuleCut();
+   while ((equal) && (in<ncuts)) {
+      // check equality in cut topology
+      equal = ( (fCut->GetSelector(in) == (otherCut->GetSelector(in))) &&
+                (fCut->GetCutDoMin(in) == (otherCut->GetCutDoMin(in))) &&
+                (fCut->GetCutDoMax(in) == (otherCut->GetCutDoMax(in))) );
+      // if equal topology, check cut values
       if (equal) {
-         otherNode = static_cast< const TMVA::DecisionTreeNode *>(other.GetNode(indOther));
-         node = static_cast< const TMVA::DecisionTreeNode *>(fNodes[indThis]);
-         if (node->GetSelector()!= otherNode->GetSelector() ) equal=false; // check all variable names
-         if (equal && useCutValue) {
-            a = node->GetCutValue();
-            b = otherNode->GetCutValue();
+         if (useCutValue) {
+            sel   = fCut->GetSelector(in);
+            vminA = fCut->GetCutMin(in);
+            vmaxA = fCut->GetCutMax(in);
+            vminB = other.GetRuleCut()->GetCutMin(in);
+            vmaxB = other.GetRuleCut()->GetCutMax(in);
             // messy - but ok...
-            rms = fRuleEnsemble->GetRuleFit()->GetMethodRuleFit()->Data().GetRMS(node->GetSelector());
-            s = ( rms>0 ? (a-b)/rms : 0 );
-            sumdc2 += s*s;
-            sumw   += 1.0/(rms*rms); // TODO: probably not needed
+            rms = fRuleEnsemble->GetRuleFit()->GetMethodRuleFit()->GetRMS(sel);
+            smin=0;
+            smax=0;
+            if (fCut->GetCutDoMin(in))
+               smin = ( rms>0 ? (vminA-vminB)/rms : 0 );
+            if (fCut->GetCutDoMax(in))
+               smax = ( rms>0 ? (vmaxA-vmaxB)/rms : 0 );
+            sumdc2 += smin*smin + smax*smax;
+            //            sumw   += 1.0/(rms*rms); // TODO: probably not needed
          }
       }
       in++;
    }
    if (!useCutValue) sumdc2 = (equal ? 0.0:-1.0); // ignore cut values
-   else              sumdc2 = (equal ? sqrt(sumdc2)*norm : -1.0);
+   else              sumdc2 = (equal ? sqrt(sumdc2) : -1.0);
 
    return sumdc2;
-}
-
-//_______________________________________________________________________
-void TMVA::Rule::GetEffectiveRule( std::vector<Int_t>& nodeind ) const
-{
-   //
-   // Returns a vector of node indecis which correspond to the effective rule.
-   // E.g, the rule:
-   //  v1<0.1
-   //  v1<0.05
-   //  v4>0.12
-   //
-   // is effectively the same as:
-   //  v1<0.05
-   //  v4>0.12
-   //
-   nodeind.clear();
-   UInt_t nnodes = fNodes.size();
-   if (nnodes==2) { // just one cut, return all nodes
-      for (UInt_t i=0; i<nnodes; i++) {
-         nodeind.push_back(i);
-      }
-      return;
-   }
-   //
-   // Loop over all nodes - 1 (last node is not a cut)
-   //
-   Bool_t equal;
-   UInt_t in=0;
-   while (in<nnodes-1) {
-      equal = kFALSE;
-      while ((CmpNodeCut(in,in+1)!=0) && (in<nnodes-2)) {
-         in++;
-         equal = kTRUE;
-      }
-      nodeind.push_back(in);
-      in++;
-   }
-   nodeind.push_back(nnodes-1); // last should always be the end-node
-}
-
-//_______________________________________________________________________
-Int_t TMVA::Rule::CmpNodeCut( Int_t node1, Int_t node2 ) const
-{
-   // returns:
-   // -1 : nodes are equal, cutvalue1<cutvalue2
-   //  0 : nodes are not equal; different var or cutdir
-   // +1 : nodes are equal, cutvalue1>cutvalue2
-   //
-   Int_t nnodes = Int_t(fNodes.size());
-   // Check nodes
-   if ((node1<0) || (node2<0) || (node1>nnodes-2) || (node2>nnodes-2)) return 0;
-
-   // Check cut direction
-   if (fCutDirs[node1]!=fCutDirs[node2]) return 0;
-
-   // Check cut variable
-   const TMVA::DecisionTreeNode *dnode1 = static_cast< const TMVA::DecisionTreeNode *>(fNodes[node1]);
-   const TMVA::DecisionTreeNode *dnode2 = static_cast< const TMVA::DecisionTreeNode *>(fNodes[node2]);
-   if (dnode1->GetSelector()!=dnode2->GetSelector()) return 0;
-
-   // Check cut value
-   return (dnode1->GetCutValue()>dnode2->GetCutValue() ? +1 : -1);
-}
-
-//_______________________________________________________________________
-Bool_t TMVA::Rule::IsSimpleRule() const
-{
-   // REMOVE
-   // A simple rule is defined by:
-   // * contains one variable
-   // * all cuts are in the same direction
-   //
-   if (fNodes.size()==2) { // size=2 -> only one cut -> always simple
-      return kTRUE;
-   }
-   //
-   if (GetNumVarsUsed()!=1) {
-      return kFALSE;
-   }
-   UInt_t ic = 0;
-   UInt_t nc = fCutDirs.size()-1;
-   Bool_t done = kFALSE;
-   Int_t co;
-   Int_t coPrev=0;
-   Bool_t allop=kFALSE;
-   while (!done) {
-      co = fCutDirs[ic];
-      if (ic==0) coPrev = co;
-      allop = (coPrev==co);
-      ic++;
-      done = ((ic==nc) || (!allop));
-      coPrev = co;
-   }
-   return allop;
 }
 
 //_______________________________________________________________________
@@ -404,10 +215,9 @@ void TMVA::Rule::Copy( const Rule& other )
    // copy function
    if(this != &other) {
       SetRuleEnsemble( other.GetRuleEnsemble() );
-      SetNodes( other.GetNodes() );
+      fCut = new RuleCut( *(other.GetRuleCut()) );
       fSSB     = other.GetSSB();
       fSSBNeve = other.GetSSBNeve();
-      SetCutDirs( other.GetCutDirs() );
       SetCoefficient(other.GetCoefficient());
       SetSupport( other.GetSupport() );
       SetSigma( other.GetSigma() );
@@ -421,49 +231,71 @@ void TMVA::Rule::Copy( const Rule& other )
 void TMVA::Rule::Print( ostream& os ) const
 {
    // print function
-   Int_t ind;
-   Int_t sel,ntype,nnodes;
-   Double_t data, ssbval;
-   const TMVA::DecisionTreeNode *node, *nextNode;
-   std::vector<Int_t> nodes;
-   GetEffectiveRule( nodes );
+   const Int_t ncuts = fCut->GetNcuts();
+   if (ncuts<1) os << "     *** WARNING - <EMPTY RULE> ***" << endl; // TODO: Fix this, use fLogger
    //
-   nnodes = nodes.size();
+   Int_t sel;
+   Double_t valmin, valmax;
+   //
    os << "    Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << endl;
    os << "    Coefficient = " << Form("%1.4f", fCoefficient) << endl;
    os << "    Support     = " << Form("%1.4f", fSupport)  << endl;
    os << "    S/(S+B)     = " << Form("%1.4f", fSSB)  << endl;  
 
-   for ( Int_t i=0; i<nnodes-1; i++) {
-      ind = nodes[i];
-      node = dynamic_cast< const TMVA::DecisionTreeNode * >(fNodes[ind]);
-      nextNode = (i+1<nnodes ? dynamic_cast< const TMVA::DecisionTreeNode * >(fNodes[ind+1]):0);
-      data = 0;
+   for ( Int_t i=0; i<ncuts; i++) {
       os << "    ";
-      if (node!=0) {
-         sel  = node->GetSelector();
-         data = node->GetCutValue();
-         ntype = GetCutDir(ind);
-         ssbval = nextNode->GetSoverSB();
-         os << Form("* Cut %2d",i+1)
-            << " : " << GetVarName(sel)
-            << (ntype==1 ? " > ":" < ")
-            << Form("%10.3g",data)
-            << "   S/(S+B) = " << Form("%1.3f",ssbval) << endl;
-      } 
-      else fLogger << kFATAL << "BUG WARNING - NOT A DecisionTreeNode!" << Endl;
+      sel    = fCut->GetSelector(i);
+      valmin = fCut->GetCutMin(i);
+      valmax = fCut->GetCutMax(i);
+      //
+      os << Form("* Cut %2d",i+1) << " : " << std::flush;
+      if (fCut->GetCutDoMin(i)) os << Form("%10.3g",valmin) << " < " << std::flush;
+      else                      os << "             " << std::flush;
+      os << GetVarName(sel) << std::flush;
+      if (fCut->GetCutDoMax(i)) os << " < " << Form("%10.3g",valmax) << std::flush;
+      else                      os << "             " << std::flush;
+      os << std::endl;
    }
-   if (nnodes<2) os << "     *** WARNING - <EMPTY RULE> ***" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::Rule::PrintLogger(const char *title) const
+{
+   // print function
+   const Int_t ncuts = fCut->GetNcuts();
+   if (ncuts<1) fLogger << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
+   //
+   Int_t sel;
+   Double_t valmin, valmax;
+   //
+   if (title) fLogger << kINFO << title;
+   fLogger << kINFO
+           << "Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << Endl;
+   //           << "Coefficient = " << Form("%1.4f", fCoefficient) << Endl;
+
+
+   for ( Int_t i=0; i<ncuts; i++) {
+      
+      fLogger << kINFO << "            ";
+      sel    = fCut->GetSelector(i);
+      valmin = fCut->GetCutMin(i);
+      valmax = fCut->GetCutMax(i);
+      //
+      fLogger << kINFO << Form("Cut %2d",i+1) << " : ";
+      if (fCut->GetCutDoMin(i)) fLogger << kINFO << Form("%10.3g",valmin) << " < ";
+      else                      fLogger << kINFO << "             ";
+      fLogger << kINFO << GetVarName(sel);
+      if (fCut->GetCutDoMax(i)) fLogger << kINFO << " < " << Form("%10.3g",valmax);
+      else                      fLogger << kINFO << "             ";
+      fLogger << Endl;
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::Rule::PrintRaw( ostream& os ) const
 {
-   // extensive print function
-   const TMVA::DecisionTreeNode *node;
-   std::vector<Int_t> nodes;
-   GetEffectiveRule( nodes );
-   UInt_t nnodes = nodes.size();
+   // extensive print function used to print info for the weight file
+   const UInt_t ncuts = fCut->GetNcuts();
    os << "Parameters: "
       << fImportance << " "
       << fImportanceRef << " "
@@ -473,22 +305,16 @@ void TMVA::Rule::PrintRaw( ostream& os ) const
       << fNorm << " "
       << fSSB << " "
       << fSSBNeve << " "
-      << endl;
-   os << "N(nodes): " << nnodes << endl; // mark end of nodes
-   for ( UInt_t i=0; i<nnodes; i++) {
-      node = dynamic_cast< const TMVA::DecisionTreeNode * >(fNodes[nodes[i]]);
-      os << "Node " << i << " : " << flush;
-      os << node->GetSelector()
-         << " " << node->GetCutValue()
-         << " " << GetCutDir(nodes[i])
-         << " " << node->GetCutType() 
-         //         << " " << node->GetSoverSB()
-         << " " << node->GetNSigEvents()
-         << " " << node->GetNBkgEvents()
-         << " " << node->GetSeparationIndex()
-         << " " << node->GetSeparationGain()
-         << " " << node->GetNEvents()
-         << " " << node->GetNodeType() << endl;
+      << endl;                                                  \
+   os << "N(cuts): " << ncuts << endl; // mark end of nodes
+   for ( UInt_t i=0; i<ncuts; i++) {
+      os << "Cut " << i << " : " << flush;
+      os <<        fCut->GetSelector(i)
+         << " " << fCut->GetCutMin(i)
+         << " " << fCut->GetCutMax(i)
+         << " " << (fCut->GetCutDoMin(i) ? "T":"F")
+         << " " << (fCut->GetCutDoMax(i) ? "T":"F")
+         << endl;
    }
 }
 
@@ -498,9 +324,7 @@ void TMVA::Rule::ReadRaw( istream& istr )
    // read function (format is the same as written by PrintRaw)
 
    TString dummy;
-   TMVA::DecisionTreeNode *node;
-   std::vector<Int_t> nodes;
-   UInt_t nnodes = nodes.size();
+   UInt_t ncuts;
    istr >> dummy
         >> fImportance
         >> fImportanceRef
@@ -510,30 +334,22 @@ void TMVA::Rule::ReadRaw( istream& istr )
         >> fNorm
         >> fSSB
         >> fSSBNeve;
-   istr >> dummy >> nnodes;
-   Double_t cutval, cuttype, s, b, sepind,sepgain,neve;
-   Int_t    idum, cutdir, nodetype;
-   UInt_t   selvar;
-   fNodes.clear();
-   fCutDirs.clear();
+   istr >> dummy >> ncuts;
+   Double_t cutmin,cutmax;
+   UInt_t   sel,idum;
+   Char_t   bA, bB;
    //
-   for ( UInt_t i=0; i<nnodes; i++) {
-      node = new TMVA::DecisionTreeNode();
+   fCut = new TMVA::RuleCut();
+   fCut->SetNcuts( ncuts );
+   for ( UInt_t i=0; i<ncuts; i++) {
       istr >> dummy >> idum; // get 'Node' and index
       istr >> dummy;         // get ':'
-      istr >> selvar >> cutval >> cutdir >> cuttype >> s >> b >> sepind >> sepgain >> neve >> nodetype;
-      node->SetSelector(selvar);
-      node->SetCutValue(cutval);
-      fCutDirs.push_back(cutdir);
-      node->SetCutType(cuttype) ;
-      //      node->SetSoverSB(sosb);
-      node->SetNSigEvents(s);
-      node->SetNBkgEvents(s);
-      node->SetSeparationIndex(sepind);
-      node->SetSeparationGain(sepgain);
-      node->SetNEvents(neve);
-      node->SetNodeType(nodetype);
-      fNodes.push_back(node);
+      istr >> sel >> cutmin >> cutmax >> bA >> bB;
+      fCut->SetSelector(i,sel);
+      fCut->SetCutMin(i,cutmin);
+      fCut->SetCutMax(i,cutmax);
+      fCut->SetCutDoMin(i,(bA=='T' ? kTRUE:kFALSE));
+      fCut->SetCutDoMax(i,(bB=='T' ? kTRUE:kFALSE));
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.10 2006/11/23 17:43:39 rdm Exp $   
+// @(#)root/tmva $Id: Types.h,v 1.11 2007/01/16 09:37:03 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -37,7 +37,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <map>
+#include "TROOT.h"
 #include "Riostream.h"
 
 #ifndef ROOT_TMVA_MsgLogger
@@ -46,7 +46,7 @@
 
 namespace TMVA {
 
-   typedef std::pair<Double_t,Double_t> LowHigh_t;
+   //typedef std::pair<Double_t,Double_t> LowHigh_t;
 
    class Types {
       
@@ -64,6 +64,7 @@ namespace TMVA {
          kTMlpANN        , 
          kBDT            ,     
          kRuleFit        ,
+         kRuleFitJF      ,
          kSVM            ,
          kMLP            ,
          kBayesClassifier,
@@ -71,11 +72,11 @@ namespace TMVA {
          kMaxMethod
       };
 
-      enum EPreprocessingMethod {
+      enum EVariableTransform {
          kNone = 0,
          kDecorrelated,
          kPCA,
-         kMaxPreprocessingMethod
+         kMaxVariableTransform
       };
 
       enum ESBType { 
@@ -87,20 +88,13 @@ namespace TMVA {
       };
 
       enum ETreeType { kTraining = 0, kTesting, kMaxTreeType };
-         
+
    public:
 
       static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
       ~Types() {}
 
-      EMVA GetMethodType( const TString& method ) const { 
-         std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
-         if (it == fStr2type.end()) {
-            fLogger << kFATAL << "unknown method in map: " << method << Endl;
-            return kVariable; // Inserted to get rid of GCC warning...
-         }
-         else return it->second;
-      }
+      EMVA GetMethodType( const TString& method ) const;
 
    private:
 
@@ -111,7 +105,7 @@ namespace TMVA {
    private:
          
       std::map<TString, EMVA> fStr2type; // types-to-text map
-      mutable MsgLogger            fLogger;   // message logger
+      mutable MsgLogger       fLogger;   // message logger
          
    };
 }

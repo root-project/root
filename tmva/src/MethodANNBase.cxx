@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.11 2007/01/30 11:24:16 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -29,10 +29,10 @@
 //                                                                      
 //_______________________________________________________________________
 
-#include "TDirectory.h"
 #include "TString.h"
 #include <vector>
 #include "TTree.h"
+#include "TDirectory.h"
 #include "Riostream.h"
 #include "TRandom3.h"
 #include "TH2F.h"
@@ -68,7 +68,6 @@
 using std::vector;
 
 ClassImp(TMVA::MethodANNBase)
-   ;
 
 //______________________________________________________________________________
 TMVA::MethodANNBase::MethodANNBase( TString jobName, TString methodTitle, DataSet& theData, 
@@ -407,7 +406,7 @@ void TMVA::MethodANNBase::ForceNetworkInputs(Int_t ignoreIndex)
 
    for (Int_t j = 0; j < GetNvar(); j++) {
       if (j == ignoreIndex) x = 0;
-      else x = (fNormalize) ? GetEventValNormalized(j) : Data().Event().GetVal(j);
+      else x = (fNormalize) ? GetEventValNormalized(j) : GetEvent().GetVal(j);
 
       neuron = GetInputNeuron(j);
       neuron->ForceValue(x);
@@ -522,7 +521,7 @@ Double_t TMVA::MethodANNBase::GetMvaValue()
    TObjArray* inputLayer = (TObjArray*)fNetwork->At(0);
 
    for (Int_t i = 0; i < GetNvar(); i++) {
-      Double_t x = fNormalize?GetEventValNormalized(i):Data().Event().GetVal(i);
+      Double_t x = fNormalize?GetEventValNormalized(i):GetEvent().GetVal(i);
       neuron = (TNeuron*)inputLayer->At(i);
       neuron->ForceValue(x);
    }
@@ -584,7 +583,7 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
    // compute ranking of input variables by summing function of weights
 
    // create the ranking object
-   fRanking = new Ranking( GetName(), "Sum of weights-squared" );
+   fRanking = new Ranking( GetName(), "Importance" );
 
    TNeuron*  neuron;
    TSynapse* synapse;
@@ -608,8 +607,10 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
 
       for (Int_t j = 0; j < numSynapses; j++) {
          synapse = neuron->PostLinkAt(j);
-         importance += (synapse->GetWeight() * avgVal)*(synapse->GetWeight() * avgVal);
+         importance += synapse->GetWeight() * synapse->GetWeight();
       }
+      
+      importance *= avgVal * avgVal;
 
       fRanking->AddRank( *new Rank( varName, importance ) );
    }
@@ -623,12 +624,10 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    // write histograms to file
    PrintMessage(Form("write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
 
-   BaseDir()->mkdir(GetName()+GetMethodName())->cd(); 
+   //   BaseDir()->mkdir(GetName()+GetMethodName())->cd(); 
 
    TH2F*      hist;
    Int_t numLayers = fNetwork->GetEntriesFast();
-
-   BaseDir()->cd();
 
    if (fEstimatorHistTrain) fEstimatorHistTrain->Write();
    if (fEstimatorHistTest ) fEstimatorHistTest ->Write();

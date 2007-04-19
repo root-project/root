@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodVariable.h,v 1.16 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: MethodVariable.h,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -61,6 +61,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -78,7 +81,6 @@ namespace TMVA {
    private:
 
       ClassDef(MethodVariable,0) // Wrapper class for a single variable "MVA" 
-         ;
    };
 
 } // namespace TMVA

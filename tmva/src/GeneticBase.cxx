@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.cxx,v 1.19 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticBase.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -39,24 +39,23 @@ namespace TMVA {
 using namespace std;
 
 ClassImp(TMVA::GeneticBase)
-   ;
    
 //_______________________________________________________________________
-TMVA::GeneticBase::GeneticBase( Int_t populationSize, vector<LowHigh_t*> ranges )
+TMVA::GeneticBase::GeneticBase( Int_t populationSize, vector<Interval*> ranges )
    : fLogger( "GeneticBase" )
 {
    // Constructor
    // Parameters: 
    //     int populationSize : defines the number of "Individuals" which are created and tested 
    //                          within one Generation (Iteration of the Evolution)
-   //     vector<LowHigh_t*> ranges : LowHigh_t is a pair of doubles, where the first entry 
-   //                          is the low and the second entry the high constraint of the variable
+   //     vector<Interval*> ranges : Interval holds the information of an interval, where the GetMin 
+   //                          gets the low and GetMax gets the high constraint of the variable
    //                          the size of "ranges" is the number of coefficients which are optimised
    // Purpose: 
    //     Creates a random population with individuals of the size ranges.size()
 
-   for (vector< LowHigh_t* >::iterator it = ranges.begin(); it<ranges.end(); it++) {
-      fPopulation.AddFactor( (*it)->first, (*it)->second );
+   for (vector< Interval* >::iterator it = ranges.begin(); it<ranges.end(); it++) {
+      fPopulation.AddFactor( (*it) );
    }
 
    fPopulation.CreatePopulation( populationSize );
@@ -190,12 +189,16 @@ void TMVA::GeneticBase::Evolution()
    // the function can be overridden to change the parameters for mutation rate
    // sexual reproduction and so on.
    if (fSexual) {
+      fPopulation.MakeCopies( 5 );  
       fPopulation.MakeChildren();
-      fPopulation.Mutate( 10, 1, kTRUE, fSpread, fMirror );
+      fPopulation.NextGeneration();
+
+      fPopulation.Mutate( 10, 3, kTRUE, fSpread, fMirror );
       fPopulation.Mutate( 40, fPopulation.GetPopulationSize()*3/4 );
-   }
-   else {
-      fPopulation.MakeMutants();
+   } else {
+      fPopulation.MakeCopies( 3 );  
+      fPopulation.MakeMutants(100,true, 0.1, true);
+      fPopulation.NextGeneration();
    }
 }
 

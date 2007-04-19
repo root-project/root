@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: CrossEntropy.h,v 1.10 2006/11/16 22:51:58 helgevoss Exp $       
+// @(#)root/tmva $Id: CrossEntropy.h,v 1.9 2006/11/20 15:35:28 brun Exp $       
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -63,7 +63,6 @@ namespace TMVA {
    protected:
     
       ClassDef(CrossEntropy,0) // Implementation of the CrossEntropy as separation criterion
-         ;    
    };
 
 } // namespace TMVA

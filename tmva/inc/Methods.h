@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Methods.h,v 1.4 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: Methods.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -75,6 +75,9 @@
 #endif
 #ifndef ROOT_TMVA_MethodRuleFit
 #include "TMVA/MethodRuleFit.h"
+#endif
+#ifndef ROOT_TMVA_MethodRuleFitJF
+#include "TMVA/MethodRuleFitJF.h"
 #endif
 #ifndef ROOT_TMVA_MethodBayesClassifier
 #include "TMVA/MethodBayesClassifier.h"

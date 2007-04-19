@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.h,v 1.31 2006/11/02 15:44:49 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodANNBase.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -87,6 +87,9 @@ namespace TMVA {
       // print network, for debugging
       virtual void PrintNetwork();
       
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -172,7 +175,6 @@ namespace TMVA {
       static const Bool_t fgFIXED_SEED = kFALSE;  // fix rand generator seed
           
       ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
-         ;
    };
    
 } // namespace TMVA

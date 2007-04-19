@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: Timer.h,v 1.10 2006/11/16 22:51:59 helgevoss Exp $    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: Timer.h,v 1.13 2007/04/02 17:43:10 andreas.hoecker Exp $    
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,15 +12,13 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2006:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -61,8 +59,8 @@ namespace TMVA {
   
    public:
   
-      Timer( Bool_t colourfulOutput = kTRUE );
-      Timer( Int_t ncounts, TString prefix = "", Bool_t colourfulOutput = kTRUE );
+      Timer( const char* prefix = "", Bool_t colourfulOutput = kTRUE );
+      Timer( Int_t ncounts, const char* prefix = "", Bool_t colourfulOutput = kTRUE );
       virtual ~Timer( void );
   
       void Init ( Int_t ncounts );
@@ -71,13 +69,15 @@ namespace TMVA {
       // when the "Scientific" flag set, time is returned with subdecimals
       // for algorithm timing measurement
       TString GetElapsedTime  ( Bool_t Scientific = kTRUE  );
-      TString GetLeftTime     ( Int_t icounts              );
-      void    DrawProgressBar ( Int_t icounts              );
+      TString GetLeftTime     ( Int_t icounts );
+      void    DrawProgressBar ( Int_t );
+      void    DrawProgressBar ( TString );
+      void    DrawProgressBar ( void );
                           
    private:
 
-      Double_t  ElapsedSeconds( void             );
-      TString   SecToText     ( Double_t, Bool_t );
+      Double_t  ElapsedSeconds( void );
+      TString   SecToText     ( Double_t, Bool_t ) const;
 
       Int_t     fNcounts;               // reference number of "counts" 
       TString   fPrefix;                // prefix for outputs
@@ -89,7 +89,6 @@ namespace TMVA {
       MsgLogger*           fLogger;     // the output logger
 
       ClassDef(Timer,0) // Timing information for training and evaluation of MVA methods
-         ;
    };
 
 } // namespace

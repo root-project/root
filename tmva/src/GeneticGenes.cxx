@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.cxx,v 1.13 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticGenes.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -34,7 +34,6 @@
 //_______________________________________________________________________
 
 ClassImp(TMVA::GeneticGenes)
-   ;
    
 //_______________________________________________________________________
 TMVA::GeneticGenes::GeneticGenes( std::vector<Double_t> & f  ) 

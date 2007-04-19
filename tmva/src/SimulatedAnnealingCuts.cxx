@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.7 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -37,9 +37,8 @@
 #include "TMVA/MethodCuts.h"
 
 ClassImp(TMVA::SimulatedAnnealingCuts)
-   ;
 
-TMVA::SimulatedAnnealingCuts::SimulatedAnnealingCuts( std::vector<LowHigh_t*>& ranges )
+TMVA::SimulatedAnnealingCuts::SimulatedAnnealingCuts( std::vector<Interval*>& ranges )
    : SimulatedAnnealingBase( ranges )
 {
    // constructor

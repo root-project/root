@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputSqSum.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuronInputSqSum.h,v 1.7 2007/02/02 19:16:05 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -69,7 +69,6 @@ namespace TMVA {
       TString GetName() { return "Sum of weighted activations squared"; }
 
       ClassDef(TNeuronInputSqSum,0) // Calculates square of  weighted sum of neuron inputs
-         ;
    };
 
 } // namespace TMVA

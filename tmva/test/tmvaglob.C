@@ -2,28 +2,34 @@
 #ifndef TMVA_TMVAGLOB
 #define TMVA_TMVAGLOB
 
+#include "RVersion.h"
+
 namespace TMVAGlob {
+
+   // --------- S t y l e ---------------------------
+   const Bool_t UsePaperStyle = 0;
+   // -----------------------------------------------
 
    enum TypeOfPlot { kNormal = 0,
                      kDecorrelated,
                      kPCA,
                      kNumOfMethods };
 
-
    // set the style
-   void SetSignalAndBackgroundStyle( TH1* sig, TH1* bgd, TH1* all = 0 ) 
+   void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = 0 ) 
    {
 
       //signal
-      const Int_t FillColor__S = 38;
+      const Int_t FillColor__S = 38+150;
       const Int_t FillStyle__S = 1001;
-      const Int_t LineColor__S = 1;
+      const Int_t LineColor__S = 104;
       const Int_t LineWidth__S = 2;
 
       // background
-      const Int_t FillColor__B = 2;
+      const Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
+      const Int_t FillColor__B = icolor;
       const Int_t FillStyle__B = 3554;
-      const Int_t LineColor__B = 2;
+      const Int_t LineColor__B = icolor;
       const Int_t LineWidth__B = 2;
 
       if (sig != NULL) {
@@ -33,11 +39,11 @@ namespace TMVAGlob {
          sig->SetFillColor( FillColor__S );
       }
     
-      if (bgd != NULL) {
-         bgd->SetLineColor( LineColor__B );
-         bgd->SetLineWidth( LineWidth__B );
-         bgd->SetFillStyle( FillStyle__B );
-         bgd->SetFillColor( FillColor__B );
+      if (bkg != NULL) {
+         bkg->SetLineColor( LineColor__B );
+         bkg->SetLineWidth( LineWidth__B );
+         bkg->SetFillStyle( FillStyle__B );
+         bkg->SetFillColor( FillColor__B );
       }
 
       if (all != NULL) {
@@ -82,6 +88,12 @@ namespace TMVAGlob {
       TListIter itc(loc);
       TObject *o(0);
       while ((o = itc())) delete o;
+
+      // define new line styles
+      TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
+      TMVAStyle->SetLineStyleString( 5, "[52 12]" );
+      TMVAStyle->SetLineStyleString( 6, "[22 12]" );
+      TMVAStyle->SetLineStyleString( 7, "[22 10 7 10]" );
    }
 
    // checks if file with name "fin" is already open, and if not opens one
@@ -93,20 +105,19 @@ namespace TMVAGlob {
             gROOT->cd();
             file->Close();
          }
-         cout << "Creating TFile: " << fin << endl;
-         file = new TFile( fin );
+         cout << "Opening root file " << fin << " in read mode" << endl;
+         file = TFile::Open( fin, "READ" );
       }
       else {
-         cout << "Retrieving TFile: " << fin << endl;
          file = gDirectory->GetFile();
       }
 
       file->cd();
       return file;
-   }   
+   }
 
    // used to create output file for canvas
-   void imgconv( TCanvas* c, TString fname )
+   void imgconv( TCanvas* c, const TString & fname )
    {
       // return;
       if (NULL == c) {
@@ -121,49 +132,66 @@ namespace TMVAGlob {
          TString pngName = fname + ".png";
          TString gifName = fname + ".gif";
          TString epsName = fname + ".eps";
-            
+         c->cd();
          // create eps (other option: c->Print( epsName ))
-         c->SaveAs(epsName);      
-         cout << "If you want to save the image as gif or png, please comment out "
-              << "the corresponding lines (line no. 83+84) in tmvaglob.C" << endl;
-         //         c->SaveAs(gifName);
-         c->SaveAs(pngName);
+         if (UsePaperStyle) c->Print(epsName);      
+         //          cout << "If you want to save the image as gif or png, please comment out "
+         //               << "the corresponding lines (line no. 142+143) in tmvaglob.C" << endl;
+         c->Print(pngName);
       }
    }
 
    void plot_logo( Float_t v_scale = 1.0 )
    {
-      TImage *img = TImage::Open("tmva_logo.gif");
+      TImage *img = TImage::Open("../macros/tmva_logo.gif");
       if (!img) {
-         printf("Could not create an image... exit\n");
+         cut <<"Could not open image ../macros/tmva_logo.gif" << endl;
          return;
       }
       img->SetConstRatio(kFALSE);
       UInt_t h_ = img->GetHeight();
       UInt_t w_ = img->GetWidth();
-      //cout << w_/h_ << endl;
-
-      Float_t rgif = 405/108.;
-      Float_t rpad = gPad->GetWw()/gPad->GetWh();
-      Float_t xperc = 0.3;
-      Float_t yperc = xperc * rpad / rgif;
 
       Float_t r = w_/h_;
+      gPad->Update();
+      Float_t rpad = Double_t(gPad->VtoAbsPixel(0) - gPad->VtoAbsPixel(1))/(gPad->UtoAbsPixel(1) - gPad->UtoAbsPixel(0));
+      r *= rpad;
 
-      Float_t d = 0.045;
+      Float_t d = 0.055;
       // absolute coordinates
-      Float_t x1L = 1 - gStyle->GetPadRightMargin();
-      Float_t y1L = 0.91;
-      TPad *p1 = new TPad("img", "img", x1L - d*r, y1L, x1L, y1L + d*1.5*v_scale );
+      Float_t x1R = 1 - gStyle->GetPadRightMargin(); 
+      Float_t y1B = 1 - gStyle->GetPadTopMargin()+.01; // we like the logo to sit a bit above the histo 
+
+      Float_t x1L = x1R - d*r;
+      Float_t y1T = y1B + d*v_scale;
+      if (y1T>0.99) y1T = 0.99;
+
+      TPad *p1 = new TPad("imgpad", "imgpad", x1L, y1B, x1R, y1T );
       p1->SetRightMargin(0);
       p1->SetBottomMargin(0);
       p1->SetLeftMargin(0);
       p1->SetTopMargin(0);
-
       p1->Draw();
+
+      Int_t xSizeInPixel = p1->UtoAbsPixel(1) - p1->UtoAbsPixel(0);
+      Int_t ySizeInPixel = p1->VtoAbsPixel(0) - p1->VtoAbsPixel(1);
+      if (xSizeInPixel<=25 || ySizeInPixel<=25) {
+         delete p1;
+         return; // ROOT doesn't draw smaller than this
+      }
+
       p1->cd();
       img->Draw();
    } 
+
+   void NormalizeHists( TH1* sig, TH1* bkg ) 
+   {
+      if(sig->GetSumw2N()==0) sig->Sumw2();
+      if(bkg->GetSumw2N()==0) bkg->Sumw2();
+      
+      sig->Scale( 1.0/sig->GetSumOfWeights() );
+      bkg->Scale( 1.0/bkg->GetSumOfWeights() );      
+   }      
 }
 
 #endif

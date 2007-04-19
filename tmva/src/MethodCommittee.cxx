@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.7 2007/01/30 11:24:16 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -49,17 +49,16 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "Riostream.h"
-#include "TDirectory.h"
 #include "TRandom.h"
 #include <algorithm>
 #include "TObjString.h"
+#include "TDirectory.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Methods.h"
 
 using std::vector;
 
 ClassImp(TMVA::MethodCommittee)
-   ;
  
 //_______________________________________________________________________
 TMVA::MethodCommittee::MethodCommittee( TString jobName, TString committeeTitle, DataSet& theData, 
@@ -161,20 +160,17 @@ void TMVA::MethodCommittee::WriteStateToFile() const
 { 
    // Function to write options and weights to file
 
-   if (GetWeightFileType()==kTEXT) {
-
-      // get the filename
-      TString fname(GetWeightFileName());
-      fLogger << kINFO << "creating weight file: " << fname << Endl;
-
-      std::ofstream* fout = new std::ofstream( fname );
-      if (!fout->good()) { // file not found --> Error
-         fLogger << kFATAL << "<WriteStateToFile> "
-                 << "unable to open output  weight file: " << fname << endl;
-      }
-
-      WriteStateToStream( *fout );
+   // get the filename
+   TString fname(GetWeightFileName());
+   fLogger << kINFO << "creating weight file: " << fname << Endl;
+   
+   std::ofstream* fout = new std::ofstream( fname );
+   if (!fout->good()) { // file not found --> Error
+      fLogger << kFATAL << "<WriteStateToFile> "
+              << "unable to open output  weight file: " << fname << endl;
    }
+   
+   WriteStateToStream( *fout );
 }
 
 //_______________________________________________________________________
@@ -269,12 +265,13 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
    if (!HasTrainingTree()) fLogger << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
 
    // give reference to event
-   Event& event = Data().Event();
+   Event& event = GetEvent();
 
    Double_t err=0, sumw=0, sumwfalse=0, count=0;
    vector<Bool_t> correctSelected;
 
    // loop over all events in training tree
+   MethodBase* mbase = (MethodBase*)method;
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
 
       // read the Training Event into "event"
@@ -284,7 +281,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
       sumw += event.GetBoostWeight();
 
       // decide whether it is signal or background-like
-      Bool_t isSignalType = method->IsSignalLike();
+      Bool_t isSignalType = mbase->IsSignalLike();
       
       // to prevent code duplication
       if (isSignalType == event.IsSignal()) correctSelected.push_back( kTRUE );
@@ -354,7 +351,7 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
    TRandom *trandom   = new TRandom( imember );
 
    // give reference to event
-   Event& event = Data().Event();
+   Event& event = GetEvent();
 
    // loop over all events in training tree
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
@@ -384,7 +381,7 @@ void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
       o << endl;
       o << "------------------------------ new member: " << imember << " ---------------" << endl;
       o << "boost weight: " << GetBoostWeights()[imember] << endl;
-      GetCommittee()[imember]->WriteStateToStream( o );
+      ((MethodBase*)GetCommittee()[imember])->WriteStateToStream( o );
    }   
 }
   
@@ -449,7 +446,7 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
       }
 
       // read weight file
-      method->ReadStateFromStream(istr);
+      ((MethodBase*)method)->ReadStateFromStream(istr);
       GetCommittee().push_back(method);
       GetBoostWeights().push_back(boostWeight);
    }
@@ -470,7 +467,8 @@ Double_t TMVA::MethodCommittee::GetMvaValue()
    Double_t norm  = 0;
    for (UInt_t itree=0; itree<GetCommittee().size(); itree++) {
 
-      Double_t tmpMVA = fUseMemberDecision ? ( GetCommittee()[itree]->IsSignalLike() ? 1.0 : -1.0 ) : GetCommittee()[itree]->GetMvaValue();
+      Double_t tmpMVA = ( fUseMemberDecision ? ( ((MethodBase*)GetCommittee()[itree])->IsSignalLike() ? 1.0 : -1.0 ) 
+                          : GetCommittee()[itree]->GetMvaValue() );
 
       if (fUseWeightedMembers){ 
          myMVA += GetBoostWeights()[itree] * tmpMVA;
@@ -490,8 +488,6 @@ void  TMVA::MethodCommittee::WriteMonitoringHistosToFile( void ) const
    // here we could write some histograms created during the processing
    // to the output file.
    fLogger << kINFO << "write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
-
-   BaseDir()->mkdir(GetName()+GetMethodName())->cd();
 
    fBoostFactorHist->Write();
    fErrFractHist->Write();

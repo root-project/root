@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Tools.cxx,v 1.11 2007/02/03 06:40:26 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -30,21 +30,28 @@
 #include <algorithm>
 #include "Riostream.h"
 #include "TObjString.h"
+#include "TMath.h"
 #include "TTree.h"
 #include "TLeaf.h"
 #include "TH1.h"
+#include "TList.h"
 #include "TSpline.h"
 #include "TVector.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "TTreeFormula.h"
-#include "TMath.h"
 
-#ifndef TMVA_Tools
+#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
-#ifndef TMVA_Event
+#ifndef ROOT_TMVA_Config
+#include "TMVA/Config.h"
+#endif
+#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
+#endif
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
 #endif
 
 namespace TMVA {
@@ -53,6 +60,7 @@ namespace TMVA {
       const char* Tools_NAME_ = "Tools"; // name to locate output
       static MsgLogger* Tools_Logger = 0;
    }   
+
 }
 
 TMVA::MsgLogger& TMVA::Tools::Logger()
@@ -66,6 +74,55 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 {
    // normalise to output range: [-1, 1]
    return 2*(x - xmin)/(xmax - xmin) - 1.0;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) 
+{
+   // compute "separation" defined as
+   // <s2> = (1/2) Int_-oo..+oo { (S^2(x) - B^2(x))/(S(x) + B(x)) dx }
+   Double_t separation = 0;
+   
+   // sanity checks
+   // signal and background histograms must have same number of bins and 
+   // same limits
+   if ((S->GetNbinsX() != B->GetNbinsX()) || (S->GetNbinsX() <= 0)) {
+      Logger() << kFATAL << "<GetSeparation> signal and background"
+               << " histograms have different number of bins: " 
+               << S->GetNbinsX() << " : " << B->GetNbinsX() << Endl;
+   }
+
+   if (S->GetXaxis()->GetXmin() != B->GetXaxis()->GetXmin() || 
+       S->GetXaxis()->GetXmax() != B->GetXaxis()->GetXmax() || 
+       S->GetXaxis()->GetXmax() <= S->GetXaxis()->GetXmin()) {
+      Logger() << kINFO << S->GetXaxis()->GetXmin() << " " << B->GetXaxis()->GetXmin() 
+               << " " << S->GetXaxis()->GetXmax() << " " << B->GetXaxis()->GetXmax() 
+               << " " << S->GetXaxis()->GetXmax() << " " << S->GetXaxis()->GetXmin() << Endl;
+      Logger() << kFATAL << "<GetSeparation> signal and background"
+               << " histograms have different or invalid dimensions:" << Endl;
+   }
+
+   Int_t    nstep  = S->GetNbinsX();
+   Double_t intBin = (S->GetXaxis()->GetXmax() - S->GetXaxis()->GetXmin())/nstep;
+   Double_t nS     = S->GetEntries()*intBin;
+   Double_t nB     = B->GetEntries()*intBin;
+   if (nS > 0 && nB > 0) {
+      for (Int_t bin=0; bin<nstep; bin++) {
+         Double_t s = S->GetBinContent( bin )/nS;
+         Double_t b = B->GetBinContent( bin )/nB;
+         // separation
+         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
+      }
+      separation *= intBin;
+   }
+   else {
+      Logger() << kWARNING << "<GetSeparation> histograms with zero entries: " 
+               << nS << " : " << nB << " cannot compute separation"
+               << Endl;
+      separation = 0;
+   }
+
+   return separation;
 }
 
 void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
@@ -200,7 +257,7 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
    for (i=0; i<n; i++) for (j=0; j<n; j++) if (j != i) (*d)(i,j) = 0;
 
    // compute the square-root C' of covariance matrix: C = C'*C'
-   for (i=0; i<n; i++) (*d)(i,i) = sqrt((*d)(i,i));
+   for (i=0; i<n; i++) (*d)(i,i) = TMath::Sqrt((*d)(i,i));
    if (NULL == sqrtMat) sqrtMat = new TMatrixD( n, n );
    sqrtMat->Mult( (*s), (*d) );
    (*sqrtMat) *= (*si);
@@ -212,6 +269,36 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
    delete s;
    delete si;
    delete d;
+}
+
+const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
+{
+   // turns covariance into correlation matrix   
+   if (covMat == 0) return 0;
+
+   // sanity check
+   Int_t nvar = covMat->GetNrows();
+   if (nvar != covMat->GetNcols()) 
+      Logger() << kFATAL << "<GetCorrelationMatrix> input matrix not quadratic" << Endl;
+   
+   TMatrixD* corrMat = new TMatrixD( nvar, nvar );
+
+   for (Int_t ivar=0; ivar<nvar; ivar++) {
+      for (Int_t jvar=0; jvar<nvar; jvar++) {
+         if (ivar != jvar) {
+            Double_t d = (*covMat)(ivar, ivar)*(*covMat)(jvar, jvar);
+            if (d > 0) (*corrMat)(ivar, jvar) = (*covMat)(ivar, jvar)/TMath::Sqrt(d);
+            else {
+               Logger() << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
+                       << "(" << ivar << ", " << jvar << ")" << Endl;
+               (*corrMat)(ivar, jvar) = 0;
+            }
+         }
+         else (*corrMat)(ivar, ivar) = 1.0;
+      }
+   }
+
+   return corrMat;
 }
 
 TH1* TMVA::Tools::projNormTH1F( TTree* theTree, TString theVarName,
@@ -242,36 +329,35 @@ Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
    return w;
 }
 
-TList* TMVA::Tools::ParseFormatLine( TString formatString )
+TList* TMVA::Tools::ParseFormatLine( TString formatString, const char * sep )
 {
    // Parse the string and cut into labels separated by ":"
    TList*   labelList = new TList();
-   TString  label;
+   while(formatString.First(sep)==0) formatString.Remove(0,1); // remove initial separators
 
-   const Int_t n = (Int_t)formatString.Length();
+   while(formatString.Length()>0) {
+      if(formatString.First(sep)==-1) { // no more separator
+         labelList->Add(new TObjString(formatString.Data()));
+         formatString="";
+         break;
+      }
 
-   for (Int_t i=0; i<n; i++) {
-      label.Append(formatString(i));
-      if (formatString(i)==':') {
-         label.Chop();
-         labelList->Add(new TObjString(label.Data()));
-         label.Resize(0);
-      }
-      if (i == n-1) {
-         labelList->Add(new TObjString(label.Data()));
-         label.Resize(0);
-      }
+      Ssiz_t posSep = formatString.First(sep);
+      labelList->Add(new TObjString(TString(formatString(0,posSep)).Data()));
+      formatString.Remove(0,posSep+1);
+      
+      while(formatString.First(sep)==0) formatString.Remove(0,1); // // remove additional separators
+      
    }
    return labelList;                                                 
 }
-
 
 vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar,
                                                   vector<Int_t>* nodes )
 {
    // parse option string for ANN methods
    // default settings (should be defined in theOption string)
-   TList*  list  = TMVA::Tools::ParseFormatLine( theOptions );
+   TList*  list  = TMVA::Tools::ParseFormatLine( theOptions, ":" );
 
    // format and syntax of option string: "3000:N:N+2:N-3:6"
    //
@@ -422,7 +508,7 @@ void TMVA::Tools::UsefulSortAscending(vector<Double_t>  &v)
    v=vtemp[0];
 }
 
-int TMVA::Tools::GetIndexMaxElement(vector<Double_t>  &v)
+Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>  &v )
 {
    // find index of maximum entry in vector
    if (v.size()==0) return -1;
@@ -437,7 +523,7 @@ int TMVA::Tools::GetIndexMaxElement(vector<Double_t>  &v)
    return pos;
 }
 
-int TMVA::Tools::GetIndexMinElement(vector<Double_t>  &v)
+Int_t TMVA::Tools::GetIndexMinElement( vector<Double_t>  &v )
 {
    // find index of minimum entry in vector
    if (v.size()==0) return -1;
@@ -479,12 +565,117 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, TString r )
    snew.ReplaceAll( "/", "_D_" );
    snew.ReplaceAll( "+", "_P_" );
    snew.ReplaceAll( "-", "_M_" );
+   snew.ReplaceAll( " ", "_" );
+   snew.ReplaceAll( "[", "_" );
+   snew.ReplaceAll( "]", "_" );
 
    return snew;
 }
 
+//_______________________________________________________________________
+const TString& TMVA::Tools::Color( const TString & c ) 
+{
+   // human readable color strings
+   static TString gClr_none         = "" ;
+   static TString gClr_white        = "\033[1;37m";  // white
+   static TString gClr_blue         = "\033[34m";    // blue
+   static TString gClr_red          = "\033[1;31m" ; // red
+   static TString gClr_yellow       = "\033[1;33m";  // yellow
+   static TString gClr_darkred      = "\033[31m";    // dark red
+   static TString gClr_darkgreen    = "\033[32m";    // dark green
+   static TString gClr_darkyellow   = "\033[33m";    // dark yellow
+                                    
+   static TString gClr_white_b      = "\033[1m"    ; // bold white
+   static TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
+   static TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
+                                    
+   static TString gClr_blue_bg      = "\033[44m";    // blue background
+   static TString gClr_red_bg       = "\033[1;41m";  // white on red background
+   static TString gClr_whiteonblue  = "\033[1;44m";  // white on blue background
+   static TString gClr_whiteongreen = "\033[1;42m";  // white on green background
+   static TString gClr_grey_bg      = "\033[47m";    // grey background
+
+   static TString gClr_reset  = "\033[0m";     // reset
+
+   if(!TMVA::Config::Instance().UseColor()) return gClr_none;
+
+   if (c=="white")   return gClr_white; 
+   if (c=="blue")    return gClr_blue; 
+   if (c=="yellow")  return gClr_yellow; 
+   if (c=="red")     return gClr_red; 
+   if (c=="dred")    return gClr_darkred; 
+   if (c=="dgreen")  return gClr_darkgreen; 
+   if (c=="dyellow") return gClr_darkyellow; 
+
+   if (c=="bwhite")  return gClr_white_b; 
+
+   if (c=="blue_bgd")  return gClr_blue_bg; 
+   if (c=="red_bgd")  return gClr_red_bg; 
+ 
+   if (c=="white_on_blue")  return gClr_whiteonblue; 
+   if (c=="white_on_green")  return gClr_whiteongreen; 
+
+   if (c=="reset") return gClr_reset; 
+
+   cout << "Unknown color " << c << endl;
+   exit(1);
+
+   return gClr_none;
+}
+
+void TMVA::Tools::FormattedOutput( const std::vector<Double_t>& values, const std::vector<TString>& V, 
+                                   const TString titleVars, const TString titleValues, MsgLogger& logger,
+                                   TString format )
+{
+   // formatted output of simple table
+
+   // sanity check
+   UInt_t nvar = V.size();
+   if ((UInt_t)values.size() != nvar) {
+      logger << kFATAL << "<FormattedOutput> fatal error with dimensions: " 
+             << values.size() << " OR " << " != " << nvar << Endl;
+   }
+
+   // find maximum length in V (and column title)
+   UInt_t maxL = 7;
+   std::vector<UInt_t> vLengths;
+   for (UInt_t ivar=0; ivar<nvar; ivar++) maxL = TMath::Max( (UInt_t)V[ivar].Length(), maxL );
+   maxL = TMath::Max( (UInt_t)titleVars.Length(), maxL );
+
+   // column length
+   UInt_t maxV = 7;
+   maxV = TMath::Max( (UInt_t)titleValues.Length() + 1, maxL );
+
+   // full column length
+   UInt_t clen = maxL + maxV + 3;
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) logger << "-";
+   logger << Endl;
+
+   // title bar   
+   logger << setw(maxL) << titleVars << ":";
+   logger << setw(maxV+1) << titleValues << ":";
+   logger << Endl;
+   for (UInt_t i=0; i<clen; i++) logger << "-";
+   logger << Endl;
+
+   // the numbers
+   for (UInt_t irow=0; irow<nvar; irow++) {
+      logger << setw(maxL) << V[irow] << ":";
+      logger << setw(maxV+1) << Form( format.Data(), values[irow] );
+      logger << Endl;
+   }
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) logger << "-";
+   logger << Endl;
+}
+
 void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>& V, MsgLogger& logger )
 {
+   // formatted output of matrix (with labels)
+
    // sanity check: matrix must be quadratic
    UInt_t nvar = V.size();
    if ((UInt_t)M.GetNcols() != nvar || (UInt_t)M.GetNrows() != nvar) {
@@ -528,19 +719,118 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
-const TString BC_blue   = "\033[1;34m" ;
-const TString BC_red    = "\033[1;31m" ;
-const TString BC__      = "\033[1m"    ;
-const TString EC__      = "\033[0m"    ;
 
 void TMVA::Tools::TMVAWelcomeMessage()
 {
    // direct output, eg, when starting ROOT session -> no use of Logger here
-   cout  << endl
-         << BC__ << "T" << "MVA -- Toolkit for Multivariate Analysis"
-         << EC__ << endl;
-   cout << "        " << "Copyright (C) 2005-2006 CERN, LAPP & MPI-K Heidelberg and Victoria" << endl;
+   cout << endl;
+   cout << Color("white") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << endl;
+   cout << "        " << "Copyright (C) 2005-2007 CERN, MPI-K Heidelberg and Victoria U." << endl;
    cout << "        " << "Home page http://tmva.sourceforge.net" << endl;
    cout << "        " << "All rights reserved, please read http://tmva.sf.net/license.txt" << endl << endl;
+}
+
+void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
+{
+   // prints the release number and date
+   logger << "________________Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
+          << "" << Endl;
+}
+
+void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType )
+{
+   // various kinds of welcome messages
+   // ASCII text generated by this site: http://www.network-science.de/ascii/
+
+   switch (msgType) {
+
+   case kStandardWelcomeMsg:
+      logger << Color("white") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << Endl;
+      logger << "Copyright (C) 2005-2006 CERN, LAPP & MPI-K Heidelberg and Victoria U." << Endl;
+      logger << "Home page http://tmva.sourceforge.net" << Endl;
+      logger << "All rights reserved, please read http://tmva.sf.net/license.txt" << Endl << Endl;
+      break;
+
+   case kIsometricWelcomeMsg:
+      logger << "   ___           ___           ___           ___      " << Endl;
+      logger << "  /\\  \\         /\\__\\         /\\__\\         /\\  \\     " << Endl;
+      logger << "  \\:\\  \\       /::|  |       /:/  /        /::\\  \\    " << Endl;
+      logger << "   \\:\\  \\     /:|:|  |      /:/  /        /:/\\:\\  \\   " << Endl;
+      logger << "   /::\\  \\   /:/|:|__|__   /:/__/  ___   /::\\~\\:\\  \\  " << Endl;
+      logger << "  /:/\\:\\__\\ /:/ |::::\\__\\  |:|  | /\\__\\ /:/\\:\\ \\:\\__\\ " << Endl;
+      logger << " /:/  \\/__/ \\/__/~~/:/  /  |:|  |/:/  / \\/__\\:\\/:/  / " << Endl;
+      logger << "/:/  /            /:/  /   |:|__/:/  /       \\::/  /  " << Endl;
+      logger << "\\/__/            /:/  /     \\::::/__/        /:/  /   " << Endl;
+      logger << "                /:/  /       ~~~~           /:/  /    " << Endl;
+      logger << "                \\/__/                       \\/__/     " << Endl << Endl;
+      break;
+
+   case kBlockWelcomeMsg:
+      logger << Endl;
+      logger << "_|_|_|_|_|  _|      _|  _|      _|    _|_|    " << Endl;
+      logger << "    _|      _|_|  _|_|  _|      _|  _|    _|  " << Endl;
+      logger << "    _|      _|  _|  _|  _|      _|  _|_|_|_|  " << Endl;
+      logger << "    _|      _|      _|    _|  _|    _|    _|  " << Endl;
+      logger << "    _|      _|      _|      _|      _|    _|  " << Endl << Endl;
+      break;
+
+   case kLeanWelcomeMsg:
+      logger << Endl;
+      logger << "_/_/_/_/_/  _/      _/  _/      _/    _/_/   " << Endl;
+      logger << "   _/      _/_/  _/_/  _/      _/  _/    _/  " << Endl;
+      logger << "  _/      _/  _/  _/  _/      _/  _/_/_/_/   " << Endl;
+      logger << " _/      _/      _/    _/  _/    _/    _/    " << Endl;
+      logger << "_/      _/      _/      _/      _/    _/     " << Endl << Endl;
+      break;
+
+   case kLogoWelcomeMsg:
+      logger << Endl;
+      logger << "_/_/_/_/_/ _|      _|  _|      _|    _|_|   " << Endl;
+      logger << "   _/      _|_|  _|_|  _|      _|  _|    _| " << Endl;
+      logger << "  _/       _|  _|  _|  _|      _|  _|_|_|_| " << Endl;
+      logger << " _/        _|      _|    _|  _|    _|    _| " << Endl;
+      logger << "_/         _|      _|      _|      _|    _| " << Endl << Endl;
+      break;
+
+   case kSmall1WelcomeMsg:
+      logger << " _____ __  ____   ___   " << Endl;
+      logger << "|_   _|  \\/  \\ \\ / /_\\  " << Endl;
+      logger << "  | | | |\\/| |\\ V / _ \\ " << Endl;
+      logger << "  |_| |_|  |_| \\_/_/ \\_\\" << Endl << Endl;
+      break;
+
+   case kSmall2WelcomeMsg:
+      logger << " _____ __  ____     ___     " << Endl;
+      logger << "|_   _|  \\/  \\ \\   / / \\    " << Endl;
+      logger << "  | | | |\\/| |\\ \\ / / _ \\   " << Endl;
+      logger << "  | | | |  | | \\ V / ___ \\  " << Endl;
+      logger << "  |_| |_|  |_|  \\_/_/   \\_\\ " << Endl << Endl;
+      break;
+
+   case kOriginalWelcomeMsgColor:
+      logger << kINFO << "" << Color("red") 
+             << "_______________________________________" << Color("reset") << Endl;
+      logger << kINFO << "" << Color("blue")
+             << Color("red_bgd") << Color("bwhite") << " // " << Color("reset")
+             << Color("white") << Color("blue_bgd") 
+             << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ " << Color("reset") << Endl;
+      logger << kINFO << ""<< Color("blue")
+             << Color("red_bgd") << Color("white") << "//  " << Color("reset")
+             << Color("white") << Color("blue_bgd") 
+             << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\" << Color("reset") << Endl;
+      break;
+      
+   case kOriginalWelcomeMsgBW:
+      logger << kINFO << "" 
+             << "_______________________________________" << Endl;
+      logger << kINFO << " // "
+             << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ " << Endl;
+      logger << kINFO << "//  " 
+             << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\" << Endl;
+      break;
+      
+   default:
+      logger << kFATAL << "unknown message type: " << msgType << Endl;
+   }
 }
 

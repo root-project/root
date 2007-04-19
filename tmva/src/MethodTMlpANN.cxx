@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.11 2006/11/27 17:10:33 brun Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.12 2007/01/30 11:24:16 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -51,20 +51,27 @@
 #include "TMVA/MethodTMlpANN.h"
 #include <stdlib.h>
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
 #include "TLeaf.h"
 #include "TEventList.h"
 #include "TObjString.h"
+#include "TROOT.h"
+
+#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
+#endif
 
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
+#if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
 const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
 // const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
+#else
+const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
+// const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
+#endif
 
 ClassImp(TMVA::MethodTMlpANN)
-   ;
 
 //_______________________________________________________________________
 TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSet& theData, 
@@ -177,6 +184,8 @@ void TMVA::MethodTMlpANN::ProcessOptions()
 {
    // builds the neural network as specified by the user
 
+   MethodBase::ProcessOptions();
+
    CreateMLPOptions(fLayerSpec);
 
    // Here we create a dummy tree necessary to create 
@@ -194,7 +203,7 @@ void TMVA::MethodTMlpANN::ProcessOptions()
    }
    dummyTree->Branch("type", &type, "type/I");
 
-   if(fMLP!=0) delete fMLP;
+   if (fMLP!=0) delete fMLP;
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
 }
 
@@ -204,7 +213,7 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue()
    // calculate the value of the neural net for the current event 
    static Double_t* d = new Double_t[Data().GetNVariables()];
    for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
-      d[ivar] = (Double_t)Data().Event().GetVal(ivar);
+      d[ivar] = (Double_t)GetEvent().GetVal(ivar);
    }
    Double_t mvaVal = fMLP->Evaluate(0,d);
    return mvaVal;
@@ -294,9 +303,3 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream & istr )
    // how?
 }
 
-//_______________________________________________________________________
-void  TMVA::MethodTMlpANN::WriteMonitoringHistosToFile( void ) const
-{
-   // write special monitoring histograms to file (done internally in TMultiLayerPerceptron)
-   fLogger << kINFO << "wrote monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
-}

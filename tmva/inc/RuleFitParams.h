@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.h,v 1.9 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tmva $Id: RuleFitParams.h,v 1.10 2007/02/02 19:16:05 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -33,14 +33,21 @@
 #ifndef ROOT_TMVA_RuleFitParams
 #define ROOT_TMVA_RuleFitParams
 
+#if ROOT_VERSION_CODE >= 364802
+#ifndef ROOT_TMathBase
+#include "TMathBase.h"
+#endif
+#else
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+#endif
+
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMathBase
-#include "TMathBase.h"
 #endif
 
 class TTree;
@@ -59,12 +66,36 @@ namespace TMVA {
 
       void Init();
 
+      // set message type
+      void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
+
+      // set RuleFit ptr
       void SetRuleFit( RuleFit *rf )    { fRuleFit = rf; Init(); }
       //
+      // GD path: set N(path steps)
       void SetGDNPathSteps( Int_t np )  { fGDNPathSteps = np; }
+
+      // GD path: set path step size
       void SetGDPathStep( Double_t s )  { fGDPathStep = s; }
-      void SetGDTau( Double_t t )       { fGDTau = t; }
-      void SetGDErrNsigma( Double_t s ) { fGDErrNsigma = s; }
+
+      // GD path: set tau search range
+      void SetGDTau( Double_t t0, Double_t t1 )
+      {
+         fGDTauMin = (t0>1.0 ? 1.0:(t0<0.0 ? 0.0:t0));
+         fGDTauMax = (t1>1.0 ? 1.0:(t1<0.0 ? 0.0:t1));
+         if (fGDTauMax<fGDTauMin) fGDTauMax = fGDTauMin;
+      }
+
+      // GD path: set number of steps in tau search range
+      void SetGDTauScan( UInt_t n )        { fGDTauScan = n; }
+
+      // GD path: set tau
+      void SetGDTau( Double_t t ) { fGDTau = t; }
+
+
+      void SetGDErrScale( Double_t s ) { fGDErrScale = s; }
+      void SetGDNTau( UInt_t n )        { fGDNTau = n; fGDTauVec.resize(n); }
+      void SetGDTauVec( std::vector<Double_t> & tau ) { fGDNTau = tau.size(); fGDTauMin = tau[0]; fGDTauMax = tau[fGDNTau-1]; fGDTauVec = tau; }
 
       // return type such that +1 = signal and -1 = background
       Int_t Type( const Event * e ) const { return (e->IsSignal() ? 1:-1); }
@@ -89,6 +120,12 @@ namespace TMVA {
     
       // Penalty function; Lasso function (eq 8)
       Double_t Penalty() const;
+
+      // initialize GD path
+      void InitGD();
+
+      // find best tau and return the number of scan steps used
+      Int_t FindGDTau();
 
       // make path for binary classification (squared-error ramp, sect 6 in ref 1)
       void MakeGDPath();
@@ -117,7 +154,9 @@ namespace TMVA {
       Double_t ErrorRateRisk(UInt_t ibeg, UInt_t iend);
 
       // estimate 1-area under ROC
+      Double_t ErrorRateRocRaw( std::vector<Double_t> & sFsig, std::vector<Double_t> & sFbkg );
       Double_t ErrorRateRoc(UInt_t ibeg, UInt_t iend);
+      void     ErrorRateRocTst(UInt_t ibeg, UInt_t iend);
 
       // make gradient vector (eq 44 in ref 1)
       void MakeGradientVector(UInt_t ibeg, UInt_t iend);
@@ -125,28 +164,60 @@ namespace TMVA {
       // Calculate the direction in parameter space (eq 25, ref 1) and update coeffs (eq 22, ref 1)
       void UpdateCoefficients();
 
-      // calculate average of responses (initial estimate of a0)
-      Double_t CalcAverageResponse(UInt_t ibeg, UInt_t iend);
+      // calculate average of responses of F
+      Double_t CalcAverageResponse();
+      Double_t CalcAverageResponseOLD(UInt_t ibeg, UInt_t iend);
 
-      RuleFit      * fRuleFit;      // rule fit
-      RuleEnsemble * fRuleEnsemble; // rule ensemble
+      // calculate average of true response (initial estimate of a0)
+      Double_t CalcAverageTruth(UInt_t ibeg, UInt_t iend);
+
+      // calculate the average of each variable over the range
+      void EvaluateAverage(UInt_t ibeg, UInt_t iend);
+
+      // the same as above but for the various tau
+      void MakeTstGradientVector(UInt_t ibeg, UInt_t iend);
+      void UpdateTstCoefficients();
+      void CalcTstAverageResponse();
+      //      void CalcTstAverageResponse(UInt_t ibeg, UInt_t iend);
+
+      RuleFit             * fRuleFit;      // rule fit
+      RuleEnsemble        * fRuleEnsemble; // rule ensemble
       std::vector<const Event *>  fTrainingEvents; // ptr to training events
+      //
+      UInt_t                fNRules;       // number of rules
+      UInt_t                fNLinear;      // number of linear terms
+      //
       // Event indecis for path/validation - TODO: should let the user decide
       // Now it is just a simple one-fold cross validation.
+      //
       UInt_t                fPathIdx1;       // first event index for path search
       UInt_t                fPathIdx2;       // last event index for path search
       UInt_t                fPerfIdx1;       // first event index for performance evaluation
       UInt_t                fPerfIdx2;       // last event index for performance evaluation
+      std::vector<Double_t> fAverageSelector; // average of each variable over a range set by EvaluateAverage()
+      std::vector<Double_t> fAverageRule;     // average of each rule over a range set by EvaluateAverage()
 
       std::vector<Double_t> fGradVec;        // gradient vector - dimension = number of rules in ensemble
       std::vector<Double_t> fGradVecLin;     // gradient vector - dimension = number of variables
-      std::vector<Double_t> fGradVecMin;     // gradient vector, min
-      Double_t              fGradOfs;        // gradient for offset
+      std::vector< std::vector<Double_t> > fGradVecTst;    // gradient vector - one per tau
+      std::vector< std::vector<Double_t> > fGradVecLinTst; // gradient vector, linear terms - one per tau
       //
-      Double_t              fGDTau;          // threshold parameter (tau in eq 26, ref 1)
+      std::vector<Double_t> fGDErrSum;  // accumulated errors per tau
+      std::vector< std::vector<Double_t> > fGDCoefTst;    // rule coeffs - one per tau
+      std::vector< std::vector<Double_t> > fGDCoefLinTst; // linear coeffs - one per tau
+      std::vector<Double_t> fGDOfsTst;       // offset per tau
+      //
+      Double_t              fAverageTruth;   // average truth, ie sum(y)/N, y=+-1
+      //
+      std::vector< Double_t > fGDTauVec;     // the tau's
+      UInt_t                fGDNTau;         // number of tau-paths
+      UInt_t                fGDTauScan;      // number scan for tau-paths
+      Double_t              fGDTauMin;       // min threshold parameter (tau in eq 26, ref 1)
+      Double_t              fGDTauMax;       // max threshold parameter (tau in eq 26, ref 1)
+      Double_t              fGDTau;          // selected threshold parameter (tau in eq 26, ref 1)
       Double_t              fGDPathStep;     // step size along path (delta nu in eq 22, ref 1)
       Int_t                 fGDNPathSteps;   // number of path steps
-      Double_t              fGDErrNsigma;    // threshold difference from minimum (n sigmas)
+      Double_t              fGDErrScale;     // stop scan at error = scale*errmin
       //
       std::vector<Double_t> fFstar;          // vector of F*() - filled in CalcFStar()
       Double_t              fFstarMedian;    // median value of F*() using 

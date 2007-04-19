@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.cxx,v 1.29 2006/11/16 22:51:58 helgevoss Exp $   
+// @(#)root/tmva $Id: Event.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -36,7 +36,7 @@
 Int_t TMVA::Event::fgCount = 0;
 
 //____________________________________________________________
-TMVA::Event::Event(const std::vector<VariableInfo>& varinfo) 
+TMVA::Event::Event(const std::vector<VariableInfo>& varinfo, Bool_t AllowExternalLinks) 
    : fVariables(varinfo),
      fVarPtr(new void*[varinfo.size()]), // array to hold pointers to the integer or float array
      fVarPtrI(0),                        // array to hold all float variables 
@@ -45,21 +45,19 @@ TMVA::Event::Event(const std::vector<VariableInfo>& varinfo)
      fWeight(0),
      fBoostWeight(1.0),
      fCountI(0),
-     fCountF(0),
-     fLogger( "Event" )
+     fCountF(0)
 {
    // constructor
 
-   fgCount++; if (!(fgCount%1000)) fLogger<< kINFO << "<Event> instantited " << fgCount << " times " <<Endl;
+   fgCount++; 
    for (UInt_t ivar=0; ivar<fVariables.size(); ivar++) {
       if      (fVariables[ivar].VarType()=='I') fCountI++;
       else if (fVariables[ivar].VarType()=='F') fCountF++;
-      else fLogger << kFATAL << "unknown variable type encountered in constructor of Event" << Endl;
    }
-   InitPointers();
+   InitPointers(AllowExternalLinks);
 }
 
-TMVA::Event::Event(const Event& event) 
+TMVA::Event::Event( const Event& event ) 
    : fVariables(event.fVariables),
      fVarPtr(new void*[event.fVariables.size()]), // array to hold pointers to the integer or float array
      fVarPtrI(0),                                 // array to hold all float variables 
@@ -68,13 +66,12 @@ TMVA::Event::Event(const Event& event)
      fWeight(event.fWeight),
      fBoostWeight(event.fBoostWeight),
      fCountI(event.fCountI),
-     fCountF(event.fCountF),
-     fLogger( "Event" )
+     fCountF(event.fCountF)
 {
    // constructor
 
-   fgCount++; if (!(fgCount%1000)) fLogger<< kDEBUG << "<Event> instantiated " << fgCount << " times " <<Endl;
-   InitPointers(kFALSE); // this constructor is (miss)used in the BinarySearchTree
+   fgCount++; 
+   InitPointers(kFALSE); // this constructor is used in the BinarySearchTree
    // where we don't want to have externaly linked variables
    for (UInt_t ivar = 0; ivar< fCountI; ivar++){
       fVarPtrI[ivar] = *((Int_t*)event.fVarPtr[ivar]);
@@ -111,12 +108,22 @@ void TMVA::Event::InitPointers(bool AllowExternalLink)
          // set the void pointer to the int field
          fVarPtr[ivar] = fVarPtrI+ivarI++;
       } 
-      else fLogger << kFATAL << "unknown variable type encountered in constructor of Event" << Endl;
    }
 }
 
+
 //____________________________________________________________
-void TMVA::Event::SetBranchAddresses(TTree *tr) 
+TMVA::Event::~Event() {
+   delete[] fVarPtr;
+   delete[] fVarPtrI;
+   delete[] fVarPtrF;
+   fgCount--;
+}
+
+
+
+//____________________________________________________________
+void TMVA::Event::SetBranchAddresses(TTree *tr)
 {
    // sets the branch addresses of the associated
    // tree to the local memory as given by fVarPtr
@@ -140,22 +147,16 @@ void TMVA::Event::SetBranchAddresses(TTree *tr)
 void TMVA::Event::CopyVarValues( const Event& other )
 {
    // copies only the variable values
-
-   // sanity check
-   if (GetNVars() != other.GetNVars()) fLogger << kFATAL << "<CopyVarValues> mismatch in events" << Endl;
-
    for (UInt_t ivar=0; ivar<GetNVars(); ivar++) SetVal( ivar, other.GetVal( ivar ) );    
+   SetType(other.Type());
+   SetWeight(other.GetWeight());
+   SetBoostWeight(other.GetBoostWeight());
 }
 
 //____________________________________________________________
 void TMVA::Event::SetVal(UInt_t ivar, Float_t val) 
 {
    // set variable ivar to val
-
-   if (ivar>=GetNVars()) 
-      fLogger << kFATAL << "<SetVal> cannot set value for variable index " << ivar 
-              << ", exceeds max index " << GetNVars()-1 << Endl;
-
    *((Float_t*)fVarPtr[ivar]) = val;
 }
 
@@ -174,8 +175,9 @@ void TMVA::Event::Print(std::ostream& o) const
 
    o << fVariables.size() << " vars: ";
    for(UInt_t ivar=0; ivar<fVariables.size(); ivar++)
-      o << std::setw(10) << GetVal(ivar);
-   o << std::setw(10) << (IsSignal()?"  Signal":"  Background");
+      o << " " << std::setw(10) << GetVal(ivar);
+   o << "  EvtWeight " << std::setw(10) << GetWeight();
+   o << std::setw(10) << (IsSignal()?" Signal":" Background");
    o << std::endl;
 }
 

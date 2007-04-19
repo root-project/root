@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.12 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.13 2006/11/23 17:43:38 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -48,8 +48,6 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
-
-
 namespace TMVA {
 
    class Node;
@@ -72,17 +70,16 @@ namespace TMVA {
    public:
 
       // constructor of a node 
-      Node() : fParent ( NULL ), fLeft( NULL), fRight( NULL ),  
-        fPos ('u'), fDepth(0), fParentTree(NULL) { fgCount++; }
+      Node();
       
       // constructor of a daughter node as a daughter of 'p'
       Node( Node* p, char pos );
 
       // copy constructor
-      Node (const Node &n );
+      Node( const Node &n );
 
       // destructor
-      virtual ~Node ();
+      virtual ~Node();
       
       // test event if i{ decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const = 0;
@@ -136,21 +133,24 @@ namespace TMVA {
       void SetParentTree(TMVA::BinaryTree* t) {fParentTree = t;} 
 
       int GetCount(){return fgCount;}
+
+      virtual Int_t GetMemSize() const;
+
    private: 
 
-      Node*  fParent;              // the previous (parent) node
-      Node*  fLeft;                // pointers to the two "daughter" nodes
-      Node*  fRight;               // pointers to the two "daughter" nodes
+      Node*   fParent;              // the previous (parent) node
+      Node*   fLeft;                // pointers to the two "daughter" nodes
+      Node*   fRight;               // pointers to the two "daughter" nodes
 
-      char         fPos;    // position, i.e. it is a left (l) or right (r) daughter 
-      UInt_t       fDepth;  // depth of the node within the tree (seen from root node)
+      char    fPos;                 // position, i.e. it is a left (l) or right (r) daughter 
+      UInt_t  fDepth;               // depth of the node within the tree (seen from root node)
 
-      BinaryTree*   fParentTree; //pointer to the parent tree to which the Node belongs 
+      BinaryTree*  fParentTree;     // pointer to the parent tree to which the Node belongs 
 
-      static int fgCount;   // counter of all nodes present.. for debug.. to spot memory leaks...
+      static Int_t fgCount;         // counter of all nodes present.. for debug.. to spot memory leaks...
 
+   public:
       ClassDef(Node,0) // Node for the BinarySearch or Decision Trees
-         ;
    };
 
 } // namespace TMVA

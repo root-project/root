@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationRadial.cxx,v 1.7 2006/10/11 08:49:44 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivationRadial.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -40,7 +40,6 @@
 static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationRadial)
-   ;
 
 //______________________________________________________________________________
 TMVA::TActivationRadial::TActivationRadial()

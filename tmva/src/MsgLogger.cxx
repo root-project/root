@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: MsgLogger.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -23,23 +23,22 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+// Local include(s):
+#include "TMVA/MsgLogger.h"
+
+// Local include(s):
+#include "TMVA/Config.h"
+
 // STL include(s):
 #include <iomanip>
 #include <iostream>
 
 // ROOT include(s):
-#include "TObject.h"
 
-// Local include(s):
-#include "TMVA/MsgLogger.h"
 
 using namespace std;
 
-// uncomment this line to inhibit colored output
-#define USE_COLORED_CONSOLE
-
 ClassImp(TMVA::MsgLogger)
-   ;
 
 // this is the hard-coded maximum length of the source names
 static const string::size_type MAXIMUM_SOURCE_NAME_LENGTH = 13;
@@ -155,7 +154,7 @@ void TMVA::MsgLogger::Send()
    string::size_type previous_pos = 0, current_pos = 0;
 
    // slice the message into lines:
-   for (;;) {
+   while (kTRUE) {
       current_pos = message.find( '\n', previous_pos );
       string line = message.substr( previous_pos, current_pos - previous_pos );
 
@@ -183,19 +182,19 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type < fMinType) return;
    map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
-#ifdef USE_COLORED_CONSOLE
-   // no text for INFO
-   if (type == kINFO) 
-      // no color for info
-      cout << fPrefix << line << endl;
-   else
-      cout << fColorMap.find( type )->second << fPrefix << "<" << stype->second << "> " << line  << "\033[0m" << endl;
-#else
-   if (type == kINFO) 
-      cout << fPrefix << line << endl;
-   else
-      cout << fPrefix << "<" << stype->second << "> " << line << endl;
-#endif // USE_COLORED_CONSOLE
+   if(Config::Instance().UseColor()) {
+      // no text for INFO
+      if (type == kINFO) 
+         // no color for info
+         cout << fPrefix << line << endl;
+      else
+         cout << fColorMap.find( type )->second << fPrefix << "<" << stype->second << "> " << line  << "\033[0m" << endl;
+   } else {
+      if (type == kINFO) 
+         cout << fPrefix << line << endl;
+      else
+         cout << fPrefix << "<" << stype->second << "> " << line << endl;
+   }
 
    // take decision to stop if fatal error
    if (type == kFATAL) { cout << "***> abort program execution" << endl; exit(1); }
@@ -224,6 +223,6 @@ void TMVA::MsgLogger::InitMaps()
    fColorMap[kINFO]    = "";
    fColorMap[kWARNING] = "\033[31m";
    fColorMap[kERROR]   = "\033[31m";
-   fColorMap[kFATAL]   = "\033[1;31;40m";
+   fColorMap[kFATAL]   = "\033[1;41;29m";
    fColorMap[kALWAYS]  = "\033[30m";   
 }

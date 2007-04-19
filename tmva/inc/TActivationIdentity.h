@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationIdentity.h,v 1.9 2006/11/14 14:19:17 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivationIdentity.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -69,7 +69,6 @@ namespace TMVA {
   private:
 
     ClassDef(TActivationIdentity,0) // Identity activation function for TNeuron
-       ;
    };
 
 } // namespace TMVA

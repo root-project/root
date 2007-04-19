@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingCuts.h,v 1.6 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingCuts.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -51,13 +51,12 @@ namespace TMVA {
       
    public:
       
-      SimulatedAnnealingCuts( std::vector<LowHigh_t*>& ranges );
+      SimulatedAnnealingCuts( std::vector<Interval*>& ranges );
       ~SimulatedAnnealingCuts();
       
       Double_t MinimizeFunction( const std::vector<Double_t>& parameters );                      
 
       ClassDef(SimulatedAnnealingCuts,0)  // Concrete Simulated Annealing fitter for cut optimisation
-         ;
    };
 } // namespace TMVA
 

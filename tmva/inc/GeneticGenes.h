@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.h,v 1.9 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticGenes.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -60,7 +60,6 @@ namespace TMVA {
       std::vector<Double_t> fResults; // stores the fitness-results of this individual
   
       ClassDef(GeneticGenes,0) // Genes definition for genetic algorithm
-         ;
    };
 
 } // namespace TMVA

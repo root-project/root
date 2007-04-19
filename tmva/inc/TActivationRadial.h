@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationRadial.h,v 1.5 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivationRadial.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -69,7 +69,6 @@ namespace TMVA {
       TFormula* fEqnDerivative;      // equation of derivative
 
       ClassDef(TActivationRadial,0)  // Radial basis activation function for TNeuron
-         ;
    };
 
 } // namespace TMVA

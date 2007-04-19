@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -105,7 +105,6 @@ namespace TMVA {
       TString fABSSUM; // neuron input type name
 
       ClassDef(TNeuronInputChooser,0) // Class for choosing neuron input functions
-         ;
    };
 
 } // namespace TMVA

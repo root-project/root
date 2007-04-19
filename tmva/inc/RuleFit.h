@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: RuleFit.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -67,6 +67,8 @@ namespace TMVA {
                         const std::vector<Event *> & trainingEvents,
                         Double_t samplefrac );
 
+      void SetMsgType( EMsgType t );
+
       void SetTrainingEvents( const std::vector<Event *> & el, Double_t sampfrac );
 
       // calculate and print some statistics on the given forest
@@ -89,12 +91,20 @@ namespace TMVA {
       void     SetModelFull()                        { fRuleEnsemble.SetModelFull(); }
       // set minimum importance allowed
       void     SetImportanceCut( Double_t minimp=0 ) { fRuleEnsemble.SetImportanceCut(minimp); }
-      // set max rule distance - see RuleEnsemble
-      void     SetMaxRuleDist( Double_t maxd )       { fRuleEnsemble.SetMaxRuleDist(maxd); }
+      // set minimum rule distance - see RuleEnsemble
+      void     SetRuleMinDist( Double_t d )          { fRuleEnsemble.SetRuleMinDist(d); }
       // set path related parameters
       void     SetGDTau( Double_t t=0.0 )       { fRuleFitParams.SetGDTau(t); }
       void     SetGDPathStep( Double_t s=0.01 ) { fRuleFitParams.SetGDPathStep(s); }
       void     SetGDNPathSteps( Int_t n=100 )   { fRuleFitParams.SetGDNPathSteps(n); }
+      // make visualization histograms
+      void     MakeVisHists();
+      void     FillVisHistCut(const Rule * rule, std::vector<TH2F *> & hlist);
+      void     FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hlist);
+      void     FillCut(TH2F* h2,const TMVA::Rule *rule,Int_t vind);
+      void     FillLin(TH2F* h2,Int_t vind);
+      void     FillCorr(TH2F* h2,const TMVA::Rule *rule,Int_t v1, Int_t v2);
+      Bool_t   GetCorrVars(TString & title, TString & var1, TString & var2);
       // accessors
       UInt_t        GetNSubsamples() const { return (fSubsampleEvents.size()>1 ? fSubsampleEvents.size()-1:0); }
       const Event*  GetTrainingEvent(UInt_t i)  const { return fTrainingEvents[i]; }
@@ -129,7 +139,6 @@ namespace TMVA {
       mutable MsgLogger                   fLogger;          // message logger
 
       ClassDef(RuleFit,0)  // the actual calculations to Friedman's RuleFit method
-         ;
    };
 }
 

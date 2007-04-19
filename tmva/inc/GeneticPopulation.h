@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.h,v 1.12 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -42,6 +42,9 @@
 #ifndef ROOT_TMVA_GeneticGenes
 #include "TMVA/GeneticGenes.h"
 #endif
+#ifndef ROOT_TMVA_Interval
+#include "TMVA/Interval.h"
+#endif
 #ifndef ROOT_TMVA_GeneticRange
 #include "TMVA/GeneticRange.h"
 #endif
@@ -60,21 +63,26 @@ namespace TMVA {
       GeneticPopulation();
       virtual ~GeneticPopulation();
 
-      typedef std::pair<const Double_t, GeneticGenes > entry;
+      typedef std::pair<Double_t, GeneticGenes > entry;
 
       void CreatePopulation( Int_t size );
       void AddPopulation( GeneticPopulation *genePool );
       void TrimPopulation();
-      void GiveHint( std::vector< Double_t > hint, Double_t fitness = 0 );
+      void GiveHint( std::vector< Double_t >& hint, Double_t fitness = 0 );
       void MakeChildren();
+      void MakeCopies( int number );
       GeneticGenes MakeSex( GeneticGenes male, GeneticGenes female );
 
       void MakeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
                         Double_t spread = 0.1, Bool_t mirror = kFALSE  );
       void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
                    Double_t spread = 0.1, Bool_t mirror = kFALSE  );
-
-      void AddFactor( Double_t from, Double_t to );
+      GeneticGenes Mutate(  GeneticGenes individual, Double_t probability, Bool_t near,      
+                            Double_t spread, Bool_t mirror );
+      
+      void NextGeneration();
+      
+      void AddFactor( Interval *interval );
 
       GeneticGenes* GetGenes();
       GeneticGenes* GetGenes( Int_t index );
@@ -94,9 +102,9 @@ namespace TMVA {
       Double_t GetCounterFitness() const { return fCounterFitness; }
       Int_t    GetPopulationSize() const { return fPopulationSize; }
 
-      std::multimap<Double_t, GeneticGenes  >* GetGenePool()    const { return fGenePool; }
-      std::multimap<Double_t, GeneticGenes  >* GetNewGenePool() const { return fNewGenePool; }
-      std::vector< TMVA::GeneticRange* >&      GetRanges()      { return fRanges; }
+      std::multimap<Double_t, GeneticGenes>* GetGenePool()    const { return fGenePool; }
+      std::multimap<Double_t, GeneticGenes>* GetNewGenePool() const { return fNewGenePool; }
+      std::vector<TMVA::GeneticRange*>&      GetRanges()            { return fRanges; }
   
    private:
 
@@ -112,7 +120,6 @@ namespace TMVA {
       mutable MsgLogger                      fLogger;        // message logger      
 
       ClassDef(GeneticPopulation,0) //Population definition for genetic algorithm
-         ;
    };
 
 } // namespace TMVA

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTreeNode.h,v 1.4 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: BinarySearchTreeNode.h,v 1.5 2006/11/23 17:43:38 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -51,6 +51,7 @@
 namespace TMVA {
 
    class Event;
+   class MsgLogger;
 
    // a class used to identify a Node; (needed for recursive reading from text file)
    // (currently it is NOT UNIQUE... but could eventually made it
@@ -60,12 +61,10 @@ namespace TMVA {
    public:
 
       // constructor of a node for the search tree
-      BinarySearchTreeNode( Event* e = NULL, Bool_t o=kFALSE ) : 
-        TMVA::Node(), fEvent( e ), fEventOwnership ( o ),  fSelector( -1 ) {}
+      BinarySearchTreeNode( Event* e = NULL );
 
       // constructor of a daughter node as a daughter of 'p'
-      BinarySearchTreeNode( BinarySearchTreeNode* p, char pos ) : TMVA::Node(p,pos),
-        fEvent( NULL ), fEventOwnership (kFALSE), fSelector( -1 ) {}
+      BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos );
 
       // copy constructor
       BinarySearchTreeNode ( const BinarySearchTreeNode &n, 
@@ -87,11 +86,10 @@ namespace TMVA {
       inline void SetSelector( Short_t i) { fSelector = i; }
       // return index of variable used for discrimination at this node 
       inline Short_t GetSelector() const { return fSelector; }
-      // set the EVENT that forms this node (in search tree)
-      inline void SetEvent( Event* e ) { fEvent = e; }
 
-      // return the EVENT that forms this node (in search tree)
-      inline Event* GetEvent() const { return fEvent; }
+      const std::vector<Float_t> & GetEventV() const { return fEventV; }
+      Float_t                      GetWeight() const { return fWeight; }
+      Bool_t                       IsSignal()  const { return fIsSignal; }
 
       // printout of the node
       virtual void Print( ostream& os ) const;
@@ -103,20 +101,19 @@ namespace TMVA {
       virtual void ReadRec( istream& is, char &pos, 
                             UInt_t &depth, TMVA::Node* parent=NULL );
 
-      // return true/false if the EVENT* that forms the node is owned by the node or not 
-      Bool_t      GetEventOwnership( void           ) { return fEventOwnership; }
-      // set if the EVENT* that forms the node is owned by the node or not 
-      void        SetEventOwnership( Bool_t b ) { fEventOwnership = b; }
+      virtual Int_t GetMemSize() const;
 
    private: 
+      // Read the data block
+      Bool_t      ReadDataRecord( istream& is );
 
-      Event* fEvent;               // event that forms the node (search tree)
-      Bool_t      fEventOwnership; // flag if Event* is owned by the node or not
+      std::vector<Float_t> fEventV;
+      Float_t     fWeight;
+      Bool_t      fIsSignal;
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
-    
+
       ClassDef(BinarySearchTreeNode,0) // Node for the BinarySearchTree
-         ;
    };
 
 } // namespace TMVA

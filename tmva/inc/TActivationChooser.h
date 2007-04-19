@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationChooser.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TActivationChooser.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -133,7 +133,6 @@ namespace TMVA {
       mutable MsgLogger fLogger; // message logger
 
       ClassDef(TActivationChooser,0) // Class for choosing activation functions
-         ;
    };
 
 } // namespace TMVA

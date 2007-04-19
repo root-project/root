@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SeparationBase.h,v 1.12 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: SeparationBase.h,v 1.9 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -105,7 +105,6 @@ namespace TMVA {
       TString fName;  // name of the concrete Separation Index impementation
  
       ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
-         ;
    };
 
 

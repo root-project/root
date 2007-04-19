@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTreeNode.cxx,v 1.5 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: BinarySearchTreeNode.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -42,17 +42,48 @@
 #include "TMVA/BinarySearchTreeNode.h"
 #include "Riostream.h"
 #include <stdexcept>
+#include <assert.h>
 #include "TMVA/Event.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::BinarySearchTreeNode)
-   ;
+
 
 //_______________________________________________________________________
-TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode  &n,
-                                                   BinarySearchTreeNode* parent) : 
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( Event* e ) : 
+   TMVA::Node(),
+   fEventV(std::vector<Float_t>()),
+   fWeight(e==0?0:e->GetWeight()),
+   fIsSignal(e==0?kTRUE:e->IsSignal()),
+   fSelector( -1 )
+{
+   // constructor of a node for the search tree
+   if(e!=0) 
+      for(UInt_t ivar=0; ivar<e->GetNVars(); ivar++)
+         fEventV.push_back(e->GetVal(ivar));
+}
+
+//_______________________________________________________________________
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos ) : 
+   TMVA::Node(parent,pos),
+   fEventV(std::vector<Float_t>()),
+   fWeight(0),
+   fIsSignal(kTRUE),
+   fSelector( -1 )
+{
+   // constructor of a daughter node as a daughter of 'p'
+
+}
+
+
+
+//_______________________________________________________________________
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode &n,
+                                                   BinarySearchTreeNode* parent ) : 
    TMVA::Node(n),
-   fEvent ( n.fEvent==NULL ? NULL : new Event(*(n.fEvent)) ),
-   fEventOwnership (kTRUE),
+   fEventV(n.fEventV),
+   fWeight(n.fWeight),
+   fIsSignal(n.fIsSignal),
    fSelector (n.fSelector)
 {
    // copy constructor of a node. It will result in an explicit copy of
@@ -63,21 +94,20 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode ( const BinarySearchTreeNode  &
    
    if (n.GetRight() == 0 ) this->SetRight(NULL);
    else this->SetRight( new BinarySearchTreeNode( *((BinarySearchTreeNode*)(n.GetRight())),this));
-   
+
 }
 
-
 //_______________________________________________________________________
-TMVA::BinarySearchTreeNode::~BinarySearchTreeNode ( void )
+TMVA::BinarySearchTreeNode::~BinarySearchTreeNode()
 {
    // node destructor
-   if (this->GetEventOwnership()) delete fEvent;
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::BinarySearchTreeNode::GoesRight(const TMVA::Event& e) const {
+Bool_t TMVA::BinarySearchTreeNode::GoesRight( const TMVA::Event& e ) const 
+{
    // check if the event fed into the node goes/decends to the right daughter
-   if (e.GetVal(fSelector) > fEvent->GetVal(fSelector)) return true;
+   if (e.GetVal(fSelector) > GetEventV()[fSelector]) return true;
    else return false;
 }
 
@@ -85,7 +115,7 @@ Bool_t TMVA::BinarySearchTreeNode::GoesRight(const TMVA::Event& e) const {
 Bool_t TMVA::BinarySearchTreeNode::GoesLeft(const TMVA::Event& e) const
 {
    // check if the event fed into the node goes/decends to the left daughter
-   if (e.GetVal(fSelector) <= fEvent->GetVal(fSelector)) return true;
+   if (e.GetVal(fSelector) <= GetEventV()[fSelector]) return true;
    else return false;
 }
 
@@ -95,20 +125,23 @@ Bool_t TMVA::BinarySearchTreeNode::EqualsMe(const TMVA::Event& e) const
    // check if the event fed into the node actually equals the event
    // that forms the node (in case of a search tree)
    Bool_t result = true;
-   for (UInt_t i=0; i<fEvent->GetNVars(); i++) {
-      result&= (e.GetVal(i) == fEvent->GetVal(i));
+   for (UInt_t i=0; i<GetEventV().size(); i++) {
+      result&= (e.GetVal(i) == GetEventV()[i]);
    }
    return result;
 }
 
-
-// print a node
 //_______________________________________________________________________
-void TMVA::BinarySearchTreeNode::Print(ostream& os) const
+void TMVA::BinarySearchTreeNode::Print( ostream& os ) const
 {
-   //print the node
-   os << "< ***  " <<endl << " node.Data: " << this->GetEvent() 
-      << "at address " <<long(this->GetEvent()) <<endl;
+   // print the node
+   os << "< ***  " <<endl << " node.Data: ";
+   std::vector<Float_t>::const_iterator it=fEventV.begin();
+   os << fEventV.size() << " vars: ";
+   for(;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
+   os << "  EvtWeight " << std::setw(10) << fWeight;
+   os << std::setw(10) << (fIsSignal?" Signal":" Background") << endl;
+
    os << "Selector: " <<  this->GetSelector() <<endl;
    os << "My address is " << long(this) << ", ";
    if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
@@ -119,73 +152,104 @@ void TMVA::BinarySearchTreeNode::Print(ostream& os) const
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTreeNode::PrintRec(ostream& os ) const
+void TMVA::BinarySearchTreeNode::PrintRec( ostream& os ) const
 {
-   //recursively print the node and its daughters (--> print the 'tree')
-   os << this->GetDepth() << " " << this->GetPos() 
-      << " node.Data: " <<  endl << this->GetEvent() ;
-   os << this->GetDepth() << " " << this->GetPos() 
-      << " Selector: " <<  this->GetSelector() <<endl;
+   // recursively print the node and its daughters (--> print the 'tree')
+   os << this->GetDepth() << " " << this->GetPos() << " " << this->GetSelector()
+      << " data: " <<  endl;
+   std::vector<Float_t>::const_iterator it=fEventV.begin();
+   os << fEventV.size() << " vars: ";
+   for(;it!=fEventV.end(); it++) os << " " << std::setw(10) << *it;
+   os << "  EvtWeight " << std::setw(10) << fWeight;
+   os << std::setw(10) << (fIsSignal?" Signal":" Background") << endl;
+
    if(this->GetLeft() != NULL)this->GetLeft()->PrintRec(os) ;
    if(this->GetRight() != NULL)this->GetRight()->PrintRec(os);
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTreeNode::ReadRec(istream& is,  char &pos, UInt_t &depth,
-                                         TMVA::Node* parent )
+Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( istream& is ) 
 {
-   //recursively read the node and its daughters (--> print the 'tree')
+   // Read the data block
+
    std::string tmp;
-   Int_t itmp;
+   UInt_t      depth;
+   char        pos;
+   TString     sigbkgd;
+   Float_t     evtValFloat;
+   //   Int_t       evtValInt;
+   //   Float_t     evtWeight;
+   UInt_t      nvar;
+   Int_t       itmp;
+   UInt_t      selIdx;
 
-   if (parent==NULL) {
-      is >> itmp >> pos ;
-      this->SetDepth(itmp);
-      this->SetPos(pos);
-   } else {
-      this->SetDepth(depth);
-      this->SetPos(pos);
+   // read depth and position
+   is >> itmp;
+   if( itmp==-1 ) { delete this; return kFALSE; }
+   depth = itmp;
+   is >> pos >> selIdx >> tmp;
+   this->SetDepth(itmp);   // depth of the tree
+   this->SetPos(pos);      // either 's' (root node), 'l', or 'r'
+   this->SetSelector(selIdx);
+
+   // read and build the event
+   is >> nvar >> tmp;
+   fEventV.clear();
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+      is >> evtValFloat;
+      fEventV.push_back(evtValFloat);
+//       if(GetEvent()->IsFloat(ivar)) {
+//          is >> evtValFloat;
+//          GetEvent()->SetValFloatNoCheck(ivar, evtValFloat);
+//          fEventV.push_back(evtValFloat);
+//       } else {
+//          is >> evtValInt;
+//          GetEvent()->SetValIntNoCheck(ivar, evtValInt);
+//          fEventV.push_back((Float_t)evtValInt);
+//       }
    }
+   is >> tmp >> fWeight;
+   //   GetEvent()->SetWeight(fWeight);
+   is >> sigbkgd;
+   //   GetEvent()->SetType((sigbkgd=="Signal")?Types::kSignal:Types::kBackground);
+   fIsSignal = (sigbkgd=="Signal");
+   // -------------------------
 
-   is >> tmp;
+   return kTRUE;
+}
 
+//_______________________________________________________________________
+void TMVA::BinarySearchTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
+                                          TMVA::Node* parent )
+{
+   // recursively read the node and its daughters (--> print the 'tree')
+
+   if( ! ReadDataRecord(is) ) return;
+
+   depth = GetDepth();
+   pos   = GetPos();
+
+   // find parent node
+   while( parent!=0 && parent->GetDepth() != GetDepth()-1) parent=parent->GetParent();
+
+   if(parent!=0) {
+      SetParent(parent);
+      if(GetPos()=='l') parent->SetLeft(this);
+      if(GetPos()=='r') parent->SetRight(this);
+   }
    
-   std::cout  << kFATAL << " Cannot read revents yet as the constuctor would need "
-              << " know about the VariableInfo" << std::endl; exit(1);
-
-   //TMVA::Event* e = new TMVA::Event();
-   this->SetEventOwnership(kTRUE);
-   // read the event
-   Double_t dtmp;
-   Int_t nvar;
-   is >> tmp >> tmp >> nvar >> tmp >> tmp >> tmp >> dtmp;
-   // e->SetWeight(dtmp);
-   for (int i=0; i<nvar; i++){
-      is >> dtmp; 
-      //      e->SetVal(i,dtmp);
-   }
-   //   this->SetEvent(e);
-
-   is >> itmp >> pos >> tmp >> tmp;
-   this->SetSelector((UInt_t)atoi(tmp.c_str()));
-
-   is >> depth >> pos;
-
-   if (depth == this->GetDepth()+1){
-      if (pos=='l') {
-         this->SetLeft(new TMVA::BinarySearchTreeNode() );
-         this->GetLeft()->SetParent(this);
-         this->GetLeft()->ReadRec(is,pos,depth,this);
-      }
-   }
-   if (depth == this->GetDepth()+1){
-      if (pos=='r') {
-         this->SetRight(new TMVA::BinarySearchTreeNode());
-         this->GetRight()->SetParent(this);
-         this->GetRight()->ReadRec(is,pos,depth,this);
-      }
-   }
+   char childPos;
+   UInt_t childDepth;
+   TMVA::Node * newNode = new TMVA::BinarySearchTreeNode(  );
+   newNode->ReadRec(is, childPos, childDepth, this);
 }
 
 
 
+//_______________________________________________________________________
+Int_t TMVA::BinarySearchTreeNode::GetMemSize() const { 
+   Int_t size = sizeof(*this);
+   if(GetLeft()!=0) size += GetLeft()->GetMemSize();
+   if(GetRight()!=0) size += GetRight()->GetMemSize();
+   return size;
+}

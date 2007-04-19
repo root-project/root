@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.h,v 1.11 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: Reader.h,v 1.12 2007/01/16 09:37:03 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,7 +44,7 @@
 #include "TMVA/Types.h"
 #endif
 #ifndef ROOT_TMVA_IMethod
-#include "TMVA/IMethod.h"
+#include "TMVA/MethodBase.h"
 #endif
 #ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
@@ -59,20 +59,20 @@
 
 namespace TMVA {
 
-   class Reader : public TObject {
+   class Reader : public Configurable {
 
    public:
       
       // without prior specification of variables
-      Reader( Bool_t verbose = 0 );
+      Reader( TString theOption="", Bool_t verbose = 0 );
 
       // STL types
-      Reader( std::vector<std::string>&  varNames, Bool_t verbose = 0 );
-      Reader( const std::string     varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
+      Reader( std::vector<std::string>&  varNames, TString theOption = "", Bool_t verbose = 0 );
+      Reader( const std::string varNames, TString theOption, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
       // Root types
-      Reader( std::vector<TString>& varNames, Bool_t verbose = 0 );
-      Reader( const TString    varNames, Bool_t verbose = 0 );  // format: "var1:var2:..."
+      Reader( std::vector<TString>& varNames, TString theOption = "", Bool_t verbose = 0 );
+      Reader( const TString varNames, TString theOption, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
       virtual ~Reader( void );
   
@@ -80,10 +80,13 @@ namespace TMVA {
 
       Double_t EvaluateMVA( const std::vector<Float_t>&,  TString methodName, Double_t aux = 0 );    
       Double_t EvaluateMVA( const std::vector<Double_t>&, TString methodName, Double_t aux = 0 );    
-      Double_t EvaluateMVA( IMethod* method,              Double_t aux = 0 );    
+      Double_t EvaluateMVA( MethodBase* method,           Double_t aux = 0 );    
       Double_t EvaluateMVA( TString methodName,           Double_t aux = 0 );    
 
+      Double_t GetProba( TString methodName, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
+
       // accessors 
+      virtual const char* GetName() const { return "Reader"; }
       Bool_t   Verbose( void ) const  { return fVerbose; }
       void     SetVerbose( Bool_t v ) { fVerbose = v; }
 
@@ -107,14 +110,16 @@ namespace TMVA {
       void DecodeVarNames( const std::string varNames );
       void DecodeVarNames( const TString varNames );
 
+      void DeclareOptions();
+
       Bool_t fVerbose;    // verbosity
+      Bool_t fColor;      // color mode
 
       std::map<TString, IMethod*> fMethodMap; // map of methods
 
       mutable MsgLogger fLogger; // message logger
 
       ClassDef(Reader,0) // Interpret the trained MVAs in an analysis context
-         ;
    };
 
 }

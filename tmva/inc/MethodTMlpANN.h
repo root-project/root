@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.20 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.10 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,6 +70,9 @@ namespace TMVA {
       // training method
       virtual void Train( void );
 
+      using MethodBase::WriteWeightsToStream;
+      using MethodBase::ReadWeightsFromStream;
+
       // write weights to file
       virtual void WriteWeightsToStream( ostream& o ) const;
 
@@ -81,9 +84,6 @@ namespace TMVA {
       // - PrepareEvaluationtree... ugly but necessary due to the strucure 
       //   of TMultiLayerPercepton in ROOT grr... :-(
       virtual Double_t GetMvaValue();
-
-      // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
@@ -112,7 +112,6 @@ namespace TMVA {
       void InitTMlpANN( void );
 
       ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
-         ;
    };
 
 } // namespace TMVA

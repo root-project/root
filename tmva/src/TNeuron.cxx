@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuron.cxx,v 1.19 2006/11/16 19:42:44 stelzer Exp $
+// @(#)root/tmva $Id: TNeuron.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -48,7 +48,6 @@ static const Int_t UNINITIALIZED = -1;
 using std::vector;
 
 ClassImp(TMVA::TNeuron)
-   ;
 
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()

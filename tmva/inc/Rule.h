@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.h,v 1.7 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: Rule.h,v 1.8 2006/11/23 17:43:38 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -27,6 +27,7 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
 #ifndef ROOT_TMVA_Rule
 #define ROOT_TMVA_Rule
 
@@ -40,6 +41,9 @@
 #endif
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
+#endif
+#ifndef ROOT_TMVA_RuleCut
+#include "TMVA/RuleCut.h"
 #endif
 
 namespace TMVA {
@@ -58,9 +62,7 @@ namespace TMVA {
    public:
 
       // main constructor
-      Rule( RuleEnsemble *re,
-            const std::vector< const Node * > & nodes,
-            const std::vector< Int_t >        & cutdires );
+      Rule( RuleEnsemble *re, const std::vector< const Node * > & nodes );
 
       // copy constructor
       Rule( const Rule & other ) { Copy( other ); }
@@ -69,6 +71,9 @@ namespace TMVA {
       Rule() {}
 
       virtual ~Rule() {}
+
+      // set message type
+      void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
 
       // set RuleEnsemble ptr
       void SetRuleEnsemble( const RuleEnsemble *re ) { fRuleEnsemble = re; }
@@ -95,7 +100,7 @@ namespace TMVA {
       void SetImportanceRef(Double_t v) { fImportanceRef=(v>0 ? v:1.0); }
 
       // calculate importance
-      void CalcImportance()             { fImportance = fabs(fCoefficient)*fSigma; }
+      void CalcImportance()             { fImportance = TMath::Abs(fCoefficient)*fSigma; }
 
       // get the relative importance
       Double_t GetRelImportance()  const { return fImportance/fImportanceRef; }
@@ -110,18 +115,8 @@ namespace TMVA {
       // if >0 => signal and <0 bkg
       inline Double_t EvalEventSB( const Event& e ) const;
 
-      // REMOVE
-      // returns +-1 if the rules are equal single rules appart from the cutvalue
-      Int_t EqualSingleNode( const Rule & other ) const;
-
       // test if two rules are equal
       Bool_t Equal( const Rule & other, Bool_t useCutValue, Double_t maxdist ) const;
-
-      // test if two rules are equivalent REMOVE
-      Int_t  Equivalent( const Rule & other ) const;
-
-      // test if a rule is 'simple', ie only one var with one cut direction
-      Bool_t IsSimpleRule() const;
 
       // returns true if the trained S/(S+B) of the last node is > 0.5
       Double_t GetSSB()       const { return fSSB; }
@@ -137,27 +132,23 @@ namespace TMVA {
       Bool_t operator<( const Rule & other ) const;
 
       // get number of variables used in Rule
-      Int_t GetNumVarsUsed() const;
+      UInt_t GetNumVarsUsed() const { return fCut->GetNcuts(); }
 
       // check if variable is used by the rule
-      Bool_t ContainsVariable(Int_t iv) const;
-
-      // get the effective rule
-      void GetEffectiveRule( std::vector<Int_t> & nodeind ) const;
+      Bool_t ContainsVariable(UInt_t iv) const;
 
       // accessors
-      const RuleEnsemble                * GetRuleEnsemble()  const { return fRuleEnsemble; }
-      Double_t                            GetCoefficient()   const { return fCoefficient; }
-      Double_t                            GetSupport()       const { return fSupport; }
-      Double_t                            GetSigma()         const { return fSigma; }
-      Double_t                            GetNorm()          const { return fNorm; }
-      Double_t                            GetImportance()    const { return fImportance; }
-      Double_t                            GetImportanceRef() const { return fImportanceRef; }
-      const std::vector< const Node * > & GetNodes()         const { return fNodes; }
-      const std::vector< Int_t >        & GetCutDirs()       const { return fCutDirs; }
+      const RuleCut*      GetRuleCut()       const { return fCut; }
+      const RuleEnsemble* GetRuleEnsemble()  const { return fRuleEnsemble; }
+      Double_t            GetCoefficient()   const { return fCoefficient; }
+      Double_t            GetSupport()       const { return fSupport; }
+      Double_t            GetSigma()         const { return fSigma; }
+      Double_t            GetNorm()          const { return fNorm; }
+      Double_t            GetImportance()    const { return fImportance; }
+      Double_t            GetImportanceRef() const { return fImportanceRef; }
 
-      const Node *GetNode( Int_t i )     const { return fNodes[i]; }
-      Int_t       GetCutDir( Int_t i )  const { return fCutDirs[i]; }
+      // print the rule using flogger
+      void PrintLogger( const char *title=0 ) const;
 
       // print just the raw info, used for weight file generation
       void PrintRaw( ostream& os ) const;
@@ -172,32 +163,24 @@ namespace TMVA {
       // copy from another rule
       void Copy( const Rule & other );
 
-      // set the vector of nodes
-      void SetNodes( const std::vector< const Node * > & nodes );
-      void SetCutDirs( const std::vector< Int_t > & cutdir ) { fCutDirs = cutdir; }
-
-      // compare two nodes
-      Int_t CmpNodeCut( Int_t node1, Int_t node2 ) const;
-
       // get distance between two equal (ie apart from the cut values) rules
       Double_t RuleDist( const Rule & other, Bool_t useCutValue ) const;
 
       // get the name of variable with index i
       const TString & GetVarName( Int_t i) const;
 
-      std::vector< const Node * > fNodes;         // vector of all nodes in the Rule
-      std::vector< Int_t>         fCutDirs;       // cut type +1 - right, -1 - left, 0 - undefined; PHASE OUT
-      Double_t                    fNorm;          // normalization - usually 1.0/t(k)
-      Double_t                    fSupport;       // s(k)
-      Double_t                    fSigma;         // t(k) = sqrt(s*(1-s))
-      Double_t                    fCoefficient;   // rule coeff. a(k)
-      Double_t                    fImportance;    // importance of rule
-      Double_t                    fImportanceRef; // importance ref
-      const RuleEnsemble         *fRuleEnsemble;  // pointer to parent RuleEnsemble
-      Double_t                    fSSB;           // S/(S+B) for rule
-      Double_t                    fSSBNeve;       // N(events) reaching the last node in reevaluation
+      RuleCut*             fCut;           // all cuts associated with the rule
+      Double_t             fNorm;          // normalization - usually 1.0/t(k)
+      Double_t             fSupport;       // s(k)
+      Double_t             fSigma;         // t(k) = sqrt(s*(1-s))
+      Double_t             fCoefficient;   // rule coeff. a(k)
+      Double_t             fImportance;    // importance of rule
+      Double_t             fImportanceRef; // importance ref
+      const RuleEnsemble*  fRuleEnsemble;  // pointer to parent RuleEnsemble
+      Double_t             fSSB;           // S/(S+B) for rule
+      Double_t             fSSBNeve;       // N(events) reaching the last node in reevaluation
 
-      mutable MsgLogger           fLogger;        // message logger
+      mutable MsgLogger    fLogger;        // message logger
 
    };
 
@@ -226,18 +209,21 @@ inline Double_t TMVA::Rule::EvalEvent( const TMVA::Event& e ) const
    //
    // Loop over all nodes until the end or the event fails
    //
-   Double_t rval = 1.0;
-   UInt_t nnodes = fNodes.size()-1;
-   UInt_t n=0;
-   Bool_t stepOK=kTRUE;
+//    Double_t rval = 1.0;
+//    UInt_t nnodes = fNodes.size()-1;
+//    UInt_t n=0;
+//    Bool_t stepOK=kTRUE;
+//    Bool_t goesR;
+//    while (stepOK && (n<nnodes)) {
+//      goesR =  fNodes[n]->GoesRight(e);
+//       stepOK = ( ((fCutDirs[n]== +1) && goesR ) ||
+//                  ((fCutDirs[n]== -1) && (!goesR)) );
+//       if (!stepOK) rval = 0.0;
+//       n++;
+//    }
+//    return rval;
 
-   while (stepOK && (n<nnodes)) {
-      stepOK = ( ((fCutDirs[n]== +1) && fNodes[n]->GoesRight(e)) ||
-                 ((fCutDirs[n]== -1) && fNodes[n]->GoesLeft(e)) );
-      if (!stepOK) rval = 0.0;
-      n++;
-   }
-   return rval;
+   return fCut->EvalEvent(e);
 }
 
 //_______________________________________________________________________

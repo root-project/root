@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputAbs.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuronInputAbs.h,v 1.7 2007/02/02 19:16:05 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -35,9 +35,24 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+// ROOT_VERSION(5,15,02) = (5<<16)+(15<<8)+2 = 364802
+// we use the hardcoded number here since rootcint does not easily
+// understand macro
+// we tried using rootcints -p option, but that causes rootcint to pick up
+// things from the ROOT version of TMVA
+
+#if ROOT_VERSION_CODE >= 364802
+#ifndef ROOT_TMathBase
+#include "TMathBase.h"
+#endif
+#else
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+#endif
+
 #include "TObject.h"
 #include "TString.h"
-#include "TMathBase.h"
 
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
@@ -69,7 +84,6 @@ namespace TMVA {
       TString GetName() { return "Sum of weighted activations (absolute value)"; }
 
       ClassDef(TNeuronInputAbs,0) // Calculates the sum of the absolute values of the weighted inputs
-         ;
    };
 
 } // namespace TMVA

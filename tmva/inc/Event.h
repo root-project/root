@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.h,v 1.22 2006/11/16 22:51:58 helgevoss Exp $   
+// @(#)root/tmva $Id: Event.h,v 1.11 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -26,16 +26,16 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
-#ifndef TMVA_ROOT_Event
-#define TMVA_ROOT_Event
+#ifndef ROOT_TMVA_Event
+#define ROOT_TMVA_Event
 
 #include <vector>
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_TMVA_MsgLogger
-#include "TMVA/MsgLogger.h"
-#endif
+// #ifndef ROOT_TMVA_MsgLogger
+// #include "TMVA/MsgLogger.h"
+// #endif
 #ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
 #endif
@@ -57,9 +57,9 @@ namespace TMVA {
 
    public:
 
-      Event( const std::vector<TMVA::VariableInfo>& );
+      Event( const std::vector<TMVA::VariableInfo>&, Bool_t AllowExternalLinks = kTRUE );
       Event( const Event& );
-      ~Event() { fgCount--; }
+      ~Event();
       
       void SetBranchAddresses(TTree* tr);
       std::vector<TBranch*>& Branches() { return fBranches; }
@@ -71,7 +71,12 @@ namespace TMVA {
       void    SetWeight(Float_t w)      { fWeight=w; }
       void    SetBoostWeight(Float_t w) { fBoostWeight=w; }
       void    SetType(Int_t t)          { fType=t; }
+      void    SetType(Types::ESBType t) { fType=(t==Types::kSignal)?1:0; }
       void    SetVal(UInt_t ivar, Float_t val);
+      void    SetValFloatNoCheck(UInt_t ivar, Float_t val) { *((Float_t*)fVarPtr[ivar]) = val; }
+      void    SetValIntNoCheck(UInt_t ivar, Int_t val) { *((Int_t*)fVarPtr[ivar]) = val; }
+
+
       void    CopyVarValues( const Event& other );
 
       Char_t  VarType(Int_t ivar)     const { return fVariables[ivar].VarType(); }
@@ -82,8 +87,16 @@ namespace TMVA {
       Int_t   GetValInt(Int_t ivar)   const { return *((Int_t*)fVarPtr[ivar]); }
       UInt_t  GetNVars()              const { return fVariables.size(); }
       Float_t GetValueNormalized(Int_t ivar) const;
+      void*   GetExternalLink(Int_t ivar) const { return fVariables[ivar].GetExternalLink(); }
 
       void Print(std::ostream & o) const;
+
+
+      Int_t GetMemSize() const { 
+         Int_t size = sizeof(*this);
+         size += GetNVars() * (sizeof(void*)+sizeof(Int_t)+sizeof(Float_t));
+         return size;
+      }
 
    private:
 
@@ -100,8 +113,6 @@ namespace TMVA {
       UInt_t    fCountF;          // the number of Float variables
 
       std::vector<TBranch*> fBranches; // TTree branches
-
-      mutable MsgLogger fLogger;  // message logger
 
       static Int_t fgCount;       // count instances of Event
 

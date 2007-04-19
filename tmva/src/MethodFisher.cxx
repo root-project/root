@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.12 2007/02/03 06:40:26 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA_MethodFisher                                                     *
+ * Class  : MethodFisher                                                          *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -103,22 +103,20 @@
 // End_Html
 //_______________________________________________________________________
 
-#include "Riostream.h"
-#include <cmath>
-#include <algorithm>
+#include <assert.h>
+#include "TMath.h"
 #include "TMVA/MethodFisher.h"
 #include "TMVA/Tools.h"
 #include "TMatrix.h"
 #include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodFisher)
-   ;
 
 //_______________________________________________________________________
 TMVA::MethodFisher::MethodFisher( TString jobName, TString methodTitle, DataSet& theData, 
                                   TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
-   , fTheMethod("Fisher")
+   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ),
+     fTheMethod("Fisher")
 {
    // standard constructor for the "Fisher" 
    InitFisher(); // sets default values
@@ -130,35 +128,15 @@ TMVA::MethodFisher::MethodFisher( TString jobName, TString methodTitle, DataSet&
    ProcessOptions();
 
    // this is the preparation for training
-   if (HasTrainingTree()) {
-
-      // count number of signal and background events
-      Int_t nsig = Data().GetNEvtSigTrain();
-      Int_t nbgd = Data().GetNEvtBkgdTrain();
-
-      fLogger << kVERBOSE << "num of events for training (signal, background): "
-              << " (" << nsig << ", " << nbgd << ")" << Endl;
-
-      // Fisher wants same number of events in each species
-      if (nsig != nbgd) {
-         fLogger << kWARNING << "\t--------------------------------------------------" << Endl;
-         fLogger << kWARNING << "\tWarning: different number of signal and background\n"
-                 << "--- " << GetName() << " \tevents: Fisher training will not be optimal :-("
-                 << Endl;
-         fLogger << kWARNING << "\t--------------------------------------------------" << Endl;
-      }      
-
-      // allocate arrays 
-      InitMatrices();
-   }
+   if (HasTrainingTree()) InitMatrices();
 }
 
 //_______________________________________________________________________
 TMVA::MethodFisher::MethodFisher( DataSet& theData, 
                                   TString theWeightFile,  
                                   TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
-   , fTheMethod("Fisher")
+   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ), 
+     fTheMethod("Fisher")
 {
    // constructor to calculate the Fisher-MVA from previously generatad 
    // coefficients (weight file)
@@ -179,6 +157,8 @@ void TMVA::MethodFisher::InitFisher( void )
    fBetw        = 0;
    fWith        = 0;
    fCov         = 0;
+
+   fSumOfWeightsS = fSumOfWeightsB = 0;
 
    // allocate Fisher coefficients
    fF0          = 0;
@@ -207,6 +187,8 @@ void TMVA::MethodFisher::ProcessOptions()
 
    if (fTheMethod ==  "Fisher" ) fFisherMethod = kFisher;
    else                          fFisherMethod = kMahalanobis;
+
+   PrintOptions();
 }
 
 //_______________________________________________________________________
@@ -257,7 +239,7 @@ Double_t TMVA::MethodFisher::GetMvaValue()
 {
    // returns the Fisher value (no fixed range)
    Double_t result = fF0;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) 
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++)
       result += (*fFisherCoeff)[ivar]*GetEventValNormalized(ivar);
 
    return result;
@@ -269,8 +251,7 @@ void TMVA::MethodFisher::InitMatrices( void )
    // initialisaton method; creates global matrices and vectors
    // should never be called without existing trainingTree
    if (!HasTrainingTree()) {
-      fLogger << kFATAL << "<InitMatrices> fatal error: Data().TrainingTree() is zero pointer"
-              << " --> exit(1)" << Endl;
+      fLogger << kFATAL << "<InitMatrices> fatal error: Data().TrainingTree() is zero pointer" << Endl;
    }
 
    // average value of each variables for S, B, S+B
@@ -289,31 +270,49 @@ void TMVA::MethodFisher::InitMatrices( void )
 void TMVA::MethodFisher::GetMean( void )
 {
    // compute mean values of variables in each sample, and the overall means
+
+   // initialise internal sum-of-weights variables
+   fSumOfWeightsS = 0;
+   fSumOfWeightsB = 0;
+
+   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+      // read the Training Event into "event"
+      ReadTrainingEvent(ievt);
+
+      if (GetEvent().IsSignal()) { fSumOfWeightsS += GetEventWeight(); }
+      else                       { fSumOfWeightsB += GetEventWeight(); }            
+   }
+
+   // init vectors
+   Double_t sumS[(const Int_t)GetNvar()];
+   Double_t sumB[(const Int_t)GetNvar()];
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) { sumS[ivar] = sumB[ivar] = 0; }   
+
+   // compute sample means
+   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+
+      // read the Training Event into "event"
+      ReadTrainingEvent(ievt);
+
+      // sum of weights
+      Double_t weight = GetEventWeight();
+      if (GetEvent().IsSignal()) { fSumOfWeightsS += weight; }
+      else                       { fSumOfWeightsB += weight; }            
+
+      Double_t* sum = GetEvent().IsSignal() ? sumS : sumB;
+
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++) sum[ivar] += GetEventValNormalized( ivar )*weight;
+   }
+
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {   
+      (*fMeanMatx)( ivar, 2 ) = sumS[ivar];
+      (*fMeanMatx)( ivar, 0 ) = sumS[ivar]/fSumOfWeightsS;
 
-      Double_t sumS = 0;
-      Double_t sumB = 0;
-      for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-
-         // read the Training Event into "event"
-         ReadTrainingEvent(ievt);
-
-         Double_t value = GetEventValNormalized( ivar );
-
-         // for weights ... use: Double_t weight = GetEventWeight();
-
-         if (Data().Event().IsSignal()) sumS += value;
-         else                           sumB += value;
-      }
-
-      (*fMeanMatx)( ivar, 2 ) = sumS;
-      (*fMeanMatx)( ivar, 0 ) = sumS/Data().GetNEvtSigTrain();
-
-      (*fMeanMatx)( ivar, 2 ) += sumB;
-      (*fMeanMatx)( ivar, 1 ) = sumB/Data().GetNEvtBkgdTrain();       
+      (*fMeanMatx)( ivar, 2 ) += sumB[ivar];
+      (*fMeanMatx)( ivar, 1 ) = sumB[ivar]/fSumOfWeightsB;
 
       // signal + background
-      (*fMeanMatx)( ivar, 2 ) /= Data().GetNEvtTrain();
+      (*fMeanMatx)( ivar, 2 ) /= (fSumOfWeightsS + fSumOfWeightsB);
    }  
 }
 
@@ -323,33 +322,40 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    // the matrix of covariance 'within class' reflects the dispersion of the
    // events relative to the center of gravity of their own class  
 
+   // assert required
+   assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0 );
+
    // product matrices (x-<x>)(y-<y>) where x;y are variables
 
+   // init
+   const Int_t nvar = GetNvar();
+   Double_t sumSig[nvar][nvar];
+   Double_t sumBgd[nvar][nvar];
+   Double_t xval[nvar];
+   for (Int_t x=0; x<nvar; x++) for (Int_t y=0; y<nvar; y++) sumSig[x][y] = sumBgd[x][y] = 0;
+
    // 'within class' covariance
-   for (Int_t x=0; x<GetNvar(); x++) {
-      for (Int_t y=0; y<GetNvar(); y++) {
+   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
 
-         Double_t sumSig = 0;
-         Double_t sumBgd = 0;
+      // read the Training Event into "event"
+      ReadTrainingEvent(ievt);
 
-         for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+      Double_t weight = GetEventWeight();
 
-            // read the Training Event into "event"
-            ReadTrainingEvent(ievt);
+      for (Int_t x=0; x<nvar; x++) xval[x] = GetEventValNormalized( x );
 
-            // when using weights....
-            //            Double_t weight = GetEventWeight();
-            if (Data().Event().IsSignal()) {
-               sumSig += ( (GetEventValNormalized( x ) - (*fMeanMatx)(x, 0))* 
-                           (GetEventValNormalized( y ) - (*fMeanMatx)(y, 0)) );
-            }
-            else {
-               sumBgd += ( (GetEventValNormalized( x ) - (*fMeanMatx)(x, 1))* 
-                           (GetEventValNormalized( y ) - (*fMeanMatx)(y, 1)) );
-            }
+      for (Int_t x=0; x<nvar; x++) {
+         for (Int_t y=0; y<nvar; y++) {            
+            Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
+            if (GetEvent().IsSignal()) sumSig[x][y] += v;
+            else                       sumBgd[x][y] += v;
          }
+      }
+   }
 
-         (*fWith)(x, y) = (sumSig + sumBgd)/Data().GetNEvtTrain();
+   for (Int_t x=0; x<nvar; x++) {
+      for (Int_t y=0; y<nvar; y++) {
+         (*fWith)(x, y) = (sumSig[x][y] + sumBgd[x][y])/(fSumOfWeightsS + fSumOfWeightsB);
       }
    }
 }
@@ -361,6 +367,9 @@ void TMVA::MethodFisher::GetCov_BetweenClass( void )
    // events of a class relative to the global center of gravity of all the class
    // hence the separation between classes
 
+   // assert required
+   assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0);
+
    Double_t prodSig, prodBgd;
 
    for (Int_t x=0; x<GetNvar(); x++) {
@@ -371,8 +380,7 @@ void TMVA::MethodFisher::GetCov_BetweenClass( void )
          prodBgd = ( ((*fMeanMatx)(x, 1) - (*fMeanMatx)(x, 2))*
                      ((*fMeanMatx)(y, 1) - (*fMeanMatx)(y, 2)) );
 
-         (*fBetw)(x, y) = ( (Data().GetNEvtSigTrain()*prodSig + Data().GetNEvtBkgdTrain()*prodBgd) 
-                            / Double_t(Data().GetNEvtTrain()) );
+         (*fBetw)(x, y) = (fSumOfWeightsS*prodSig + fSumOfWeightsB*prodBgd) / (fSumOfWeightsS + fSumOfWeightsB);
       }
    }
 }
@@ -397,6 +405,9 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    //
    // then the array of Fisher coefficients is 
    // [coeff] =sqrt(fNsig*fNbgd)/fNevt*transpose{Xs-Xb}*InvWith
+
+   // assert required
+   assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0);
 
    // invert covariance matrix
    TMatrixD* theMat = 0;
@@ -428,8 +439,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    invCov.Invert();
    
    // apply rescaling factor
-   Double_t xfact = ( sqrt( Double_t(Data().GetNEvtSigTrain()*Data().GetNEvtBkgdTrain()) )
-                      / Double_t(Data().GetNEvtTrain()) );
+   Double_t xfact = TMath::Sqrt( fSumOfWeightsS*fSumOfWeightsB ) / (fSumOfWeightsS + fSumOfWeightsB);
 
    // compute difference of mean values
    vector<Double_t> diffMeans( GetNvar() );
@@ -491,24 +501,16 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 {
    // display Fisher coefficients and discriminating power for each variable
    // check maximum length of variable name
-   Int_t maxL = 0; 
+   fLogger << kINFO << "Results for Fisher coefficients:" << Endl;
+   vector<TString>  vars;
+   vector<Double_t> coeffs;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      if ((*fInputVars)[ivar].Length() > maxL) maxL = (*fInputVars)[ivar].Length();
+      vars  .push_back( GetInputExp(ivar) );
+      coeffs.push_back(  (*fFisherCoeff)[ivar] );
    }
-
-   fLogger << kINFO << "results" << Endl;
-   fLogger << kINFO << "-------------------------------" << Endl;
-   fLogger << kINFO << setiosflags(ios::left) << setw(TMath::Max(maxL,10)) << "Variable \t:"
-           << " Coefficient:"
-           << resetiosflags(ios::right) << Endl;
-   fLogger << kINFO << "-------------------------------" << Endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      fLogger << kINFO << Form( "%-11s\t:   %+.3f", GetInputExp(ivar).Data(), (*fFisherCoeff)[ivar] ) 
-              << Endl;
-   }
-
-   fLogger << kINFO << Form( "%-11s\t:   %+.3f", "(offset)", fF0 ) << Endl;
-   fLogger << kINFO << "-------------------------------" << Endl;
+   vars  .push_back( "(offset)" );
+   coeffs.push_back( fF0 );
+   TMVA::Tools::FormattedOutput( coeffs, vars, "Variable" , "Coefficient", fLogger );   
 }
   
 //_______________________________________________________________________

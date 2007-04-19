@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.cxx,v 1.12 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: Ranking.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -34,7 +34,6 @@
 #include "TString.h"
 
 ClassImp(TMVA::Ranking)
-   ;
 
 TMVA::Ranking::Ranking()
   : fLogger( "", kINFO )
@@ -88,7 +87,7 @@ void TMVA::Ranking::Print() const
    for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
       if ((*ir).GetVariable().Length() > maxL) maxL = (*ir).GetVariable().Length();
    
-   fLogger << kINFO << "ranking result (top variable is best ranked)" << Endl;
+   fLogger << kINFO << "Ranking result (top variable is best ranked)" << Endl;
    fLogger << kINFO << "----------------------------------------------------------------" << Endl;
    fLogger << kINFO << setiosflags(ios::left) 
            << setw(5) << "Rank : "

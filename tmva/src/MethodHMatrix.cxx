@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.36 2006/11/17 14:59:24 stelzer Exp $    
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.45 2007/04/03 22:37:21 andreas.hoecker Exp $    
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -34,7 +34,6 @@
 #include <algorithm>
 
 ClassImp(TMVA::MethodHMatrix)
-   ;
 
 //_______________________________________________________________________
 //Begin_Html                                                                      
@@ -113,13 +112,13 @@ TMVA::MethodHMatrix::~MethodHMatrix( void )
    if (NULL != fVecMeanB   ) delete fVecMeanB;
 }
 
+//_______________________________________________________________________
 void TMVA::MethodHMatrix::DeclareOptions() 
 {
-   //
-   // MethodHMatrix options:
-   //
+   // MethodHMatrix options: none (apart from those implemented in MethodBase)
 }
 
+//_______________________________________________________________________
 void TMVA::MethodHMatrix::ProcessOptions() 
 {
    // process user options
@@ -134,101 +133,95 @@ void TMVA::MethodHMatrix::Train( void )
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 
-   // get mean values 
-   Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-
-      Statistics( TMVA::Types::kTraining, (*fInputVars)[ivar], 
-                  meanS, meanB, rmsS, rmsB, xmin, xmax, fNormaliseInputVars );
-
-      (*fVecMeanS)(ivar) = meanS;
-      (*fVecMeanB)(ivar) = meanB;
-   }
-
    // covariance matrices for signal and background
-   this->ComputeCovariance( kTRUE,  fInvHMatrixS );
-   this->ComputeCovariance( kFALSE, fInvHMatrixB );
+   ComputeCovariance( kTRUE,  fInvHMatrixS );
+   ComputeCovariance( kFALSE, fInvHMatrixB );
 
-   if ( TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24 ) {
+   // sanity checks
+   if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24) {
       fLogger << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixS->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
-   if ( TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24 ) {
+   if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24) {
       fLogger << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
               << TMath::Abs(fInvHMatrixB->Determinant())
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
 
-    if ( TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120 ) {
+    if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
        fLogger << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
                << TMath::Abs(fInvHMatrixS->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
     }
-    if ( TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120 ) {
+    if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
        fLogger << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
                << TMath::Abs(fInvHMatrixB->Determinant())
                << " did you use the variables that are linear combinations ???" 
                << Endl;
     }
 
-
-
    // invert matrix
-
-
    fInvHMatrixS->Invert();
    fInvHMatrixB->Invert();
 }
 
+//_______________________________________________________________________
 void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 {
    // compute covariance matrix
 
-  UInt_t nvar = GetNvar(), ivar, jvar;
+   const UInt_t nvar = GetNvar();
+   UInt_t ivar, jvar;
 
    // init matrices
-   TVectorD vec(nvar);
-   TMatrixD mat2(nvar, nvar);      
-   for (ivar=0; ivar<nvar; ivar++) {
-      vec(ivar) = 0;
-      for (jvar=0; jvar<nvar; jvar++) {
-         mat2(ivar, jvar) = 0;
-      }
-   }
+   TVectorD vec(nvar);        vec  *= 0;
+   TMatrixD mat2(nvar, nvar); mat2 *= 0;
+
+   // initialise internal sum-of-weights variables
+   Double_t sumOfWeights = 0;
+   Double_t xval[nvar];
 
    // perform event loop
-   Int_t ic = 0;
    for (Int_t i=0; i<Data().GetNEvtTrain(); i++) {
 
       // fill the event
-      ReadTrainingEvent(i);
-      
-      if (Data().Event().IsSignal() == isSignal) {
-         ic++; // count used events
-         for (ivar=0; ivar<nvar; ivar++) {
+      ReadTrainingEvent(i);      
+      if (GetEvent().IsSignal() != isSignal) continue;
 
-            Double_t xi = (fNormaliseInputVars) ? GetEventValNormalized(ivar) : GetEventVal(ivar);
-            vec(ivar) += xi;
-            mat2(ivar, ivar) += (xi*xi);
+      // event is of good type
+      Double_t weight = GetEventWeight();
+      sumOfWeights += weight;
 
-            for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj = (fNormaliseInputVars) ? GetEventValNormalized(jvar) : GetEventVal(jvar);
-               mat2(ivar, jvar) += (xi*xj);
-               mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
-            }
-         }         
+      // mean values
+      for (ivar=0; ivar<nvar; ivar++) {
+         xval[ivar] = (fNormaliseInputVars) ? GetEventValNormalized(ivar) : GetEventVal(ivar);
       }
+
+      // covariance matrix         
+      for (ivar=0; ivar<nvar; ivar++) {
+
+         vec(ivar)        += xval[ivar]*weight;
+         mat2(ivar, ivar) += (xval[ivar]*xval[ivar])*weight;
+         
+         for (jvar=ivar+1; jvar<nvar; jvar++) {
+            mat2(ivar, jvar) += (xval[ivar]*xval[jvar])*weight;
+            mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
+         }
+      }         
    }
 
    // variance-covariance
-   Double_t n = (Double_t)ic;
    for (ivar=0; ivar<nvar; ivar++) {
+
+      if (isSignal) (*fVecMeanS)(ivar) = vec(ivar)/sumOfWeights;
+      else          (*fVecMeanB)(ivar) = vec(ivar)/sumOfWeights;
+
       for (jvar=0; jvar<nvar; jvar++) {
-         (*mat)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/(n*n);
+         (*mat)(ivar, jvar) = mat2(ivar, jvar)/sumOfWeights - vec(ivar)*vec(jvar)/(sumOfWeights*sumOfWeights);
       }
    }
 }
@@ -240,13 +233,13 @@ Double_t TMVA::MethodHMatrix::GetMvaValue()
    Double_t s = GetChi2( Types::kSignal     );
    Double_t b = GetChi2( Types::kBackground );
   
-   if( (s+b)<0 ) fLogger << kFATAL << "big trouble: s+b: " << s+b << Endl;
+   if (s+b < 0) fLogger << kFATAL << "big trouble: s+b: " << s+b << Endl;
 
    return (b - s)/(s + b);
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event *e,  Types::ESBType type ) const
+Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) const
 {
    // compute chi2-estimator for event according to type (signal/background)
 
@@ -286,7 +279,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
    Int_t ivar,jvar;
    vector<Double_t> val( GetNvar() );
    for (ivar=0; ivar<GetNvar(); ivar++)
-      val[ivar] = fNormaliseInputVars?GetEventValNormalized(ivar):Data().Event().GetVal( ivar );
+      val[ivar] = fNormaliseInputVars ? GetEventValNormalized(ivar) : GetEvent().GetVal( ivar );
 
    Double_t chi2 = 0;
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -307,18 +300,13 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
 }
   
 //_______________________________________________________________________
-void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream & o ) const
+void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream& o ) const
 {  
    // write variable names and min/max 
    // NOTE: the latter values are mandatory for the normalisation 
    // in the reader application !!!
    Int_t ivar,jvar;
    o << this->GetMethodName() <<endl;
-   o << "NVars= " << GetNvar() <<endl; 
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      TString var = (*fInputVars)[ivar];
-      o << var << "  " << GetXmin( var ) << "  " << GetXmax( var ) << endl;
-   }
 
    // mean vectors
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -343,33 +331,15 @@ void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream & o ) const
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodHMatrix::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodHMatrix::ReadWeightsFromStream( istream& istr )
 {
    // read variable names and min/max
    // NOTE: the latter values are mandatory for the normalisation 
    // in the reader application !!!
    Int_t ivar,jvar;
    TString var, dummy;
-   Double_t xmin, xmax;
-   Int_t dummyInt;
    istr >> dummy;
    this->SetMethodName(dummy);
-   istr >> dummy >> dummyInt; SetNvar(dummyInt);
-
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      istr >> var >> xmin >> xmax;
-
-      // sanity check
-      if (var != (*fInputVars)[ivar]) {
-         fLogger << kFATAL << "error while reading weight file; "
-                 << "unknown variable: " << var << " at position: " << ivar << ". "
-                 << "Expected variable: " << (*fInputVars)[ivar] << Endl;
-      }
-    
-      // set min/max
-      Data().SetXmin( ivar, xmin );
-      Data().SetXmax( ivar, xmax );
-   }    
 
    // mean vectors
    for (ivar=0; ivar<GetNvar(); ivar++) 

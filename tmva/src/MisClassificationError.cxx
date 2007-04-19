@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.12 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -37,7 +37,6 @@
 #include "TMVA/MisClassificationError.h"
 
 ClassImp(TMVA::MisClassificationError)
-   ;
 
 //_______________________________________________________________________
 Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )

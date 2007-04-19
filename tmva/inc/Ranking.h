@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: Ranking.h,v 1.7 2007/01/16 09:37:03 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -23,8 +23,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: Ranking.h,v 1.6 2006/11/20 15:35:28 brun Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Ranking
@@ -42,6 +40,9 @@
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TString;
@@ -73,7 +74,6 @@ namespace TMVA {
       mutable MsgLogger  fLogger;                   // message logger
 
       ClassDef(Ranking,0) // method-specific ranking for input variables 
-         ;
    };
 
    // --------------------------------------------------------------------------

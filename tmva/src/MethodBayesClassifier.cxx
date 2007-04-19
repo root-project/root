@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.cxx,v 1.5 2006/11/17 00:21:35 stelzer Exp $    
+// @(#)root/tmva $Id: MethodBayesClassifier.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $    
 // Author: Marcin .... 
 
 /**********************************************************************************
@@ -34,7 +34,6 @@
 #include "Riostream.h"
 
 ClassImp(TMVA::MethodBayesClassifier)
-   ; 
 
 //_______________________________________________________________________
 TMVA::MethodBayesClassifier::MethodBayesClassifier( TString jobName, TString methodTitle, DataSet& theData, 

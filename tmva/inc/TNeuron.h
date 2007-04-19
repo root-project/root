@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuron.h,v 1.17 2006/11/16 19:42:44 stelzer Exp $
+// @(#)root/tmva $Id: TNeuron.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -150,7 +150,6 @@ namespace TMVA {
       mutable MsgLogger fLogger;                  // message logger
 
       ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
-         ;
    };
 
 } // namespace TMVA

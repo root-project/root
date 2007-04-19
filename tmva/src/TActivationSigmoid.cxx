@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationSigmoid.cxx,v 1.12 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivationSigmoid.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -41,7 +41,6 @@
 static const Int_t  UNINITIALIZED = -1;
 
 ClassImp(TMVA::TActivationSigmoid)
-   ;
 
 //______________________________________________________________________________
 TMVA::TActivationSigmoid::TActivationSigmoid()

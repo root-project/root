@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.7 2007/01/12 16:03:17 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -32,14 +32,13 @@
 // Implementation of Simulated Annealing fitter  
 //_______________________________________________________________________
 
-#include "Riostream.h"
 #include "TMath.h"
+#include "Riostream.h"
 #include "TMVA/SimulatedAnnealingBase.h"
 
 ClassImp(TMVA::SimulatedAnnealingBase)
-   ;
 
-TMVA::SimulatedAnnealingBase::SimulatedAnnealingBase( std::vector<LowHigh_t*>& ranges )
+TMVA::SimulatedAnnealingBase::SimulatedAnnealingBase( std::vector<Interval*>& ranges )
    : fRandom                ( new TRandom() )
    , fRanges                ( ranges )
    , fMaxCalls              ( 500000 )
@@ -86,7 +85,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
    std::vector <Double_t> adaptiveErrors;
    std::vector <Int_t>    nAccepted;
    for (Int_t k = 0; k < npar; k++ ) {
-      adaptiveErrors.push_back( (fRanges[k]->second - fRanges[k]->first)/10.0 );
+      adaptiveErrors.push_back( (fRanges[k]->GetMax() - fRanges[k]->GetMin())/10.0 );
       nAccepted.push_back(0);
    }
 
@@ -119,7 +118,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
             if (optPoint.first          > 0 && optPoint.second          == 0 && 
                 optPoint_previous.first > 0 && optPoint_previous.second == 0) {
                if (stepWidth > 20) {
-                  deltaT = sqrt( deltaT );
+                 deltaT = TMath::Sqrt( deltaT );
                   stepWidth = 0.5*stepWidth;
                }
             }
@@ -145,7 +144,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
                yPars[h] = xPars[h] + gRandom->Uniform(-1.0,1.0)*adaptiveErrors[h];
 
                // retry if randomising has thrown yPars out of its bounds
-               while (yPars[h] < fRanges[h]->first || yPars[h] > fRanges[h]->second) {
+               while (yPars[h] < fRanges[h]->GetMin() || yPars[h] > fRanges[h]->GetMax()) {
                   yPars[h] = gRandom->Uniform(-2.0,2.0)*adaptiveErrors[h] + parameters[h];
                }
 
@@ -207,8 +206,8 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
             // else don't touch the error
 
             // the error shouldn't be larger than the full variable range
-            if (adaptiveErrors[i] > fRanges[i]->second - fRanges[i]->first) 
-               adaptiveErrors[i] = fRanges[i]->second - fRanges[i]->first;
+            if (adaptiveErrors[i] > fRanges[i]->GetMax() - fRanges[i]->GetMin()) 
+               adaptiveErrors[i] = fRanges[i]->GetMax() - fRanges[i]->GetMin();
          }
 
          // reset number of accepted functions
@@ -245,5 +244,5 @@ Double_t TMVA::SimulatedAnnealingBase::GetPerturbationProbability( Double_t E, D
                                                                    Double_t temperature )
 {
    // calculates the probability that a perturbation occured
-   return (temperature > 0) ? TMath::Exp( (E - Eref)/temperature ) : 0;
+   return (temperature > 0) ? TMath::Exp( (Eref - E)/temperature ) : 0;
 }
