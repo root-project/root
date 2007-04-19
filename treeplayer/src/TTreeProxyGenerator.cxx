@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.27 2007/01/30 11:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.28 2007/02/05 18:11:29 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1857,8 +1857,11 @@ namespace ROOT {
       fprintf(hf,"   if (tree == 0) return;\n");
       fprintf(hf,"   fChain = tree;\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
+      fprintf(hf,"   delete fHelper;\n");
       fprintf(hf,"   fHelper = new TSelectorDraw();\n");
+      fprintf(hf,"   delete fInput;\n");
       fprintf(hf,"   fInput  = new TList();\n");
+      fprintf(hf,"   fInput->SetOwner();\n");
       fprintf(hf,"   fInput->Add(new TNamed(\"varexp\",\"0.0\")); // Fake a double size histogram\n");
       fprintf(hf,"   fInput->Add(new TNamed(\"selection\",\"\"));\n");
       fprintf(hf,"   fHelper->SetInputList(fInput);\n");
