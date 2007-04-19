@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.209 2007/03/01 07:55:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.210 2007/03/30 15:01:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1253,6 +1253,11 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   Note, that the linear fitter doesn't take into account the errors in x. If errors
    //   in x are important, go through minuit (use option "F" for polynomial fitting).
    //
+   //   3) When fitting a TGraph (ie no errors associated to each point),
+   //   a correction is applied to the errors on the parameters with the following
+   //   formula:
+   //      errorp *= sqrt(chisquare/(ndf-1))
+   //
    // Associated functions:
    //
    //   One or more object (typically a TF1*) can be added to the list
@@ -1290,7 +1295,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
-   Int_t i, npar,nvpar,nparx;
+   Int_t i, npar,nvpar,nparx, ndf;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    TF1 *fnew1;
@@ -1422,6 +1427,17 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       f1->SetRange(xmin, xmax);
    }
 
+   //*-*- Compute sum of squares of errors in the bin range
+   Bool_t hasErrors = kFALSE;
+   Double_t ex, ey, sumw2=0;
+   for (i=0;i<fNpoints;i++) {
+      if(fX[i]<xmin || fX[i]>xmax) continue;
+      ex = GetErrorX(i);
+      ey = GetErrorY(i);
+      if (ex > 0 || ey > 0) hasErrors = kTRUE;
+      sumw2 += ey*ey;
+   }
+
    // If case of a predefined function, then compute initial values of parameters
 
    if (linear){
@@ -1429,6 +1445,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          fitResult = grFitter->ExecuteCommand("FitGraph", &h, 0);
       else
          fitResult = grFitter->ExecuteCommand("FitGraph", 0, 0);
+      amin = f1->GetChisquare();
+      ndf  = f1->GetNDF();
    } else {
 
       //Int_t special = f1->GetNumber();
@@ -1482,17 +1500,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
       }
 
-      //*-*- Compute sum of squares of errors in the bin range
-      Bool_t hasErrors = kFALSE;
-      Double_t ex, ey, sumw2=0;
-      for (i=0;i<fNpoints;i++) {
-         if(fX[i]<xmin || fX[i]>xmax) continue;
-         ex = GetErrorX(i);
-         ey = GetErrorY(i);
-         if (ex > 0 || ey > 0) hasErrors = kTRUE;
-         sumw2 += ey*ey;
-      }
-
       // Perform minimization
 
       arglist[0] = TVirtualFitter::GetMaxIterations();
@@ -1506,7 +1513,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
       f1->SetChisquare(amin);
-      Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
+      ndf = f1->GetNumberFitPoints()-npar+nfixed;
       f1->SetNDF(ndf);
 
       //////////////////////////////////////
@@ -1521,12 +1528,21 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
             if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
             else                         werr = we;
          }
-         if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
          f1->SetParameter(i,par);
          f1->SetParError(i,werr);
       }
    }
 
+   //In case the graph has no errors (eg TGraph) we can compute
+   //a better parameter error estimation using the chisquare and ndf
+   for (i=0;i<npar;i++) {
+      if (!hasErrors && ndf > 1) {
+         werr  = f1->GetParError(i);
+         werr *= TMath::Sqrt(amin/(ndf-1));
+         f1->SetParError(i,werr);
+      }  
+   }  
+    
    // Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);
