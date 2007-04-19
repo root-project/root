@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.19 2006/10/25 08:03:31 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.20 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -131,6 +131,12 @@ public:
    Bool_t IsReadOnly() const { return fReadOnly; }
    Bool_t IsMarked() const { return fIsMarked; }
 
+   virtual Bool_t HandleDNDdrop(TDNDdata *data);
+   virtual Atom_t HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+                                    Int_t xroot, Int_t yroot);
+   virtual Atom_t HandleDNDenter(Atom_t * typelist);
+   virtual Bool_t HandleDNDleave();
+
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleSelectionClear(Event_t *event);
@@ -140,6 +146,7 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
 
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
+   virtual void DataDropped(const char *fname) { Emit("DataDropped(char *)", fname); }  //*SIGNAL*
    virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
 
    ClassDef(TGTextView,0)  // Non-editable text viewer widget

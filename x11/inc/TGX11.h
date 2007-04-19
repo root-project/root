@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.29 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.30 2007/02/20 09:44:44 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -390,6 +390,19 @@ public:
    void         DeleteImage(Drawable_t img);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
    UInt_t       ScreenWidthMM() const;
+
+   void         DeleteProperty(Window_t, Atom_t&);
+   Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                            Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   Bool_t       SetSelectionOwner(Window_t, Atom_t&);
+   void         ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                                 Int_t format, UChar_t *data, Int_t len);
+   void         SetDNDAware(Window_t, Atom_t *);
+   void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    ClassDef(TGX11,0)  //Interface to X11
 };

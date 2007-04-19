@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.17 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.18 2007/02/20 09:44:43 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -2072,3 +2072,92 @@ UInt_t TVirtualX::ScreenWidthMM() const
 
    return 400;
 }
+
+//______________________________________________________________________________
+void TVirtualX::DeleteProperty(Window_t, Atom_t&)
+{
+   // Deletes the specified property only if the property was defined on the 
+   // specified window and causes the X server to generate a PropertyNotify 
+   // event on the window unless the property does not exist.
+
+}
+
+//______________________________________________________________________________
+Int_t TVirtualX::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                             Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**)
+{
+   // Returns the actual type of the property; the actual format of the property; 
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
+   // bytes remaining to be read in the property; and a pointer to the data 
+   // actually returned.
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TVirtualX::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
+{
+   // Changes the specified dynamic parameters if the pointer is actively 
+   // grabbed by the client and if the specified time is no earlier than the 
+   // last-pointer-grab time and no later than the current X server time.
+
+}
+
+//______________________________________________________________________________
+void TVirtualX::ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&)
+{
+   // Requests that the specified selection be converted to the specified 
+   // target type.
+
+}
+
+//______________________________________________________________________________
+Bool_t TVirtualX::SetSelectionOwner(Window_t, Atom_t&)
+{
+   // Changes the owner and last-change time for the specified selection.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TVirtualX::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
+{
+   // Alters the property for the specified window and causes the X server 
+   // to generate a PropertyNotify event on that window.
+
+}
+
+//______________________________________________________________________________
+void TVirtualX::SetDNDAware(Window_t, Atom_t *)
+{
+   // Add XdndAware property and the list of drag and drop types to the 
+   // Window win.
+
+}
+
+//______________________________________________________________________________
+void TVirtualX::SetTypeList(Window_t, Atom_t, Atom_t *)
+{
+   // Add the list of drag and drop types to the Window win.
+
+}
+
+//______________________________________________________________________________
+Window_t TVirtualX::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
+{
+   // Recursively search in the children of Window for a Window which is at 
+   // location x, y and is DND aware, with a maximum depth of maxd.
+
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TVirtualX::IsDNDAware(Window_t, Atom_t *)
+{
+   // Checks if the Window is DND aware, and knows any of the DND formats
+   // passed in argument.
+
+   return kFALSE;
+}
+
+

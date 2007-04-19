@@ -4820,8 +4820,14 @@ gdk_event_translate(GdkEvent * event,
       event->type = GDK_SELECTION_REQUEST;
       event->selection.type = GDK_SELECTION_REQUEST;
       event->selection.window = window;
-      event->selection.selection = gdk_clipboard_atom;
-      event->selection.target = GDK_TARGET_STRING;
+      if (xevent->wParam == gdk_clipboard_atom) {
+         event->selection.selection = gdk_clipboard_atom;
+         event->selection.target = GDK_TARGET_STRING;
+      }
+      else {
+         event->selection.selection = xevent->wParam;
+         event->selection.target = 0x0200; // CF_PRIVATEFIRST
+      }
       event->selection.property = gdk_selection_property;
       event->selection.requestor = (guint32) xevent->hwnd;
       event->selection.time = xevent->time;
@@ -6213,6 +6219,27 @@ gdk_event_translate(GdkEvent * event,
 #endif
       break;
 #endif                          /* No delayed rendering */
+
+   case WM_DROPFILES:
+      {
+         DWORD i;
+         char tmp[256];
+         HDROP hDrop = (HDROP)xevent->wParam;
+         DWORD DropsNo = DragQueryFile(hDrop, -1, NULL, 0);
+         return_val = TRUE;
+         event->type = GDK_CLIENT_EVENT;
+         event->client.type = GDK_CLIENT_EVENT;
+         event->client.window = window;
+         event->client.message_type = gdk_atom_intern("XdndDrop", TRUE);
+         event->client.data_format = 0;
+         event->client.data.l[0] = 0;
+         for (i = 0; i < DropsNo; i++) {
+            DragQueryFile(hDrop, i, tmp, 256);
+            // Do anything with the data...
+         }
+         DragFinish(hDrop);
+      }
+      break;
 
    case WM_DESTROY:
       GDK_NOTE(EVENTS, g_print("WM_DESTROY: %#x\n", xevent->hwnd));

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.80 2006/08/10 06:33:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.81 2007/02/01 16:00:28 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 class TGResourcePool;
 class TGTextButton;
 class TGVFileSplitter;
-
+class TDNDdata;
 
 //---- frame states
 
@@ -116,6 +116,14 @@ enum EMWMHints {
    kMWMDecorMaximize = BIT(6)
 };
 
+//---- drag and drop
+
+enum EDNDFlags {
+   kIsDNDSource = BIT(0),
+   kIsDNDTarget = BIT(1)
+};
+
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -147,6 +155,7 @@ protected:
    UInt_t   fOptions;       // frame options
    Pixel_t  fBackground;    // frame background color
    UInt_t   fEventMask;     // currenty active event mask
+   Int_t    fDNDState;      // EDNDFlags
    TGFrameElement *fFE;     // pointer to frame element
 
    static Bool_t      fgInit;
@@ -313,6 +322,22 @@ public:
    virtual void        Dump() const { }
    virtual void        Inspect() const { }
    virtual void        SetDrawOption(Option_t * /*option*/="") { }
+
+   // drag and drop...
+   void                SetDNDSource(Bool_t onoff)
+                       { if (onoff) fDNDState |= kIsDNDSource; else fDNDState &= ~kIsDNDSource; }
+   void                SetDNDTarget(Bool_t onoff)
+                       { if (onoff) fDNDState |= kIsDNDTarget; else fDNDState &= ~kIsDNDTarget; }
+   Bool_t              IsDNDSource() const { return fDNDState & kIsDNDSource; }
+   Bool_t              IsDNDTarget() const { return fDNDState & kIsDNDTarget; }
+
+   virtual TDNDdata   *GetDNDdata(Atom_t /*dataType*/) { return 0; }
+   virtual Bool_t      HandleDNDdrop(TDNDdata * /*DNDdata*/) { return kFALSE; }
+   virtual Atom_t      HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t /*action*/,
+                                         Int_t /*xroot*/, Int_t /*yroot*/) { return kNone; }
+   virtual Atom_t      HandleDNDenter(Atom_t * /*typelist*/) { return kNone; }
+   virtual Bool_t      HandleDNDleave() { return kFALSE; }
+   virtual Bool_t      HandleDNDfinished() { return kFALSE; }
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
@@ -499,6 +524,10 @@ public:
 
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleClientMessage(Event_t *event);
+   virtual Bool_t HandleSelection(Event_t *event);
+   virtual Bool_t HandleSelectionRequest(Event_t *event);
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
    virtual void   SendCloseMessage();
    virtual void   CloseWindow();   //*SIGNAL*
 

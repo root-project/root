@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.48 2006/05/29 14:51:15 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.49 2007/02/20 09:44:44 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2650,3 +2650,209 @@ UInt_t TGX11::ScreenWidthMM() const
 
    return (UInt_t)WidthMMOfScreen(DefaultScreenOfDisplay(fDisplay));
 }
+
+//______________________________________________________________________________
+void TGX11::DeleteProperty(Window_t win, Atom_t& prop)
+{
+   // Deletes the specified property only if the property was defined on the 
+   // specified window and causes the X server to generate a PropertyNotify 
+   // event on the window unless the property does not exist.
+
+   XDeleteProperty(fDisplay, win, prop);
+}
+
+//______________________________________________________________________________
+Int_t TGX11::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t length,
+                         Bool_t del, Atom_t req_type, Atom_t *act_type,
+                         Int_t *act_format, ULong_t *nitems, ULong_t *bytes,
+                         unsigned char **prop_list)
+{
+   // Returns the actual type of the property; the actual format of the property; 
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
+   // bytes remaining to be read in the property; and a pointer to the data 
+   // actually returned.
+
+   return XGetWindowProperty(fDisplay, win, prop, offset, length, del, req_type,
+                             act_type, act_format, nitems, bytes, prop_list);
+}
+
+//______________________________________________________________________________
+void TGX11::ChangeActivePointerGrab(Window_t /*win*/, UInt_t mask, Cursor_t cur)
+{
+   // Changes the specified dynamic parameters if the pointer is actively 
+   // grabbed by the client.
+   
+   UInt_t xevmask;
+   MapEventMask(mask, xevmask);
+   if (cur == kNone)
+      XChangeActivePointerGrab(fDisplay, xevmask, fCursors[kHand], CurrentTime);
+   else
+      XChangeActivePointerGrab(fDisplay, xevmask, cur, CurrentTime);
+}
+
+//______________________________________________________________________________
+void TGX11::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
+                             Atom_t &prop, Time_t &stamp)
+{
+   // Requests that the specified selection be converted to the specified 
+   // target type.
+
+   XConvertSelection(fDisplay, sel, target, prop, win, stamp);
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::SetSelectionOwner(Window_t owner, Atom_t &sel)
+{
+   // Changes the owner and last-change time for the specified selection
+
+   return XSetSelectionOwner(fDisplay, sel, owner, CurrentTime);
+}
+
+//______________________________________________________________________________
+void TGX11::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                             Int_t format, UChar_t *data, Int_t len)
+{
+   // This function alters the property for the specified window and
+   // causes the X server to generate a PropertyNotify event on that
+   // window.
+
+   if (!id) return;
+
+   XChangeProperty(fDisplay, (Window) id, (Atom) property, (Atom) type,
+                   format, PropModeReplace, data, len);
+}
+
+//______________________________________________________________________________
+void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
+{
+   // Add XdndAware property and the list of drag and drop types to the 
+   // Window win.
+
+   unsigned char version = 4;
+   Atom dndaware = XInternAtom(fDisplay, "XdndAware", kFALSE);
+   XChangeProperty(fDisplay, (Window) win, (Atom) dndaware, (Atom) XA_ATOM,
+                   32, PropModeReplace, (unsigned char *) &version, 1);
+
+   if (typelist) {
+      int n;
+
+      for (n = 0; typelist[n]; n++);
+      if (n > 0) {
+         XChangeProperty(fDisplay, win, dndaware, XA_ATOM, 32, PropModeAppend,
+                         (unsigned char *) typelist, n);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGX11::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
+{
+   // Add the list of drag and drop types to the Window win.
+
+   if (typelist) {
+      int n;
+      for (n = 0; typelist[n]; n++);
+      if (n > 0) {
+         XChangeProperty(fDisplay, win, prop, XA_ATOM, 32, PropModeAppend,
+                         (unsigned char *) typelist, n);
+      }
+   }
+}
+
+//______________________________________________________________________________
+Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
+                            int x, int y, int maxd)
+{
+   // Recursively search in the children of Window for a Window which is at
+   // location x, y and is DND aware, with a maximum depth of maxd.
+   // Possibility to exclude dragwin and input.
+
+   WindowAttributes_t wattr;
+
+   Atom_t *dndTypeList = new Atom_t[3];
+   dndTypeList[0] = InternAtom("application/root", kFALSE);
+   dndTypeList[1] = InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
+
+   if (maxd <= 0) return kNone;
+
+   if (win == dragwin || win == input) return kNone;
+
+   GetWindowAttributes(win, wattr);
+   if (wattr.fMapState != kIsUnmapped &&
+      x >= wattr.fX && x < wattr.fX + wattr.fWidth &&
+      y >= wattr.fY && y < wattr.fY + wattr.fHeight) {
+
+      if (IsDNDAware(win, dndTypeList)) return win;
+
+      Window r, p, *children;
+      UInt_t numch;
+      int i;
+
+      if (XQueryTree(fDisplay, win, &r, &p, &children, &numch)) {
+         if (children && numch > 0) {
+            r = kNone;
+
+            // upon return from XQueryTree, children are listed in the current
+            // stacking order, from bottom-most (first) to top-most (last)
+
+            for (i = numch-1; i >= 0; --i) {
+               r = FindRWindow((Window_t)children[i], dragwin, input,
+                               x - wattr.fX, y - wattr.fY, maxd-1);
+               if (r != kNone) break;
+            }
+
+            XFree(children);
+
+            if (r != kNone) return r;
+         }
+         return kNone; //win;   // ?!?
+      }
+   }
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
+{
+   // Checks if Window win is DND aware, and knows any of the DND formats
+   // passed in argument.
+
+   Atom_t  actual;
+   Int_t   format;
+   ULong_t count, remaining;
+   unsigned char *data = 0;
+   Atom_t *types, *t;
+   Int_t   result = kTRUE;
+
+   if (win == kNone) return kFALSE;
+
+   Atom dndaware = XInternAtom(fDisplay, "XdndAware", kFALSE);
+
+   XGetWindowProperty(fDisplay, win, dndaware, 0, 0x8000000L, kFALSE,
+                      XA_ATOM, &actual, &format, &count, &remaining, &data);
+
+   if ((actual != XA_ATOM) || (format != 32) || (count == 0) || !data) {
+      if (data) XFree(data);
+      return kFALSE;
+   }
+
+   types = (Atom_t *) data;
+
+   if ((count > 1) && typelist) {
+      result = kFALSE;
+      for (t = typelist; *t; t++) {
+         for (ULong_t j = 1; j < count; j++) {
+            if (types[j] == *t) {
+               result = kTRUE;
+               break;
+            }
+         }
+         if (result) break;
+      }
+   }
+   XFree(data);
+   return result;
+}
+
+

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.29 2006/10/25 08:03:31 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.30 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -36,6 +36,12 @@
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TSystem.h"
+#include "TGDNDManager.h"
+#include "TBufferFile.h"
+#include "TSystemFile.h"
+#include "TObjString.h"
+#include "TMacro.h"
+#include "TGMsgBox.h"
 #include "Riostream.h"
 
 
@@ -90,6 +96,13 @@ void TGTextView::Init(ULong_t back)
 
    fScrollTimer = new TViewTimer(this, 75);
    gSystem->AddTimer(fScrollTimer);
+
+   Atom_t *dndTypeList = new Atom_t[3];
+   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
+   gVirtualX->SetDNDAware(fId, dndTypeList);
+   SetDNDTarget(kTRUE);
 
    gVirtualX->ClearWindow(fCanvas->GetId());
    Layout();
@@ -1007,6 +1020,123 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    delete [] buffer;
 
    gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+static Bool_t IsTextFile(const char *candidate)
+{
+   // Returns true if given a text file
+   // Uses the specification given on p86 of the Camel book
+   // - Text files have no NULLs in the first block
+   // - and less than 30% of characters with high bit set
+
+   Int_t i;
+   Int_t nchars;
+   Int_t weirdcount = 0;
+   char buffer[512];
+   FILE *infile;
+
+   infile = fopen(candidate, "r");
+   if (infile) {
+      // Read a block
+      nchars = fread(buffer, 1, 512, infile);
+      fclose (infile);
+      // Examine the block
+      for (i = 0; i < nchars; i++) {
+         if (buffer[i] & 128)
+            weirdcount++;
+         if (buffer[i] == '\0')
+            // No NULLs in text files
+            return kFALSE;
+      }
+      if ((nchars > 0) && ((weirdcount * 100 / nchars) > 30))
+         return kFALSE;
+   } else {
+      // Couldn't open it. Not a text file then
+      return kFALSE;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGTextView::HandleDNDdrop(TDNDdata *data)
+{
+   // Handle Drop event
+
+   static Atom_t rootObj = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
+
+   if (fText->RowCount() > 1) {
+      Int_t ret;
+      new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                   "Overvrite", "Do you want to replace existing text?",
+                   kMBIconExclamation, kMBYes | kMBNo, &ret);
+      if (ret == kMBNo)
+         return kTRUE;
+   }
+   if (data->fDataType == rootObj) {
+      TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
+      buf.SetReadMode();
+      TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+      if (obj->InheritsFrom("TMacro")) {
+         TMacro *macro = (TMacro *)obj;
+         TIter next(macro->GetListOfLines());
+         TObjString *objs;
+         while ((objs = (TObjString*) next())) {
+            AddLine(objs->GetName());
+         }
+      }
+      else if (obj->InheritsFrom("TSystemFile")) {
+         TSystemFile *sfile = (TSystemFile *)obj;
+         LoadFile(sfile->GetName());
+         DataDropped(sfile->GetName());
+      }
+      return kTRUE;
+   }
+   else if (data->fDataType == uriObj) {
+      TString sfname = (char *)data->fData;
+      sfname.ReplaceAll("file:", "");
+      sfname.ReplaceAll("\r\n", "");
+      sfname.ReplaceAll("//", "/");
+      if (IsTextFile(sfname.Data()))
+         LoadFile(sfname.Data());
+         DataDropped(sfname.Data());
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Atom_t TGTextView::HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
+                                      Int_t /*xroot*/, Int_t /*yroot*/)
+{
+   // Handle Drag position event
+
+   return action;
+}
+
+//______________________________________________________________________________
+Atom_t TGTextView::HandleDNDenter(Atom_t *typelist)
+{
+   // Handle Drag Enter event
+
+   static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   Atom_t ret = kNone;
+   for (int i = 0; typelist[i] != kNone; ++i) {
+      if (typelist[i] == rootObj)
+         ret = rootObj;
+      if (typelist[i] == uriObj)
+         ret = uriObj;
+   }
+   return ret;
+}
+
+//______________________________________________________________________________
+Bool_t TGTextView::HandleDNDleave()
+{
+   // Handle Drag Leave event
 
    return kTRUE;
 }

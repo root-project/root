@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.51 2007/02/01 15:53:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.52 2007/04/17 15:57:29 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -61,6 +61,12 @@
 #include "TGMsgBox.h"
 #include "TGResourcePool.h"
 #include "TList.h"
+#include "TClass.h"
+#include "TGListView.h"
+#include "TGMimeTypes.h"
+#include "TKey.h"
+#include "TKeyMapFile.h"
+#include "TGDNDManager.h"
 #include "Riostream.h"
 
 
@@ -294,6 +300,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas).
 
+   fBdown = kFALSE;
    fMsgWindow  = p;
    fDragging   = kFALSE;
    fTotal = fSelected = 0;
@@ -325,6 +332,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas).
 
+   fBdown = kFALSE;
    fMsgWindow  = p->GetViewPort();
    fCanvas = p;
    fCanvas->GetViewPort()->SetContainer(this);
@@ -816,6 +824,10 @@ Bool_t TGContainer::HandleButton(Event_t *event)
       fXp = pos.fX + event->fX;
       fYp = pos.fY + event->fY;
 
+      fXDND = event->fX;
+      fYDND = event->fY;
+      fBdown = kTRUE;
+
       UnSelectAll();
       total = selected = 0;
 
@@ -866,6 +878,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    if (event->fType == kButtonRelease) {
       gVirtualX->SetInputFocus(fId);
 
+      fBdown = kFALSE;
       if (fDragging) {
          fDragging = kFALSE;
          fScrolling = kFALSE;
@@ -879,6 +892,62 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    }
    fClient->NeedRedraw(this);
    return kTRUE;
+}
+
+//______________________________________________________________________________
+const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
+{
+   // Retrieve icons associated with class "name". Association is made
+   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
+
+   TObject *obj = 0;
+   TClass *cl;
+   const TGPicture *pic;
+   const char *iconname = 0;
+
+   if (f->InheritsFrom("TGLVEntry")) {
+      obj = (TObject *)((TGLVEntry *)f)->GetUserData();
+      if (obj) {
+         if (obj->IsA() == TKey::Class()) {
+            cl = TClass::GetClass(((TKey *)obj)->GetClassName());
+         } else if (obj->IsA() == TKeyMapFile::Class()) {
+            cl = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
+         } else {
+            cl = obj->IsA();
+         }
+         const char *name = obj->GetIconName() ? obj->GetIconName() : cl->GetName();
+         iconname = (strlen(name) > 0) ? name : obj->GetName();
+
+         if (obj->IsA()->InheritsFrom("TGeoVolume")) {
+            iconname = obj->GetIconName() ? obj->GetIconName() : obj->IsA()->GetName();
+         }
+         pic = fClient->GetMimeTypeList()->GetIcon(iconname, kFALSE);
+      }
+   }
+   if (pic == 0) {
+      if (obj->IsFolder()) {
+         pic = fClient->GetPicture("folder_s.xpm");
+      } else {
+         pic = fClient->GetPicture("doc_s.xpm");
+      }
+   }
+   return pic;
+}
+
+//______________________________________________________________________________
+void TGContainer::SetDragPixmap(const TGPicture *p)
+{
+   Pixmap_t pic, mask;
+   TGPicture *selpic = new TGSelectedPicture(gClient, p);
+   pic  = selpic->GetPicture();
+   mask = selpic->GetMask();
+
+   if (gDNDManager) {
+      gDNDManager->SetDragPixmap(pic, mask, p->GetWidth()/2, 2+p->GetHeight()/2);
+   } else {
+      gVirtualX->DeletePixmap(pic);
+      gVirtualX->DeletePixmap(mask);
+   }
 }
 
 //______________________________________________________________________________
@@ -939,7 +1008,11 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    TGFrame* f = 0;
    fOnMouseOver = kFALSE;
 
-   if (fDragging) {
+   if (gDNDManager->IsDragging()) {
+      gDNDManager->Drag(event->fXRoot, event->fYRoot,
+                        TGDNDManager::GetDNDactionCopy(), event->fTime);
+   }
+   else if (fDragging) {
       if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       fX0 =  TMath::Min(fXp,x);
@@ -1017,8 +1090,22 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          }
       }
       if (over_frame) {
-         OnMouseOver(over_frame);
-         gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
+         if (!gDNDManager->IsDragging()) {
+            if (fBdown && ((abs(event->fX - fXDND) > 3) || (abs(event->fY - fYDND) > 3))) {
+               if (gDNDManager && over_frame->IsDNDSource()) {
+                  SetDragPixmap(GetObjPicture(over_frame));
+                  gDNDManager->StartDrag(over_frame, event->fXRoot, event->fYRoot);
+               }
+            }
+         }
+         if (gDNDManager->IsDragging()) {
+            gDNDManager->Drag(event->fXRoot, event->fYRoot,
+                              TGDNDManager::GetDNDactionCopy(), event->fTime);
+         }
+         else {
+            OnMouseOver(over_frame);
+            gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
+         }
       } else {
          gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kPointer));
       }

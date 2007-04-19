@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.114 2007/02/22 15:40:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.115 2007/03/12 13:39:33 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -58,6 +58,8 @@
 #include "TGuiBuilder.h"
 #include "TImage.h"
 #include "TError.h"
+#include "TGDNDManager.h"
+#include "TBufferFile.h"
 
 #include "TPluginManager.h"
 #include "TVirtualGL.h"
@@ -578,6 +580,12 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // we need to use GetDefaultSize() to initialize the layout algorithm...
    Resize(GetDefaultSize());
+
+   Atom_t *dndTypeList = new Atom_t[2];
+   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   dndTypeList[1] = 0;
+   gVirtualX->SetDNDAware(fId, dndTypeList);
+   SetDNDTarget(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -1650,6 +1658,57 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
    if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
+{
+   static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+
+   if (data->fDataType == rootObj) {
+      TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
+      buf.SetReadMode();
+      TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+      gPad->Clear();
+      if (obj->InheritsFrom("TGraph"))
+         obj->Draw("ACP");
+      else
+         obj->Draw();
+      gPad->Modified();
+      gPad->Update();
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Atom_t TRootCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+                                      Int_t /*xroot*/, Int_t /*yroot*/)
+{
+   TPad *pad = fCanvas->Pick(x, y, 0);
+   if (pad) {
+      pad->cd();
+      gROOT->SetSelectedPad(pad);
+   }
+   return action;
+}
+
+//______________________________________________________________________________
+Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
+{
+   static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   for (int i = 0; typelist[i] != kNone; ++i) {
+      if (typelist[i] == rootObj) {
+         return rootObj;
+      }
+   }
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HandleDNDleave()
+{
    return kTRUE;
 }
 

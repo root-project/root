@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.122 2007/03/20 09:54:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.123 2007/03/23 09:06:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -54,7 +54,10 @@
 #include "TObjArray.h"
 #include "TEnv.h"
 #include "RStipples.h"
+#include "TEnv.h"
 
+// DND protocol version
+#define XDND_PROTOCOL_VERSION   5
 #ifndef IDC_HAND
 #define IDC_HAND  MAKEINTRESOURCE(32649)
 #endif
@@ -1064,6 +1067,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       fCursors[kPointer] = gdk_syscursor_new((ULong_t)IDC_ARROW);
       fCursors[kCaret] =  gdk_syscursor_new((ULong_t)IDC_IBEAM);
       fCursors[kWatch] = gdk_syscursor_new((ULong_t)IDC_WAIT);
+      fCursors[kNoDrop] = gdk_syscursor_new((ULong_t)IDC_NO);
    }
    else {
       fUseSysPointers = kFALSE;
@@ -1084,6 +1088,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
       //fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
       fCursors[kWatch] = gdk_cursor_new(GDK_BUSY);
+      fCursors[kNoDrop] = gdk_cursor_new(GDK_PIRATE);
    }
    fCursors[kRotate] = gdk_cursor_new(GDK_EXCHANGE);
    fCursors[kArrowRight] = gdk_cursor_new(GDK_ARROW);
@@ -3912,7 +3917,7 @@ void TGWin32::UpdateWindow(int mode)
    // Copy the pixmap gCws->drawing on the window gCws->window
    // if the double buffer is on.
 
-   if (gCws->double_buffer) {
+   if (gCws && gCws->double_buffer) {
       gdk_window_copy_area(gCws->window, gGCpxmp, 0, 0,
                            gCws->drawing, 0, 0, gCws->width, gCws->height);
    }
@@ -7219,3 +7224,272 @@ UInt_t TGWin32::ScreenWidthMM() const
 
    return (UInt_t)gdk_screen_width_mm();
 }
+
+//------------------------------ Drag and Drop ---------------------------------
+
+//______________________________________________________________________________
+void TGWin32::DeleteProperty(Window_t win, Atom_t& prop)
+{
+   // Deletes the specified property on the specified window.
+
+   HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
+   Atom_t atom = (Atom_t)GetProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
+   if (atom != 0) {
+	   GlobalDeleteAtom(atom);
+   }
+   RemoveProp(hWnd,(LPCTSTR)MAKELONG(prop,0));
+}
+
+//______________________________________________________________________________
+Int_t TGWin32::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t len,
+                         Bool_t del, Atom_t req_type, Atom_t *act_type,
+                         Int_t *act_format, ULong_t *nitems, ULong_t *bytes,
+                         unsigned char **prop_list)
+{
+   // Returns the actual type of the property, the actual format of the property,
+   // and a pointer to the data actually returned.
+   
+   HGLOBAL hdata;
+   UChar_t *ptr, *data;
+   UInt_t i, n, length;
+
+   HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
+   if (hWnd == NULL)
+      return 0;
+
+   Atom_t dndproxy = InternAtom("XdndProxy", kFALSE);
+   Atom_t dndtypelist = InternAtom("XdndTypeList", kFALSE);
+
+   if (prop == dndproxy)
+      return 0;
+   if (prop == dndtypelist) {
+      *act_type = XA_ATOM;
+      *prop_list = (unsigned char *)GetProp(hWnd, (LPCTSTR)MAKELONG(prop,0));
+      for (n = 0; prop_list[n]; n++);
+      *nitems = n;
+      return n;
+   }
+   else {
+      if (!OpenClipboard(NULL)) {
+         return 0;
+      }
+      hdata = GetClipboardData(CF_PRIVATEFIRST);
+      ptr = (UChar_t *)GlobalLock(hdata);
+      length = GlobalSize(hdata);
+      data = (UChar_t *)malloc(length + 1);
+      for (i = 0; i < length; i++) {
+         data[i] = ptr[i];
+      }
+      GlobalUnlock(hdata);
+      CloseClipboard();
+      *prop_list = data;
+      *bytes = *nitems = length;
+      return length;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGWin32::ChangeActivePointerGrab(Window_t win, UInt_t mask, Cursor_t cur)
+{
+   // Changes the active cursor of the specified window.
+
+   UInt_t xevmask;
+   MapEventMask(mask, xevmask);
+   if (cur == kNone)
+      gdk_window_set_cursor((GdkWindow *) win, fCursors[kHand]);
+   else
+      gdk_window_set_cursor((GdkWindow *) win, (GdkCursor *)cur);
+}
+
+//______________________________________________________________________________
+void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
+                             Atom_t &prop, Time_t &stamp)
+{
+   // Get Clipboard data.
+
+   HGLOBAL hdata;
+   UChar_t *ptr, *data;
+   UInt_t i, length;
+
+   static UINT gdk_selection_notify_msg = 
+      RegisterWindowMessage("gdk-selection-notify");
+   HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
+   if (!OpenClipboard(NULL)) {
+      return;
+   }
+   hdata = GetClipboardData(CF_PRIVATEFIRST);
+   ptr = (UChar_t *)GlobalLock(hdata);
+   length = GlobalSize(hdata);
+   data = (UChar_t *)malloc(length + 1);
+   for (i = 0; i < length; i++) {
+      *data++ = *ptr++;
+   }
+   GlobalUnlock(hdata);
+   CloseClipboard();
+   /* Send ourselves an ersatz selection notify message so that we actually
+    * fetch the data.
+    */
+   PostMessage(hWnd, gdk_selection_notify_msg, sel, target);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::SetSelectionOwner(Window_t owner, Atom_t &sel)
+{
+   // Assigns owner of Clipboard.
+
+   static UINT gdk_selection_request_msg = 
+      RegisterWindowMessage("gdk-selection-request");
+   HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)owner);
+   OpenClipboard(hWnd);
+   EmptyClipboard();
+   CloseClipboard();
+   if (owner) {
+      ::PostMessage(hWnd, gdk_selection_request_msg, sel, 0);
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGWin32::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                               Int_t format, UChar_t *data, Int_t len)
+{
+   // Put data into Clipboard.
+
+   HGLOBAL hdata;
+   Int_t i, length;
+   UChar_t *ptr;
+
+   if (data == 0 || len == 0)
+      return;
+   if (!OpenClipboard((HWND)GDK_DRAWABLE_XID((GdkWindow *)id))) {
+      return;
+   }
+   hdata = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, len + 1);
+   ptr = (UChar_t *)GlobalLock(hdata);
+   for (i = 0; i < len; i++) {
+      *ptr++ = *data++;
+   }
+   GlobalUnlock(hdata);
+   SetClipboardData(CF_PRIVATEFIRST, hdata);
+   CloseClipboard();
+}
+
+//______________________________________________________________________________
+void TGWin32::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
+{
+   // Add the list of drag and drop types to the Window win.
+
+   SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)win),
+           (LPCTSTR)MAKELONG(prop,0),
+           (HANDLE)typelist);
+}
+
+//______________________________________________________________________________
+Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input, 
+                              int x, int y, int maxd)
+{
+   // Recursively search in the children of Window for a Window which is at 
+   // location x, y and is DND aware, with a maximum depth of maxd.
+   // Possibility to exclude dragwin and input.
+
+   POINT screen_point, point;
+   POINT cpt;
+   RECT  rect;
+   HWND hwnd, hwndc;
+   HWND hwndt;
+   Window_t win, retwin = kNone;
+   Atom_t version = 0;
+   Atom_t dndaware = InternAtom("XdndAware", kFALSE);
+
+   cpt.x = x;
+   cpt.y = y;
+   hwnd = ::ChildWindowFromPointEx((HWND)GDK_DRAWABLE_XID((GdkWindow *)root),
+                                    cpt, CWP_ALL);
+   while (hwnd) {
+      GetWindowRect(hwnd, &rect);
+      if (PtInRect(&rect, cpt)) {
+         if (GetProp(hwnd,(LPCTSTR)MAKELONG(dndaware,0))) {
+            win = (Window_t) gdk_xid_table_lookup(hwnd);
+            if (win && win != dragwin && win != input)
+               return win;
+         }
+         Bool_t done = kFALSE;
+         hwndt = hwnd;
+         while (!done) {
+            point = cpt;
+            ::MapWindowPoints(NULL, hwndt, &point, 1);
+            hwndc = ChildWindowFromPoint (hwndt, point);
+            if (GetProp(hwnd,(LPCTSTR)MAKELONG(dndaware,0))) {
+               win = (Window_t) gdk_xid_table_lookup(hwndc);
+               if (win && win != dragwin && win != input)
+                  return win;
+            }
+            if (hwndc == NULL)
+               done = TRUE;
+            else if (hwndc == hwndt)
+               done = TRUE;
+            else
+               hwndt = hwndc;
+            if (GetProp(hwndt,(LPCTSTR)MAKELONG(dndaware,0))) {
+               win = (Window_t) gdk_xid_table_lookup(hwndt);
+               if (win && win != dragwin && win != input)
+                  return win;
+            }
+         }
+      }
+      hwnd = GetNextWindow(hwnd, GW_HWNDNEXT);
+   }
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::IsDNDAware(Window_t win, Atom_t *typelist)
+{
+   // Checks if Window win is DND aware, and knows any of the DND formats
+   // passed in argument.
+
+   if (!win) return kFALSE;
+
+   Atom_t version = 0;
+   Atom_t dndaware = InternAtom("XdndAware", kFALSE);
+   HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
+   while (window) {
+      version = (Atom_t)GetProp(window,(LPCTSTR)MAKELONG(dndaware,0));
+      if (version) return kTRUE;
+      window = ::GetParent(window);
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
+{
+   // Add XdndAware property and the list of drag and drop types to the 
+   // Window win.
+
+   int n;
+   if (!id) return;
+
+   DWORD dwStyle = GetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id), 
+                                 GWL_EXSTYLE);
+   SetWindowLong((HWND)GDK_DRAWABLE_XID((GdkWindow *)id), GWL_EXSTYLE, 
+                 dwStyle | WS_EX_ACCEPTFILES);
+   Atom_t dndaware = InternAtom("XdndAware", kFALSE);
+   SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
+           (LPCTSTR)MAKELONG(dndaware,0),
+           (HANDLE)XDND_PROTOCOL_VERSION);
+
+   if (typelist == 0)
+      return;
+   for (n = 0; typelist[n]; n++);
+   Atom_t dndtypelist = InternAtom("XdndTypeList", kFALSE);
+   SetProp((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
+           (LPCTSTR)MAKELONG(dndtypelist,0),
+           (HANDLE)typelist);
+
+}
+
+
+
+

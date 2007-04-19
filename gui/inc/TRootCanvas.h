@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.22 2006/10/12 07:57:23 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.23 2006/11/02 07:34:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TGHorizontal3DLine;
 class TGVertical3DLine;
 class TVirtualPadEditor;
 class TGDockableFrame;
+class TGDNDManager;
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
 
@@ -100,6 +101,12 @@ private:
    Bool_t   HandleContainerMotion(Event_t *ev);
    Bool_t   HandleContainerExpose(Event_t *ev);
    Bool_t   HandleContainerCrossing(Event_t *ev);
+
+   Bool_t   HandleDNDdrop(TDNDdata *data);
+   Atom_t   HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+                              Int_t xroot, Int_t yroot);
+   Atom_t   HandleDNDenter(Atom_t * typelist);
+   Bool_t   HandleDNDleave();
 
 public:
    TRootCanvas(TCanvas *c = 0, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);

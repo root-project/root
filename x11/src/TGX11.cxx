@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.55 2006/02/06 16:34:43 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.56 2007/03/20 09:54:27 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1125,6 +1125,7 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fCursors[kArrowRight]  = XCreateFontCursor(fDisplay, XC_arrow);
    fCursors[kCaret]       = XCreateFontCursor(fDisplay, XC_xterm);
    fCursors[kWatch]       = XCreateFontCursor(fDisplay, XC_watch);
+   fCursors[kNoDrop]      = XCreateFontCursor(fDisplay, XC_pirate);
 
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;

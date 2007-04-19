@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.148 2007/03/29 10:12:29 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.149 2007/04/02 16:53:30 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -85,6 +85,7 @@
 #include "TQConnection.h"
 #include "TGButton.h"
 #include "TGSplitter.h"
+#include "TGDNDManager.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -147,6 +148,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    SetWindowAttributes_t wattr;
 
+   fDNDState   = 0;
    fBackground = back;
    fOptions    = options;
    fWidth = w; fHeight = h; fX = fY = fBorderWidth = 0;
@@ -202,6 +204,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    WindowAttributes_t attributes;
    gVirtualX->GetWindowAttributes(id, attributes);
 
+   fDNDState    = 0;
    fX           = attributes.fX;
    fY           = attributes.fY;
    fWidth       = attributes.fWidth;
@@ -234,6 +237,10 @@ void TGFrame::DeleteWindow()
    // execution "thread" can cause side effects because frame methods
    // can still be called while the window object has already been deleted.
 
+   if (gDNDManager) {
+      if (gDNDManager->GetMainFrame() == this)
+         gDNDManager->SetMainFrame(0);
+   }
    TTimer::SingleShot(150, IsA()->GetName(), this, "ReallyDelete()");
 }
 
@@ -587,10 +594,12 @@ Bool_t TGFrame::HandleClientMessage(Event_t *event)
    // Handle a client message. Client messages are the ones sent via
    // TGFrame::SendMessage (typically by widgets).
 
+   if (gDNDManager) {
+      gDNDManager->HandleClientMessage(event);
+   }
    if (event->fHandle == gROOT_MESSAGE) {
       ProcessMessage(event->fUser[0], event->fUser[1], event->fUser[2]);
    }
-
    return kTRUE;
 }
 
@@ -1392,6 +1401,13 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
       }
    }
    //AddInput(kButtonPressMask); // to allow Drag and Drop
+   // Create Drag&Drop Manager and define a few DND types
+   Atom_t *dndTypeList = new Atom_t[4];
+   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   dndTypeList[1] = gVirtualX->InternAtom("text/plain", kFALSE);
+   dndTypeList[2] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[3] = 0;
+   new TGDNDManager(this, dndTypeList);
    SetWindowName();
 }
 
@@ -1501,6 +1517,47 @@ void TGMainFrame::RemoveBind(const TGWindow *, Int_t keycode, Int_t modifier) co
 }
 
 //______________________________________________________________________________
+Bool_t TGMainFrame::HandleButton(Event_t *event)
+{
+   if (event->fType == kButtonRelease) {
+      if (gDNDManager->IsDragging()) gDNDManager->Drop();
+   }
+   return TGCompositeFrame::HandleButton(event);
+}
+
+
+//______________________________________________________________________________
+Bool_t TGMainFrame::HandleMotion(Event_t *event)
+{
+
+   if (gDNDManager && gDNDManager->IsDragging()) {
+      gDNDManager->Drag(event->fXRoot, event->fYRoot,
+                        TGDNDManager::GetDNDactionCopy(), event->fTime);
+   }
+   return TGCompositeFrame::HandleMotion(event);
+}
+
+//______________________________________________________________________________
+Bool_t TGMainFrame::HandleSelection(Event_t *event)
+{
+   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
+      if (gDNDManager)
+         return gDNDManager->HandleSelection(event);
+   }
+   return TGCompositeFrame::HandleSelection(event);
+}
+
+//______________________________________________________________________________
+Bool_t TGMainFrame::HandleSelectionRequest(Event_t *event)
+{
+   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
+      if (gDNDManager)
+         return gDNDManager->HandleSelectionRequest(event);
+   }
+   return TGCompositeFrame::HandleSelectionRequest(event);
+}
+
+//______________________________________________________________________________
 Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
 {
    // Handle client messages sent to this frame.
@@ -1512,6 +1569,9 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
       Emit("CloseWindow()");
       if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
          CloseWindow();
+   }
+   if (gDNDManager) {
+      gDNDManager->HandleClientMessage(event);
    }
    return kTRUE;
 }

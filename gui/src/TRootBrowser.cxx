@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.104 2007/01/30 11:49:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.105 2007/02/15 15:04:40 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -64,6 +64,8 @@
 #include "TMethod.h"
 #include "TColor.h"
 #include "TObjString.h"
+#include "TGDNDManager.h"
+#include "TBufferFile.h"
 
 #include "HelpText.h"
 
@@ -252,6 +254,20 @@ public:
    TRootObjItem(const TGWindow *p, const TGPicture *bpic,
                 const TGPicture *spic, TGString *name,
                 TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
+
+   virtual TDNDdata *GetDNDdata(Atom_t) {
+      return &fDNDData;
+   }
+
+   virtual Bool_t HandleDNDfinished() {
+      if (GetParent())
+         return ((TGFrame *)GetParent())->HandleDNDfinished();
+      return kFALSE;
+   }
+
+protected:
+   TBufferFile *fBuf;
+   TDNDdata fDNDData;
 };
 
 //______________________________________________________________________________
@@ -262,12 +278,32 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
 {
    // Create an icon box item.
 
+   TKey *key = 0;
+   TObject *object = 0;
    delete [] fSubnames;
    fSubnames = new TGString* [2];
 
    fSubnames[0] = new TGString(obj->GetTitle());
 
    fSubnames[1] = 0;
+
+   fBuf = new TBufferFile(TBuffer::kWrite);
+
+   if (obj->IsA() == TKey::Class()) {
+      key = (TKey *)obj;
+      object = key->ReadObj();
+      fBuf->WriteObject(object);
+      fDNDData.fData = fBuf->Buffer();
+      fDNDData.fDataLength = fBuf->Length();
+      fDNDData.fDataType = gVirtualX->InternAtom("application/root", kFALSE);
+      SetDNDSource(kTRUE);
+   }
+   else {
+      fDNDData.fData = 0;
+      fDNDData.fDataLength = 0;
+      fDNDData.fDataType = 0;
+      SetDNDSource(kFALSE);
+   }
 
    int i;
    for (i = 0; fSubnames[i] != 0; ++i)
@@ -539,7 +575,22 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       }
 
       fi = AddFile(name, spic, pic);
-      if (fi) fi->SetUserData(obj);
+      if (fi) {
+         fi->SetUserData(obj);
+         if (obj->IsA() == TSystemFile::Class()) {
+            char str[256];
+            TDNDdata data;
+            sprintf(str, "file:%s/%s\r\n",
+                    gSystem->UnixPathName(obj->GetTitle()),
+                    obj->GetName());
+            data.fData = (void *)strdup(str);
+            data.fDataLength = strlen(str)+1;
+            data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
+            fi->SetDNDdata(&data);
+            fi->SetDNDSource(kTRUE);
+         }
+      }
+
       fIsEmpty = kFALSE;
       return;
    }
@@ -1133,12 +1184,20 @@ void TRootBrowser::CreateBrowser(const char *name)
    fListLevel = 0;
    fTreeLock  = kFALSE;
 
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), 0, kTRUE);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F5), 0, kTRUE);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kKeyMod1Mask, kTRUE);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kKeyMod1Mask, kTRUE);
    ClearHistory();
    SetEditDisabled(kEditDisable);
 
+   Atom_t *dndTypeList = new Atom_t[3];
+   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
+   gVirtualX->SetDNDAware(fId, dndTypeList);
+   //SetDNDTarget(kTRUE);
+   AddInput(kPointerMotionMask);
    MapSubwindows();
    SetDefaults();
    Resize();
@@ -1161,6 +1220,9 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
       if (!event->fState && (EKeySym)keysym == kKey_F5) {
          Refresh(kTRUE);
          return kTRUE;
+      }
+      if (!event->fState && (EKeySym)keysym == kKey_Escape) {
+         if (gDNDManager->IsDragging()) gDNDManager->EndDrag();
       }
 
       if (event->fState & kKeyMod1Mask) {

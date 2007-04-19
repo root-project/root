@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.35 2007/01/10 17:43:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.36 2007/04/17 12:08:17 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 #include "TRegexp.h"
 #include "TList.h"
 #include "TSystem.h"
+#include "TGDNDManager.h"
+#include "TBufferFile.h"
 #include "Riostream.h"
 #include <time.h>
 
@@ -245,6 +247,10 @@ TGFileItem::TGFileItem(const TGWindow *p,
    char tmp[256];
    Long64_t fsize, bsize;
 
+   fBuf = new TBufferFile(TBuffer::kWrite);
+   fDNDData.fData = 0;
+   fDNDData.fDataLength = 0;
+   fDNDData.fDataType = 0;
    fLcurrent =
    fBlpic = blpic;
    fSlpic = slpic;

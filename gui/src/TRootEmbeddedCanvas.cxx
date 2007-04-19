@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.26 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.27 2007/01/23 16:41:14 antcheva Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -25,6 +25,8 @@
 #include "TStyle.h"
 #include "TPluginManager.h"
 #include "TVirtualGL.h"
+#include "TGDNDManager.h"
+#include "TBufferFile.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -132,6 +134,12 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    SetContainer(fCanvasContainer);
 
    fCanvas = new TCanvas(name ? name : Form("%s_canvas", GetName()), w, h, fCWinId);
+
+   Atom_t *dndTypeList = new Atom_t[2];
+   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   dndTypeList[1] = 0;
+   gVirtualX->SetDNDAware(fId, dndTypeList);
+   SetDNDTarget(kTRUE);
 
    if (!p) {
       fCanvas->SetBorderMode(0);
@@ -297,6 +305,65 @@ Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
    if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TRootEmbeddedCanvas::HandleDNDdrop(TDNDdata *data)
+{
+   static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+
+   if (data->fDataType == rootObj) {
+      TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
+      buf.SetReadMode();
+      TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+      gPad->Clear();
+      if (obj->InheritsFrom("TGraph"))
+         obj->Draw("ACP");
+      else
+         obj->Draw();
+      gPad->Modified();
+      gPad->Update();
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Atom_t TRootEmbeddedCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+                                              Int_t xroot, Int_t yroot)
+{
+
+   Int_t    px = 0, py = 0;
+   Window_t wtarget;
+
+   gVirtualX->TranslateCoordinates(gClient->GetDefaultRoot()->GetId(),
+                                   gVirtualX->GetWindowID(fCanvas->GetCanvasID()), 
+                                   xroot, yroot, px, py, wtarget);
+
+   TPad *pad = fCanvas->Pick(px, py, 0);
+   if (pad) {
+      pad->cd();
+      gROOT->SetSelectedPad(pad);
+   }
+   return action;
+}
+
+//______________________________________________________________________________
+Atom_t TRootEmbeddedCanvas::HandleDNDenter(Atom_t *typelist)
+{
+   static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   for (int i = 0; typelist[i] != kNone; ++i) {
+      if (typelist[i] == rootObj) {
+         return rootObj;
+      }
+   }
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TRootEmbeddedCanvas::HandleDNDleave()
+{
    return kTRUE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.35 2007/03/05 09:10:03 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.36 2007/03/18 18:35:21 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -383,6 +383,19 @@ public:
    void         RemoveWindow(ULong_t qwid);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
    UInt_t       ScreenWidthMM() const;
+
+   void         DeleteProperty(Window_t, Atom_t&);
+   Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                            Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   Bool_t       SetSelectionOwner(Window_t, Atom_t&);
+   void         ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                                 Int_t format, UChar_t *data, Int_t len);
+   void         SetDNDAware(Window_t win, Atom_t *typelist);
+   void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    Bool_t       GUIThreadMessageFunc(MSG* msg);
    Bool_t       IsCmdThread() const;

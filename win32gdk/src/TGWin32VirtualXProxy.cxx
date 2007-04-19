@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.11 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.12 2007/02/01 16:24:14 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -239,6 +239,17 @@ RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmapFromData,unsigned char*,bits,UI
 RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
 VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULong_t,qwid,1)
 VOID_METHOD_ARG4(VirtualX,ShapeCombineMask,Window_t,id,Int_t,x,Int_t,y,Pixmap_t,mask,1)
+
+VOID_METHOD_ARG2(VirtualX,DeleteProperty,Window_t,win,Atom_t&,prop,1)
+RETURN_METHOD_ARG11(VirtualX,Int_t,GetProperty,Window_t,win,Atom_t,prop,Long_t,offset,Long_t,length,Bool_t,del,Atom_t,req_type,Atom_t*,act_type,Int_t*,act_format,ULong_t*,nitems,ULong_t*,bytes,unsigned char**,prop_list)
+VOID_METHOD_ARG3(VirtualX,ChangeActivePointerGrab,Window_t,win,UInt_t,mask,Cursor_t,cur,1)
+VOID_METHOD_ARG5(VirtualX,ConvertSelection,Window_t,win,Atom_t&,sel,Atom_t&,target,Atom_t&,prop,Time_t&,stamp,1)
+RETURN_METHOD_ARG2(VirtualX,Bool_t,SetSelectionOwner,Window_t,win,Atom_t&,prop)
+VOID_METHOD_ARG6(VirtualX,ChangeProperties,Window_t,id,Atom_t,property,Atom_t,type,Int_t,format,UChar_t*,data,Int_t,len,1)
+VOID_METHOD_ARG2(VirtualX,SetDNDAware,Window_t,id,Atom_t*,typelist,1)
+VOID_METHOD_ARG3(VirtualX,SetTypeList,Window_t,win,Atom_t,prop,Atom_t*,typelist,1);
+RETURN_METHOD_ARG6(VirtualX,Window_t,FindRWindow,Window_t,win,Window_t,dragwin,Window_t,input,int,x,int,y,int,maxd);
+RETURN_METHOD_ARG2(VirtualX,Bool_t,IsDNDAware,Window_t,win,Atom_t*,typelist);
 
 //VOID_METHOD_ARG1(VirtualX,CreateOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(VirtualX,DeleteOpenGLContext,Int_t,wid,1)

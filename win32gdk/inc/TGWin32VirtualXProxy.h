@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.13 2006/02/03 09:04:52 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.14 2006/05/15 13:31:01 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -264,6 +264,19 @@ public:
    Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    void         RemoveWindow(ULong_t qwid);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
+
+   void         DeleteProperty(Window_t, Atom_t&);
+   Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                            Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   Bool_t       SetSelectionOwner(Window_t, Atom_t&);
+   void         ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                                 Int_t format, UChar_t *data, Int_t len);
+   void         SetDNDAware(Window_t win, Atom_t *typelist);
+   void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
    void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }

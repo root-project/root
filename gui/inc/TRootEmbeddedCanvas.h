@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.12 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.h,v 1.13 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 
 class TCanvas;
 class TRootEmbeddedContainer;
-
+class TDNDdata;
 
 class TRootEmbeddedCanvas : public TGCanvas {
 
@@ -66,6 +66,12 @@ public:
    Bool_t     GetAutoFit() const { return fAutoFit; }
    void       SetAutoFit(Bool_t fit = kTRUE) { fAutoFit = fit; }
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
+
+   virtual Bool_t HandleDNDdrop(TDNDdata *data);
+   virtual Atom_t HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
+                                    Int_t /*xroot*/, Int_t /*yroot*/);
+   virtual Atom_t HandleDNDenter(Atom_t * typelist);
+   virtual Bool_t HandleDNDleave();
 
    ClassDef(TRootEmbeddedCanvas,0)  //A ROOT TCanvas that can be embedded in a TGFrame
 };

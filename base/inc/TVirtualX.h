@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.41 2007/02/19 16:16:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.42 2007/02/20 09:44:43 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -49,11 +49,11 @@ R__EXTERN Atom_t gWM_DELETE_WINDOW;
 R__EXTERN Atom_t gMOTIF_WM_HINTS;
 R__EXTERN Atom_t gROOT_MESSAGE;
 
-const int kNumCursors = 18;
+const int kNumCursors = 19;
 enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
                kBottomSide, kLeftSide, kTopSide, kRightSide,
                kMove, kCross, kArrowHor, kArrowVer, kHand, kRotate,
-               kPointer, kArrowRight, kCaret, kWatch };
+               kPointer, kArrowRight, kCaret, kWatch, kNoDrop };
 
 class TPoint;
 class TString;
@@ -308,6 +308,20 @@ public:
    virtual void         DeleteImage(Drawable_t img);
    virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
    virtual void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
+
+   //---- Drag and Drop -----
+   virtual void         DeleteProperty(Window_t, Atom_t&);
+   virtual Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   virtual void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   virtual void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   virtual Bool_t       SetSelectionOwner(Window_t, Atom_t&);
+   virtual void         ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                                         Int_t format, UChar_t *data, Int_t len);
+   virtual void         SetDNDAware(Window_t, Atom_t *);
+   virtual void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    static TVirtualX    *&Instance();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.32 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.33 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -37,7 +37,7 @@ class TGContainerTimer;
 class TGContainerKeyboardTimer;
 class TGContainerScrollTimer;
 class TGListView;
-
+class TGPicture;
 
 class TGContainer : public TGCompositeFrame {
 
@@ -67,6 +67,8 @@ protected:
    TString            fKeyInput;      // keyboard input (buffer)
    Bool_t             fKeyTimerActive;// kTRUE - keyboard timer is active
    Bool_t             fScrolling;     // kTRUE - when scrolling is ON
+   Int_t              fXDND, fYDND;
+   Bool_t             fBdown;
 
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
@@ -78,7 +80,7 @@ protected:
    virtual void SearchPattern();
    virtual void OnAutoScroll();
    virtual void RepeatSearch();
-
+   
 private:
    TGContainer(const TGContainer&);               // not implemented
    TGContainer& operator=(const TGContainer&);    // not implemented
@@ -134,11 +136,15 @@ public:
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
+   virtual Bool_t HandleDNDfinished() { fBdown = kFALSE; return kTRUE; }
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
+
+   const TGPicture *GetObjPicture(TGFrame *f);
+   virtual void SetDragPixmap(const TGPicture *pic);
 
    virtual void SelectAll();                    //*SIGNAL*
    virtual void UnSelectAll();                  //*SIGNAL*

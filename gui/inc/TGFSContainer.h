@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.19 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.20 2007/04/17 12:08:17 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -24,7 +24,12 @@
 #ifndef ROOT_TGListView
 #include "TGListView.h"
 #endif
-
+#ifndef ROOT_TDNDManager
+#include "TGDNDManager.h"
+#endif
+#ifndef ROOT_TBufferFile
+#include "TBufferFile.h"
+#endif
 
 //----- file sort mode
 enum EFSSortMode {
@@ -58,6 +63,8 @@ protected:
    Bool_t            fIsLink;       // true if symbolic link
    Long_t            fModTime;      // modification time
    Long64_t          fSize;         // file size
+   TBufferFile      *fBuf;          // buffer used for Drag and Drop
+   TDNDdata          fDNDData;      // Drag and Drop data
 
    virtual void DoRedraw();
 
@@ -79,6 +86,46 @@ public:
    Long_t   GetModTime() const { return fModTime; }
    Int_t    GetUid() const { return fUid; }
    Int_t    GetGid() const { return fGid; }
+
+   virtual TDNDdata *GetDNDdata(Atom_t) {
+      return &fDNDData;
+   }
+
+   virtual Atom_t HandleDNDenter(Atom_t *) {
+      if (!IsDNDTarget()) return kNone;
+      return gVirtualX->InternAtom("application/root", kFALSE);
+   }
+
+   virtual Bool_t HandleDNDleave() {
+      return kTRUE;
+   }
+
+   virtual Atom_t HandleDNDposition(int, int, Atom_t action, int, int) {
+      if (action == TGDNDManager::GetDNDactionCopy()) return action;
+      return kNone;
+   }
+
+   virtual Bool_t HandleDNDfinished() {
+      return ((TGFrame *)GetParent())->HandleDNDfinished();
+   }
+
+   void SetDNDdata(TDNDdata *data) {
+      if (fDNDData.fDataLength > 0)
+         free(fDNDData.fData);
+      fDNDData.fData = calloc(sizeof(unsigned char), data->fDataLength);
+      memcpy(fDNDData.fData, data->fData, data->fDataLength);
+      fDNDData.fDataLength = data->fDataLength;
+      fDNDData.fDataType = data->fDataType;
+   }
+
+   void SetDNDObject(TObject *obj) {
+      if (fDNDData.fDataLength)
+         free(fDNDData.fData);
+      fBuf->WriteObject(obj);
+      fDNDData.fData = fBuf->Buffer();
+      fDNDData.fDataLength = fBuf->Length();
+      fDNDData.fDataType = gVirtualX->InternAtom("application/root", kFALSE);
+   }
 
    ClassDef(TGFileItem,0)   // Class representing file system object
 };

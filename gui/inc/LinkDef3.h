@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.12 2006/06/20 07:57:54 antcheva Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.13 2006/11/01 16:23:34 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,9 +16,11 @@
 
 #pragma link C++ enum EDragType;
 #pragma link C++ enum EGuiBldAction;
+#pragma link C++ enum EDNDFlags;
 
 #pragma link C++ global gDragManager;
 #pragma link C++ global gGuiBuilder;
+#pragma link C++ global gDNDManager;
 
 #pragma link C++ nestedclass;
 
@@ -72,5 +74,8 @@
 #pragma link C++ class TGPasswdDialog;
 #pragma link C++ class TGTextEditor;
 #pragma link C++ class TGSpeedo;
+#pragma link C++ class TDNDdata;
+#pragma link C++ class TGDNDManager;
+#pragma link C++ class TGDragWindow;
 
 #endif
