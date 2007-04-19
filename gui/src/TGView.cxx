@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.21 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.22 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -45,21 +45,9 @@
 #include "TGView.h"
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
-#include "TSystem.h"
 #include "TMath.h"
 #include "KeySymbols.h"
 
-
-
-//______________________________________________________________________________
-Bool_t TViewTimer::Notify()
-{
-   // Notify when timer times out and reset the timer.
-
-   fView->HandleTimer(this);
-   Reset();
-   return kFALSE;
-}
 
 
 ClassImp(TGViewFrame)
@@ -74,14 +62,21 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
    fView = v;
 
    SetBackgroundColor(back);
-
+      
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
                          kButtonMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
-            kFocusChangeMask | kStructureNotifyMask);
+            kFocusChangeMask);
 
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 1; // NorthWestGravity
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
+   // guibuiding settings
    fEditDisabled = kEditDisableGrab | kEditDisableKeyEnable | kEditDisableBtnEnable;
 }
 
@@ -105,36 +100,34 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fYMargin = yMargin;
    fScrollVal.fX = 1;
    fScrollVal.fY = 1;
+   fExposedRegion.Empty();
 
    fClipboard = fClient->GetResourcePool()->GetClipboard();
 
-   fCanvas = new TGViewFrame(this, 10, 10, kChildFrame, back);
+   fCanvas = new TGViewFrame(this, 10, 10, kChildFrame | kOwnBackground, back);
    AddFrame(fCanvas);
 
    if (!(sboptions & kNoHSB)) {
       fHsb = new TGHScrollBar(this, 10, 10, kChildFrame);
       AddFrame(fHsb);
       fHsb->Associate(this);
-   } else
+   } else {
       fHsb = 0;
+   }
 
    if (!(sboptions & kNoVSB)) {
       fVsb = new TGVScrollBar(this, 10, 10, kChildFrame);
       AddFrame(fVsb);
       fVsb->Associate(this);
-   } else
+   } else {
       fVsb = 0;
+   }
 
-   fWhiteGC = GetWhiteGC();
+   fWhiteGC = *fClient->GetResourcePool()->GetWhiteGC();
    fWhiteGC.SetGraphicsExposures(kTRUE);
+   fWhiteGC.SetBackground(back);
 
-   Clear();
-   Layout();
-
-   fScrollTimer = new TViewTimer(this, 75);
-   gSystem->AddTimer(fScrollTimer);
-   fReadOnly = kFALSE;
-
+   // sets for guibuilding   
    if (fVsb) {
       fVsb->SetEditDisabled(kEditDisableGrab | kEditDisableBtnEnable);
    }
@@ -154,8 +147,6 @@ TGView::~TGView()
 {
    // Delete view.
 
-   delete fScrollTimer;
-
    if (!MustCleanup()) {
       delete fCanvas;
       delete fHsb;
@@ -168,16 +159,15 @@ void TGView::Clear(Option_t *)
 {
    // Clear view.
 
-   fIsMarked  = kFALSE;
-   fIsSaved   = kTRUE;
    fScrolling = -1;
-   fIsMarking = kFALSE;
-   fMarkedStart.fX = fMarkedStart.fY = 0;
-   fMarkedEnd.fX   = fMarkedEnd.fY   = 0;
-   fMousePos.fX    = fMousePos.fY    = -1;
-   fVisible.fX     = fVisible.fY     = 0;
-   SetVsbPosition(0);
-   SetHsbPosition(0);
+
+   fMousePos.fX = fMousePos.fY    = -1;
+   fVisible.fX  = fVisible.fY     = 0;
+   fVirtualSize = TGDimension(0, 0);
+
+   Layout();
+   gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 0, 0,
+                           fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 
 //______________________________________________________________________________
@@ -186,13 +176,102 @@ void TGView::SetVisibleStart(Int_t newTop, Int_t direction)
    // Scroll view in specified direction to make newTop the visible location.
 
    if (direction == kHorizontal) {
-      if (newTop / fScrollVal.fX == fVisible.fX / fScrollVal.fX)
+      if (newTop / fScrollVal.fX == fVisible.fX / fScrollVal.fX) {
          return;
+      }
       ScrollCanvas(newTop, kHorizontal);
    } else {
-      if (newTop / fScrollVal.fY == fVisible.fY / fScrollVal.fY)
+      if (newTop / fScrollVal.fY == fVisible.fY / fScrollVal.fY) {
          return;
+      }
       ScrollCanvas(newTop, kVertical);
+   }
+}
+
+//______________________________________________________________________________
+void TGView::DrawRegion(Int_t, Int_t, UInt_t, UInt_t)
+{
+   // Draw region.
+
+   TGLongPosition endpt = ToPhysical(TGLongPosition(fVirtualSize.fWidth,
+                                                    fVirtualSize.fHeight));
+
+   if (endpt.fX < (Int_t)fCanvas->GetWidth()) {
+      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), endpt.fX, 0,
+                               fCanvas->GetWidth() - endpt.fX, endpt.fY);
+   }
+   if (endpt.fY < (Int_t)fCanvas->GetHeight()) {
+      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 0, endpt.fY,
+                             fCanvas->GetWidth(), fCanvas->GetHeight() - endpt.fY);
+   }
+}
+
+//______________________________________________________________________________
+void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // update a part of view
+
+   x = x < 0 ? 0 : x;
+   y = y < 0 ? 0 : y;
+   w = x + w > fCanvas->GetWidth() ? fCanvas->GetWidth() - x : w;
+   h = y + h > fCanvas->GetHeight() ? fCanvas->GetHeight() - y : h;
+
+   if (fExposedRegion.IsEmpty()) {
+      fExposedRegion.fX = x;
+      fExposedRegion.fY = y;
+      fExposedRegion.fW = w;
+      fExposedRegion.fH = h;
+   } else {
+      TGRectangle r(x, y, w, h);
+      fExposedRegion.Merge(r); 
+   }
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+Bool_t TGView::HandleButton(Event_t *event)
+{
+   // handle button
+
+   if (event->fType == kButtonPress) {
+      int amount, ch;
+
+      ch = fCanvas->GetHeight();
+
+      if (fScrollVal.fY == 1) {
+         amount = fScrollVal.fY * TMath::Max(ch/6, 1);
+      } else {
+         amount = fScrollVal.fY * 5;
+      }
+
+      if (event->fState & kKeyShiftMask) {
+         amount = fScrollVal.fY;
+      } else if (event->fState & kKeyControlMask) {
+         amount = ch - TMath::Max(ch / 20, 1);
+      }
+
+      if (event->fCode == kButton4) {
+         ScrollDown(amount);
+         return kTRUE;
+      } else if (event->fCode == kButton5) {
+         ScrollUp(amount);
+         return kTRUE;
+      }
+  }
+  return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGView::DoRedraw()
+{
+   // redraw
+
+   DrawBorder();
+
+   if (!fExposedRegion.IsEmpty()) {
+      DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
+                 fExposedRegion.fW, fExposedRegion.fH);
+      fExposedRegion.Empty();
    }
 }
 
@@ -202,221 +281,20 @@ Bool_t TGView::HandleExpose(Event_t *event)
    // Handle expose events.
 
    if (event->fWindow == fCanvas->GetId()) {
-      DrawRegion(event->fX, event->fY, event->fWidth, event->fHeight);
-   } else
-      TGCompositeFrame::HandleExpose(event);
 
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGView::HandleCrossing(Event_t *event)
-{
-   // Handle mouse crossing event.
-
-   if (event->fWindow != fCanvas->GetId())
-      return kTRUE;
-
-   fMousePos.fY = ToObjYCoord(fVisible.fY + event->fY);
-   if (ToScrYCoord(fMousePos.fY+1) >= (Int_t)fCanvas->GetHeight())
-      fMousePos.fY--;
-   fMousePos.fX = ToObjXCoord(fVisible.fX + event->fX, fMousePos.fY);
-   if (fMousePos.fX >= ReturnLineLength(fMousePos.fY))
-      fMousePos.fX--;
-   if ((event->fState & kButton1Mask) && fIsMarked && fIsMarking) {
-      if (event->fType == kLeaveNotify) {
-         if (event->fX < 0) {
-            fScrolling = 0;
-            return kFALSE;
-         }
-         if (event->fX >= (Int_t)fCanvas->GetWidth()) {
-            fScrolling = 1;
-            return kFALSE;
-         }
-         if (event->fY < 0) {
-            fScrolling = 2;
-            return kFALSE;
-         }
-         if (event->fY >= (Int_t)fCanvas->GetHeight()) {
-            fScrolling = 3;
-            return kFALSE;
-         }
+      TGPosition pos(event->fX, event->fY);
+      TGDimension dim(event->fWidth, event->fHeight);
+      TGRectangle rect(pos, dim);
+      if (fExposedRegion.IsEmpty()) {
+         fExposedRegion = rect;
       } else {
-         fScrolling = -1;
-         Mark(fMousePos.fX, fMousePos.fY);
+         fExposedRegion.Merge(rect);
       }
-   } else
-      fIsMarking = kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGView::HandleTimer(TTimer *)
-{
-   // Handle scroll timer.
-
-   TGLongPosition size;
-
-   if (fIsMarked) {
-      size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
-      size.fX = ToObjXCoord(fVisible.fX + fCanvas->GetWidth(), fMousePos.fY) - 1;
-      switch (fScrolling) {
-         case -1:
-            break;
-         case 0:
-            if (fVisible.fX == 0) {
-               fScrolling = -1;
-               break;
-            } else {
-               SetHsbPosition(fVisible.fX / fScrollVal.fX - 1);
-               Mark(ToObjXCoord(fVisible.fX, fMousePos.fY) - 1, fMousePos.fY);
-            }
-            break;
-         case 1:
-            if ((Int_t)fCanvas->GetWidth() >= ToScrXCoord(ReturnLineLength(fMousePos.fY), fMousePos.fY)) {
-               fScrolling = -1;
-               break;
-            } else {
-               SetHsbPosition(fVisible.fX / fScrollVal.fX + 1);
-               Mark(size.fX+1, fMousePos.fY);
-            }
-            break;
-         case 2:
-            if (fVisible.fY == 0) {
-               fScrolling = -1;
-               break;
-            } else {
-               SetVsbPosition(fVisible.fY / fScrollVal.fY - 1);
-               Mark(fMousePos.fX, fMarkedStart.fY - 1);
-            }
-            break;
-         case 3:
-            if ((Int_t)fCanvas->GetHeight() >= ToScrYCoord(ReturnLineCount())) {
-               fScrolling = -1;
-               break;
-            } else {
-               SetVsbPosition(fVisible.fY / fScrollVal.fY + 1);
-               Mark(fMousePos.fX, size.fY + 1);
-            }
-            break;
-         default:
-            break;
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGView::HandleButton(Event_t *event)
-{
-   // Handle mouse button event in text editor.
-
-   if (event->fWindow != fCanvas->GetId()) {
-      return kFALSE;
+      fClient->NeedRedraw(this);
+   } else {
+      return TGCompositeFrame::HandleExpose(event);
    }
 
-   if (event->fCode == kButton1) {
-      if (event->fType == kButtonPress) {
-         if (fIsMarked) {
-            if (event->fState & kKeyShiftMask) {
-               fIsMarking = kTRUE;
-               TGView::HandleMotion(event);
-               return kTRUE;
-            }
-            fIsMarked = kFALSE;
-            UnMark();
-         }
-         fIsMarked = kTRUE;
-         fIsMarking = kTRUE;
-         fMousePos.fY = ToObjYCoord(fVisible.fY + event->fY);
-         fMousePos.fX = ToObjXCoord(fVisible.fX + event->fX, fMousePos.fY);
-         fMarkedStart.fX = fMarkedEnd.fX = fMousePos.fX;
-         fMarkedStart.fY = fMarkedEnd.fY = fMousePos.fY;
-      } else {
-         fScrolling = -1;
-         if ((fMarkedStart.fX == fMarkedEnd.fX) &&
-             (fMarkedStart.fY == fMarkedEnd.fY)) {
-            fIsMarked = kFALSE;
-            SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED),
-                        fWidgetId, kFALSE);
-            Marked(kFALSE);
-         } else {
-            SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED),
-                        fWidgetId, kTRUE);
-            Marked(kTRUE);
-         }
-         fIsMarking = kFALSE;
-      }
-   } else if (event->fCode == kButton4) {
-      // move three lines up
-      if (fVisible.fY > 0) {
-         SetVsbPosition(fVisible.fY / fScrollVal.fY - 3);
-         //Mark(fMousePos.fX, fMarkedStart.fY - 3);
-      }
-   } else if (event->fCode == kButton5) {
-      // move three lines down
-      if ((Int_t)fCanvas->GetHeight() < ToScrYCoord(ReturnLineCount())) {
-         TGLongPosition size;
-         size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
-         SetVsbPosition(fVisible.fY / fScrollVal.fY + 3);
-         //Mark(fMousePos.fX, size.fY + 3);
-      }
-   } else if (event->fType == kButtonPress) {
-      if (event->fCode == kButton2) {
-         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLICK2),
-                     fWidgetId, (event->fYRoot << 16) | event->fXRoot);
-      } else if (event->fCode == kButton3) {
-         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLICK3),
-                     fWidgetId, (event->fYRoot << 16) | event->fXRoot);
-      }
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGView::HandleDoubleClick(Event_t *event)
-{
-   // handle double click
-
-   if (event->fWindow != fCanvas->GetId()) {
-      return kFALSE;
-   }
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-Bool_t TGView::HandleMotion(Event_t *event)
-{
-   // Handle mouse motion event in the text editor widget.
-
-   if ((ToObjYCoord(fVisible.fY+event->fY) == fMousePos.fY) &&
-       (ToObjXCoord(fVisible.fX+event->fX, ToObjYCoord(fVisible.fY+event->fY)) == fMousePos.fX))
-      return kTRUE;
-
-   if (fScrolling != -1) {
-      return kTRUE;
-   }
-
-   fMousePos.fY = ToObjYCoord(fVisible.fY+event->fY);
-   if (fMousePos.fY >= ReturnLineCount())
-      fMousePos.fY = ReturnLineCount()-1;
-   fMousePos.fX = ToObjXCoord(fVisible.fX+event->fX, fMousePos.fY);
-   if (fMousePos.fX > ReturnLineLength(fMousePos.fY))
-      fMousePos.fX = ReturnLineLength(fMousePos.fY);
-   if (event->fWindow != fCanvas->GetId())
-      return kTRUE;
-   if (!fIsMarked || !fIsMarking)
-      return kTRUE;
-   if (event->fX < 0)
-      return kTRUE;
-   if (event->fX >= (Int_t)fCanvas->GetWidth())
-      return kTRUE;
-   if (event->fY < 0)
-      return kTRUE;
-   if (event->fY >= (Int_t)fCanvas->GetHeight())
-      return kTRUE;
-   Mark(fMousePos.fX, fMousePos.fY);
    return kTRUE;
 }
 
@@ -453,167 +331,83 @@ Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 //______________________________________________________________________________
 void TGView::Layout()
 {
-   // Layout the components of view.
+   // layout view
 
-   HLayout();
-   VLayout();
-}
+   Bool_t need_vsb, need_hsb;
+   Int_t cw, ch;
 
-//______________________________________________________________________________
-void TGView::HLayout()
-{
-   // Horizontal layout of widgets (canvas, scrollbar).
+   need_vsb = need_hsb = kFALSE;
 
-   if (!fHsb) return;
+   // test whether we need scrollbars
+   cw = fWidth - (fBorderWidth << 1) - fXMargin - 1;
+   ch = fHeight - (fBorderWidth << 1) - fYMargin - 1;
 
-   Int_t tcw, tch;
-   Long_t cols;
-   tch = fHeight - (fBorderWidth << 1) - fYMargin-1;
-   tcw = fWidth - (fBorderWidth << 1) - fXMargin-1;
-   if (fVsb && fVsb->IsMapped()) {
-      tcw -= fVsb->GetDefaultWidth();
-      if (tcw < 0) tcw = 0;
-   }
-   fCanvas->SetHeight(tch);
-   fCanvas->SetWidth(tcw);
-   cols = ReturnLongestLineWidth();
-   if (cols <= tcw) {
-      if (fHsb && fHsb->IsMapped()) {
-         SetVisibleStart(0, kHorizontal);
-         fHsb->UnmapWindow();
-         VLayout();
-      }
-      fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
-   } else {
+   fCanvas->SetWidth(cw);
+   fCanvas->SetHeight(ch);
+
+   if ((Int_t)fVirtualSize.fWidth > cw) {
       if (fHsb) {
-         tch -= fHsb->GetDefaultHeight();
-         if (tch < 0) tch = 0;
-         fHsb->MoveResize(fBorderWidth, fHeight - fHsb->GetDefaultHeight()-fBorderWidth,
-                          tcw+1+fBorderWidth, fHsb->GetDefaultHeight());
-         fHsb->MapWindow();
-         fHsb->SetRange(Int_t(cols/fScrollVal.fX), Int_t(tcw/fScrollVal.fX));
+         need_hsb = kTRUE;
+         if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
+         if (ch < 0) ch = 0;
+         fCanvas->SetHeight(ch);
       }
-      fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
    }
-}
 
-//______________________________________________________________________________
-void TGView::VLayout()
-{
-   // Vertical layout of widgets (canvas, scrollbar).
-
-   Int_t  tcw, tch;
-   Long_t lines;
-
-   tch = fHeight - (fBorderWidth << 1) - fYMargin-1;
-   tcw = fWidth - (fBorderWidth << 1) - fXMargin-1;
-   if (fHsb && fHsb->IsMapped()) {
-      tch -= fHsb->GetDefaultHeight();
-      if (tch < 0) tch = 0;
-   }
-   fCanvas->SetHeight(tch);
-   fCanvas->SetWidth(tcw);
-   lines = ReturnHeighestColHeight();
-   if (lines <= tch) {
-      if (fVsb && fVsb->IsMapped()) {
-         SetVisibleStart(0, kVertical);
-         fVsb->UnmapWindow();
-         HLayout();
-      }
-      fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
-   } else {
+   if ((Int_t)fVirtualSize.fHeight > ch) {
       if (fVsb) {
-         tcw -= fVsb->GetDefaultWidth();
-         if (tcw < 0) tcw = 0;
-         fVsb->MoveResize(fWidth - fVsb->GetDefaultWidth() - fBorderWidth, fBorderWidth,
-                          fVsb->GetDefaultWidth(), tch+1+fBorderWidth);
+         need_vsb = kTRUE;
+         if (fHsb && fHsb->IsMapped()) cw -= fHsb->GetDefaultHeight();
+         if (cw < 0) cw = 0;
+         fCanvas->SetWidth(cw);
+      }
+   }
+
+   // re-check again (putting the scrollbar could have changed things)
+
+   if ((Int_t)fVirtualSize.fWidth > cw) {
+      if (!need_hsb) {
+         if (fHsb) {
+	         need_hsb = kTRUE;
+	         if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
+            if (ch <0) ch = 0;
+	         fCanvas->SetHeight(ch);
+         }
+      }
+   }
+
+   if (fHsb) {
+      if (need_hsb) {
+         fHsb->MoveResize(fBorderWidth +fXMargin, ch + fBorderWidth + fYMargin,
+                          cw, fHsb->GetDefaultHeight());
+         fHsb->MapWindow();
+      } else {
+         fHsb->UnmapWindow();
+         fHsb->SetPosition(0);
+      }
+   }
+
+   if (fVsb) {
+      if (need_vsb) {
+         fVsb->MoveResize(cw + fBorderWidth + fXMargin,  fBorderWidth + fYMargin,
+                          fVsb->GetDefaultWidth(), ch);
          fVsb->MapWindow();
-         fVsb->SetRange(Int_t(lines/fScrollVal.fY), Int_t(tch/fScrollVal.fY));
+      } else {
+         fVsb->UnmapWindow();
+         fVsb->SetPosition(0);
       }
-      fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, tcw, tch);
    }
-}
+   fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, cw, ch);
 
-//______________________________________________________________________________
-void TGView::SetSBRange(Int_t direction)
-{
-   // Set the range for the kVertical or kHorizontal scrollbar.
-
-   if (direction == kVertical) {
-      if (!fVsb)
-         return;
-      if (ReturnHeighestColHeight() <= (Int_t)fCanvas->GetHeight()) {
-         if (fVsb->IsMapped())
-            VLayout();
-         else
-            return;
-      }
-      if (!fVsb->IsMapped())
-         VLayout();
-      fVsb->SetRange(Int_t(ReturnHeighestColHeight()/fScrollVal.fY),
-                     Int_t(fCanvas->GetHeight()/fScrollVal.fY));
-   } else {
-      if (!fHsb)
-         return;
-      if (ReturnLongestLineWidth() <= (Int_t)fCanvas->GetWidth()) {
-         if (fHsb->IsMapped())
-            HLayout();
-         else
-            return;
-      }
-      if (!fHsb->IsMapped())
-         HLayout();
-      fHsb->SetRange(Int_t(ReturnLongestLineWidth()/fScrollVal.fX),
-                     Int_t(fCanvas->GetWidth()/fScrollVal.fX));
+   if (fHsb) {
+      fHsb->SetRange(fVirtualSize.fWidth / fScrollVal.fX,
+		               fCanvas->GetWidth() / fScrollVal.fX);
    }
-}
 
-//______________________________________________________________________________
-void TGView::SetHsbPosition(Long_t newPos)
-{
-   // Set position of horizontal scrollbar.
-
-   if (fHsb && fHsb->IsMapped())
-      fHsb->SetPosition(Int_t(newPos));
-   else
-      SetVisibleStart(Int_t(newPos * fScrollVal.fX), kHorizontal);
-}
-
-//______________________________________________________________________________
-void TGView::SetVsbPosition(Long_t newPos)
-{
-   // Set position of vertical scrollbar.
-
-   if (fVsb && fVsb->IsMapped())
-      fVsb->SetPosition(Int_t(newPos));
-   else
-      SetVisibleStart(Int_t(newPos * fScrollVal.fY), kVertical);
-}
-
-//______________________________________________________________________________
-void TGView::ShowBottom()
-{
-   // Show bottom of the page.
-
-   Int_t  tch;
-   Long_t lines, newPos;
-
-   tch = fCanvas->GetHeight();
-   lines = ReturnHeighestColHeight();
-   if (lines > tch) {
-      newPos = lines / fScrollVal.fY;
-      SetVsbPosition(newPos);
+   if (fVsb) {
+      fVsb->SetRange(fVirtualSize.fHeight / fScrollVal.fY,
+		               fCanvas->GetHeight() / fScrollVal.fY);
    }
-   Layout();
-}
-
-//______________________________________________________________________________
-void TGView::ShowTop()
-{
-   // Show top of the page.
-
-   SetVsbPosition(0);
-   Layout();
 }
 
 //______________________________________________________________________________
@@ -641,6 +435,15 @@ void TGView::DrawBorder()
 }
 
 //______________________________________________________________________________
+void TGView::ScrollToPosition(TGLongPosition pos)
+{
+   //
+
+   if (pos.fX != fHsb->GetPosition()) fHsb->SetPosition(pos.fX / fScrollVal.fX);
+   if (pos.fY != fVsb->GetPosition()) fVsb->SetPosition(pos.fY / fScrollVal.fY);
+}
+
+//______________________________________________________________________________
 void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 {
    // Scroll the canvas to new_top in the kVertical or kHorizontal direction.
@@ -648,7 +451,13 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
    Point_t points[4];
    Int_t xsrc, ysrc, xdest, ydest, cpyheight, cpywidth;
 
+   new_top = new_top < 0 ? 0 : new_top;
+
    if (direction == kVertical) {
+      if (new_top == fVisible.fY) {
+         return;
+      } 
+
       points[0].fX = points[3].fX = 0;
       points[1].fX = points[2].fX = fCanvas->GetWidth();
       xsrc = xdest = 0;
@@ -657,59 +466,80 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          ysrc = 0;
          ydest = Int_t(fVisible.fY - new_top);
          cpyheight = ydest;
-         if (ydest > (Int_t)fCanvas->GetHeight())
+         if (ydest > (Int_t)fCanvas->GetHeight()) {
             ydest = fCanvas->GetHeight();
+         }
+
          points[1].fY = points[0].fY = 0;
-         points[3].fY = points[2].fY = ydest ; // -1;
+         points[3].fY = points[2].fY = ydest; // -1;
       } else {
          ydest = 0;
          ysrc = Int_t(new_top - fVisible.fY);
          cpyheight= ysrc;
-         if (ysrc > (Int_t)fCanvas->GetHeight())
+         if (ysrc > (Int_t)fCanvas->GetHeight()) {
             ysrc = fCanvas->GetHeight();
+         }
          points[1].fY = points[0].fY = fCanvas->GetHeight()-ysrc; // +1;
          points[3].fY = points[2].fY = fCanvas->GetHeight();
       }
       fVisible.fY = new_top;
-      if (fVisible.fY < 0)
+
+      if (fVisible.fY < 0) {
          fVisible.fY = 0;
+      }
    } else {
+      if (new_top == fVisible.fX) {
+         return;
+      }
+
       points[0].fY = points[1].fY = 0;
       points[2].fY = points[3].fY = fCanvas->GetHeight();
       ysrc = ydest = 0;
       cpyheight = 0;
+
       if (new_top < fVisible.fX) {
          xsrc = 0;
          xdest = Int_t(fVisible.fX - new_top);
          cpywidth = xdest;
-         if (xdest < 0)
+         if (xdest < 0) {
             xdest = fCanvas->GetWidth();
+         }
          points[0].fX = points[3].fX = 0;
          points[1].fX = points[2].fX = xdest ; // -1;
       } else {
          xdest = 0;
          xsrc =  Int_t(new_top - fVisible.fX);
          cpywidth = xsrc;
-         if (xsrc > (Int_t)fCanvas->GetWidth())
+         if (xsrc > (Int_t)fCanvas->GetWidth()) {
             xsrc = fCanvas->GetWidth();
+         }
          points[0].fX = points[3].fX = fCanvas->GetWidth()-xsrc; // +1;
          points[1].fX = points[2].fX = fCanvas->GetWidth();
       }
       fVisible.fX = new_top;
-      if (fVisible.fX < 0)
+      if (fVisible.fX < 0) {
          fVisible.fX = 0;
+      }
    }
    // Copy the scrolled region to its new position
    gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC(),
                        xsrc, ysrc, fCanvas->GetWidth()-cpywidth,
                        fCanvas->GetHeight()-cpyheight, xdest, ydest);
-   // Clear the remaining area of any old text
-   gVirtualX->ClearArea(fCanvas->GetId(), points[0].fX, points[0].fY,
-                        points[2].fX - points[0].fX,
-                        points[2].fY - points[0].fY);
 
-   DrawRegion(points[0].fX, points[0].fY,
-              points[2].fX - points[0].fX, points[2].fY - points[0].fY);
+   UInt_t xdiff = points[2].fX - points[0].fX;
+   UInt_t ydiff = points[2].fY - points[0].fY;
+
+   // under windows we need to redraw larger area (why?)
+#ifdef WIN32
+   xdiff = xdiff << 1;
+   ydiff = ydiff << 1;
+#endif
+
+   // Clear the remaining area of any old text
+   gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 
+                            points[0].fX, points[0].fY, xdiff, ydiff);
+
+   DrawRegion(points[0].fX, points[0].fY, xdiff, ydiff);
 }
 
 //______________________________________________________________________________

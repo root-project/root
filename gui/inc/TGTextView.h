@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.18 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.19 2006/10/25 08:03:31 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TGText.h"
 #endif
 
+class TViewTimer;
 
 class TGTextView : public TGView {
 
@@ -44,9 +45,16 @@ protected:
    Int_t           fMaxWidth;     // maximum width of character in font
    TGGC            fNormGC;       // graphics context for drawing text
    TGGC            fSelGC;        // graphics context for drawing marked text
-   GContext_t      fSelbackGC;    // graphics context for drawing marked background
+   TGGC            fSelbackGC;    // graphics context for drawing marked background
    Bool_t          fMarkedFromX;  // true if text is marked from x
    Bool_t          fMarkedFromY;  // true if text is marker from y
+   Bool_t          fIsMarked;     // true if text is marked/selected
+   Bool_t          fIsMarking;    // true if in marking mode
+   Bool_t          fIsSaved;      // true is content is saved
+   Bool_t          fReadOnly;     // text cannot be editted
+   TGLongPosition  fMarkedStart;  // start position of marked text
+   TGLongPosition  fMarkedEnd;    // end position of marked text
+   TViewTimer     *fScrollTimer;  // scrollbar timer
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -58,6 +66,8 @@ protected:
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
    virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   virtual void HLayout();
+   virtual void VLayout();
 
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
@@ -96,21 +106,57 @@ public:
    virtual Long_t ReturnLineLength(Long_t line) { return fText->GetLineLength(line); }
    virtual Long_t ReturnLongestLine() { return fText->GetLongestLine(); }
    virtual Long_t ReturnLineCount() { return fText->RowCount(); }
+
+   virtual void   SetSBRange(Int_t direction);
+   virtual void   SetHsbPosition(Long_t newPos);
+   virtual void   SetVsbPosition(Long_t newPos);
+   virtual void   ShowBottom();
+   virtual void   ShowTop();
+
+   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SetText(TGText *text);
+   virtual void   AddText(TGText *text);
+   virtual void   AddLine(const char *string);
+   virtual void   AddLineFast(const char *string);
+   virtual void   Update();
+   virtual void   Layout();
+
+   virtual void   SetBackground(Pixel_t p);
+   virtual void   SetSelectBack(Pixel_t p);
+   virtual void   SetSelectFore(Pixel_t p);
+
+   TGText        *GetText() const { return fText; }
+
+   virtual void   SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; } //*TOGGLE* *GETTER=IsReadOnly
+   Bool_t IsReadOnly() const { return fReadOnly; }
+   Bool_t IsMarked() const { return fIsMarked; }
+
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleDoubleClick(Event_t *event);
    virtual Bool_t HandleSelectionClear(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
-
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
-   virtual void SetText(TGText *text);
-   virtual void AddText(TGText *text);
-   virtual void AddLine(const char *string);
-   virtual void AddLineFast(const char *string);
-   virtual void Update();
-   TGText      *GetText() const { return fText; }
+   virtual Bool_t HandleMotion(Event_t *event);
+   virtual Bool_t HandleTimer(TTimer *t);
+   virtual Bool_t HandleCrossing(Event_t *event);
 
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
+   virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
 
    ClassDef(TGTextView,0)  // Non-editable text viewer widget
 };
+
+
+class TViewTimer : public TTimer {
+private:
+   TGView   *fView;
+
+   TViewTimer(const TViewTimer&);             // not implemented
+   TViewTimer& operator=(const TViewTimer&);  // not implemented
+
+public:
+   TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }
+   Bool_t Notify();
+};
+
 
 #endif

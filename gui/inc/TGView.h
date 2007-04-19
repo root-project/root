@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.16 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.17 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -45,24 +45,22 @@
 class TGViewFrame;
 class TGHScrollBar;
 class TGVScrollBar;
-class TViewTimer;
-
 
 class TGView : public TGCompositeFrame, public TGWidget {
+
+friend class TGViewFrame;
 
 public:
    enum { kNoHSB = BIT(0), kNoVSB = BIT(1) };
    enum { kHorizontal = 0, kVertical = 1 };
 
 protected:
-   TGLongPosition    fMarkedStart;  // start position of marked text
-   TGLongPosition    fMarkedEnd;    // end position of marked text
    TGLongPosition    fVisible;      // position of visible region
    TGLongPosition    fMousePos;     // position of mouse
-   TGLongPosition    fScrollVal;    // position of scrollbar
-   Bool_t            fIsMarked;     // true if text is marked/selected
-   Bool_t            fIsMarking;    // true if in marking mode
-   Bool_t            fIsSaved;      // true is content is saved
+   TGLongPosition    fScrollVal;    // scroll value
+   TGDimension       fVirtualSize;  // the current virtual window size
+   TGRectangle       fExposedRegion;// exposed area   
+
    Int_t             fScrolling;    // scrolling direction
    Atom_t            fClipboard;    // clipboard property
    UInt_t            fXMargin;      // x margin
@@ -70,10 +68,12 @@ protected:
    TGViewFrame      *fCanvas;       // frame containing the text
    TGHScrollBar     *fHsb;          // horizontal scrollbar
    TGVScrollBar     *fVsb;          // vertical scrollbar
-   TViewTimer       *fScrollTimer;  // scrollbar timer
+
    TGGC              fWhiteGC;      // graphics context used for scrolling
                                     // generates GraphicsExposure events
-   Bool_t            fReadOnly;     // text cannot be editted
+
+   virtual void DoRedraw();
+   virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
 
 private:
    TGView(const TGView&);              // not implemented
@@ -97,53 +97,34 @@ public:
    virtual void   DrawBorder();
    virtual void   Layout();
    virtual void   SetLayoutManager(TGLayoutManager*) { }
-   virtual void   HLayout();
-   virtual void   VLayout();
-   virtual void   SetSBRange(Int_t direction);
-   virtual void   SetHsbPosition(Long_t newPos);
-   virtual void   SetVsbPosition(Long_t newPos);
-   virtual void   ShowBottom();
-   virtual void   ShowTop();
+   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
+
+   virtual void ScrollToPosition(TGLongPosition newPos);
+   void ScrollUp(Int_t pixels)
+      { ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY + pixels)); }
+   void ScrollDown(Int_t pixels)
+      { ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY - pixels)); }
+   void ScrollLeft(Int_t pixels)
+      { ScrollToPosition(TGLongPosition(fVisible.fX + pixels, fVisible.fY)); }
+   void ScrollRight(Int_t  pixels)
+      { ScrollToPosition(TGLongPosition(fVisible.fX - pixels, fVisible.fY)); }
+
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
+   TGDimension GetVirtualSize() const { return fVirtualSize; }
+   TGLongPosition  GetScrollValue() const { return fScrollVal; }
+   TGLongPosition  GetScrollPosition() const { return fVisible; }
 
-   virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);
-   virtual Long_t ToObjYCoord(Long_t yCoord) { return yCoord; }
-   virtual Long_t ToScrXCoord(Long_t xCoord, Long_t line);
-   virtual Long_t ToScrYCoord(Long_t yCoord) { return yCoord; }
+   TGLongPosition ToVirtual(TGLongPosition coord)  const { return coord + fVisible; }
+   TGLongPosition ToPhysical(TGLongPosition coord) const { return coord - fVisible; }
 
-   virtual void Mark(Long_t xPos, Long_t yPos);
-   virtual void UnMark() { }
-   virtual void DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
-
-   virtual Long_t ReturnLineLength(Long_t line);
-   virtual Long_t ReturnLineCount() { return 0; }
-   virtual Long_t ReturnHeighestColHeight() { return 0; }
-   virtual Long_t ReturnLongestLineWidth() { return 0; }
-
-   Bool_t IsMarked() const { return fIsMarked; }
-   Bool_t IsSaved() { return fIsSaved; }
-
-   virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleExpose(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; } //*TOGGLE* *GETTER=IsReadOnly
-   virtual Bool_t IsReadOnly() const { return fReadOnly; }
+
    virtual void   ChangeBackground(Pixel_t);
    const TGGC &GetWhiteGC() { return fWhiteGC; }
 
-   virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
-
-   ClassDef(TGView,0)  // Text view widget base class
+   ClassDef(TGView,0)  // View widget base class
 };
-
-inline Long_t TGView::ToObjXCoord(Long_t xCoord, Long_t) { return xCoord; }
-inline Long_t TGView::ToScrXCoord(Long_t xCoord, Long_t) { return xCoord; }
-inline void   TGView::Mark(Long_t, Long_t) { }
-inline void   TGView::DrawRegion(Int_t, Int_t, UInt_t, UInt_t) { }
-inline Long_t TGView::ReturnLineLength(Long_t) { return 0; }
 
 
 class TGViewFrame : public TGCompositeFrame {
@@ -180,16 +161,5 @@ public:
 };
 
 
-class TViewTimer : public TTimer {
-private:
-   TGView   *fView;
-
-   TViewTimer(const TViewTimer&);             // not implemented
-   TViewTimer& operator=(const TViewTimer&);  // not implemented
-
-public:
-   TViewTimer(TGView *t, Long_t ms) : TTimer(ms, kTRUE), fView(t) { }
-   Bool_t Notify();
-};
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.58 2005/08/11 15:12:09 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.59 2006/06/30 07:48:18 antcheva Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -2318,6 +2318,12 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
    fEdit = new TGTextEdit(this, w, h, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    AddFrame(fEdit, fL1);
+
+   // set selected text colors 
+   Pixel_t pxl;
+   gClient->GetColorByName("#ccccff", pxl);
+   fEdit->SetSelectBack(pxl);
+   fEdit->SetSelectFore(TGFrame::GetBlackPixel());
 
    fOK = new TGTextButton(this, "  &OK  ");
    fL2 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);

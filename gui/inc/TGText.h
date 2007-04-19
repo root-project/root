@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.8 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.9 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -111,6 +111,7 @@ public:
 
    Bool_t  DelLine(ULong_t pos);
    char   *GetLine(TGLongPosition pos, ULong_t length);
+   TString AsString();
    TGTextLine *GetCurrentLine() const { return fCurrent; }
    Bool_t  BreakLine(TGLongPosition pos);
    Bool_t  InsLine(ULong_t row, const char *string);
@@ -127,9 +128,6 @@ public:
                   Bool_t direction, Bool_t caseSensitive);
    Bool_t  Replace(TGLongPosition start, const char *oldText, const char *newText,
                    Bool_t direction, Bool_t caseSensitive);
-
-   //void    SetLineColor(Long_t row, Pixel_t color);
-   //Pixel_t GetLineColor(Long_t row) const;
 
    ClassDef(TGText,0)  // Text used by TGTextEdit
 };

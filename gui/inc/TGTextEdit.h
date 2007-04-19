@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.17 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.18 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 
 class TGPopupMenu;
 class TGSearchType;
-
+class TGTextEditHist;
 
 class TGTextEdit : public TGTextView {
 
@@ -51,6 +51,7 @@ protected:
    TGLongPosition   fCurrent;       // current cursor position
    EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
    Bool_t           fEnableMenu;    // enable context menu with editor actions
+   TGTextEditHist  *fHistory;       // undo manager
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -61,20 +62,7 @@ protected:
    virtual void CursorOn();
    virtual void CursorOff();
    virtual void DrawCursor(Int_t mode);
-   virtual void SetCurrent(TGLongPosition new_coord);
    virtual void AdjustPos();
-
-   virtual void InsChar(char character);
-   virtual void DelChar();
-   virtual void BreakLine();
-   virtual void PrevChar();
-   virtual void NextChar();
-   virtual void LineUp();
-   virtual void LineDown();
-   virtual void ScreenUp();
-   virtual void ScreenDown();
-   virtual void Home();
-   virtual void End();
    virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
 
    static const TGGC &GetCursor0GC();
@@ -95,6 +83,17 @@ public:
    virtual Bool_t Copy();
    virtual Bool_t Cut();
    virtual Bool_t Paste();
+   virtual void   InsChar(char character);
+   virtual void   DelChar();
+   virtual void   BreakLine();
+   virtual void   PrevChar();
+   virtual void   NextChar();
+   virtual void   LineUp();
+   virtual void   LineDown();
+   virtual void   ScreenUp();
+   virtual void   ScreenDown();
+   virtual void   Home();
+   virtual void   End();
    virtual void   Print(Option_t * = "") const;
    virtual void   Delete(Option_t * = "");
    virtual Bool_t Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE);
@@ -107,11 +106,13 @@ public:
    TGPopupMenu   *GetMenu() const { return fMenu; }
    virtual void   EnableMenu(Bool_t on = kTRUE) { fEnableMenu = on; } //*TOGGLE* *GETTER=IsMenuEnabled
    virtual Bool_t IsMenuEnabled() const { return fEnableMenu; }
+   TGTextEditHist *GetHistory() const { return fHistory; }
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
    virtual void   SetFocus() { RequestFocus(); }
 
+   virtual void   SetCurrent(TGLongPosition new_coord);
    TGLongPosition GetCurrentPos() const { return fCurrent; }
    virtual Long_t ReturnLongestLineWidth();
 

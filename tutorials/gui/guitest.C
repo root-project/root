@@ -2425,6 +2425,12 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
    fEdit->Connect("Saved()",  "Editor", this, "DoSave()");
    fEdit->Connect("Closed()", "Editor", this, "DoClose()");
 
+   // set selected text colors
+   Pixel_t pxl;
+   gClient->GetColorByName("#ccccff", pxl);
+   fEdit->SetSelectBack(pxl);
+   fEdit->SetSelectFore(TGFrame::GetBlackPixel());
+
    fOK = new TGTextButton(fMain, "  &OK  ");
    fOK->Connect("Clicked()", "Editor", this, "DoOK()");
    fL2 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);

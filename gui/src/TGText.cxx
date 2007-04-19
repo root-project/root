@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.18 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.19 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -656,10 +656,13 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    // case of failure (start and end not being within bounds).
 
    if ((start.fY < 0) || (start.fY >= fRowCount) ||
-       (end.fY < 0)   || (end.fY >= fRowCount))
+       (end.fY < 0)   || (end.fY >= fRowCount)) {
       return kFALSE;
-   if ((end.fX < 0) || (end.fX > GetLineLength(end.fY)))
+   }
+
+   if ((end.fX < 0) || (end.fX > GetLineLength(end.fY))) {
       return kFALSE;
+   }
 
    char *tempbuffer;
 
@@ -671,14 +674,16 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    }
    fCurrent->DelText(start.fX, fCurrent->fLength-start.fX);
    SetCurrentRow(fCurrentRow+1);
-   for (Long_t i = start.fY+1; i < end.fY; i++)
+   for (Long_t i = start.fY+1; i < end.fY; i++) {
       DelLine(fCurrentRow);
+   }
+
    tempbuffer = fCurrent->GetText(end.fX+1, fCurrent->fLength-end.fX-1);
    DelLine(fCurrentRow);
    SetCurrentRow(start.fY);
-   if (tempbuffer)
+   if (tempbuffer) {
       fCurrent->InsText(fCurrent->GetLineLength(), tempbuffer);
-   else {
+   } else {
       if (fCurrent->fNext) {
          fCurrent->InsText(fCurrent->fLength, fCurrent->fNext->fString);
          DelLine(fCurrentRow+1);
@@ -734,10 +739,12 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    fCurrent->DelText(ins_pos.fX, fCurrent->fLength - ins_pos.fX);
    following = fCurrent->fNext;
    // inserting first line
-   if (start_src.fY == end_src.fY)
+   if (start_src.fY == end_src.fY) {
       len = end_src.fX - start_src.fX+1;
-   else
+   } else {
       len = src->GetLineLength(start_src.fY) - start_src.fX;
+   }
+
    if (len > 0) {
       lineString = src->GetLine(start_src, len);
       fCurrent->InsText(ins_pos.fX, lineString);
@@ -783,8 +790,9 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    }
    // now re-linking the rest of the origin text
    fCurrent->fNext = following;
-   if (fCurrent->fNext)
+   if (fCurrent->fNext) {
       fCurrent->fNext->fPrev = fCurrent;
+   }
 
    LongestLine();
    fIsSaved = kFALSE;
@@ -797,8 +805,9 @@ Bool_t TGText::InsText(TGLongPosition pos, const char *buffer)
    // Insert single line at specified position. Return false in case position
    // is out of bounds.
 
-   if (pos.fY < 0 || pos.fY > fRowCount)
+   if (pos.fY < 0 || pos.fY > fRowCount) {
       return kFALSE;
+   }
 
    if (pos.fY == fRowCount) {
       SetCurrentRow(fRowCount-1);
@@ -837,21 +846,26 @@ Bool_t TGText::InsLine(ULong_t pos, const char *string)
    // Returns false if insertion failed.
 
    TGTextLine *previous, *newline;
-   if ((Long_t)pos > fRowCount)
+   if ((Long_t)pos > fRowCount) {
       return kFALSE;
-   if ((Long_t)pos < fRowCount)
+   }
+   if ((Long_t)pos < fRowCount) {
       SetCurrentRow(pos);
-   else
+   } else {
       SetCurrentRow(fRowCount-1);
+   }
+
    if (!fCurrent) return kFALSE;
 
    previous = fCurrent->fPrev;
    newline = new TGTextLine(string);
    newline->fPrev = previous;
-   if (previous)
+   if (previous) {
       previous->fNext = newline;
-   else
+   } else {
       fFirst = newline;
+   }
+
    newline->fNext = fCurrent;
    fCurrent->fPrev = newline;
    fRowCount++;
@@ -867,8 +881,9 @@ Bool_t TGText::DelLine(ULong_t pos)
 {
    // Delete specified row. Returns false if row does not exist.
 
-   if (!SetCurrentRow(pos) || (fRowCount == 1))
+   if (!SetCurrentRow(pos) || (fRowCount == 1)) {
       return kFALSE;
+   }
 
    TGTextLine *travel = fCurrent;
    if (travel == fFirst) {
@@ -899,8 +914,9 @@ char *TGText::GetLine(TGLongPosition pos, ULong_t length)
    // Return string at position pos. Returns 0 in case pos is not valid.
    // The returned string must be deleted by the user.
 
-   if (SetCurrentRow(pos.fY))
+   if (SetCurrentRow(pos.fY)) {
       return fCurrent->GetText(pos.fX, length);
+   }
    return 0;
 }
 
@@ -921,13 +937,16 @@ Bool_t TGText::BreakLine(TGLongPosition pos)
       temp = new TGTextLine(tempbuffer);
       fCurrent->DelText(pos.fX, fCurrent->fLength - pos.fX);
       delete [] tempbuffer;
-   } else
+   } else {
       temp = new TGTextLine;
+   }
    temp->fPrev = fCurrent;
    temp->fNext = fCurrent->fNext;
    fCurrent->fNext = temp;
-   if (temp->fNext)
+   if (temp->fNext) {
       temp->fNext->fPrev = temp;
+   }
+
    fIsSaved = kFALSE;
    fRowCount++;
    fCurrentRow++;
@@ -941,9 +960,9 @@ Long_t TGText::GetLineLength(Long_t row)
 {
    // Get length of specified line. Returns -1 if row does not exist.
 
-   if (!SetCurrentRow(row))
+   if (!SetCurrentRow(row)) {
       return -1;
-
+   }
    return (Long_t)fCurrent->GetLineLength();
 }
 
@@ -954,8 +973,9 @@ Bool_t TGText::SetCurrentRow(Long_t row)
    // In which case fCurrent is not changed or set to the last valid line.
 
    Long_t count;
-   if ((row < 0) || (row >= fRowCount))
+   if ((row < 0) || (row >= fRowCount)) {
       return kFALSE;
+   }
    if (row > fCurrentRow) {
       for (count = fCurrentRow; count < row; count++) {
          if (!fCurrent->fNext) {
@@ -984,8 +1004,9 @@ void TGText::ReTab(Long_t row)
 {
    // Redo all tabs in a line. Needed after a new tab is inserted.
 
-   if (!SetCurrentRow(row))
+   if (!SetCurrentRow(row)) {
       return;
+   }
 
    // first remove all special tab characters (16)
    char *buffer;
@@ -995,8 +1016,9 @@ void TGText::ReTab(Long_t row)
    while (buffer[i] != '\0') {
       if (buffer[i] == '\t') {
          ULong_t j = i+1;
-         while (buffer[j] == 16 && buffer[j] != '\0')
+         while (buffer[j] == 16 && buffer[j] != '\0') {
             j++;
+         }
          strcpy(buffer+i+1, buffer+j);
       }
       i++;
@@ -1014,10 +1036,12 @@ void TGText::ReTab(Long_t row)
       // Expand tabs
       if (c == 0x09) {
          *dst++ = '\t';
-         while (((dst-buf2) & 0x7) && (cnt++ < kMaxLen-1))
+         while (((dst-buf2) & 0x7) && (cnt++ < kMaxLen-1)) {
             *dst++ = 16;
-      } else
+         }
+      } else {
          *dst++ = c;
+      }
       if (cnt++ >= kMaxLen-1) break;
    }
    *dst = '\0';
@@ -1066,16 +1090,18 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
                x = kNPOS;
                continue;
             }
-            if (x != kNPOS)
+            if (x != kNPOS) {
                break;
+            }
          }
          if (x != kNPOS) {
             foundPos->fX = x;
             foundPos->fY = fCurrentRow;
             return kTRUE;
          }
-         if (!SetCurrentRow(fCurrentRow-1))
+         if (!SetCurrentRow(fCurrentRow-1)) {
             break;
+         }
          start.fX = fCurrent->fLength;
       }
    }
@@ -1088,12 +1114,14 @@ Bool_t TGText::Replace(TGLongPosition start, const char *oldText, const char *ne
 {
    // Replace oldText by newText. Returns false if nothing replaced.
 
-   if (!SetCurrentRow(start.fY))
+   if (!SetCurrentRow(start.fY)) {
       return kFALSE;
+   }
 
    TGLongPosition foundPos;
-   if (!Search(&foundPos, start, oldText, direction, caseSensitive))
+   if (!Search(&foundPos, start, oldText, direction, caseSensitive)) {
       return kFALSE;
+   }
 
    TGLongPosition delEnd;
    delEnd.fY = foundPos.fY;
@@ -1121,3 +1149,27 @@ void TGText::LongestLine()
    }
 }
 
+//______________________________________________________________________________
+TString TGText::AsString()
+{
+   // Returns content as ROOT string
+
+   TString ret;
+
+   Long_t line_count = 0;
+   TGTextLine *travel = fFirst;
+   fColCount = 0;
+
+   while (travel) {
+      if ((Long_t)travel->fLength > fColCount) {
+         fColCount = travel->fLength;
+         fLongestLine = line_count;
+      }
+      ret += travel->GetText();
+      travel = travel->fNext;
+      if (travel) ret += '\n';
+      line_count++;
+   }
+
+   return ret;
+}
