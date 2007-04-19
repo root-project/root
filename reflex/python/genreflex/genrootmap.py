@@ -14,15 +14,30 @@ model = """
 """
 
 #----------------------------------------------------------------------------------
-def genRootMap(mapfile, dicfile, libfile, classes) :
+def isRootmapVetoed(c) :
+  if c.has_key('extra') and 'rootmap' in c['extra'] :
+    rootmapsel = c['extra']['rootmap'].lower()
+    return (rootmapsel == 'false' or rootmapsel == '0')
+  return False
+
+#----------------------------------------------------------------------------------
+def genRootMap(mapfile, dicfile, libfile, cnames, classes) :
   startmark = '#--Begin ' + dicfile + '\n'
   endmark   = '#--End   ' + dicfile + '\n'
   finalmark = '#--Final End\n'
   transtable = string.maketrans(': ', '@-')
 
+  # filter out classes that were de-selected by rootmap attribute
+  cveto = filter( lambda c: isRootmapVetoed(c),classes)
+  for cv in cveto :
+    cvname = cv['fullname']
+    # not all cvname have to be in cnames, cname could have been excluded
+    if cvname in cnames:
+      cnames.remove(cvname)
+
   new_lines = []
   if libfile.rfind('/') != -1 : libfile =  libfile[libfile.rfind('/')+1:]
-  for c in classes :
+  for c in cnames :
     nc = string.translate(str(c), transtable)
     nc = nc.replace(' ','')
     new_lines += '%-45s %s\n' % ('Library.' + nc + ':', libfile )
@@ -39,5 +54,3 @@ def genRootMap(mapfile, dicfile, libfile, classes) :
   f = open(mapfile,'w')
   f.writelines(lines)
   f.close()
-
-

@@ -311,7 +311,7 @@ class genreflex:
         else :
           mapfile = os.path.join(self.outputDir, self.rootmap)
         if not self.rootmaplib :  self.rootmaplib = 'lib'+name+'.so'
-        genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames)
+        genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames, classes)
     #------------Report unused class selections in selection
     if self.selector : 
       warnings += self.selector.reportUnusedClasses()

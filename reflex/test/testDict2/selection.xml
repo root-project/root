@@ -4,7 +4,7 @@
   <class name="testclasses2::WithTypedefMemberT<testclasses::MyInt>"/>
   <class pattern="classVec*"/>
   <class pattern="Class*"/>
-  <class pattern="Bla::*"/>
+  <class pattern="Bla::*" rootmap="FALSE"/>
   <function name="function1"/>
   <function name="function2"/>
   <function name="function3"/>
