@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.11 2007/02/03 06:40:26 brun Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -273,7 +273,7 @@ void TMVA::MethodCFMlpANN::Train( void )
    Int_t ntest(0);
    Int_t nvar(GetNvar());
    Int_t nlayers(fNlayers);
-   Int_t nodes[nlayers];
+   Int_t *nodes = new Int_t[nlayers];
    Int_t ncycles(fNcycles);
 
    for (Int_t i=0; i<nlayers; i++) nodes[i] = fNodes[i]; // full copy of class member
@@ -284,7 +284,7 @@ void TMVA::MethodCFMlpANN::Train( void )
 #else
    fLogger << kWARNING << "<Train> sorry CFMlpANN is not yet implemented on Windows" << Endl;
 #endif  
-
+   delete [] nodes;
 
    //    cout << "Weights after training:" << endl;
    //    cout << "=======================" << endl;

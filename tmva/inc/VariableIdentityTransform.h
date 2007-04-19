@@ -38,13 +38,14 @@
 
 #include "TMVA/VariableTransformBase.h"
 
+/*
 namespace TMVA {
 
    class VariableIdentityTransform : public VariableTransformBase {
 
    public:
   
-      VariableIdentityTransform( std::vector<VariableInfo>& );
+      VariableIdentityTransform( std::vector<VariableInfo>& ) 
       virtual ~VariableIdentityTransform( void ) {}
 
       void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
@@ -59,7 +60,7 @@ namespace TMVA {
    };
 
 } // namespace TMVA
-
+*/
 #endif 
 
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.37 2007/04/17 20:49:54 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodSVM.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -389,7 +389,7 @@ void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
   
    Int_t nvar = SuppVecTree->GetNbranches(); 
   
-   Float_t var[nvar];
+   Float_t *var = new Float_t[nvar];
    Int_t i = 0; 
 
    TIter next_branch1( SuppVecTree->GetListOfBranches() );
@@ -425,6 +425,7 @@ void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
       (*fAlphas)[ievt] = (Float_t)(*alphaVec)(ievt);
    }
    SetKernel();
+   delete [] var;
 }
 
 //_______________________________________________________________________

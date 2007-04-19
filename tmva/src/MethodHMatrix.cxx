@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.45 2007/04/03 22:37:21 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -183,7 +183,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
 
    // initialise internal sum-of-weights variables
    Double_t sumOfWeights = 0;
-   Double_t xval[nvar];
+   Double_t *xval = new Double_t[nvar];
 
    // perform event loop
    for (Int_t i=0; i<Data().GetNEvtTrain(); i++) {
@@ -224,6 +224,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
          (*mat)(ivar, jvar) = mat2(ivar, jvar)/sumOfWeights - vec(ivar)*vec(jvar)/(sumOfWeights*sumOfWeights);
       }
    }
+   delete [] xval;
 }
 
 //_______________________________________________________________________

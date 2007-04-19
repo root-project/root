@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.11 2007/01/30 11:24:16 brun Exp $ 
+// @(#)root/tmva $Id: MethodCuts.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -856,14 +856,16 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& par,
                                            << ibin << Endl;
 
     const Int_t nvar = GetNvar();
-    Double_t cutMin[nvar];
-    Double_t cutMax[nvar];
+    Double_t *cutMin = new Double_t[nvar];
+    Double_t *cutMax = new Double_t[nvar];
     for (Int_t ivar=0; ivar<nvar; ivar++) {
        cutMin[ivar] = cutMinAll[ivar][ibin-1];
        cutMax[ivar] = cutMaxAll[ivar][ibin-1];
     }
     
     MatchCutsToPars( par, cutMin, cutMax );
+    delete [] cutMin;
+    delete [] cutMax;
  }
 
 //_______________________________________________________________________

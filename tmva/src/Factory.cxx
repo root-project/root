@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.12 2007/01/16 09:37:03 brun Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.13 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -865,8 +865,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
    if (nvar > 1) {
 
       // needed for correlations
-      Float_t  fvec[nvar];
-      Double_t dvec[nvar];
+      Float_t  *fvec = new Float_t[nvar];
+      Double_t *dvec = new Double_t[nvar];
       vector<Double_t> rvec;
       Int_t    type;
       // for correlations
@@ -959,6 +959,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Tools::FormattedOutput( *overlapB, *theVars, fLogger );
 
       // cleanup
+      delete [] fvec;
+      delete [] dvec;
       delete tpSig;
       delete tpBkg;
       delete corrMatS;

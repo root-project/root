@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.14 2007/01/30 11:24:16 brun Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.15 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -99,7 +99,7 @@
 #include "TMVA/PDF.h"
 #endif
 #ifndef ROOT_TMVA_VariableIdentityTransform
-#include "TMVA/VariableIdentityTransform.h"
+//#include "TMVA/VariableIdentityTransform.h"
 #endif
 #ifndef ROOT_TMVA_VariableDecorrTransform
 #include "TMVA/VariableDecorrTransform.h"
@@ -667,7 +667,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
 
    fLogger << kINFO << "Create VariableTransformation \"" << fVarTransformString << "\"" << Endl;
    if (fVarTransformString == "None" ) {
-      fVarTransform = new VariableIdentityTransform( Data().GetVariableInfos() );
+      //fVarTransform = new VariableIdentityTransform( Data().GetVariableInfos() );
    } 
    else if(fVarTransformString == "Decorrelate" ) {
       fVarTransform = new VariableDecorrTransform( Data().GetVariableInfos() );

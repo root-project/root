@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.12 2007/02/03 06:40:26 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -284,8 +284,8 @@ void TMVA::MethodFisher::GetMean( void )
    }
 
    // init vectors
-   Double_t sumS[(const Int_t)GetNvar()];
-   Double_t sumB[(const Int_t)GetNvar()];
+   Double_t *sumS = new Double_t[(const Int_t)GetNvar()];
+   Double_t *sumB = new Double_t[(const Int_t)GetNvar()];
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) { sumS[ivar] = sumB[ivar] = 0; }   
 
    // compute sample means
@@ -314,6 +314,8 @@ void TMVA::MethodFisher::GetMean( void )
       // signal + background
       (*fMeanMatx)( ivar, 2 ) /= (fSumOfWeightsS + fSumOfWeightsB);
    }  
+   delete [] sumS;
+   delete [] sumB;
 }
 
 //_______________________________________________________________________
@@ -329,12 +331,15 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
 
    // init
    const Int_t nvar = GetNvar();
-   Double_t sumSig[nvar][nvar];
-   Double_t sumBgd[nvar][nvar];
-   Double_t xval[nvar];
-   for (Int_t x=0; x<nvar; x++) for (Int_t y=0; y<nvar; y++) sumSig[x][y] = sumBgd[x][y] = 0;
+   const Int_t nvar2 = nvar*nvar;
+   Double_t *sumSig = new Double_t[nvar2];
+   Double_t *sumBgd = new Double_t[nvar2];
+   Double_t *xval   = new Double_t[nvar];
+   memset(sumSig,0,nvar2*sizeof(Double_t));
+   memset(sumBgd,0,nvar2*sizeof(Double_t));
 
    // 'within class' covariance
+   Int_t k =0;
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
 
       // read the Training Event into "event"
@@ -347,17 +352,23 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
       for (Int_t x=0; x<nvar; x++) {
          for (Int_t y=0; y<nvar; y++) {            
             Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
-            if (GetEvent().IsSignal()) sumSig[x][y] += v;
-            else                       sumBgd[x][y] += v;
+            if (GetEvent().IsSignal()) sumSig[k] += v;
+            else                       sumBgd[k] += v;
+            k++;
          }
       }
    }
 
+   k = 0;
    for (Int_t x=0; x<nvar; x++) {
       for (Int_t y=0; y<nvar; y++) {
-         (*fWith)(x, y) = (sumSig[x][y] + sumBgd[x][y])/(fSumOfWeightsS + fSumOfWeightsB);
+         (*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);
+         k++;
       }
    }
+   delete [] sumSig;
+   delete [] sumBgd;
+   delete [] xval;
 }
 
 //_______________________________________________________________________

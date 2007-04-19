@@ -99,8 +99,8 @@ void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) cons
    if(!IsCreated()) return;
    const Int_t nvar = GetNVariables();
 
-   Double_t dv[nvar];
-   Double_t rv[nvar];
+   Double_t *dv = new Double_t[nvar];
+   Double_t *rv = new Double_t[nvar];
    for (Int_t ivar=0; ivar<nvar; ivar++) dv[ivar] = GetEventRaw().GetVal(ivar);
       
    // Perform PCA and put it into PCAed events tree
@@ -109,6 +109,8 @@ void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) cons
    GetEvent().SetType       ( GetEventRaw().Type() );
    GetEvent().SetWeight     ( GetEventRaw().GetWeight() );
    GetEvent().SetBoostWeight( GetEventRaw().GetBoostWeight() );
+   delete [] dv;
+   delete [] rv;
 }
 
 //_______________________________________________________________________
@@ -128,7 +130,7 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
    ResetBranchAddresses( tr );
 
    Long64_t ievt, entries = tr->GetEntries();
-   Double_t dvec[nvar];
+   Double_t *dvec = new Double_t[nvar];
 
    for (ievt=0; ievt<entries; ievt++) {
       ReadEvent(tr, ievt, Types::kSignal);
@@ -143,6 +145,7 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
       fMeanValues[i]   = const_cast<TVectorD*>( fPCA[i]->GetMeanValues() );
       fEigenVectors[i] = const_cast<TMatrixD*>( fPCA[i]->GetEigenVectors() );
    }
+   delete [] dvec;
 }
 
 //_______________________________________________________________________
