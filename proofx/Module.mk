@@ -66,7 +66,7 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA += -L$(XROOTDDIRP) -lXrdPosix
+PROOFXLIBEXTRA += -L$(XROOTDDIRP) -lXrdClient
 endif
 
 ##### local rules #####
