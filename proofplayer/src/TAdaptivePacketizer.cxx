@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.5 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.6 2007/03/19 10:46:10 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -56,6 +56,7 @@
 #include "TClass.h"
 #include "TRandom.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 //
 // The following three utility classes manage the state of the
@@ -1037,11 +1038,16 @@ TDSetElement* TAdaptivePacketizer::CreateNewPacket(TDSetElement* base, Long64_t 
                                          base->GetDirectory(), first, num);
 
    // create TDSetElements for all the friends of elem.
-   TDSetElement::FriendsList_t *friends = base->GetListOfFriends();
-   for (TDSetElement::FriendsList_t::iterator i = friends->begin(); i != friends->end(); ++i) {
-      TDSetElement* friendElem = i->first;
-      elem->AddFriend(new TDSetElement(friendElem->GetFileName(), friendElem->GetObjName(),
-                                       friendElem->GetDirectory(), first, num), i->second);
+   TList *friends = base->GetListOfFriends();
+   if (friends) {
+      TIter nxf(friends);
+      TPair *p = 0;
+      while ((p = (TPair *) nxf())) {
+         TDSetElement *fe = (TDSetElement *) p->Key();
+         elem->AddFriend(new TDSetElement(fe->GetFileName(), fe->GetObjName(),
+                                          fe->GetDirectory(), first, num),
+                                         ((TObjString *)(p->Value()))->GetName());
+      }
    }
    return elem;
 }

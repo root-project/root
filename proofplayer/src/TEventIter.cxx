@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.30 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.31 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 #include "TTree.h"
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
+#include "TMap.h"
+#include "TObjString.h"
 
 #include "TError.h"
 
@@ -351,19 +353,23 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
       return 0;
    fAcquiredTrees->AddFirst(main);
 
-   TDSetElement::FriendsList_t* friends = elem->GetListOfFriends();
-   for (TDSetElement::FriendsList_t::iterator i = friends->begin();
-                i != friends->end(); ++i) {
-      TTree* friendTree = fgTreeFileCache->Acquire(i->first->GetFileName(),
-                                                   i->first->GetDirectory(),
-                                                   i->first->GetObjName());
-      if (friendTree) {
-         fAcquiredTrees->AddFirst(friendTree);
-         main->AddFriend(friendTree, i->second);
-      }
-      else {
-         ReleaseAllTrees();
-         return 0;
+   TList *friends = elem->GetListOfFriends();
+   if (friends) {
+      TIter nxf(friends);
+      TPair *p = 0;
+      while ((p = (TPair *) nxf())) {
+         TDSetElement *dse = (TDSetElement *) p->Key();
+         TObjString *str = (TObjString *) p->Value();
+         TTree* friendTree = fgTreeFileCache->Acquire(dse->GetFileName(),
+                                                      dse->GetDirectory(),
+                                                      dse->GetObjName());
+         if (friendTree) {
+            fAcquiredTrees->AddFirst(friendTree);
+            main->AddFriend(friendTree, str->GetName());
+         } else {
+            ReleaseAllTrees();
+            return 0;
+         }
       }
    }
    return main;

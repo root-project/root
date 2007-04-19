@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.41 2007/03/19 01:36:56 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.42 2007/03/19 10:33:59 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -44,7 +44,5 @@
 #pragma link C++ class TProofNodeInfo;
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
-#pragma link C++ class std::pair<TDSet*, TString>;
-#pragma link C++ class std::pair<TDSetElement*, TString>;
 
 #endif

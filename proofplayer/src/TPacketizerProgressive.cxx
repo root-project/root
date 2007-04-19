@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.8 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.9 2007/03/19 10:46:10 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -389,11 +389,16 @@ TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
 
    // begin friends code
    // create TDSetElements for all the friends of elem.
-   TDSetElement::FriendsList_t *friends = base->GetListOfFriends();
-   for (TDSetElement::FriendsList_t::iterator i = friends->begin(); i != friends->end(); ++i) {
-      TDSetElement* friendElem = i->first;
-      packet->AddFriend(new TDSetElement(friendElem->GetFileName(), friendElem->GetObjName(),
-                                         friendElem->GetDirectory(), fs->GetNextEntry(), num), i->second);
+   TList *friends = base->GetListOfFriends();
+   if (friends) {
+      TIter nxf(friends);
+      TPair *p = 0;
+      while ((p = (TPair *) nxf())) {
+         TDSetElement *fe = (TDSetElement *) p->Key();
+         packet->AddFriend(new TDSetElement(fe->GetFileName(), fe->GetObjName(),
+                                          fe->GetDirectory(), fs->GetNextEntry(), num),
+                                         ((TObjString *)(p->Value()))->GetName());
+      }
    }
    // end friends code
 

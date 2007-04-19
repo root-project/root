@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.5 2007/02/12 13:05:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.6 2007/04/17 15:55:13 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,9 +46,6 @@
 #include "TNamed.h"
 #endif
 
-#include <set>
-#include <list>
-
 class TChain;
 class TCut;
 class TDSet;
@@ -62,8 +59,6 @@ class TProofChain;
 class TTree;
 
 class TDSetElement : public TNamed {
-public:
-   typedef  std::list<std::pair<TDSetElement*, TString> > FriendsList_t;
 private:
    // TDSetElement status bits
    enum EStatusBits {
@@ -79,7 +74,7 @@ private:
    TEventList      *fEventList;  // event list to be used in processing
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
-   FriendsList_t   *fFriends;    // friend elements
+   TList           *fFriends;    // friend elements
    Bool_t           fIsTree;     // true if type is a TTree (or TTree derived)
 
    Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
@@ -94,7 +89,7 @@ public:
    TDSetElement(const TDSetElement& elem);
    virtual ~TDSetElement();
 
-   virtual FriendsList_t *GetListOfFriends() const { return fFriends; }
+   virtual TList   *GetListOfFriends() const { return fFriends; }
    virtual void     AddFriend(TDSetElement *friendElement, const char *alias);
    virtual void     DeleteFriends();
    const char      *GetFileName() const { return GetName(); }
@@ -121,7 +116,7 @@ public:
    void             Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
 
-   ClassDef(TDSetElement,4)  // A TDSet element
+   ClassDef(TDSetElement,5)  // A TDSet element
 };
 
 
@@ -208,7 +203,7 @@ public:
    void                  Lookup();
    void                  SetLookedUp();
 
-   ClassDef(TDSet,4)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,5)  // Data set for remote processing (PROOF)
 };
 
 #endif

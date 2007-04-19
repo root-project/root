@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.7 2007/03/30 16:44:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.8 2007/04/17 15:55:13 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -66,8 +66,6 @@
 #include "TChainElement.h"
 #include "TSystem.h"
 #include "THashList.h"
-#include <set>
-#include <queue>
 
 ClassImp(TDSetElement)
 ClassImp(TDSet)
@@ -82,7 +80,7 @@ TDSetElement::TDSetElement() : TNamed("",""),
    fEventList(NULL),
    fValid(kFALSE),
    fEntries(0),
-   fFriends(NULL),
+   fFriends(0),
    fIsTree(kFALSE)
 {
    // Default constructor
@@ -277,9 +275,11 @@ void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
       Error("AddFriend", "The friend TDSetElement is null!");
       return;
    }
-   if (!fFriends)
-      fFriends = new FriendsList_t;
-   fFriends->push_back(std::make_pair(new TDSetElement(*friendElement), TString(alias)));
+   if (!fFriends) {
+      fFriends = new TList();
+      fFriends->SetOwner();
+   }
+   fFriends->Add(new TPair(new TDSetElement(*friendElement), new TObjString(alias)));
 }
 
 //______________________________________________________________________________
@@ -288,9 +288,12 @@ void TDSetElement::DeleteFriends()
    // Deletes the list of friends and all the friends on the list.
    if (!fFriends)
       return;
-   for (FriendsList_t::iterator i = fFriends->begin();
-             i != fFriends->end(); ++i) {
-      delete i->first;
+
+   TIter nxf(fFriends);
+   TPair *p = 0;
+   while ((p = (TPair *) nxf())) {
+      delete p->Key();
+      delete p->Value();
    }
    delete fFriends;
    fFriends = 0;
