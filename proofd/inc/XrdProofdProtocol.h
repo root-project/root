@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.21 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.22 2007/03/30 16:46:05 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -164,6 +164,7 @@ public:
    int           KillProofServ(int pid, bool forcekill = 0, bool add = 1);
    int           KillProofServ(XrdProofServProxy *xps, bool forcekill = 0, bool add = 1);
    XrdClientMessage *SendCoordinator(const char *url, int type, const char *msg, int srvtype);
+   int           SetProofServEnv(int psid = -1, int loglevel = -1, const char *cfg = 0);
    int           SetShutdownTimer(XrdProofServProxy *xps, bool on = 1);
    int           TerminateProofServ(XrdProofServProxy *xps, bool add = 1);
    int           VerifyProofServ(XrdProofServProxy *xps);
@@ -295,8 +296,6 @@ public:
    static int    ReadPROOFcfg();
    static int    ResolveKeywords(XrdOucString &s, XrdProofClient *pcl);
    static int    SetProofServEnv(XrdROOT *r);
-   static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
-                                 int loglevel = -1, const char *cfg = 0);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
    static int    VerifyProcessByID(int pid, const char *pname = 0);
 };

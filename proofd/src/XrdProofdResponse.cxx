@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.10 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.11 2007/03/20 16:16:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-const char *XrdProofdResponse::fgTraceID = " : Response";
+const char *XrdProofdResponse::fgTraceID = " resp:";
 #define TRACEID fTraceID.c_str()
 #define TRSID ((const char *)fTrsid)
 
@@ -481,23 +481,13 @@ void XrdProofdResponse::Set(unsigned char *stream)
 {
    // Auxilliary Set method
 
-   static char hv[] = "0123456789abcdef";
-   char *outbuff;
-   int i;
    XrdOucMutexHelper mh(fMutex);
 
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
 
-   if (TRACING(REQ) || TRACING(RSP)) {
-      outbuff = fTrsid;
-      for (i = 0; i < (int)sizeof(fResp.streamid); i++) {
-         *outbuff++ = hv[(stream[i] >> 4) & 0x0f];
-         *outbuff++ = hv[ stream[i]       & 0x0f];
-      }
-      *outbuff++ = ' ';
-      *outbuff = '\0';
-   }
+   if (TRACING(ALL))
+      SetTrsid();
 }
 
 //______________________________________________________________________________
@@ -505,9 +495,6 @@ void XrdProofdResponse::Set(unsigned short sid)
 {
    // Auxilliary Set method
 
-   static char hv[] = "0123456789abcdef";
-   char *outbuff;
-   int i;
    unsigned char stream[2];
    XrdOucMutexHelper mh(fMutex);
 
@@ -516,15 +503,8 @@ void XrdProofdResponse::Set(unsigned short sid)
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
 
-   if (TRACING(REQ) || TRACING(RSP)) {
-      outbuff = fTrsid;
-      for (i = 0; i < (int)sizeof(fResp.streamid); i++) {
-         *outbuff++ = hv[(stream[i] >> 4) & 0x0f];
-         *outbuff++ = hv[ stream[i]       & 0x0f];
-      }
-      *outbuff++ = ' ';
-      *outbuff = '\0';
-   }
+   if (TRACING(ALL))
+      SetTrsid();
 }
 
 //______________________________________________________________________________
@@ -534,4 +514,40 @@ void XrdProofdResponse::GetSID(unsigned short &sid)
    XrdOucMutexHelper mh(fMutex);
 
    memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
+
+   if (TRACING(ALL))
+      SetTrsid();
+}
+
+//______________________________________________________________________________
+void XrdProofdResponse::Set(const char *tid)
+{
+   // Auxilliary set method
+   fTraceID = tid;
+
+   if (TRACING(ALL) && tid) {
+      memcpy(fTrsid, tid, 7);
+      fTrsid[7] = 0;
+   }
+}
+
+//______________________________________________________________________________
+void XrdProofdResponse::SetTrsid()
+{
+   // Auxilliary Set method
+
+   static char hv[] = "0123456789abcdef";
+   XrdOucMutexHelper mh(fMutex);
+
+   int i;
+   char *outbuff = fTrsid;
+   for (i = 0; i < (int)sizeof(fResp.streamid); i++) {
+      *outbuff++ = hv[(fResp.streamid[i] >> 4) & 0x0f];
+      *outbuff++ = hv[ fResp.streamid[i]       & 0x0f];
+   }
+   *outbuff++ = ' ';
+   *outbuff = '\0';
+
+   if (fTraceID.length() <= 0)
+      fTraceID = fTrsid;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.8 2006/12/12 14:32:06 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.9 2007/03/20 16:16:04 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -78,6 +78,11 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
 #define TRACES(act, x) \
    if (TRACING(act)) \
       {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID,TRSID); cerr <<x; \
+       XrdProofdTrace->End();}
+
+#define TRACESTR(act, x) \
+   if (TRACING(act)) \
+      {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID,RESPONSE.STRID()); cerr <<x; \
        XrdProofdTrace->End();}
 
 //

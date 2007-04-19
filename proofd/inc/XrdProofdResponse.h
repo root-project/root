@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.5 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.6 2006/12/03 23:34:04 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -37,8 +37,7 @@ class XrdProofdResponse
  public:
    XrdProofdResponse() { fLink = 0; *fTrsid = '\0'; fSID = 0;
                          fRespIO[0].iov_base = (caddr_t)&fResp;
-                         fRespIO[0].iov_len  = sizeof(fResp);
-                         fTraceID = fgTraceID; }
+                         fRespIO[0].iov_len  = sizeof(fResp); }
    XrdProofdResponse(XrdProofdResponse &rhs) { Set(rhs.fLink);
                                                Set(rhs.fResp.streamid); }
    virtual ~XrdProofdResponse() {}
@@ -48,7 +47,8 @@ class XrdProofdResponse
                                                Set((unsigned char *)rhs.fResp.streamid);
                                                return *this; }
 
-   const  char          *ID() { return (const char *)fTrsid;}
+   const  char          *STRID() { return (const char *)fTrsid;}
+   const  char          *ID() { return fTraceID.c_str();}
 
    int                   Send(void);
    int                   Send(const char *msg);
@@ -70,12 +70,12 @@ class XrdProofdResponse
    int                   Send(kXR_int32 int1, void *data = 0, int dlen = 0);
 
    inline void           Set(XrdLink *lp) { fLink = lp; GetSID(fSID);}
-   inline void           Set(const char *tid) { fTraceID = tid;}
+   void                  Set(const char *tid);
    void                  Set(unsigned char *stream);
    void                  Set(unsigned short streamid);
 
    void                  GetSID(unsigned short &sid);
-
+   void                  SetTrsid();
 
    // To protect from concurrent use
    XrdOucRecMutex       fMutex;
@@ -84,7 +84,7 @@ class XrdProofdResponse
 
    ServerResponseHeader fResp;
    XrdLink             *fLink;
-   struct iovec         fRespIO[4];
+   struct iovec         fRespIO[5];
 
    char                 fTrsid[8];  // sizeof() does not work here
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.18 2007/03/20 16:16:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.19 2007/03/29 13:54:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -112,8 +112,13 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
       if (GetServType() != kSTProofd)
          TRACE(REQ, "XrdProofConn: severe error occurred while opening a"
                     " connection" << " to server "<<URLTAG);
-      return;
    }
+
+   // Garbage-collect the obsolete physical connections, if any
+   if (fgConnMgr)
+      fgConnMgr->GarbageCollect();
+
+   return;
 }
 
 //_____________________________________________________________________________
@@ -143,6 +148,9 @@ bool XrdProofConn::Init(const char *url)
 
    // Init connection manager (only once)
    if (!fgConnMgr) {
+      // We do not want the garbage collector thread: we will garbage collect
+      // after each new (logical) connection
+      EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, 0);
       if (!(fgConnMgr = new XrdClientConnectionMgr())) {
          TRACE(REQ,"XrdProofConn::Init: error initializing connection manager");
          return 0;
