@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: CollectionProxy.h,v 1.15 2006/06/08 16:05:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.16 2006/07/05 07:09:08 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -252,10 +252,12 @@ namespace ROOT {
          }
       };
 
+#ifndef __CINT__
       // Need specialization for boolean references due to stupid STL vector<bool>
       template<> inline void* ROOT::Reflex::Address<std::vector<bool,std::allocator<bool> >::const_reference>::address(std::vector<bool,std::allocator<bool> >::const_reference ) {
          return 0;
       }
+#endif
 
    }
 }

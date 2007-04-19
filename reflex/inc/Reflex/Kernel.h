@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.25 2006/10/03 15:13:59 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.26 2006/12/07 09:34:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -84,7 +84,7 @@
 #endif
 // Disable warning C4786: identifier was truncated to '255' characters in the debug information
 #pragma warning ( disable : 4786 )
-// Disable warning C4291: no matching operator delete found; memory will not be freed if 
+// Disable warning C4291: no matching operator delete found; memory will not be freed if
 // initialization throws an exception
 #pragma warning ( disable : 4291 )
 // Disable warning C4250: inheritance via dominance
@@ -95,7 +95,7 @@
 #include <limits>
 
 // Large integer definition depends of the platform
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__CINT__)
 typedef __int64 longlong;
 typedef unsigned __int64 ulonglong;
 #elif defined(__linux) || defined(sun) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux)) || defined(__sgi) || defined(__FreeBSD__)
@@ -171,7 +171,7 @@ namespace ROOT {
 
       namespace Dummy {
          RFLX_API const StdString_Cont_Type_t & StdStringCont();
-         RFLX_API const Type_Cont_Type_t & TypeCont();        
+         RFLX_API const Type_Cont_Type_t & TypeCont();
          RFLX_API const Base_Cont_Type_t & BaseCont();
          RFLX_API const Scope_Cont_Type_t & ScopeCont();
          RFLX_API const Object_Cont_Type_t & ObjectCont();
@@ -197,7 +197,7 @@ namespace ROOT {
       /** some general information about the Reflex package */
       class RFLX_API Reflex {
          public:
-      
+
          /** default constructor */
          Reflex();
 
@@ -205,23 +205,23 @@ namespace ROOT {
          ~Reflex();
 
          static void Shutdown();
-      
+
          /** the Name of the package - used for messages */
          static const std::string & Argv0(); // returns "Seal Reflex";
 
       }; // struct Reflex
 
-    
-      // these defines are used for the modifiers they are used in the following 
+
+      // these defines are used for the modifiers they are used in the following
       // classes
       // BA = BASE
       // CL = CLASS
       // FU = FUNCTION
       // DM = DATAMEMBER
-      // FM = FUNCTIONMEMBER 
+      // FM = FUNCTIONMEMBER
       // TY = TYPE
       // ME = MEMBER
-      //                              BA  CL  DM  FM  TY  ME 
+      //                              BA  CL  DM  FM  TY  ME
       enum ENTITY_DESCRIPTION {
          PUBLIC          = (1<<0),  //  X       X   X       X
          PROTECTED       = (1<<1),  //  X       X   X       X
@@ -245,7 +245,7 @@ namespace ROOT {
          VIRTUAL         = (1<<19), //  X   X           X
          TRANSIENT       = (1<<20), //          X           X
          ARTIFICIAL      = (1<<21), //  X   X   X   X   X   X
-         // the bits 31 - 28 are reserved for template default arguments 
+         // the bits 31 - 28 are reserved for template default arguments
          TEMPLATEDEFAULTS1  = (0<<31)&(0<<30)&(0<<29)&(1<<28),
          TEMPLATEDEFAULTS2  = (0<<31)&(0<<30)&(1<<29)&(0<<28),
          TEMPLATEDEFAULTS3  = (0<<31)&(0<<30)&(1<<29)&(1<<28),
@@ -273,24 +273,24 @@ namespace ROOT {
          Q         = (1<<5),
          S         = (1<<6)
       };
-      
+
 
       /** enum containing all possible types and scopes */
-      enum TYPE { 
+      enum TYPE {
          CLASS = 0,
          STRUCT,
-         ENUM, 
-         FUNCTION, 
-         ARRAY, 
-         FUNDAMENTAL, 
-         POINTER, 
-         POINTERTOMEMBER, 
-         TYPEDEF, 
-         UNION, 
-         TYPETEMPLATEINSTANCE, 
-         MEMBERTEMPLATEINSTANCE, 
-         NAMESPACE, 
-         DATAMEMBER, 
+         ENUM,
+         FUNCTION,
+         ARRAY,
+         FUNDAMENTAL,
+         POINTER,
+         POINTERTOMEMBER,
+         TYPEDEF,
+         UNION,
+         TYPETEMPLATEINSTANCE,
+         MEMBERTEMPLATEINSTANCE,
+         NAMESPACE,
+         DATAMEMBER,
          FUNCTIONMEMBER,
          UNRESOLVED
       };
@@ -307,7 +307,7 @@ namespace ROOT {
       typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);
 
       /** typedef for function for Offset calculation */
-      typedef size_t( * OffsetFunction ) ( void * );
+      typedef size_t (* OffsetFunction) ( void * );
 
       /** dummy types for type_info purposes */
       class RFLX_API NullType {};
@@ -328,7 +328,7 @@ namespace ROOT {
       class RFLX_API UnnamedNamespace {};
       class RFLX_API UnnamedStruct {};
       class RFLX_API UnnamedUnion {};
-      
+
       /** exception classes */
       class RFLX_EXCEPTIONAPI(RFLX_API) RuntimeError : public std::exception {
       public:
@@ -345,7 +345,7 @@ namespace ROOT {
 //-------------------------------------------------------------------------------
 inline size_t ROOT::Reflex::NPos() {
 //-------------------------------------------------------------------------------
-   return (size_t) -1; 
+   return (size_t) -1;
 }
 
 #endif // ROOT_Reflex_Kernel

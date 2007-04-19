@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.13 2006/09/14 13:38:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.14 2006/10/09 09:27:17 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -107,7 +107,7 @@ namespace ROOT {
           * if a given property (with a key) is attached to this item.
           */
          bool HasKey( const std::string & key ) const
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__CINT__)
             __attribute__((deprecated))
 #endif
             ;
@@ -242,7 +242,7 @@ namespace ROOT {
           * self can be larger, because it may have holes
           */
          size_t PropertySize() const
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__CINT__)
             __attribute__((deprecated))
 #endif
             ;

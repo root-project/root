@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.14 2006/09/12 13:06:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.15 2007/01/24 09:33:02 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -63,7 +63,7 @@ namespace ROOT{
 
 
       RFLX_API Type FunctionTypeBuilder( const Type & r,
-                                         const std::vector<Type> & p,
+                                         const std::vector<ROOT::Reflex::Type> & p,
                                          const std::type_info & ti = typeid(UnknownType));
 
 
