@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.104 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.105 2007/03/19 01:36:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -698,70 +698,75 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    SafeDelete(fSelector);
    fSelectorClass = 0;
+   Int_t version = -1;
    TRY {
       if (!(fSelector = TSelector::GetSelector(selector_file))) {
          Error("Process", "cannot load: %s", selector_file );
          return -1;
       }
-   } CATCH(excode) {
-      Error("Process","exception %d caught", excode);
-      Error("Process", "cannot load: %s", selector_file );
-      return -1;
-   } ENDTRY;
 
-   fSelectorClass = fSelector->IsA();
-   Int_t version = fSelector->Version();
+      // Save binaries to cache, if any
+      gProofServ->CopyToCache(selector_file, 1);
 
-   fOutput = fSelector->GetOutputList();
+      fSelectorClass = fSelector->IsA();
+      version = fSelector->Version();
 
-   TPerfStats::Start(fInput, fOutput);
+      fOutput = fSelector->GetOutputList();
 
-   fSelStatus = new TStatus;
-   fOutput->Add(fSelStatus);
+      TPerfStats::Start(fInput, fOutput);
 
-   TCleanup clean(this);
-   SetupFeedback();
+      fSelStatus = new TStatus;
+      fOutput->Add(fSelStatus);
 
-   fSelector->SetOption(option);
-   fSelector->SetInputList(fInput);
+      TCleanup clean(this);
+      SetupFeedback();
 
-   // If in sequential (0-PROOF) mode validate the data set to get
-   // the number of entries
-   fTotalEvents = nentries;
-   if (fTotalEvents < 0 && gProofServ &&
-       gProofServ->IsMaster() && !gProofServ->IsParallel()) {
-      dset->Validate();
-      dset->Reset();
-      TDSetElement *e = 0;
-      while ((e = dset->Next())) {
-         fTotalEvents += e->GetNum();
+      fSelector->SetOption(option);
+      fSelector->SetInputList(fInput);
+
+      // If in sequential (0-PROOF) mode validate the data set to get
+      // the number of entries
+      fTotalEvents = nentries;
+      if (fTotalEvents < 0 && gProofServ &&
+         gProofServ->IsMaster() && !gProofServ->IsParallel()) {
+         dset->Validate();
+         dset->Reset();
+         TDSetElement *e = 0;
+         while ((e = dset->Next())) {
+            fTotalEvents += e->GetNum();
+         }
       }
-   }
 
-   dset->Reset();
+      dset->Reset();
 
-   fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
+      fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
-   if (version == 0) {
-      PDB(kLoop,1) Info("Process","Call Begin(0)");
-      fSelector->Begin(0);
-   } else {
-      if (IsClient()) {
-         // on client (for local run)
+      if (version == 0) {
          PDB(kLoop,1) Info("Process","Call Begin(0)");
          fSelector->Begin(0);
+      } else {
+         if (IsClient()) {
+            // on client (for local run)
+            PDB(kLoop,1) Info("Process","Call Begin(0)");
+            fSelector->Begin(0);
+         }
+         if (fSelStatus->IsOk()) {
+            PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
+            fSelector->SlaveBegin(0);  // Init is called explicitly
+                                       // from GetNextEvent()
+         }
       }
-      if (fSelStatus->IsOk()) {
-         PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
-         fSelector->SlaveBegin(0);  // Init is called explicitly
-                                    // from GetNextEvent()
-      }
-   }
+
+   } CATCH(excode) {
+     Error("Process","exception %d caught", excode);
+      return -1;
+   } ENDTRY;
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
-   PDB(kLoop,1) Info("Process","Looping over Process()");
+   PDB(kLoop,1)
+      Info("Process","Looping over Process()");
 
    // get the byte read counter at the beginning of processing
    Long64_t readbytesatstart = 0;
@@ -777,51 +782,59 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    gAbort = kFALSE;
    Long64_t entry;
    fEventsProcessed = 0;
-   while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
-      Bool_t ok = kTRUE;
-      if (version == 0) {
-         PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
-         if (fSelector->ProcessCut(entry)) {
-            PDB(kLoop,3)Info("Process","Call ProcessFill(%lld)", entry);
-            fSelector->ProcessFill(entry);
-         }
-      } else {
-         PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
+   TRY {
 
-         TRY {
-            fSelector->Process(entry);
-         } CATCH(excode) {
-            ok = kFALSE;
-            if (excode == kPEX_STOPPED) {
-               Info("Process","received stop-process signal");
-            } else if (excode == kPEX_ABORTED) {
-               gAbort = kTRUE;
-               Info("Process","received abort-process signal");
-            } else {
-               Error("Process","exception %d caught", excode);
-               // Perhaps we need a dedicated status code here ...
-               fExitStatus = kAborted;
+      while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+
+         Bool_t ok = kTRUE;
+         if (version == 0) {
+            PDB(kLoop,3)
+               Info("Process","Call ProcessCut(%lld)", entry);
+            if (fSelector->ProcessCut(entry)) {
+               PDB(kLoop,3)
+                  Info("Process","Call ProcessFill(%lld)", entry);
+               fSelector->ProcessFill(entry);
             }
-            // Break this loop
-            break;
-         } ENDTRY;
-         if (fSelector->GetAbort() == TSelector::kAbortProcess) break;
-      }
+         } else {
+            PDB(kLoop,3)
+               Info("Process","Call Process(%lld)", entry);
+            fSelector->Process(entry);
+            if (fSelector->GetAbort() == TSelector::kAbortProcess) break;
+         }
 
-      if (ok) {
-         fEventsProcessed++;
-         if (gMonitoringWriter)
-            gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
-      }
+         if (ok) {
+            fEventsProcessed++;
+            if (gMonitoringWriter)
+               gMonitoringWriter->SendProcessingProgress(fEventsProcessed,
+                       TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+         }
 
-      if (TestBit(TProofPlayer::kDispatchOneEvent)) {
-         gSystem->DispatchOneEvent(kTRUE);
-         ResetBit(TProofPlayer::kDispatchOneEvent);
+         if (TestBit(TProofPlayer::kDispatchOneEvent)) {
+            gSystem->DispatchOneEvent(kTRUE);
+            ResetBit(TProofPlayer::kDispatchOneEvent);
+         }
+         if (!ok || gROOT->IsInterrupted()) break;
+     }
+
+   } CATCH(excode) {
+      if (excode == kPEX_STOPPED) {
+         Info("Process","received stop-process signal");
+         fExitStatus = kStopped;
+      } else if (excode == kPEX_ABORTED) {
+         gAbort = kTRUE;
+         Info("Process","received abort-process signal");
+         fExitStatus = kAborted;
+      } else {
+         Error("Process","exception %d caught", excode);
+         // Perhaps we need a dedicated status code here ...
+         gAbort = kTRUE;
+         fExitStatus = kAborted;
       }
-      if (!ok || gROOT->IsInterrupted()) break;
-   }
-   PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
+   } ENDTRY;
+
+   PDB(kGlobal,2) 
+     Info("Process","%lld events processed",fEventsProcessed);
 
    if (gMonitoringWriter) {
       gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
