@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.20 2006/02/22 06:15:21 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.21 2007/02/13 14:44:32 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -211,6 +211,11 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                 !strcmp(strtok(0,      " "), "link")    &&
                 !strcmp(strtok(0,      " "), "C++")) {
                char *type = strtok(0, " ");
+               if (!strncmp(type, "option=", 7) || !strncmp(type, "options=", 8)) {
+                  if (strstr(type, "nomap"))
+                     continue;
+                  type = strtok(0, " ");
+               }
                if (!strcmp(type, "class") || !strcmp(type, "typedef")) {
                   char *cls = strtok(0, "-!+;");
                   // just in case remove trailing space and tab
