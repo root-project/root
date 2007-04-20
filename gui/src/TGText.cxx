@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.19 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.20 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -172,14 +172,76 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
    // in case pos and length are out of range. The returned string
    // must be freed by the user.
 
-   if (pos >= fLength)
+   if (pos >= fLength) {
       return 0;
-   if (pos + length > fLength)
+   }
+
+   if (pos + length > (ULong_t)fString) {
       length = fLength - pos;
+   }
 
    char *retstring = new char[length+1];
    retstring[length] = '\0';
    strncpy(retstring, fString+pos, (UInt_t)length);
+
+   return retstring;
+}
+
+//______________________________________________________________________________
+char *TGTextLine::GetWord(ULong_t pos)
+{
+   // Get word at position. Returned string must be deleted.
+
+   if (pos >= fLength) {
+      return 0;
+   }
+
+   Int_t start = (Int_t)pos;
+   Int_t end = (Int_t)pos;
+   Int_t i = (Int_t)pos;
+
+   if (fString[i] == ' ' || fString[i] == '\t') {
+      while (start >= 0) {
+         if (fString[start] == ' ' || fString[start] == '\t') --start;
+         else break;
+      }
+      ++start;
+      while (end < fLength) {
+         if (fString[end] == ' ' || fString[end] == '\t') ++end;
+         else break;
+      }
+   } else if (isalnum(fString[i])) {
+      while (start >= 0) {
+         if (isalnum(fString[start])) --start;
+         else break;
+      }
+      ++start;
+      while (end < fLength) {
+         if (isalnum(fString[end])) ++end;
+         else break;
+      }
+   } else {
+      while (start >= 0) {
+         if (isalnum(fString[start]) || fString[start] == ' ' || fString[start] == '\t') {
+            break;
+         } else {
+            --start;
+         }
+      }
+      ++start;
+      while (end < fLength) {
+         if (isalnum(fString[end]) || fString[end] == ' ' || fString[end] == '\t') {
+            break;
+         } else {
+            ++end;
+         }
+      }
+   }
+
+   UInt_t length = UInt_t(end - start);
+   char *retstring = new char[length+1];
+   retstring[length] = '\0';
+   strncpy(retstring, fString+start, length);
 
    return retstring;
 }

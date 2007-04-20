@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.20 2007/04/19 16:23:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.21 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -148,6 +148,8 @@ public:
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*
    virtual void DataDropped(const char *fname) { Emit("DataDropped(char *)", fname); }  //*SIGNAL*
    virtual void Marked(Bool_t mark) { Emit("Marked(Bool_t)", mark); } // *SIGNAL*
+   virtual void Clicked(const char *word) { Emit("Clicked(char *)", word); }  //*SIGNAL*
+   virtual void DoubleClicked(const char *word) { Emit("DoubleClicked(char *)", word); }  //*SIGNAL*
 
    ClassDef(TGTextView,0)  // Non-editable text viewer widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.9 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.10 2007/04/19 16:23:12 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
    void InsText(ULong_t pos, const char *text);
    char *GetText(ULong_t pos, ULong_t length);
    char *GetText() const { return fString; }
+   char *GetWord(ULong_t pos);
 
    void DelChar(ULong_t pos);
    void InsChar(ULong_t pos, char character);

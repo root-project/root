@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.40 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.41 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -148,31 +148,26 @@ public:
 class TInsTextCom : public TGTextEditCommand {
 private:
    TGLongPosition  fEndPos;
-   Bool_t          fBreakLine;
 
 public:
+   char            fChar;
+
    TInsTextCom(TGTextEdit *te) : TGTextEditCommand(te)  {
-      fBreakLine = kFALSE;
    }
 
    void SetEndPos(TGLongPosition end) {
       fEndPos = end;
-
-      if (fEndPos.fX > 0) fEndPos.fX--;
-      fBreakLine = (fEndPos.fX == 0);
    }
-
-   void SetBreakLine(Bool_t on) { fBreakLine = on; }
 
    Bool_t Notify() { //
       fEdit->GetText()->DelText(fPos, fEndPos);
 
-      fEdit->SetCurrent(fPos);
-
-      if (fBreakLine || (!fPos.fX && (fPos.fY != fEndPos.fY))) {
+      if (fChar > 0) {
+         fEdit->GetText()->InsChar(fPos, fChar);
+      } else if (fPos.fY != fEndPos.fY) {
          fEdit->GetText()->BreakLine(fPos);
       }
-
+      fEdit->SetCurrent(fPos);
       fEdit->Update();
       return kTRUE;
    }
@@ -223,8 +218,8 @@ public:
 };
 
 
-
 ClassImp(TGTextEdit)
+
 
 //______________________________________________________________________________
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
@@ -970,8 +965,9 @@ Bool_t TGTextEdit::HandleSelection(Event_t *event)
 
    // undo command
    TInsTextCom *icom = new TInsTextCom(this);
-
+   icom->fChar = fText->GetChar(fCurrent);
    fText->InsText(fCurrent, fClipText, start_src, end_src);
+
    fIsMarked = kFALSE;
 
    fExposedRegion.fX = 0;
@@ -983,6 +979,7 @@ Bool_t TGTextEdit::HandleSelection(Event_t *event)
    if (start_src.fY == end_src.fY) {
       pos.fX = pos.fX + fCurrent.fX;
    }
+
    icom->SetEndPos(pos);
 
    // calculate exposed region
@@ -1054,6 +1051,11 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          }
 
          SetCurrent(pos);
+
+         TGTextLine *line = fText->GetCurrentLine();
+         char *word = line->GetWord(pos.fX);
+         Clicked((const char*)word);   // emit signal
+         delete word;
       }
       if (event->fCode == kButton2) {
          if (gVirtualX->GetPrimarySelectionOwner() != kNone) {
@@ -1145,7 +1147,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
 
    fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
    char *line = fText->GetCurrentLine()->GetText();
-   Int_t len = fText->GetCurrentLine()->GetLineLength();
+   UInt_t len = (UInt_t)fText->GetCurrentLine()->GetLineLength();
    Int_t start = pos.fX;
    Int_t end = pos.fX;
    Int_t i = pos.fX;
@@ -1156,7 +1158,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
          else break;
       }
       ++start;
-      while (end < len) {
+      while (end < (Int_t)len) {
          if (line[end] == ' ' || line[end] == '\t') ++end;
          else break;
       }
@@ -1166,7 +1168,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
          else break;
       }
       ++start;
-      while (end < len) {
+      while (end < (Int_t)len) {
          if (isalnum(line[end])) ++end;
          else break;
       }
@@ -1179,7 +1181,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
          }
       }
       ++start;
-      while (end < len) {
+      while (end < (Int_t)len) {
          if (isalnum(line[end]) || line[end] == ' ' || line[end] == '\t') {
             break;
          } else {
@@ -1191,8 +1193,17 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
    fMarkedStart.fX = start;
    fIsMarked = kTRUE;
    fMarkedEnd.fX = end;
-
    Marked(kTRUE);
+
+   len = end - start; //length
+   char *word = new char[len + 1];
+   word[len] = '\0';
+   strncpy(word, line+start, (UInt_t)len);
+   DoubleClicked((const char *)word);  // emit signal
+
+   delete [] word;
+//   delete [] line;
+
    UpdateRegion(0, (Int_t)ToScrYCoord(fMarkedStart.fY), fCanvas->GetWidth(),
                 UInt_t(ToScrYCoord(fMarkedEnd.fY + 1) - ToScrYCoord(fMarkedStart.fY)));
 
