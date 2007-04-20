@@ -1,33 +1,13 @@
-// @(#)root/gui:$Name:  $:$Id: TGDNDManager.h
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.82 2007/04/19 21:07:02 brun Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-/**************************************************************************
-
-    This file is part of xclass.
-    Copyright (C) 1996-2000 Hector Peraza.
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-**************************************************************************/
 
 #ifndef ROOT_TDNDManager
 #define ROOT_TDNDManager
