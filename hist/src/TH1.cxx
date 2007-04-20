@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.339 2007/04/02 15:24:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.340 2007/04/17 15:10:22 moneta Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1520,19 +1520,21 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       k_end   = zaxis1->GetLast();
    }
    
-   ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
    
    if (opt.Contains("OF")) {
-      i_end = ++nbinx1;
-      j_end = ++nbiny1;
-      k_end = ++nbinz1;
-      ndf += nbinx1 + nbiny1 + nbinz1;
+      if (this->GetDimension() == 3) k_end = ++nbinz1;
+      if (this->GetDimension() >= 2) j_end = ++nbiny1;
+      if (this->GetDimension() >= 1) i_end = ++nbinx1;
    }
    
    if (opt.Contains("UF")) {
-      i_start = j_start = k_start = 0;
-      ndf += nbinx1 + nbiny1 + nbinz1;
+      if (this->GetDimension() == 3) k_start = 0;
+      if (this->GetDimension() >= 2) j_start = 0;
+      if (this->GetDimension() >= 1) i_start = 0;
    }
+
+   ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
+
    
   //small number of events diagnostics
    for(i=i_start; i<=i_end; i++) {
