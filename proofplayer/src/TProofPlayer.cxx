@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.105 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.106 2007/04/19 09:25:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -758,7 +758,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
    } CATCH(excode) {
-     Error("Process","exception %d caught", excode);
+      Error("Process","exception %d caught", excode);
       return -1;
    } ENDTRY;
 
@@ -834,7 +834,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    } ENDTRY;
 
    PDB(kGlobal,2) 
-     Info("Process","%lld events processed",fEventsProcessed);
+      Info("Process","%lld events processed",fEventsProcessed);
 
    if (gMonitoringWriter) {
       gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
