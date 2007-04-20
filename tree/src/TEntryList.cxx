@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.11 2007/03/17 08:45:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.12 2007/03/30 13:38:10 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -338,71 +338,81 @@ void TEntryList::Add(const TEntryList *elist)
    }
 
    if (!fLists){
-      if (!strcmp(elist->fTreeName.Data(),fTreeName.Data()) && !strcmp(elist->fFileName.Data(),fFileName.Data())){
-         //entry lists are for the same tree
-         if (!elist->fBlocks)
-            //the other list is empty list
-            return;
-         if (!fBlocks){
-            //this entry list is empty
-            TEntryListBlock *block1 = 0;
-            TEntryListBlock *block2 = 0;
-            fNBlocks = elist->fNBlocks;
-            fN = elist->fN;
-            fBlocks = new TObjArray();
-            for (Int_t i=0; i<fNBlocks; i++){
-               block1 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
-               block2 = new TEntryListBlock(*block1);
+      if (!elist->fLists){
+         if (!strcmp(elist->fTreeName.Data(),fTreeName.Data()) && !strcmp(elist->fFileName.Data(),fFileName.Data())){
+            //entry lists are for the same tree
+            if (!elist->fBlocks)
+               //the other list is empty list
+               return;
+            if (!fBlocks){
+               //this entry list is empty
+               TEntryListBlock *block1 = 0;
+               TEntryListBlock *block2 = 0;
+               fNBlocks = elist->fNBlocks;
+               fN = elist->fN;
+               fBlocks = new TObjArray();
+               for (Int_t i=0; i<fNBlocks; i++){
+                  block1 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
+                  block2 = new TEntryListBlock(*block1);
                fBlocks->Add(block2);
+               }
+               return;
             }
-            return;
-         }
-         //both not empty, merge block by block
-         TEntryListBlock *block1=0;
-         TEntryListBlock *block2=0;
-         Int_t i;
-         Int_t nmin = TMath::Min(fNBlocks, elist->fNBlocks);
-         Long64_t nnew, nold;
-         for (i=0; i<nmin; i++){
-            block1 = (TEntryListBlock*)fBlocks->UncheckedAt(i);
-            block2 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
-            nold = block1->GetNPassed();
-            nnew = block1->Merge(block2);
-            fN = fN - nold + nnew;
-         }
-         if (fNBlocks<elist->fNBlocks){
-            Int_t nmax = elist->fNBlocks; 
-            for (i=nmin; i<nmax; i++){
+            //both not empty, merge block by block
+            TEntryListBlock *block1=0;
+            TEntryListBlock *block2=0;
+            Int_t i;
+            Int_t nmin = TMath::Min(fNBlocks, elist->fNBlocks);
+            Long64_t nnew, nold;
+            for (i=0; i<nmin; i++){
+               block1 = (TEntryListBlock*)fBlocks->UncheckedAt(i);
                block2 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
-               block1 = new TEntryListBlock(*block2);
-               fBlocks->Add(block1);
-               fN+=block1->GetNPassed();
-               fNBlocks++;
+               nold = block1->GetNPassed();
+               nnew = block1->Merge(block2);
+               fN = fN - nold + nnew;
             }
+            if (fNBlocks<elist->fNBlocks){
+               Int_t nmax = elist->fNBlocks; 
+               for (i=nmin; i<nmax; i++){
+                  block2 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
+                  block1 = new TEntryListBlock(*block2);
+                  fBlocks->Add(block1);
+                  fN+=block1->GetNPassed();
+                  fNBlocks++;
+               }
+            }
+            fLastIndexQueried = -1;
+            fLastIndexReturned = 0;
+         } else {
+            //entry lists are for different trees. create a chain entry list with
+            //2 sub lists for the first and second entry lists
+            fLastIndexQueried = -1;
+            fLastIndexReturned = 0;
+            fLists = new TList();
+            TEntryList *el = new TEntryList();
+            el->fTreeName = fTreeName;
+            el->fFileName = fFileName;
+            el->fBlocks = fBlocks;
+            fBlocks = 0;
+            el->fNBlocks = fNBlocks;
+            el->fN = fN;
+            el->fLastIndexQueried = -1;
+            el->fLastIndexReturned = 0;
+            fLists->Add(el);
+            el = new TEntryList(*elist);
+            el->fLastIndexQueried = -1;
+            el->fLastIndexReturned = 0;
+            fLists->Add(el);
+            fN+=el->GetN();
+            fCurrent = 0;
          }
-         fLastIndexQueried = -1;
-         fLastIndexReturned = 0;
       } else {
-      //entry lists are for different trees. create a chain entry list with
-      //2 sub lists for the first and second entry lists
-         fLastIndexQueried = -1;
-         fLastIndexReturned = 0;
-         fLists = new TList();
-         TEntryList *el = new TEntryList();
-         el->fTreeName = fTreeName;
-         el->fFileName = fFileName;
-         el->fBlocks = fBlocks;
-         fBlocks = 0;
-         el->fNBlocks = fNBlocks;
-         el->fN = fN;
-         el->fLastIndexQueried = -1;
-         el->fLastIndexReturned = 0;
-         fLists->Add(el);
-         el = new TEntryList(*elist);
-         el->fLastIndexQueried = -1;
-         el->fLastIndexReturned = 0;
-         fLists->Add(el);
-         fN+=el->GetN();
+         //second list already has sublists. add one by one
+         TEntryList *el = 0;
+         TIter next(elist->fLists);
+         while ((el = (TEntryList*)next())){
+            Add(el);
+         }
          fCurrent = 0;
       }
    } else {
