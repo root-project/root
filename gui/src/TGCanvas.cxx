@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.52 2007/04/17 15:57:29 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.53 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -937,6 +937,8 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
 //______________________________________________________________________________
 void TGContainer::SetDragPixmap(const TGPicture *p)
 {
+   // Set drag window pixmaps and hotpoint.
+   
    Pixmap_t pic, mask;
    TGPicture *selpic = new TGSelectedPicture(gClient, p);
    pic  = selpic->GetPicture();

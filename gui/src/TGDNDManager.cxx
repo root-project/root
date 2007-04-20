@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.82 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.2 2007/04/20 11:43:22 rdm Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
@@ -18,32 +18,32 @@
 #define XA_ATOM ((Atom_t) 4)
 #define XA_WINDOW ((Atom_t) 33)
 
-Atom_t TGDNDManager::fDNDaware         = kNone;
-Atom_t TGDNDManager::fDNDselection     = kNone;
-Atom_t TGDNDManager::fDNDproxy         = kNone;
+Atom_t TGDNDManager::fgDNDaware         = kNone;
+Atom_t TGDNDManager::fgDNDselection     = kNone;
+Atom_t TGDNDManager::fgDNDproxy         = kNone;
 
-Atom_t TGDNDManager::fDNDenter         = kNone;
-Atom_t TGDNDManager::fDNDleave         = kNone;
-Atom_t TGDNDManager::fDNDposition      = kNone;
-Atom_t TGDNDManager::fDNDstatus        = kNone;
-Atom_t TGDNDManager::fDNDdrop          = kNone;
-Atom_t TGDNDManager::fDNDfinished      = kNone;
-Atom_t TGDNDManager::fDNDversion       = kNone;
+Atom_t TGDNDManager::fgDNDenter         = kNone;
+Atom_t TGDNDManager::fgDNDleave         = kNone;
+Atom_t TGDNDManager::fgDNDposition      = kNone;
+Atom_t TGDNDManager::fgDNDstatus        = kNone;
+Atom_t TGDNDManager::fgDNDdrop          = kNone;
+Atom_t TGDNDManager::fgDNDfinished      = kNone;
+Atom_t TGDNDManager::fgDNDversion       = kNone;
 
-Atom_t TGDNDManager::fDNDactionCopy    = kNone;
-Atom_t TGDNDManager::fDNDactionMove    = kNone;
-Atom_t TGDNDManager::fDNDactionLink    = kNone;
-Atom_t TGDNDManager::fDNDactionAsk     = kNone;
-Atom_t TGDNDManager::fDNDactionPrivate = kNone;
+Atom_t TGDNDManager::fgDNDactionCopy    = kNone;
+Atom_t TGDNDManager::fgDNDactionMove    = kNone;
+Atom_t TGDNDManager::fgDNDactionLink    = kNone;
+Atom_t TGDNDManager::fgDNDactionAsk     = kNone;
+Atom_t TGDNDManager::fgDNDactionPrivate = kNone;
 
-Atom_t TGDNDManager::fDNDtypeList      = kNone;
-Atom_t TGDNDManager::fDNDactionList    = kNone;
-Atom_t TGDNDManager::fDNDactionDescrip = kNone;
+Atom_t TGDNDManager::fgDNDtypeList      = kNone;
+Atom_t TGDNDManager::fgDNDactionList    = kNone;
+Atom_t TGDNDManager::fgDNDactionDescrip = kNone;
 
-Atom_t TGDNDManager::fXAWMState     = kNone;
-Atom_t TGDNDManager::fXCDNDData     = kNone;
+Atom_t TGDNDManager::fgXAWMState     = kNone;
+Atom_t TGDNDManager::fgXCDNDData     = kNone;
 
-Bool_t TGDNDManager::fInit = kFALSE;
+Bool_t TGDNDManager::fgInit = kFALSE;
 
 // TODO:
 // - add an TGFrame::HandleDNDstatus event handler?
@@ -181,9 +181,9 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
    fVersion = ROOTDND_PROTOCOL_VERSION;
    fTypelist = typelist;
 
-   if (!fInit) {
+   if (!fgInit) {
       InitAtoms();
-      fInit = kTRUE;
+      fgInit = kTRUE;
    }
 
    //Reset();
@@ -230,8 +230,8 @@ TGDNDManager::~TGDNDManager()
 
    // remove the aware prop ant the types list, if any
    if (fMain) {
-      gVirtualX->DeleteProperty(fMain->GetId(), fDNDaware);
-      gVirtualX->DeleteProperty(fMain->GetId(), fDNDtypeList);
+      gVirtualX->DeleteProperty(fMain->GetId(), fgDNDaware);
+      gVirtualX->DeleteProperty(fMain->GetId(), fgDNDtypeList);
    }
    if (fDropTimeout) delete fDropTimeout;
 
@@ -246,25 +246,25 @@ TGDNDManager::~TGDNDManager()
    if (fDraggerTypes) delete[] fDraggerTypes;
 }
 
-Atom_t TGDNDManager::GetDNDaware() { return fDNDaware; }
-Atom_t TGDNDManager::GetDNDselection() { return fDNDselection; }
-Atom_t TGDNDManager::GetDNDproxy() { return fDNDproxy; }
-Atom_t TGDNDManager::GetDNDenter() { return fDNDenter; }
-Atom_t TGDNDManager::GetDNDleave() { return fDNDleave; }
-Atom_t TGDNDManager::GetDNDposition() { return fDNDposition; }
-Atom_t TGDNDManager::GetDNDstatus() { return fDNDstatus; }
-Atom_t TGDNDManager::GetDNDdrop() { return fDNDdrop; }
-Atom_t TGDNDManager::GetDNDfinished() { return fDNDfinished; }
-Atom_t TGDNDManager::GetDNDversion() { return fDNDversion; }
-Atom_t TGDNDManager::GetDNDactionCopy() { return fDNDactionCopy; }
-Atom_t TGDNDManager::GetDNDactionMove() { return fDNDactionMove; }
-Atom_t TGDNDManager::GetDNDactionLink() { return fDNDactionLink; }
-Atom_t TGDNDManager::GetDNDactionAsk() { return fDNDactionAsk; }
-Atom_t TGDNDManager::GetDNDactionPrivate() { return fDNDactionPrivate; }
-Atom_t TGDNDManager::GetDNDtypeList() { return fDNDtypeList; }
-Atom_t TGDNDManager::GetDNDactionList() { return fDNDactionList; }
-Atom_t TGDNDManager::GetDNDactionDescrip() { return fDNDactionDescrip; }
-Atom_t TGDNDManager::GetXCDNDData() { return fXCDNDData; }
+Atom_t TGDNDManager::GetDNDaware() { return fgDNDaware; }
+Atom_t TGDNDManager::GetDNDselection() { return fgDNDselection; }
+Atom_t TGDNDManager::GetDNDproxy() { return fgDNDproxy; }
+Atom_t TGDNDManager::GetDNDenter() { return fgDNDenter; }
+Atom_t TGDNDManager::GetDNDleave() { return fgDNDleave; }
+Atom_t TGDNDManager::GetDNDposition() { return fgDNDposition; }
+Atom_t TGDNDManager::GetDNDstatus() { return fgDNDstatus; }
+Atom_t TGDNDManager::GetDNDdrop() { return fgDNDdrop; }
+Atom_t TGDNDManager::GetDNDfinished() { return fgDNDfinished; }
+Atom_t TGDNDManager::GetDNDversion() { return fgDNDversion; }
+Atom_t TGDNDManager::GetDNDactionCopy() { return fgDNDactionCopy; }
+Atom_t TGDNDManager::GetDNDactionMove() { return fgDNDactionMove; }
+Atom_t TGDNDManager::GetDNDactionLink() { return fgDNDactionLink; }
+Atom_t TGDNDManager::GetDNDactionAsk() { return fgDNDactionAsk; }
+Atom_t TGDNDManager::GetDNDactionPrivate() { return fgDNDactionPrivate; }
+Atom_t TGDNDManager::GetDNDtypeList() { return fgDNDtypeList; }
+Atom_t TGDNDManager::GetDNDactionList() { return fgDNDactionList; }
+Atom_t TGDNDManager::GetDNDactionDescrip() { return fgDNDactionDescrip; }
+Atom_t TGDNDManager::GetXCDNDData() { return fgXCDNDData; }
 
 //______________________________________________________________________________
 void TGDNDManager::InitAtoms()
@@ -272,37 +272,37 @@ void TGDNDManager::InitAtoms()
    // Initialize drag and drop atoms.
 
    // awareness
-   fDNDaware = gVirtualX->InternAtom("XdndAware", kFALSE);
+   fgDNDaware = gVirtualX->InternAtom("XdndAware", kFALSE);
 
    // selection
-   fDNDselection = gVirtualX->InternAtom("XdndSelection", kFALSE);
+   fgDNDselection = gVirtualX->InternAtom("XdndSelection", kFALSE);
 
    // proxy window
-   fDNDproxy = gVirtualX->InternAtom("XdndProxy", kFALSE);
+   fgDNDproxy = gVirtualX->InternAtom("XdndProxy", kFALSE);
 
    // messages
-   fDNDenter    = gVirtualX->InternAtom("XdndEnter", kFALSE);
-   fDNDleave    = gVirtualX->InternAtom("XdndLeave", kFALSE);
-   fDNDposition = gVirtualX->InternAtom("XdndPosition", kFALSE);
-   fDNDstatus   = gVirtualX->InternAtom("XdndStatus", kFALSE);
-   fDNDdrop     = gVirtualX->InternAtom("XdndDrop", kFALSE);
-   fDNDfinished = gVirtualX->InternAtom("XdndFinished", kFALSE);
+   fgDNDenter    = gVirtualX->InternAtom("XdndEnter", kFALSE);
+   fgDNDleave    = gVirtualX->InternAtom("XdndLeave", kFALSE);
+   fgDNDposition = gVirtualX->InternAtom("XdndPosition", kFALSE);
+   fgDNDstatus   = gVirtualX->InternAtom("XdndStatus", kFALSE);
+   fgDNDdrop     = gVirtualX->InternAtom("XdndDrop", kFALSE);
+   fgDNDfinished = gVirtualX->InternAtom("XdndFinished", kFALSE);
 
    // actions
-   fDNDactionCopy    = gVirtualX->InternAtom("XdndActionCopy", kFALSE);
-   fDNDactionMove    = gVirtualX->InternAtom("XdndActionMove", kFALSE);
-   fDNDactionLink    = gVirtualX->InternAtom("XdndActionLink", kFALSE);
-   fDNDactionAsk     = gVirtualX->InternAtom("XdndActionAsk", kFALSE);
-   fDNDactionPrivate = gVirtualX->InternAtom("XdndActionPrivate", kFALSE);
+   fgDNDactionCopy    = gVirtualX->InternAtom("XdndActionCopy", kFALSE);
+   fgDNDactionMove    = gVirtualX->InternAtom("XdndActionMove", kFALSE);
+   fgDNDactionLink    = gVirtualX->InternAtom("XdndActionLink", kFALSE);
+   fgDNDactionAsk     = gVirtualX->InternAtom("XdndActionAsk", kFALSE);
+   fgDNDactionPrivate = gVirtualX->InternAtom("XdndActionPrivate", kFALSE);
 
    // types list
-   fDNDtypeList      = gVirtualX->InternAtom("XdndTypeList", kFALSE);
-   fDNDactionList    = gVirtualX->InternAtom("XdndActionList", kFALSE);
-   fDNDactionDescrip = gVirtualX->InternAtom("XdndActionDescription", kFALSE);
+   fgDNDtypeList      = gVirtualX->InternAtom("XdndTypeList", kFALSE);
+   fgDNDactionList    = gVirtualX->InternAtom("XdndActionList", kFALSE);
+   fgDNDactionDescrip = gVirtualX->InternAtom("XdndActionDescription", kFALSE);
 
    // misc
-   fXAWMState = gVirtualX->InternAtom("WM_STATE", kFALSE);
-   fXCDNDData = gVirtualX->InternAtom("_XC_DND_DATA", kFALSE);
+   fgXAWMState = gVirtualX->InternAtom("WM_STATE", kFALSE);
+   fgXCDNDData = gVirtualX->InternAtom("_XC_DND_DATA", kFALSE);
 }
 
 static int ArrayLength(Atom_t *a)
@@ -358,7 +358,7 @@ Window_t TGDNDManager::GetRootProxy()
    //target_error = kFALSE;
 
    gVirtualX->GetProperty(gVirtualX->GetDefaultRootWindow(),
-                          fDNDproxy, 0, 1, kFALSE, XA_WINDOW,
+                          fgDNDproxy, 0, 1, kFALSE, XA_WINDOW,
                           &actual, &format, &count, &remaining, &data);
 
    if ((actual == XA_WINDOW) && (format == 32) && (count > 0) && data) {
@@ -368,7 +368,7 @@ Window_t TGDNDManager::GetRootProxy()
       delete[] data;
       data = 0;
 
-      gVirtualX->GetProperty(win, fDNDproxy, 0, 1, kFALSE, XA_WINDOW,
+      gVirtualX->GetProperty(win, fgDNDproxy, 0, 1, kFALSE, XA_WINDOW,
                              &actual, &format, &count, &remaining, &data);
 
       // XSync(_dpy, kFALSE);      // force the error...
@@ -392,21 +392,21 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
 {
    // Handle DND related client messages.
 
-   if (event->fHandle == fDNDenter) {
+   if (event->fHandle == fgDNDenter) {
       HandleDNDenter((Window_t) event->fUser[0], event->fUser[1],
                      (Atom_t *) &event->fUser[2]);
 
-   } else if (event->fHandle == fDNDleave) {
+   } else if (event->fHandle == fgDNDleave) {
       HandleDNDleave((Window_t) event->fUser[0]);
 
-   } else if (event->fHandle == fDNDposition) {
+   } else if (event->fHandle == fgDNDposition) {
       HandleDNDposition((Window_t) event->fUser[0],
                        (Int_t) (event->fUser[2] >> 16) & 0xFFFF,  // x_root
                        (Int_t) (event->fUser[2] & 0xFFFF),        // y_root
                        (Atom_t) event->fUser[4],                  // action
                        (Time_t) event->fUser[3]);                 // timestamp
 
-   } else if (event->fHandle == fDNDstatus) {
+   } else if (event->fHandle == fgDNDstatus) {
       Rectangle_t skip;
       skip.fX      = (event->fUser[2] >> 16) & 0xFFFF;
       skip.fY      = (event->fUser[2] & 0xFFFF);
@@ -417,10 +417,10 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
                       (int) (event->fUser[1] & 0x1),
                        skip, (Atom_t) event->fUser[4]);
 
-   } else if (event->fHandle == fDNDdrop) {
+   } else if (event->fHandle == fgDNDdrop) {
       HandleDNDdrop((Window_t) event->fUser[0], (Time_t) event->fUser[2]);
 
-   } else if (event->fHandle == fDNDfinished) {
+   } else if (event->fHandle == fgDNDfinished) {
       HandleDNDfinished((Window_t) event->fUser[0]);
 
    } else {
@@ -460,7 +460,7 @@ void TGDNDManager::SendDNDenter(Window_t target)
 
    event.fType   = kClientMessage;
    event.fWindow = target;
-   event.fHandle = fDNDenter;
+   event.fHandle = fgDNDenter;
    event.fFormat = 32;
 
    event.fUser[0] = fMain->GetId();  // from;
@@ -486,7 +486,7 @@ void TGDNDManager::SendDNDleave(Window_t target)
 
    event.fType    = kClientMessage;
    event.fWindow  = target;
-   event.fHandle  = fDNDleave;
+   event.fHandle  = fgDNDleave;
    event.fFormat  = 32;
 
    event.fUser[0] = fMain->GetId();  // from;
@@ -509,7 +509,7 @@ void TGDNDManager::SendDNDposition(Window_t target, int x, int y,
 
    event.fType    = kClientMessage;
    event.fWindow  = target;
-   event.fHandle  = fDNDposition;
+   event.fHandle  = fgDNDposition;
    event.fFormat  = 32;
 
    event.fUser[0] = fMain->GetId();  // from;
@@ -531,7 +531,7 @@ void TGDNDManager::SendDNDstatus(Window_t source, Atom_t action)
 
    event.fType    = kClientMessage;
    event.fWindow  = source;
-   event.fHandle  = fDNDstatus;
+   event.fHandle  = fgDNDstatus;
    event.fFormat  = 32;
 
    event.fUser[0] = fMain->GetId();    // from;
@@ -553,7 +553,7 @@ void TGDNDManager::SendDNDdrop(Window_t target)
 
    event.fType    = kClientMessage;
    event.fWindow  = target;
-   event.fHandle  = fDNDdrop;
+   event.fHandle  = fgDNDdrop;
    event.fFormat  = 32;
 
    event.fUser[0] = fMain->GetId();    // from;
@@ -574,7 +574,7 @@ void TGDNDManager::SendDNDfinished(Window_t source)
 
    event.fType    = kClientMessage;
    event.fWindow  = source;
-   event.fHandle  = fDNDfinished;
+   event.fHandle  = fgDNDfinished;
    event.fFormat  = 32;
 
    event.fUser[0] = fMain->GetId();    // from;
@@ -601,7 +601,7 @@ Bool_t TGDNDManager::HandleDNDenter(Window_t src, Long_t vers, Atom_t dataTypes[
       ULong_t i, count, remaining;
       unsigned char *data = 0;
 
-      gVirtualX->GetProperty(src, fDNDtypeList,
+      gVirtualX->GetProperty(src, fgDNDtypeList,
                              0, 0x8000000L, kFALSE, XA_ATOM,
                              &type, &format, &count, &remaining, &data);
 
@@ -741,11 +741,11 @@ Bool_t TGDNDManager::HandleDNDdrop(Window_t source, Time_t timestamp)
    // send a XdndFinished message to the source.
 
    if (fMain && fDropType != kNone) {
-      gVirtualX->ChangeProperties(fMain->GetId(), fXCDNDData, fDropType,
+      gVirtualX->ChangeProperties(fMain->GetId(), fgXCDNDData, fDropType,
                                   8, (unsigned char *) 0, 0);
 
-      gVirtualX->ConvertSelection(fMain->GetId(), fDNDselection, fDropType,
-                                  fXCDNDData, timestamp);
+      gVirtualX->ConvertSelection(fMain->GetId(), fgDNDselection, fDropType,
+                                  fgXCDNDData, timestamp);
    }
 
    fSource = source;
@@ -768,22 +768,22 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
 {
    // Handle selection request event.
 
-   if ((Atom_t)event->fUser[1] == fDNDselection) {
+   if ((Atom_t)event->fUser[1] == fgDNDselection) {
       Event_t xevent;
-      TDNDdata *DNDdata = 0;
+      TDNDdata *dnddata = 0;
       char *data;
       int len;
 
       // get the data from the drag source widget
       if (fLocalSource)
-         DNDdata = fLocalSource->GetDNDdata(event->fUser[2]);
+         dnddata = fLocalSource->GetDNDdata(event->fUser[2]);
 
-      data = DNDdata ? (char *) DNDdata->fData : (char *) "";
-      len  = DNDdata ? DNDdata->fDataLength : 0;
+      data = dnddata ? (char *) dnddata->fData : (char *) "";
+      len  = dnddata ? dnddata->fDataLength : 0;
 
       if ((Atom_t)event->fUser[3] == kNone) {
          //printf("warning: kNone property specified in SelectionRequest\n");
-         event->fUser[3] = fXCDNDData;
+         event->fUser[3] = fgXCDNDData;
       }
 
       gVirtualX->ChangeProperties(event->fUser[0], event->fUser[3],
@@ -810,7 +810,7 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
 {
    // Handle selection event.
 
-   if ((Atom_t)event->fUser[1] == fDNDselection) {
+   if ((Atom_t)event->fUser[1] == fgDNDselection) {
       Atom_t actual = fDropType;
       Int_t format = 8;
       ULong_t count, remaining;
@@ -874,7 +874,7 @@ Bool_t TGDNDManager::StartDrag(TGFrame *src, int x_root, int y_root,
       fMain = (TGFrame *)src->GetMainFrame();
    }
 
-   if (!gVirtualX->SetSelectionOwner(fMain->GetId(), fDNDselection)) {
+   if (!gVirtualX->SetSelectionOwner(fMain->GetId(), fgDNDselection)) {
       // hmmm... failed to acquire ownership of XdndSelection!
       return kFALSE;
    }
@@ -1006,9 +1006,9 @@ Bool_t TGDNDManager::SetRootProxy()
 
    if (GetRootProxy() == kNone) {
       gVirtualX->ChangeProperties(gVirtualX->GetDefaultRootWindow(),
-                                  fDNDproxy, XA_WINDOW, 32,
+                                  fgDNDproxy, XA_WINDOW, 32,
                                   (unsigned char *) &mainw, 1);
-      gVirtualX->ChangeProperties(mainw, fDNDproxy, XA_WINDOW, 32,
+      gVirtualX->ChangeProperties(mainw, fgDNDproxy, XA_WINDOW, 32,
                                   (unsigned char *) &mainw, 1);
 
       fProxyOurs = kTRUE;
@@ -1026,8 +1026,8 @@ Bool_t TGDNDManager::RemoveRootProxy()
 
    if (!fProxyOurs) return kFALSE;
 
-   gVirtualX->DeleteProperty(fMain->GetId(), fDNDproxy);
-   gVirtualX->DeleteProperty(gVirtualX->GetDefaultRootWindow(), fDNDproxy);
+   gVirtualX->DeleteProperty(fMain->GetId(), fgDNDproxy);
+   gVirtualX->DeleteProperty(gVirtualX->GetDefaultRootWindow(), fgDNDproxy);
    // the following is to ensure that the properties
    // (specially the one on the root window) are deleted
    // in case the application is exiting...

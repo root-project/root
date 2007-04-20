@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.115 2007/03/12 13:39:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.116 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1664,6 +1664,8 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
 //______________________________________________________________________________
 Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
 {
+   // Handle drop events.
+
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
 
    if (data->fDataType == rootObj) {
@@ -1686,6 +1688,8 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
 Atom_t TRootCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
+   // Handle dragging position events.
+
    TPad *pad = fCanvas->Pick(x, y, 0);
    if (pad) {
       pad->cd();
@@ -1697,6 +1701,8 @@ Atom_t TRootCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
 //______________________________________________________________________________
 Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
 {
+   // Handle drag enter events.
+
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    for (int i = 0; typelist[i] != kNone; ++i) {
       if (typelist[i] == rootObj) {
@@ -1709,6 +1715,8 @@ Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
 //______________________________________________________________________________
 Bool_t TRootCanvas::HandleDNDleave()
 {
+   // Handle drag leave events.
+
    return kTRUE;
 }
 

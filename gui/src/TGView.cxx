@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.22 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.23 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -437,7 +437,7 @@ void TGView::DrawBorder()
 //______________________________________________________________________________
 void TGView::ScrollToPosition(TGLongPosition pos)
 {
-   //
+   // Scroll the canvas to pos.
 
    if (pos.fX != fHsb->GetPosition()) fHsb->SetPosition(pos.fX / fScrollVal.fX);
    if (pos.fY != fVsb->GetPosition()) fVsb->SetPosition(pos.fY / fScrollVal.fY);

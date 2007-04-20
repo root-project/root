@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.149 2007/04/02 16:53:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.150 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1519,6 +1519,8 @@ void TGMainFrame::RemoveBind(const TGWindow *, Int_t keycode, Int_t modifier) co
 //______________________________________________________________________________
 Bool_t TGMainFrame::HandleButton(Event_t *event)
 {
+   // Handle mouse button events.
+
    if (event->fType == kButtonRelease) {
       if (gDNDManager->IsDragging()) gDNDManager->Drop();
    }
@@ -1529,6 +1531,7 @@ Bool_t TGMainFrame::HandleButton(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMainFrame::HandleMotion(Event_t *event)
 {
+   // Handle mouse motion events.
 
    if (gDNDManager && gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
@@ -1540,6 +1543,8 @@ Bool_t TGMainFrame::HandleMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMainFrame::HandleSelection(Event_t *event)
 {
+   // Handle primary selection event.
+
    if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelection(event);
@@ -1550,6 +1555,8 @@ Bool_t TGMainFrame::HandleSelection(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGMainFrame::HandleSelectionRequest(Event_t *event)
 {
+   // Handle selection request event.
+
    if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelectionRequest(event);

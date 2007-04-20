@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.82 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDNDManager.h,v 1.2 2007/04/20 11:43:22 rdm Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    Window_t GetInputId() const { return fInput; }
    Bool_t HasWindow(Window_t w) const { return (w == fId || w == fInput); }
 
-   ClassDef(TGDragWindow, 0)
+   ClassDef(TGDragWindow, 0) // Window used for dragging
 };
 
 //----------------------------------------------------------------------
@@ -68,7 +68,7 @@ public:
    void     *fData;           // Actual data
    Int_t     fDataLength;     // Length of data
 
-   ClassDef(TDNDdata, 0)
+   ClassDef(TDNDdata, 0) // Drag and drop specific data
 };
 
 //----------------------------------------------------------------------
@@ -100,17 +100,17 @@ protected:
    Cursor_t       fDNDNoDropCursor;              // no drop cursor type
 
 protected:
-   static Atom_t  fDNDaware, fDNDselection, fDNDproxy;
-   static Atom_t  fDNDenter, fDNDleave, fDNDposition, fDNDstatus;
-   static Atom_t  fDNDdrop, fDNDfinished;
-   static Atom_t  fDNDversion;
-   static Atom_t  fDNDactionCopy, fDNDactionMove, fDNDactionLink;
-   static Atom_t  fDNDactionAsk, fDNDactionPrivate;
-   static Atom_t  fDNDtypeList, fDNDactionList, fDNDactionDescrip;
-   static Atom_t  fXCDNDData;
+   static Atom_t  fgDNDaware, fgDNDselection, fgDNDproxy;
+   static Atom_t  fgDNDenter, fgDNDleave, fgDNDposition, fgDNDstatus;
+   static Atom_t  fgDNDdrop, fgDNDfinished;
+   static Atom_t  fgDNDversion;
+   static Atom_t  fgDNDactionCopy, fgDNDactionMove, fgDNDactionLink;
+   static Atom_t  fgDNDactionAsk, fgDNDactionPrivate;
+   static Atom_t  fgDNDtypeList, fgDNDactionList, fgDNDactionDescrip;
+   static Atom_t  fgXCDNDData;
 
-   static Bool_t  fInit;
-   static Atom_t  fXAWMState;
+   static Bool_t  fgInit;
+   static Atom_t  fgXAWMState;
 
 protected:
    void           InitAtoms();
@@ -184,7 +184,7 @@ public:
    static Atom_t  GetDNDactionDescrip();
    static Atom_t  GetXCDNDData();
 
-   ClassDef(TGDNDManager, 0)
+   ClassDef(TGDNDManager, 0) // The main Drag and Drop Manager
 };
 
 R__EXTERN TGDNDManager *gDNDManager; // global drag and drop manager
