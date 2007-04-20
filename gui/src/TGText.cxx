@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.20 2007/04/19 16:23:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.21 2007/04/20 12:15:28 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGText.h"
-
+#include <ctype.h>
 
 const Int_t kMaxLen = 8000;
 
@@ -197,8 +197,8 @@ char *TGTextLine::GetWord(ULong_t pos)
    }
 
    Int_t start = (Int_t)pos;
-   Int_t end = (Int_t)pos;
-   Int_t i = (Int_t)pos;
+   UInt_t end = (UInt_t)pos;
+   UInt_t i = (UInt_t)pos;
 
    if (fString[i] == ' ' || fString[i] == '\t') {
       while (start >= 0) {
