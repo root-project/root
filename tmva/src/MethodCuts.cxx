@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $ 
+// @(#)root/tmva $Id: MethodCuts.cxx,v 1.13 2007/04/19 10:32:04 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -849,24 +849,23 @@ void TMVA::MethodCuts::MatchParsToCuts( const std::vector<Double_t> & par,
 //_______________________________________________________________________
 void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& par, 
                                         Double_t** cutMinAll, Double_t** cutMaxAll, Int_t ibin )
- {
-    // translate the cuts into parameters
-
-    if (ibin < 1 || ibin > fNbins) fLogger << kFATAL << "::MatchCutsToPars: bin error: "
-                                           << ibin << Endl;
-
-    const Int_t nvar = GetNvar();
-    Double_t *cutMin = new Double_t[nvar];
-    Double_t *cutMax = new Double_t[nvar];
-    for (Int_t ivar=0; ivar<nvar; ivar++) {
-       cutMin[ivar] = cutMinAll[ivar][ibin-1];
-       cutMax[ivar] = cutMaxAll[ivar][ibin-1];
-    }
-    
-    MatchCutsToPars( par, cutMin, cutMax );
-    delete [] cutMin;
-    delete [] cutMax;
- }
+{
+   // translate the cuts into parameters
+   if (ibin < 1 || ibin > fNbins) fLogger << kFATAL << "::MatchCutsToPars: bin error: "
+                                          << ibin << Endl;
+   
+   const Int_t nvar = GetNvar();
+   Double_t *cutMin = new Double_t[nvar];
+   Double_t *cutMax = new Double_t[nvar];
+   for (Int_t ivar=0; ivar<nvar; ivar++) {
+      cutMin[ivar] = cutMinAll[ivar][ibin-1];
+      cutMax[ivar] = cutMaxAll[ivar][ibin-1];
+   }
+   
+   MatchCutsToPars( par, cutMin, cutMax );
+   delete [] cutMin;
+   delete [] cutMax;
+}
 
 //_______________________________________________________________________
 void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& par, 

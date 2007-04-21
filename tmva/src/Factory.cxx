@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.13 2007/04/19 06:53:01 brun Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.14 2007/04/19 10:32:04 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -959,8 +959,6 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Tools::FormattedOutput( *overlapB, *theVars, fLogger );
 
       // cleanup
-      delete [] fvec;
-      delete [] dvec;
       delete tpSig;
       delete tpBkg;
       delete corrMatS;
@@ -968,6 +966,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
       delete theVars;
       delete overlapS;
       delete overlapB;
+      delete [] fvec;
+      delete [] dvec;
    }
 
    // -----------------------------------------------------------------------
@@ -1067,7 +1067,7 @@ void TMVA::Factory::ProcessMultipleMVA()
          vector<IMethod*>::iterator itrMethod2    = fMethods.begin();
          vector<IMethod*>::iterator itrMethod2End = fMethods.end();
          for (; itrMethod2 != itrMethod2End; itrMethod2++) {
-            TString binDir( gConfig().ioNames.weightFileDir + bin->first );
+            TString binDir( gConfig().fIoNames.fWeightFileDir + bin->first );
             ((MethodBase*)(*itrMethod2))->SetWeightFileDir(binDir);
          }
       

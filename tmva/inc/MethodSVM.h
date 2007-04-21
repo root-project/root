@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSVM.h,v 1.19 2007/04/17 20:49:54 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodSVM.h,v 1.7 2007/04/19 06:53:01 brun Exp $    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -118,7 +118,7 @@ namespace TMVA {
       Int_t   TakeStep( Int_t , Int_t );
       
       Float_t LearnFunc( Int_t );
-      Float_t (MethodSVM::*KernelFunc)( Int_t, Int_t ) const;
+      Float_t (MethodSVM::*fKernelFunc)( Int_t, Int_t ) const;
    
       // kernel functions
       Float_t LinearKernel    ( Int_t, Int_t ) const;

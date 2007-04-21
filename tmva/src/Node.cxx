@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: Node.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -109,6 +109,7 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
 
 //_______________________________________________________________________
 Int_t TMVA::Node::GetMemSize() const { 
+   // calculates the memory size of the node
    Int_t size = sizeof(*this);
    if(fLeft!=0) size += fLeft->GetMemSize();
    if(fRight!=0) size += fRight->GetMemSize();

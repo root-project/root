@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.13 2007/04/19 10:32:04 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -224,6 +224,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
          (*mat)(ivar, jvar) = mat2(ivar, jvar)/sumOfWeights - vec(ivar)*vec(jvar)/(sumOfWeights*sumOfWeights);
       }
    }
+
    delete [] xval;
 }
 

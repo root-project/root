@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.16 2007/04/19 10:32:04 brun Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.17 2007/04/21 07:36:16 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -173,7 +173,7 @@ TMVA::MethodBase::MethodBase( TString      jobName,
    DeclareOptions();
 
    // default extension for weight files
-   fFileDir = gConfig().ioNames.weightFileExtension;
+   fFileDir = gConfig().fIoNames.fWeightFileExtension;
    gSystem->MakeDirectory( fFileDir );
 }
 
@@ -446,14 +446,14 @@ void TMVA::MethodBase::CreateMVAPdfs()
    histMVAPdfS->Sumw2();
    histMVAPdfB->Sumw2();
    
-   Double_t NormS = histMVAPdfS->GetSumOfWeights();
-   Double_t NormB = histMVAPdfB->GetSumOfWeights();
+   Double_t normS = histMVAPdfS->GetSumOfWeights();
+   Double_t normB = histMVAPdfB->GetSumOfWeights();
 
-   if (NormS <= 0 || NormB <= 0) fLogger << kFATAL << "<FitMvaOutput> zero norm: " 
-                                         << NormS << " " << NormB << Endl;
+   if (normS <= 0 || normB <= 0) fLogger << kFATAL << "<FitMvaOutput> zero norm: " 
+                                         << normS << " " << normB << Endl;
 
-   histMVAPdfS->Scale( 1./(NormS*intBin) );
-   histMVAPdfB->Scale( 1./(NormB*intBin) );
+   histMVAPdfS->Scale( 1./(normS*intBin) );
+   histMVAPdfB->Scale( 1./(normB*intBin) );
 
    fMVAPdfS = new TMVA::PDF( histMVAPdfS, TMVA::PDF::kSpline2, fNsmoothMVAPdf );
    fMVAPdfB = new TMVA::PDF( histMVAPdfB, TMVA::PDF::kSpline2, fNsmoothMVAPdf );
@@ -506,10 +506,10 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf ) const
 
    // Fourth write the MVA variable distributions
    if(IsMVAPdfs()) {
-     tf << endl << "#MVAPDFS -*-*-*-*-*-*-*-*-*-*-* MVA PDFS -*-*-*-*-*-*-*-*-*-*-*-" << endl;
-     tf << *fMVAPdfS << endl;
-     tf << *fMVAPdfB << endl;
-     tf << endl;
+      tf << endl << "#MVAPDFS -*-*-*-*-*-*-*-*-*-*-* MVA PDFS -*-*-*-*-*-*-*-*-*-*-*-" << endl;
+      tf << *fMVAPdfS << endl;
+      tf << *fMVAPdfB << endl;
+      tf << endl;
    }
 
    // Lst, write weights
@@ -561,7 +561,7 @@ void TMVA::MethodBase::WriteStateToFile() const
            << Tools::Color("blue") << tfname << Tools::Color("reset") << Endl;
    
    ofstream tfile( tfname );
-   if (!tfile.good()) { // file not found --> Error
+   if (!tfile.good()) { // file could not be opened --> Error
       fLogger << kFATAL << "<WriteStateToFile> "
               << "unable to open output weight file: " << tfname << Endl;
    }
@@ -613,6 +613,9 @@ void TMVA::MethodBase::ReadStateFromFile()
 
 //_______________________________________________________________________
 bool TMVA::MethodBase::GetLine(std::istream& fin, char * buf ) {
+   // reads one line from the input stream
+   // checks for certain keywords and interprets 
+   // the line if keywords are found
    fin.getline(buf,512);
    TString line(buf);
    if(line.BeginsWith("TMVA Release")) {
@@ -755,7 +758,6 @@ TString TMVA::MethodBase::GetWeightFileName() const
    // directory/jobname_methodname_suffix.extension.{root/txt}
    TString suffix = "";
    return  fFileDir + "/" + fJobName + "_" + fMethodTitle + suffix + ".weights.txt";
-
 }
 
 //_______________________________________________________________________
@@ -919,7 +921,7 @@ void TMVA::MethodBase::Test( TTree *theTestTree )
 
    // fill 2 types of histograms for the various analyses
    // this one is for actual plotting
-   Double_t Sxmax = fXmax+0.00001; 
+   Double_t sxmax = fXmax+0.00001; 
    if (fHistS_plotbin ) { delete fHistS_plotbin;  fHistS_plotbin  = 0; }
    if (fHistB_plotbin ) { delete fHistB_plotbin;  fHistB_plotbin  = 0; }
    if (fProbaS_plotbin) { delete fProbaS_plotbin; fProbaS_plotbin = 0; }
@@ -927,14 +929,14 @@ void TMVA::MethodBase::Test( TTree *theTestTree )
    if (fHistS_highbin ) { delete fHistS_highbin;  fHistS_highbin  = 0; }
    if (fHistB_highbin ) { delete fHistB_highbin;  fHistB_highbin  = 0; }
  
-   fHistS_plotbin  = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, Sxmax );
-   fHistB_plotbin  = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, Sxmax );
+   fHistS_plotbin  = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, sxmax );
+   fHistB_plotbin  = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, sxmax );
    if (IsMVAPdfs()) {
       fProbaS_plotbin = new TH1F( GetTestvarName() + "_Proba_S",GetTestvarName() + "_Proba_S", fNbins, 0.0, 1.0 );
       fProbaB_plotbin = new TH1F( GetTestvarName() + "_Proba_B",GetTestvarName() + "_Proba_B", fNbins, 0.0, 1.0 );
    }
-   fHistS_highbin  = new TH1F( GetTestvarName() + "_S_high",GetTestvarName() + "_S_high", fNbinsH, fXmin, Sxmax );
-   fHistB_highbin  = new TH1F( GetTestvarName() + "_B_high",GetTestvarName() + "_B_high", fNbinsH, fXmin, Sxmax );
+   fHistS_highbin  = new TH1F( GetTestvarName() + "_S_high",GetTestvarName() + "_S_high", fNbinsH, fXmin, sxmax );
+   fHistB_highbin  = new TH1F( GetTestvarName() + "_B_high",GetTestvarName() + "_B_high", fNbinsH, fXmin, sxmax );
 
    // enable quadratic errors
    fHistS_plotbin ->Sumw2(); 
@@ -1721,6 +1723,30 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile( TDirectory* targetDir )
    }   
 }
 
+void TMVA::MethodBase::MakeClass( TString classFileName ) const
+{
+   // the default consists of
+   // directory/jobname_methodname_suffix.extension.{root/txt}
+   TString suffix = "";
+   if (classFileName == "") 
+      classFileName = fFileDir + "/" + fJobName + "_" + fMethodTitle + suffix + ".class.C";
+
+   TString tfname( classFileName );
+   fLogger << kINFO << "Creating C++ class file: " 
+           << Tools::Color("blue") << classFileName << Tools::Color("reset") << Endl;
+   
+   ofstream fout( classFileName );
+   if (!fout.good()) { // file could not be opened --> Error
+      fLogger << kFATAL << "<MakeClass> "
+              << "unable to open C++ file: " << classFileName << Endl;
+   }
+
+   // now create the class
+   // ...
+
+   fout.close();
+}
+
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
 TMVA::MethodBase* TMVA::MethodBase::fgThisBase = NULL;
@@ -1767,6 +1793,7 @@ void  TMVA::MethodBase::WriteMonitoringHistosToFile( void ) const
 }
 
 TString TMVA::MethodBase::GetTrainingTMVAVersionString() const {
+   // calculates the TMVA version string from the training version code on the fly
    UInt_t a = GetTrainingTMVAVersionCode() & 0xff0000; a>>=16;
    UInt_t b = GetTrainingTMVAVersionCode() & 0x00ff00; b>>=8;
    UInt_t c = GetTrainingTMVAVersionCode() & 0x0000ff;
@@ -1774,6 +1801,7 @@ TString TMVA::MethodBase::GetTrainingTMVAVersionString() const {
 }
 
 TString TMVA::MethodBase::GetTrainingROOTVersionString() const {
+   // calculates the ROOT version string from the training version code on the fly
    UInt_t a = GetTrainingROOTVersionCode() & 0xff0000; a>>=16;
    UInt_t b = GetTrainingROOTVersionCode() & 0x00ff00; b>>=8;
    UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;

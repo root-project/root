@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.12 2007/01/16 09:37:03 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.13 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -197,7 +197,7 @@ namespace TMVA {
 
       ULong_t  fSequence;        // bit coded left right sequence to reach the node
   
-      static MsgLogger* fLogger;    // static because there is a huge number of nodes...
+      static MsgLogger* fgLogger;    // static because there is a huge number of nodes...
 
       ClassDef(DecisionTreeNode,0) //Node for the Decision Tree 
 

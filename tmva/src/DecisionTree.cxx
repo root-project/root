@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.12 2007/02/03 06:40:26 brun Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.13 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -710,11 +710,11 @@ void TMVA::DecisionTree::FillQualityGainMap(DecisionTreeNode* n )
           (this->GetRightDaughter(n)->GetLeft() == NULL) && 
           (this->GetRightDaughter(n)->GetRight() == NULL) ){
          
-//          fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
-//                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents(),
-//                                                                     this->GetRightDaughter(n)->GetNBkgEvents(),
-//                                                                     n->GetNSigEvents(), n->GetNBkgEvents()),
-//                                   n));
+         //          fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
+         //                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents(),
+         //                                                                     this->GetRightDaughter(n)->GetNBkgEvents(),
+         //                                                                     n->GetNSigEvents(), n->GetNBkgEvents()),
+         //                                   n));
          fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents_unweighted(),
                                                                     this->GetRightDaughter(n)->GetNBkgEvents_unweighted(),
@@ -1129,7 +1129,7 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
 
    // now select the optimal cuts for each varable and find which one gives
    // the best separationGain at the current stage.
-   for (int ivar=0; ivar < fNvars; ivar++){
+   for (int ivar=0; ivar < fNvars; ivar++) {
       for (Int_t icut=0; icut<fNCuts; icut++){
          // now the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
          // calculated by the "SamplePurities" from the branches that would go to the
@@ -1141,9 +1141,9 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
          // for this use the "unweighted" events, as you are interested in "statistically 
          // significant splits, which is determined rather by the actuall number of entries
          // for a node, rather than the sum of event weights.
-          if ( (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut]) >= fMinSize &&
-               (( nTotS_unWeighted+nTotB_unWeighted)- 
-                (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize){
+         if ( (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut]) >= fMinSize &&
+              (( nTotS_unWeighted+nTotB_unWeighted)- 
+               (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize){
             sepTmp = fSepType->GetSeparationGain(nSelS[ivar][icut], nSelB[ivar][icut], nTotS, nTotB);
             
             if (separationGain < sepTmp) {
@@ -1321,7 +1321,7 @@ vector< Double_t >  TMVA::DecisionTree::GetVariableImportance()
    for (int i=0; i< fNvars; i++) {
       sum += fVariableImportance[i];
       relativeImportance[i] = fVariableImportance[i];
-  } 
+   } 
 
    for (int i=0; i< fNvars; i++) {
       if (sum > std::numeric_limits<double>::epsilon())

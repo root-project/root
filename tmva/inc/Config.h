@@ -59,18 +59,20 @@ namespace TMVA {
    public:
 
       // publicly accessible global settings
-      struct VariablePlotting {
-         Float_t timesRMS;
-         Int_t   nbins1D;
-         Int_t   nbins2D;
-         Int_t   maxNumOfAllowedVariablesForScatterPlots;
-      } variablePlotting;
+      class VariablePlotting {
+      public:
+         Float_t fTimesRMS;
+         Int_t   fNbins1D;
+         Int_t   fNbins2D;
+         Int_t   fMaxNumOfAllowedVariablesForScatterPlots;
+      } fVariablePlotting;
 
       // for file names and similar
-      struct IONames {
-         TString weightFileDir;
-         TString weightFileExtension;
-      } ioNames;
+      class IONames {
+      public:
+         TString fWeightFileDir;
+         TString fWeightFileExtension;
+      } fIoNames;
          
       
    private:

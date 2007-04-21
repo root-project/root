@@ -114,7 +114,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // for nonadaptive KDE this is the only = final thing to do
       // for adaptive KDE this is going to be used in the first (hidden) iteration
       fKernel_integ = new TF1("GaussIntegral",GaussIntegral,fLowerEdge,fUpperEdge,4); 
-      fSigma = ( sqrt(2)
+      fSigma = ( TMath::Sqrt(2)
                  *TMath::Power(4./3., 0.2)
                  *fHist->GetRMS()
                  *TMath::Power(fHist->Integral(), -0.2) ); 
@@ -192,11 +192,11 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // these Sigmas will be stored in histo called fSigmaHist
       for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
          // loop over the bins of the PDF histo and fill fSigmaHist
-         if (fSigma*sqrt(1./fFirstIterHist->GetBinContent(j)) <= 0 ) {
+         if (fSigma*TMath::Sqrt(1./fFirstIterHist->GetBinContent(j)) <= 0 ) {
             fLogger << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
          }
          
-         fSigmaHist->SetBinContent(j,fFineFactor*fSigma/sqrt(fFirstIterHist->GetBinContent(j)));
+         fSigmaHist->SetBinContent(j,fFineFactor*fSigma/TMath::Sqrt(fFirstIterHist->GetBinContent(j)));
       }
    }
 
@@ -215,8 +215,8 @@ Float_t TMVA::KDEKernel::GetBinKernelIntegral( Float_t lowr, Float_t highr, Floa
       fKernel_integ->SetParameters(mean,fSigmaHist->GetBinContent(binnum)); // adaptive KDE
 
    if ( fKDEborder == 2 ) {  // renormalization of the kernel function
-      Float_t RenormFactor=1./fKernel_integ->Eval(fLowerEdge,fUpperEdge);
-      return (RenormFactor*fKernel_integ->Eval(lowr,highr));
+      Float_t renormFactor=1./fKernel_integ->Eval(fLowerEdge,fUpperEdge);
+      return (renormFactor*fKernel_integ->Eval(lowr,highr));
    }
                                    
    // the RenormFactor takes care aboud the "border" effects, i.e. sets the 

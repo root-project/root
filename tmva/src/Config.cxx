@@ -42,14 +42,14 @@ TMVA::Config::Config() :
    // constructor - set defaults
    
    // plotting
-   variablePlotting.timesRMS = 8.0;
-   variablePlotting.nbins1D  = 60;
-   variablePlotting.nbins2D  = 300;
-   variablePlotting.maxNumOfAllowedVariablesForScatterPlots = 20;
+   fVariablePlotting.fTimesRMS = 8.0;
+   fVariablePlotting.fNbins1D  = 60;
+   fVariablePlotting.fNbins2D  = 300;
+   fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
 
    // IO names
-   ioNames.weightFileDir       = "weights";
-   ioNames.weightFileExtension = "weights";
+   fIoNames.fWeightFileDir       = "weights";
+   fIoNames.fWeightFileExtension = "weights";
 }
 
 //_______________________________________________________________________

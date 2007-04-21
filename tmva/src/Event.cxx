@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Event.cxx,v 1.11 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -114,6 +114,7 @@ void TMVA::Event::InitPointers(bool AllowExternalLink)
 
 //____________________________________________________________
 TMVA::Event::~Event() {
+   // Event destructor
    delete[] fVarPtr;
    delete[] fVarPtrI;
    delete[] fVarPtrF;

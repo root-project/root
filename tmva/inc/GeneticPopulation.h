@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.h,v 1.10 2007/04/19 06:53:01 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -63,7 +63,7 @@ namespace TMVA {
       GeneticPopulation();
       virtual ~GeneticPopulation();
 
-      typedef std::pair<Double_t, GeneticGenes > entry;
+      typedef std::pair<const Double_t, GeneticGenes > entry;
 
       void CreatePopulation( Int_t size );
       void AddPopulation( GeneticPopulation *genePool );

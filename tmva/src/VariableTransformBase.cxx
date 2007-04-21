@@ -258,21 +258,21 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    // if there are too many input variables, the creation of correlations plots blows up
    // memory and basically kills the TMVA execution
    // --> avoid above critical number (which can be user defined)
-   if (nvar > (UInt_t)gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots) {
+   if (nvar > (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
       Int_t nhists = nvar*(nvar - 1)/2;
       fLogger << kWARNING << "<PlotVariables> Problem with creation of scatter and profile plots. "
               << "The number of " << nvar << " input variables would require " << nhists 
               << " two-dimensional histograms, which would blow up the computer's memory. "
               << "The current critical number of input variables is set to " 
-              << gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots
+              << gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots
               << ", it can be modified in the user script by the call: "
-              << "\"gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots = <some int>\"." 
+              << "\"gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = <some int>\"." 
               << Endl;
    }
 
-   Float_t timesRMS  = gConfig().variablePlotting.timesRMS;
-   UInt_t  nbins1D   = gConfig().variablePlotting.nbins1D;
-   UInt_t  nbins2D   = gConfig().variablePlotting.nbins2D;
+   Float_t timesRMS  = gConfig().fVariablePlotting.fTimesRMS;
+   UInt_t  nbins1D   = gConfig().fVariablePlotting.fNbins1D;
+   UInt_t  nbins2D   = gConfig().fVariablePlotting.fNbins2D;
    for (UInt_t i=0; i<nvar; i++) {
       TString myVari = Variable(i).GetInternalVarName();  
 
@@ -300,7 +300,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
       vB[i]->SetLineColor(2);
       
       // profile and scatter plots
-      if (nvar <= (UInt_t)gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots) {
+      if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
 
          for (UInt_t j=i+1; j<nvar; j++) {
             TString myVarj = Variable(j).GetInternalVarName();  
@@ -342,7 +342,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
          else                       vB[i]->Fill( vali, weight );
          
          // correlation histos
-         if (nvar <= (UInt_t)gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots) {
+         if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
 
             for (UInt_t j=i+1; j<nvar; j++) {
                Float_t valj = GetEvent().GetVal(j);
@@ -387,7 +387,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    }
 
    // correlation plots have dedicated directory
-   if (nvar <= (UInt_t)gConfig().variablePlotting.maxNumOfAllowedVariablesForScatterPlots) {
+   if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
 
       localDir = localDir->mkdir( "CorrelationPlots" );
       localDir ->cd();

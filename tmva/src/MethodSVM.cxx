@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $    
+// @(#)root/tmva $Id: MethodSVM.cxx,v 1.8 2007/04/19 10:32:04 brun Exp $    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -49,9 +49,9 @@ const int basketsize__ = 1280000;
 ClassImp(TMVA::MethodSVM)
 
 //_______________________________________________________________________
-TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
+                               TString theOption, TDirectory* theTargetDir )
+      : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
    InitSVM();
@@ -265,64 +265,64 @@ void  TMVA::MethodSVM::WriteWeightsToStream( ostream& o ) const
 //_______________________________________________________________________
 void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
 {
-  // write training sample (TTree) to file
+   // write training sample (TTree) to file
     
-  TTree *SuppVecTree = new TTree("SuppVecTree", "Support Vector tree");
+   TTree *suppVecTree = new TTree("SuppVecTree", "Support Vector tree");
     
-  UInt_t nvar = 0;
+   UInt_t nvar = 0;
     
-  Float_t* sVVar = new Float_t[ GetNvar() ];
-  vector< Double_t > *alpha_t = new vector< Double_t >;
+   Float_t* sVVar = new Float_t[ GetNvar() ];
+   vector< Double_t > *alpha_t = new vector< Double_t >;
     
-  // create tree branches
+   // create tree branches
     
-  for (UInt_t ivar=0; ivar < Data().GetNVariables(); ivar++) {
-    // add Branch to Support Vector Tree
-    const char* myVar = Data().GetInternalVarName(ivar).Data();
-    char vt = Data().VarType(ivar);   // the variable type, 'F' 
-    if (vt=='F') { 
-      SuppVecTree->Branch( myVar,&sVVar[nvar], Form("%s/%c", myVar, vt), basketsize__ );
-      nvar++;
-    }
-      
-    else {
-      fLogger << kFATAL << "<WriteWeightsToStream> unknown variable type '" 
-              << vt << "' encountered; allowed are: 'F'"
-              << Endl;
-    }
-  } // end of loop over input variables
-    
-  for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
-    if ((*fAlphas)[ievt] != 0) {
-	
-      for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
-        sVVar[ivar] = (*fVariables)[ivar][ievt];
+   for (UInt_t ivar=0; ivar < Data().GetNVariables(); ivar++) {
+      // add Branch to Support Vector Tree
+      const char* myVar = Data().GetInternalVarName(ivar).Data();
+      char vt = Data().VarType(ivar);   // the variable type, 'F' 
+      if (vt=='F') { 
+         suppVecTree->Branch( myVar,&sVVar[nvar], Form("%s/%c", myVar, vt), basketsize__ );
+         nvar++;
       }
-      alpha_t->push_back((Double_t)(*fAlphas)[ievt] * (*fTypesVec)[ievt]);
+      
+      else {
+         fLogger << kFATAL << "<WriteWeightsToStream> unknown variable type '" 
+                 << vt << "' encountered; allowed are: 'F'"
+                 << Endl;
+      }
+   } // end of loop over input variables
+    
+   for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
+      if ((*fAlphas)[ievt] != 0) {
 	
-      SuppVecTree->Fill();
-    }
-  }
+         for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
+            sVVar[ivar] = (*fVariables)[ivar][ievt];
+         }
+         alpha_t->push_back((Double_t)(*fAlphas)[ievt] * (*fTypesVec)[ievt]);
+	
+         suppVecTree->Fill();
+      }
+   }
     
-  TVectorD alphaVec(alpha_t->size());
-  for (UInt_t i = 0; i < alpha_t->size(); i++) alphaVec[i] = (*alpha_t)[i];
+   TVectorD alphaVec(alpha_t->size());
+   for (UInt_t i = 0; i < alpha_t->size(); i++) alphaVec[i] = (*alpha_t)[i];
 
-  alphaVec.Write("AlphasVector");
+   alphaVec.Write("AlphasVector");
 
-  // Write min, max values
-  TVectorD MaxVars( GetNvar() );
-  TVectorD MinVars( GetNvar() );
+   // Write min, max values
+   TVectorD maxVars( GetNvar() );
+   TVectorD minVars( GetNvar() );
   
-  for( Int_t ivar = 0; ivar < GetNvar(); ivar ++){
-    MaxVars[ivar] = GetXmax( ivar );
-    MinVars[ivar] = GetXmin( ivar );
-  }
-  MaxVars.Write("MaxVars");
-  MinVars.Write("MinVars");
+   for( Int_t ivar = 0; ivar < GetNvar(); ivar ++){
+      maxVars[ivar] = GetXmax( ivar );
+      minVars[ivar] = GetXmin( ivar );
+   }
+   maxVars.Write("MaxVars");
+   minVars.Write("MinVars");
 
-  delete alpha_t; alpha_t = 0;
+   delete alpha_t; alpha_t = 0;
     
-  delete [] sVVar; sVVar = 0;
+   delete [] sVVar; sVVar = 0;
 } 
 
   
@@ -331,49 +331,49 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
 {
    // read configuration from input stream
    if(TxtWeightsOnly()) {
-     istr >> fBparm;
+      istr >> fBparm;
    
-     istr >> fNsupv;
-        if(fAlphas!=0) delete fAlphas;
-     fAlphas = new vector< Float_t >(fNsupv+1);
+      istr >> fNsupv;
+      if(fAlphas!=0) delete fAlphas;
+      fAlphas = new vector< Float_t >(fNsupv+1);
 
-     if(fVariables!=0) {
-       for(vector< Float_t* >::iterator it = fVariables->begin(); it!=fVariables->end(); it++)
-         delete[] *it;
-       delete fVariables;
-     }
-     fVariables = new vector< Float_t* >(GetNvar());
-     for (Int_t i = 0; i < GetNvar(); i++) 
-       (*fVariables)[i] = new Float_t[fNsupv + 1];
+      if(fVariables!=0) {
+         for(vector< Float_t* >::iterator it = fVariables->begin(); it!=fVariables->end(); it++)
+            delete[] *it;
+         delete fVariables;
+      }
+      fVariables = new vector< Float_t* >(GetNvar());
+      for (Int_t i = 0; i < GetNvar(); i++) 
+         (*fVariables)[i] = new Float_t[fNsupv + 1];
 
-     if(fNormVar!=0) delete fNormVar;
-     fNormVar = new vector< Float_t >(fNsupv + 1);
+      if(fNormVar!=0) delete fNormVar;
+      fNormVar = new vector< Float_t >(fNsupv + 1);
 
-     fMaxVars = new TVectorD( GetNvar() );
-     fMinVars = new TVectorD( GetNvar() );
+      fMaxVars = new TVectorD( GetNvar() );
+      fMinVars = new TVectorD( GetNvar() );
 
-     Double_t readTmp;
-     Int_t IEvt;
-     for (Int_t ievt = 0; ievt < fNsupv; ievt++) {
-       istr >> IEvt >> (*fAlphas)[ievt];
+      Double_t readTmp;
+      Int_t IEvt;
+      for (Int_t ievt = 0; ievt < fNsupv; ievt++) {
+         istr >> IEvt >> (*fAlphas)[ievt];
 
-       (*fNormVar)[ievt] = 0;
-       for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
-         istr >> readTmp;
-         (*fVariables)[ivar][ievt] = readTmp;
-         (*fNormVar)[ievt] += readTmp * readTmp;
-       }
-     }
+         (*fNormVar)[ievt] = 0;
+         for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
+            istr >> readTmp;
+            (*fVariables)[ivar][ievt] = readTmp;
+            (*fNormVar)[ievt] += readTmp * readTmp;
+         }
+      }
 
-     for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
-       istr >> (*fMaxVars)[ivar];
+      for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
+         istr >> (*fMaxVars)[ivar];
      
-     for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
-       istr >> (*fMinVars)[ivar];
+      for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
+         istr >> (*fMinVars)[ivar];
        
-     SetKernel();
+      SetKernel();
    } else {
-     istr >> fBparm;
+      istr >> fBparm;
    }
 }
 
@@ -381,20 +381,20 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
 void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
 {
    // read training sample from file
-   TTree *SuppVecTree = (TTree*)fFin.Get( "SuppVecTree" );
+   TTree *suppVecTree = (TTree*)fFin.Get( "SuppVecTree" );
   
    // reading support vectors from tree to vectors
-   Int_t  nevt = (Int_t)SuppVecTree->GetEntries();
+   Int_t  nevt = (Int_t)suppVecTree->GetEntries();
    fNsupv = nevt;
   
-   Int_t nvar = SuppVecTree->GetNbranches(); 
+   Int_t nvar = suppVecTree->GetNbranches(); 
   
    Float_t *var = new Float_t[nvar];
    Int_t i = 0; 
 
-   TIter next_branch1( SuppVecTree->GetListOfBranches() );
+   TIter next_branch1( suppVecTree->GetListOfBranches() );
    while (TBranch *branch = (TBranch*)next_branch1())
-      SuppVecTree->SetBranchAddress( branch->GetName(), &var[i++]);
+      suppVecTree->SetBranchAddress( branch->GetName(), &var[i++]);
    
    TVectorD *alphaVec = (TVectorD*)fFin.Get( "AlphasVector" );
 
@@ -416,7 +416,7 @@ void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
    fNormVar = new vector< Float_t >(nevt + 1);
      
    for (Int_t ievt = 0; ievt < nevt; ievt++) {      
-      SuppVecTree->GetEntry(ievt);
+      suppVecTree->GetEntry(ievt);
       (*fNormVar)[ievt] = 0;
       for (Int_t ivar = 0; ivar < nvar; ivar++) { // optymalizacja
          (*fVariables)[ivar][ievt] = var[ivar];
@@ -441,7 +441,7 @@ Double_t TMVA::MethodSVM::GetMvaValue()
    }
 
    for (Int_t ievt = 0; ievt < fNsupv - 1; ievt++) {
-      myMVA = myMVA + (*fAlphas)[ievt] * (this->*KernelFunc)(fNsupv, ievt);
+      myMVA = myMVA + (*fAlphas)[ievt] * (this->*fKernelFunc)(fNsupv, ievt);
    }
 
    myMVA -=fBparm;
@@ -452,9 +452,9 @@ Double_t TMVA::MethodSVM::GetMvaValue()
 //_______________________________________________________________________
 void TMVA::MethodSVM::PrepareDataToTrain()
 {
-  // puts all events in std::vectors 
-  //normalized data
-  for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {   
+   // puts all events in std::vectors 
+   //normalized data
+   for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {   
 
       ReadTrainingEvent( ievt );  
       (*fNormVar)[ievt] = 0.;
@@ -473,20 +473,20 @@ void TMVA::MethodSVM::PrepareDataToTrain()
       }
    } 
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
-     switch ( fKernelType ){
+      switch ( fKernelType ){
 
-     case kLinear:
-       (*fKernelDiag)[ievt] = (*fNormVar)[ievt];
-       break;
+      case kLinear:
+         (*fKernelDiag)[ievt] = (*fNormVar)[ievt];
+         break;
 
-     case kRBF:
-       (*fKernelDiag)[ievt] = 1;
-       break;
+      case kRBF:
+         (*fKernelDiag)[ievt] = 1;
+         break;
 
-     default:
-       (*fKernelDiag)[ievt] = (this->*KernelFunc)(ievt, ievt);
-       break;
-     }
+      default:
+         (*fKernelDiag)[ievt] = (this->*fKernelFunc)(ievt, ievt);
+         break;
+      }
    }
 }
 
@@ -498,12 +498,12 @@ void TMVA::MethodSVM::SetKernel()
    switch( fKernelType ) {
     
    case kLinear:
-      KernelFunc = &MethodSVM::LinearKernel;
+      fKernelFunc = &MethodSVM::LinearKernel;
       fWeightVector = new vector<Float_t>( GetNvar() );
       break;
     
    case kRBF:
-      KernelFunc = &MethodSVM::RBFKernel;
+      fKernelFunc = &MethodSVM::RBFKernel;
       if (fDoubleSigmaSquered <= 0.) {
          fDoubleSigmaSquered = 1.;
          fLogger <<kWARNING << "wrong Sigma value, uses default ::"<<fDoubleSigmaSquered<<endl;
@@ -511,7 +511,7 @@ void TMVA::MethodSVM::SetKernel()
       break;
      
    case kPolynomial:
-      KernelFunc = &MethodSVM::PolynomialKernel;
+      fKernelFunc = &MethodSVM::PolynomialKernel;
       if (fOrder < 2) {
          fOrder = 2;
          fLogger << kWARNING << "wrong polynomial order! Choose Order = "<< fOrder <<Endl;
@@ -519,7 +519,7 @@ void TMVA::MethodSVM::SetKernel()
       break;
     
    case kSigmoidal:
-      KernelFunc = &MethodSVM::SigmoidalKernel;
+      fKernelFunc = &MethodSVM::SigmoidalKernel;
       break;
      
    }
@@ -640,7 +640,7 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
    Float_t kernel_II, kernel_IJ, kernel_JJ;
 
    kernel_II = (*fKernelDiag)[ievt];
-   kernel_IJ = (this->*KernelFunc)( ievt, jevt );
+   kernel_IJ = (this->*fKernelFunc)( ievt, jevt );
    kernel_JJ =  (*fKernelDiag)[jevt];
 
    eta = 2*kernel_IJ - kernel_II - kernel_JJ; 
@@ -693,8 +693,8 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
    for (Int_t i = 0; i < Data().GetNEvtTrain(); i++ ) {
 
       if ((*fI)[i] == 0)
-         (*fErrorCache)[i] += ( dL_I * (this->*KernelFunc)( ievt, i ) + 
-                                dL_J * (this->*KernelFunc)( jevt, i ) );
+         (*fErrorCache)[i] += ( dL_I * (this->*fKernelFunc)( ievt, i ) + 
+                                dL_J * (this->*fKernelFunc)( jevt, i ) );
    }
 
    // store new alphas
@@ -756,11 +756,11 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
 Float_t TMVA::MethodSVM::LinearKernel( Int_t ievt, Int_t jevt ) const 
 {
    // linear kernel
-  Float_t val = 0.; 
+   Float_t val = 0.; 
 
-  for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
-    val += (*fVariables)[ivar][ievt] * (*fVariables)[ivar][jevt];
-  return val;
+   for (Int_t ivar = 0; ivar < GetNvar(); ivar++)
+      val += (*fVariables)[ivar][ievt] * (*fVariables)[ivar][jevt];
+   return val;
 }
 
 //_____________________________________________________________
@@ -768,11 +768,11 @@ Float_t TMVA::MethodSVM::RBFKernel( Int_t ievt, Int_t jevt ) const
 {
    // radial basis function kernel
    
-  Float_t val = TMVA::MethodSVM::LinearKernel( ievt, jevt );
-  val *= (-2);
-  val += (*fNormVar)[ievt] + (*fNormVar)[jevt];
+   Float_t val = TMVA::MethodSVM::LinearKernel( ievt, jevt );
+   val *= (-2);
+   val += (*fNormVar)[ievt] + (*fNormVar)[jevt];
   
-  return TMath::Exp( -val/fDoubleSigmaSquered );
+   return TMath::Exp( -val/fDoubleSigmaSquered );
 }
 
 //_____________________________________________________________
@@ -784,8 +784,8 @@ Float_t TMVA::MethodSVM::PolynomialKernel( Int_t ievt, Int_t jevt ) const
    val += fTheta;
    Float_t valResult = 1.;
    for (Int_t i = fOrder; i > 0; i /= 2){
-     if (i%2) valResult = val; 
-     val *= val; 
+      if (i%2) valResult = val; 
+      val *= val; 
    } 
    
    return valResult;
@@ -810,7 +810,7 @@ Float_t TMVA::MethodSVM::LearnFunc( Int_t kevt)
    Float_t s = 0.;
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
       if ((*fAlphas)[ievt]>0)
-         s+=(*fAlphas)[ievt] * (Float_t)(*fTypesVec)[ievt] * (this->*KernelFunc)( ievt, kevt );
+         s+=(*fAlphas)[ievt] * (Float_t)(*fTypesVec)[ievt] * (this->*fKernelFunc)( ievt, kevt );
    }
 
    return s;

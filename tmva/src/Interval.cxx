@@ -35,8 +35,8 @@
 ClassImp(TMVA::Interval)
 
 //_______________________________________________________________________
-TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) 
-   : fLogger( "Interval" )
+   TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) 
+      : fLogger( "Interval" )
 {
    // defines minimum and maximum of an interval
    // when nbins == 0, interval describes a discrete distribution (equally distributed in the interval)
@@ -46,15 +46,15 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins )
    fMax   = max;
    fNbins = nbins;
    if( fMax - fMin == 0 ){
-       fLogger << kFATAL << "maximum lower than minimum" << Endl;
+      fLogger << kFATAL << "maximum lower than minimum" << Endl;
    }
    if( nbins < 0 ){
-       fLogger << kFATAL << "nbins < 0" << Endl;
-       return;
+      fLogger << kFATAL << "nbins < 0" << Endl;
+      return;
    }
    if( nbins == 1 ){
-       fLogger << kFATAL << "interval has to have at least 2 bins if discrete" << Endl;
-       return;
+      fLogger << kFATAL << "interval has to have at least 2 bins if discrete" << Endl;
+      return;
    }
 }
 
@@ -72,12 +72,12 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
    //        Double_t position 
    //
    if( fNbins <= 0 ){
-       fLogger << kFATAL << "GetElement only possible for discrete values" << Endl;
-       return 0.0;
+      fLogger << kFATAL << "GetElement only possible for discrete values" << Endl;
+      return 0.0;
    }
    if( bin < 0 || bin >= fNbins ){
-       fLogger << kFATAL << "bin " << bin << " out of interval [0," << fNbins << ")" << Endl;
-       return 0.0;
+      fLogger << kFATAL << "bin " << bin << " out of interval [0," << fNbins << ")" << Endl;
+      return 0.0;
    }
    
    return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );

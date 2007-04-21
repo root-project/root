@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.14 2007/04/19 10:32:04 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -338,8 +338,9 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    memset(sumSig,0,nvar2*sizeof(Double_t));
    memset(sumBgd,0,nvar2*sizeof(Double_t));
 
+   Int_t k=0;
+   
    // 'within class' covariance
-   Int_t k =0;
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
 
       // read the Training Event into "event"
@@ -348,7 +349,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
       Double_t weight = GetEventWeight();
 
       for (Int_t x=0; x<nvar; x++) xval[x] = GetEventValNormalized( x );
-
+      Int_t k=0;
       for (Int_t x=0; x<nvar; x++) {
          for (Int_t y=0; y<nvar; y++) {            
             Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
@@ -358,14 +359,14 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
          }
       }
    }
-
-   k = 0;
+   k=0;
    for (Int_t x=0; x<nvar; x++) {
       for (Int_t y=0; y<nvar; y++) {
          (*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);
          k++;
       }
    }
+
    delete [] sumSig;
    delete [] sumBgd;
    delete [] xval;

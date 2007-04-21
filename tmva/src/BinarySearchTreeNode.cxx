@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTreeNode.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: BinarySearchTreeNode.cxx,v 1.5 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -248,6 +248,7 @@ void TMVA::BinarySearchTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth
 
 //_______________________________________________________________________
 Int_t TMVA::BinarySearchTreeNode::GetMemSize() const { 
+   // Calculate the size of the node in memory
    Int_t size = sizeof(*this);
    if(GetLeft()!=0) size += GetLeft()->GetMemSize();
    if(GetRight()!=0) size += GetRight()->GetMemSize();

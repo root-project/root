@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.h,v 1.11 2006/11/23 17:43:38 rdm Exp $   
+// @(#)root/tmva $Id: MethodBase.h,v 1.12 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -250,6 +250,9 @@ namespace TMVA {
       // sets the minimum requirement on the MVA output to declare an event signal-like
       Double_t GetSignalReferenceCut() const { return fSignalReferenceCut; }
  
+      // make ROOT-independent C++ class
+      virtual void MakeClass( TString classFileName = "" ) const;
+
    public:
 
       // static pointer to this object

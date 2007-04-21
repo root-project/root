@@ -84,7 +84,7 @@ void TMVApplication( TString myMethodList = "" )
    // - the variable names must corresponds in name and type to 
    // those given in the weight file(s) that you use
    Float_t var1, var2, var3, var4;
-   reader->AddVariable( "var1+var2", &var1 );
+   reader->AddVariable( "var1 + var2", &var1 );
    reader->AddVariable( "var1-var2", &var2 );
    reader->AddVariable( "var3", &var3 );
    reader->AddVariable( "var4", &var4 );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.13 2007/04/19 10:32:04 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -263,7 +263,7 @@ TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
 //_______________________________________________________________________
 void TMVA::MethodCFMlpANN::Train( void )
 {
-   // calls CFMlpANN training
+   // training of the Clement-Ferrand NN classifier
 
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
@@ -284,13 +284,13 @@ void TMVA::MethodCFMlpANN::Train( void )
 #else
    fLogger << kWARNING << "<Train> sorry CFMlpANN is not yet implemented on Windows" << Endl;
 #endif  
-   delete [] nodes;
+
 
    //    cout << "Weights after training:" << endl;
    //    cout << "=======================" << endl;
    //    PrintWeights(cout);
 
-
+   delete [] nodes;
 }
 
 //_______________________________________________________________________
@@ -360,10 +360,10 @@ void  TMVA::MethodCFMlpANN::NN_ava( Double_t* xeev )
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
       for (Int_t j=1; j<=neur_1.neuron[layer]; j++) {
 
-         Double_t x = ww_ref(neur_1.ww, layer+1,j); // init with the bias layer
+         Double_t x = Ww_ref(neur_1.ww, layer+1,j); // init with the bias layer
 
          for (Int_t k=1; k<=neur_1.neuron[layer-1]; k++) { // neurons of originating layer
-            x += fYNN[layer-1][k-1]*w_ref(neur_1.w, layer+1, j, k);
+            x += fYNN[layer-1][k-1]*W_ref(neur_1.w, layer+1, j, k);
          }
          fYNN[layer][j-1] = NN_fonc( layer, x );
       }
@@ -442,10 +442,10 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
          Int_t jmax = 10*k;
          if (neur_1.neuron[layer]<jmax) jmax = neur_1.neuron[layer];
          for (Int_t j=jmin; j<=jmax; j++) 
-            istr >> ww_ref(neur_1.ww, layer+1, j);
+            istr >> Ww_ref(neur_1.ww, layer+1, j);
          for (Int_t i=1; i<=neur_1.neuron[layer-1]; i++) 
             for (Int_t j=jmin; j<=jmax; j++) 
-               istr >> w_ref(neur_1.w, layer+1, j, i);
+               istr >> W_ref(neur_1.w, layer+1, j, i);
 
          // skip two empty lines
          istr.getline( dumchar, nchar );
@@ -550,16 +550,16 @@ void TMVA::MethodCFMlpANN::WriteWeightsToStream( std::ostream & o ) const
          for (j=jmin; j<=jmax; j++) {
 
             // o << neur_1.ww[j*max_nLayers_ + layer - 6] << "   ";
-            //define ww_ref(a_1,a_2)    wwNN[(a_2)*max_nLayers_ + a_1 - 7]
-            o << ww_ref(neur_1.ww, layer+1, j);
+            //define Ww_ref(a_1,a_2)    wwNN[(a_2)*max_nLayers_ + a_1 - 7]
+            o << Ww_ref(neur_1.ww, layer+1, j);
          }
          o << endl;
          for (i=1; i<=neur_1.neuron[layer-1]; i++) {
             for (j=jmin; j<=jmax; j++) {
                // o << neur_1.w[(i*max_nNodes_ + j)*max_nLayers_ + layer - 186] << "   ";
-               //#define w_ref(a_1,a_2,a_3) wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+               //#define W_ref(a_1,a_2,a_3) wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
 
-               o << w_ref(neur_1.w, layer+1, j, i);
+               o << W_ref(neur_1.w, layer+1, j, i);
 
             }
             o << endl;
@@ -583,7 +583,7 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
    // write the weights of the neural net
 
    // write number of variables and classes
-  o << "Number of vars " << fParam_1.nvar << endl;
+   o << "Number of vars " << fParam_1.nvar << endl;
    o << "Output nodes   " << fParam_1.lclass << endl;
    
    // write extrema of input variables
@@ -617,7 +617,7 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
          for (j=jmin; j<=jmax; j++) {
 
             //o << neur_1.ww[j*max_nLayers_ + layer - 6] << "   ";
-            o << ww_ref(neur_1.ww, layer+1, j) << "   ";
+            o << Ww_ref(neur_1.ww, layer+1, j) << "   ";
 
          }
          o << endl;
@@ -625,7 +625,7 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
          for (i=1; i<=neur_1.neuron[layer-1]; i++) {
             for (j=jmin; j<=jmax; j++) {
                //               o << neur_1.w[(i*max_nNodes_ + j)*max_nLayers_ + layer - 186] << "   ";
-               o << w_ref(neur_1.w, layer+1, j, i) << "   ";
+               o << W_ref(neur_1.w, layer+1, j, i) << "   ";
             }
             o << endl;
          }

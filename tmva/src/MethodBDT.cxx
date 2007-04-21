@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.cxx,v 1.13 2007/02/03 06:40:26 brun Exp $ 
+// @(#)root/tmva $Id: MethodBDT.cxx,v 1.14 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -106,9 +106,9 @@ using std::vector;
 ClassImp(TMVA::MethodBDT)
  
 //_______________________________________________________________________
-TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theData, 
+                               TString theOption, TDirectory* theTargetDir )
+      : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // the standard constructor for the "boosted decision trees" 
    //
@@ -326,7 +326,7 @@ void TMVA::MethodBDT::InitEventSample( void )
 void TMVA::MethodBDT::Train( void )
 {  
    // some option, not yet set as "choosable option".. more for internal testing
-   Bool_t PRUNE_BEFORE_BOOST = kFALSE;
+   Bool_t pruneBeforeBoost = kFALSE;
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 
@@ -421,7 +421,7 @@ void TMVA::MethodBDT::Train( void )
 
       nNodesBeforePruningCount +=nNodesBeforePruning;
       fNodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
-      if (PRUNE_BEFORE_BOOST && fPruneMethod !=  TMVA::DecisionTree::kNoPruning){
+      if (pruneBeforeBoost && fPruneMethod !=  TMVA::DecisionTree::kNoPruning){
          fForest.back()->SetPruneMethod(fPruneMethod);
          fForest.back()->SetPruneStrength(fPruneStrength);
          fForest.back()->PruneTree();
@@ -439,7 +439,7 @@ void TMVA::MethodBDT::Train( void )
    // get elapsed time
    fLogger << kINFO << "<Train> elapsed time: " << timer.GetElapsedTime()    
            << "                              " << Endl;    
-   if (!PRUNE_BEFORE_BOOST  && fPruneMethod !=  TMVA::DecisionTree::kNoPruning){
+   if (!pruneBeforeBoost  && fPruneMethod !=  TMVA::DecisionTree::kNoPruning){
       fLogger << kINFO << "Pruning "<< fNTrees << " Decision Trees ... patience please" << Endl;
       TMVA::Timer timer2( fNTrees, GetName() ); 
       TH1D *alpha = new TH1D("alpha","PruneStrengths",fNTrees,0,fNTrees);
@@ -574,16 +574,16 @@ Double_t TMVA::MethodBDT::TestTreeQuality( TMVA::DecisionTree *dt )
    // 
 
    Double_t ncorrect=0, nfalse=0;
-//    for (Int_t ievt=0; ievt<Data().GetNEvtTest(); ievt++) {
-//       ReadTestEvent(ievt);
-//       Bool_t isSignalType= (dt->CheckEvent(Data().GetEvent()) > 0.5 ) ? 1 : 0;
+   //    for (Int_t ievt=0; ievt<Data().GetNEvtTest(); ievt++) {
+   //       ReadTestEvent(ievt);
+   //       Bool_t isSignalType= (dt->CheckEvent(Data().GetEvent()) > 0.5 ) ? 1 : 0;
       
-//       if (isSignalType == (Data().GetEvent().IsSignal() )) {
-//          ncorrect += Data().GetEvent().GetWeight();
-//       }else{
-//          nfalse += Data().GetEvent().GetWeight();
-//       }
-//    }
+   //       if (isSignalType == (Data().GetEvent().IsSignal() )) {
+   //          ncorrect += Data().GetEvent().GetWeight();
+   //       }else{
+   //          nfalse += Data().GetEvent().GetWeight();
+   //       }
+   //    }
    
    for (UInt_t ievt=0; ievt<fValidationSample.size(); ievt++) {
       Bool_t isSignalType= (dt->CheckEvent(*(fValidationSample[ievt])) > 0.5 ) ? 1 : 0;
@@ -656,7 +656,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, TMVA::Deci
          boostWeight = (1-err)/err ;
       }
       else {
-        boostWeight =  TMath::Power((1-err)/err,adaBoostBeta) ;
+         boostWeight =  TMath::Power((1-err)/err,adaBoostBeta) ;
       }
    }
    else {
@@ -736,7 +736,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
    Int_t iTree;
    Double_t boostWeight;
    for (int i=0;i<fNTrees;i++){
-     istr >> dummy >> iTree >> dummy >> boostWeight;
+      istr >> dummy >> iTree >> dummy >> boostWeight;
       if (iTree != i) {
          fForest.back()->Print( cout );
          fLogger << kFATAL << "Error while reading weight file; mismatch Itree=" 

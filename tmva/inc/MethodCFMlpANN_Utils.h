@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.12 2007/01/30 18:35:17 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.13 2007/04/19 06:53:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -105,18 +105,18 @@ namespace TMVA {
       static Int_t fg_max_nNodes_;  // maximum number of nodes per variable
       static Int_t fg_999;          // constant
 
-      Double_t w_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
+      Double_t W_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
          return wNN [(a_3*max_nNodes_ + a_2)*max_nLayers_ + a_1 - 187];
       }
-      Double_t & w_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
+      Double_t & W_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
          return wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187];
       }
 
       
-      Double_t ww_ref(const Double_t wwNN[], Int_t a_1,Int_t a_2) const {
+      Double_t Ww_ref(const Double_t wwNN[], Int_t a_1,Int_t a_2) const {
          return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
       }
-      Double_t & ww_ref(Double_t wwNN[], Int_t a_1,Int_t a_2) {
+      Double_t & Ww_ref(Double_t wwNN[], Int_t a_1,Int_t a_2) {
          return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
       }
 
@@ -134,34 +134,35 @@ namespace TMVA {
       } fVarn_1;
 
       // dynamic data table
-      struct fVARn2 {
-         fVARn2() { 
-            xx = 0;
+      class VARn2 {
+      public:
+         VARn2() { 
+            fxx = 0;
          }
-         ~fVARn2() {
+         ~VARn2() {
             Delete();
          }
-         void create( Int_t nevt, Int_t nvar ) {
+         void Create( Int_t nevt, Int_t nvar ) {
             fNevt = nevt+1; fNvar = nvar+1; // fortran array style 1...N
-            xx = new Double_t*[fNevt];
-            for (Int_t i=0; i<fNevt; i++) xx[i] = new Double_t[fNvar];
+            fxx = new Double_t*[fNevt];
+            for (Int_t i=0; i<fNevt; i++) fxx[i] = new Double_t[fNvar];
          }
          Double_t operator=( Double_t val ) { return val; }
          Double_t &operator()( Int_t ievt, Int_t ivar ) const { 
-            if (0 != xx && ievt < fNevt && ivar < fNvar) return xx[ievt][ivar];
+            if (0 != fxx && ievt < fNevt && ivar < fNvar) return fxx[ievt][ivar];
             else {
-               printf( "*** ERROR in varn3_(): xx is zero pointer ==> abort ***\n") ;
+               printf( "*** ERROR in varn3_(): fxx is zero pointer ==> abort ***\n") ;
                // exit(1);
-               return xx[0][0];
+               return fxx[0][0];
             }
          }
          void Delete( void ) {
-            if (0 != xx) for (Int_t i=0; i<fNevt; i++) if (0 != xx[i]) delete [] xx[i];
-            delete[] xx;
-            xx=0;
+            if (0 != fxx) for (Int_t i=0; i<fNevt; i++) if (0 != fxx[i]) delete [] fxx[i];
+            delete[] fxx;
+            fxx=0;
          }
   
-         Double_t** xx;
+         Double_t** fxx;
          Int_t fNevt;
          Int_t fNvar;
       } fVarn2_1, fVarn3_1;

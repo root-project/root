@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.11 2007/01/12 17:02:02 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -117,8 +117,8 @@ void TMVA::MethodCFMlpANN_Utils::Train_nn( Double_t *tin2, Double_t *tout2, Int_
    }
 
    // create dynamic data tables (AH)
-   fVarn2_1.create( *ntrain + *ntest, *nvar2 );
-   fVarn3_1.create( *ntrain + *ntest, *nvar2 );
+   fVarn2_1.Create( *ntrain + *ntest, *nvar2 );
+   fVarn3_1.Create( *ntrain + *ntest, *nvar2 );
 
    Int_t imax;
    char det[20];
@@ -863,7 +863,7 @@ void TMVA::MethodCFMlpANN_Utils::Foncf( Int_t *i__, Double_t *u, Double_t *f )
       *f = -.99999999989999999;
    } 
    else {
-     yy = TMath::Exp(-(*u) / fDel_1.temp[*i__ - 1]);
+      yy = TMath::Exp(-(*u) / fDel_1.temp[*i__ - 1]);
       *f = (1. - yy) / (yy + 1.);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.16 2007/02/03 06:40:26 brun Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.17 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -338,8 +338,8 @@ void TMVA::MethodLikelihood::Train( void )
    // create reference histograms
 
    // fine binned histos needed for the KDE smoothing
-   std::vector<TH1*>* SigFineBinKDE = new vector<TH1*>( GetNvar() );
-   std::vector<TH1*>* BgdFineBinKDE = new vector<TH1*>( GetNvar() );   
+   std::vector<TH1*>* sigFineBinKDE = new vector<TH1*>( GetNvar() );
+   std::vector<TH1*>* bgdFineBinKDE = new vector<TH1*>( GetNvar() );   
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
 
       TString var = (*fInputVars)[ivar];
@@ -370,8 +370,8 @@ void TMVA::MethodLikelihood::Train( void )
          UInt_t nbinsS = minNEvt/fAverageEvtPerBinVarS[ivar];
          UInt_t nbinsB = minNEvt/fAverageEvtPerBinVarB[ivar];
 
-         (*SigFineBinKDE)[ivar] = new TH1F( var + "_sig_KDE", var + " signal training KDE",     5*nbinsS, GetXmin(ivar), GetXmax(ivar));
-         (*BgdFineBinKDE)[ivar] = new TH1F( var + "_bgd_KDE", var + " background training KDE", 5*nbinsB, GetXmin(ivar), GetXmax(ivar));
+         (*sigFineBinKDE)[ivar] = new TH1F( var + "_sig_KDE", var + " signal training KDE",     5*nbinsS, GetXmin(ivar), GetXmax(ivar));
+         (*bgdFineBinKDE)[ivar] = new TH1F( var + "_bgd_KDE", var + " background training KDE", 5*nbinsB, GetXmin(ivar), GetXmax(ivar));
       }
    }
 
@@ -394,12 +394,12 @@ void TMVA::MethodLikelihood::Train( void )
          if (GetEvent().IsSignal()) {
             (*fHistSig)[ivar]->Fill( value, weight );
             // fill the fine binned signal histos needed for the KDE smoothing
-            if (fInterpolateMethod == TMVA::PDF::kKDE) (*SigFineBinKDE)[ivar]->Fill( value, weight );
+            if (fInterpolateMethod == TMVA::PDF::kKDE) (*sigFineBinKDE)[ivar]->Fill( value, weight );
          } 
          else {
             (*fHistBgd)[ivar]->Fill( value, weight );
             // fill the fine binned signal histos needed for the KDE smoothing
-            if (fInterpolateMethod == TMVA::PDF::kKDE) (*BgdFineBinKDE)[ivar]->Fill( value, weight );
+            if (fInterpolateMethod == TMVA::PDF::kKDE) (*bgdFineBinKDE)[ivar]->Fill( value, weight );
          }
       }
    }
@@ -408,7 +408,7 @@ void TMVA::MethodLikelihood::Train( void )
    for (UInt_t itype=0; itype < 2; itype++) { // signal and background
 
       vector<TH1*>& histV    = itype==0 ? *fHistSig : *fHistBgd;
-      vector<TH1*>& histVKDE = itype==0 ? *SigFineBinKDE : *BgdFineBinKDE;
+      vector<TH1*>& histVKDE = itype==0 ? *sigFineBinKDE : *bgdFineBinKDE;
 
       vector<TH1*>& vHistSmo = itype==0 ? *fHistSig_smooth : *fHistBgd_smooth;
       vector<PDF*>& vPDF     = itype==0 ? *fPDFSig : *fPDFBgd;
@@ -453,8 +453,8 @@ void TMVA::MethodLikelihood::Train( void )
 
    // clean up the mess
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      delete (*SigFineBinKDE)[ivar];
-      delete (*BgdFineBinKDE)[ivar];
+      delete (*sigFineBinKDE)[ivar];
+      delete (*bgdFineBinKDE)[ivar];
    }   
 }
 

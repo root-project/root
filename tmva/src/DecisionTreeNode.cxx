@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.12 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -47,7 +47,7 @@
 using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
-TMVA::MsgLogger* TMVA::DecisionTreeNode::fLogger = 0;
+TMVA::MsgLogger* TMVA::DecisionTreeNode::fgLogger = 0;
    
 //_______________________________________________________________________
 TMVA::DecisionTreeNode::DecisionTreeNode()
@@ -67,7 +67,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
      fSequence ( 0 ) 
 {
    // constructor of an essentially "empty" node floating in space
-   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
+   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 }
 
 //_______________________________________________________________________
@@ -88,7 +88,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fSequence( 0 ) 
 {
    // constructor of a daughter node as a daughter of 'p'
-   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
+   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
    // get the sequence, depending on if it is a left or a right daughter
    if (pos == 'r' ){
@@ -120,7 +120,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
 {
    // copy constructor of a node. It will result in an explicit copy of
    // the node and recursively all it's daughters
-   if (!fLogger) fLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
+   if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
    this->SetParent( parent );
    if (n.GetLeft() == 0 ) this->SetLeft(NULL);
@@ -163,7 +163,7 @@ Double_t TMVA::DecisionTreeNode::GetPurity( void ) const
       return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
    }
    else {
-      *fLogger << kINFO << "Zero events in purity calcuation , retrun purity=0.5" << Endl;
+      *fgLogger << kINFO << "Zero events in purity calcuation , retrun purity=0.5" << Endl;
       return 0.5;
    }
 }

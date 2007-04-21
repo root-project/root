@@ -53,6 +53,7 @@ Bool_t TMVA::VariableIdentityTransform::PrepareTransformation( TTree* inputTree)
 //_______________________________________________________________________
 void TMVA::VariableIdentityTransform::ApplyTransformation( Types::ESBType ) const
 {
+   cout << "Test" << endl;
    // this transformation doesn't do anything
    if      (fEvent == fEventRaw) return;
    else if (fEvent != 0)         delete fEvent;
