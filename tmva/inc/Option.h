@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.h,v 1.9 2007/04/20 12:06:28 brun Exp $   
+// @(#)root/tmva $Id: Option.h,v 1.10 2007/04/21 14:20:46 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -147,7 +147,7 @@ namespace TMVA {
       virtual Bool_t IsArrayOpt() const { return kTRUE; }
       virtual Int_t  GetArraySize() const { return fSize; }
    
-      using OptionBase::Print;
+      using Option<T>::Print;
       virtual void Print(ostream&, Int_t levelofdetail=0) const;
 
       virtual Bool_t SetValue(const TString& val, Int_t i=0);
