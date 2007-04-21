@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.9 2007/04/19 06:53:01 brun Exp $
+// @(#)root/tmva $Id: DataSet.cxx,v 1.10 2007/04/19 10:32:04 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -41,7 +41,7 @@
 #include "TMVA/Configurable.h"
 #endif
 #ifndef ROOT_TMVA_VariableIdentityTransform
-//#include "TMVA/VariableIdentityTransform.h"
+#include "TMVA/VariableIdentityTransform.h"
 #endif
 #ifndef ROOT_TMVA_VariableDecorrTransform
 #include "TMVA/VariableDecorrTransform.h"
@@ -150,7 +150,7 @@ TMVA::VariableTransformBase* TMVA::DataSet::GetTransform( Types::EVariableTransf
    // transformation not yet created
    switch (transform) {
    case Types::kNone:
-      //trbase = new VariableIdentityTransform( GetVariableInfos() );
+      trbase = new VariableIdentityTransform( GetVariableInfos() );
       break;
    case Types::kDecorrelated:
       trbase = new VariableDecorrTransform( GetVariableInfos() );

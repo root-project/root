@@ -75,7 +75,7 @@
 #pragma link C++ class TMVA::IMethod+;
 #pragma link C++ class TMVA::MsgLogger+;
 #pragma link C++ class TMVA::VariableTransformBase+;
-//#pragma link C++ class TMVA::VariableIdentityTransform+;
+#pragma link C++ class TMVA::VariableIdentityTransform+;
 #pragma link C++ class TMVA::VariableDecorrTransform+;
 #pragma link C++ class TMVA::VariablePCATransform+;
 #pragma link C++ class TMVA::Config+;
