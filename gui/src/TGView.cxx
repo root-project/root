@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.23 2007/04/19 16:23:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.24 2007/04/20 15:07:46 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -257,8 +257,8 @@ Bool_t TGView::HandleButton(Event_t *event)
          ScrollUp(amount);
          return kTRUE;
       }
-  }
-  return kFALSE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -368,10 +368,10 @@ void TGView::Layout()
    if ((Int_t)fVirtualSize.fWidth > cw) {
       if (!need_hsb) {
          if (fHsb) {
-	         need_hsb = kTRUE;
-	         if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
+            need_hsb = kTRUE;
+            if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
             if (ch <0) ch = 0;
-	         fCanvas->SetHeight(ch);
+            fCanvas->SetHeight(ch);
          }
       }
    }
@@ -400,13 +400,11 @@ void TGView::Layout()
    fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, cw, ch);
 
    if (fHsb) {
-      fHsb->SetRange(fVirtualSize.fWidth / fScrollVal.fX,
-		               fCanvas->GetWidth() / fScrollVal.fX);
+      fHsb->SetRange(fVirtualSize.fWidth / fScrollVal.fX, fCanvas->GetWidth() / fScrollVal.fX);
    }
 
    if (fVsb) {
-      fVsb->SetRange(fVirtualSize.fHeight / fScrollVal.fY,
-		               fCanvas->GetHeight() / fScrollVal.fY);
+      fVsb->SetRange(fVirtualSize.fHeight / fScrollVal.fY, fCanvas->GetHeight() / fScrollVal.fY);
    }
 }
 
