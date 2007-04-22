@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.28 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.29 2007/04/20 15:07:46 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TVirtualGL.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
+#include "TImage.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -135,9 +136,10 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
 
    fCanvas = new TCanvas(name ? name : Form("%s_canvas", GetName()), w, h, fCWinId);
 
-   Atom_t *dndTypeList = new Atom_t[2];
+   Atom_t *dndTypeList = new Atom_t[3];
    dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = 0;
+   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
    gVirtualX->SetDNDAware(fId, dndTypeList);
    SetDNDTarget(kTRUE);
 
@@ -314,6 +316,7 @@ Bool_t TRootEmbeddedCanvas::HandleDNDdrop(TDNDdata *data)
    // Handle drop events.
 
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
 
    if (data->fDataType == rootObj) {
       TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
@@ -327,6 +330,26 @@ Bool_t TRootEmbeddedCanvas::HandleDNDdrop(TDNDdata *data)
       gPad->Modified();
       gPad->Update();
       return kTRUE;
+   }
+   else if (data->fDataType == uriObj) {
+      TString sfname = (char *)data->fData;
+      sfname.ReplaceAll("file:", "");
+      sfname.ReplaceAll("\r\n", "");
+      sfname.ReplaceAll("//", "/");
+      if (sfname.EndsWith(".bmp") ||
+          sfname.EndsWith(".gif") ||
+          sfname.EndsWith(".jpg") ||
+          sfname.EndsWith(".png") ||
+          sfname.EndsWith(".tiff") ||
+          sfname.EndsWith(".xpm")) {
+         TImage *img = TImage::Open(sfname.Data());
+         if (img) {
+            img->Draw("xxx");
+            img->SetEditable(kTRUE);
+         }
+      }
+      gPad->Modified();
+      gPad->Update();
    }
    return kFALSE;
 }
@@ -358,12 +381,15 @@ Atom_t TRootEmbeddedCanvas::HandleDNDenter(Atom_t *typelist)
    // Handle drag enter events.
 
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   Atom_t ret = kNone;
    for (int i = 0; typelist[i] != kNone; ++i) {
-      if (typelist[i] == rootObj) {
-         return rootObj;
-      }
+      if (typelist[i] == rootObj)
+         ret = rootObj;
+      if (typelist[i] == uriObj)
+         ret = uriObj;
    }
-   return kNone;
+   return ret;
 }
 
 //______________________________________________________________________________

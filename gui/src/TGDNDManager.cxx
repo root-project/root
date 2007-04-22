@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.2 2007/04/20 11:43:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.3 2007/04/20 15:07:46 brun Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
@@ -209,11 +209,6 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
    fDNDNoDropCursor = gVirtualX->CreateCursor(kNoDrop); // kNoDrop
 
    // set the aware prop
-
-   //if (fMain) {
-   //   SetAware(fTypelist);
-   //   SetTypeList(fTypelist);
-   //}
 
    fProxyOurs = kFALSE;
    gDNDManager = this;
@@ -474,6 +469,19 @@ void TGDNDManager::SendDNDenter(Window_t target)
    for (i = 0; i < 3; ++i)
       event.fUser[2+i] = (i < n) ? fTypelist[i] : kNone;
 
+   if (fLocalSource) {
+      TDNDdata *dnddata = 0;
+      Atom_t dataType;
+
+      // get the data type from the drag source widget
+      if (fLocalSource)
+         dnddata = fLocalSource->GetDNDdata(0);
+      dataType = dnddata ? (Atom_t) dnddata->fDataType : (Atom_t) kNone;
+      event.fUser[2] = dataType;
+      event.fUser[3] = kNone;
+      event.fUser[4] = kNone;
+   }
+   
    gVirtualX->SendEvent(target, &event);
 }
 

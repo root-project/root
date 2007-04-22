@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.116 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.117 2007/04/20 15:07:46 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -581,9 +581,10 @@ void TRootCanvas::CreateCanvas(const char *name)
    // we need to use GetDefaultSize() to initialize the layout algorithm...
    Resize(GetDefaultSize());
 
-   Atom_t *dndTypeList = new Atom_t[2];
+   Atom_t *dndTypeList = new Atom_t[3];
    dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = 0;
+   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
    gVirtualX->SetDNDAware(fId, dndTypeList);
    SetDNDTarget(kTRUE);
 }
@@ -1667,6 +1668,7 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
    // Handle drop events.
 
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
 
    if (data->fDataType == rootObj) {
       TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
@@ -1680,6 +1682,26 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
       gPad->Modified();
       gPad->Update();
       return kTRUE;
+   }
+   else if (data->fDataType == uriObj) {
+      TString sfname = (char *)data->fData;
+      sfname.ReplaceAll("file:", "");
+      sfname.ReplaceAll("\r\n", "");
+      sfname.ReplaceAll("//", "/");
+      if (sfname.EndsWith(".bmp") ||
+          sfname.EndsWith(".gif") ||
+          sfname.EndsWith(".jpg") ||
+          sfname.EndsWith(".png") ||
+          sfname.EndsWith(".tiff") ||
+          sfname.EndsWith(".xpm")) {
+         TImage *img = TImage::Open(sfname.Data());
+         if (img) {
+            img->Draw("xxx");
+            img->SetEditable(kTRUE);
+         }
+      }
+      gPad->Modified();
+      gPad->Update();
    }
    return kFALSE;
 }
@@ -1704,12 +1726,15 @@ Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
    // Handle drag enter events.
 
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
+   static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   Atom_t ret = kNone;
    for (int i = 0; typelist[i] != kNone; ++i) {
-      if (typelist[i] == rootObj) {
-         return rootObj;
-      }
+      if (typelist[i] == rootObj)
+         ret = rootObj;
+      if (typelist[i] == uriObj)
+         ret = uriObj;
    }
-   return kNone;
+   return ret;
 }
 
 //______________________________________________________________________________

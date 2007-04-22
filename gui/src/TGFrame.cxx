@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.150 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.151 2007/04/20 15:07:46 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1402,11 +1402,10 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    }
    //AddInput(kButtonPressMask); // to allow Drag and Drop
    // Create Drag&Drop Manager and define a few DND types
-   Atom_t *dndTypeList = new Atom_t[4];
+   Atom_t *dndTypeList = new Atom_t[3];
    dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = gVirtualX->InternAtom("text/plain", kFALSE);
-   dndTypeList[2] = gVirtualX->InternAtom("text/uri-list", kFALSE);
-   dndTypeList[3] = 0;
+   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   dndTypeList[2] = 0;
    new TGDNDManager(this, dndTypeList);
    SetWindowName();
 }
