@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.24 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.25 2006/07/11 09:14:05 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64+12*fNz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    Int_t                 GetNedges() const   {return fNedges;}
    virtual Int_t         GetNmeshVertices() const;
    virtual Int_t         GetNsegments() const {return fNedges;}     

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.51 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.52 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -1615,6 +1615,38 @@ void TGeoSphere::SetPoints(Float_t *points) const
 }
 
 //_____________________________________________________________________________
+void TGeoSphere::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   TGeoSphere * localThis = const_cast<TGeoSphere *>(this);
+   localThis->SetNumberOfDivisions(gGeoManager->GetNsegments());
+   Bool_t full = kTRUE;
+   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   Int_t ncenter = 1;
+   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1>0)?0:1;
+   Int_t ndown = (fTheta2<180)?0:1;
+   // number of different latitudes, excluding 0 and 180 degrees
+   Int_t nlat = fNz+1-(nup+ndown);
+   // number of different longitudes
+   Int_t nlong = fNseg;
+   if (TestShapeBit(kGeoPhiSeg)) nlong++;
+
+   nvert = nlat*nlong+nup+ndown+ncenter;
+   if (TestShapeBit(kGeoRSeg)) nvert *= 2;
+
+   nsegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
+   if (TestShapeBit(kGeoRSeg)) nsegs *= 2; // inner sphere
+   if (TestShapeBit(kGeoPhiSeg)) nsegs += 2*nlat+nup+ndown; // 2 phi planes
+   nsegs += nlong * (2-nup - ndown);  // connecting cones
+      
+   npols = fNz*fNseg; // outer
+   if (TestShapeBit(kGeoRSeg)) npols *=2;  // inner
+   if (TestShapeBit(kGeoPhiSeg)) npols += 2*fNz; // 2 phi planes
+   npols += (2-nup-ndown)*fNseg; // connecting
+}
+
+//_____________________________________________________________________________
 Int_t TGeoSphere::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
@@ -1644,6 +1676,7 @@ void TGeoSphere::Sizeof3D() const
 ///// obsolete - to be removed
 }
 
+//_____________________________________________________________________________
 const TBuffer3D & TGeoSphere::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
 // Fills a static 3D buffer and returns a reference.

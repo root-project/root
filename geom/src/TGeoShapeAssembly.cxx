@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.8 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.9 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -335,3 +335,13 @@ void TGeoShapeAssembly::SetPoints(Float_t * /*points*/) const
 // No mesh for assemblies.
    Error("SetPoints", "Drawing functions should not be called for assemblies, but rather for their content");
 }
+
+//_____________________________________________________________________________
+void TGeoShapeAssembly::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   nvert = 0;
+   nsegs = 0;
+   npols = 0;
+}
+

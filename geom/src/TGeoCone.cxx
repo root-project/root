@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.58 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.59 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -1002,6 +1002,16 @@ void TGeoCone::SetPoints(Float_t *points) const
          points[indx++] = dz;
       }
    }
+}
+
+//_____________________________________________________________________________
+void TGeoCone::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments();
+   nvert = n*4;
+   nsegs = n*8;
+   npols = n*4;
 }
 
 //_____________________________________________________________________________
@@ -2213,6 +2223,17 @@ void TGeoConeSeg::SetPoints(Float_t *points) const
       }
    }
 }
+
+//_____________________________________________________________________________
+void TGeoConeSeg::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments()+1;
+   nvert = n*4;
+   nsegs = n*8;
+   npols = n*4-2;
+}
+
 //_____________________________________________________________________________
 Int_t TGeoConeSeg::GetNmeshVertices() const
 {

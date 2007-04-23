@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.37 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.38 2007/02/16 10:37:01 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -290,6 +290,15 @@ TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*
    Error("Divide", "Composite shapes cannot be divided");
    return 0;
 }      
+
+//_____________________________________________________________________________
+void TGeoCompositeShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   nvert = 0;
+   nsegs = 0;
+   npols = 0;
+}
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::InspectShape() const

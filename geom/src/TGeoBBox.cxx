@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.52 2007/01/12 16:03:15 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.53 2007/01/16 09:04:50 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -578,6 +578,15 @@ TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) con
       return 0;
    }   
    return (new TGeoBBox(dx, dy, dz));
+}
+
+//_____________________________________________________________________________
+void TGeoBBox::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   nvert = 8;
+   nsegs = 12;
+   npols = 6;
 }
 
 //_____________________________________________________________________________

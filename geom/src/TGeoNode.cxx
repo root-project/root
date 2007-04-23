@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.40 2006/12/06 15:09:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.41 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -162,7 +162,7 @@ void TGeoNode::Browse(TBrowser *b)
 }
 
 //_____________________________________________________________________________
-void TGeoNode::CheckOverlaps(Double_t ovlp)
+void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
 {
 // Check overlaps bigger than OVLP hierarchically, starting with this node.
    static Int_t icall = 0;
@@ -179,11 +179,11 @@ void TGeoNode::CheckOverlaps(Double_t ovlp)
    if (!fVolume->IsSelected()) {
       // this branch was not checked -> check it
       fVolume->SelectVolume(clear=kFALSE);
-      fVolume->CheckOverlaps(ovlp);
+      fVolume->CheckOverlaps(ovlp, option);
       nd = GetNdaughters();
       for (i=0; i<nd; i++) {
          daughter = fVolume->GetNode(i);
-         daughter->CheckOverlaps(ovlp);
+         daughter->CheckOverlaps(ovlp, option);
       }
    }
    icall--;

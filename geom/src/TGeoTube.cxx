@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.70 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.71 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -1006,6 +1006,25 @@ Int_t TGeoTube::GetNmeshVertices() const
    Int_t numPoints = n*4;
    if (!HasRmin()) numPoints = 2*(n+1);
    return numPoints;
+}
+
+//_____________________________________________________________________________
+void TGeoTube::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments();
+   nvert = n*4;
+   nsegs = n*8;
+   npols = n*4;
+   if (!HasRmin()) {
+      nvert = 2*(n+1);
+      nsegs = 5*n;
+      npols = 3*n;
+   } else {
+      nvert = n*4;
+      nsegs = n*8;
+      npols = n*4;
+   }   
 }
 
 //_____________________________________________________________________________
@@ -2053,6 +2072,16 @@ void TGeoTubeSeg::SetPoints(Float_t *points) const
 }
 
 //_____________________________________________________________________________
+void TGeoTubeSeg::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments()+1;
+   nvert = n*4;
+   nsegs = n*8;
+   npols = n*4 - 2;
+}
+
+//_____________________________________________________________________________
 Int_t TGeoTubeSeg::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
@@ -2817,6 +2846,13 @@ void TGeoCtub::SetPoints(Float_t *points) const
          indx++;
       }
    }
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   TGeoTubeSeg::GetMeshNumbers(nvert,nsegs,npols);
 }
 
 //_____________________________________________________________________________

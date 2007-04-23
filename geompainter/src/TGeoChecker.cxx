@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.46 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.47 2007/01/15 16:10:09 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -89,41 +89,56 @@
 
 ClassImp(TGeoChecker)
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 TGeoChecker::TGeoChecker()
+            :TObject(),
+             fGeoManager(NULL),
+             fVsafe(NULL),
+             fBuff1(NULL),
+             fBuff2(NULL),
+             fFullCheck(kFALSE)
 {
 // Default constructor
-   fGeoManager = 0;
-   fVsafe      = 0;
-   fBuff1 = 0;
-   fBuff2 = 0;
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 TGeoChecker::TGeoChecker(TGeoManager *geom)
+            :TObject(),
+             fGeoManager(geom),
+             fVsafe(NULL),
+             fBuff1(NULL),
+             fBuff2(NULL),
+             fFullCheck(kFALSE)
 {
 // Constructor for a given geometry
-   fGeoManager = geom;
-   fVsafe = 0;
    fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
    fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
+            :TObject(),
+             fGeoManager(NULL),
+             fVsafe(NULL),
+             fBuff1(NULL),
+             fBuff2(NULL),
+             fFullCheck(kFALSE)
 {
-// constructor
+// Obsolete constructor
    fGeoManager = gGeoManager;
-   fVsafe = 0;
    fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
    fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 TGeoChecker::~TGeoChecker()
 {
 // Destructor
-   delete fBuff1;
-   delete fBuff2;
+   if (fBuff1) delete fBuff1;
+   if (fBuff2) delete fBuff2;
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
 {
 // Shoot nrays with random directions from starting point (startx, starty, startz)
@@ -299,7 +314,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
    delete [] array2;
 }
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
 {
 // Clean-up the mesh of pcon/pgon from useless points
@@ -319,17 +334,23 @@ void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
    numPoints = ipoint;
 }      
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp)
 {
 // Check if the 2 non-assembly volume candidates overlap/extrude. Returns overlap object.
    TGeoOverlap *nodeovlp = 0;
-   Int_t numPoints1 = 0;
-   Int_t numPoints2 = 0;
+   Int_t numPoints1 = fBuff1->NbPnts();
+   Int_t numSegs1   = fBuff1->NbSegs();
+   Int_t numPols1   = fBuff1->NbPols();
+   Int_t numPoints2 = fBuff2->NbPnts();
+   Int_t numSegs2   = fBuff2->NbSegs();
+   Int_t numPols2   = fBuff2->NbPols();
    UInt_t ip;
    Bool_t extrude, isextrusion, isoverlapping;
    Double_t *points1 = fBuff1->fPnts; 
+   Int_t    *segs1   = fBuff1->fSegs;
    Double_t *points2 = fBuff2->fPnts;
+   Int_t    *segs2   = fBuff2->fSegs;
    Double_t local[3], local1[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
@@ -337,30 +358,30 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
    
+   shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
    if (!shape1->IsComposite() && 
        fBuff1->fID != (TObject*)shape1) {
       // Fill first buffer.
-      numPoints1 = shape1->GetNmeshVertices();
       fBuff1->SetRawSizes(numPoints1, 3*numPoints1, 0, 0, 0, 0);
       points1 = fBuff1->fPnts;
       shape1->SetPoints(points1);
-      if (shape1->InheritsFrom(TGeoPcon::Class())) {
-         CleanPoints(points1, numPoints1);
-         fBuff1->SetRawSizes(numPoints1, 3*numPoints1, 0, 0, 0, 0);
-      }   
+//      if (shape1->InheritsFrom(TGeoPcon::Class())) {
+//         CleanPoints(points1, numPoints1);
+//         fBuff1->SetRawSizes(numPoints1, 3*numPoints1,0, 0, 0, 0);
+//      }   
       fBuff1->fID = shape1;
    }   
+   shape2->GetMeshNumbers(numPoints2, numSegs2, numPols2);
    if (!shape2->IsComposite() && 
        fBuff2->fID != (TObject*)shape2) {
-      // Fill first buffer.
-      numPoints2 = shape2->GetNmeshVertices();
-      fBuff2->SetRawSizes(numPoints2, 3*numPoints2, 0, 0, 0, 0);
+      // Fill second buffer.
+      fBuff2->SetRawSizes(numPoints2, 3*numPoints2, 0, 0, 0,0);
       points2 = fBuff2->fPnts;
       shape2->SetPoints(points2);
-      if (shape2->InheritsFrom(TGeoPcon::Class())) {
-         CleanPoints(points2, numPoints2);
-         fBuff2->SetRawSizes(numPoints2, 3*numPoints2, 0, 0, 0, 0);
-      }   
+//      if (shape2->InheritsFrom(TGeoPcon::Class())) {
+//         CleanPoints(points2, numPoints2);
+//         fBuff1->SetRawSizes(numPoints2, 3*numPoints2,0,0,0,0);
+//      }   
       fBuff2->fID = shape2;
    }   
       
@@ -371,6 +392,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       if (!shape2->IsComposite()) {
          for (ip=0; ip<fBuff2->NbPnts(); ip++) {
             memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
+            if (local[0]<1e-10 && local[1]<1e-10) continue;
             mat2->LocalToMaster(local, point);
             mat1->MasterToLocal(point, local);
             extrude = !shape1->Contains(local);
@@ -395,6 +417,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       if (!shape1->IsComposite()) {
          for (ip=0; ip<fBuff1->NbPnts(); ip++) {
             memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
+            if (local[0]<1e-10 && local[1]<1e-10) continue;
             mat1->LocalToMaster(local, point);
             mat2->MasterToLocal(point, local1);
             extrude = shape2->Contains(local1);
@@ -431,6 +454,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       // loop all points of first candidate
       for (ip=0; ip<fBuff1->NbPnts(); ip++) {
          memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
+         if (local[0]<1e-10 && local[1]<1e-10) continue;
          mat1->LocalToMaster(local, point);
          mat2->MasterToLocal(point, local); // now point in local reference of second
          overlap = shape2->Contains(local);
@@ -455,6 +479,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    if (!shape2->IsComposite()) {
       for (ip=0; ip<fBuff2->NbPnts(); ip++) {
          memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
+         if (local[0]<1e-10 && local[1]<1e-10) continue;
          mat2->LocalToMaster(local, point);
          mat1->MasterToLocal(point, local); // now point in local reference of first
          overlap = shape1->Contains(local);
@@ -474,11 +499,104 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
             }     
          }
       }
-   }   
+   } 
+   if (!fFullCheck || nodeovlp) return nodeovlp;  
+
+   // Check segments of one mesh against the other shape
+   Double_t point1[3], point2[3], dir[3];
+   Double_t dist, len;
+   Int_t is;
+   if (!shape1->IsComposite() && numPoints1==8) {
+      // fill the mesh with segments
+      fBuff1->SetRawSizes(numPoints1, 3*numPoints1, numSegs1, 3*numSegs1, numPols1,6*numPols1);
+      shape1->SetSegsAndPols(*fBuff1);
+      points1 = fBuff1->fPnts;
+      segs1   = fBuff1->fSegs;
+      // loop all segments of the mesh
+      for (is=0; is<numSegs1; is++) {
+         for (ip=0; ip<3; ip++) {
+            point1[ip] = points1[3*segs1[3*is+1]+ip];
+            point2[ip] = points1[3*segs1[3*is+2]+ip];
+            point1[ip] -= 1.e-6*point1[ip];
+            point2[ip] -= 1.e-6*point2[ip];
+         }  
+         len = (point2[0]-point1[0])*(point2[0]-point1[0])+
+               (point2[1]-point1[1])*(point2[1]-point1[1])+
+               (point2[2]-point1[2])*(point2[2]-point1[2]);
+         if (len<TGeoShape::Tolerance()) continue;
+         len  = TMath::Sqrt(len);      
+         mat1->LocalToMaster(point1, point);
+         mat2->MasterToLocal(point, point1); 
+         mat1->LocalToMaster(point2, point);
+         mat2->MasterToLocal(point, point2);        
+         // Now point1 and point2 in the frame of vol2
+         for (ip=0; ip<3; ip++) dir[ip] = (point2[ip]-point1[ip])/len;
+         if (shape2->Contains(point1)) {
+            dist = shape2->DistFromInside(point1, dir, 3);
+            safety = dist;
+         } else {
+            dist = shape2->DistFromOutside(point1, dir, 3);
+            safety = len-dist;
+         }   
+         if (safety>ovlp) {
+            if (nodeovlp) {
+               nodeovlp->SetOverlap(TMath::Min(safety, nodeovlp->GetOverlap()));
+            } else {   
+               nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
+               fGeoManager->AddOverlap(nodeovlp);
+            }   
+//            break;
+         }
+      }
+   }
+   if (nodeovlp) return nodeovlp;         
+   if (!shape2->IsComposite() && numPoints2==8) {
+      // fill the mesh with segments
+      fBuff2->SetRawSizes(numPoints2, 3*numPoints2, numSegs2, 3*numSegs2, numPols2,6*numPols2);
+      shape2->SetSegsAndPols(*fBuff2);
+      points2 = fBuff2->fPnts;
+      segs2   = fBuff2->fSegs;
+      // loop all segments of the mesh
+      for (is=0; is<numSegs2; is++) {
+         for (ip=0; ip<3; ip++) {
+            point1[ip] = points2[3*segs2[3*is+1]+ip];
+            point2[ip] = points2[3*segs2[3*is+2]+ip];
+            point1[ip] -= 1.e-6*point1[ip];
+            point2[ip] -= 1.e-6*point2[ip];
+         }  
+         len = (point2[0]-point1[0])*(point2[0]-point1[0])+
+               (point2[1]-point1[1])*(point2[1]-point1[1])+
+               (point2[2]-point1[2])*(point2[2]-point1[2]);
+         if (len<TGeoShape::Tolerance()) continue;
+         len  = TMath::Sqrt(len);      
+         mat2->LocalToMaster(point1, point);
+         mat1->MasterToLocal(point, point1); 
+         mat2->LocalToMaster(point2, point);
+         mat1->MasterToLocal(point, point2);        
+         // Now point1 and point2 in the frame of vol1
+         for (ip=0; ip<3; ip++) dir[ip] = (point2[ip]-point1[ip])/len;
+         if (shape1->Contains(point1)) {
+            dist = shape1->DistFromInside(point1, dir, 3);
+            safety = dist;
+         } else {
+            dist = shape1->DistFromOutside(point1, dir, 3);
+            safety = len-dist;
+         }   
+         if (safety>ovlp) {
+            if (nodeovlp) {
+               nodeovlp->SetOverlap(TMath::Min(safety, nodeovlp->GetOverlap()));
+            } else {   
+               nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
+               fGeoManager->AddOverlap(nodeovlp);
+            }   
+//            break;
+         }
+      }
+   }
    return nodeovlp;
 }
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
 {
 // Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
@@ -562,8 +680,8 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
          capacity, err*capacity, vol->GetName());
 }   
 
-//-----------------------------------------------------------------------------
-void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option) const
+//______________________________________________________________________________
+void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option)
 {
 // Check illegal overlaps for volume VOL within a limit OVLP.
    if (vol->GetFinder()) return;
@@ -573,6 +691,8 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    TString opt(option);
    opt.ToLower();
    if (opt.Contains("s")) sampling = kTRUE;
+   if (opt.Contains("f")) fFullCheck = kTRUE;
+   else                   fFullCheck = kFALSE;
    if (sampling) {
       opt = opt.Strip(TString::kLeading, 's');
       Int_t npoints = atoi(opt.Data());
@@ -692,7 +812,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    }
 }
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 void TGeoChecker::PrintOverlaps() const
 {
 // Print the current list of overlaps held by the manager class.
@@ -702,7 +822,7 @@ void TGeoChecker::PrintOverlaps() const
    while ((ov=(TGeoOverlap*)next())) ov->PrintInfo();
 }
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 {
 //--- Draw point (x,y,z) over the picture of the daughers of the volume containing this point.
@@ -751,7 +871,8 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
    gPad->Modified();
    gPad->Update();
 }  
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
                             Int_t nphi,   Double_t phimin, Double_t phimax,
                             Double_t /*rmin*/, Double_t /*rmax*/, Option_t *option)
@@ -827,6 +948,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    }
    return hist;           
 }
+
 //______________________________________________________________________________
 void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
@@ -897,7 +1019,8 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    delete pm;
    delete xyz;
 }   
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Randomly shoot nrays from point (startx,starty,startz) and plot intersections 
@@ -997,7 +1120,8 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
    delete pm;
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
                                     const char* g3path)
 {
@@ -1111,7 +1235,8 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    if (!node_close) dist=-1;
    return node_close;
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *endpoint) const
 {
 // Shoot one ray from start point with direction (dirx,diry,dirz). Fills input array
@@ -1201,7 +1326,8 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    }
 //   printf("exit : INFINITE step. nelem=%i\n", nelem);
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 void TGeoChecker::Test(Int_t npoints, Option_t *option)
 {
    // Check time of finding "Where am I" for n points.
@@ -1250,7 +1376,8 @@ void TGeoChecker::Test(Int_t npoints, Option_t *option)
    delete xyz;
    delete timer;
 }
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 void TGeoChecker::TestOverlaps(const char* path)
 {
 //--- Geometry overlap checker based on sampling. 
@@ -1367,7 +1494,7 @@ void TGeoChecker::TestOverlaps(const char* path)
    delete overlaps;
 }
 
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 Double_t TGeoChecker::Weight(Double_t precision, Option_t *option)
 {
 // Estimate weight of top level volume with a precision SIGMA(W)/W
@@ -1443,7 +1570,7 @@ Double_t TGeoChecker::Weight(Double_t precision, Option_t *option)
    delete [] nin;
    return weight;
 }
-//-----------------------------------------------------------------------------
+//______________________________________________________________________________
 Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints)
 {
 // count voxel timing
@@ -1474,7 +1601,8 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
    time = timer.CpuTime();
    return time;
 }   
-//-----------------------------------------------------------------------------
+
+//______________________________________________________________________________
 Bool_t TGeoChecker::TestVoxels(TGeoVolume *vol, Int_t npoints)
 {
 // Returns optimal voxelization type for volume vol.

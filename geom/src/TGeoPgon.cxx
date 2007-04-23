@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.61 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.62 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1753,6 +1753,19 @@ void TGeoPgon::SetPoints(Float_t *points) const
       }
    }
 }
+
+//_____________________________________________________________________________
+void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = fNedges+1;
+   Int_t nz = GetNz();
+   nvert = nz*2*n;
+   Bool_t specialCase = (GetDphi() == 360);
+   nsegs = 4*(nz*n-1+(specialCase == kTRUE));
+   npols = 2*(nz*n-1+(specialCase == kTRUE));
+}
+
 //_____________________________________________________________________________
 Int_t TGeoPgon::GetNmeshVertices() const
 {

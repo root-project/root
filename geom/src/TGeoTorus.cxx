@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.35 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.36 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -1066,6 +1066,28 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
    }
    return TGeoShape::Big();   
 }      
+
+//_____________________________________________________________________________
+void TGeoTorus::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments()+1;
+   nvert = n*(n-1);
+   Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) nvert *= 2;
+   else if (hasphi) nvert += 2;
+   nsegs = (2*n-1)*(n-1);
+   npols = (n-1)*(n-1);
+   if (hasrmin) {
+      nsegs += (2*n-1)*(n-1);
+      npols += (n-1)*(n-1);
+   }
+   if (hasphi) {
+      nsegs += 2*(n-1);
+      npols += 2*(n-1);
+   }
+}
 
 //_____________________________________________________________________________
 const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const

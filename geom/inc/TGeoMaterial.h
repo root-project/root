@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.24 2006/11/03 21:22:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.25 2006/11/07 08:50:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -117,6 +117,9 @@ public:
    virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
    virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   void                     SetA(Double_t a) {fA = a; SetRadLen(0);}
+   void                     SetZ(Double_t z) {fZ = z; SetRadLen(0);}
+   void                     SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
    void                     SetIndex(Int_t index) {fIndex=index;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);

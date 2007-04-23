@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.31 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.32 2007/01/16 09:04:50 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -459,6 +459,13 @@ void TGeoEltu::SetPoints(Double_t *points) const
          indx++;
       }
    }
+}
+
+//_____________________________________________________________________________
+void TGeoEltu::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   TGeoTube::GetMeshNumbers(nvert,nsegs,npols);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.25 2006/06/02 16:00:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.26 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
 
    void              Browse(TBrowser *b);
    virtual void      cd() const {;}
-   void              CheckOverlaps(Double_t ovlp=0.1); // *MENU*
+   void              CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void              CheckShapes();
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
    void              Draw(Option_t *option="");

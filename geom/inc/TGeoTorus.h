@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.13 2005/11/18 16:07:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.14 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    Double_t              GetR() const    {return fR;}
    Double_t              GetRmin() const {return fRmin;}

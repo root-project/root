@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.26 2005/11/18 16:07:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.27 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 48;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}
@@ -140,6 +141,7 @@ public:
    virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
@@ -200,6 +202,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    const Double_t       *GetNlow() const {return &fNlow[0];}
    const Double_t       *GetNhigh() const {return &fNhigh[0];}

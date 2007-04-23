@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.16 2006/02/28 10:57:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.17 2006/11/03 21:22:32 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -42,6 +42,7 @@ private :
    TGeoVolume      *fVsafe;           // volume to which a safety sphere node was added
    TBuffer3D       *fBuff1;           // Buffer containing mesh vertices for first volume
    TBuffer3D       *fBuff2;           // Buffer containing mesh vertices for second volume
+   Bool_t           fFullCheck;       // Full overlap checking
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
 public:
@@ -53,7 +54,7 @@ public:
    virtual ~TGeoChecker();
    // methods
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
-   void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const;
+   void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="");
    void             CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp=0.1, Int_t npoints=1000000) const;
    void             CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    Double_t         CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
@@ -72,7 +73,7 @@ public:
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
    Double_t         Weight(Double_t precision=0.01, Option_t *option="v");
    
-   ClassDef(TGeoChecker, 1)               // a simple geometry checker
+   ClassDef(TGeoChecker, 2)               // a simple geometry checker
 };
 
 #endif

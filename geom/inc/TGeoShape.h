@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.39 2006/04/11 11:21:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.40 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -119,6 +119,7 @@ public:
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const = 0;
    Int_t                 GetId() const  {return fShapeId;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
+   virtual void          GetMeshNumbers(Int_t &/*nvert*/, Int_t &/*nsegs*/, Int_t &/*npols*/) const {;}
    virtual const char   *GetName() const;
    virtual Int_t         GetNmeshVertices() const {return 0;}
    char                 *GetPointerName() const;   

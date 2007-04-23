@@ -1,4 +1,4 @@
-// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.7 2005/11/18 16:07:58 brun Exp $
+// @(#) :$Name:  $:$Id: TGeoHalfSpace.h,v 1.8 2006/07/03 16:10:43 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual Double_t     *GetNorm()     {return fN;}
    virtual void          GetBoundingCylinder(Double_t * /*param*/) const {;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}

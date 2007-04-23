@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.40 2007/02/19 14:20:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.41 2007/02/21 10:35:13 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -1077,6 +1077,18 @@ void TGeoXtru::SetPoints(Float_t *points) const
       }
    }
 }
+
+//_____________________________________________________________________________
+void TGeoXtru::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t nz = GetNz();
+   Int_t nv = GetNvert();
+   nvert = nz*nv;
+   nsegs = nv*(2*nz-1);
+   npols = nv*(nz-1)+2;
+}
+
 //_____________________________________________________________________________
 Int_t TGeoXtru::GetNmeshVertices() const
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.20 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.21 2007/01/12 16:03:16 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -477,6 +477,16 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
    points[indx++] = 0; // x
    points[indx++] = 0; // y
    points[indx++] = fDz;
+}
+
+//_____________________________________________________________________________
+void TGeoParaboloid::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments();
+   nvert = n*(n+1)+2;
+   nsegs = n*(2*n+3);
+   npols = n*(n+2);
 }
 
 //_____________________________________________________________________________

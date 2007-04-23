@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.176 2007/03/14 11:31:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.177 2007/03/19 15:54:03 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3703,7 +3703,7 @@ TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipno
 // The current point must be on the boundary of fCurrentNode.
 
 // Extrapolate current point with shape tolerance.
-   Double_t extra = 1000.*TGeoShape::Tolerance();
+   Double_t extra = 100.*TGeoShape::Tolerance();
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -3739,7 +3739,7 @@ TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipno
 }   
 
 //_____________________________________________________________________________
-TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
+TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path, Bool_t frombdr)
 {
 // Find distance to next boundary and store it in fStep. Returns node to which this
 // boundary belongs. If PATH is specified, compute only distance to the node to which
@@ -3748,7 +3748,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 // geometry (usually physics processes). Therefore in this case this method provides the
 // answer to the question : "Is STEPMAX a safe step ?" returning a NULL node and filling
 // fStep with a big number.
-
+// In case frombdr=kTRUE, the isotropic safety is set to zero.
 // Note : safety distance for the current point is computed ONLY in case STEPMAX is
 //        specified, otherwise users have to call explicitly TGeoManager::Safety() if
 //        they want this computed for the current point.
@@ -3760,24 +3760,27 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
    Bool_t computeGlobal = kFALSE;
-   fIsOnBoundary = kFALSE;
-   if (stepmax<1E20) {
+   fIsOnBoundary = frombdr;
+   fSafety = 0.;
+   if (stepmax<1E29) {
       if (stepmax <= 0) {
          stepmax = - stepmax;
          computeGlobal = kTRUE;
       }
-      if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2]) && fLastSafety>=0.) fSafety = fLastSafety;
-      else fSafety = Safety();
-      fSafety = TMath::Abs(fSafety);
-      memcpy(fLastPoint, fPoint, kN3);
-      fLastSafety = fSafety;
-      if (fSafety<TGeoShape::Tolerance()) fIsOnBoundary = kTRUE;
-      else fIsOnBoundary = kFALSE;
-      fStep = stepmax;
-      if (stepmax<fSafety) {
+      if (stepmax<1E29) {
+         if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2]) && fLastSafety>=0.) fSafety = fLastSafety;
+         else fSafety = Safety();
+         fSafety = TMath::Abs(fSafety);
+         memcpy(fLastPoint, fPoint, kN3);
+         fLastSafety = fSafety;
+         if (fSafety<TGeoShape::Tolerance()) fIsOnBoundary = kTRUE;
+         else fIsOnBoundary = kFALSE;
          fStep = stepmax;
-         return fCurrentNode;
-      }
+         if (stepmax<fSafety) {
+            fStep = stepmax;
+            return fCurrentNode;
+         }
+      }   
    }
    if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
    Double_t snext  = TGeoShape::Big();
@@ -5313,43 +5316,11 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 {
 // Check all geometry for illegal overlaps within a limit OVLP.
-   ClearOverlaps();
-   Info("CheckOverlaps", "Checking overlaps for %s within a limit of %g", GetName(),ovlp);
-   fSearchOverlaps = kTRUE;
-   Int_t nvol = fVolumes->GetEntriesFast();
-   Int_t i10 = nvol/10;
-   Int_t iv=0;
-   TIter next(fVolumes);
-   TGeoVolume *vol;
-   while ((vol=(TGeoVolume*)next())) {
-      iv++;
-      if (i10 && nvol>1000) {
-         if ((iv%i10) == 0) printf("%i percent\n", Int_t(10*iv/i10));
-      }
-      if (!vol->GetNdaughters() || vol->GetFinder()) continue;
-      vol->CheckOverlaps(ovlp, option);
+   if (!fTopNode) {
+      Info("CheckOverlaps","Top node not set");
+      return;
    }
-   SortOverlaps();
-   Int_t novlps = fOverlaps->GetEntriesFast();
-   TNamed *obj;
-   char name[15];
-   char num[15];
-   Int_t ndigits=1;
-   Int_t i,j, result=novlps;
-   while ((result /= 10)) ndigits++;
-   for (i=0; i<novlps; i++) {
-      obj = (TNamed*)fOverlaps->At(i);
-      result = i;
-      name[0] = 'o';
-      name[1] = 'v';
-      for (j=0; j<ndigits; j++) name[j+2]='0';
-      name[ndigits+2] = 0;
-      sprintf(num,"%i", i);
-      memcpy(name+2+ndigits-strlen(num), num, strlen(num));
-      obj->SetName(name);
-   }
-   fSearchOverlaps = kFALSE;
-   Info("CheckOverlaps","number of illegal overlaps/extrusions : %d", novlps);
+   fTopNode->CheckOverlaps(ovlp,option);   
 }
 
 //_____________________________________________________________________________

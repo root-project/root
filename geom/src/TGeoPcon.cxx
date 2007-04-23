@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.59 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.60 2007/01/16 09:04:50 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -1195,6 +1195,18 @@ void TGeoPcon::Sizeof3D() const
 ///    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
 ///    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
 ///    painter->AddSize3D(numPoints, numSegs, numPolys);
+}
+
+//_____________________________________________________________________________
+void TGeoPcon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t nz = GetNz();
+   nvert = nz*2*n;
+   Bool_t specialCase = (GetDphi() == 360);
+   nsegs = 4*(nz*n-1+(specialCase == kTRUE));
+   npols = 2*(nz*n-1+(specialCase == kTRUE));
 }
 
 //_____________________________________________________________________________

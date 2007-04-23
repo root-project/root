@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.14 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.15 2007/01/16 09:04:50 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -869,6 +869,17 @@ void TGeoHype::SetPoints(Float_t *points) const
          points[indx++] = z;
       }
    }
+}
+
+//_____________________________________________________________________________
+void TGeoHype::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   Int_t n = gGeoManager->GetNsegments();
+   Bool_t hasRmin = HasInner();
+   nvert = (hasRmin)?(2*n*n):(n*n+2);
+   nsegs = (hasRmin)?(4*n*n):(n*(2*n+1));
+   npols = (hasRmin)?(2*n*n):(n*(n+1)); 
 }
 
 //_____________________________________________________________________________

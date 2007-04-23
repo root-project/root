@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.22 2006/07/03 16:10:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.23 2006/07/11 09:14:05 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -84,7 +84,6 @@ public:
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    static void           GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t *norm);
-   virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t             *GetVertices() {return &fXY[0][0];}
    Double_t              GetTwist(Int_t iseg) const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
@@ -165,7 +164,6 @@ public:
    Double_t              GetTl2() const   {return fTl2;}
    Double_t              GetAlpha2() const   {return fAlpha2;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
-   virtual Int_t         GetNmeshVertices() const {return 8;}
    virtual void          SetDimensions(Double_t *param);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
@@ -209,7 +207,6 @@ public:
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
-   virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}
    virtual void          SetDimensions(Double_t *param);
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");

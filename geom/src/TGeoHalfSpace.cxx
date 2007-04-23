@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.10 2006/07/03 16:10:44 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.11 2007/01/12 16:03:16 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -148,6 +148,15 @@ TGeoVolume *TGeoHalfSpace::Divide(TGeoVolume * /*voldiv*/, const char * /*divnam
    Error("Divide", "Half-spaces cannot be divided");
    return 0;
 }   
+
+//_____________________________________________________________________________
+void TGeoHalfSpace::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   nvert = 0;
+   nsegs = 0;
+   npols = 0;
+}
 
 //_____________________________________________________________________________
 void TGeoHalfSpace::InspectShape() const

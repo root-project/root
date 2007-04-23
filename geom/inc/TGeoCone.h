@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.25 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.26 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -76,6 +76,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Double_t      GetDz() const    {return fDz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual Double_t      GetRmin1() const {return fRmin1;}
    virtual Double_t      GetRmax1() const {return fRmax1;}
@@ -154,6 +155,7 @@ public:
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}

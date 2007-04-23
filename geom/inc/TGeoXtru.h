@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.14 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.15 2006/07/03 16:10:44 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -89,6 +89,7 @@ public:
    Double_t             *GetZ() const     {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;

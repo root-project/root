@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.3 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.4 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   26/09/05
    
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
                                 Double_t start, Double_t step);
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
+   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const {return fShape->GetNmeshVertices();}
    TGeoShape            *GetShape() const {return fShape;}
    TGeoScale            *GetScale() const {return fScale;}

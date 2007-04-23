@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.84 2006/11/03 21:22:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.85 2007/03/02 08:52:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -352,7 +352,7 @@ public:
 
    //--- geometry queries
    TGeoNode              *CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode);
-   TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::Big(),const char *path="");
+   TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::Big(),const char *path="", Bool_t frombdr=kFALSE);
    TGeoNode              *FindNextDaughterBoundary(Double_t *point, Double_t *dir, Int_t &idaughter, Bool_t compmatrix=kFALSE);
    TGeoNode              *FindNextBoundaryAndStep(Double_t stepmax=TGeoShape::Big(), Bool_t compsafe=kFALSE);
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
@@ -381,6 +381,7 @@ public:
    Bool_t                 GotoSafeLevel();
    Int_t                  GetSafeLevel() const;
    Double_t               GetSafeDistance() const      {return fSafety;}
+   Double_t               GetLastSafety() const        {return fLastSafety;}
    Double_t               GetStep() const              {return fStep;}
    void                   InspectState() const;
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
