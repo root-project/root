@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.7 2006/09/25 13:45:17 rdm Exp $
+// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.8 2006/09/27 08:48:18 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -395,7 +395,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fMaterialName = new TGTextEntry(f1, new TGTextBuffer(50), kMATERIAL_NAME);
    fMaterialName->Resize(100, fMaterialName->GetDefaultHeight());
    fMaterialName->SetToolTipText("Enter the new material name");
-   f1->AddFrame(fMaterialName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
+   f1->AddFrame(fMaterialName, new TGLayoutHints(kLHintsRight, 3, 1, 2, 5));
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
@@ -417,7 +417,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Density"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEntryDensity = new TGNumberEntry(f1, 0., 5, kMANAGER_DENSITY_SELECT);
-   fEntryDensity->SetNumStyle(TGNumberFormat::kNESReal);
+   fEntryDensity->SetNumStyle(TGNumberFormat::kNESRealThree);
    fEntryDensity->SetNumAttr(TGNumberFormat::kNEANonNegative);
    fEntryDensity->Resize(100,fEntryDensity->GetDefaultHeight()); 
    TGTextEntry *nef = (TGTextEntry*)fEntryDensity->GetNumberEntry();
@@ -1065,7 +1065,13 @@ void TGeoManagerEditor::DoCreateMaterial()
 void TGeoManagerEditor::DoCreateMixture()
 {
 // Create a new mixture.
-
+   Double_t density = fEntryDensity->GetNumber();
+   const char *name = fMaterialName->GetText();
+   fSelectedMaterial = new TGeoMixture(name, 1, density);
+   ShowSelectMaterial();
+   fCategories->GetItem("Media")->GetButton()->SetEnabled(kTRUE);
+   DoEditMaterial();
+   fMaterialName->SetText(Form("material%i", fGeometry->GetListOfMaterials()->GetSize()));
 }
 
 //______________________________________________________________________________

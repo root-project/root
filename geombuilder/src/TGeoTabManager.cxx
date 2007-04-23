@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.10 2007/01/29 15:10:48 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.11 2007/01/30 11:49:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -140,7 +140,9 @@ void TGeoTabManager::GetMaterialEditor(TGeoMaterial *material)
 {
 // Get editor for a material.
    if (!material) return;
-   if (!fMaterialPanel) fMaterialPanel = new TGeoTransientPanel(fGedEditor, "Material", material);
+   TString name = "Material";
+   if (material->IsMixture()) name = "Mixture";
+   if (!fMaterialPanel) fMaterialPanel = new TGeoTransientPanel(fGedEditor, name.Data(), material);
    else {
       fMaterialPanel->SetModel(material);
       fMaterialPanel->Show();
