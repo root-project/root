@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.5 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.6 2007/01/17 17:05:09 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -389,6 +389,10 @@ void TGTextEditor::Build()
    fToolBar->GetButton(kM_EDIT_PASTE)->SetState(kButtonDisabled);
 
    fTextEdit = new TGTextEdit(this, 10, 10, 1);
+   Pixel_t pxl;
+   gClient->GetColorByName("#ccccff", pxl);
+   fTextEdit->SetSelectBack(pxl);
+   fTextEdit->SetSelectFore(TGFrame::GetBlackPixel());
    fTextEdit->Associate(this);
    AddFrame(fTextEdit, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
@@ -407,6 +411,7 @@ void TGTextEditor::Build()
 
    fTextEdit->SetFocus();
    fTextEdit->Connect("DataChanged()", "TGTextEditor", this, "DataChanged()");
+   fTextEdit->Connect("DataDropped(char *)", "TGTextEditor", this, "DataDropped(char *)");
    fTextEdit->MapWindow();
 
    MapSubwindows();
@@ -424,6 +429,21 @@ void TGTextEditor::Build()
 
    fExiting = kFALSE;
    fTextChanged = kFALSE;
+}
+
+void TGTextEditor::DataDropped(char *fname)
+{
+   char *p, tmp[1024];
+   if ((p = strrchr(fname, '/')) == 0) {
+      p = fname;
+   } else {
+      ++p;
+   }
+   sprintf(tmp, "%s: %ld lines read.", p, fTextEdit->ReturnLineCount());
+   fStatusBar->SetText(tmp, 0);
+   fFilename = p;
+   sprintf(tmp, "%s - TGTextEditor", p);
+   SetWindowName(tmp);
 }
 
 //______________________________________________________________________________

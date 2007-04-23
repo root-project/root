@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.30 2007/04/19 16:23:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.31 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TObjString.h"
 #include "TMacro.h"
 #include "TGMsgBox.h"
+#include "TUrl.h"
 #include "Riostream.h"
 
 
@@ -1096,13 +1097,15 @@ Bool_t TGTextView::HandleDNDdrop(TDNDdata *data)
       return kTRUE;
    }
    else if (data->fDataType == uriObj) {
-      TString sfname = (char *)data->fData;
-      sfname.ReplaceAll("file:", "");
-      sfname.ReplaceAll("\r\n", "");
-      sfname.ReplaceAll("//", "/");
-      if (IsTextFile(sfname.Data()))
-         LoadFile(sfname.Data());
-         DataDropped(sfname.Data());
+      TString sfname((char *)data->fData);
+      if (sfname.Length() > 7) {
+         sfname.ReplaceAll("\r\n", "");
+         TUrl uri(sfname.Data());
+         if (IsTextFile(uri.GetFile())) {
+            LoadFile(uri.GetFile());
+            DataDropped(uri.GetFile());
+         }
+      }
    }
    return kFALSE;
 }

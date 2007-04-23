@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.105 2007/02/15 15:04:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.106 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -580,7 +580,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
          if (obj->IsA() == TSystemFile::Class()) {
             char str[256];
             TDNDdata data;
-            sprintf(str, "file:%s/%s\r\n",
+            sprintf(str, "file://%s/%s\r\n",
                     gSystem->UnixPathName(obj->GetTitle()),
                     obj->GetName());
             data.fData = (void *)strdup(str);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.53 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.54 2007/04/20 15:07:46 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -902,7 +902,7 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
 
    TObject *obj = 0;
    TClass *cl;
-   const TGPicture *pic;
+   const TGPicture *pic=0;
    const char *iconname = 0;
 
    if (f->InheritsFrom("TGLVEntry")) {
@@ -1093,7 +1093,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
       }
       if (over_frame) {
          if (!gDNDManager->IsDragging()) {
-            if (fBdown && ((abs(event->fX - fXDND) > 3) || (abs(event->fY - fYDND) > 3))) {
+            if (fBdown && ((abs(event->fX - fXDND) > 2) || (abs(event->fY - fYDND) > 2))) {
                if (gDNDManager && over_frame->IsDNDSource()) {
                   SetDragPixmap(GetObjPicture(over_frame));
                   gDNDManager->StartDrag(over_frame, event->fXRoot, event->fYRoot);

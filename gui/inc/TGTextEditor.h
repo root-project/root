@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.2 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.3 2006/07/18 19:31:38 brun Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    void           Goto();
    void           About();
    void           DataChanged() { fTextChanged = kTRUE; }
+   void           DataDropped(char *fname);
    Int_t          IsSaved();
    void           CompileMacro();
    void           ExecuteMacro();
