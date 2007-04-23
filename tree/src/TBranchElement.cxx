@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.221 2007/03/26 16:02:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.222 2007/04/03 16:10:23 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1297,6 +1297,113 @@ void TBranchElement::FillLeaves(TBuffer& b)
          si->WriteBufferSTL(b, GetCollectionProxy(), n, fID, fOffset);
       }
    }
+}
+
+//______________________________________________________________________________
+static void R__CleanName(std::string &name) 
+{
+   // Remove trailing dimensions and make sure
+   // there is a trailing dot.
+
+   std::size_t dim = name.find_first_of("[");
+   if (dim != std::string::npos) {
+      name.erase(dim);
+   }
+   if (name[name.size()-1] != '.') {
+      name += '.';
+   }
+}
+
+//______________________________________________________________________________
+TBranch* TBranchElement::FindBranch(const char *name)
+{
+   // Find the immediate sub-branch with passed name.
+
+   // The default behavior of TBranch::FindBranch is sometimes 
+   // incorrect if this branch represent a base class, since
+   // the base class name might or might not be in the name
+   // of the sub-branches and might or might not be in the
+   // name being passed.
+
+   if (fID >= 0) {
+      TVirtualStreamerInfo* si = GetInfo();
+      TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+      if (se && se->IsBase()) {
+         // We allow the user to pass only the last dotted component of the name.
+         std::string longnm(GetName());
+         R__CleanName(longnm);
+         longnm += name;
+         std::string longnm_parent(GetMother()->GetSubBranch(this)->GetName());
+         R__CleanName(longnm_parent);
+         longnm_parent += name;  // Name without the base class name
+
+         TBranch* branch = 0;
+         TIter next(GetListOfBranches());
+         while ((branch = (TBranch*) next())) {
+            std::string brname(branch->GetName());
+            std::size_t dim = brname.find_first_of("[");
+            if (dim != std::string::npos) {
+               brname.erase(dim);
+            }
+            if (name == brname) {
+               return branch;
+            }
+            if (longnm == brname) {
+               return branch;
+            }
+            if (longnm_parent == brname) {
+               return branch;
+            }
+         }
+         return 0;
+      }
+   }
+   TBranch *result = TBranch::FindBranch(name);
+   if (!result) {
+      // Look in base classes if any
+      for(Int_t i = 0; i < GetListOfBranches()->GetEntries(); ++i) {
+         TBranchElement *br = (TBranchElement*)GetListOfBranches()->At(i);
+         TVirtualStreamerInfo* si = br->GetInfo();
+         if (br->GetID() >= 0) {
+            TStreamerElement* se = (TStreamerElement*) si->GetElems()[br->GetID()];
+            if (se && se->IsBase()) {
+               result = br->FindBranch(name);
+            }
+         }
+      }
+   }
+   return result;
+}
+
+//______________________________________________________________________________
+TLeaf* TBranchElement::FindLeaf(const char *name)
+{
+   // -- Find the leaf corresponding to the name 'searchname'.
+
+   TLeaf *leaf = TBranch::FindLeaf(name);
+
+   if (leaf==0 && GetListOfLeaves()->GetEntries()==1) {
+      TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
+      if (parent==this || parent->GetID()<0 ) return 0;
+
+      TVirtualStreamerInfo* si = parent->GetInfo();
+      TStreamerElement* se = (TStreamerElement*) si->GetElems()[parent->GetID()];
+
+      if (! se->IsBase() ) return 0;
+
+      TBranchElement *grand_parent = (TBranchElement*)GetMother()->GetSubBranch(parent);
+
+      std::string longname( grand_parent->GetName() );
+      R__CleanName(longname);
+      longname += name;
+
+      std::string leafname( GetListOfLeaves()->At(0)->GetName() );
+
+      if ( longname == leafname ) {
+         return (TLeaf*)GetListOfLeaves()->At(0);
+      }
+   }
+   return leaf;
 }
 
 //______________________________________________________________________________

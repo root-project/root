@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.56 2007/03/08 23:29:01 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.57 2007/03/26 16:02:09 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -110,6 +110,8 @@ public:
    virtual void             Browse(TBrowser* b);
    virtual Int_t            Fill();
    virtual void             FillLeaves(TBuffer& b);
+   virtual TBranch         *FindBranch(const char *name);
+   virtual TLeaf           *FindLeaf(const char *name);
    virtual char            *GetAddress() const;
            TBranchElement  *GetBranchCount() const { return fBranchCount; }
            TBranchElement  *GetBranchCount2() const { return fBranchCount2; }
