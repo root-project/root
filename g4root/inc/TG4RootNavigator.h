@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.h,v 1.1 2006/11/22 17:14:01 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.h,v 1.2 2006/11/22 17:29:54 rdm Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -41,6 +41,7 @@ protected:
    Bool_t                fStepEntering;    // Next step is entering daughter
    Bool_t                fStepExiting;     // Next step is exiting current volume
    G4ThreeVector         fNextPoint;       // Crossing point with next boundary
+   G4double              fLastSafety;      // Last computed safety
 private:
    G4VPhysicalVolume *SynchronizeHistory();
    TGeoNode          *SynchronizeGeoManager();

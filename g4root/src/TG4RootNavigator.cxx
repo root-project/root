@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.6 2007/02/26 16:10:37 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.7 2007/03/02 08:52:02 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -36,7 +36,8 @@ TG4RootNavigator::TG4RootNavigator()
                   fDetConstruction(0),
                   fStepEntering(kFALSE),
                   fStepExiting(kFALSE),
-                  fNextPoint()
+                  fNextPoint(),
+                  fLastSafety(0)
 {
 // Dummy ctor.
 }
@@ -48,7 +49,8 @@ TG4RootNavigator::TG4RootNavigator(TG4RootDetectorConstruction *dc)
                   fDetConstruction(0),
                   fStepEntering(kFALSE),
                   fStepExiting(kFALSE),
-                  fNextPoint()
+                  fNextPoint(),
+                  fLastSafety(0)
 {
 // Default ctor.
    SetDetectorConstruction(dc);
@@ -100,7 +102,10 @@ G4double TG4RootNavigator::ComputeStep(const G4ThreeVector &pGlobalPoint,
    istep++;
 //   printf("step#%lld\n", istep);
    Double_t tol = 0.;
-   if (fEnteredDaughter || fExitedMother) {
+   Double_t pstep = pCurrentProposedStepLength;
+   if (pstep>TGeoShape::Big()) pstep=TGeoShape::Big();
+   Bool_t frombdr = fEnteredDaughter | fExitedMother;
+   if (frombdr) {
       Double_t npt[3];
       tol = TGeoShape::Tolerance();
       npt[0] = pGlobalPoint.x()*gCm+tol*pDirection.x();
@@ -111,9 +116,10 @@ G4double TG4RootNavigator::ComputeStep(const G4ThreeVector &pGlobalPoint,
       fGeometry->SetCurrentPoint(pGlobalPoint.x()*gCm, pGlobalPoint.y()*gCm, pGlobalPoint.z()*gCm);
    }   
    fGeometry->SetCurrentDirection(pDirection.x(), pDirection.y(), pDirection.z());
-   fGeometry->FindNextBoundary(-(pCurrentProposedStepLength*gCm-tol));
+   fGeometry->FindNextBoundary(-(pstep*gCm-tol), "", frombdr);
    pNewSafety = (fGeometry->GetSafeDistance()-tol)*cm;
    if (pNewSafety<0.) pNewSafety = 0.;
+   fLastSafety = pNewSafety;
    G4double step = (gGeoManager->GetStep()+tol)*cm;
 //   if (step >= pCurrentProposedStepLength) step = kInfinity;
    if (step < 2.*tol*cm) step = 0.;
@@ -284,10 +290,11 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
    fEnteredDaughter = fExitedMother = kFALSE;
    Bool_t onBoundary = kFALSE;
    if (fStepEntering || fStepExiting) {
-      Double_t d2 = (globalPoint.x()-fNextPoint.x())*(globalPoint.x()-fNextPoint.x()) +
-                    (globalPoint.y()-fNextPoint.y())*(globalPoint.y()-fNextPoint.y()) +
-                    (globalPoint.z()-fNextPoint.z())*(globalPoint.z()-fNextPoint.z());
-      if (d2 < 1.e-10) onBoundary = kTRUE;
+      Double_t d2 = globalPoint.diff2(fNextPoint);
+      if (d2 < 1.e-10) {
+         fNextPoint = globalPoint;
+         onBoundary = kTRUE;
+      }   
 //      G4cout << G4endl << "    ON BOUNDARY" << "entering/exiting="<< fStepEntering << "/" << fStepExiting << G4endl;
    }
    if ((!ignoreDirection || onBoundary )&& pGlobalDirection) {
@@ -370,6 +377,8 @@ G4double TG4RootNavigator::ComputeSafety(const G4ThreeVector &globalpoint,
 // calculations.  The geometry must be closed.
 
 // TO CHANGE TGeoManager::Safety To take into account pProposedMaxLength
+   Double_t d2 = globalpoint.diff2(fNextPoint);
+   if (d2 < 1.e-10) return fLastSafety;
    fGeometry->ResetState();
    fGeometry->SetCurrentPoint(globalpoint.x()*gCm, globalpoint.y()*gCm, globalpoint.z()*gCm);
    G4double safety = fGeometry->Safety()*cm;
