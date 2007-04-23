@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.340 2007/04/17 15:10:22 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.341 2007/04/20 16:04:43 moneta Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -6572,18 +6572,17 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       Double_t dSEXPT;
       Bool_t addStatus = fgAddDirectory;
       fgAddDirectory = kFALSE;
-      TH1F *hDistValues = new TH1F("hDistValues","KS distances",200,0,1);
       TH1 *hExpt = (TH1*)Clone();
       fgAddDirectory = addStatus;
       // make nEXPT experiments (this should be a parameter)
+      prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {
          hExpt->Reset();
          hExpt->FillRandom(h1,(Int_t)ne2);
          dSEXPT = KolmogorovTest(hExpt,"M");
-         hDistValues->Fill(dSEXPT);
+         if (dSEXPT>dfmax) prb3 += 1.0;
       }
-      prb3 = hDistValues->Integral(hDistValues->FindBin(dfmax),200)/hDistValues->Integral();
-      delete hDistValues;
+      prb3 /= (Double_t)nEXPT;
       delete hExpt;
    }
 
