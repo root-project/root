@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.214 2007/03/30 21:37:47 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.215 2007/04/04 12:43:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1928,6 +1928,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
    char     left[kMaxLen];   left[0] = '\0';
    char  scratch[kMaxLen];
    char scratch2[kMaxLen];
+   std::string currentname;
+   Int_t previousdot = 0;
    char *current;
    TLeaf *tmp_leaf=0;
    TBranch *branch=0, *tmp_branch=0;
@@ -2207,7 +2209,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             sprintf(scratch,"%s.%s",first,work);
             sprintf(scratch2,"%s.%s.%s",first,second,work);
 
-
+            if (previousdot) {
+               currentname = &(work[previousdot+1]);
+            }
 
             // First look for the current 'word' in the list of
             // leaf of the
@@ -2215,6 +2219,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
+               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(currentname.c_str());
             }
             if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                // This is a non-object leaf, it should NOT be specified more except for
@@ -2226,6 +2231,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                tmp_branch = branch->FindBranch(work);
                if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
                if (!tmp_branch) tmp_branch = branch->FindBranch(scratch2);
+               if (!tmp_branch) tmp_branch = branch->FindBranch(currentname.c_str());
             }
             if (tmp_branch) {
                branch=tmp_branch;
@@ -2235,6 +2241,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                   tmp_leaf = branch->FindLeaf(work);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
+                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(currentname.c_str());
                   if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                      // This is a non-object leaf, it should NOT be specified
                      // more except for dimensions.
@@ -2262,7 +2269,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                      work[where] = '@';
                      work[where+1] = cname[i];
                      ++current;
+                     previousdot = where+1;
                   } else {
+                     previousdot = strlen(work);
                      work[strlen(work)] = cname[i];
                   }
                } else --current;
