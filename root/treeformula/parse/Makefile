@@ -1,12 +1,12 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake* test.root *.clog
+CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake* test.root *.clog  speedtest.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += QEvent functca cscan gaus aliases templateName BoolOrder \
 				testStringFormula testBoolOpt expotest NonFormulaMean \
-				templateBase strings
+				templateBase strings base
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -78,3 +78,13 @@ QEvent: QEvent.log
 	$(TestDiff)
 
 strings: strings.log
+
+runbase_C.$(DllSuf): ClassDefinitions.C
+
+speedtest.root: runbase_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l runbase.C+\(true\) 2>&1 > speedtest.log
+
+base.clog: speedtest.root
+
+base: base.clog 
+	$(TestDiff)
