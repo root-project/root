@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.117 2007/04/20 15:07:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.118 2007/04/22 15:48:59 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1684,24 +1684,25 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
       return kTRUE;
    }
    else if (data->fDataType == uriObj) {
-      TString sfname = (char *)data->fData;
-      sfname.ReplaceAll("file:", "");
-      sfname.ReplaceAll("\r\n", "");
-      sfname.ReplaceAll("//", "/");
-      if (sfname.EndsWith(".bmp") ||
-          sfname.EndsWith(".gif") ||
-          sfname.EndsWith(".jpg") ||
-          sfname.EndsWith(".png") ||
-          sfname.EndsWith(".tiff") ||
-          sfname.EndsWith(".xpm")) {
-         TImage *img = TImage::Open(sfname.Data());
-         if (img) {
-            img->Draw("xxx");
-            img->SetEditable(kTRUE);
+      TString sfname((char *)data->fData);
+      if (sfname.Length() > 7) {
+         sfname.ReplaceAll("\r\n", "");
+         TUrl uri(sfname.Data());
+         if (sfname.EndsWith(".bmp") ||
+            sfname.EndsWith(".gif") ||
+            sfname.EndsWith(".jpg") ||
+            sfname.EndsWith(".png") ||
+            sfname.EndsWith(".tiff") ||
+            sfname.EndsWith(".xpm")) {
+            TImage *img = TImage::Open(uri.GetFile());
+            if (img) {
+               img->Draw("xxx");
+               img->SetEditable(kTRUE);
+            }
          }
+         gPad->Modified();
+         gPad->Update();
       }
-      gPad->Modified();
-      gPad->Update();
    }
    return kFALSE;
 }
