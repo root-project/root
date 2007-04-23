@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.53 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.54 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -684,8 +684,7 @@ TH1 *TProfile2D::DrawCopy(Option_t *option) const
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TProfile2D *newpf = new TProfile2D();
-   Copy(*newpf);
+   TProfile2D *newpf = (TProfile2D*)Clone();
    newpf->SetDirectory(0);
    newpf->SetBit(kCanDelete);
    newpf->AppendPad(option);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.84 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.85 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -664,8 +664,7 @@ TH1 *TProfile::DrawCopy(Option_t *option) const
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TProfile *newpf = new TProfile();
-   Copy(*newpf);
+   TProfile *newpf = (TProfile*)Clone();
    newpf->SetDirectory(0);
    newpf->SetBit(kCanDelete);
    newpf->AppendPad(option);
