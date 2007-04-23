@@ -52,6 +52,8 @@ Processing clonesfile.root
 
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:list<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:list<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
 Processing listsfile.root
 *************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
@@ -75,8 +77,6 @@ Processing listsfile.root
 *************************************************************
 *        0 *        0 *                                     *
 *************************************************************
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:list<Track> to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:list<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
 *************************************************************
@@ -104,6 +104,8 @@ Error in <TTreeFormula::Compile>:  Bad numerical expression : "TopCl.fTracksPtr.
 *************************************************************
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:vector<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Processing vectorfile.root
 *************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
@@ -127,8 +129,6 @@ Processing vectorfile.root
 *************************************************************
 *        0 *        0 *                                     *
 *************************************************************
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:vector<Track> to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:vector<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 *************************************************************
