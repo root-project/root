@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.4 2007/03/16 15:25:55 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.5 2007/03/28 15:12:35 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -847,7 +847,7 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
       if (real) {
          filesToParse[declFileName] = real;
          listFilesToParse.push_back(declFileName);
-         delete real;
+         delete [] real;
       }
    }
    /* do it only for the header
