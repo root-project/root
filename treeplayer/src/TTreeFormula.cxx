@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.215 2007/04/04 12:43:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.216 2007/04/23 17:54:31 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3970,7 +3970,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
    if (fNoper==2 && GetAction(0)==kAlternate) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
-      return subform->IsInteger();
+      return subform->IsInteger(kFALSE);
    }
 
    if (fNoper > 1) return kFALSE;
@@ -3978,7 +3978,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
    if (GetAction(0)==kAlias) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
-      return subform->IsInteger();
+      return subform->IsInteger(kFALSE);
    }
 
    if (fLeaves.GetEntries() != 1) {
@@ -4037,8 +4037,9 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UShort_t")) return kTRUE;
-   if (!strcmp(leaf->GetTypeName(),"Bool_t")) return kTRUE;
-   if (!strcmp(leaf->GetTypeName(),"UChar_t")) return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"Bool_t"))   return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"Char_t"))   return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"UChar_t"))  return kTRUE;
    return kFALSE;
 }
 
