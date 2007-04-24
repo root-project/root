@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.6 2007/01/17 17:05:09 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.7 2007/04/23 09:07:27 brun Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -431,8 +431,12 @@ void TGTextEditor::Build()
    fTextChanged = kFALSE;
 }
 
+//______________________________________________________________________________
 void TGTextEditor::DataDropped(char *fname)
 {
+   // Update file informations when receiving the signal
+   // DataDropped from TGTextEdit widget.
+
    char *p, tmp[1024];
    if ((p = strrchr(fname, '/')) == 0) {
       p = fname;
