@@ -72,16 +72,17 @@ fi
 AC_SUBST([REFLEXTESTDIRS])
 
 # config files and output 
-AC_CONFIG_FILES([ Makefile                    \
-                  doc/Makefile                \
-                  inc/Makefile                \
-                  inc/Reflex/Makefile         \
-                  inc/Reflex/Builder/Makefile \
-                  python/Makefile             \
-                  python/genreflex/Makefile   \
-                  src/Makefile                \
-                  test/Makefile               \
-                  test/testDict1/Makefile     \
+AC_CONFIG_FILES([ Makefile                     \
+                  doc/Makefile                 \
+                  inc/Makefile                 \
+                  inc/Reflex/Makefile          \
+                  inc/Reflex/Builder/Makefile  \
+                  inc/Reflex/internal/Makefile \
+                  python/Makefile              \
+                  python/genreflex/Makefile    \
+                  src/Makefile                 \
+                  test/Makefile                \
+                  test/testDict1/Makefile      \
                   test/testDict2/Makefile
                 ])
 

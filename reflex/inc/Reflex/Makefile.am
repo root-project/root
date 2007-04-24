@@ -1,7 +1,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = Builder
+SUBDIRS = Builder internal
 
 Reflexdir = $(includedir)/Reflex
 
@@ -10,20 +10,6 @@ Reflex_HEADERS =                   \
   Base.h                           \
   Callback.h                       \
   DictionaryGenerator.h            \
-  internal/InternalTools.h         \
-  internal/MemberBase.h            \
-  internal/MemberTemplateImpl.h    \
-  internal/MemberTemplateName.h    \
-  internal/OwnedMember.h           \
-  internal/OwnedMemberTemplate.h   \
-  internal/OwnedPropertyList.h     \
-  internal/PropertyListImpl.h      \
-  internal/ScopeBase.h             \
-  internal/ScopeName.h             \
-  internal/TypeBase.h              \
-  internal/TypeName.h              \
-  internal/TypeTemplateImpl.h      \
-  internal/TypeTemplateName.h      \
   Kernel.h                         \
   Member.h                         \
   MemberTemplate.h                 \
