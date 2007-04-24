@@ -6252,6 +6252,7 @@ gdk_event_translate(GdkEvent * event,
          gdk_event_queue_append(event0);
 
          DragQueryPoint(hDrop, &pt);
+         MapWindowPoints(xevent->hwnd, NULL, &pt, 1);
          event1 = gdk_event_new();
          event1->any.window = window;
          event1->type = GDK_CLIENT_EVENT;
