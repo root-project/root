@@ -28,15 +28,15 @@ void hbars()
    hDiv->SetBarWidth(0.45);
    hDiv->SetBarOffset(0.1);
    hDiv->SetFillColor(49);
-   hDiv->DrawCopy("bar2");
+   TH1 *h1 = hDiv->DrawCopy("bar2");
    hDivFR->SetBarWidth(0.4);
    hDivFR->SetBarOffset(0.55);
    hDivFR->SetFillColor(50);
-   hDivFR->DrawCopy("bar2,same");
+   TH1 *h2 = hDivFR->DrawCopy("bar2,same");
   
    TLegend *legend = new TLegend(0.55,0.65,0.76,0.82);
-   legend->AddEntry(hDiv,"All nations","f");
-   legend->AddEntry(hDivFR,"French only","f");
+   legend->AddEntry(h1,"All nations","f");
+   legend->AddEntry(h2,"French only","f");
    legend->Draw();
    
    c1->cd();
