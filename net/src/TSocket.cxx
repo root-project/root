@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.40 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.41 2007/03/13 09:31:36 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -623,8 +623,8 @@ Int_t TSocket::Recv(TMessage *&mess)
    Int_t  n;
    UInt_t len;
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
-      if (n == -5) {
-         // Connection reset or broken
+      if (n == 0 || n == -5) {
+         // Connection closed, reset or broken
          Close();
       }
       mess = 0;
@@ -634,8 +634,8 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
-      if (n == -5) {
-         // Connection reset or broken
+      if (n == 0 || n == -5) {
+         // Connection closed, reset or broken
          Close();
       }
       delete [] buf;
@@ -681,12 +681,13 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
+   if (length == 0) return 0;
 
    Int_t n;
 
    if ((n = gSystem->RecvRaw(fSocket, buffer, length, (int) opt)) <= 0) {
-      if (n == -5) {
-         // Connection reset or broken
+      if (n == 0 || n == -5) {
+         // Connection closed, reset or broken
          Close();
       }
       return n;
