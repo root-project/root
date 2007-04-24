@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.3 2007/01/15 11:30:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.4 2007/04/24 18:51:30 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -121,8 +121,6 @@ TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4,
 void TGLMesh::GetNormal(const TGLVertex3 &v, TGLVector3 &n)const
 {
    // get normal
-   Double_t z = (fRmax1 - fRmax2) / (2 * fDz);
-   Double_t mag = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + z * z);
 
    if( fDz < 1.e-10 ) {
       n[0] = 0.;
