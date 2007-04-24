@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.123 2007/03/23 09:06:11 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.124 2007/04/19 21:07:02 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -7270,7 +7270,7 @@ Int_t TGWin32::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t len,
       return n;
    }
    else {
-      if (!OpenClipboard(NULL)) {
+      if (!OpenClipboard((HWND)GDK_DRAWABLE_XID((GdkWindow *)win))) {
          return 0;
       }
       hdata = GetClipboardData(CF_PRIVATEFIRST);
@@ -7315,7 +7315,7 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
    static UINT gdk_selection_notify_msg = 
       RegisterWindowMessage("gdk-selection-notify");
    HWND hWnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)win);
-   if (!OpenClipboard(NULL)) {
+   if (!OpenClipboard((HWND)GDK_DRAWABLE_XID((GdkWindow *)win))) {
       return;
    }
    hdata = GetClipboardData(CF_PRIVATEFIRST);

@@ -6222,22 +6222,78 @@ gdk_event_translate(GdkEvent * event,
 
    case WM_DROPFILES:
       {
-         DWORD i;
+         DWORD i, len;
          char tmp[256];
-         HDROP hDrop = (HDROP)xevent->wParam;
-         DWORD DropsNo = DragQueryFile(hDrop, -1, NULL, 0);
-         return_val = TRUE;
-         event->type = GDK_CLIENT_EVENT;
-         event->client.type = GDK_CLIENT_EVENT;
-         event->client.window = window;
-         event->client.message_type = gdk_atom_intern("XdndDrop", TRUE);
-         event->client.data_format = 0;
-         event->client.data.l[0] = 0;
-         for (i = 0; i < DropsNo; i++) {
-            DragQueryFile(hDrop, i, tmp, 256);
-            // Do anything with the data...
+         char uri[256];
+         HDROP hDrop;
+         HGLOBAL hdata;
+         char *ptr;
+         POINT pt;
+         GdkAtom *types;
+         GdkEvent *event0, *event1, *event2;
+
+         hDrop = (HDROP)xevent->wParam;
+         types = calloc(sizeof(GdkAtom), 3);
+         types[0] = gdk_atom_intern("text/uri-list", FALSE);
+         types[1] = types[2] = 0;
+         event0 = gdk_event_new();
+         event0->type = GDK_CLIENT_EVENT;
+         event0->any.window = window;
+         event0->client.type = GDK_CLIENT_EVENT;
+         event0->client.window = window;
+         event0->client.message_type = gdk_atom_intern("XdndEnter", TRUE);
+         event0->client.data_format = 0;
+         event0->client.data.l[0] = (long)window;
+         event0->client.data.l[1] = 0;
+         event0->client.data.l[2] = (long)*types;
+         event0->client.data.l[3] = 0;
+         event0->client.data.l[4] = 0;
+         gdk_window_ref(window);
+         gdk_event_queue_append(event0);
+
+         DragQueryPoint(hDrop, &pt);
+         event1 = gdk_event_new();
+         event1->any.window = window;
+         event1->type = GDK_CLIENT_EVENT;
+         event1->client.type = GDK_CLIENT_EVENT;
+         event1->client.window = window;
+         event1->client.message_type = gdk_atom_intern("XdndPosition", TRUE);
+         event1->client.data_format = 0;
+         event1->client.data.l[0] = (long)window;
+         event1->client.data.l[1] = 0;
+         event1->client.data.l[2] = (long)(pt.y | (pt.x << 16));
+         event1->client.data.l[3] = 0; // time
+         event1->client.data.l[4] = 0; // action
+         gdk_window_ref(window);
+         gdk_event_queue_append(event1);
+
+         event2 = gdk_event_new();
+         event2->any.window = window;
+         event2->type = GDK_CLIENT_EVENT;
+         event2->client.type = GDK_CLIENT_EVENT;
+         event2->client.window = window;
+         event2->client.message_type = gdk_atom_intern("XdndDrop", TRUE);
+         event2->client.data_format = 0;
+         event2->client.data.l[0] = 0;
+         if (OpenClipboard(xevent->hwnd)) {
+            DragQueryFile(hDrop, 0, tmp, 256);
+            sprintf(uri, "file://%s\r\n", tmp);
+            len = strlen(uri);
+             // Do anything with the data...
+            hdata = GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, len+1);
+            ptr = (char *)GlobalLock(hdata);
+            for (i = 0; i < len; i++) {
+               ptr[i] = uri[i];
+            }
+            ptr[len] = '\0';
+            GlobalUnlock(hdata);
+            SetClipboardData(CF_PRIVATEFIRST, hdata);
+            CloseClipboard();
          }
          DragFinish(hDrop);
+         gdk_window_ref(window);
+         gdk_event_queue_append(event2);
+         return_val = FALSE;
       }
       break;
 
