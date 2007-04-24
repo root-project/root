@@ -53,5 +53,8 @@
 
   <class pattern="std::list<MYFLOAT*>"/>
   <class pattern="std::list<MYINT*>"/>
+
+  <class pattern="std::vector<ClassO*"/>
+  <class pattern="std::vector<const ClassO*"/>
  
 </lcgdict>

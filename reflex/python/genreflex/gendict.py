@@ -829,11 +829,13 @@ class genDictionary(object) :
       prdict = {'PointerType':'*', 'ReferenceType':'&'}
       nidelem = self.xref[nid]['elem']
       if nidelem in ('PointerType','ReferenceType') :
-        if const : return self.genTypeName(nid, enum, const, colon)
-        else :     return self.genTypeName(nid, enum, const, colon) + ' ' + cvdict[id[-1]]
+        if const : return self.genTypeName(nid, enum, False, colon)
+        else :     return self.genTypeName(nid, enum, False, colon) + ' ' + cvdict[id[-1]]
       else :
-        if const : return self.genTypeName(nid, enum, const, colon)
-        else     : return cvdict[id[-1]] + ' ' + self.genTypeName(nid, enum, const, colon)
+        if const : return self.genTypeName(nid, enum, False, colon)
+        else     : return cvdict[id[-1]] + ' ' + self.genTypeName(nid, enum, False, colon)
+    # "const" vetoeing must not recurse
+    const = False
     elem  = self.xref[id]['elem']
     attrs = self.xref[id]['attrs']
     s = self.genScopeName(attrs, enum, const, colon)
@@ -1280,12 +1282,12 @@ class genDictionary(object) :
     for i in range(narg) :
       a = args[i]
       #arg = self.genArgument(a, 0);
-      arg = self.genTypeName(a['type'],colon=True,const=True)
-      if arg[-1] == '*' :
-         if arg[-2] == ':' :   # Pointer to data member
-           s += '*(%s*)arg[%d]' % (arg, i )
-         else :
-           s += '(%s)arg[%d]' % (arg, i )
+      arg = self.genTypeName(a['type'],colon=True)
+      if arg[-1] == '*' or len(arg) > 7 and arg[-7:] == '* const':
+        if arg[-2:] == ':*' or arg[-8:] == ':* const' : # Pointer to data member
+          s += '*(%s*)arg[%d]' % (arg, i )
+        else :
+          s += '(%s)arg[%d]' % (arg, i )
       elif arg[-1] == ']' :
         s += '(%s)arg[%d]' % (arg, i)
       elif arg[-1] == ')' or (len(arg) > 7 and arg[-7:] == ') const'): # FIXME, the second check is a hack

@@ -85,6 +85,8 @@ class selClass :
     elif name in ('exclusion',) :
       self.classes   = self.exc_classes
       self.functions = self.exc_functions
+    if 'pattern' in attrs :
+      attrs['n_pattern'] = self.genNName(attrs['pattern'])
 #----------------------------------------------------------------------------------
   def end_element(self, name):
     if name in ('exclusion',) :
@@ -105,7 +107,7 @@ class selClass :
     for c in sltor :
       attrs = c['attrs']
       if 'n_name' in attrs and attrs['n_name'] == clname :  c['used'] = 1; return attrs
-      if 'pattern' in attrs and matchpattern(clname,attrs['pattern']) : return attrs
+      if 'n_pattern' in attrs and matchpattern(clname,attrs['n_pattern']) : return attrs
       if 'file_name' in attrs and attrs['file_name'] == fname : return attrs
       if 'file_pattern' in attrs and matchpattern(fname,attrs['file_pattern']): return attrs
     return None
@@ -115,7 +117,7 @@ class selClass :
       if c['methods'] or c['fields'] : continue
       attrs = c['attrs']
       if 'n_name' in attrs  and attrs['n_name'] == clname : return attrs 
-      if 'pattern' in attrs and matchpattern(clname, attrs['pattern']) : return attrs
+      if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return attrs
       if 'file_name' in attrs and attrs['file_name'] == fname : return attrs
       if 'file_pattern' in attrs and matchpattern(fname,attrs['file_pattern']): return attrs
     return None
@@ -130,7 +132,7 @@ class selClass :
         if 'name' in f and f['name'] == field :
           attrs = c['attrs'] 
           if 'n_name' in attrs and attrs['n_name'] == clname : return f
-          if 'pattern' in attrs and matchpattern(clname, attrs['pattern']) : return f
+          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return f
     return None
 #----------------------------------------------------------------------------------
   def excfield(self, clname, field ) :
@@ -140,7 +142,7 @@ class selClass :
         if 'name' in f and f['name'] == field :
           attrs = c['attrs'] 
           if 'n_name' in attrs and attrs['n_name'] == clname : return f
-          if 'pattern' in attrs and matchpattern(clname, attrs['pattern']) : return f
+          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return f
     return None
 #----------------------------------------------------------------------------------
   def matchmethod(self, clname, method ) :
@@ -153,7 +155,7 @@ class selClass :
         if ('name' in m and m['name'] == method ) or ('pattern' in m and matchpattern(method, m['pattern'])) :
           attrs = c['attrs']
           if 'n_name' in attrs and attrs['n_name'] == clname : return m
-          if 'pattern' in attrs and matchpattern(clname, attrs['pattern']) : return m
+          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
   def excmethod(self, clname, method ) :
@@ -163,7 +165,7 @@ class selClass :
         if ('name' in m and m['name'] == method ) or ('pattern' in m and matchpattern(method, m['pattern'])) :
           attrs = c['attrs']
           if 'n_name' in attrs and attrs['n_name'] == clname : return m
-          if 'pattern' in attrs and matchpattern(clname, attrs['pattern']) : return m
+          if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
   def selfunction(self, funcname ) :

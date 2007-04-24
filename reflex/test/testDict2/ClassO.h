@@ -15,12 +15,18 @@ class ClassO {
   const T** _cpp;
 };
 
+#include <vector>
+
 namespace {
   struct __TestDict2ClassO_Instances__ { 
      ClassO<int> m;
      ClassO<int*> n;
      ClassO<ClassO<int> > o;
      ClassO<ClassO<int*>*> p;
+     std::vector<ClassO<int*> > _v;
+     std::vector<ClassO<int*>*> _vp;
+     std::vector<const ClassO<int>*> _vcp;
+     std::vector<const ClassO<int const*>* const*> _vcpp;
   };
 }
 
