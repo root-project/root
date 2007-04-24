@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.27 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.28 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -789,6 +789,7 @@ void TGenCollectionProxy::PushProxy(void *objstart)
    e->refCount = 1;
    e->object   = objstart;
    e->start    = 0;
+   e->idx      = 0;
    ::memset(e->buff,0,sizeof(e->buff));
    fProxyList.push_back(e);
    fEnv = e;
