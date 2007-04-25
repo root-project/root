@@ -12,22 +12,32 @@ REFLEXDIRS   := $(REFLEXDIR)/src
 REFLEXDIRI   := $(REFLEXDIR)/inc
 
 ##### libReflex #####
+REFLEXL      := $(MODDIRI)/LinkDef.h
+REFLEXDS     := $(MODDIRS)/G__Reflex.cxx
+REFLEXDO     := $(REFLEXDS:.cxx=.o)
+REFLEXDH     := $(REFLEXDS:.cxx=.h)
+
 REFLEXAH     := $(wildcard $(MODDIRI)/Reflex/*.h)
 REFLEXBH     := $(wildcard $(MODDIRI)/Reflex/Builder/*.h)
 REFLEXIH     := $(wildcard $(MODDIRI)/Reflex/internal/*.h)
 REFLEXH      := $(REFLEXAH) $(REFLEXBH) $(REFLEXIH)
-REFLEXS      := $(wildcard $(MODDIRS)/*.cxx)
+REFLEXAPIH   := $(filter-out $(MODDIRI)/Reflex/Builder/ReflexBuilder.h,\
+	        $(filter-out $(MODDIRI)/Reflex/Reflex.h,\
+	        $(filter-out $(MODDIRI)/Reflex/SharedLibrary.h,\
+		$(REFLEXAH) $(REFLEXBH))))
+REFLEXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 REFLEXO      := $(REFLEXS:.cxx=.o)
 
-REFLEXDEP    := $(REFLEXO:.o=.d)
+REFLEXDEP    := $(REFLEXO:.o=.d) $(REFLEXDO:.o=.d)
 
 REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
+REFLEXDICTLIB:= $(LPATH)/libReflexDict.$(SOEXT)
 REFLEXMAP    := $(REFLEXLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Reflex/%.h,include/Reflex/%.h,$(REFLEXH))
-ALLLIBS      += $(REFLEXLIB)
-#ALLMAPS      += $(REFLEXMAP)
+ALLLIBS      += $(REFLEXLIB) $(REFLEXDICTLIB)
+ALLMAPS      += $(REFLEXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(REFLEXDEP)
@@ -124,7 +134,7 @@ include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 
 .PRECIOUS: $(RFLX_GRFLXPY)
 
-$(RFLX_GCCXMLPATHPY):
+$(RFLX_GCCXMLPATHPY): config/Makefile.config
 		@(if [ ! -d "lib/python/genreflex" ]; then \
 		  mkdir -p lib/python/genreflex; fi )
 		@echo "gccxmlpath = '$(GCCXML)'" > $(RFLX_GCCXMLPATHPY);
@@ -162,11 +172,20 @@ $(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIB
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
 
+$(REFLEXDICTLIB): $(REFLEXDO) $(ORDER_) $(MAINLIBS) $(REFLEXLIB)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
+		"$(SOFLAGS)" libReflexDict.$(SOEXT) $@ "$(REFLEXDO)" \
+		"$(RFLX_REFLEXLL) $(REFLEXLIBEXTRA)"
+
+$(REFLEXDS): $(REFLEXAPIH) $(REFLEXL) $(ROOTCINTTMPEXE)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c -p $(REFLEXAPIH) $(REFLEXL)
+
 $(REFLEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
 		$(RLIBMAP) -o $(REFLEXMAP) -l $(REFLEXLIB) \
 		   -d $(REFLEXLIBDEPM) -c $(REFLEXL)
 
-all-reflex:     $(REFLEXLIB) $(REFLEXMAP)
+all-reflex:     $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXMAP)
 
 clean-genreflex:
 		@rm -f bin/genreflex*
@@ -177,7 +196,7 @@ clean-check-reflex:
 
 clean-reflex: clean-genreflex clean-check-reflex
 		@rm -f $(RFLX_GENMAPX)
-		@rm -f $(REFLEXO)
+		@rm -f $(REFLEXO) $(REFLEXDO)
 
 clean::         clean-reflex
 
