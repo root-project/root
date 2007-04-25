@@ -40,6 +40,10 @@ N: Paul Balm
 E: p.balm@nikhef.nl
 D: implemented TDatabasePDG::ConvertGeant3ToPDG
 
+N: Daniel Barna
+E: daniel.barna@cern.ch
+D: CINT install target
+
 N: Guy Barrand
 E: barrand@lal.in2p3.fr
 D: contribution to GUI classes
@@ -176,6 +180,10 @@ D: class TQtLock
 N: Denis Favre-Miville
 E: Denis.Favre-Miville@ensimag.imag.fr
 D: contribution to the GUI and graphics editors
+
+N: André Felipe
+E: (felipe.andre@gmail.com)
+D: CINT contributions
 
 N: Jan Fiete Grosse-Oetringhaus
 E: Jan.Fiete.Grosse-Oetringhaus@cern.ch
