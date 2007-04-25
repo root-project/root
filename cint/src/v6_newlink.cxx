@@ -7297,6 +7297,7 @@ static void G__linknestedtypedef(int tagnum,int globalcomp)
 * #pragma link off class ClassName;      can use regexp
 * #ifdef G__ROOTSPECIAL
 * #pragma link off class ClassName-;     set ROOT specific flag
+* #pragma link off options=OPTION,OPTION class ClassName; set ROOT specific flag
 * #endif
 * #pragma link C++ enum ClassName;      can use regexp
 * #pragma link C   enum ClassName;      can use regexp
@@ -7462,6 +7463,48 @@ void G__specify_link(int link_stub)
     return;
   }
 
+  int rfNoStreamer = 0;
+  int rfNoInputOper = 0;
+  int rfUseBytecount = 0;
+  int rfNoMap = 0;
+
+  /*************************************************************************
+  * #pragma link [spec] options=...
+  * possible options:
+  *   nostreamer: set G__NOSTREAMER flag
+  *   noinputoper: set G__NOINPUTOPERATOR flag
+  *   evolution: set G__USEBYTECOUNT flag
+  *   nomap: (irgnored by CINT; prevents entry in ROOT's rootmap file)
+  *************************************************************************/
+  if (!strncmp(buf,"options=", 8) || !strncmp(buf,"option=", 7)) {
+     const char* optionStart = buf + 7;
+     if (*optionStart == '=') ++optionStart;
+
+     std::list<std::string> options;
+     while (optionStart) {
+        const char* next = strchr(optionStart, ',');
+        options.push_back(std::string(optionStart));
+        if (next) options.back().erase(next - optionStart);
+        optionStart = next;
+        if (optionStart) ++optionStart; // skip ','
+     }
+
+     for (std::list<std::string>::iterator iOpt = options.begin();
+          iOpt != options.end(); ++iOpt)
+        if (*iOpt == "nomap") rfNoMap = 1; // ignored
+        else if (*iOpt == "nostreamer") rfNoStreamer = 1;
+        else if (*iOpt == "noinputoper") rfNoInputOper = 1;
+        else if (*iOpt == "evolution") rfUseBytecount = 1;
+        else {
+           G__printlinenum();
+           G__fprinterr(G__serr,"Warning: ignoring unknown #pragma link option=%s\n", iOpt->c_str());
+        }
+
+     // fetch next token
+     c = G__fgetname_template(buf,";\n\r");
+  }
+
+
   /*************************************************************************
   * #pragma link [spec] nestedclass;
   *************************************************************************/
@@ -7499,9 +7542,6 @@ void G__specify_link(int link_stub)
      ) {
     int len;
     char* p2;
-    int rf1 = 0;
-    int rf2 = 0;
-    int rf3 = 0;
     int iirf;
 #ifndef G__OLDIKMPLEMENTATION1334
     char protectedaccess=0;
@@ -7519,15 +7559,15 @@ void G__specify_link(int link_stub)
     c = G__fgetstream_template(buf,";\n\r");
     for (iirf = 0; iirf < 3; iirf++) {
       if (buf[strlen(buf)-1] == '-') {
-        rf1 = 1;
+        rfNoStreamer = 1;
         buf[strlen(buf)-1] = '\0';
       }
       if (buf[strlen(buf)-1] == '!') {
-        rf2 = 1;
+        rfNoInputOper = 1;
         buf[strlen(buf)-1] = '\0';
       }
       if (buf[strlen(buf)-1] == '+') {
-        rf3 = 1;
+        rfUseBytecount = 1;
         buf[strlen(buf)-1] = '\0';
       }
     }
@@ -7631,11 +7671,11 @@ void G__specify_link(int link_stub)
           G__linknestedtypedef(i,globalcomp);
 #endif
         G__struct.rootflag[i] = 0;
-        if (rf1 == 1) G__struct.rootflag[i] = G__NOSTREAMER;
-        if (rf2 == 1) G__struct.rootflag[i] |= G__NOINPUTOPERATOR;
-        if (rf3 == 1) {
+        if (rfNoStreamer == 1) G__struct.rootflag[i] = G__NOSTREAMER;
+        if (rfNoInputOper == 1) G__struct.rootflag[i] |= G__NOINPUTOPERATOR;
+        if (rfUseBytecount == 1) {
           G__struct.rootflag[i] |= G__USEBYTECOUNT;
-          if(rf1) {
+          if(rfNoStreamer) {
             G__struct.rootflag[i] &= ~G__NOSTREAMER;
             G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
           }
