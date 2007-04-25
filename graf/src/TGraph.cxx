@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.211 2007/04/19 14:29:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.212 2007/04/24 15:16:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3197,7 +3197,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
          for (ip = first; ip < last; ip++) {
             Double_t xw;
-            if (!optionBins) xw = wminstep + (ip-first)*delta+0.5*delta;
+            if (!optionBins) xw = wmin + (ip-first)*delta+0.5*delta;
             else             xw = x[ip-1] + 0.5*(x[ip]-x[ip-1]);;
 
             if (!optionRot) {
