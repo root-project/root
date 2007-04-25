@@ -5397,7 +5397,9 @@ void G__cpplink_memvar(FILE *fp)
                 fprintf(fp,"(void*)0,");
               }
               else
-              if(G__LOCALSTATIC==var->statictype[j]) {
+              if (var->statictype[j]==G__LOCALSTATIC
+                 || var->statictype[j]==G__COMPILEDGLOBAL 
+                 && ('n'==G__struct.type[i] || 0==G__struct.name[i][0])) {
                 if(pvoidflag) fprintf(fp,"(void*)G__PVOID,");
                 else          fprintf(fp,"(void*)(&%s::%s),"
                                       ,G__fulltagname(i,1),var->varnamebuf[j]);
