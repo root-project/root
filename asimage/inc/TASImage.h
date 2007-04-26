@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.25 2007/02/22 14:11:35 couet Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.26 2007/03/05 15:02:52 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -65,6 +65,7 @@ private:
    void SetDefaults();
    void CreateThumbnail();
    void DestroyImage();
+   const char *TypeFromMagicNumber(const char *file);
 
 protected:
    ASImage  *fImage;        //! pointer to image structure of original image

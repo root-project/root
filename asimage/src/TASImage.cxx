@@ -363,6 +363,45 @@ static void init_icon_paths()
 }
 
 //______________________________________________________________________________
+const char *TASImage::TypeFromMagicNumber(const char *file)
+{
+   // Guess file type from the first byte of file
+
+   UChar_t magic;
+   FILE *fp = fopen(file, "rb");
+   const char *ret = "";
+
+   if (!fp) return 0;
+
+   fread(&magic, 1, 1, fp);
+
+   switch (magic) {
+      case 0x00:
+         ret = "ico";
+         break;
+      case 0x42:
+         ret = "bmp";
+         break;
+      case 0x47:
+         ret = "gif";
+         break;
+      case 0x49:
+         ret = "tiff";
+         break;
+      case 0x89:
+         ret = "png";
+      case 0xff:
+         ret = "jpg";
+         break;
+      default: 
+         ret = "";
+   }
+
+   fclose(fp);
+   return ret;
+}
+
+//______________________________________________________________________________
 void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
    // Read specified image file. The file type is determined by
@@ -407,9 +446,17 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    iparams.subimage = 0;
    iparams.return_animation_delay = -1;
 
-   TString ext = strrchr(filename, '.') + 1;
+   TString ext;
+   const char *dot = strrchr(filename, '.');
    ASImage *image = 0;
    TString fname = filename;
+
+   if (!dot) {
+      ext = TypeFromMagicNumber(filename);
+      fname += "." + ext;
+   } else {
+      ext = dot + 1;
+   }
 
    if (!ext.IsNull() && ext.IsDigit()) { // read subimage
       iparams.subimage = ext.Atoi();
@@ -492,6 +539,26 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // If NN is ommitted the delay between subimages is zero.
    // For repeated animation the last subimage must be specified as "myfile.gif++NN",
    // where NN is number of cycles. If NN is ommitted the animation will be infinite.
+   //
+   // The following macro creates animated gif from jpeg images with names 
+   //    imageNN.jpg, where 1<= NN <= 10
+   // {
+   //    TImage *img = 0;
+   //    gSystem->Unlink("anim.gif");  // delete existing file 
+   //    
+   //    for (int i = 1; i <= 10; i++) {
+   //       delete img; // delete previous image
+   //
+   //       // Read image data. Image can be in any format, e.g. png, gif, etc.
+   //       img = TImage::Open(Form("image%d.jpg", i));
+   //
+   //       if (i < 10) {
+   //          img->WriteImage("anim.gif+");
+   //       } else { // the last image written.  "++" stands for infinit animation. 
+   //          img->WriteImage("anim.gif++"); 
+   //       }
+   //    }
+   // }
 
    if (!IsValid()) {
       Error("WriteImage", "no image loaded");
