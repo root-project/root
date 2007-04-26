@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.4 2006/09/25 13:45:17 rdm Exp $
+// @(#):$Name:  $:$Id: TGeoMaterialEditor.cxx,v 1.5 2007/04/23 09:04:52 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -620,7 +620,7 @@ void TGeoMixtureEditor::UpdateElements()
    for (Int_t i=0; i<nelem; i++) {
       Bool_t byfrac = (fMixture->GetNmixt())?kFALSE:kTRUE;
       if (byfrac) 
-         s = Form("%d-%s-%d: Wmass = %g \%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+         s = Form("%d-%s-%d: Wmass = %g \%%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
                   (Int_t)fMixture->GetAmixt()[i],fMixture->GetWmixt()[i]);
       else
          s = Form("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
