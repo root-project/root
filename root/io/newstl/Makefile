@@ -20,12 +20,12 @@ FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP)
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP) emulvector.root
 # We intentionally do not delete the output file in $(FILEDIR) so that 
 # we can keep the historic versions.
 
 #Set the list of target to make while testing
-TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite
+TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite Emulvector
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -178,3 +178,15 @@ base.clog: $(LIBDIR)runbase_C.$(DllSuf)
 
 base: base.clog
 	$(TestDiff)
+
+emulvector.root.log: writetest_emulvector.C
+	$(CMDECHO) root.exe -b -l -q writetest_emulvector.C > emulvector.root.log 2>&1
+	
+emulvector.root: emulvector.root.log emulvector.root.ref
+	$(TestDiff)
+	
+Emulvector.log: emulvector.root
+
+Emulvector: Emulvector.log
+	$(TestDiff)
+
