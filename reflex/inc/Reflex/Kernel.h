@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.26 2006/12/07 09:34:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.27 2007/04/19 16:18:06 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -16,7 +16,7 @@
 // taken from http://www.nedprod.com/programs/gccvisibility.html
 // Shared library support
 
-#if __GNUC__ >= 4
+#if __GNUC__ >= 4 && !defined(__CINT__)
   #define GCC_HASCLASSVISIBILITY
 #endif
 
