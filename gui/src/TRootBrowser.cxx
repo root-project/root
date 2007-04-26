@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.106 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.107 2007/04/23 09:07:27 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -256,6 +256,17 @@ public:
                 TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
 
    virtual TDNDdata *GetDNDdata(Atom_t) {
+      TObject *object = 0;
+      if (fObj->IsA() == TKey::Class())
+         object = ((TKey *)fObj)->ReadObj();
+      else
+         object = fObj;
+      if (object) {
+         fBuf->WriteObject(object);
+         fDNDData.fData = fBuf->Buffer();
+         fDNDData.fDataLength = fBuf->Length();
+      }
+      fDNDData.fDataType = gVirtualX->InternAtom("application/root", kFALSE);
       return &fDNDData;
    }
 
@@ -266,8 +277,9 @@ public:
    }
 
 protected:
+   TObject     *fObj;
    TBufferFile *fBuf;
-   TDNDdata fDNDData;
+   TDNDdata     fDNDData;
 };
 
 //______________________________________________________________________________
@@ -278,8 +290,9 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
 {
    // Create an icon box item.
 
-   TKey *key = 0;
-   TObject *object = 0;
+   fObj = obj;
+   fDNDData.fData = 0;
+   fDNDData.fDataLength = 0;
    delete [] fSubnames;
    fSubnames = new TGString* [2];
 
@@ -290,18 +303,9 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
    fBuf = new TBufferFile(TBuffer::kWrite);
 
    if (obj->IsA() == TKey::Class()) {
-      key = (TKey *)obj;
-      object = key->ReadObj();
-      fBuf->WriteObject(object);
-      fDNDData.fData = fBuf->Buffer();
-      fDNDData.fDataLength = fBuf->Length();
-      fDNDData.fDataType = gVirtualX->InternAtom("application/root", kFALSE);
       SetDNDSource(kTRUE);
    }
    else {
-      fDNDData.fData = 0;
-      fDNDData.fDataLength = 0;
-      fDNDData.fDataType = 0;
       SetDNDSource(kFALSE);
    }
 
