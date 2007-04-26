@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.16 2006/10/09 09:27:17 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.17 2007/04/16 13:19:07 axel Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -140,7 +140,7 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("fPropertyListImpl"), m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::fPropertyListImpl"), m.Name(SCOPED));
-  CPPUNIT_ASSERT_EQUAL(0, int(Object_Cast<void*>(m.Get(o))));
+  CPPUNIT_ASSERT_EQUAL((void*)0, Object_Cast<void*>(m.Get(o)));
 
   m = t.FunctionMemberAt(0);
   CPPUNIT_ASSERT(m);

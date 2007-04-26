@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.23 2007/01/10 08:51:41 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.24 2007/01/10 11:07:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -146,7 +146,7 @@ void ReflexUnitTest::empty_type() {
   Type t;
   CPPUNIT_ASSERT_EQUAL(40, int(Type::TypeSize()));
   CPPUNIT_ASSERT(!t);
-  CPPUNIT_ASSERT_EQUAL(0, int(t.Allocate()));
+  CPPUNIT_ASSERT_EQUAL(size_t(0), size_t(t.Allocate()));
   CPPUNIT_ASSERT(!t.BaseAt(0));
   CPPUNIT_ASSERT_EQUAL(0, int(t.BaseSize()));
   CPPUNIT_ASSERT(!t.CastObject(Type(),Object()));
@@ -158,7 +158,7 @@ void ReflexUnitTest::empty_type() {
   CPPUNIT_ASSERT(!t.FunctionMemberAt(0));
   CPPUNIT_ASSERT_EQUAL(0,int(t.FunctionMemberSize()));
   CPPUNIT_ASSERT(!(bool)t.HasBase(Type()));
-  CPPUNIT_ASSERT_EQUAL(0, int(t.Id()));
+  CPPUNIT_ASSERT_EQUAL(size_t(0), size_t(t.Id()));
   CPPUNIT_ASSERT_EQUAL(false, t.IsAbstract());
   CPPUNIT_ASSERT_EQUAL(false, t.IsArray());
   CPPUNIT_ASSERT_EQUAL(false, t.IsClass());
