@@ -377,13 +377,28 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
 
    switch (magic) {
       case 0x00:
-         ret = "ico";
+      {
+         fread(&magic, 1, 1, fp);
+         fread(&magic, 1, 1, fp);
+
+         ret = (magic == 1) ? "ico" : "cur";
          break;
+      }
+      case 0x25:
+      {
+         fread(&magic, 1, 1, fp);
+         if (magic == 0x21) ret = "ps";
+         else if (magic == 0x50) ret = "pdf";
+         break;
+      }
       case 0x42:
          ret = "bmp";
          break;
       case 0x47:
          ret = "gif";
+         break;
+      case 0x54:
+         ret = "tga";
          break;
       case 0x49:
          ret = "tiff";
