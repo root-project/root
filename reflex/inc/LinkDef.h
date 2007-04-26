@@ -1,4 +1,4 @@
-/* @(#)root/reflex:$Name:  $:$Id: LinkDef.h,v 1.23 2007/02/14 18:25:22 rdm Exp $ */
+/* @(#)root/reflex:$Name:  $:$Id: LinkDef.h,v 1.1 2007/04/25 16:52:43 axel Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -44,7 +44,10 @@
 #pragma link C++ class ROOT::Reflex::UnnamedStruct;
 #pragma link C++ class ROOT::Reflex::UnnamedUnion;
 
+#ifndef G__SUNPRO_CC
+// cannot distinguish ::exception and std::exception
 #pragma link C++ class ROOT::Reflex::RuntimeError;
+#endif
 
 #pragma link C++ function ROOT::Reflex::NPos();
 

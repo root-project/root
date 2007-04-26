@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.27 2007/04/19 16:18:06 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.28 2007/04/26 08:58:07 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -17,45 +17,45 @@
 // Shared library support
 
 #if __GNUC__ >= 4 && !defined(__CINT__)
-  #define GCC_HASCLASSVISIBILITY
+#  define GCC_HASCLASSVISIBILITY
 #endif
 
 #ifdef WIN32
-  #define RFLX_IMPORT __declspec(dllimport)
-  #define RFLX_EXPORT __declspec(dllexport)
-  #define RFLX_DLLLOCAL
-  #define RFLX_DLLPUBLIC
+#  define RFLX_IMPORT __declspec(dllimport)
+#  define RFLX_EXPORT __declspec(dllexport)
+#  define RFLX_DLLLOCAL
+#  define RFLX_DLLPUBLIC
 #else
-  #ifdef GCC_HASCLASSVISIBILITY
-    #define RFLX_EXPORT __attribute__((visibility("default")))
-    #define RFLX_DLLLOCAL __attribute__((visibility("hidden")))
-    #define RFLX_DLLPUBLIC __attribute__((visibility("default")))
-  #else
-    #define RFLX_EXPORT
-    #define RFLX_DLLLOCAL
-    #define RFLX_DLLPUBLIC
-  #endif
-  #define RFLX_IMPORT
+#  ifdef GCC_HASCLASSVISIBILITY
+#    define RFLX_EXPORT __attribute__((visibility("default")))
+#    define RFLX_DLLLOCAL __attribute__((visibility("hidden")))
+#    define RFLX_DLLPUBLIC __attribute__((visibility("default")))
+#  else
+#    define RFLX_EXPORT
+#    define RFLX_DLLLOCAL
+#    define RFLX_DLLPUBLIC
+#  endif
+#  define RFLX_IMPORT
 #endif
 
 // Define RFLX_API for DLL builds
 #ifdef REFLEX_DLL
-  #ifdef REFLEX_BUILD
-    #define RFLX_API RFLX_EXPORT
-  #else
-    #define RFLX_API  RFLX_IMPORT
-  #endif // REFLEX_BUILD
+#  ifdef REFLEX_BUILD
+#    define RFLX_API RFLX_EXPORT
+#  else
+#    define RFLX_API  RFLX_IMPORT
+#  endif // REFLEX_BUILD
 #else
-  #define RFLX_API
+#  define RFLX_API
 #endif // REFLEX_DLL
 
 // Throwable classes must always be visible on GCC in all binaries
 #ifdef WIN32
-  #define RFLX_EXCEPTIONAPI(api) api
+#  define RFLX_EXCEPTIONAPI(api) api
 #elif defined(GCC_HASCLASSVISIBILITY)
-  #define RFLX_EXCEPTIONAPI(api) RFLX_EXPORT
+#  define RFLX_EXCEPTIONAPI(api) RFLX_EXPORT
 #else
-  #define RFLX_EXCEPTIONAPI(api)
+#  define RFLX_EXCEPTIONAPI(api)
 #endif
 // end macros for symbol selection
 
