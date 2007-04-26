@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.27 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.28 2007/04/05 22:29:54 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -150,7 +150,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                fVal   = new Value(*fValue);
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
-                  fValDiff += (slong - fValDiff%slong)%slong;
+                  if (fVal->fCase != G__BIT_ISFUNDAMENTAL) {
+                     fValDiff += (slong - fValDiff%slong)%slong;
+                  }
                }
                break;
          }
@@ -308,7 +310,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
-                     fVal->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
+                     fKey->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
                   }
                }
                for( i=nCurr; i<left; ++i, addr += fValDiff )
