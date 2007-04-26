@@ -32,12 +32,12 @@ REFLEXDEP    := $(REFLEXO:.o=.d) $(REFLEXDO:.o=.d)
 
 REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
 REFLEXDICTLIB:= $(LPATH)/libReflexDict.$(SOEXT)
-REFLEXMAP    := $(REFLEXLIB:.$(SOEXT)=.rootmap)
+REFLEXDICTMAP:= $(REFLEXDICTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Reflex/%.h,include/Reflex/%.h,$(REFLEXH))
 ALLLIBS      += $(REFLEXLIB) $(REFLEXDICTLIB)
-ALLMAPS      += $(REFLEXMAP)
+ALLMAPS      += $(REFLEXDICTMAP)
 
 # include all dependency files
 INCLUDEFILES += $(REFLEXDEP)
@@ -175,17 +175,17 @@ $(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIB
 $(REFLEXDICTLIB): $(REFLEXDO) $(ORDER_) $(MAINLIBS) $(REFLEXLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflexDict.$(SOEXT) $@ "$(REFLEXDO)" \
-		"$(RFLX_REFLEXLL) $(REFLEXLIBEXTRA)"
+		"$(REFLEXDICTLIBEXTRA)"
 
 $(REFLEXDS): $(REFLEXAPIH) $(REFLEXL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -p $(REFLEXAPIH) $(REFLEXL)
 
-$(REFLEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
-		$(RLIBMAP) -o $(REFLEXMAP) -l $(REFLEXLIB) \
-		   -d $(REFLEXLIBDEPM) -c $(REFLEXL)
+$(REFLEXDICTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
+		$(RLIBMAP) -o $(REFLEXDICTMAP) -l $(REFLEXDICTLIB) \
+		   -d $(REFLEXDICTLIBDEPM) -c $(REFLEXL)
 
-all-reflex:     $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXMAP)
+all-reflex:     $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP)
 
 clean-genreflex:
 		@rm -f bin/genreflex*
@@ -201,7 +201,7 @@ clean-reflex: clean-genreflex clean-check-reflex
 clean::         clean-reflex
 
 distclean-reflex: clean-reflex
-		@rm -f $(REFLEXDEP) $(REFLEXLIB) $(REFLEXMAP)
+		@rm -f $(REFLEXDEP) $(REFLEXLIB) $(REFLEXDICTMAP)
 		@rm -rf include/Reflex lib/python
 
 distclean::     distclean-reflex
