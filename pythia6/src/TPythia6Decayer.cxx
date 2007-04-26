@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.4 2006/05/12 08:17:01 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.5 2006/11/27 16:53:54 brun Exp $
 // Author: Christian Holm Christensen   22/04/06
 // Much of this code has been lifted from AliROOT.
 
@@ -71,7 +71,7 @@ Int_t TPythia6Decayer::ImportParticles(TClonesArray *particles)
 {
    // Get the decay products into the passed PARTICLES TClonesArray of
    // TParticles
-   return TPythia6::Instance()->ImportParticles(particles);
+   return TPythia6::Instance()->ImportParticles(particles,"All");
 }
 
 //______________________________________________________________________________
