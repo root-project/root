@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.179 2007/03/17 11:02:01 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.180 2007/04/18 13:20:24 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -89,6 +89,8 @@ Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
 Canvas.PrintDirectory       .
+#set the default precision when writing floating point numbers in TCanvas::SaveSource
+Canvas.SavePrecision        7
 
 # Printer settings.
 #WinNT.*.Print.Command:      AcroRd32.exe
