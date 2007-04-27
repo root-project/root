@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.124 2007/03/18 18:35:21 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.125 2007/03/28 14:32:09 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1566,7 +1566,12 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 void TCanvas::SaveSource(const char *filename, Option_t *option)
 {
    // Save primitives in this canvas as a C++ macro file.
-
+   // This function loops on all the canvas primitives and for each primitive
+   // calls the object SavePrimitive function.
+   // When outputing floating point numbers, the default precision is 7 digits.
+   // The precision can be changed (via system.rootrc) by changing the value
+   // of the environment variable "Canvas.SavePrecision"
+   
    //    reset bit TClass::kClassSaved for all classes
    TIter next(gROOT->GetListOfClasses());
    TClass *cl;
@@ -1604,6 +1609,10 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       if (!lenfile) delete [] fname;
       return;
    }
+   
+   //set precision
+   Int_t precision = gEnv->GetValue("Canvas.SavePrecision",7);
+   out.precision(precision);
 
    //   Write macro header and date/time stamp
    TDatime t;
