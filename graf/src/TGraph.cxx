@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.212 2007/04/24 15:16:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.213 2007/04/25 14:59:12 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1292,6 +1292,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
    //   Root > st->SetX1NDC(newx1); //new x start position
    //   Root > st->SetX2NDC(newx2); //new x end position
+   //
+   //      Access to the fit status
+   //      ========================
+   //   The function return the status of the fit (fitResult) in the following form
+   //     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+   //   The fitResult is 0 is the fit is OK.
+   //   The fitResult is negative in case of an error not connected with the fit.
    
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
@@ -1303,23 +1310,23 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    // Check validity of function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
-      return 0;
+      return -1;
    }
    if (f1->IsZombie()) {
       Error("Fit", "function is zombie");
-      return 0;
+      return -2;
    }
 
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
-      return 0;
+      return -3;
    }
 
    // Check that function has same dimension as graph
    if (f1->GetNdim() > 1) {
       Error("Fit", "function %s is not 1-D", f1->GetName());
-      return 0;
+      return -4;
    }
    //}
 
@@ -1504,10 +1511,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
       arglist[0] = TVirtualFitter::GetMaxIterations();
       arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-      fitResult  = grFitter->ExecuteCommand("MIGRAD",arglist,2);
+      fitResult += grFitter->ExecuteCommand("MIGRAD",arglist,2);
       if (fitOption.Errors) {
-         grFitter->ExecuteCommand("HESSE",arglist,0);
-         grFitter->ExecuteCommand("MINOS",arglist,0);
+         fitResult += 100*grFitter->ExecuteCommand("HESSE",arglist,0);
+         fitResult +=  10*grFitter->ExecuteCommand("MINOS",arglist,0);
 
       }
 
