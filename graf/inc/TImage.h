@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.18 2007/01/16 17:01:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.19 2007/02/22 14:11:36 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -228,7 +228,7 @@ public:
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return 0; }
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
-   virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/) { }
+   virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0) { }
    virtual void      FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
    static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.26 2007/03/05 15:02:52 couet Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.27 2007/04/26 07:40:45 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -208,13 +208,13 @@ public:
    UInt_t    *GetScanline(UInt_t y);
    void       GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
    Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
-   void       PaintImage(Drawable_t wid, Int_t x, Int_t y);
+   void       PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0);
    void       SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
    void       SavePrimitive(ostream &out, Option_t *option = "");
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
-   static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y);
+   static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0);
 
    // some static functions
    Bool_t SetJpegDpi(const char *name, UInt_t dpi = 72);

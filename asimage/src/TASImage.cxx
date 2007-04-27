@@ -468,7 +468,6 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 
    if (!dot) {
       ext = TypeFromMagicNumber(filename);
-      fname += "." + ext;
    } else {
       ext = dot + 1;
    }
@@ -1084,7 +1083,8 @@ void TASImage::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
+void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y, 
+                              Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc)
 {
    // draw asimage on drawable
 
@@ -1092,15 +1092,18 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       return;
    }
 
+   wsrc = wsrc ? wsrc : im->width;
+   hsrc = hsrc ? hsrc : im->height;
+
    static int x11 = -1;
    if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
    Pixmap_t mask = kNone;
 
-	if (x11) {
-   	UInt_t hh = im->height;
-   	UInt_t ow = im->width%8;
-   	UInt_t ww = im->width - ow + (ow ? 8 : 0);
+   if (x11) {
+      UInt_t hh = hsrc;
+      UInt_t ow = wsrc%8;
+      UInt_t ww = wsrc - ow + (ow ? 8 : 0);
 
    	UInt_t bit = 0;
    	int i = 0;
@@ -1110,33 +1113,33 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
    	char *bits = new char[ww*hh]; //an array of bits
 
    	ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
-                                                0, 0, ww, 0, 0);
+                                                   xsrc, ysrc, ww, 0, 0);
    	if(imdec) {
       	for (yy = 0; yy < hh; yy++) {
-         	imdec->decode_image_scanline(imdec);
-         	CARD32 *a = imdec->buffer.alpha;
+            imdec->decode_image_scanline(imdec);
+            CARD32 *a = imdec->buffer.alpha;
 
-         	for (xx = 0; xx < ww; xx++) {
-            	if (a[xx]) {
-               	SETBIT(bits[i], bit);
-            	} else {
-               	CLRBIT(bits[i], bit);
-            	}
-            	bit++;
-            	if (bit == 8) {
-               	bit = 0;
-               	i++;
-            	}
-         	}
-      	}
-		}
-     
-		stop_image_decoding(&imdec);
+            for (xx = 0; xx < ww; xx++) {
+               if (a[xx]) {
+                  SETBIT(bits[i], bit);
+               } else {
+                  CLRBIT(bits[i], bit);
+               }
+               bit++;
+               if (bit == 8) {
+                  bit = 0;
+                  i++;
+               }
+            }
+         }
+      }
+   
+      stop_image_decoding(&imdec);
 
-    	mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
+      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
                                           (const char *)bits, ww, hh);
-     	delete [] bits;
-	}
+      delete [] bits;
+   }
 
    GCValues_t gv;
    static GContext_t gc = 0;
@@ -1153,19 +1156,19 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
    }
 
    if (x11) { //use built-in optimized version
-      asimage2drawable(fgVisual, wid, im, (GC)gc, 0, 0, x, y, im->width, im->height, 1);
+      asimage2drawable(fgVisual, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
    } else {
       ASImage *img = 0;
       unsigned char *bits = (unsigned char *)im->alt.argb32;
       if (!bits) {
-         img = tile_asimage(fgVisual, im, 0, 0, im->width, im->height,
+         img = tile_asimage(fgVisual, im, xsrc, ysrc, wsrc, hsrc,
                             0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
          bits = (unsigned char *)img->alt.argb32;
       }
 
-      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, im->width, im->height);
+      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
       if (pic) {
-         gVirtualX->CopyArea(pic, wid, gc, 0, 0, im->width, im->height, x, y);
+         gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
          gVirtualX->DeletePixmap(pic);
       } else {
          return;
@@ -1184,11 +1187,13 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y)
+void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ysrc,
+                          UInt_t wsrc, UInt_t hsrc)
 {
    // draw image on drawable wid (pixmap, window ) at x,y position
 
-	Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y);
+	Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y,
+                  xsrc, ysrc, wsrc, hsrc);
 }
 
 //______________________________________________________________________________
