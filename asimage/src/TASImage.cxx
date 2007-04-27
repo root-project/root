@@ -408,7 +408,7 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
       case 0xff:
          ret = "jpg";
          break;
-      default: 
+      default:
          ret = "";
    }
 
@@ -554,12 +554,12 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // For repeated animation the last subimage must be specified as "myfile.gif++NN",
    // where NN is number of cycles. If NN is ommitted the animation will be infinite.
    //
-   // The following macro creates animated gif from jpeg images with names 
+   // The following macro creates animated gif from jpeg images with names
    //    imageNN.jpg, where 1<= NN <= 10
    // {
    //    TImage *img = 0;
-   //    gSystem->Unlink("anim.gif");  // delete existing file 
-   //    
+   //    gSystem->Unlink("anim.gif");  // delete existing file
+   //
    //    for (int i = 1; i <= 10; i++) {
    //       delete img; // delete previous image
    //
@@ -568,8 +568,8 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    //
    //       if (i < 10) {
    //          img->WriteImage("anim.gif+");
-   //       } else { // the last image written.  "++" stands for infinit animation. 
-   //          img->WriteImage("anim.gif++"); 
+   //       } else { // the last image written.  "++" stands for infinit animation.
+   //          img->WriteImage("anim.gif++");
    //       }
    //    }
    // }
@@ -1083,14 +1083,12 @@ void TASImage::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y, 
+void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
                               Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc)
 {
-   // draw asimage on drawable
+   // Draw asimage on drawable.
 
-   if (!im) {
-      return;
-   }
+   if (!im) return;
 
    wsrc = wsrc ? wsrc : im->width;
    hsrc = hsrc ? hsrc : im->height;
@@ -1105,17 +1103,17 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       UInt_t ow = wsrc%8;
       UInt_t ww = wsrc - ow + (ow ? 8 : 0);
 
-   	UInt_t bit = 0;
-   	int i = 0;
-   	UInt_t yy = 0;
-   	UInt_t xx = 0;
+      UInt_t bit = 0;
+      int i = 0;
+      UInt_t yy = 0;
+      UInt_t xx = 0;
 
-   	char *bits = new char[ww*hh]; //an array of bits
+      char *bits = new char[ww*hh]; //an array of bits
 
-   	ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
+      ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
                                                    xsrc, ysrc, ww, 0, 0);
-   	if(imdec) {
-      	for (yy = 0; yy < hh; yy++) {
+      if (imdec) {
+         for (yy = 0; yy < hh; yy++) {
             imdec->decode_image_scanline(imdec);
             CARD32 *a = imdec->buffer.alpha;
 
@@ -1133,10 +1131,10 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
             }
          }
       }
-   
+
       stop_image_decoding(&imdec);
 
-      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
+      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(),
                                           (const char *)bits, ww, hh);
       delete [] bits;
    }
@@ -1190,9 +1188,14 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ysrc,
                           UInt_t wsrc, UInt_t hsrc)
 {
-   // draw image on drawable wid (pixmap, window ) at x,y position
+   // Draw image on the drawable wid (pixmap, window) at x,y position.
+   //
+   // wid        : Drawable (pixmap or window) on which image is drawn.
+   // x,y        : Window coordinates where image is drawn.
+   // xsrc, ysrc : X and Y coordinates of an image area to be drawn.
+   // wsrc, hsrc : Widh and height image area to be drawn.
 
-	Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y,
+   Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y,
                   xsrc, ysrc, wsrc, hsrc);
 }
 
@@ -2042,7 +2045,7 @@ Pixmap_t TASImage::GetPixmap()
       return 0;
    }
 
-	Pixmap_t ret;
+   Pixmap_t ret;
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
@@ -5163,23 +5166,23 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
 //_____________________________________________________________________________
 static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
-   //
+   // Apply tool point argb32.
 
-	int cw = ctx->canvas_width;
+   int cw = ctx->canvas_width;
 
-	if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {	
-		CARD32 value = ctx->tool->matrix[0]; //color
-		CARD32 *dst = (CARD32 *)(ctx->canvas);
-		dst += curr_y * cw; 
+   if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {
+      CARD32 value = ctx->tool->matrix[0]; //color
+      CARD32 *dst = (CARD32 *)(ctx->canvas);
+      dst += curr_y * cw;
 
       _alphaBlend(&dst[curr_x], &value);
-	}
+   }
 }
 
 //_____________________________________________________________________________
 static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
-   //
+   // Apply tool 2D argb32.
 
    CARD32 *src = (CARD32 *)ctx->tool->matrix;
    int corner_x = curr_x - ctx->tool->center_x;
@@ -5254,15 +5257,13 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 //_____________________________________________________________________________
 static void destroy_asdraw_context32( ASDrawContext *ctx )
 {
-   //
+   // Destroy asdraw context32.
 
-   if(ctx) {
-		if(ctx->scratch_canvas) {
-			free(ctx->scratch_canvas);
-      }	 
-		delete ctx;
-	}	 
-}	   
+   if (ctx) {
+      if (ctx->scratch_canvas) free(ctx->scratch_canvas);
+      delete ctx;
+   }
+}
 
 static const UInt_t kBrushCacheSize = 20;
 static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
@@ -5415,7 +5416,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 
    // set text size in pixels
    Int_t ttfsize;
-   Float_t  scale = 1.044; // 
+   Float_t  scale = 1.044;
 
    if (wh < hh) {
       ttfsize = (Int_t)(text->GetTextSize()*wh*scale);
@@ -5525,7 +5526,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
       DrawGlyph(source, color, bx, by);
    }
 }
-                           
+
 //______________________________________________________________________________
 void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
                            UInt_t color, const char *font_name, Float_t angle)
@@ -5760,7 +5761,7 @@ void TASImage::Streamer(TBuffer &b)
       }
 
       if ( version == 1 ) {
-         Int_t fileVersion = b.GetVersionOwner(); 
+         Int_t fileVersion = b.GetVersionOwner();
          if (fileVersion > 0 && fileVersion < 50000 ) {
             TImage::Streamer(b);
             b >> fMaxValue;
