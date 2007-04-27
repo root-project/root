@@ -1,4 +1,4 @@
-/* @(#)root/reflex:$Name:  $:$Id: LinkDef.h,v 1.1 2007/04/25 16:52:43 axel Exp $ */
+/* @(#)root/reflex:$Name:  $:$Id: LinkDef.h,v 1.2 2007/04/26 13:47:05 axel Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,6 +9,8 @@
  *************************************************************************/
 
 #ifdef __CINT__
+
+#pragma link off class ROOT::Reflex::DictionaryGenerator;
 
 #pragma link C++ nestedclasses;
 
