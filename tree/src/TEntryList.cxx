@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.12 2007/03/30 13:38:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.13 2007/04/20 15:16:34 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -711,6 +711,10 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    TIter next(fLists);
    TEntryList *templist;
    while ((templist = (TEntryList*)next())){
+      if (templist->fStringHash==0){
+         stotal = templist->fTreeName + templist->fFileName;
+         templist->fStringHash = stotal.Hash();
+      }
       if (newhash == templist->fStringHash){
          if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), filename)){
             return templist;
@@ -729,6 +733,10 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    newhash = stotal.Hash();
    next.Reset();
    while ((templist = (TEntryList*)next())){
+      if (templist->fStringHash==0){
+         stotal = templist->fTreeName + templist->fFileName;
+         templist->fStringHash = stotal.Hash();
+      }
       if (newhash == templist->fStringHash){
          if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), longname)){
             return templist;
@@ -951,6 +959,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
          fCurrent->fStringHash = stotal.Hash();
       }
       if (newhash == fCurrent->fStringHash){
+         //this list is current
          if (!strcmp(fCurrent->fTreeName, treename) && !strcmp(fCurrent->fFileName, filename)){
             return;
          }
