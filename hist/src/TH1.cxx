@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.341 2007/04/20 16:04:43 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.342 2007/04/23 10:58:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2898,6 +2898,13 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //     Given an histogram h, one can retrieve an associated function
 //     with:  TF1 *myfunc = h->GetFunction("myfunc");
 //
+//      Access to the fit status
+//      ========================
+//     The function return the status of the fit (fitResult) in the following form
+//       fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+//     The fitResult is 0 is the fit is OK.
+//     The fitResult is negative in case of an error not connected with the fit.
+//
 //      Access to the fit results
 //      =========================
 //     If the histogram is made persistent, the list of
@@ -3005,24 +3012,24 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    // Check validity of function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
-      return 0;
+      return -1;
    }
    if (f1->IsZombie()) {
       Error("Fit", "function is zombie");
-      return 0;
+      return -2;
    }
 
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
-      return 0;
+      return -3;
    }
 
    // Check that function has same dimension as histogram
    if (f1->GetNdim() != GetDimension()) {
       Error("Fit","function %s dimension, %d, does not match histogram dimension, %d",
             f1->GetName(), f1->GetNdim(), GetDimension());
-      return 0;
+      return -4;
    }
    
    // We must empty the current buffer (if any), otherwise TH1::Reset may be
@@ -3091,7 +3098,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    }
 
    TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
-   if (!hFitter) return 0;
+   if (!hFitter) return -5;
    hFitter->Clear();
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
@@ -3257,7 +3264,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       //   - Perform minimization
       arglist[0] = TVirtualFitter::GetMaxIterations();
       arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-      fitResult = hFitter->ExecuteCommand("MIGRAD",arglist,2);
+      fitResult += hFitter->ExecuteCommand("MIGRAD",arglist,2);
       if (fitResult != 0) {
          //   Abnormal termination, MIGRAD might not have converged on a
          //   minimum.
@@ -3266,11 +3273,11 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
          }
       }
       if (fitOption.More) {
-         hFitter->ExecuteCommand("IMPROVE",arglist,0);
+         fitResult += 1000*hFitter->ExecuteCommand("IMPROVE",arglist,0);
       }
       if (fitOption.Errors) {
-         hFitter->ExecuteCommand("HESSE",arglist,0);
-         hFitter->ExecuteCommand("MINOS",arglist,0);
+         fitResult +=  100*hFitter->ExecuteCommand("HESSE",arglist,0);
+         fitResult +=   10*hFitter->ExecuteCommand("MINOS",arglist,0);
       }
 
       //   - Get return status
