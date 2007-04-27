@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.123 2007/02/06 15:30:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.124 2007/03/26 16:02:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -187,7 +187,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Init(name,address,leaflist,basketsize,compress);
+   Init(name,leaflist,compress);
 }
 
 //______________________________________________________________________________
@@ -268,10 +268,10 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
    //
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Init(name,address,leaflist,basketsize,compress);
+   Init(name,leaflist,compress);
 }
 
-void TBranch::Init(const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
+void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 {
    // Initialization routine called from the constructor.  This should NOT be made virtual.
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.34 2007/02/04 17:39:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.35 2007/03/26 16:02:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -89,7 +89,7 @@ protected:
    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
 
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
-   void     Init(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   void     Init(const char *name, const char *leaflist, Int_t compress);
 
 private:
    TBranch(const TBranch&);             // not implemented
