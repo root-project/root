@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.28 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.29 2007/01/15 14:27:37 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
                                      Option_t *option, Long64_t nentries, Long64_t firstentry) = 0;
    virtual Long64_t       DrawSelect(const char *varexp, const char *selection, Option_t *option
                                      ,Long64_t nentries, Long64_t firstentry) = 0;
-   virtual Long64_t       Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+   virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                               ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual Int_t          GetDimension() const = 0;
    virtual TH1           *GetHistogram() const = 0;
@@ -84,7 +84,7 @@ public:
    virtual void           SetEstimate(Long64_t n) = 0;
    virtual void           SetTree(TTree *t) = 0;
    virtual void           StartViewer(Int_t ww, Int_t wh) = 0;
-   virtual Long64_t       UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+   virtual Int_t          UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                                       ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual void           UpdateFormulaLeaves() = 0;
    

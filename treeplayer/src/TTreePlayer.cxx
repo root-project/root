@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.239 2007/03/03 15:07:33 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.240 2007/03/30 09:58:01 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1080,7 +1080,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 }
 
 //______________________________________________________________________________
-Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
+Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
 {
 // Fit  a projected item(s) from a Tree.
 // Returns -1 in case of error or number of selected events in case of success.
@@ -1097,6 +1097,11 @@ Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *s
 //    will fit sqrt(x) and save the histogram as "hsqrt" in the current
 //    directory.
 //
+//   Return status
+//   =============
+// The function returns the status of the histogram fit (see TH1::Fit)
+// If no entries were selected, the function returns -1;
+//   (ie fitResult is null is the fit is OK)
 
    Int_t nch = strlen(option) + 10;
    char *opt = new char[nch];
@@ -1106,11 +1111,12 @@ Long64_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *s
    Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
    delete [] opt;
-
-   if (fHistogram) {
-      fHistogram->Fit(formula,option,goption);
+   Int_t fitResult = -1;
+   
+   if (fHistogram && nsel > 0) {
+      fitResult = fHistogram->Fit(formula,option,goption);
    }
-   return nsel;
+   return fitResult;
 }
 
 //______________________________________________________________________________
@@ -3324,7 +3330,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
 
 
 //______________________________________________________________________________
-Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
+Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
 //*-*        ===================================================
@@ -3374,9 +3380,20 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
 //
 //   1, 2 and 3 Dimensional fits are supported.
 //   See also TTree::Fit
-
+//
+//    Return status
+//    =============
+//   The function return the status of the fit in the following form
+//     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+//   The fitResult is 0 is the fit is OK.
+//   The fitResult is negative in case of an error not connected with the fit.
+//   The number of entries used in the fit can be obtained via
+//     mytree.GetSelectedRows();
+//   If the number of selected entries is null the function returns -1
+ 
    Int_t npar,nvpar,nparx;
    Int_t i;
+   Int_t fitResult = 0;
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    Double_t arglist[10];
@@ -3401,14 +3418,14 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
    Long64_t nrows = GetSelectedRows();
    if (nrows <= 0) {
       Error("UnbinnedFit", "Cannot fit: no entries selected");
-      return 0;
+      return -1;
    }
 
    // Check that function has same dimension as number of variables
    Int_t ndim = GetDimension();
    if (ndim != fitfunc->GetNdim()) {
       Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
-      return 0;
+      return -2;
    }
 
    // Create and set up the fitter
@@ -3468,13 +3485,13 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
    // Now ready for minimization step
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = 1;
-   tFitter->ExecuteCommand("MIGRAD", arglist, 2);
+   fitResult += tFitter->ExecuteCommand("MIGRAD", arglist, 2);
    if (opt.Contains("m")) {
-      tFitter->ExecuteCommand("IMPROVE",arglist,0);
+      fitResult += 1000*tFitter->ExecuteCommand("IMPROVE",arglist,0);
    }
    if (opt.Contains("e")) {
-      tFitter->ExecuteCommand("HESSE",arglist,0);
-      tFitter->ExecuteCommand("MINOS",arglist,0);
+      fitResult +=  100*tFitter->ExecuteCommand("HESSE",arglist,0);
+      fitResult +=   10*tFitter->ExecuteCommand("MINOS",arglist,0);
    }
    fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
 
@@ -3521,7 +3538,7 @@ Long64_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, cons
       fHistogram->Draw();
    }
 
-   return nsel;
+   return fitResult;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.99 2007/02/09 08:37:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.100 2007/03/15 11:33:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -237,7 +237,7 @@ public:
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
-   virtual Long64_t        Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual TBranch        *GetBranch(const char* name);
    virtual TBranchRef     *GetBranchRef() const { return fBranchRef; };
@@ -382,7 +382,7 @@ public:
    virtual void            SetUpdate(Int_t freq = 0) { fUpdate = freq; }
    virtual void            Show(Long64_t entry = -1, Int_t lenmax = 20);
    virtual void            StartViewer(); // *MENU*
-   virtual Long64_t        UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
 
    ClassDef(TTree,16)  //Tree descriptor (the main ROOT I/O class)

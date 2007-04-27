@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.326 2007/03/19 22:02:21 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.327 2007/03/26 16:02:09 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3404,7 +3404,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::Fit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Option_t* goption, Long64_t nentries, Long64_t firstentry)
+Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Option_t* goption, Long64_t nentries, Long64_t firstentry)
 {
    // -- Fit  a projected item(s) from a tree.
    //
@@ -3424,6 +3424,12 @@ Long64_t TTree::Fit(const char* funcname, const char* varexp, const char* select
    //    directory.
    //
    //   See also TTree::UnbinnedFit
+   //
+   //   Return status
+   //   =============
+   //  The function returns the status of the histogram fit (see TH1::Fit)
+   //  If no entries were selected, the function returns -1;
+   //   (ie fitResult is null is the fit is OK)
 
    GetPlayer();
    if (fPlayer) {
@@ -5934,7 +5940,7 @@ void TTree::Streamer(TBuffer& b)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::UnbinnedFit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
+Int_t TTree::UnbinnedFit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    // -- Unbinned fit of one or more variable(s) from a tree.
    //
@@ -5980,6 +5986,16 @@ Long64_t TTree::UnbinnedFit(const char* funcname, const char* varexp, const char
    //
    //   1, 2 and 3 Dimensional fits are supported.
    //   See also TTree::Fit
+   //
+   //    Return status
+   //    =============
+   //   The function return the status of the fit in the following form
+   //     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+   //   The fitResult is 0 is the fit is OK.
+   //   The fitResult is negative in case of an error not connected with the fit.
+   //   The number of entries used in the fit can be obtained via
+   //     mytree.GetSelectedRows();
+   //   If the number of selected entries is null the function returns -1
 
    GetPlayer();
    if (fPlayer) {
