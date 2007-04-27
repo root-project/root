@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.31 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.32 2007/04/23 09:07:27 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -1038,6 +1038,11 @@ static Bool_t IsTextFile(const char *candidate)
    Int_t weirdcount = 0;
    char buffer[512];
    FILE *infile;
+   FileStat_t buf;
+
+   gSystem->GetPathInfo(candidate, buf);
+   if (!(buf.fMode & kS_IFREG))
+      return kFALSE;
 
    infile = fopen(candidate, "r");
    if (infile) {

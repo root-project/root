@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.18 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.19 2007/04/19 16:23:12 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
    TGPopupMenu   *GetMenu() const { return fMenu; }
    virtual void   EnableMenu(Bool_t on = kTRUE) { fEnableMenu = on; } //*TOGGLE* *GETTER=IsMenuEnabled
    virtual Bool_t IsMenuEnabled() const { return fEnableMenu; }
-   TGTextEditHist *GetHistory() const { return fHistory; }
+   TList         *GetHistory() const { return (TList *)fHistory; }
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
