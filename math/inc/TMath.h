@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TMath.h,v 1.72 2007/02/08 09:07:50 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TMath.h,v 1.73 2007/02/09 10:15:39 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -40,6 +40,7 @@ namespace TMath {
    inline Double_t InvPi()    { return 1.0 / Pi(); }
    inline Double_t RadToDeg() { return 180.0 / Pi(); }
    inline Double_t DegToRad() { return Pi() / 180.0; }
+   inline Double_t Sqrt2()    { return 1.4142135623730950488016887242097; }
 
    // e (base of natural log)
    inline Double_t E()        { return 2.71828182845904523536; }
@@ -108,6 +109,9 @@ namespace TMath {
    // Dry Air Gas Constant (R / MWair)
    // http://atmos.nmsu.edu/education_and_outreach/encyclopedia/gas_constant.htm
    inline Double_t Rgair()    { return (1000.0 * R()) / MWair(); }  // J kg^-1 K^-1
+
+   // Euler-Mascheroni Constant
+   inline Double_t EulerGamma() { return 0.577215664901532860606512090082402431042; }
 
    // Elementary charge
    inline Double_t Qe()       { return 1.602176462e-19; }     // C
