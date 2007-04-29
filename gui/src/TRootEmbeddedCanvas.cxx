@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.30 2007/04/22 15:48:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.31 2007/04/23 10:40:05 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
 #include "TImage.h"
+#include "TClass.h"
 #include "TUrl.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -326,7 +327,7 @@ Bool_t TRootEmbeddedCanvas::HandleDNDdrop(TDNDdata *data)
       gPad->Clear();
       if (obj->InheritsFrom("TGraph"))
          obj->Draw("ACP");
-      else
+      else if (obj->IsA()->GetMethodAllAny("Draw"))
          obj->Draw();
       gPad->Modified();
       gPad->Update();

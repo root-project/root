@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.118 2007/04/22 15:48:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.119 2007/04/23 10:40:05 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1677,7 +1677,7 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
       gPad->Clear();
       if (obj->InheritsFrom("TGraph"))
          obj->Draw("ACP");
-      else
+      else if (obj->IsA()->GetMethodAllAny("Draw"))
          obj->Draw();
       gPad->Modified();
       gPad->Update();

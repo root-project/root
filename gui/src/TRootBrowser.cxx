@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.107 2007/04/23 09:07:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.108 2007/04/26 16:42:16 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include "TObjString.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
+#include "TFolder.h"
 
 #include "HelpText.h"
 
@@ -302,10 +303,11 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
 
    fBuf = new TBufferFile(TBuffer::kWrite);
 
-   if (obj->IsA() == TKey::Class()) {
+   if (obj->IsA()->HasDefaultConstructor()) {
       SetDNDSource(kTRUE);
    }
-   else {
+   if ((obj->IsA() == TFolder::Class()) ||
+       (obj->IsA() == TClass::Class())) {
       SetDNDSource(kFALSE);
    }
 
