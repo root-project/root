@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.28 2007/02/06 14:35:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.29 2007/04/15 06:08:27 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -227,6 +227,8 @@ void TPaveStats::Paint(Option_t *option)
       longest = wtok[0]+wtok[1]+2.*margin;
       if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
       SetTextSize(textsize);
+   } else {
+      titlesize = textsize;
    }
    Double_t ytext = fY2 + 0.5*yspace;
    Double_t xtext = 0;
@@ -302,7 +304,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->SetTextAlign(22);
             xtext = 0.5*(fX1+fX2);
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
-                                          latex->GetTextSize(),
+                                          titlesize,
                                           sl);
             gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
          }
