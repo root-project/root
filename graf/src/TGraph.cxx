@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.213 2007/04/25 14:59:12 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.214 2007/04/27 08:36:23 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -396,6 +396,7 @@ TGraph::~TGraph()
          delete obj;
       }
       delete fFunctions;
+      fFunctions = 0; //to avoid accessing a deleted object in RecursiveRemove
    }
    delete fHistogram;
 }
