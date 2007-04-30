@@ -176,9 +176,6 @@ else
 		fi; \
 		if [ "$(ASGIFINCDIR)" != "" ]; then \
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
-			NOUNGIF="--with-ungif --with-builtin-ungif=no"; \
-		else \
-			NOUNGIF="--with-builtin-ungif"; \
 		fi; \
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
 			TTFINCDIR="--with-ttf-includes=-I../../../$(FREETYPEDIRI)"; \
@@ -190,13 +187,13 @@ else
 		--disable-glx \
 		$$MMX \
 		$(ASTEPDBG) \
-		$(NOUNGIF) \
+		--with-ungif \
+		$$GIFINCDIR \
 		--with-jpeg \
 		$$JPEGINCDIR \
 		--with-png \
 		$$PNGINCDIR \
-		$$TIFFINCDIR \
-		$$GIFINCDIR; \
+		$$TIFFINCDIR; \
 		$(MAKE))
 endif
 endif
