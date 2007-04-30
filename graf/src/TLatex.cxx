@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.69 2007/01/30 08:50:56 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.70 2007/02/23 15:02:33 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1334,10 +1334,15 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             Double_t y3 = y1-GetHeight()*spec.fSize/4;
 
             Analyse(x+GetHeight()*spec.fSize/2,y,spec,text+opSqrt+6,length-opSqrt-7);
-            DrawLine(x,y1,x1,y2,spec);
-            DrawLine(x1,y2,x1,y3,spec);
-            DrawLine(x1,y3,x2,y3,spec);
 
+            Short_t lineW = GetLineWidth();
+            Double_t dx = (y2-y3)/8;
+            SetLineWidth(TMath::Max(2,(Int_t)(dx/2)));
+            DrawLine(x-dx,y1,x1-dx,y2,spec);
+            SetLineWidth((Int_t)(dx/4));
+            DrawLine(x1-dx,y2,x1,y3,spec);
+            DrawLine(x1,y3,x2,y3,spec);
+            SetLineWidth(lineW);
          }
       }
    }
