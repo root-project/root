@@ -2596,9 +2596,9 @@ int G__initary(char* new_name)
     }
   }
   // Get number of dimensions.
-  const int& num_of_dimensions = var->paran[varid];
+  const short num_of_dimensions = var->paran[varid];
   int& num_of_elements = var->varlabel[varid][1];
-  const int& stride = var->varlabel[varid][0];
+  const int stride = var->varlabel[varid][0];
   // Check for an unspecified length array.
   int isauto = 0;
   if (num_of_elements == INT_MAX /* unspecified length flag */) {
@@ -2963,7 +2963,7 @@ int G__initstruct(char* new_name)
     return c;
   }
   int& num_of_elements = var->varlabel[varid][1];
-  const int& stride = var->varlabel[varid][0];
+  const int stride = var->varlabel[varid][0];
   // Check for an unspecified length array.
   int isauto = 0;
   if (num_of_elements == INT_MAX /* unspecified length flag */) {
