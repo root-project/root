@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.7 2006/05/23 04:47:35 brun Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -60,9 +60,8 @@ private:
 
    TObject         *fMetaDataObject; //-> generic file meta data object
 
-protected:
-   TFileInfo(const TFileInfo&);
-   TFileInfo& operator=(const TFileInfo&);
+   TFileInfo(const TFileInfo&);             // not implemented
+   TFileInfo& operator=(const TFileInfo&);  // not implemented
 
 public:
    TFileInfo(const char *url=0, Long64_t size=-1, const char *uuid=0,
@@ -99,6 +98,9 @@ public:
    Int_t           Compare(const TObject *obj) const;
 
    void            Print(Option_t *options="") const;
+
+   static TList   *CreateList(const char *file);
+   static TList   *CreateListMatching(const char *files);
 
    ClassDef(TFileInfo,1)  // Describes generic file info including meta information
 };
