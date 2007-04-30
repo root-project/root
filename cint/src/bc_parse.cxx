@@ -1925,7 +1925,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
     num_of_elements = 0;
   }
   // Load the address of the first element of the array as a pointer.
-  int num_of_dimensions = var->paran[ig15];
+  const short num_of_dimensions = var->paran[ig15];
   for (int j = 0; j < num_of_dimensions; ++j) {
     m_bc_inst.LD(0);
   }
