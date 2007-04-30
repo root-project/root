@@ -296,6 +296,9 @@ gint
 gdk_nmbstowchar_ts(wchar_t * dest,
                    const gchar * src, gint src_len, gint dest_max)
 {
+#if 1
+   return mbstowcs(dest, src, src_len);
+#else
    wchar_t *wcp;
    guchar *cp, *end;
    gint n;
@@ -341,4 +344,5 @@ gdk_nmbstowchar_ts(wchar_t * dest,
       return -1;
 
    return n;
+#endif
 }
