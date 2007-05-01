@@ -646,6 +646,13 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
    HGDIOBJ hgdiobj;
    HRGN src_rgn, draw_rgn, outside_rgn;
    RECT r;
+   gboolean transp = FALSE;
+
+   if (width < 0 && height < 0) {
+      transp = TRUE;
+      width *= -1.0;
+      height *= -1.0;
+   }
 
    src_private = (GdkDrawablePrivate *) src;
    gc_private = (GdkGCPrivate *) gc;
@@ -715,21 +722,34 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
     * from a window.
     */
    if (src_private->window_type == GDK_DRAWABLE_PIXMAP) {
+      BLENDFUNCTION fnc;
+      fnc.BlendOp = AC_SRC_OVER;
+      fnc.BlendFlags = 0;
+      fnc.SourceConstantAlpha = 0xff;
+      fnc.AlphaFormat = AC_SRC_ALPHA;
+
       if ((srcdc = CreateCompatibleDC(hdc)) == NULL)
          WIN32_GDI_FAILED("CreateCompatibleDC");
 
       if ((hgdiobj = SelectObject(srcdc, GDK_DRAWABLE_XID(src))) == NULL)
          WIN32_GDI_FAILED("SelectObject");
 
-      if (!BitBlt(hdc, xdest, ydest, width, height,
-                  srcdc, xsrc, ysrc, SRCCOPY))
-         WIN32_GDI_FAILED("BitBlt");
+      if (transp) {
+         if (!AlphaBlend(hdc, xdest, ydest, width, height,
+                         srcdc, xsrc, ysrc, width, height, fnc))
+            WIN32_GDI_FAILED("AlphaBlend");
+      } else {
+         if (!BitBlt(hdc, xdest, ydest, width, height,
+                     srcdc, xsrc, ysrc, SRCCOPY))
+            WIN32_GDI_FAILED("BitBlt");
+      }
 
       if ((SelectObject(srcdc, hgdiobj) == NULL))
          WIN32_GDI_FAILED("SelectObject");
 
       if (!DeleteDC(srcdc))
          WIN32_GDI_FAILED("DeleteDC");
+
    } else {
       if (GDK_DRAWABLE_XID(drawable) == GDK_DRAWABLE_XID(src)) {
          /* Blitting inside a window, use ScrollDC */
