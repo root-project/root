@@ -33,6 +33,11 @@
 #define G_PI 3.14159265358979323846
 #endif
 
+#define GDKBIT(n)       (1 << (n))
+#define GDKSETBIT(n,i)  ((n) |= GDKBIT(i))
+#define GDKCLRBIT(n,i)  ((n) &= ~GDKBIT(i))
+#define GDKTESTBIT(n,i) ((gboolean)(((n) & GDKBIT(i)) != 0))
+
 #include "gdkdrawable.h"
 #include "gdkprivate.h"
 #include "gdkwindow.h"
@@ -648,10 +653,10 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
    RECT r;
    gboolean transp = FALSE;
 
-   if (width < 0 && height < 0) {
+   if (GDKTESTBIT(width,31) && GDKTESTBIT(height,31)) {
       transp = TRUE;
-      width *= -1.0;
-      height *= -1.0;
+      GDKCLRBIT(width,31);
+      GDKCLRBIT(height,31);
    }
 
    src_private = (GdkDrawablePrivate *) src;
@@ -669,11 +674,9 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
 
    SetBkMode(hdc, TRANSPARENT); // bb add
 
-   src_rgn =
-       CreateRectRgn(0, 0, src_private->width + 1,
-                     src_private->height + 1);
-   draw_rgn =
-       CreateRectRgn(xsrc, ysrc, xsrc + width + 1, ysrc + height + 1);
+   src_rgn = CreateRectRgn(0, 0, src_private->width + 1,
+                           src_private->height + 1);
+   draw_rgn = CreateRectRgn(xsrc, ysrc, xsrc + width + 1, ysrc + height + 1);
    SetRectEmpty(&r);
    outside_rgn = CreateRectRgnIndirect(&r);
 
@@ -752,6 +755,7 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
 
    } else {
       if (GDK_DRAWABLE_XID(drawable) == GDK_DRAWABLE_XID(src)) {
+#if 1
          /* Blitting inside a window, use ScrollDC */
          RECT scrollRect, clipRect, emptyRect;
          HRGN updateRgn;
@@ -761,21 +765,31 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
          scrollRect.right = MAX(xsrc + width + 1, xdest + width + 1);
          scrollRect.bottom = MAX(ysrc + height + 1, ydest + height + 1);
 
-         clipRect.left = xdest;
-         clipRect.top = ydest;
-         clipRect.right = xdest + width + 1;
-         clipRect.bottom = ydest + height + 1;
+         //clipRect.left = xdest;
+         //clipRect.top = ydest;
+         //clipRect.right = xdest + width + 1;
+         //clipRect.bottom = ydest + height + 1;
+         GetClipBox(hdc, &clipRect);
 
          SetRectEmpty(&emptyRect);
          updateRgn = CreateRectRgnIndirect(&emptyRect);
+
          if (!ScrollDC(hdc, xdest - xsrc, ydest - ysrc,
                        &scrollRect, &clipRect, updateRgn, NULL))
             WIN32_GDI_FAILED("ScrollDC");
+
          if (!InvalidateRgn(GDK_DRAWABLE_XID(drawable), updateRgn, FALSE))
             WIN32_GDI_FAILED("InvalidateRgn");
+
          if (!UpdateWindow(GDK_DRAWABLE_XID(drawable)))
             WIN32_GDI_FAILED("UpdateWindow");
+
          DeleteObject(updateRgn);
+#else
+         if (!BitBlt(hdc, xdest, ydest, width, height,
+                     hdc, xsrc, ysrc, SRCCOPY))
+            WIN32_GDI_FAILED("BitBlt");
+#endif
       } else {
          if ((srcdc = GetDC(GDK_DRAWABLE_XID(src))) == NULL)
             WIN32_GDI_FAILED("GetDC");
@@ -783,6 +797,7 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
          if (!BitBlt(hdc, xdest, ydest, width, height,
                      srcdc, xsrc, ysrc, SRCCOPY))
             WIN32_GDI_FAILED("BitBlt");
+
          ReleaseDC(GDK_DRAWABLE_XID(src), srcdc);
       }
    }
