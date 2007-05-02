@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.8 2006/12/08 15:51:43 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.9 2007/02/03 17:41:02 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -126,7 +126,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fContNam->AddFrame(fParNam[i],
                          new TGLayoutHints(kLHintsExpandX, 2, 2, 7, 5));
    }
-   f1->AddFrame(fContNam, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContNam, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Fix'
    fContFix = new TGCompositeFrame(f1, 20, 20, kVerticalFrame | kFixedWidth);
@@ -163,7 +163,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    f1->AddFrame(fContBnd, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Value'fParStp
-   fContVal = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
+   fContVal = new TGCompositeFrame(f1, 100, 20, kVerticalFrame | kFixedWidth);
    fContVal->AddFrame(new TGLabel(fContVal,"Value"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
@@ -177,10 +177,10 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                               this, "DoParValue()");
       fParVal[i]->Connect("ValueSet(Long_t)", "TFitParametersDialog", this, "DoParValue()");
    }
-   f1->AddFrame(fContVal, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContVal, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Min'
-   fContMin = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
+   fContMin = new TGCompositeFrame(f1, 100, 20, kVerticalFrame | kFixedWidth);
    fContMin->AddFrame(new TGLabel(fContMin,"Min"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
@@ -193,7 +193,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fParMin[i]->SetNumber(fPmin[i]);
       fParMin[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, "DoParMinLimit()");
    }
-   f1->AddFrame(fContMin, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContMin, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Set Range'
    fContSld = new TGCompositeFrame(f1, 120, 20, kVerticalFrame | kFixedWidth);
@@ -206,10 +206,10 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fContSld->AddFrame(fParSld[i], new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 5));
       fParSld[i]->SetConstrained(kTRUE);
    }
-   f1->AddFrame(fContSld,  new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContSld,  new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Max'
-   fContMax = new TGCompositeFrame(f1, 80, 20, kVerticalFrame);
+   fContMax = new TGCompositeFrame(f1, 100, 20, kVerticalFrame | kFixedWidth);
    fContMax->AddFrame(new TGLabel(fContMax,"Max"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
@@ -222,10 +222,10 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fParMax[i]->SetNumber(fPmax[i]);
       fParMax[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, "DoParMaxLimit()");
    }
-   f1->AddFrame(fContMax, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContMax, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Step'
-   fContStp = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
+   fContStp = new TGCompositeFrame(f1, 100, 20, kVerticalFrame | kFixedWidth);
    fContStp->AddFrame(new TGLabel(fContStp,"Step"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
    for (Int_t i = 0; i < fNP; i++ ) {
@@ -239,7 +239,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                               this, "DoParStep()");
       fParStp[i]->Connect("ValueSet(Long_t)", "TFitParametersDialog", this, "DoParStep()");
    }
-   f1->AddFrame(fContStp, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContStp, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    // column 'Error'
    fContErr = new TGCompositeFrame(f1, 80, 20, kVerticalFrame | kFixedWidth);
@@ -258,7 +258,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       else
          ((TGTextEntry *)fParErr[i])->SetText("-");
    }
-   f1->AddFrame(fContErr, new TGLayoutHints(kLHintsExpandX, 1, 1, 2, 2));
+   f1->AddFrame(fContErr, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 270, 20, kHorizontalFrame);
    AddFrame(f2, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX));
