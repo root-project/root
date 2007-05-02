@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.195 2007/03/22 10:18:50 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.196 2007/04/17 09:05:24 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1377,7 +1377,7 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
 //______________________________________________________________________________
 void TProof::Interrupt(EUrgent type, ESlaves list)
 {
-   // Send interrupt OOB byte to master or slave servers.
+   // Send interrupt to master or slave servers.
 
    if (!IsValid()) return;
 
@@ -2117,13 +2117,18 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   TString type = (action.Contains("submas")) ? "submasters"
                                                              : "workers";
                   Int_t frac = (Int_t) (done*100.)/tot;
+                  char msg[512] = {0};
                   if (frac >= 100) {
-                     fprintf(stderr,"%s: OK (%d %s)                 \n",
+                     sprintf(msg,"%s: OK (%d %s)                 \n",
                              action.Data(),tot, type.Data());
                   } else {
-                     fprintf(stderr,"%s: %d out of %d (%d %%)\r",
+                     sprintf(msg,"%s: %d out of %d (%d %%)\r",
                              action.Data(), done, tot, frac);
                   }
+                  if (fSync)
+                     fprintf(stderr,"%s", msg);
+                  else
+                     NotifyLogMsg(msg, 0);
                }
                // Notify GUIs
                StartupMessage(action.Data(), st, (Int_t)done, (Int_t)tot);
@@ -2151,13 +2156,18 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                if (tot) {
                   TString type = "files";
                   Int_t frac = (Int_t) (done*100.)/tot;
+                  char msg[512] = {0};
                   if (frac >= 100) {
-                     fprintf(stderr,"%s: OK (%d %s)                 \n",
+                     sprintf(msg,"%s: OK (%d %s)                 \n",
                              action.Data(),tot, type.Data());
                   } else {
-                     fprintf(stderr,"%s: %d out of %d (%d %%)\r",
+                     sprintf(msg,"%s: %d out of %d (%d %%)\r",
                              action.Data(), done, tot, frac);
                   }
+                  if (fSync)
+                     fprintf(stderr,"%s", msg);
+                  else
+                     NotifyLogMsg(msg, 0);
                }
                // Notify GUIs
                DataSetStatus(action.Data(), st, (Int_t)done, (Int_t)tot);
@@ -3374,9 +3384,11 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
 
       TMessage *reply;
       slave->GetSocket()->Recv(reply);
-      if (reply->What() != kPROOF_CHECKFILE)
-         sendto = kTRUE;
-      delete reply;
+      sendto = (!reply || reply->What() != kPROOF_CHECKFILE) ? kTRUE : kFALSE;
+      if (reply)
+         delete reply;
+      else
+         Error("CheckFile", "received empty message from worker: %s", slave->GetName());
    }
 
    return sendto;
@@ -3961,11 +3973,11 @@ R__HIDDEN Int_t TProof::DisablePackages()
 Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
 {
    // Build specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists on all unique nodes. If opt is -1
+   // script if it exists on all unique nodes. If opt is kBuildOnSlavesNoWait
    // then submit build command to slaves, but don't wait
-   // for results. If opt is 1 then collect result from slaves.
-   // To be used on the master.
-   // If opt = 0 (default) then submit and wait for results
+   // for results. If opt is kCollectBuildResults then collect result
+   // from slaves. To be used on the master.
+   // If opt = kBuildAll (default) then submit and wait for results
    // (to be used on the client).
    // Returns 0 in case of success and -1 in case of error.
 
@@ -3988,7 +4000,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       opt = kBuildAll;
    }
 
-   if (opt <= 0) {
+   if (opt <= kBuildAll) {
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kBuildPackage) << pac;
       Broadcast(mess, kUnique);
@@ -3998,7 +4010,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       Broadcast(mess2, fNonUniqueMasters);
    }
 
-   if (opt >= 0) {
+   if (opt >= kBuildAll) {
       // by first forwarding the build commands to the master and slaves
       // and only then building locally we build in parallel
       Int_t st = 0;
@@ -4564,10 +4576,9 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
 Int_t TProof::Load(const char *macro, Bool_t notOnClient)
 {
    // Load the specified macro on master, workers and, if notOnClient is
-   // kFALSE, on the client. The macro file is uploaded if new or updated; if
-   // existing, the corresponding header basename(macro).h or .hh, is also
-   // uploaded.
-   // The default is to load the macro also on the client.
+   // kFALSE, on the client. The macro file is uploaded if new or updated.
+   // If existing, the corresponding header basename(macro).h or .hh, is also
+   // uploaded. The default is to load the macro also on the client.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
