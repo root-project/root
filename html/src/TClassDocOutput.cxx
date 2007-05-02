@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.5 2007/03/28 15:12:35 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.6 2007/04/24 18:37:39 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -900,7 +900,7 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
             if (!filename) continue;
             listFilesToParse.push_back(line);
             filesToParse[line] = filename;
-            delete filename;
+            delete [] filename;
             if (*iFile == implFileName || *iFile == declFileName)
                outdot << "\"" << *iFile << "\" [style=filled,fillcolor=lightgray];" << endl;
          }
