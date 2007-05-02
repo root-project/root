@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.100 2007/03/15 11:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.101 2007/04/27 08:34:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -174,12 +174,13 @@ protected:
       kGetBranch         = BIT(3),
       kGetEntry          = BIT(4),
       kGetEntryWithIndex = BIT(5),
-      kGetFriendAlias    = BIT(6),
-      kGetLeaf           = BIT(7),
-      kLoadTree          = BIT(8),
-      kPrint             = BIT(9),
-      kRemoveFriend      = BIT(10),
-      kSetBranchStatus   = BIT(11)
+      kGetFriend         = BIT(6),
+      kGetFriendAlias    = BIT(7),
+      kGetLeaf           = BIT(8),
+      kLoadTree          = BIT(9),
+      kPrint             = BIT(10),
+      kRemoveFriend      = BIT(12),
+      kSetBranchStatus   = BIT(12)
    };
 
 public:
@@ -264,6 +265,7 @@ public:
    virtual TEntryList     *GetEntryList();
    virtual Long64_t        GetEntryNumber(Long64_t entry) const;
    virtual Int_t           GetFileNumber() const { return fFileNumber; }
+   virtual TTree          *GetFriend(const char*) const;
    virtual const char     *GetFriendAlias(TTree*) const;
    TH1                    *GetHistogram() { return GetPlayer()->GetHistogram(); }
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.240 2007/03/30 09:58:01 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.241 2007/04/27 08:34:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -740,6 +740,17 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //
 //  If the object is a TBits, the histogram will contain the index of the bit
 //  that are turned on.
+//
+//     Retrieving  information about the tree itself.
+//     ============================================
+//
+//  You can refer to the tree (or chain) containing the data by using the
+//  string 'This'.  
+//  You can then could any TTree methods.  For example:
+//     tree->Draw("This->GetReadEntry()");
+//  will display the local entry numbers be read.
+//     tree->Draw("This->GetUserInfo()->At(0)->GetName()");
+//  will display the name of the first 'user info' object.
 //
 //     Special functions and variables
 //     ===============================

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.327 2007/03/26 16:02:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.328 2007/04/27 08:34:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2867,6 +2867,17 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  If the object is a TBits, the histogram will contain the index of the bit
    //  that are turned on.
    //
+   //     Retrieving  information about the tree itself.
+   //     ============================================
+   //
+   //  You can refer to the tree (or chain) containing the data by using the
+   //  string 'This'.  
+   //  You can then could any TTree methods.  For example:
+   //     tree->Draw("This->GetReadEntry()");
+   //  will display the local entry numbers be read.
+   //     tree->Draw("This->GetUserInfo()->At(0)->GetName()");
+   //  will display the name of the first 'user info' object.
+   //
    //     Special functions and variables
    //     ===============================
    //
@@ -3901,6 +3912,41 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       }
    }
    return nbytes;
+}
+//______________________________________________________________________________
+TTree* TTree::GetFriend(const char *friendname) const
+{
+   // Return a pointer to the TTree friend whose name or alias is 'friendname.
+
+
+   // We already have been visited while recursively
+   // looking through the friends tree, let's return.
+   if (kGetFriend & fFriendLockStatus) {
+      return 0;
+   }
+   if (!fFriends) {
+      return 0;
+   }
+   TFriendLock lock(const_cast<TTree*>(this), kGetFriend);
+   TIter nextf(fFriends);
+   TFriendElement* fe = 0;
+   while ((fe = (TFriendElement*) nextf())) {
+      if (strcmp(friendname,fe->GetName())==0
+          || strcmp(friendname,fe->GetTreeName())==0) {
+         return fe->GetTree();
+      }
+   }
+   // After looking at the first level,
+   // let's see if it is a friend of friends.
+   nextf.Reset();
+   fe = 0;
+   while ((fe = (TFriendElement*) nextf())) {
+      TTree *res = fe->GetTree()->GetFriend(friendname);
+      if (res) {
+         return res;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.55 2007/04/04 12:43:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.56 2007/04/04 15:39:14 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -73,7 +73,9 @@ protected:
    };
    enum { 
       kDirect, kDataMember, kMethod, 
-      kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList };
+      kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
+      kTreeMember
+   };
    enum { 
       kAlias           = 200,
       kAliasString     = 201,

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.35 2007/02/05 18:11:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.36 2007/03/30 21:37:47 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -579,6 +579,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
    // returns the address of the value pointed to by the
    // TFormLeafInfo.
 
+   if (fElement==0) return thisobj;
+
    switch (fElement->GetNewType()) {
       // basic types
       case kBool_t:
@@ -720,9 +722,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 //______________________________________________________________________________
 Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
 {
-//*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
-//*-*            ====================================
-//
+   // Return result of a leafobject method.
 
    char *thisobj = 0;
    if (leaf->InheritsFrom("TLeafObject") ) {
@@ -1916,6 +1916,8 @@ Bool_t TFormLeafInfoMethod::IsString() const
 {
    // Return true if the return value is a string.
 
+   if (fNext) return fNext->IsString();
+
    TMethodCall::EReturnType r = fMethod->ReturnType();
    return (r==TMethodCall::kString);
 }
@@ -2581,3 +2583,74 @@ Bool_t TFormLeafInfoCast::Update()
    return TFormLeafInfo::Update();
 }
 
+//______________________________________________________________________________
+//
+// TFormLeafTTree is a small helper class to implement reading 
+// from the containing TTree object itself.
+//______________________________________________________________________________
+
+TFormLeafInfoTTree::TFormLeafInfoTTree(TTree *tree, const char *alias, TTree *current) :
+TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fAlias(alias),fCurrent(current)
+{
+   if (fCurrent==0) fCurrent = fTree->GetFriend(alias);
+}
+
+TFormLeafInfoTTree::TFormLeafInfoTTree(const TFormLeafInfoTTree& orig) :
+   TFormLeafInfo(orig)
+{
+   // Copy Constructor.
+   fTree    = orig.fTree;
+   fAlias   = orig.fAlias;
+   fCurrent = orig.fCurrent;
+}
+
+TFormLeafInfoTTree::~TFormLeafInfoTTree()
+{
+   // Default destructor.
+
+}
+
+TFormLeafInfo* TFormLeafInfoTTree::DeepCopy() const 
+{
+   // Copy the object and all its content.
+
+   return new TFormLeafInfoTTree(*this);
+}
+
+//______________________________________________________________________________
+void* TFormLeafInfoTTree::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
+{
+   // returns the address of the value pointed to by the
+   // TFormLeafInfo.
+
+   return GetLocalValuePointer((char*)fCurrent,instance);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoTTree::GetValue(TLeaf *leaf, Int_t instance)
+{
+   // Return result of a leafobject method.
+
+   return ReadValue((char*)fCurrent,instance);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoTTree::ReadValue(char *thisobj, Int_t instance)
+{
+   // Return result of a leafobject method.
+
+   if (fElement) return TFormLeafInfo::ReadValue(thisobj,instance);
+   else if (fNext) return fNext->ReadValue(thisobj,instance);
+   else return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TFormLeafInfoTTree::Update() 
+{
+   // Update after a change of file in a chain
+   
+   if (fAlias.Length() && fAlias != fTree->GetName()) {
+      fCurrent = fTree->GetFriend(fAlias.Data());
+   }
+   return fCurrent && TFormLeafInfo::Update();
+}

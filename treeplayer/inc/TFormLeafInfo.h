@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.8 2006/02/22 06:59:15 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.9 2006/06/28 10:03:14 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -439,6 +439,33 @@ public:
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Bool_t    Update();
 };
+
+//______________________________________________________________________________
+//
+// TFormLeafTTree is a small helper class to implement reading 
+// from the containing TTree object itself.
+
+class TFormLeafInfoTTree : public TFormLeafInfo {
+   TTree   *fTree;
+   TTree   *fCurrent;
+   TString  fAlias;
+
+public:
+   TFormLeafInfoTTree(TTree *tree = 0, const char *alias = 0, TTree *current = 0);
+   TFormLeafInfoTTree(const TFormLeafInfoTTree& orig);
+   ~TFormLeafInfoTTree();
+
+   virtual TFormLeafInfo* DeepCopy() const;
+
+   using TFormLeafInfo::GetLocalValuePointer;
+   using TFormLeafInfo::GetValue;
+
+   virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual Double_t  ReadValue(char *thisobj, Int_t instance);
+   virtual Bool_t    Update();
+};
+
 
 #endif /* ROOT_TFormLeafInfo */
 
