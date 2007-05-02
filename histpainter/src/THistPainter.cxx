@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.283 2007/02/15 15:04:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.284 2007/03/08 17:12:05 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3236,7 +3236,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    fLego->TAttFill::Modify();
 
    // Paint the Back Box if needed
-   if (Hoption.BackBox && !Hoption.Same) {
+   if (Hoption.BackBox && !Hoption.Same && !Hoption.Lego && !Hoption.Surf) {
       fLego->InitMoveScreen(-1.1,1.1);
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
@@ -3341,7 +3341,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    }
 
    // Paint the Axis if needed
-   if (!Hoption.Axis && !Hoption.Same) {
+   if (!Hoption.Axis && !Hoption.Same && !Hoption.Lego && !Hoption.Surf) {
       TGaxis *axis = new TGaxis();
       PaintLegoAxis(axis, 90);
       delete axis;
