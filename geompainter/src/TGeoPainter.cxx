@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.98 2007/02/18 14:58:56 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.99 2007/03/14 11:31:36 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1667,12 +1667,12 @@ void TGeoPainter::SetVisLevel(Int_t level) {
       fVisLock = kFALSE;
    }   
    if (!fLastVolume) {
-      printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
+//      printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
       return;
    }   
    if (!gPad) return;
    if (gPad->GetView()) {
-      printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
+//      printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
       ModifiedPad();
    }
 }
