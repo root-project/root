@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.44 2007/03/30 16:46:05 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.45 2007/04/19 09:27:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -3921,7 +3921,8 @@ int XrdProofdProtocol::SetProofServEnv(XrdROOT *r)
 
    char *ev = 0;
 
-   TRACE(REQ, "SetProofServEnv: enter: ROOT dir: "<< (r ? r->Dir() : "*** undef ***"));
+   MTRACE(REQ, "xpd:child: ",
+               "SetProofServEnv: enter: ROOT dir: "<< (r ? r->Dir() : "*** undef ***"));
 
    if (r) {
       char *rootsys = (char *) r->Dir();
@@ -3990,7 +3991,7 @@ int XrdProofdProtocol::SetProofServEnv(XrdROOT *r)
    }
 
    // Bad input
-   TRACE(REQ, "SetProofServEnv: XrdROOT instance undefined!");
+   MTRACE(REQ,  "xpd:child: ", "SetProofServEnv: XrdROOT instance undefined!");
    return -1;
 }
 
@@ -4001,31 +4002,35 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
 
    char *ev = 0;
 
-   TRACEI(REQ, "SetProofServEnv: enter: psid: "<<psid<<
+   MTRACE(REQ,  "xpd:child: ", "SetProofServEnv: enter: psid: "<<psid<<
                       ", log: "<<loglevel);
 
    // Make sure the principal client is defined
    if (!fPClient) {
-      TRACEI(XERR, "SetProofServEnv: principal client undefined - cannot continue");
+      MTRACE(XERR, "xpd:child: ",
+                   "SetProofServEnv: principal client undefined - cannot continue");
       return -1;
    }
 
    // Set basic environment for proofserv
    if (SetProofServEnv(fPClient->ROOT()) != 0) {
-      TRACEI(XERR, "SetProofServEnv: problems setting basic environment - exit");
+      MTRACE(XERR, "xpd:child: ",
+                   "SetProofServEnv: problems setting basic environment - exit");
       return -1;
    }
 
    // Session proxy
    XrdProofServProxy *xps = fPClient->ProofServs()->at(psid);
    if (!xps) {
-      TRACEI(XERR, "SetProofServEnv: unable to get instance of proofserv proxy");
+      MTRACE(XERR, "xpd:child: ",
+                   "SetProofServEnv: unable to get instance of proofserv proxy");
       return -1;
    }
 
    // Work directory
    XrdOucString udir = fPClient->Workdir();
-   TRACEI(DBG, "SetProofServEnv: working dir for "<<fClientID<<" is: "<<udir);
+   MTRACE(DBG, "xpd:child: ",
+               "SetProofServEnv: working dir for "<<fClientID<<" is: "<<udir);
 
    // Session tag
    char hn[64], stag[512];
@@ -4049,10 +4054,11 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
       logdir += "/";
       logdir += xps->Tag();
    }
-   TRACEI(DBG, "SetProofServEnv: log dir "<<logdir);
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: log dir "<<logdir);
    // Make sure the directory exists
    if (AssertDir(logdir.c_str(), fUI) == -1) {
-      TRACEI(XERR, "SetProofServEnv: unable to create log dir: "<<logdir);
+      MTRACE(XERR, "xpd:child: ",
+                   "SetProofServEnv: unable to create log dir: "<<logdir);
       return -1;
    }
    // The session dir (sandbox) depends on the role
@@ -4067,38 +4073,40 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    ev = new char[strlen("ROOTPROOFSESSDIR=")+sessdir.length()+2];
    sprintf(ev, "ROOTPROOFSESSDIR=%s", sessdir.c_str());
    putenv(ev);
-   TRACEI(DBG, "SetProofServEnv: "<<ev);
+   MTRACE(DBG,  "xpd:child: ", "SetProofServEnv: "<<ev);
 
    // Log level
    ev = new char[strlen("ROOTPROOFLOGLEVEL=")+5];
    sprintf(ev, "ROOTPROOFLOGLEVEL=%d", loglevel);
    putenv(ev);
-   TRACEI(DBG, "SetProofServEnv: "<<ev);
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
 
    // Ordinal number
    ev = new char[strlen("ROOTPROOFORDINAL=")+strlen(xps->Ordinal())+2];
    sprintf(ev, "ROOTPROOFORDINAL=%s", xps->Ordinal());
    putenv(ev);
-   TRACEI(DBG, "SetProofServEnv: "<<ev);
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
 
    // ROOT Version tag if not the default one
    if (fPClient->ROOT() != fgROOT.front()) {
       ev = new char[strlen("ROOTVERSIONTAG=")+strlen(fPClient->ROOT()->Tag())+2];
       sprintf(ev, "ROOTVERSIONTAG=%s", fPClient->ROOT()->Tag());
       putenv(ev);
-      TRACE(DBG, "SetProofServEnv: "<<ev);
+      MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
    }
 
    // Create the env file
-   TRACEI(DBG, "SetProofServEnv: creating env file");
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: creating env file");
    XrdOucString envfile = sessdir;
    envfile += ".env";
    FILE *fenv = fopen(envfile.c_str(), "w");
    if (!fenv) {
-      TRACE(XERR, "SetProofServEnv: unable to open env file: "<<envfile);
+      MTRACE(XERR, "xpd:child: ",
+                  "SetProofServEnv: unable to open env file: "<<envfile);
       return -1;
    }
-   TRACEI(DBG, "SetProofServEnv: environment file: "<< envfile);
+   MTRACE(DBG, "xpd:child: ",
+               "SetProofServEnv: environment file: "<< envfile);
 
    // Forwarded sec credentials, if any
    if (fAuthProt) {
@@ -4117,7 +4125,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
                ev[env.length()] = 0;
                putenv(ev);
                fprintf(fenv, "%s\n", ev);
-               TRACE(DBG, "SetProofServEnv: "<<ev);
+               MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
             }
          }
       }
@@ -4131,7 +4139,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
          memcpy(ev+strlen("XrdSecCREDS="), creds->buffer, creds->size);
          ev[lev] = 0;
          putenv(ev);
-         TRACEI(DBG, "SetProofServEnv: XrdSecCREDS set");
+         MTRACE(DBG, "xpd:child: ", "SetProofServEnv: XrdSecCREDS set");
 
          // If 'pwd', save AFS key, if any
          if (!strncmp(fAuthProt->Entity.prot, "pwd", 3)) {
@@ -4144,12 +4152,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
                   sprintf(ev, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
                   putenv(ev);
                   fprintf(fenv, "ROOTPROOFAFSCREDS has been set\n");
-                  TRACEI(DBG, "SetProofServEnv: " << ev);
+                  MTRACE(DBG, "xpd:child: ", "SetProofServEnv: " << ev);
                } else {
-                  TRACEI(DBG, "SetProofServEnv: problems in saving AFS key");
+                  MTRACE(DBG, "xpd:child: ", "SetProofServEnv: problems in saving AFS key");
                }
             } else {
-               TRACEI(XERR, "SetProofServEnv: unable to create creds dir: "<<credsdir);
+               MTRACE(XERR, "xpd:child: ",
+                            "SetProofServEnv: unable to create creds dir: "<<credsdir);
                return -1;
             }
          }
@@ -4228,7 +4237,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
             ev[env.length()] = 0;
             putenv(ev);
             fprintf(fenv, "%s\n", ev);
-            TRACEI(DBG, "SetProofServEnv: "<<ev);
+            MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
          }
       }
    }
@@ -4247,7 +4256,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
             ev[env.length()] = 0;
             putenv(ev);
             fprintf(fenv, "%s\n", ev);
-            TRACEI(DBG, "SetProofServEnv: "<<ev);
+            MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
             env.erase(ieq);
             if (namelist.length() > 0)
                namelist += ',';
@@ -4259,7 +4268,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
       sprintf(ev, "PROOF_ALLVARS=%s", namelist.c_str());
       putenv(ev);
       fprintf(fenv, "%s\n", ev);
-      TRACEI(DBG, "SetProofServEnv: "<<ev);
+      MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
    }
 
    // Close file
@@ -4273,12 +4282,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    else
       syml += "/last-master-session";
    if (SymLink(logdir.c_str(), syml.c_str()) != 0) {
-      TRACEI(XERR, "SetProofServEnv: problems creating symlink to "
+      MTRACE(XERR, "xpd:child: ",
+                   "SetProofServEnv: problems creating symlink to "
                     " last session (errno: "<<errno<<")");
    }
 
    // We are done
-   TRACEI(DBG, "SetProofServEnv: done");
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: done");
    return 0;
 }
 
@@ -4383,11 +4393,12 @@ int XrdProofdProtocol::Create()
 
       int setupOK = 0;
 
-      TRACEP(FORK,"Child process");
+      MTRACE(FORK, "xpd: ", "child process");
 
       // We set to the user environment
       if (SetUserEnvironment() != 0) {
-         TRACEI(XERR,"Create: SetUserEnvironment did not return OK - EXIT");
+         MTRACE(XERR, "xpd:child: ",
+                      "Create: SetUserEnvironment did not return OK - EXIT");
          write(fp[1], &setupOK, sizeof(setupOK));
          close(fp[0]);
          close(fp[1]);
@@ -4410,7 +4421,8 @@ int XrdProofdProtocol::Create()
 
       // Set environment for proofserv
       if (SetProofServEnv(psid, loglevel, cffile.c_str()) != 0) {
-         TRACEI(XERR, "Create: SetProofServEnv did not return OK - EXIT");
+         MTRACE(XERR, "xpd:child: ",
+                      "Create: SetProofServEnv did not return OK - EXIT");
          write(fp[1], &setupOK, sizeof(setupOK));
          close(fp[0]);
          close(fp[1]);
@@ -4426,7 +4438,8 @@ int XrdProofdProtocol::Create()
          char *buf = (char *) xps->Fileout();
          for (n = 0; n < lfout; n += ns) {
             if ((ns = write(fp[1], buf + n, lfout - n)) <= 0) {
-               TRACEI(XERR, "Create: SetProofServEnv did not return OK - EXIT");
+               MTRACE(XERR, "xpd:child: ",
+                            "Create: SetProofServEnv did not return OK - EXIT");
                write(fp[1], &setupOK, sizeof(setupOK));
                close(fp[0]);
                close(fp[1]);
@@ -4439,13 +4452,13 @@ int XrdProofdProtocol::Create()
       close(fp[0]);
       close(fp[1]);
 
-      TRACEP(LOGIN,"Create: fClientID: "<<fClientID<<
+      MTRACE(LOGIN,"xpd:child: ", "Create: fClientID: "<<fClientID<<
                          ", uid: "<<getuid()<<", euid:"<<geteuid());
       // Run the program
       execv(xps->ROOT()->PrgmSrv(), argvv);
 
       // We should not be here!!!
-      XPDERR("Create: returned from execv: bad, bad sign !!!");
+      MERROR("xpd:child: ", "Create: returned from execv: bad, bad sign !!!");
       exit(1);
    }
 
@@ -5675,7 +5688,7 @@ int XrdProofdProtocol::SetUserEnvironment()
    // dir to the sandbox.
    // Return 0 on success, -1 if enything goes wrong.
 
-   TRACEI(ACT, "SetUserEnvironment: enter");
+   MTRACE(ACT, "xpd:child: ", "SetUserEnvironment: enter");
 
    if (fPClient->Workdir() && strlen(fPClient->Workdir())) {
       TRACEI(DBG, "SetUserEnvironment: changing dir to : "<<fPClient->Workdir());
@@ -5683,18 +5696,18 @@ int XrdProofdProtocol::SetUserEnvironment()
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
          if (!pGuard.Valid()) {
-            TRACEI(XERR, "SetUserEnvironment: could not get privileges");
+            MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: could not get privileges");
             return -1;
          }
 
          if (chdir(fPClient->Workdir()) == -1) {
-            TRACEI(XERR, "SetUserEnvironment: can't change directory to "<<
+            MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: can't change directory to "<<
                           fPClient->Workdir());
             return -1;
          }
       } else {
          if (chdir(fPClient->Workdir()) == -1) {
-            TRACEI(XERR, "SetUserEnvironment: can't change directory to "<<
+            MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: can't change directory to "<<
                           fPClient->Workdir());
             return -1;
          }
@@ -5704,20 +5717,20 @@ int XrdProofdProtocol::SetUserEnvironment()
       char *h = new char[8 + strlen(fPClient->Workdir())];
       sprintf(h, "HOME=%s", fPClient->Workdir());
       putenv(h);
-      TRACEI(XERR, "SetUserEnvironment: set "<<h);
+      MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: set "<<h);
 
    } else {
-      TRACEI(XERR, "SetUserEnvironment: working directory undefined!");
+      MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: working directory undefined!");
    }
 
    // Set access control list from /etc/initgroup
    // (super-user privileges required)
-   TRACEI(DBG, "SetUserEnvironment: setting ACLs");
+   MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: setting ACLs");
    if ((int) geteuid() != fUI.fUid) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (!pGuard.Valid()) {
-         TRACEI(XERR, "SetUserEnvironment: could not get privileges");
+         MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: could not get privileges");
          return -1;
       }
 
@@ -5725,9 +5738,10 @@ int XrdProofdProtocol::SetUserEnvironment()
    }
 
    // acquire permanently target user privileges
-   TRACEI(DBG, "SetUserEnvironment: acquire target user identity");
+   MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: acquire target user identity");
    if (XrdSysPriv::ChangePerm((uid_t)fUI.fUid, (gid_t)fUI.fGid) != 0) {
-      TRACEI(XERR, "SetUserEnvironment: can't acquire "<< fUI.fUser <<" identity");
+      MTRACE(XERR, "xpd:child: ",
+                   "SetUserEnvironment: can't acquire "<< fUI.fUser <<" identity");
       return -1;
    }
 
@@ -5736,7 +5750,7 @@ int XrdProofdProtocol::SetUserEnvironment()
    fPClient->SaveUNIXPath();
 
    // We are done
-   TRACEI(DBG, "SetUserEnvironment: done");
+   MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: done");
    return 0;
 }
 
@@ -7432,7 +7446,7 @@ void XrdProofWorker::Reset(const char *str)
 
    // First token is the type
    XrdOucString tok;
-   XrdOucString typestr = "mastersubmasterworkerslave";
+   XrdOucString typestr = "master|submaster|worker|slave";
    int from = s.tokenize(tok, 0, ' ');
    if (from == STR_NPOS || typestr.find(tok) == STR_NPOS)
       return;
@@ -7476,7 +7490,7 @@ void XrdProofWorker::Reset(const char *str)
 
    // Default image is the host name
    if (fImage.length() <= 0)
-      fImage.assign(fHost, fHost.find('@'));
+      fImage.assign(fHost, fHost.find('@')+1);
 }
 
 //__________________________________________________________________________
