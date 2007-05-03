@@ -1565,7 +1565,7 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
   static char tname[L_tmpnam+10];
   char sname[L_tmpnam+10];
 #endif
-  static struct G__input_file ftemp;
+  struct G__input_file ftemp;
 
   /* struct G__ifunc_table *ifunc; */
 
