@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.45 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.46 2007/02/26 09:27:10 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -994,8 +994,10 @@ void TGListView::SetHeaders(Int_t ncolumns)
       for (int i = 0; i < fNColumns; i++) {
          if (fColHeader[i]) fColHeader[i]->DestroyWindow();
          delete fColHeader[i];
+         delete fSplitHeader[i];
       }
       delete [] fColHeader;
+      delete [] fSplitHeader;
    }
 
    fNColumns  = ncolumns+1;    // one extra for the blank filler header
