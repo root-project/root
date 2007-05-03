@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.36 2007/03/30 21:37:47 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.37 2007/05/02 20:18:39 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -2590,7 +2590,7 @@ Bool_t TFormLeafInfoCast::Update()
 //______________________________________________________________________________
 
 TFormLeafInfoTTree::TFormLeafInfoTTree(TTree *tree, const char *alias, TTree *current) :
-TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fAlias(alias),fCurrent(current)
+TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fCurrent(current),fAlias(alias)
 {
    if (fCurrent==0) fCurrent = fTree->GetFriend(alias);
 }
@@ -2618,7 +2618,7 @@ TFormLeafInfo* TFormLeafInfoTTree::DeepCopy() const
 }
 
 //______________________________________________________________________________
-void* TFormLeafInfoTTree::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
+void* TFormLeafInfoTTree::GetLocalValuePointer(TLeaf *, Int_t instance)
 {
    // returns the address of the value pointed to by the
    // TFormLeafInfo.
@@ -2627,7 +2627,7 @@ void* TFormLeafInfoTTree::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoTTree::GetValue(TLeaf *leaf, Int_t instance)
+Double_t TFormLeafInfoTTree::GetValue(TLeaf *, Int_t instance)
 {
    // Return result of a leafobject method.
 
