@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.108 2007/04/26 16:42:16 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.109 2007/04/29 07:06:48 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -895,14 +895,12 @@ TRootBrowser::~TRootBrowser()
 {
    // Browser destructor.
 
-   UnmapWindow();
-
    if (fIconPic) gClient->FreePicture(fIconPic);
 
    delete fToolBarSep;
+
+   fToolBar->Cleanup();
    delete fToolBar;
-   delete fFSComboBox;
-   delete fDrawOption;
    delete fStatusBar;
    delete fV1;
    delete fV2;
@@ -926,7 +924,6 @@ TRootBrowser::~TRootBrowser()
    delete fMenuBarLayout;
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
-   delete fComboLayout;
    delete fBarLayout;
 
    delete fTextEdit;
