@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.13 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.14 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 //______________________________________________________________________________
 TGVSplitter::~TGVSplitter()
 {
-   // Delete vertical slider widget.
+   // Delete vertical splitter widget.
 
    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
@@ -224,7 +224,7 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 //______________________________________________________________________________
 TGHSplitter::~TGHSplitter()
 {
-   // Delete vertical slider widget.
+   // Delete horizontal splitter widget.
 
    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
