@@ -373,6 +373,10 @@ N: Wim Lavrijsen
 E: WLavrijsen@lbl.gov
 D: PyRoot package
 
+N: Kerry Lee
+E: kerry.t.lee@nasa.gov
+D: Contribution to TDatime::Set
+
 N: Josef Leydold
 E: leydold@statmath.wu-wien.ac.at
 D: UNURAN package and interfaces
