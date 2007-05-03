@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.9 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.10 2007/04/30 10:44:33 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -218,7 +218,7 @@ TList *TFileInfo::CreateListMatching(const char *files)
    // If no files match the selection, 0 is returned
 
    if (!files || strlen(files) <= 0) {
-      Printf("TFileInfo::CreateListMatching: input path undefined");
+      ::Info("TFileInfo::CreateListMatching", "input path undefined");
       return 0;
    }
 
