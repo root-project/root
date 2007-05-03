@@ -92,6 +92,7 @@ for c in $options ; do eval ${c}_explicit="no" ; done
 enable_afs=no
 enable_cint7=no
 enable_gdml=no
+enable_globus=no
 enable_explicitlink=no
 enable_qt=no
 enable_qtgsi=no
@@ -2855,26 +2856,26 @@ if test "x$enable_globus" = "xyes"; then
        globusinc=""
        globusincdir=""
        enable_globus="no"
-       break
-    fi
-    globusinc="$globusinc $found_hdr"
-    globusincdir=$found_dir
-    if test ! "x$globusincdir" = "x" ; then
-       flavour=`basename $globusincdir`
-    fi
-
-    # The other headers now
-    inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
-    for i in $inclist ; do
-       check_header $i "" "$globusincdir"
-       if test "x$found_hdr" = "x" ; then
-          globusinc=""
-          globusincdir=""
-          enable_globus="no"
-          break
-       fi
+    else
        globusinc="$globusinc $found_hdr"
-    done
+       globusincdir=$found_dir
+       if test ! "x$globusincdir" = "x" ; then
+          flavour=`basename $globusincdir`
+       fi
+
+       # The other headers now
+       inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
+       for i in $inclist ; do
+          check_header $i "" "$globusincdir"
+          if test "x$found_hdr" = "x" ; then
+             globusinc=""
+             globusincdir=""
+             enable_globus="no"
+             break
+          fi
+          globusinc="$globusinc $found_hdr"
+       done
+    fi
 fi
 
 if test "x$enable_globus" = "xyes"; then
@@ -3466,14 +3467,17 @@ if test ! "x$enable_krb5" = "xno" ; then
     message "Checking whether we're using MIT Kerberos"
     result "$krb5mit"
 
-    check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
-    if test "x$found_lib" = "x" ; then
-	enable_krb5=no
-    else
-	# The order is important here
-	krb5lib="$found_lib $krb5lib"
-	krb5libdir="$found_dir $krb5libdir"
-	if test "x$cryptolib" = "x" ; then
+    # Only MIT kerberos is currently supported
+    if test "x$krb5mit" = "xyes" ; then
+
+      check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
+      if test "x$found_lib" = "x" ; then
+	 enable_krb5=no
+      else
+	 # The order is important here
+	 krb5lib="$found_lib $krb5lib"
+	 krb5libdir="$found_dir $krb5libdir"
+	 if test "x$cryptolib" = "x" ; then
             check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
                           $krb5libdirs
             cryptolib=$found_lib
@@ -3486,28 +3490,30 @@ if test ! "x$enable_krb5" = "xno" ; then
 	    if test "x$cryptolib" = "x" ; then
                 enable_krb5=no
 	    fi
-	fi
-    fi
+	 fi
+      fi
 
-    krb5init=""
-    krb5bindir=""
-    if test ! "x$krb5dir" = "x" ; then
-	krb5bindir=$krb5dir/bin
-    fi
-    for i in "$krb5bindir" /usr/athena/bin \
+      krb5init=""
+      krb5bindir=""
+      if test ! "x$krb5dir" = "x" ; then
+	 krb5bindir=$krb5dir/bin
+      fi
+      for i in "$krb5bindir" /usr/athena/bin \
              /usr/local/athena/bin /usr/kerberos/bin \
              /usr/krb5/bin /usr/local/kerberos/bin \
              /usr/bin /usr/local/bin ; do
-        if test -x $i/kinit ; then
+         if test -x $i/kinit ; then
             krb5init=$i/kinit
             break
-        fi
-    done
+         fi
+      done
 
-    if test "x$krb5init" = "x" ; then
-        result "Checking for kinit ... no"
-    else
-        echo "Checking for kinit ... $krb5init"
+      if test "x$krb5init" = "x" ; then
+         result "Checking for kinit ... no"
+      else
+         echo "Checking for kinit ... $krb5init"
+      fi
+
     fi
 
     if test ! "x$enable_krb5" = "xyes" ; then
