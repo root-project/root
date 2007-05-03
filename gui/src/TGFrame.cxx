@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.151 2007/04/20 15:07:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.152 2007/04/22 15:48:59 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1406,7 +1406,8 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
    dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
    dndTypeList[2] = 0;
-   new TGDNDManager(this, dndTypeList);
+   if (!gDNDManager)
+      new TGDNDManager(this, dndTypeList);
    SetWindowName();
 }
 
