@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.12 2006/11/06 09:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.13 2006/12/13 18:06:34 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -69,15 +69,7 @@ TDatime::TDatime(const char *sqlDateTime)
    // Expects as input a string in SQL date/time compatible format, like:
    // yyyy-mm-dd hh:mm:ss.
 
-   Int_t yy, mm, dd, hh, mi, ss;
-
-   if (sscanf(sqlDateTime, "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6)
-      Set(yy, mm, dd, hh, mi, ss);
-   else {
-      Error("TDatime(sqlDatTime)", "input string not in right format, set"
-            " to current date/time");
-      Set();
-   }
+   Set(sqlDateTime);
 }
 
 //______________________________________________________________________________
@@ -346,6 +338,23 @@ void TDatime::Set(Int_t year, Int_t month, Int_t day,
    }
 
    fDatime = (year-1995)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
+}
+
+//______________________________________________________________________________
+void TDatime::Set(const char* sqlDateTime)
+{
+   // Expects as input a string in SQL date/time compatible format, like:
+   // yyyy-mm-dd hh:mm:ss.
+
+   Int_t yy, mm, dd, hh, mi, ss;
+
+   if (sscanf(sqlDateTime, "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6)
+      Set(yy, mm, dd, hh, mi, ss);
+   else {
+      Error("TDatime(sqlDatTime)", "input string not in right format, set"
+            " to current date/time");
+      Set();
+   }
 }
 
 //______________________________________________________________________________

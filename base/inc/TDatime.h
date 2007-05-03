@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.11 2006/05/13 11:00:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.12 2007/02/04 17:39:44 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    void         Set(Int_t date, Int_t time);
    void         Set(Int_t year, Int_t month, Int_t day,
                     Int_t hour, Int_t min, Int_t sec);
+   void         Set(const char *sqlDateTime);
    Int_t        Sizeof() const {return sizeof(UInt_t);}
 
    friend Bool_t operator==(const TDatime &d1, const TDatime &d2);
