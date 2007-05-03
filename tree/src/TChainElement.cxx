@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.6 2006/06/25 14:14:11 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.7 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -31,6 +31,7 @@ TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
    fEntries    = 0;
    fPacketSize = 100;
    fStatus     = -1;
+   ResetBit(kHasBeenLookedUp);
 }
 
 //______________________________________________________________________________
@@ -45,6 +46,7 @@ TChainElement::TChainElement(const char *name, const char *title)
    fEntries    = 0;
    fPacketSize = 100;
    fStatus     = -1;
+   ResetBit(kHasBeenLookedUp);
 }
 
 //______________________________________________________________________________
@@ -83,3 +85,14 @@ void TChainElement::SetPacketSize(Int_t size)
 
    fPacketSize = size;
 }
+
+//_______________________________________________________________________
+void TChainElement::SetLookedUp(Bool_t y)
+{
+   // Set/Reset the looked-up bit
+   if (y)
+      SetBit(kHasBeenLookedUp);
+   else
+      ResetBit(kHasBeenLookedUp);
+}
+

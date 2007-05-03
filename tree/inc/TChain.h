@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.64 2007/03/15 11:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.65 2007/03/16 08:15:29 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -30,7 +30,7 @@ class TBrowser;
 class TCut;
 class TEntryList;
 class TEventList;
-
+class TCollection;
 
 class TChain : public TTree {
 
@@ -70,7 +70,7 @@ public:
    virtual Int_t     Add(TChain* chain);
    virtual Int_t     Add(const char* name, Long64_t nentries = kBigNumber);
    virtual Int_t     AddFile(const char* name, Long64_t nentries = kBigNumber, const char* tname = "");
-   virtual Int_t     AddFileInfoList(TList* list, Long64_t nfiles = kBigNumber);
+   virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = kBigNumber);
    virtual TFriendElement *AddFriend(const char* chainname, const char* dummy = "");
    virtual TFriendElement *AddFriend(const char* chainname, TFile* dummy);
    virtual TFriendElement *AddFriend(TTree* chain, const char* alias, Bool_t warn = kFALSE);
@@ -110,7 +110,7 @@ public:
    virtual Double_t  GetWeight() const;
    virtual Int_t     LoadBaskets(Long64_t maxmemory);
    virtual Long64_t  LoadTree(Long64_t entry);
-           void      Lookup();
+           void      Lookup(Bool_t force = kFALSE);
    virtual void      Loop(Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");

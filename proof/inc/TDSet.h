@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.6 2007/04/17 15:55:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.7 2007/04/19 09:33:40 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #endif
 
 class TChain;
+class TCollection;
 class TCut;
 class TDSet;
 class TEventList;
@@ -149,7 +150,7 @@ public:
                              const char *dir = 0, Long64_t first = 0,
                              Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
-   virtual Bool_t        Add(TList *fileinfo);
+   virtual Bool_t        Add(TCollection *fileinfo);
    virtual void          AddFriend(TDSet *friendset, const char *alias);
 
    virtual Long64_t      Process(const char *selector, Option_t *option = "",

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.163 2007/03/16 08:15:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.164 2007/03/30 16:44:34 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -430,25 +430,45 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 }
 
 //______________________________________________________________________________
-Int_t TChain::AddFileInfoList(TList* fileinfolist, Long64_t nfiles /* = kBigNumber */)
+Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNumber */)
 {
-   // -- Add all files referenced in the list to the chain.
+   // Add all files referenced in the list to the chain. The object type in the
+   // list must be either TFileInfo or TObjString or TUrl .
 
-   if (!fileinfolist)
+   if (!filelist)
       return 0;
-   TIter next(fileinfolist);
-   TFileInfo* finfo;
+   TIter next(filelist);
+
+   TObject *o = 0;
    Long64_t cnt=0;
-   while ((finfo = (TFileInfo*)next())) {
+   while ((o = next())) {
+      // Get the url
+      TString cn = o->ClassName();
+      const char *url = 0;
+      if (cn == "TFileInfo") {
+         TFileInfo *fi = (TFileInfo *)o;
+         url = (fi->GetCurrentUrl()) ? fi->GetCurrentUrl()->GetUrl() : 0;
+         if (!url) {
+            Warning("AddFileInfoList", "found TFileInfo with empty Url - ignoring");
+            continue;
+         }
+      } else if (cn == "TUrl") {
+         url = ((TUrl*)o)->GetUrl();
+      } else if (cn == "TObjString") {
+         url = ((TObjString*)o)->GetName();
+      }
+      if (!url) {
+         Warning("AddFileInfoList", "object is of type %s : expecting TFileInfo, TUrl"
+                                 " or TObjString - ignoring", o->ClassName());
+         continue;
+      }
+      // Good entry
       cnt++;
-      // read the first url
-      finfo->ResetUrl();
-      if (finfo->GetCurrentUrl())
-         AddFile((finfo->GetCurrentUrl())->GetUrl());
-      if (cnt>=nfiles)
+      AddFile(url);
+      if (cnt >= nfiles)
          break;
    }
-   if (fProofChain)
+  if (fProofChain)
       // This updates the proxy chain when we will really use PROOF
       ResetBit(kProofUptodate);
 
@@ -1386,9 +1406,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
 }
 
 //______________________________________________________________________________
-void TChain::Lookup()
+void TChain::Lookup(Bool_t force)
 {
-   // -- Check the files in the chain.
+   // Check / locate the files in the chain.
+   // By default only the files not yet looked up are checked.
+   // Use force = kTRUE to check / re-check every file.
 
    TIter next(fFiles);
    TChainElement* element = 0;
@@ -1398,6 +1420,9 @@ void TChain::Lookup()
    Int_t nlook = 0;
    TFileStager *stg = 0;
    while ((element = (TChainElement*) next())) {
+      // Do not do it more than needed
+      if (element->HasBeenLookedUp() && !force) continue;
+      // Count
       nlook++;
       // Get the Url
       TUrl elemurl(element->GetTitle());
@@ -1417,9 +1442,9 @@ void TChain::Lookup()
             break;
          }
       }
-      Int_t n2 = (nelements > 50) ? (Int_t) nelements / 50 : 1;
+      Int_t n1 = (nelements > 100) ? (Int_t) nelements / 100 : 1;
       if (stg->Locate(eurl.Data(), eurl) == 0) {
-         if (nlook > 0 && !(nlook % n2)) {
+         if (nlook > 0 && !(nlook % n1)) {
             printf("Lookup | %3d %% finished\r", 100 * nlook / nelements);
             fflush(stdout);
          }
@@ -1430,7 +1455,9 @@ void TChain::Lookup()
          elemurl.SetAnchor(anchor);
          // Save it into the element
          element->SetTitle(elemurl.GetUrl());
-      } else {
+         // Remember
+         element->SetLookedUp();
+     } else {
          // Failure: remove
          fFiles->Remove(element);
          if (gSystem->AccessPathName(eurl))
@@ -1439,7 +1466,11 @@ void TChain::Lookup()
             Error("Lookup", "file %s cannot be read\n", eurl.Data());
       }
    }
-   printf("\n");
+   if (nelements > 0)
+      printf("Lookup | %3d %% finished\n", 100 * nlook / nelements);
+   else
+      printf("\n");
+   fflush(stdout);
    SafeDelete(stg);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.8 2007/04/17 15:55:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.9 2007/04/19 09:33:40 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -602,7 +602,14 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          dir = tree;
          tree = behindSlash;
       }
-      Add(file, tree, dir);
+      if (Add(file, tree, dir)) {
+         if (elem->HasBeenLookedUp()) {
+            // Save lookup information, if any
+            TDSetElement *dse = (TDSetElement *) fElements->Last();
+            if (dse)
+               dse->SetLookedUp();
+         }
+      }
    }
    SetDirectory(0);
 
@@ -799,18 +806,29 @@ Bool_t TDSet::Add(TDSet *dset)
 }
 
 //______________________________________________________________________________
-Bool_t TDSet::Add(TList *fileinfo)
+Bool_t TDSet::Add(TCollection *filelist)
 {
-   // Add files passed as list of TfileInfo objects
+   // Add files passed as list of TFileInfo, TUrl or TObjString objects .
+   // If TFileInfo, the first entry and the number of entries are also filled.
 
-   if (!fileinfo)
+   if (!filelist)
       return kFALSE;
 
-   TFileInfo *fi = 0;
-   TIter next(fileinfo);
-   while ((fi = (TFileInfo *) next())) {
-      Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
-          fi->GetFirst(), fi->GetEntries());
+   TObject *o = 0;
+   TIter next(filelist);
+   while ((o = next())) {
+      TString cn(o->ClassName());
+      if (cn == "TFileInfo") {
+         TFileInfo *fi = 0;
+         Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
+             fi->GetFirst(), fi->GetEntries());
+      } else if (cn == "TUrl") {
+         Add(((TUrl *)o)->GetUrl());
+      } else if (cn == "TObjString") {
+         Add(((TObjString *)o)->GetName());
+      } else {
+         Warning("Add","found object fo unexpected type %s - ignoring", cn.Data());
+      }
    }
 
    return kTRUE;

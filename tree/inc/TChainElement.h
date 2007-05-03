@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.9 2006/06/25 14:14:10 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.10 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -29,6 +29,11 @@ class TBranch;
 
 class TChainElement : public TNamed {
 
+   // TChainElement status bits
+   enum EStatusBits {
+      kHasBeenLookedUp = BIT(15)
+   };
+
 protected:
    Long64_t      fEntries;          //Number of entries in the tree of this chain element
    Int_t         fNPackets;         //Number of packets
@@ -55,12 +60,14 @@ public:
    virtual char       *GetPackets() const {return fPackets;}
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
+   virtual Bool_t      HasBeenLookedUp() { return TestBit(kHasBeenLookedUp); }
    virtual void        ls(Option_t *option="") const;
    virtual void        SetBaddress(void *add) {fBaddress = add;}
    virtual void        SetBaddressClassName(const char* clname) { fBaddressClassName = clname; }
    virtual void        SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
    virtual void        SetBaddressType(UInt_t type) { fBaddressType = type; }
    virtual void        SetBranchPtr(TBranch **ptr) { fBranchPtr = ptr; }
+   virtual void        SetLookedUp(Bool_t y = kTRUE);
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}
