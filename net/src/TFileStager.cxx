@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFileStager.cxx,v 1.1 2007/02/14 18:25:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFileStager.cxx,v 1.2 2007/03/30 16:44:33 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TError.h"
-#include "TList.h"
+#include "TFileInfo.h"
+#include "TSeqCollection.h"
 #include "TFileStager.h"
 #include "TObjString.h"
 #include "TPluginManager.h"
@@ -34,11 +35,11 @@
 #include "TUrl.h"
 
 //_____________________________________________________________________________
-TList* TFileStager::GetStaged(TList *pathlist)
+TList* TFileStager::GetStaged(TCollection *pathlist)
 {
    // Retrieves the staging (online) status for a list of path names. Path names
-   // are TUrl objects or TObjString. The returned list is the list of staged
-   // files as TObjString (we use TObjString, because you can do a FindObject
+   // must be of type TUrl, TFileInfo or TObjString. The returned list is the list
+   // of staged files as TObjString (we use TObjString, because you can do a FindObject
    // on that list using the file name, which is not possible with TUrl objects.
 
    if (!pathlist) {
@@ -46,66 +47,44 @@ TList* TFileStager::GetStaged(TList *pathlist)
       return 0;
    }
 
-   TList* stagedlist = 0;
-   if (strcmp(GetName(), "local")) {
-      // If a local instance, evrything is staged by definition;
-      // we neede to copy the input list as the user expects a new list
-      stagedlist = (TList *)pathlist->Clone();
-
-   } else {
-
-      stagedlist = new TList();
-
-      TIter nxt(pathlist);
-      TObject* obj = 0;
-      while ((obj = nxt()))  {
-         const char* pathname = 0;
-         if (TString(obj->ClassName()) == "TUrl")
-            pathname = ((TUrl*)obj)->GetUrl();
-         if (TString(obj->ClassName()) == "TObjString")
-            pathname = ((TObjString*)obj)->GetName();
-         if (!pathname) {
-            Warning("GetStaged", "object is of type %s : expecting TUrl"
-                                 " or TObjString - ignoring", obj->ClassName());
-            continue;
-         }
-         if (IsStaged(pathname))
-            stagedlist->Add(new TObjString(pathname));
-      }
+   TList* stagedlist = new TList();
+   TIter nxt(pathlist);
+   TObject* o = 0;
+   Bool_t local = (!strcmp(GetName(), "local")) ? kTRUE : kFALSE;
+   while ((o = nxt())) {
+      TString pn = TFileStager::GetPathName(o);
+      if (pn == "") {
+         Warning("GetStaged", "object is of unexpected type %s - ignoring", o->ClassName());
+      } else if (local || IsStaged(pn))
+         stagedlist->Add(new TObjString(pn));
    }
 
    // List of online files
    stagedlist->SetOwner(kTRUE);
+   Info("GetStaged", "%d files staged", stagedlist->GetSize());
    return stagedlist;
 }
 
 //_____________________________________________________________________________
-Bool_t TFileStager::Stage(TList *pathlist, Option_t *opt)
+Bool_t TFileStager::Stage(TCollection *pathlist, Option_t *opt)
 {
    // Issue a stage request for a list of files.
    // Return the '&' of all single Prepare commands.
 
    TIter nxt(pathlist);
-   TObject* obj;
+   TObject *o = 0;
    Bool_t success = kFALSE;
 
-   while ((obj = nxt()))  {
-      const char* pathname = 0;
-      if (TString(obj->ClassName()) == "TUrl") {
-         pathname = ((TUrl*)obj)->GetUrl();
-      }
-      if (TString(obj->ClassName()) == "TObjString") {
-         pathname = ((TObjString*)obj)->GetName();
-      }
-
-      if (!pathname) {
-         Warning("Stage", "found object of type %s - expecting TUrl/TObjstring - ignoring",
-                              obj->ClassName());
+   while ((o = nxt()))  {
+      TString pn = TFileStager::GetPathName(o);
+      if (pn == "") {
+         Warning("Stage", "found object of unexpected type %s - ignoring",
+                              o->ClassName());
          continue;
       }
 
       // Issue to prepare
-      success &= Stage(pathname, opt);
+      success &= Stage(pn, opt);
    }
 
    // return global flag
@@ -153,4 +132,25 @@ Int_t TFileStager::Locate(const char *u, TString &f)
       return -1;
    f = u;
    return 0;
+}
+
+//_____________________________________________________________________________
+TString TFileStager::GetPathName(TObject *o)
+{
+   // Return the path name contained in object 'o' allowing for
+   // TUrl, TObjString or TFileInfo
+
+   TString pathname;
+   TString cn(o->ClassName());
+   if (cn == "TUrl") {
+      pathname = ((TUrl*)o)->GetUrl();
+   } else if (cn == "TObjString") {
+      pathname = ((TObjString*)o)->GetName();
+   } else if (cn == "TFileInfo") {
+      TFileInfo *fi = (TFileInfo *)o;
+      pathname = (fi->GetCurrentUrl()) ? fi->GetCurrentUrl()->GetUrl() : "";
+   }
+
+   // Done
+   return pathname;
 }

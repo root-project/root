@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.17 2007/02/14 18:25:22 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.18 2007/03/08 12:09:09 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -22,15 +22,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TString.h"
 #include "TEnv.h"
+#include "TFileStager.h"
+#include "TObjString.h"
+#include "TROOT.h"
 #include "TSocket.h"
+#include "TString.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "TXNetFile.h"
 #include "TXNetSystem.h"
-#include "TROOT.h"
-#include "TObjString.h"
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientConn.hh"
@@ -97,7 +98,7 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
    TString dummy = url;
    dummy += "/dummy";
 
-   XrdClientAdmin *cadm = new XrdClientAdmin(dummy);
+   XrdClientAdmin *cadm = XrdClientAdmin::GetClientAdmin(dummy);
 
    if (!cadm) {
       Error("Connect","fatal error: new object creation failed.");
@@ -127,7 +128,7 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
             Int_t rproto = TXNetFile::GetRootdProtocol(s);
             if (rproto < 0) {
                Error("TXNetSystem", "getting protocol of the rootd server");
-               SafeDelete(cadm);
+               cadm = 0;
                return 0;
             }
             // Finalize TSocket initialization
@@ -158,19 +159,18 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
 
             // Type of server
             fIsRootd = kTRUE;
-
-            SafeDelete(cadm);
+            cadm = 0;
 
          } else {
             Error("Connect", "some severe error occurred while opening"
                   " the connection at %s - exit", url);
-            SafeDelete(cadm);
+            cadm = 0;
             return cadm;
          }
       } else {
          Error("Connect",
                "while opening the connection at %s - exit", url);
-         SafeDelete(cadm);
+         cadm = 0;
          return cadm;
       }
    }
@@ -217,6 +217,8 @@ void* TXNetSystem::OpenDirectory(const char* dir)
          cg.ClientAdmin()->ExistDirs(dirs, existDirs);
          if (existDirs.GetSize()>0 && existDirs[0])
             return fDirp;
+         else
+            cg.NotifyLastError();
       }
       return 0;
    }
@@ -257,7 +259,12 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
       if (cg.IsValid()) {
          // use default permissions 755 to create directory
          Bool_t ok = cg.ClientAdmin()->Mkdir(TUrl(dir).GetFile(),7,5,5);
-         return (ok ? 0 : -1);
+         if (ok) {
+            return 0;
+         } else {
+            cg.NotifyLastError();
+            return -1;
+         }
       }
    }
 
@@ -283,10 +290,12 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
          TXNetSystemConnectGuard cg(this, fUrl);
          if (cg.IsValid()) {
             Bool_t ok = cg.ClientAdmin()->DirList(fDir, fDirList);
-            if (ok)
+            if (ok) {
                fDirListValid = kTRUE;
-            else
+            } else {
+               cg.NotifyLastError();
                return 0;
+            }
          }
       }
 
@@ -342,6 +351,9 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
 
             buf.fIsLink = 0;     // not available
             return 0;
+         } else {
+            if (gDebug > 0)
+               cg.NotifyLastError();
          }
       }
       return 1;
@@ -418,6 +430,8 @@ int TXNetSystem::Unlink(const char *path)
 
             // Done
             return ((ok) ? 0 : -1);
+         } else if (!ok) {
+            cg.NotifyLastError();
          }
       }
    }
@@ -453,7 +467,7 @@ Bool_t TXNetSystem::IsOnline(const char *path)
                return kFALSE;
          }
          case kXR_error:
-            Error("IsOnline","Error %x : %s", cg.ClientAdmin()->LastServerError(),
+            Error("IsOnline","Error %d : %s", cg.ClientAdmin()->LastServerError()->errnum,
                              cg.ClientAdmin()->LastServerError()->errmsg);
             return kFALSE;
          default:
@@ -470,7 +484,7 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
 
    TXNetSystemConnectGuard cg(this, path);
    if (cg.IsValid()) {
-      XrdOucString pathname = TUrl(path).GetFile();
+      XrdOucString pathname = TUrl(path).GetFileAndOptions();
       vecString vs;
       vs.Push_back(pathname);
       cg.ClientAdmin()->Prepare(vs, (kXR_char)option, (kXR_char)priority);
@@ -480,6 +494,88 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
       if (!(cg.ClientAdmin()->LastServerResp()->status)){
          return kTRUE;
       }
+      cg.NotifyLastError();
+   }
+
+   // Done
+   return kFALSE;
+}
+
+//_____________________________________________________________________________
+Int_t TXNetSystem::Prepare(TCollection *paths,
+                           UChar_t opt, UChar_t prio, TString *bufout)
+{
+   // Issue a prepare request for a list of files defined by 'paths', which must
+   // be of one of the following types: TFileInfo, TUrl, TObjString.
+   // On output, bufout, if defined, points to a buffer form that can be used
+   // with GetPathsInfo.
+   // Return the number of paths found or -1 if any error occured.
+
+   Int_t npaths = 0;
+
+   TXNetSystemConnectGuard cg(this, "");
+   if (cg.IsValid()) {
+
+      TString *buf = (bufout) ? bufout : new TString();
+
+      // Prepare the buffer
+      TObject *o = 0;
+      TUrl u;
+      TString path;
+      TIter nxt(paths);
+      while ((o = nxt()))  {
+         // Extract the path name from the allowed object types
+         TString pn = TFileStager::GetPathName(o);
+         if (pn == "") {
+            Warning("Prepare", "object is of unexpected type %s - ignoring", o->ClassName());
+            continue;
+         }
+         u.SetUrl(pn);
+         // The path
+         path = u.GetFile();
+         npaths++;
+         *buf += Form("%s\n", path.Data());
+      }
+
+      Info("Prepare","buffer ready: issuing prepare ...");
+      cg.ClientAdmin()->Prepare(buf->Data(), (kXR_char)opt, (kXR_char)prio);
+      if (!bufout)
+         delete buf;
+      if (gDebug >0) 
+         Info("Prepare", "Got Status %d",
+              cg.ClientAdmin()->LastServerResp()->status);
+      if (!(cg.ClientAdmin()->LastServerResp()->status)){
+         return npaths;
+      }
+      cg.NotifyLastError();
+   }
+
+   // Done
+   return -1;
+}
+
+//_____________________________________________________________________________
+Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
+{
+   // Retrieve status of a '\n'-separated list of files in 'paths'.
+   // The information is returned as one UChar_t per file in 'info';
+   // 'info' must be allocated by the caller.
+
+   if (!paths) {
+      Warning("GetPathsInfo", "input list is empty!");
+      return kFALSE;
+   }
+
+   TXNetSystemConnectGuard cg(this, "");
+   if (cg.IsValid()) {
+      cg.ClientAdmin()->SysStatX(paths, info);
+      if (gDebug >0) 
+         Info("GetPathsInfo", "Got Status %d",
+              cg.ClientAdmin()->LastServerResp()->status);
+      if (!(cg.ClientAdmin()->LastServerResp()->status)){
+         return kTRUE;
+      }
+      cg.NotifyLastError();
    }
 
    // Done
@@ -508,6 +604,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
             eurl = u.GetUrl();
             return 0;
          }
+         cg.NotifyLastError();
       }
       return 1;
    }
@@ -528,7 +625,8 @@ TXNetSystemConnectGuard::TXNetSystemConnectGuard(TXNetSystem *xn, const char *ur
 
     if (xn)
        // Connect
-       fClientAdmin = xn->Connect(url);
+       fClientAdmin = (url && strlen(url) > 0) ? xn->Connect(url)
+                                               : xn->Connect(xn->fUrl);
 }
 
 //_____________________________________________________________________________
@@ -536,7 +634,15 @@ TXNetSystemConnectGuard::~TXNetSystemConnectGuard()
 {
    // Destructor: close the connection
 
-   if (fClientAdmin)
-      delete fClientAdmin;
+   fClientAdmin = 0;
 }
 
+//_____________________________________________________________________________
+void TXNetSystemConnectGuard::NotifyLastError()
+{
+   // Print message about last occured error
+
+   if (fClientAdmin)
+      if (fClientAdmin->GetClientConn())
+         Printf("Srv err: %s", fClientAdmin->GetClientConn()->LastServerError.errmsg);
+}

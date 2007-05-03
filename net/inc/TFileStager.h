@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFileStager.h,v 1.2 2007/03/08 12:09:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFileStager.h,v 1.3 2007/03/30 16:44:33 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TString.h"
 #endif
 
-class TList;
+class TCollection;
 
 class TFileStager : public TNamed {
 
@@ -42,14 +42,17 @@ public:
    TFileStager(const char *stager) : TNamed(stager, stager) { }
    virtual ~TFileStager() { }
 
-   TList                  *GetStaged(TList *pathlist);
+   virtual TList          *GetStaged(TCollection *pathlist);
    virtual Bool_t          IsStaged(const char *);
    virtual Int_t           Locate(const char *u, TString &f);
    virtual Bool_t          Matches(const char *s) { return ((s && (fName == s)) ? kTRUE : kFALSE); }
-   virtual Bool_t          Stage(const char *, Option_t *) { return kTRUE; }
-   virtual Bool_t          Stage(TList *pathlist, Option_t *opt = 0);
+   virtual Bool_t          Stage(const char *, Option_t * = 0) { return kTRUE; }
+   virtual Bool_t          Stage(TCollection *pathlist, Option_t *opt = 0);
 
    virtual Bool_t          IsValid() const { return kTRUE; }
+
+   // Extract the path name from supported object types
+   static TString          GetPathName(TObject *o);
 
    //--- Load desired plugin
    static TFileStager *Open(const char *stager);

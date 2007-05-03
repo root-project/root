@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.6 2007/02/14 18:25:22 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.7 2007/03/08 12:09:09 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "XrdClient/XrdClientVector.hh"
 
 class XrdClientAdmin;
+class TCollection;
 class TXNetSystemConnectGuard;
 
 typedef XrdClientVector<XrdOucString> vecString;
@@ -66,7 +67,6 @@ private:
    XrdClientAdmin *Connect(const char *url); // Connect to server
    void           *GetDirPtr() const { return fDirp; }
    void            InitXrdClient();
-//   void            SaveEndPointUrl();
 
 public:
    TXNetSystem(Bool_t owner = kTRUE);
@@ -83,8 +83,12 @@ public:
    virtual void       *OpenDirectory(const char* dir);
    virtual int         Unlink(const char *path);
 
+   // TXNetSystem specific
+   Bool_t              GetPathsInfo(const char *paths, UChar_t *info);
    Bool_t              IsOnline(const char *path);
-   Bool_t              Prepare(const char *path, UChar_t option = 8, UChar_t priority = 0);
+   Bool_t              Prepare(const char *path, UChar_t opt = 8, UChar_t prio = 0);
+   Int_t               Prepare(TCollection *paths,
+                               UChar_t opt = 8, UChar_t prio = 0, TString *buf = 0);
 
    ClassDef(TXNetSystem,0)   // System management class for xrootd servers
 };
@@ -105,6 +109,7 @@ public:
 
    XrdClientAdmin *ClientAdmin() const { return fClientAdmin; }
 
+   void NotifyLastError();
 };
 
 #endif

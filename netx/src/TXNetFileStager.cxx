@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.2 2007/03/08 12:09:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.3 2007/03/19 14:45:20 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -18,6 +18,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TError.h"
+#include "TObjString.h"
+#include "TUrl.h"
 #include "TXNetFileStager.h"
 #include "TXNetSystem.h"
 
@@ -58,7 +60,7 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
       TString p(path);
       if (!p.BeginsWith("root:"))
          p.Insert(0, fPrefix);
-      return fSystem->IsOnline(p);
+      return !(fSystem->AccessPathName(p, kFileExists));
    }
 
    // Failure
