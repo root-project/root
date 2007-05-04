@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.3 2006/07/18 19:31:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.4 2007/04/23 09:07:27 brun Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }
-   void           LoadFile(char *fname = NULL);
+   void           LoadFile(char *fname = 0);
    void           SaveFile(const char *fname);
    Bool_t         SaveFileAs();
    void           PrintText();

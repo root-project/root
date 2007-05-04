@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDNDManager.h,v 1.2 2007/04/20 11:43:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDNDManager.h,v 1.3 2007/04/20 15:07:46 brun Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
@@ -116,7 +116,7 @@ protected:
    void           InitAtoms();
    Window_t       GetRootProxy();
    Window_t       FindWindow(Window_t root, Int_t x, Int_t y, Int_t maxd);
-   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = NULL);
+   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = 0);
    Bool_t         IsTopLevel(Window_t win);
 
    void           SendDNDenter(Window_t target);
