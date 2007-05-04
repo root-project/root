@@ -7,24 +7,24 @@ MODDIR       := guihtml
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-GUIHTMLDIR    := $(MODDIR)
-GUIHTMLDIRS   := $(GUIHTMLDIR)/src
-GUIHTMLDIRI   := $(GUIHTMLDIR)/inc
+GUIHTMLDIR   := $(MODDIR)
+GUIHTMLDIRS  := $(GUIHTMLDIR)/src
+GUIHTMLDIRI  := $(GUIHTMLDIR)/inc
 
 ##### libGuiHtml #####
-GUIHTMLL      := $(MODDIRI)/LinkDef.h
-GUIHTMLDS     := $(MODDIRS)/G__GuiHtml.cxx
-GUIHTMLDO     := $(GUIHTMLDS:.cxx=.o)
-GUIHTMLDH     := $(GUIHTMLDS:.cxx=.h)
+GUIHTMLL     := $(MODDIRI)/LinkDef.h
+GUIHTMLDS    := $(MODDIRS)/G__GuiHtml.cxx
+GUIHTMLDO    := $(GUIHTMLDS:.cxx=.o)
+GUIHTMLDH    := $(GUIHTMLDS:.cxx=.h)
 
-GUIHTMLH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-GUIHTMLS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-GUIHTMLO      := $(GUIHTMLS:.cxx=.o)
+GUIHTMLH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+GUIHTMLS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+GUIHTMLO     := $(GUIHTMLS:.cxx=.o)
 
-GUIHTMLDEP    := $(GUIHTMLO:.o=.d) $(GUIHTMLDO:.o=.d)
+GUIHTMLDEP   := $(GUIHTMLO:.o=.d) $(GUIHTMLDO:.o=.d)
 
-GUIHTMLLIB    := $(LPATH)/libGuiHtml.$(SOEXT)
-GUIHTMLMAP    := $(GUIHTMLLIB:.$(SOEXT)=.rootmap)
+GUIHTMLLIB   := $(LPATH)/libGuiHtml.$(SOEXT)
+GUIHTMLMAP   := $(GUIHTMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIHTMLH))
@@ -38,20 +38,20 @@ INCLUDEFILES += $(GUIHTMLDEP)
 include/%.h:    $(GUIHTMLDIRI)/%.h
 		cp $< $@
 
-$(GUIHTMLLIB):   $(GUIHTMLO) $(GUIHTMLDO) $(ORDER_) $(MAINLIBS) $(GUIHTMLLIBDEP)
+$(GUIHTMLLIB):  $(GUIHTMLO) $(GUIHTMLDO) $(ORDER_) $(MAINLIBS) $(GUIHTMLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGuiHtml.$(SOEXT) $@ "$(GUIHTMLO) $(GUIHTMLDO)" \
 		   "$(GUIHTMLLIBEXTRA)"
 
-$(GUIHTMLDS):    $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPEXE)
+$(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIHTMLH) $(GUIHTMLL)
 
-$(GUIHTMLMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GUIHTMLL)
+$(GUIHTMLMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(GUIHTMLL)
 		$(RLIBMAP) -o $(GUIHTMLMAP) -l $(GUIHTMLLIB) \
 		   -d $(GUIHTMLLIBDEPM) -c $(GUIHTMLL)
 
-all-guihtml: $(GUIHTMLLIB) $(GUIHTMLMAP)
+all-guihtml:    $(GUIHTMLLIB) $(GUIHTMLMAP)
 
 clean-guihtml:
 		@rm -f $(GUIHTMLO) $(GUIHTMLDO)

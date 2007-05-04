@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.9 2007/05/04 15:39:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.10 2007/05/04 15:46:33 antcheva Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -62,21 +62,21 @@ ClassImp(TGTextLayout)
 // The following defines specify the meaning of the fields in a fully
 // qualified XLFD.
 
-#define XLFD_FOUNDRY	    0
-#define XLFD_FAMILY	    1
-#define XLFD_WEIGHT	    2
-#define XLFD_SLANT	    3
-#define XLFD_SETWIDTH	    4
-#define XLFD_ADD_STYLE	    5
-#define XLFD_PIXEL_SIZE	    6
-#define XLFD_POINT_SIZE	    7
+#define XLFD_FOUNDRY        0
+#define XLFD_FAMILY         1
+#define XLFD_WEIGHT         2
+#define XLFD_SLANT          3
+#define XLFD_SETWIDTH       4
+#define XLFD_ADD_STYLE      5
+#define XLFD_PIXEL_SIZE     6
+#define XLFD_POINT_SIZE     7
 #define XLFD_RESOLUTION_X   8
 #define XLFD_RESOLUTION_Y   9
 #define XLFD_SPACING        10
 #define XLFD_AVERAGE_WIDTH  11
-#define XLFD_REGISTRY	    12
-#define XLFD_ENCODING	    13
-#define XLFD_NUMFIELDS	    14	// Number of fields in XLFD.
+#define XLFD_REGISTRY       12
+#define XLFD_ENCODING       13
+#define XLFD_NUMFIELDS      14   // Number of fields in XLFD.
 
 
 // A LayoutChunk_t represents a contiguous range of text that can be measured
@@ -85,30 +85,30 @@ ClassImp(TGTextLayout)
 // like kerning and non-integer character widths may occur between the
 // characters in a single chunk, but not between characters in different
 // chunks.
-//
+
 struct LayoutChunk_t {
 
-   const char *fStart;	  // Pointer to simple string to be displayed.
-				              // This is a pointer into the TGTextLayout's
-				              // string.
-   Int_t fNumChars;		  // The number of characters in this chunk.
+   const char *fStart;     // Pointer to simple string to be displayed.
+                           // This is a pointer into the TGTextLayout's
+                           // string.
+   Int_t fNumChars;        // The number of characters in this chunk.
    Int_t fNumDisplayChars; // The number of characters to display when
-				              // this chunk is displayed. Can be less than
-				              // numChars if extra space characters were
-				              // absorbed by the end of the chunk. This
-				              // will be < 0 if this is a chunk that is
-				              // holding a tab or newline.
-   Int_t fX;               // The x origin and 
-   Int_t fY;	              // the y origin of the first character in this
-				              // chunk with respect to the upper-left hand
-				              // corner of the TGTextLayout.
-   Int_t fTotalWidth;		  // Width in pixels of this chunk. Used
-				              // when hit testing the invisible spaces at
-				              // the end of a chunk.
-   Int_t fDisplayWidth;	  // Width in pixels of the displayable
-				              // characters in this chunk. Can be less than
-				              // width if extra space characters were
-				              // absorbed by the end of the chunk.
+                           // this chunk is displayed. Can be less than
+                           // numChars if extra space characters were
+                           // absorbed by the end of the chunk. This
+                           // will be < 0 if this is a chunk that is
+                           // holding a tab or newline.
+   Int_t fX;               // The x origin and
+   Int_t fY;               // the y origin of the first character in this
+                           // chunk with respect to the upper-left hand
+                           // corner of the TGTextLayout.
+   Int_t fTotalWidth;      // Width in pixels of this chunk. Used
+                           // when hit testing the invisible spaces at
+                           // the end of a chunk.
+   Int_t fDisplayWidth;    // Width in pixels of the displayable
+                           // characters in this chunk. Can be less than
+                           // width if extra space characters were
+                           // absorbed by the end of the chunk.
 };
 
 
@@ -116,13 +116,12 @@ struct LayoutChunk_t {
 // XLFD. The extra information is used to find the closest matching font.
 
 struct XLFDAttributes_t {
-
-  FontAttributes_t fFA; // Standard set of font attributes.
-  const char *fFoundry; // The foundry of the font.
-  Int_t fSlant;         // The tristate value for the slant
-  Int_t fSetwidth;      // The proportionate width
-  Int_t fCharset;       // The character set encoding (the glyph family).
-  Int_t fEncoding;      // Variations within a charset for the glyphs above character 127.
+   FontAttributes_t fFA; // Standard set of font attributes.
+   const char *fFoundry; // The foundry of the font.
+   Int_t fSlant;         // The tristate value for the slant
+   Int_t fSetwidth;      // The proportionate width
+   Int_t fCharset;       // The character set encoding (the glyph family).
+   Int_t fEncoding;      // Variations within a charset for the glyphs above character 127.
 };
 
 
@@ -130,10 +129,10 @@ struct XLFDAttributes_t {
 // for each named font that has been defined. The named font is only deleted
 // when the last reference to it goes away.
 
-class NamedFont : public TObjString, public TRefCnt {
+class TNamedFont : public TObjString, public TRefCnt {
 public:
-  Int_t fDeletePending; // Non-zero if font should be deleted when last reference goes away.
-  FontAttributes_t fFA;   // Desired attributes for named font.
+   Int_t fDeletePending;   // Non-zero if font should be deleted when last reference goes away.
+   FontAttributes_t fFA;   // Desired attributes for named font.
 };
 
 // enums
@@ -177,23 +176,23 @@ struct FontStateMap_t { Int_t fNumKey; char *fStrKey; };
 static FontStateMap_t gWeightMap[] = {
    { kFontWeightNormal,  "normal" },
    { kFontWeightBold,    "bold"   },
-   { kFontWeightUnknown, NULL     }
+   { kFontWeightUnknown, 0        }
 };
 
 static FontStateMap_t gSlantMap[] = {
-   { kFontSlantRoman,   "roman" },
+   { kFontSlantRoman,   "roman"  },
    { kFontSlantItalic,  "italic" },
-   { kFontSlantUnknown, NULL     }
+   { kFontSlantUnknown, 0        }
 };
 
 static FontStateMap_t gUnderlineMap[] = {
    { 1, "underline" },
-   { 0, NULL        }
+   { 0, 0           }
 };
 
 static FontStateMap_t gOverstrikeMap[] = {
    { 1, "overstrike" },
-   { 0, NULL         }
+   { 0, 0            }
 };
 
 // The following structures are used when parsing XLFD's into a set of
@@ -207,14 +206,14 @@ static FontStateMap_t gXlfdgWeightMap[] = {
    { kFontWeightBold,   "bold"     },
    { kFontWeightBold,   "demi"     },
    { kFontWeightBold,   "demibold" },
-   { kFontWeightNormal,  NULL      }	// Assume anything else is "normal".
+   { kFontWeightNormal,  0         }  // Assume anything else is "normal".
 };
 
 static FontStateMap_t gXlfdSlantMap[] = {
    { kFontSlantRoman,   "r"  },
    { kFontSlantItalic,  "i"  },
    { kFontSlantOblique, "o"  },
-   { kFontSlantRoman,   NULL }		// Assume anything else is "roman".
+   { kFontSlantRoman,   0    }  // Assume anything else is "roman".
 };
 
 static FontStateMap_t gXlfdSetwidthMap[] = {
@@ -222,27 +221,27 @@ static FontStateMap_t gXlfdSetwidthMap[] = {
    { kFontSWCondence, "narrow"        },
    { kFontSWCondence, "semicondensed" },
    { kFontSWCondence, "condensed"     },
-   { kFontSWUnknown,  NULL            }
+   { kFontSWUnknown,  0               }
 };
 
 static FontStateMap_t gXlfdCharsetMap[] = {
    { kFontCSNormal, "iso8859" },
    { kFontCSSymbol, "adobe"   },
    { kFontCSSymbol, "sun"     },
-   { kFontCSOther,  NULL      }
+   { kFontCSOther,  0         }
 };
 
 
 // Characters used when displaying control sequences.
 
-static char hexChars[] = "0123456789abcdefxtnvr\\";
+static char gHexChars[] = "0123456789abcdefxtnvr\\";
 
 
 // The following table maps some control characters to sequences like '\n'
 // rather than '\x10'. A zero entry in the table means no such mapping
 // exists, and the table only maps characters less than 0x10.
 
-static char mapChars[] = {
+static char gMapChars[] = {
   0, 0, 0, 0, 0, 0, 0, 'a', 'b', 't', 'n', 'v', 'f', 'r', 0
 };
 
@@ -252,7 +251,7 @@ static int GetControlCharSubst(int c, char buf[4]);
 //______________________________________________________________________________
 void FontAttributes_t::Init()
 {
-   //
+   // Initialize font attribute struct.
 
    fFamily = 0;
    fPointsize = 0;
@@ -302,7 +301,7 @@ void TGFont::Print(Option_t *option) const
    TString opt = option;
 
    if ((opt == "full") && fNamedHash) {
-      Printf("TGFont: %s, %s, %s, ref cnt = %u", 
+      Printf("TGFont: %s, %s, %s, ref cnt = %u",
               fNamedHash->GetName(),
               fFM.fFixed ? "fixed" : "prop", References());
    } else {
@@ -354,10 +353,10 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
        || (strcasecmp(family, "Geneva") == 0)) {
       family = "Helvetica";
    } else if ((strcasecmp(family, "Times New Roman") == 0)
-	           || (strcasecmp(family, "New York") == 0)) {
+              || (strcasecmp(family, "New York") == 0)) {
       family = "Times";
    } else if ((strcasecmp(family, "Courier New") == 0)
-	           || (strcasecmp(family, "Monaco") == 0)) {
+              || (strcasecmp(family, "Monaco") == 0)) {
       family = "Courier";
    } else if (strcasecmp(family, "AvantGarde") == 0) {
       family = "AvantGarde";
@@ -378,12 +377,12 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
       upper = 1;
       for (; *src != '\0'; src++, dest++) {
          while (isspace(UChar_t(*src))) {
-	        src++;
-	        upper = 1;
+            src++;
+            upper = 1;
          }
          *dest = *src;
          if ((upper != 0) && (islower(UChar_t(*src)))) {
-	        *dest = toupper(UChar_t(*src));
+            *dest = toupper(UChar_t(*src));
          }
          upper = 0;
       }
@@ -414,7 +413,7 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
       }
    } else {
       if ((strcmp(family, "Bookman") == 0)
-	        || (strcmp(family, "AvantGarde") == 0)) {
+           || (strcmp(family, "AvantGarde") == 0)) {
          weightString = "Demi";
       } else {
          weightString = "Bold";
@@ -428,8 +427,8 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
       ;
    } else {
       if ((strcmp(family, "Helvetica") == 0)
-	        || (strcmp(family, "Courier") == 0)
-	        || (strcmp(family, "AvantGarde") == 0)) {
+           || (strcmp(family, "Courier") == 0)
+           || (strcmp(family, "AvantGarde") == 0)) {
          slantString = "Oblique";
       } else {
          slantString = "Italic";
@@ -441,8 +440,8 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
 
    if ((slantString.IsNull()) && (weightString.IsNull())) {
       if ((strcmp(family, "Times") == 0)
-	        || (strcmp(family, "NewCenturySchlbk") == 0)
-	        || (strcmp(family, "Palatino") == 0)) {
+           || (strcmp(family, "NewCenturySchlbk") == 0)
+           || (strcmp(family, "Palatino") == 0)) {
          dst->Append("-Roman");
       }
    } else {
@@ -601,7 +600,7 @@ void TGFont::UnderlineChars(Drawable_t dst, GContext_t gc,
    // been displayed previously); it just draws the underline. This procedure
    // would mainly be used to quickly underline a few characters without having
    // to construct an underlined font. To produce properly underlined text, the
-   // appropriate underlined font should be constructed and used. 
+   // appropriate underlined font should be constructed and used.
    //
    // dst       -- Window or pixmap in which to draw.
    // gc        -- Graphics context for actually drawing line.
@@ -616,14 +615,14 @@ void TGFont::UnderlineChars(Drawable_t dst, GContext_t gc,
    MeasureChars(string, lastChar, 0, 0, &endX);
 
    gVirtualX->FillRectangle(dst, gc, x + startX, y + fUnderlinePos,
-                           (UInt_t) (endX - startX),
-		                     (UInt_t) fUnderlineHeight);
+                            (UInt_t) (endX - startX),
+                            (UInt_t) fUnderlineHeight);
 }
 
 //______________________________________________________________________________
 TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
                                         Int_t wrapLength, Int_t justify, Int_t flags,
-		                                  UInt_t *width, UInt_t *height) const
+                                        UInt_t *width, UInt_t *height) const
 {
    // Computes the amount of screen space needed to display a multi-line,
    // justified string of text. Records all the measurements that were done
@@ -638,7 +637,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
    // information for the given string. The token is only valid for the given
    // string. If the string is freed, the token is no longer valid and must
    // also be deleted.
-   // 
+   //
    // The dimensions of the screen area needed to display the text are stored
    // in *width and *height.
    //
@@ -700,16 +699,16 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
          // Find the next special character in the string.
 
          for (special = start; special < end; special++) {
-	        if (!(flags & kTextIgnoreNewlines)) {
-	           if ((*special == '\n') || (*special == '\r')) {
-	              break;
-	           }
-	        }
-	        if (!(flags & kTextIgnoreTabs)) {
-	           if (*special == '\t') {
-	              break;
-	           }
-	        }
+            if (!(flags & kTextIgnoreNewlines)) {
+               if ((*special == '\n') || (*special == '\r')) {
+                  break;
+               }
+            }
+            if (!(flags & kTextIgnoreTabs)) {
+               if (*special == '\t') {
+                  break;
+               }
+            }
          }
       }
 
@@ -719,12 +718,12 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
       chunk = 0;
       if (start < special) {
          charsThisChunk = MeasureChars(start, special - start,
-				                          wrapLength - curX, flags, &newX);
+                                       wrapLength - curX, flags, &newX);
          newX += curX;
          flags &= ~kTextAtLeastOne;
          if (charsThisChunk > 0) {
             chunk = NewChunk(layout, &maxChunks, start,
-			                    charsThisChunk, curX, newX, baseline);
+                             charsThisChunk, curX, newX, baseline);
 
             start += charsThisChunk;
             curX = newX;
@@ -747,7 +746,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
                curX = newX;
                flags &= ~kTextAtLeastOne;
                continue;
-	           }
+            }
          } else {
             NewChunk(layout, &maxChunks, start, 1, curX, 1000000000, baseline)->fNumDisplayChars = -1;
             start++;
@@ -757,7 +756,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
 
       // No more characters are going to go on this line, either because
       // no more characters can fit or there are no more characters left.
-      // Consume all extra spaces at end of line.  
+      // Consume all extra spaces at end of line.
 
       while ((start < end) && isspace(UChar_t(*start))) {
          if (!(flags & kTextIgnoreNewlines)) {
@@ -882,7 +881,7 @@ wrapLine:
 }
 
 //______________________________________________________________________________
-TGTextLayout::~TGTextLayout() 
+TGTextLayout::~TGTextLayout()
 {
    // dtor
 
@@ -893,7 +892,7 @@ TGTextLayout::~TGTextLayout()
 
 //______________________________________________________________________________
 void TGTextLayout::DrawText(Drawable_t dst, GContext_t gc,
-                            Int_t x, Int_t y, Int_t firstChar, Int_t lastChar) const 
+                            Int_t x, Int_t y, Int_t firstChar, Int_t lastChar) const
 {
    // Use the information in the TGTextLayout object to display a multi-line,
    // justified string of text.
@@ -962,8 +961,8 @@ void TGTextLayout::UnderlineChar(Drawable_t dst, GContext_t gc,
    if ((CharBbox(underline, &xx, &yy, &width, &height) != 0)
       && (width != 0)) {
       gVirtualX->FillRectangle(dst, gc, x + xx,
-		             y + yy + fFont->fFM.fAscent + fFont->fUnderlinePos,
-	                (UInt_t) width, (UInt_t) fFont->fUnderlineHeight);
+                               y + yy + fFont->fFM.fAscent + fFont->fUnderlinePos,
+                               (UInt_t) width, (UInt_t) fFont->fUnderlineHeight);
    }
 }
 
@@ -1006,8 +1005,8 @@ Int_t TGTextLayout::PointToChar(Int_t x, Int_t y) const
       baseline = chunk->fY;
       if (y < baseline + fFont->fFM.fDescent) {
          if (x < chunk->fX) {
-	        // Point is to the left of all chunks on this line. Return
-	        // the index of the first character on this line.
+            // Point is to the left of all chunks on this line. Return
+            // the index of the first character on this line.
 
             return (chunk->fStart - fString);
          }
@@ -1028,47 +1027,47 @@ Int_t TGTextLayout::PointToChar(Int_t x, Int_t y) const
          while ((i < fNumChunks) && (chunk->fY == baseline)) {
             if (x < chunk->fX + chunk->fTotalWidth) {
 
-            // Point falls on one of the characters in this chunk.
+               // Point falls on one of the characters in this chunk.
 
-            if (chunk->fNumDisplayChars < 0) {
+               if (chunk->fNumDisplayChars < 0) {
 
-	           // This is a special chunk that encapsulates a single
-	           // tab or newline char.
+                  // This is a special chunk that encapsulates a single
+                  // tab or newline char.
 
-               return (chunk->fStart - fString);
+                  return (chunk->fStart - fString);
+               }
+               n = fFont->MeasureChars(chunk->fStart, chunk->fNumChars,
+                                       x + 1 - chunk->fX, kTextPartialOK, &dummy);
+               return ((chunk->fStart + n - 1) - fString);
             }
-            n = fFont->MeasureChars(chunk->fStart, chunk->fNumChars,
-                                    x + 1 - chunk->fX, kTextPartialOK, &dummy);
-            return ((chunk->fStart + n - 1) - fString);
+            last = chunk;
+            chunk++;
+            i++;
          }
-         last = chunk;
-         chunk++;
-         i++;
+
+         // Point is to the right of all chars in all the chunks on this
+         // line. Return the index just past the last char in the last
+         // chunk on this line.
+
+         pos = (last->fStart + last->fNumChars) - fString;
+         if (i < fNumChunks) pos--;
+         return pos;
       }
+      last = chunk;
+      chunk++;
+   }
 
-      // Point is to the right of all chars in all the chunks on this
-      // line. Return the index just past the last char in the last
-      // chunk on this line.
+   // Point lies below any line in this text layout. Return the index
+   // just past the last char.
 
-      pos = (last->fStart + last->fNumChars) - fString;
-      if (i < fNumChunks) pos--;
-      return pos;
-    }
-    last = chunk;
-    chunk++;
-  }
-
-  // Point lies below any line in this text layout. Return the index
-  // just past the last char.
-
-  return ((last->fStart + last->fNumChars) - fString);
+   return ((last->fStart + last->fNumChars) - fString);
 }
 
 //______________________________________________________________________________
 Int_t TGTextLayout::CharBbox(Int_t index, Int_t *x, Int_t *y, Int_t *w, Int_t *h) const
 {
    // Use the information in the TGTextLayout token to return the bounding box
-   // for the character specified by index.  
+   // for the character specified by index.
    //
    // The width of the bounding box is the advance width of the character, and
    // does not include and left- or right-bearing. Any character that extends
@@ -1188,8 +1187,8 @@ Int_t TGTextLayout::DistanceToText(Int_t x, Int_t y) const
    for (i = 0; i < fNumChunks; i++) {
       if (chunk->fStart[0] == '\n') {
 
-      // Newline characters are not counted when computing distance
-      // (but tab characters would still be considered).
+         // Newline characters are not counted when computing distance
+         // (but tab characters would still be considered).
 
          chunk++;
          continue;
@@ -1263,8 +1262,8 @@ Int_t TGTextLayout::IntersectText(Int_t x, Int_t y, Int_t w, Int_t h) const
    for (i = 0; i < fNumChunks; i++) {
       if (chunk->fStart[0] == '\n') {
 
-      // Newline characters are not counted when computing area
-      // intersection (but tab characters would still be considered).
+         // Newline characters are not counted when computing area
+         // intersection (but tab characters would still be considered).
 
          chunk++;
          continue;
@@ -1391,12 +1390,12 @@ LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
    // characters in a chunk that can be quickly drawn.
    //
    // Returns a pointer to the new chunk in the text layout. The text layout is
-   // reallocated to hold more chunks as necessary.   
+   // reallocated to hold more chunks as necessary.
    //
    // Currently, ComputeTextLayout() stores contiguous ranges of "normal"
    // characters in a chunk, along with individual tab and newline chars in
    // their own chunks. All characters in the text layout are accounted for.
- 
+
    LayoutChunk_t *chunk;
    Int_t i, maxChunks;
 
@@ -1461,8 +1460,8 @@ void TGFont::DrawCharsExp(Drawable_t dst, GContext_t gc,
          DrawChars(dst, gc, source, p - source, x, y);
          x += gVirtualX->TextWidth(fFontStruct, source, p - source);
          if (type == kCharReplace) {
-	        DrawChars(dst, gc, buf, GetControlCharSubst(UChar_t(*p), buf), x, y);
-	        x += fWidths[UChar_t(*p)];
+            DrawChars(dst, gc, buf, GetControlCharSubst(UChar_t(*p), buf), x, y);
+            x += fWidths[UChar_t(*p)];
          }
          source = p + 1;
       }
@@ -1481,7 +1480,7 @@ void TGFont::DrawChars(Drawable_t dst, GContext_t gc,
    // coordinate space.
 
    Int_t max_width =  gVirtualX->TextWidth(fFontStruct, "@", 1);
-   
+
    if ((x + (max_width * numChars) > 0x7fff)) {
       int length;
 
@@ -1497,14 +1496,14 @@ void TGFont::DrawChars(Drawable_t dst, GContext_t gc,
 
    if (fFA.fUnderline != 0) {
       gVirtualX->FillRectangle(dst, gc, x,  y + fUnderlinePos,
-	                       (UInt_t) gVirtualX->TextWidth(fFontStruct, source, numChars),
-	                       (UInt_t) fBarHeight);
+                          (UInt_t) gVirtualX->TextWidth(fFontStruct, source, numChars),
+                          (UInt_t) fBarHeight);
    }
    if (fFA.fOverstrike != 0) {
       y -= fFM.fDescent + fFM.fAscent / 10;
       gVirtualX->FillRectangle(dst, gc, x, y,
-	                       (UInt_t) gVirtualX->TextWidth(fFontStruct, source, numChars),
-	                       (UInt_t) fBarHeight);
+                          (UInt_t) gVirtualX->TextWidth(fFontStruct, source, numChars),
+                          (UInt_t) fBarHeight);
    }
 }
 
@@ -1535,7 +1534,7 @@ TGFontPool::~TGFontPool()
 //______________________________________________________________________________
 TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
 {
-   // Get the specified font. 
+   // Get the specified font.
    // The font can be one of the following forms:
    //        XLFD (see X documentation)
    //        "Family [size [style] [style ...]]"
@@ -1555,7 +1554,7 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
       return f;
    }
 
-   NamedFont *nf = (NamedFont*)fNamedTable->FindObject(font);
+   TNamedFont *nf = (TNamedFont*)fNamedTable->FindObject(font);
 
    if (nf) {
       // Construct a font based on a named font.
@@ -1651,7 +1650,7 @@ TGFont *TGFontPool::GetFont(const TGFont *font)
 //______________________________________________________________________________
 TGFont *TGFontPool::GetFont(FontStruct_t fs)
 {
-   // Use font, i.e. increases ref count of specified font. 
+   // Use font, i.e. increases ref count of specified font.
 
    TGFont *f = FindFont(fs);
 
@@ -1711,7 +1710,7 @@ void TGFontPool::FreeFont(const TGFont *font)
             // The font is being deleted. Determine if the associated named
             // font definition should and/or can be deleted too.
 
-            NamedFont *nf = (NamedFont *) font->fNamedHash;
+            TNamedFont *nf = (TNamedFont *) font->fNamedHash;
 
             if ((nf->RemoveReference() == 0) && (nf->fDeletePending != 0)) {
                fNamedTable->Remove(nf);
@@ -1785,7 +1784,7 @@ const char *TGFontPool::GetUid(const char *string)
 char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
 {
    // Return information about the font attributes as an array of strings.
-   // 
+   //
    // An array of FONT_NUMFIELDS strings is returned holding the value of the
    // font attributes in the following order:
    // family size weight slant underline overstrike
@@ -2054,14 +2053,14 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
       if (*src == '-') {
          i++;
          if (i > XLFD_NUMFIELDS) {
-	        break;
+           break;
          }
          *src = '\0';
          field[i] = src + 1;
       }
    }
 
-   // An XLFD of the form -adobe-times-medium-r-*-12-*-* is pretty common, 
+   // An XLFD of the form -adobe-times-medium-r-*-12-*-* is pretty common,
    // but it is (strictly) malformed, because the first * is eliding both
    // the Setwidth and the Addstyle fields. If the Addstyle field is a
    // number, then assume the above incorrect form was used and shift all
@@ -2071,7 +2070,7 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
    if ((i > XLFD_ADD_STYLE) && (FieldSpecified(field[XLFD_ADD_STYLE]))) {
       if (atoi(field[XLFD_ADD_STYLE]) != 0) {
          for (j = XLFD_NUMFIELDS - 1; j >= XLFD_ADD_STYLE; j--) {
-	        field[j + 1] = field[j];
+           field[j + 1] = field[j];
          }
          field[XLFD_ADD_STYLE] = 0;
          i++;
@@ -2139,7 +2138,7 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
          //
          //      [ N1 N2 N3 N4 ]
          //
-         // where N1 is the pixel size, and where N2, N3, and N4 
+         // where N1 is the pixel size, and where N2, N3, and N4
          // are some additional numbers that I don't know
          // the purpose of, so I ignore them.
 
@@ -2208,8 +2207,8 @@ char *TGFontPool::FindStateString(const FontStateMap_t *map, Int_t numKey)
 
    for ( ; map->fStrKey != 0; map++) {
       if (numKey == map->fNumKey) return map->fStrKey;
-  }
-  return 0;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2279,7 +2278,7 @@ char **TGFontPool::GetFontFamilies()
       *end = '\0';
       for (p = family; *p != '\0'; p++) {
          if (isupper(UChar_t(*p))) {
-	        *p = tolower(UChar_t(*p));
+            *p = tolower(UChar_t(*p));
          }
       }
       if (!familyTable.FindObject(family)) {
@@ -2323,7 +2322,7 @@ void TGFontPool::FreeFontFamilies(char **f)
 TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
 {
    // Given a desired set of attributes for a font, find a font with the
-   // closest matching attributes and create a new TGFont object. 
+   // closest matching attributes and create a new TGFont object.
    // The return value is a pointer to a TGFont object that represents the
    // font with the desired attributes. If a font with the desired attributes
    // could not be constructed, some other font will be substituted
@@ -2353,7 +2352,7 @@ TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
       Int_t xx; Int_t yy; UInt_t ww; UInt_t hh;
       gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), xx, yy, ww, hh);
       d *= ww;
-      
+
       d /= gVirtualX->ScreenWidthMM();
       d += 0.5;
       pixelsize = (int) d;
@@ -2361,7 +2360,7 @@ TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
 
    fontStruct = 0;
 
-   // Couldn't find exact match. Now fall back to other available physical fonts.  
+   // Couldn't find exact match. Now fall back to other available physical fonts.
 
    fmt = "-*-%.240s-*-*-*-*-*-*-*-*-*-*-*-*";
    buf.Form(fmt, family);
@@ -2423,9 +2422,9 @@ getsystem:
          // A font that is too small is better than one that is too big.
 
          if (xaPixelsize > pixelsize) {
-	        score += (xaPixelsize - pixelsize) * 120;
+            score += (xaPixelsize - pixelsize) * 120;
          } else {
-	        score += (pixelsize - xaPixelsize) * 100;
+            score += (pixelsize - xaPixelsize) * 100;
          }
       }
 
@@ -2513,10 +2512,10 @@ tryscale:
          // names that X gave us to use, but it does anyhow.
 
          if (bestScaleableScore < kMaxInt) {
-goto tryscale;
+            goto tryscale;
          } else {
             gVirtualX->FreeFontNames(nameList);
-goto getsystem;
+            goto getsystem;
          }
       }
    }
@@ -2535,7 +2534,7 @@ TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
 {
    // The return value is a pointer to an TGFont object that represents the
    // native font. If a native font by the given name could not be found,
-   // the return value is NULL.  
+   // the return value is NULL.
    //
    // Every call to this procedure returns a new TGFont object, even if the
    // name has already been seen before. The caller should call FreeFont
@@ -2554,7 +2553,7 @@ TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
 
 //______________________________________________________________________________
 TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
-                             const char *fontName) 
+                             const char *fontName)
 {
    // Helper for GetNativeFont() and GetFontFromAttributes(). Creates and
    // intializes a new TGFont object.
@@ -2655,7 +2654,7 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
    // be used; control chars will be invisible & zero-width.
 
    replaceOK = kTRUE;
-   for (p = hexChars; *p != '\0'; p++) {
+   for (p = gHexChars; *p != '\0'; p++) {
       if ((UChar_t(*p) < firstChar) || (UChar_t(*p) > lastChar)) {
          replaceOK = kFALSE;
          break;
@@ -2666,7 +2665,7 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
          if (replaceOK) {
             n = GetControlCharSubst(i, buf);
             for (; --n >= 0;) {
-	              newFont->fWidths[i] += newFont->fWidths[UChar_t(buf[n])];
+               newFont->fWidths[i] += newFont->fWidths[UChar_t(buf[n])];
             }
          } else {
             newFont->fTypes[i] = kCharSkip;
@@ -2715,16 +2714,13 @@ static Int_t GetControlCharSubst(Int_t c, char buf[4])
 
    buf[0] = '\\';
 
-   if (((UInt_t)c < sizeof(mapChars)) && (mapChars[c] != 0)) {
-      buf[1] = mapChars[c];
+   if (((UInt_t)c < sizeof(gMapChars)) && (gMapChars[c] != 0)) {
+      buf[1] = gMapChars[c];
       return 2;
    } else {
       buf[1] = 'x';
-      buf[2] = hexChars[(c >> 4) & 0xf];
-      buf[3] = hexChars[c & 0xf];
+      buf[2] = gHexChars[(c >> 4) & 0xf];
+      buf[3] = gHexChars[c & 0xf];
       return 4;
    }
 }
-
-
-
