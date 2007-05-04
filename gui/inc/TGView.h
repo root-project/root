@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.17 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.18 2007/04/19 16:23:13 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -74,6 +74,7 @@ protected:
 
    virtual void DoRedraw();
    virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual Bool_t ItemLayout() { return kFALSE; } 
 
 private:
    TGView(const TGView&);              // not implemented
@@ -121,6 +122,10 @@ public:
    virtual Bool_t HandleExpose(Event_t *event);
 
    virtual void   ChangeBackground(Pixel_t);
+   virtual void   SetBackgroundColor(Pixel_t);
+   virtual void   SetBackgroundPixmap(Pixmap_t p);
+   virtual void   UpdateBackgroundStart();
+
    const TGGC &GetWhiteGC() { return fWhiteGC; }
 
    ClassDef(TGView,0)  // View widget base class

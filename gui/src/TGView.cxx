@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.24 2007/04/20 15:07:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.25 2007/04/21 07:57:44 brun Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -123,7 +123,6 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
       fVsb = 0;
    }
 
-   fWhiteGC = *fClient->GetResourcePool()->GetWhiteGC();
    fWhiteGC.SetGraphicsExposures(kTRUE);
    fWhiteGC.SetBackground(back);
 
@@ -161,13 +160,14 @@ void TGView::Clear(Option_t *)
 
    fScrolling = -1;
 
-   fMousePos.fX = fMousePos.fY    = -1;
-   fVisible.fX  = fVisible.fY     = 0;
+   fMousePos.fX = fMousePos.fY = -1;
+   fVisible.fX  = fVisible.fY = 0;
+   UpdateBackgroundStart();
    fVirtualSize = TGDimension(0, 0);
 
+   gVirtualX->ClearArea(fCanvas->GetId(), 0, 0,
+                        fCanvas->GetWidth(), fCanvas->GetHeight());
    Layout();
-   gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 0, 0,
-                           fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 
 //______________________________________________________________________________
@@ -193,17 +193,7 @@ void TGView::DrawRegion(Int_t, Int_t, UInt_t, UInt_t)
 {
    // Draw region.
 
-   TGLongPosition endpt = ToPhysical(TGLongPosition(fVirtualSize.fWidth,
-                                                    fVirtualSize.fHeight));
-
-   if (endpt.fX < (Int_t)fCanvas->GetWidth()) {
-      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), endpt.fX, 0,
-                               fCanvas->GetWidth() - endpt.fX, endpt.fY);
-   }
-   if (endpt.fY < (Int_t)fCanvas->GetHeight()) {
-      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 0, endpt.fY,
-                             fCanvas->GetWidth(), fCanvas->GetHeight() - endpt.fY);
-   }
+   return;
 }
 
 //______________________________________________________________________________
@@ -226,6 +216,15 @@ void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       fExposedRegion.Merge(r); 
    }
    fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGView::UpdateBackgroundStart()
+{
+   // set some gc values
+
+   fWhiteGC.SetTileStipXOrigin(-fVisible.fX);
+   fWhiteGC.SetTileStipYOrigin(-fVisible.fY);
 }
 
 //______________________________________________________________________________
@@ -344,22 +343,25 @@ void TGView::Layout()
 
    fCanvas->SetWidth(cw);
    fCanvas->SetHeight(ch);
+   ItemLayout();
 
    if ((Int_t)fVirtualSize.fWidth > cw) {
       if (fHsb) {
          need_hsb = kTRUE;
-         if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
+         ch -= fVsb->GetDefaultWidth();
          if (ch < 0) ch = 0;
          fCanvas->SetHeight(ch);
+         ItemLayout();
       }
    }
 
    if ((Int_t)fVirtualSize.fHeight > ch) {
       if (fVsb) {
          need_vsb = kTRUE;
-         if (fHsb && fHsb->IsMapped()) cw -= fHsb->GetDefaultHeight();
+         cw -= fHsb->GetDefaultHeight();
          if (cw < 0) cw = 0;
          fCanvas->SetWidth(cw);
+         ItemLayout();
       }
    }
 
@@ -367,35 +369,31 @@ void TGView::Layout()
 
    if ((Int_t)fVirtualSize.fWidth > cw) {
       if (!need_hsb) {
-         if (fHsb) {
-            need_hsb = kTRUE;
-            if (fVsb && fVsb->IsMapped()) ch -= fVsb->GetDefaultWidth();
-            if (ch <0) ch = 0;
-            fCanvas->SetHeight(ch);
-         }
+         need_hsb = kTRUE;
+         ch -= fVsb->GetDefaultWidth();
+         if (ch < 0) ch = 0;
+         fCanvas->SetHeight(ch);
+         ItemLayout();
       }
    }
 
-   if (fHsb) {
-      if (need_hsb) {
-         fHsb->MoveResize(fBorderWidth +fXMargin, ch + fBorderWidth + fYMargin,
-                          cw, fHsb->GetDefaultHeight());
-         fHsb->MapWindow();
-      } else {
-         fHsb->UnmapWindow();
-         fHsb->SetPosition(0);
-      }
+   if (need_hsb) {
+      fHsb->MoveResize(fBorderWidth + fXMargin, ch + fBorderWidth + fYMargin,
+                       cw, fHsb->GetDefaultHeight());
+      fHsb->MapRaised();
+   } else {
+      fHsb->UnmapWindow();
+      fHsb->SetPosition(0);
    }
 
-   if (fVsb) {
-      if (need_vsb) {
-         fVsb->MoveResize(cw + fBorderWidth + fXMargin,  fBorderWidth + fYMargin,
-                          fVsb->GetDefaultWidth(), ch);
-         fVsb->MapWindow();
-      } else {
-         fVsb->UnmapWindow();
-         fVsb->SetPosition(0);
-      }
+
+   if (need_vsb) {
+      fVsb->MoveResize(cw + fBorderWidth + fXMargin,  fBorderWidth + fYMargin,
+                        fVsb->GetDefaultWidth(), ch);
+      fVsb->MapWindow();
+   } else {
+      fVsb->UnmapWindow();
+      fVsb->SetPosition(0);
    }
    fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, cw, ch);
 
@@ -449,7 +447,9 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
    Point_t points[4];
    Int_t xsrc, ysrc, xdest, ydest, cpyheight, cpywidth;
 
-   new_top = new_top < 0 ? 0 : new_top;
+   if (new_top < 0) {
+      return;
+   }
 
    if (direction == kVertical) {
       if (new_top == fVisible.fY) {
@@ -519,6 +519,9 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          fVisible.fX = 0;
       }
    }
+
+   UpdateBackgroundStart();
+
    // Copy the scrolled region to its new position
    gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC(),
                        xsrc, ysrc, fCanvas->GetWidth()-cpywidth,
@@ -533,10 +536,6 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
    ydiff = ydiff << 1;
 #endif
 
-   // Clear the remaining area of any old text
-   gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), 
-                            points[0].fX, points[0].fY, xdiff, ydiff);
-
    DrawRegion(points[0].fX, points[0].fY, xdiff, ydiff);
 }
 
@@ -546,5 +545,25 @@ void TGView::ChangeBackground(Pixel_t col)
    // Change background color of the canvas frame.
 
    fCanvas->SetBackgroundColor(col);
+   fWhiteGC.SetBackground(col);
+   fWhiteGC.SetForeground(col);
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
+}
+
+//______________________________________________________________________________
+void TGView::SetBackgroundColor(Pixel_t col)
+{
+   // Set background color of the canvas frame.
+
+   fCanvas->SetBackgroundColor(col);
+   fWhiteGC.SetBackground(col);
+   fWhiteGC.SetForeground(col);
+}
+
+//______________________________________________________________________________
+void TGView::SetBackgroundPixmap(Pixmap_t p)
+{
+   // Set backgound  pixmap
+
+   fCanvas->SetBackgroundPixmap(p);
 }
