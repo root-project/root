@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.7 2002/12/02 18:50:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.8 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -29,8 +29,8 @@ TLeafElement::TLeafElement(): TLeaf()
 }
 
 //______________________________________________________________________________
-TLeafElement::TLeafElement(const char *name, Int_t id, Int_t type)
-       :TLeaf(name,name)
+TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type)
+   :TLeaf(parent, name,name)
 {
    // Create a LeafObject.
    

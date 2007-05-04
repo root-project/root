@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.14 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.15 2007/02/03 18:33:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    };
 
    TLeaf();
-   TLeaf(const char* name, const char* type);
+   TLeaf(TBranch *parent, const char* name, const char* type);
    virtual ~TLeaf();
 
    virtual void     Browse(TBrowser* b);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.18 2007/01/30 11:24:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.19 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -34,8 +34,8 @@ TLeafObject::TLeafObject(): TLeaf()
 }
 
 //______________________________________________________________________________
-TLeafObject::TLeafObject(const char *name, const char *type)
-       :TLeaf(name,type)
+TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
+   :TLeaf(parent, name,type)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==================

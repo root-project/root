@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.12 2006/06/02 15:33:31 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.13 2007/01/25 17:46:54 pcanal Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    enum { kWarn = BIT(12) };
 
    TLeafObject();
-   TLeafObject(const char *name, const char *type);
+   TLeafObject(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafObject();
 
    virtual void    FillBasket(TBuffer &b);

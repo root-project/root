@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.46 2007/01/31 07:33:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.47 2007/03/28 09:39:26 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,8 +15,6 @@
 #include "TFile.h"
 #include "TBufferFile.h"
 #include "TMath.h"
-
-R__EXTERN  TBranch *gBranch;
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -409,7 +407,6 @@ void TBasket::Streamer(TBuffer &b)
 
    char flag;
    if (b.IsReading()) {
-      fBranch = gBranch;
       TKey::Streamer(b); //this must be first
       Version_t v = b.ReadVersion();
       b >> fBufferSize;
@@ -440,7 +437,9 @@ void TBasket::Streamer(TBuffer &b)
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);
          fBufferRef->SetBufferOffset(fLast);
-         fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
+         // This is now done in the TBranch streamer since fBranch might not
+         // yet be set correctly.
+         //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
       }
    } else {
       TKey::Streamer(b);   //this must be first

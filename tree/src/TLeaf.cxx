@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.23 2006/08/18 18:46:35 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.24 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -25,36 +25,34 @@
 #include <ctype.h>
 
 R__EXTERN TTree* gTree;
-R__EXTERN TBranch* gBranch;
-
 
 ClassImp(TLeaf)
 
 //______________________________________________________________________________
 TLeaf::TLeaf()
-: TNamed()
-, fNdata(0)
-, fLen(0)
-, fLenType(0)
-, fOffset(0)
-, fIsRange(kFALSE)
-, fIsUnsigned(kFALSE)
-, fLeafCount(0)
-, fBranch(gBranch)
+   : TNamed()
+   , fNdata(0)
+   , fLen(0)
+   , fLenType(0)
+   , fOffset(0)
+   , fIsRange(kFALSE)
+   , fIsUnsigned(kFALSE)
+   , fLeafCount(0)
+   , fBranch(0)
 {
 }
 
 //______________________________________________________________________________
-TLeaf::TLeaf(const char* name, const char *)
-: TNamed(name, name)
-, fNdata(0)
-, fLen(0)
-, fLenType(4)
-, fOffset(0)
-, fIsRange(kFALSE)
-, fIsUnsigned(kFALSE)
-, fLeafCount(0)
-, fBranch(gBranch)
+TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
+   : TNamed(name, name)
+   , fNdata(0)
+   , fLen(0)
+   , fLenType(4)
+   , fOffset(0)
+   , fIsRange(kFALSE)
+   , fIsUnsigned(kFALSE)
+   , fLeafCount(0)
+   , fBranch(parent)
 {
    // Create a Leaf.
    //

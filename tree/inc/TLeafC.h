@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.6 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
 
 public:
    TLeafC();
-   TLeafC(const char *name, const char *type);
+   TLeafC(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafC();
 
    virtual void    Export(TClonesArray *list, Int_t n);

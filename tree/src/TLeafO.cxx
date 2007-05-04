@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.4 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.5 2007/02/03 18:33:15 brun Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************
@@ -33,8 +33,8 @@ TLeafO::TLeafO(): TLeaf()
 }
 
 //______________________________________________________________________________
-TLeafO::TLeafO(const char *name, const char *type)
-       :TLeaf(name,type)
+TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
+   :TLeaf(parent,name,type)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============

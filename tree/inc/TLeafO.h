@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.h,v 1.1 2005/01/20 01:10:52 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafO.h,v 1.2 2005/11/11 22:16:04 pcanal Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
 
 public:
    TLeafO();
-   TLeafO(const char *name, const char *type);
+   TLeafO(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafO();
 
    virtual void    Export(TClonesArray *list, Int_t n);

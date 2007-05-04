@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.41 2007/02/06 15:30:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.42 2007/03/26 16:02:09 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -122,8 +122,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
       fBasketSeek[i] = 0;
    }
 
-   TLeaf* leaf = new TLeafObject(name, classname);
-   leaf->SetBranch(this);
+   TLeaf* leaf = new TLeafObject(this, name, classname);
    leaf->SetAddress(addobj);
    fNleaves = 1;
    fLeaves.Add(leaf);

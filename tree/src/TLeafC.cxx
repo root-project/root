@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.20 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.21 2007/02/03 18:33:15 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -32,8 +32,8 @@ TLeafC::TLeafC(): TLeaf()
 }
 
 //______________________________________________________________________________
-TLeafC::TLeafC(const char *name, const char *type)
-       :TLeaf(name,type)
+TLeafC::TLeafC(TBranch *parent, const char *name, const char *type)
+   :TLeaf(parent, name,type)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafC*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============

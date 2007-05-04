@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.124 2007/03/26 16:02:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.125 2007/04/27 16:49:16 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -39,8 +39,6 @@
 #include <cstddef>
 #include <string.h>
 #include <stdio.h>
-
-TBranch* gBranch;
 
 R__EXTERN TTree* gTree;
 
@@ -106,7 +104,6 @@ TBranch::TBranch()
    for (Int_t i = 0; i < kMaxRAM; ++i) {
       fBasketRAM[i] = -1;
    }
-   gBranch = this;
 }
 
 //______________________________________________________________________________
@@ -275,8 +272,6 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
 {
    // Initialization routine called from the constructor.  This should NOT be made virtual.
 
-   gBranch = this;
-
    if ((compress == -1) && fTree->GetDirectory()) {
       TFile* bfile = fTree->GetDirectory()->GetFile();
       if (bfile) {
@@ -326,37 +321,37 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          TLeaf* leaf = 0;
          if (*leaftype == 'C') {
-            leaf = new TLeafC(leafname, leaftype);
+            leaf = new TLeafC(this, leafname, leaftype);
          } else if (*leaftype == 'O') {
-            leaf = new TLeafO(leafname, leaftype);
+            leaf = new TLeafO(this, leafname, leaftype);
          } else if (*leaftype == 'B') {
-            leaf = new TLeafB(leafname, leaftype);
+            leaf = new TLeafB(this, leafname, leaftype);
          } else if (*leaftype == 'b') {
-            leaf = new TLeafB(leafname, leaftype);
+            leaf = new TLeafB(this, leafname, leaftype);
             leaf->SetUnsigned();
          } else if (*leaftype == 'S') {
-            leaf = new TLeafS(leafname, leaftype);
+            leaf = new TLeafS(this, leafname, leaftype);
          } else if (*leaftype == 's') {
-            leaf = new TLeafS(leafname, leaftype);
+            leaf = new TLeafS(this, leafname, leaftype);
             leaf->SetUnsigned();
          } else if (*leaftype == 'I') {
-            leaf = new TLeafI(leafname, leaftype);
+            leaf = new TLeafI(this, leafname, leaftype);
          } else if (*leaftype == 'i') {
-            leaf = new TLeafI(leafname, leaftype);
+            leaf = new TLeafI(this, leafname, leaftype);
             leaf->SetUnsigned();
          } else if (*leaftype == 'F') {
-            leaf = new TLeafF(leafname, leaftype);
+            leaf = new TLeafF(this, leafname, leaftype);
          } else if (*leaftype == 'f') {
-            leaf = new TLeafF(leafname, leaftype);
+            leaf = new TLeafF(this, leafname, leaftype);
          } else if (*leaftype == 'L') {
-            leaf = new TLeafL(leafname, leaftype);
+            leaf = new TLeafL(this, leafname, leaftype);
          } else if (*leaftype == 'l') {
-            leaf = new TLeafL(leafname, leaftype);
+            leaf = new TLeafL(this, leafname, leaftype);
             leaf->SetUnsigned();
          } else if (*leaftype == 'D') {
-            leaf = new TLeafD(leafname, leaftype);
+            leaf = new TLeafD(this, leafname, leaftype);
          } else if (*leaftype == 'd') {
-            leaf = new TLeafD(leafname, leaftype);
+            leaf = new TLeafD(this, leafname, leaftype);
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", *leaftype, name, leaflist);
@@ -461,8 +456,6 @@ TBranch::~TBranch()
 
    fTree = 0;
    fDirectory = 0;
-
-   gBranch = 0;
 }
 
 //______________________________________________________________________________
@@ -925,9 +918,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(basketnumber);
    if (basket) return basket;
 
-      // must create a new basket
-   gBranch = this;
-
      // create/decode basket parameters from buffer
    TDirectory::TContext ctxt(0);
    TFile *file = GetFile(0);
@@ -1340,7 +1330,6 @@ Int_t TBranch::LoadBaskets()
    Int_t nbaskets = fBaskets.GetEntriesFast();
    TFile *file = GetFile(0);
    TBasket *basket;
-   gBranch = this;
    for (Int_t i=0;i<nbaskets;i++) {
       basket = (TBasket*)fBaskets.UncheckedAt(i);
       if (basket) continue;
@@ -1749,6 +1738,15 @@ void TBranch::Streamer(TBuffer& b)
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
+         Int_t nbaskets = fBaskets.GetEntries();
+         for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+            TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
+            if (b) {
+               b->SetBranch(this);
+               GetTree()->IncrementTotalBuffers(b->GetBufferSize());
+               ++n;
+            }
+         }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
          // Check Byte Count is not needed since it was done in ReadBuffer
@@ -1774,7 +1772,6 @@ void TBranch::Streamer(TBuffer& b)
          b >> djunk; fZipBytes = (Long64_t)djunk;
 
          fBranches.Streamer(b);
-         gBranch = this;  // must be set again, was changed in previous statement
          fLeaves.Streamer(b);
          fBaskets.Streamer(b);
          fBasketBytes = new Int_t[fMaxBaskets];
@@ -1799,6 +1796,15 @@ void TBranch::Streamer(TBuffer& b)
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
+         Int_t nbaskets = fBaskets.GetEntries();
+         for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+            TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
+            if (b) {
+               b->SetBranch(this);
+               GetTree()->IncrementTotalBuffers(b->GetBufferSize());
+               ++n;
+            }
+         }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
          b.CheckByteCount(R__s, R__c, TBranch::IsA());
@@ -1819,9 +1825,17 @@ void TBranch::Streamer(TBuffer& b)
       b >> djunk; fZipBytes = (Long64_t)djunk;
       b >> fOffset;
       fBranches.Streamer(b);
-      gBranch = this;  // must be set again, was changed in previous statement
       fLeaves.Streamer(b);
       fBaskets.Streamer(b);
+      Int_t nbaskets = fBaskets.GetEntries();
+      for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+         TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
+         if (b) {
+            b->SetBranch(this);
+            GetTree()->IncrementTotalBuffers(b->GetBufferSize());
+            ++n;
+         }
+      }
       fNleaves = fLeaves.GetEntriesFast();
       fBasketEntry = new Long64_t[fMaxBaskets];
       b >> n;

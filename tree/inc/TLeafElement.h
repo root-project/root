@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.10 2002/01/02 21:47:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.11 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
         
 public:
    TLeafElement();
-   TLeafElement(const char *name, Int_t id, Int_t type);
+   TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
    
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}

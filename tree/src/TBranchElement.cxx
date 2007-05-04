@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.222 2007/04/03 16:10:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.223 2007/04/23 17:34:14 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -387,8 +387,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
             fEntryOffsetLen = 0;
             // ===> Create a leafcount
-            TLeaf* leaf = new TLeafElement(name, fID, fStreamerType);
-            leaf->SetBranch(this);
+            TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
             fNleaves = 1;
             fLeaves.Add(leaf);
             fTree->GetListOfLeaves()->Add(leaf);
@@ -446,8 +445,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                // -- Do the splitting work if we are allowed to.
                fType = 4;
                // Create a leaf for the master branch (the counter).
-               TLeaf *leaf = new TLeafElement(name, fID, fStreamerType);
-               leaf->SetBranch(this);
+               TLeaf *leaf = new TLeafElement(this, name, fID, fStreamerType);
                fNleaves = 1;
                fLeaves.Add(leaf);
                fTree->GetListOfLeaves()->Add(leaf);
@@ -497,9 +495,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    // Create a leaf to represent this branch.
    //
 
-   TLeaf* leaf = new TLeafElement(GetTitle(), fID, fStreamerType);
+   TLeaf* leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
    leaf->SetTitle(GetTitle());
-   leaf->SetBranch(this);
    fNleaves = 1;
    fLeaves.Add(leaf);
    fTree->GetListOfLeaves()->Add(leaf);
@@ -615,8 +612,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    if (splitlevel > 0) {
       fType = 3;
       // ===> Create a leafcount
-      TLeaf* leaf = new TLeafElement(name, fID, fStreamerType);
-      leaf->SetBranch(this);
+      TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
       fNleaves = 1;
       fLeaves.Add(leaf);
       fTree->GetListOfLeaves()->Add(leaf);
@@ -641,9 +637,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
 
    SetBit(kBranchObject);
 
-   TLeaf *leaf = new TLeafElement(GetTitle(), fID, fStreamerType);
+   TLeaf *leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
    leaf->SetTitle(GetTitle());
-   leaf->SetBranch(this);
    fNleaves = 1;
    fLeaves.Add(leaf);
    fTree->GetListOfLeaves()->Add(leaf);
@@ -752,8 +747,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    if ((splitlevel > 0) && fBranchClass.GetClass() && fBranchClass.GetClass()->CanSplit()) {
       fType = 4;
       // ===> Create a leafcount
-      TLeaf* leaf = new TLeafElement(name, fID, fStreamerType);
-      leaf->SetBranch(this);
+      TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
       fNleaves = 1;
       fLeaves.Add(leaf);
       fTree->GetListOfLeaves()->Add(leaf);
@@ -776,9 +770,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
       return;
    }
 
-   TLeaf *leaf = new TLeafElement(GetTitle(), fID, fStreamerType);
+   TLeaf *leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
    leaf->SetTitle(GetTitle());
-   leaf->SetBranch(this);
    fNleaves = 1;
    fLeaves.Add(leaf);
    fTree->GetListOfLeaves()->Add(leaf);
@@ -3465,9 +3458,8 @@ void TBranchElement::Streamer(TBuffer& R__b)
 
       // Fixup a case where the TLeafElement was missing
       if ((fType == 0) && (fLeaves.GetEntriesFast() == 0)) {
-         TLeaf* leaf = new TLeafElement(GetTitle(), fID, fStreamerType);
+         TLeaf* leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
          leaf->SetTitle(GetTitle());
-         leaf->SetBranch(this);
          fNleaves = 1;
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.15 2007/01/30 11:24:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.16 2007/02/05 18:11:29 brun Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -328,6 +328,7 @@ void TTreeCloner::CopyMemoryBaskets()
       basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
       if (basket) {
          basket = (TBasket*)basket->Clone();
+         basket->SetBranch(to);
          to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
       }
       // If the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
