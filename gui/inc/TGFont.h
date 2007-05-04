@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.8 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.9 2007/05/04 15:18:08 antcheva Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -43,7 +43,7 @@ enum ETextLayoutFlags {
    kTextAtLeastOne = BIT(1),
    kTextPartialOK  = BIT(2),
    kTextIgnoreTabs = BIT(3),
-   kTextIgnoreNewlines = BIT(4),
+   kTextIgnoreNewlines = BIT(4)
 };
 
 enum EFontWeight { kFontWeightNormal = 0,
