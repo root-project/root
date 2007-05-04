@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.22 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.23 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -32,6 +32,8 @@
 #endif
 
 class TColor;
+class TGTextLayout;
+class TGFont;
 
 class TGLabel : public TGFrame {
 
@@ -39,14 +41,23 @@ protected:
    TGString      *fText;         // label text
    UInt_t         fTWidth;       // text width
    UInt_t         fTHeight;      // text height
-   Int_t          fTMode;        // text justify
+   Int_t          fMLeft;        // margin left
+   Int_t          fMRight;       // margin right
+   Int_t          fMTop;         // margin top
+   Int_t          fMBottom;      // margin bottom
+   Int_t          fTMode;        // text alignment
+   Int_t          f3DStyle;      // 3D style (0 - normal, kRaisedFrame - raised, kSunkenFrame - sunken)
+   Int_t          fWrapLength;   // wrap length
+   Int_t          fTFlags;       // text flags (see TGFont.h  ETextLayoutFlags)
    Bool_t         fTextChanged;  // has text changed
    GContext_t     fNormGC;       // graphics context used for drawing label
-   FontStruct_t   fFontStruct;   // font to draw label
+   TGFont        *fFont;         // font to draw label
+   TGTextLayout  *fTLayout;      // text layout   
    Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
 
    virtual void DoRedraw();
+   virtual void DrawText(GContext_t gc, Int_t x, Int_t y);
 
    static const TGFont  *fgDefaultFont;
    static const TGGC    *fgDefaultGC;
@@ -72,15 +83,17 @@ public:
 
    virtual ~TGLabel();
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
+   virtual TGDimension GetDefaultSize() const 
+      { return TGDimension(fTWidth+fMLeft+fMRight, fTHeight+fMTop+fMBottom+1); }
+
    const TGString *GetText() const { return fText; }
    virtual const char *GetTitle() const { return fText->Data(); }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
    virtual void ChangeText(const char *newText) { SetText(newText); } //*MENU*icon=bld_rename.png*
    virtual void SetTitle(const char *label) { SetText(label); }
-   void SetText(Int_t number) { SetText(new TGString(number)); }
-   void SetTextJustify(Int_t tmode);
+   void  SetText(Int_t number) { SetText(new TGString(number)); }
+   void  SetTextJustify(Int_t tmode);
    Int_t GetTextJustify() const { return fTMode; }
    virtual void SetTextFont(TGFont *font, Bool_t global = kFALSE);
    virtual void SetTextFont(FontStruct_t font, Bool_t global = kFALSE);
@@ -94,9 +107,24 @@ public:
    Bool_t IsDisabled() const { return fDisabled; }
    Bool_t HasOwnFont() const;
 
-   GContext_t GetNormGC() const { return fNormGC; }
-   FontStruct_t GetFontStruct() const { return fFontStruct; }
+   void  SetWrapLength(Int_t wl) { fWrapLength = wl; Layout(); }
+   Int_t GetWrapLength() const { return fWrapLength; }
 
+   void  Set3DStyle(Int_t style) { f3DStyle = style; fClient->NeedRedraw(this); }
+   Int_t Get3DStyle() const { return f3DStyle; }
+
+   void SetMargins(Int_t left=0, Int_t right=0, Int_t top=0, Int_t bottom=0)
+      { fMLeft = left; fMRight = right; fMTop = top; fMBottom = bottom; }
+   Int_t GetLeftMargin() const { return fMLeft; }
+   Int_t GetRightMargin() const { return fMRight; }
+   Int_t GetTopMargin() const { return fMTop; }
+   Int_t GetBottomMargin() const { return fMBottom; }
+
+   GContext_t GetNormGC() const { return fNormGC; }
+   FontStruct_t GetFontStruct() const { return fFont->GetFontStruct(); }
+   TGFont      *GetFont() const  { return fFont; }
+
+   virtual void Layout();
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGLabel,0)  // A label GUI element
