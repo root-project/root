@@ -292,7 +292,7 @@ int  unuranMultiDim() {
    TH3D * h10h    = new TH3D("h10h","UNURAN gaussian N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
    TH3D * h100    = new TH3D("h100","UNURAN gaussian N-Dim distribution (first 3 dim)",30,-3,3,30,-3,3,30,-3,3);
 
-   double scale = 5;
+   int scale = 5;
 
    double par2[4] = {1,1,1,0.}; 
    f->SetParameters(par2); 

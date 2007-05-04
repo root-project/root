@@ -35,7 +35,7 @@ int unuranHist() {
    double xmax = 20;
 
    int n = 100000; // number of events generated and of reference histo
-   int ns = 1000;   // number of events from starting histo
+   int ns = 10000;   // number of events from starting histo
 
    // h0 is reference histo
    TH1D * h0 = new TH1D("h0","Landau ref data",nbin,xmin,xmax);
@@ -80,18 +80,22 @@ int unuranHist() {
    }
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   std::cout << "Time using TH1::GetRandom()  \t\t=\t " <<  time << "\tns/call" << std::endl;
+   std::cout << "Time using TH1::GetRandom()  \t=\t " <<  time << "\tns/call" << std::endl;
 
 
-   std::cout << "\nTest quality UnuRan  " << unr.MethodName() << "\t:\t";
-   double prob = h1->Chi2Test(h2,"UUP");
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << " (with h0)\t:\t";
+   double prob = h2->Chi2Test(h1,"UUP");
    if (prob < 1.E-6 ) { 
       std::cerr << "Chi2 Test failed for UNURAN method " <<  unr.MethodName() << std::endl;
       iret = -1;
    }
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << " (with ref)\t:\t";
+   h2->Chi2Test(h0,"UUP");
 
-   std::cout << "Test quality TH1::GetRandom \t\t:\t"; 
-   h1->Chi2Test(h3,"UUP");
+   std::cout << "Test quality TH1::GetRandom (with h1) \t:\t"; 
+   h3->Chi2Test(h1,"UUP");
+   std::cout << "Test quality TH1::GetRandom (with ref) \t:\t"; 
+   h3->Chi2Test(h0,"UUP");
    std::cout << "Comparison UnuRan-TH1::GetRandom \t:\t"; 
    h2->Chi2Test(h3,"UUP");
 
@@ -108,10 +112,10 @@ int unuranHist() {
 
 
 
-   // generate using binned data from h0
+   // generate using binned data from h1
    std::cout << "\nTest Using Binned data\n " << std::endl;
 
-   TUnuranEmpDist dist2(h0,false);
+   TUnuranEmpDist dist2(h1,false);
 
 
    if (!unr.Init(dist2) ) return -1;
@@ -127,12 +131,14 @@ int unuranHist() {
    time = w.CpuTime()*1.E9/n; 
    std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call" << std::endl;
 
-   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << "\t:\t"; 
-   double prob2 = h0->Chi2Test(h4,"UUP");
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << " (with h1)\t:\t"; 
+   double prob2 = h4->Chi2Test(h1,"UUP");
    if (prob2 < 1.E-6) { 
       std::cerr << "Chi2 Test failed for UNURAN method " <<  unr.MethodName() << std::endl;
       iret = -2;
    }
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << " (with ref)\t:\t"; 
+   h4->Chi2Test(h0,"UUP");
 
    c1->cd(2);
    h4->SetLineColor(kBlue);
@@ -246,7 +252,7 @@ int unuranGraf() {
    hy->Draw(); 
 
    // apply chi2 test to href
-   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << "\t:\t"; 
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << "\t\t:\t"; 
    double prob = href->Chi2Test(h2,"UUP");
    if (prob < 1.E-6) { 
       std::cerr << "Chi2 Test failed for UNURAN method " <<  unr.MethodName() << std::endl;
@@ -290,9 +296,9 @@ int unuranGraf2D() {
 
    TH3D * h3 = new TH3D("h3d","UNURAN generated 3D gauss data",50,-5,5,50,-5,5,50,-5,5);  
 
-   TH1D * hx = new TH1D("hx","x gen variable",100,-5,5);  
-   TH1D * hy = new TH1D("hy","y gen variable",100,-5,5);  
-   TH1D * hz = new TH1D("hz","z gen variable",100,-5,5);  
+   TH1D * hx = new TH1D("hx3","x gen variable",100,-5,5);  
+   TH1D * hy = new TH1D("hy3","y gen variable",100,-5,5);  
+   TH1D * hz = new TH1D("hz3","z gen variable",100,-5,5);  
 
    // now generate random points from the graph
    TUnuranEmpDist dist(Ndata,gr->GetX(), gr->GetY(), gr->GetZ() ); 
@@ -333,7 +339,7 @@ int unuranGraf2D() {
    f3->Draw("same");
 
    // apply chi2 test to href
-   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << "\t:\t"; 
+   std::cout << "\nTest quality UNURAN  " << unr.MethodName() << "\t\t:\t"; 
    double prob = href->Chi2Test(h3,"UUP");
    if (prob < 1.E-6) { 
       std::cerr << "Chi2 Test failed for UNURAN method " <<  unr.MethodName() << std::endl;
