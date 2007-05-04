@@ -149,7 +149,7 @@ const char *editortxt1 =
 "in addition to the arrow keys. By default the widget has under the right\n"
 "mouse button a popup menu giving access to several built-in functions.\n\n"
 "Cut, copy and paste between different editor windows and any other\n"
-"standard X11 text handling application is supported.\n\n"
+"standard text handling application is supported.\n\n"
 "Text can be selected with the mouse while holding the left button\n"
 "or with the arrow keys while holding the shift key pressed. Use the\n"
 "middle mouse button to paste text at the current mouse location."
@@ -219,7 +219,9 @@ const char *editortxt6 =
 "Control-X\n"
 "    Cut the marked text, copy to clipboard.\n"
 "Control-Y\n"
-"    Paste the clipboard text into line edit.\n\n"
+"    Paste the clipboard text into line edit.\n"
+"Control-Z\n"
+"    Undo action.\n\n"
 "All other keys with valid ASCII codes insert themselves into the line.";
 
 
@@ -733,7 +735,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
    fTestButton = new TGTextButton(fStatusFrame, "&Open editor...", 150);
    fTestButton->Connect("Clicked()", "TestMainFrame", this, "DoButton()");
-   fTestButton->SetToolTipText("Pops up editor");
+   fTestButton->SetToolTipText("Pops up\ntext editor");
    fStatusFrame->AddFrame(fTestButton, new TGLayoutHints(kLHintsTop |
                           kLHintsLeft, 2, 0, 2, 2));
    fTestText = new TGTextEntry(fStatusFrame, new TGTextBuffer(100));
