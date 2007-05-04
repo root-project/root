@@ -53,7 +53,7 @@ MODULES       = build cint metautils pcre utils base cont meta io net math \
                 rint html eg geom geompainter vmc fumili mlp ged quadp auth \
                 guibuilder xml foam splot smatrix sql tmva geombuilder \
                 spectrum spectrumpainter fitpanel thread proof proofplayer \
-                sessionviewer
+                sessionviewer guihtml
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
