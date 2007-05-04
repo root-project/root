@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.23 2006/10/30 17:34:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.24 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -219,6 +219,8 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Constructor.
 
+   fAccelerated = kFALSE;
+
    fMsgWindow = p;
    SetBackgroundPixmap(GetBckgndPixmap());
    SetWindowName();
@@ -251,6 +253,11 @@ Bool_t TGScrollBar::HandleTimer(TTimer *t)
 
    ev.fType    = kButtonPress;
    ev.fUser[0] = fSubw;
+
+   if (IsAccelerated()) {
+      ++fSmallInc;
+      if (fSmallInc > 100) fSmallInc = 100;
+   }
 
    gVirtualX->QueryPointer(fId, dum1, dum2, ev.fXRoot, ev.fYRoot, ev.fX, ev.fY,
                       ev.fState);
@@ -449,6 +456,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       }
 
       fDragging = kFALSE;
+      fSmallInc = 1;
 
       fPos = TMath::Max(fPos, 0);
       fPos = TMath::Min(fPos, fRange-fPsize);
@@ -695,6 +703,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       }
 
       fDragging = kFALSE;
+      fSmallInc = 1;
 
       fPos = TMath::Max(fPos, 0);
       fPos = TMath::Min(fPos, fRange-fPsize);
@@ -702,8 +711,9 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
       PositionChanged(fPos);
 
-      if (fGrabPointer)
+      if (fGrabPointer) {
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+      }
    }
    return kTRUE;
 }

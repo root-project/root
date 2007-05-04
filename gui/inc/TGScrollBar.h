@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.16 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.17 2006/10/11 10:26:23 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -99,6 +99,7 @@ protected:
    const TGPicture     *fTailPic;      // picture in tail (down or right arrow)
    TTimer              *fRepeat;       // repeat rate timer (when mouse stays pressed)
    Window_t             fSubw;         // sub window in which mouse is pressed
+   Bool_t               fAccelerated;  // kFALSE - normal, kTRUE - accelerated
 
    static Pixmap_t    fgBckgndPixmap;
    static Int_t       fgScrollBarWidth;
@@ -130,7 +131,9 @@ public:
                   { TGFrame::MoveResize(x, y, w, h); SetRange(fRange, fPsize); }
    virtual void  Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void  ChangeBackground(Pixel_t back);
-
+   virtual void  SetAccelerated(Bool_t m = kTRUE) { fAccelerated = m; }
+         Bool_t  IsAccelerated() const { return fAccelerated; }
+ 
    virtual void MapSubwindows() { TGWindow::MapSubwindows(); }
    TGScrollBarElement *GetHead() const { return fHead; }
    TGScrollBarElement *GetTail() const { return fTail; }
