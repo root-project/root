@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.145 2007/04/17 15:47:13 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.146 2007/04/18 14:56:56 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -261,7 +261,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
    // the return value is the int value corresponding to the result of the command
    // (float and double return values will be truncated).
 
-   Int_t ret = 0;
+   Long_t ret = 0;
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
