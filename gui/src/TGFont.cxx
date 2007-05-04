@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.8 2007/05/04 15:18:08 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.9 2007/05/04 15:39:12 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -1881,7 +1881,7 @@ void TGFont::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 //______________________________________________________________________________
-static char *getToken(char *str)
+static char *GetToken(char *str)
 {
    static char *p = 0;
    char *retp;
@@ -1969,14 +1969,14 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
    // Wasn't an XLFD or "-option value" string. Try it as a
    // "font size style" list.
 
-   s = getToken(str);
+   s = GetToken(str);
    if (!s) {
       delete[] str;
       return kFALSE;
    }
    fa->fFamily = GetUid(s);
 
-   s = getToken(0);
+   s = GetToken(0);
 
    if (s) {
       char *end;
@@ -1987,7 +1987,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
       }
    }
 
-   while ((s = getToken(0))) {
+   while ((s = GetToken(0))) {
       n = FindStateNum(gWeightMap, s);
       if (n != kFontWeightUnknown) {
          fa->fWeight = n;
