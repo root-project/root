@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.88 2007/03/28 14:29:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.89 2007/03/28 15:43:26 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -579,7 +579,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       char *mac = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
       if (arguments.Length()) {
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
-                 line[1],TROOT::GetMacroPath());
+                 line[1]);
       }
       Long_t retval = 0;
       if (!mac)
