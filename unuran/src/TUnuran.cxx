@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.4 2007/03/27 15:04:52 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.5 2007/03/30 13:22:33 moneta Exp $
 // Authors: L. Moneta, J. Leydold Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
@@ -238,13 +238,12 @@ bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
    const double * xmin = dist.GetLowerDomain();
    const double * xmax = dist.GetUpperDomain();
    if ( xmin != 0 || xmax != 0 ) {
-#ifdef LATER // not yet implemented in Unuran 0.8.1 (only from 1.0.0)
       ret = unur_distr_cvec_set_domain_rect(fUdistr,xmin,xmax);  
       if (ret != 0)  { 
          Error("SetMultiDistribution","invalid domain");
          return false; 
       }
-#else
+#ifdef OLDVERS
       Error("SetMultiDistribution","domain setting not available in UNURAN 0.8.1");
 #endif
 
@@ -276,13 +275,12 @@ bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
 
    // get info from histogram 
    if (dist.IsBinned() ) { 
-#ifdef LATER
       int nbins = dist.Data().size(); 
       double min = dist.LowerBin();
       double max = dist.UpperBin();
       const double * pv = &(dist.Data().front());
       ret |= unur_distr_cemp_set_hist(fUdistr, pv, nbins, min, max); 
-#else 
+#ifdef OLDVERS
       Error("SetEmpiricalDistribution","hist method not available in UNURAN 0.8.1");
 #endif
    } 
