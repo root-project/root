@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.32 2007/04/23 09:07:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.33 2007/04/27 08:45:15 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -164,6 +164,7 @@ void TGTextView::SetBackground(Pixel_t p)
 {
    // set background  color
 
+   fCanvas->SetBackgroundColor(p);
    fWhiteGC.SetBackground(p);
    fWhiteGC.SetForeground(p);
    Update();
