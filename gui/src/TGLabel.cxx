@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.30 2006/11/09 13:23:13 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -29,8 +29,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGLabel.h"
-#include "TGWidget.h"
 #include "TGString.h"
+#include "TGWidget.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TColor.h"
@@ -53,16 +53,27 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fText        = text;
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
-   fFontStruct  = font;
-   fNormGC      = norm;
    fHasOwnFont  = kFALSE;
    fDisabled    = kFALSE;
+   f3DStyle     = 0;
+   fWrapLength  = -1;
+   fTFlags      = 0;
+   fMLeft = fMRight = fMTop = fMBottom = 0;
 
-   int max_ascent, max_descent;
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
-   Resize(fTWidth, fTHeight + 1);
+   if (!norm) {
+      norm = fgDefaultGC->GetGC();
+   }
+   fNormGC = norm;
+
+   if (!font) {
+      font = fgDefaultFont->GetFontStruct();
+   } 
+
+   fFont = fClient->GetFontPool()->GetFont(font);
+   fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
+                                        fWrapLength, kTextLeft, fTFlags,
+                                        &fTWidth, &fTHeight);
+   Resize();
    SetWindowName();
 }
 
@@ -76,16 +87,27 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fText        = new TGString(!text && !p ? GetName() : text);
    fTMode       = kTextCenterX | kTextCenterY;
    fTextChanged = kTRUE;
-   fFontStruct  = font;
-   fNormGC      = norm;
    fHasOwnFont  = kFALSE;
    fDisabled    = kFALSE;
+   f3DStyle     = 0;
+   fWrapLength  = -1;
+   fTFlags      = 0;
+   fMLeft = fMRight = fMTop = fMBottom = 0;
 
-   int max_ascent, max_descent;
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
-   Resize(fTWidth, fTHeight + 1);
+   if (!norm) {
+      norm = fgDefaultGC->GetGC();
+   }
+   fNormGC = norm;
+
+   if (!font) {
+      font = fgDefaultFont->GetFontStruct();
+   }
+
+   fFont = fClient->GetFontPool()->GetFont(font);
+   fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
+                                       fWrapLength, kTextLeft, fTFlags,
+                                       &fTWidth, &fTHeight);
+   Resize();
    SetWindowName();
 }
 
@@ -94,13 +116,31 @@ TGLabel::~TGLabel()
 {
    // Delete label.
 
-   if (fText) delete fText;
+   if (fText) {
+      delete fText;
+   }
 
    if (fHasOwnFont) {
       TGGCPool *pool = fClient->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
       pool->FreeGC(gc);
    }
+
+   if (fFont != fgDefaultFont) {
+      fClient->GetFontPool()->FreeFont(fFont);
+   }
+}
+
+//______________________________________________________________________________
+void TGLabel::Layout()
+{
+   // layout label
+
+   delete fTLayout;
+   fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
+                                       fWrapLength, kTextLeft, fTFlags,
+                                       &fTWidth, &fTHeight);
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -114,15 +154,16 @@ void TGLabel::SetText(TGString *new_text)
    fText        = new_text;
    fTextChanged = kTRUE;
 
-   int max_ascent, max_descent;
+   Layout();
+}
 
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
+//______________________________________________________________________________
+void TGLabel::DrawText(GContext_t gc, Int_t x, Int_t y)
+{
+   // draw text at position (x, y)
 
-   // Resize is done when parent's is Layout() is called
-   //Resize(fTWidth, fTHeight + 1);
-   fClient->NeedRedraw(this);
+  fTLayout->DrawText(fId, gc, x, y, 0, -1);
+  //fTLayout->UnderlineChar(fId, gc, x, y, fText->GetHotPos());
 }
 
 //______________________________________________________________________________
@@ -133,89 +174,100 @@ void TGLabel::DoRedraw()
    int x, y;
 
    TGFrame::DoRedraw();
+   fTextChanged = kFALSE;
 
-   if (fTextChanged) {
-      fTextChanged = kFALSE;
+   if (fTMode & kTextLeft) {
+      x = fMLeft;
+   } else if (fTMode & kTextRight) {
+      x = fWidth - fTWidth - fMRight;
+   } else {
+      x = (fWidth - fTWidth + fMLeft - fMRight) >> 1;
    }
 
-   if (fTMode & kTextLeft)
-      x = 0;
-   else if (fTMode & kTextRight)
-      x = fWidth - fTWidth;
-   else
-      x = (fWidth - fTWidth) >> 1;
-
-   if (fTMode & kTextTop)
+   if (fTMode & kTextTop) {
       y = 0;
-   else if (fTMode & kTextBottom)
+   } else if (fTMode & kTextBottom) {
       y = fHeight - fTHeight;
-   else
+   } else {
       y = (fHeight - fTHeight) >> 1;
+   }
 
-   int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    if (!fDisabled) {
-      fText->Draw(fId, fNormGC, x, y + max_ascent);
-   } else {
+      TGGCPool *pool = fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+
+      if (!gc) {
+         fNormGC = fgDefaultGC->GetGC();
+      }
+
+      switch (f3DStyle) {
+         case kRaisedFrame:
+         case kSunkenFrame:
+            {
+               Pixel_t forecolor = gc->GetForeground();
+               Pixel_t hi = TGFrame::GetWhitePixel();
+               Pixel_t sh = forecolor;
+
+               if (f3DStyle == kRaisedFrame) {
+                  Pixel_t t = hi;
+                  hi = sh; 
+                  sh = t;
+               }
+
+               gc->SetForeground(hi);
+               DrawText(gc->GetGC(), x+1, y+1);
+               gc->SetForeground(sh);
+               DrawText(gc->GetGC(), x, y);
+               gc->SetForeground(forecolor);
+            }
+            break;
+
+         default:
+            DrawText(fNormGC, x, y);
+            break;
+      }
+   } else { // disabled
       FontH_t fontH;
-      if (GetDefaultFontStruct() != fFontStruct) {
-         fontH = gVirtualX->GetFontHandle(fFontStruct);
+
+      if (GetDefaultFontStruct() != fFont->GetFontStruct()) {
+         fontH = gVirtualX->GetFontHandle(fFont->GetFontStruct());
       } else {
          fontH = gVirtualX->GetFontHandle(GetDefaultFontStruct());
       }
       static TGGC *gc1 = 0;
       static TGGC *gc2 = 0;
-
+ 
       if (!gc1) {
          gc1 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetHilightGC()());
          gc1 = new TGGC(*gc1); // copy
       }
       gc1->SetFont(fontH);
-      fText->Draw(fId, gc1->GetGC(), x + 1, y + 1 + max_ascent);
+      DrawText(gc1->GetGC(), x + 1, y + 1);
 
       if (!gc2) {
          gc2 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetShadowGC()());
          gc2 = new TGGC(*gc2); // copy
       }
       gc2->SetFont(fontH);
-      fText->Draw(fId, gc2->GetGC(), x, y + max_ascent);
+      DrawText(gc2->GetGC(), x, y);
    }
 }
 
 //______________________________________________________________________________
-void TGLabel::SetTextFont(FontStruct_t font, Bool_t global)
+void TGLabel::SetTextFont(FontStruct_t fontStruct, Bool_t global)
 {
    // Changes text font.
    // If global is true font is changed globally - otherwise locally.
 
-   FontH_t v = gVirtualX->GetFontHandle(font);
-   if (!v) return;
+   TGFont *font = fClient->GetFontPool()->GetFont(fontStruct);
 
-   fTextChanged = kTRUE;
-
-   fFontStruct = font;
-
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
-   TGGC *gc = pool->FindGC(fNormGC);
-
-   if (!global) {
-      gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
-      fHasOwnFont = kTRUE;
+   if (!font) {
+      //error
+      return;
    }
 
-   gc->SetFont(v);
-   fNormGC = gc->GetGC();
-
-   int max_ascent, max_descent;
-
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
-
-   // Resize is done when parent's is Layout() is called
-   //Resize(fTWidth, fTHeight + 1);
-   fClient->NeedRedraw(this);
+   SetTextFont(font, global);
 }
 
 //______________________________________________________________________________
@@ -226,9 +278,12 @@ void TGLabel::SetTextFont(const char *fontName, Bool_t global)
 
    TGFont *font = fClient->GetFont(fontName);
 
-   if (font) {
-      SetTextFont(font->GetFontStruct(), global);
+   if (!font) {
+      // error
+      return;
    }
+
+   SetTextFont(font, global);
 }
 
 //______________________________________________________________________________
@@ -237,9 +292,33 @@ void TGLabel::SetTextFont(TGFont *font, Bool_t global)
    // Changes text font specified by pointer to TGFont object.
    // If global is true font is changed globally - otherwise locally.
 
-   if (font) {
-      SetTextFont(font->GetFontStruct(), global);
+   if (!font) {
+      //error
+      return;
    }
+
+   TGFont *oldfont = fFont;
+   fFont = fClient->GetFont(font);  // increase usage count
+
+   TGGCPool *pool = fClient->GetResourcePool()->GetGCPool();
+   TGGC *gc = pool->FindGC(fNormGC);
+
+   if (!global) {
+      if (gc == fgDefaultGC) { // create new GC
+         gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy ctor.
+      }
+      fHasOwnFont = kTRUE;
+   }
+
+   if (oldfont != fgDefaultFont) {
+      fClient->FreeFont(oldfont);
+   }
+
+   gc->SetFont(fFont->GetFontHandle());
+   fNormGC = gc->GetGC();
+
+   fTextChanged = kTRUE;
+   Layout();
 }
 
 //______________________________________________________________________________
@@ -248,11 +327,13 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    // Changes text color.
    // If global is true color is changed globally - otherwise locally.
 
-   TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+   TGGCPool *pool = fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {
-      gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+      if (gc == fgDefaultGC) {
+         gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+      }
       fHasOwnFont = kTRUE;
    }
 
@@ -283,7 +364,7 @@ void TGLabel::SetTextJustify(Int_t mode)
    fTextChanged = kTRUE;
    fTMode = mode;
 
-   fClient->NeedRedraw(this);
+   Layout();
 }
 
 //______________________________________________________________________________
@@ -307,8 +388,8 @@ void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    char parGC[50], parFont[50];
    sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
-      TGFont *ufont = fClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
+   if ((GetDefaultFontStruct() != fFont->GetFontStruct()) || (GetDefaultGC()() != fNormGC)) {
+      TGFont *ufont = fClient->GetResourcePool()->GetFontPool()->FindFont(fFont->GetFontStruct());
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(parFont,"ufont->GetFontStruct()");
@@ -331,7 +412,7 @@ void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
        << "," << quote << label << quote;
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         if (fFontStruct == GetDefaultFontStruct()) {
+         if (fFont->GetFontStruct() == GetDefaultFontStruct()) {
             if (fNormGC == GetDefaultGC()()) {
                out <<");" << endl;
             } else {
@@ -358,8 +439,9 @@ FontStruct_t TGLabel::GetDefaultFontStruct()
 {
    // Static returning label default font struct.
 
-   if (!fgDefaultFont)
+   if (!fgDefaultFont) {
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
+   }
    return fgDefaultFont->GetFontStruct();
 }
 
@@ -368,7 +450,8 @@ const TGGC &TGLabel::GetDefaultGC()
 {
    // Static returning label default graphics context.
 
-   if (!fgDefaultGC)
+   if (!fgDefaultGC) {
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
+   }
    return *fgDefaultGC;
 }
