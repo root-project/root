@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlParse.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -1506,12 +1506,12 @@ void TGHtml::PrintList(TGHtmlElement *first, TGHtmlElement *last)
             n = 1;
             z = "";
          }
-         printf("Block 0x%08x flags=%02x cnt=%d x=%d..%d y=%d..%d z=\"%.*s\"\n",
-               (int) p, p->flags, p->count, block->left, block->right,
+         printf("Block flags=%02x cnt=%d x=%d..%d y=%d..%d z=\"%.*s\"\n",
+                 p->flags, p->count, block->left, block->right,
          block->top, block->bottom, n, z);
       } else {
-         printf("Token 0x%08x font=%2d color=%2d align=%d flags=0x%04x name=%s\n",
-                (int) p, p->style.font, p->style.color,
+         printf("Token font=%2d color=%2d align=%d flags=0x%04x name=%s\n",
+                p->style.font, p->style.color,
                 p->style.align, p->style.flags, DumpToken(p));
       }
    }

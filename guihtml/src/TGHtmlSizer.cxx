@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlSizer.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /**************************************************************************
@@ -996,9 +996,9 @@ void TGHtml::AddStyle(TGHtmlElement *p)
       }
 
       TRACE(HtmlTrace_Style,
-          ("Style of 0x%08x font=%02d color=%02d bg=%02d "
+          ("Style font=%02d color=%02d bg=%02d "
            "align=%d flags=0x%04x token=%s\n",
-           (int)p, p->style.font, p->style.color, p->style.bgcolor,
+            p->style.font, p->style.color, p->style.bgcolor,
            p->style.align, p->style.flags, DumpToken(p)));
 
       p = p->pNext;
