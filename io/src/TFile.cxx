@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.208 2007/03/19 14:24:30 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.209 2007/03/20 11:11:02 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -111,7 +111,10 @@ Int_t    TFile::fgReadCalls = 0;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
 TString  TFile::fgCacheFileDir;
+Bool_t   TFile::fgCacheFileForce = kFALSE;
 Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
+UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
+Bool_t   TFile::fgOnlyStaged = 0;
 
 const Int_t kBEGIN = 100;
 
@@ -2337,9 +2340,12 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TPluginHandler *h;
    TFile *f = 0;
 
+   if (!option) option = "";
+
    // check if we read through a file cache
    const char *defaultreadoption = "READ";
-   if (!strcasecmp(option, "CACHEREAD")) {
+   if (!strcasecmp(option, "CACHEREAD") ||
+       ((!strcasecmp(option,"READ") || !strlen(option)) && fgCacheFileForce)) {
       if (fgCacheFileDir == "") {
          ::Warning("TFile::Open", "you want to read through a cache, but you have no valid cache directory set - reading remotely");
          ::Info("TFile::Open", "set cache directory using TFile::SetCacheFileDir()");
@@ -2350,7 +2356,8 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 
          if ((!strcmp(fileurl.GetProtocol(), "file"))) {
             // it makes no sense to read local files through a file cache
-            ::Warning("TFile::Open", "you want to read through a cache, but you are reading local files - CACHEREAD disabled");
+            if (!fgCacheFileForce)
+               ::Warning("TFile::Open", "you want to read through a cache, but you are reading local files - CACHEREAD disabled");
             option = defaultreadoption;
          } else {
             // this is a remote file and worthwhile to be put into the local cache
@@ -2460,11 +2467,17 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
                   need2copy = kTRUE;
                }
 
-               // try to fetch the file
-               if ((need2copy) && (!TFile::Cp(name, cachefilepath))) {
+               // try to fetch the file (disable now the forced caching)
+               Bool_t forcedcache = fgCacheFileForce;
+               fgCacheFileForce = kFALSE;
+               if (need2copy && !TFile::Cp(name, cachefilepath)) {
                   ::Warning("TFile::Open", "you want to read through a cache, but I cannot make a cache copy of %s - CACHEREAD disabled", cachefilepathbasedir.Data());
                   option = defaultreadoption;
+                  fgCacheFileForce = forcedcache;
+                  if (fgOpenTimeout != 0)
+                     return 0;
                } else {
+                  fgCacheFileForce = forcedcache;
                   ::Info("TFile::Open", "using local cache copy of %s [%s]", name, cachefilepath.Data());
                   // finally we have the file and can open it locally
                   fileurl.SetProtocol("file");
@@ -2812,7 +2825,8 @@ Long64_t TFile::GetFileCounter() { return fgFileCounter; }
 void TFile::IncrementFileCounter() { fgFileCounter++; }
 
 //______________________________________________________________________________
-Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected)
+Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
+                              Bool_t forcecacheread )
 {
    // Sets the directory where to locally stage/cache remote files.
    // If the directory is not writable by us return kFALSE.
@@ -2831,8 +2845,9 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected)
       }
       gSystem->Chmod(cached, 0700);
    }
-   fgCacheFileDir = cached;
+   fgCacheFileDir          = cached;
    fgCacheFileDisconnected = operatedisconnected;
+   fgCacheFileForce        = forcecacheread;
    return kTRUE;
 }
 
@@ -2903,6 +2918,44 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    }
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+UInt_t TFile::SetOpenTimeout(UInt_t timeout)
+{
+   // Sets open timeout time (in ms). Returns previous timeout value.
+
+   UInt_t to = fgOpenTimeout;
+   fgOpenTimeout = timeout;
+   return to;
+}
+
+//______________________________________________________________________________
+UInt_t TFile::GetOpenTimeout()
+{
+   // Returns open timeout (in ms).
+
+   return fgOpenTimeout;
+}
+
+//______________________________________________________________________________
+Bool_t TFile::SetOnlyStaged(Bool_t onlystaged)
+{
+   // Sets only staged flag. Returns previous value of flag.
+   // When true we check before opening the file if it is staged, if not,
+   // the open fails.
+
+   Bool_t f = fgOnlyStaged;
+   fgOnlyStaged = onlystaged;
+   return f;
+}
+
+//______________________________________________________________________________
+Bool_t TFile::GetOnlyStaged()
+{
+   // Returns staged only flag.
+
+   return fgOnlyStaged;
 }
 
 //______________________________________________________________________________

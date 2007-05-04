@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.h,v 1.62 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.h,v 1.63 2007/03/19 14:24:30 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -45,6 +45,8 @@ public:
    // Asynchronous open request status
    enum EAsyncOpenStatus { kAOSNotAsync = -1,  kAOSFailure = 0,
                            kAOSInProgress = 1, kAOSSuccess = 2 };
+   // Open timeout constants
+   enum EOpenTimeOut { kInstantTimeout = 0, kEternalTimeout = 999999999 };
 
 protected:
    Double_t         fSumBuffer;      //Sum of buffer sizes of objects written so far
@@ -88,7 +90,10 @@ protected:
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
    static TString   fgCacheFileDir;          //Directory where to locally stage files
-   static Bool_t    fgCacheFileDisconnected; //Indicates, if we trust in the files in the cache dir without stat on the cached file or not
+   static Bool_t    fgCacheFileDisconnected; //Indicates, we trust in the files in the cache dir without stat on the cached file
+   static Bool_t    fgCacheFileForce;        //Indicates, to force all READ to CACHEREAD
+   static UInt_t    fgOpenTimeout; //Timeout for open operations in ms  - 0 corresponds to blocking i/o
+   static Bool_t    fgOnlyStaged ; //Before the file is opened, it is checked, that the file is staged, if not, the open fails
    static Long64_t  fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t  fgBytesRead;   //Number of bytes read by all TFile objects
    static Long64_t  fgFileCounter; //Counter for all opened files
@@ -245,11 +250,16 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
-   static Bool_t       SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected = kTRUE);
+   static Bool_t       SetCacheFileDir(const char *cacheDir, Bool_t operateDisconnected = kTRUE, Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();
-   static Bool_t       ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinteval = 0);
+   static Bool_t       ShrinkCacheFileDir(Long64_t shrinkSize, Long_t cleanupInteval = 0);
    static Bool_t       Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
                           UInt_t buffersize = 1000000);
+
+   static UInt_t       SetOpenTimeout(UInt_t timeout);  // in ms
+   static UInt_t       GetOpenTimeout(); // in ms
+   static Bool_t       SetOnlyStaged(Bool_t onlystaged);
+   static Bool_t       GetOnlyStaged();
 
    ClassDef(TFile,7)  //ROOT file
 };
