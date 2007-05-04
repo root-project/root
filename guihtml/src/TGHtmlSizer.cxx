@@ -1,4 +1,4 @@
-// $Id: TGHtmlSizer.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
+// $Id: TGHtmlSizer.cxx,v 1.2 2007/05/04 20:33:16 rdm Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /**************************************************************************
@@ -1072,7 +1072,7 @@ void TGHtml::Sizer()
 
    TGHtmlElement *p;
    int iFont = -1;
-   TGFont *font;
+   TGFont *font=0;
    int spaceWidth = 0;
    FontMetrics_t fontMetrics;
    char *z;
