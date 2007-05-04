@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.40 2007/01/26 15:47:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.41 2007/01/28 18:27:46 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -41,25 +41,7 @@ class TFile;
 R__EXTERN TDirectory *gDirectory;
 
 class TDirectory : public TNamed {
-
-protected:
-   TObject      *fMother;          //pointer to mother of the directory
-   TList        *fList;            //List of objects in memory
-   TUUID         fUUID;            //Unique identifier
-   TString       fPathBuffer;      //!Buffer for GetPath() function   
-   static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
-   
-          Bool_t cd1(const char *path);
-   static Bool_t Cd1(const char *path);
-
-          void   FillFullPath(TString& buf) const;
-
-protected:
-   TDirectory(const TDirectory &directory);  //Directories cannot be copied
-   void operator=(const TDirectory &); //Directorise cannot be copied
-
-public:
-
+public: 
    /** @class Context
      *
      *  Small helper to keep current directory context.
@@ -67,32 +49,63 @@ public:
      */
    class TContext  {
    private:
-      TDirectory* fPrevious;   // Pointer to the previous current directory.
+      TDirectory *fDirectory;   //! Pointer to the previous current directory.
+      TContext   *fPrevious;    //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      TContext   *fNext;        //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
       TContext(TContext&);
       TContext& operator=(TContext&);
       void CdNull();
+      friend class TDirectory;
    public:
       TContext(TDirectory* previous, TDirectory* newCurrent)
-         : fPrevious(previous)
+         : fDirectory(previous),fPrevious(0),fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
+         if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
       }
-      TContext(TDirectory* newCurrent) : fPrevious(gDirectory)
+      TContext(TDirectory* newCurrent) : fDirectory(gDirectory),fPrevious(0),fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
+         if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
       }
       ~TContext()
       {
          // Destructor.   Reset the current directory to its
          // previous state.
-         if ( fPrevious ) fPrevious->cd();
+         if ( fDirectory ) {
+            fDirectory->UnregisterContext(this);
+            fDirectory->cd();
+         }
          else CdNull();
       }
    };
+
+protected:
+   
+   TObject      *fMother;          //pointer to mother of the directory
+   TList        *fList;            //List of objects in memory
+   TUUID         fUUID;            //Unique identifier
+   TString       fPathBuffer;      //!Buffer for GetPath() function   
+   TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
+   static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
+   
+          Bool_t cd1(const char *path);
+   static Bool_t Cd1(const char *path);
+
+           void   FillFullPath(TString& buf) const;
+   virtual void   CleanTargets();
+           void   RegisterContext(TContext *ctxt);
+           void   UnregisterContext(TContext *ctxt);
+
+protected:
+   TDirectory(const TDirectory &directory);  //Directories cannot be copied
+   void operator=(const TDirectory &); //Directorise cannot be copied
+
+public:
 
    TDirectory();
    TDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);

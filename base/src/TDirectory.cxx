@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.93 2007/01/28 18:27:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.94 2007/01/31 13:31:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -41,7 +41,7 @@ ClassImp(TDirectory)
 //
 
 //______________________________________________________________________________
-   TDirectory::TDirectory() : TNamed(), fMother(0),fList(0)
+   TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
@@ -49,7 +49,7 @@ ClassImp(TDirectory)
 
 //______________________________________________________________________________
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
-   : TNamed(name, title), fMother(0), fList(0)
+   : TNamed(name, title), fMother(0), fList(0),fContext(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ======================
@@ -102,9 +102,7 @@ TDirectory::~TDirectory()
       SafeDelete(fList);
    }
 
-   if (gDirectory == this) {
-         gDirectory = gROOT;
-   }
+   CleanTargets();
 
    TDirectory* mom = GetMotherDir();
 
@@ -186,6 +184,30 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
    fList       = new THashList(100,50);
    fMother     = motherDir;
    SetBit(kCanDelete);
+}
+
+//______________________________________________________________________________
+void TDirectory::CleanTargets() 
+{
+   // Clean the pointers to this object (gDirectory, TContext, etc.)
+
+   while (fContext) {
+      fContext->fDirectory = 0;
+      fContext = fContext->fNext;
+   }
+
+   if (gDirectory == this) {
+      TDirectory *cursav = GetMotherDir();
+      if (cursav && cursav != this) {
+         cursav->cd();
+      } else {
+         if (this == gROOT) {
+            gDirectory = 0;
+         } else {
+            gROOT->cd();
+         }
+      }
+   } 
 }
 
 //______________________________________________________________________________
@@ -426,19 +448,7 @@ void TDirectory::Close(Option_t *)
    if (fast) fList->Delete();
    else      fList->Delete("slow");
 
-
-   if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();
-      if (cursav && cursav != this) {
-         cursav->cd();
-      } else {
-         if (this == gROOT) {
-            gDirectory = 0;
-         } else {
-            gDirectory = gROOT;
-         }
-      }
-   } 
+   CleanTargets();
 }
 
 //______________________________________________________________________________
@@ -1006,6 +1016,37 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
    name[nch] = 0;
 }
 
+//______________________________________________________________________________
+void TDirectory::RegisterContext(TContext *ctxt) { 
+   // Register a TContext pointing to this TDirectory object
+
+   if (fContext) {
+      TContext *current = fContext;
+      while(current->fNext) {
+         current = current->fNext;
+      }
+      current->fNext = ctxt;
+      ctxt->fPrevious = current;
+   } else {
+      fContext = ctxt;
+   }
+}
+
+//______________________________________________________________________________
+void TDirectory::UnregisterContext(TContext *ctxt) { 
+   // UnRegister a TContext pointing to this TDirectory object
+
+   if (ctxt==fContext) {
+      fContext = ctxt->fNext;
+      if (fContext) fContext->fPrevious = 0;
+      ctxt->fPrevious = ctxt->fNext = 0;
+   } else {
+      TContext *next = ctxt->fNext;
+      ctxt->fPrevious->fNext = next;
+      if (next) next->fPrevious = ctxt->fPrevious;
+      ctxt->fPrevious = ctxt->fNext = 0;
+   }
+}
 
 //______________________________________________________________________________
 void TDirectory::TContext::CdNull()

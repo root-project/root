@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.h,v 1.3 2007/01/28 18:28:12 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.h,v 1.4 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -46,6 +46,7 @@ protected:
    TFile      *fFile;            //pointer to current file in memory
    TList      *fKeys;            //Pointer to keys list in memory
 
+   virtual void         CleanTargets();
 
 private:
    TDirectoryFile(const TDirectoryFile &directory);  //Directories cannot be copied

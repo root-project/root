@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.10 2007/02/10 09:17:57 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.11 2007/03/01 16:38:36 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -156,14 +156,7 @@ TDirectoryFile::~TDirectoryFile()
       SafeDelete(fKeys);
    }
 
-   if (gDirectory == this) {
-      if (gFile != this) {
-         gFile->cd();
-      } else {
-         gDirectory = gROOT;
-         gFile = 0;
-      }
-   }
+   CleanTargets();
 
    TDirectory* mom = GetMotherDir();
 
@@ -307,6 +300,20 @@ Bool_t TDirectoryFile::cd(const char *path)
    Bool_t ok = TDirectory::cd(path);
    if (ok) gFile = fFile;
    return ok;
+}
+
+//______________________________________________________________________________
+void TDirectoryFile::CleanTargets() 
+{
+   // Clean the pointers to this object (gDirectory, TContext, etc.)
+
+   TDirectory::CleanTargets();
+
+   // After CleanTargets either gFile was change appropriately
+   // by a cd() or needs to be set to zero.
+   if (gFile == this) {
+      gFile = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -489,15 +496,7 @@ void TDirectoryFile::Close(Option_t *)
       fKeys->Delete("slow");
    }
 
-   if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();
-      if (cursav && cursav != this) {
-         cursav->cd();
-      } else {
-         gFile = 0;
-         gDirectory = gROOT;
-      }
-   }
+   CleanTargets();
 }
 
 //______________________________________________________________________________
