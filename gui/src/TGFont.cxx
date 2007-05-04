@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.7 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.8 2007/05/04 15:18:08 antcheva Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -655,7 +655,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
    // height     -- Filled with height of string.
 
    const char *start, *end, *special;
-   Int_t n, y, charsThisChunk, maxChunks;
+   Int_t n, y=0, charsThisChunk, maxChunks;
    Int_t baseline, h, curX, newX, maxWidth;
    TGTextLayout *layout;
    LayoutChunk_t *chunk;
