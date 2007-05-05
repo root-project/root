@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.124 2007/04/19 21:07:02 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.125 2007/04/24 08:15:08 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -5061,7 +5061,23 @@ FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
    // otherwise an opaque pointer to the FontStruct_t.
    // Free the loaded font using DeleteFont().
 
-   return (FontStruct_t) gdk_font_load(font_name);
+   char  family[100], weight[32], slant[32], fontname[256];
+   Int_t n1, pixel, numfields;
+
+   numfields = sscanf(font_name, "%s -%d%n", family, &pixel, &n1);
+   if (numfields == 2) {
+      sprintf(weight,"medium");
+      if (strstr(font_name, "bold"))
+         sprintf(weight,"bold");
+      sprintf(slant,"r");
+      if (strstr(font_name, "italic"))
+         sprintf(slant,"i");
+      sprintf(fontname, "-*-%s-%s-%s-*-*-%d-*-*-*-*-*-iso8859-1", 
+              family, weight, slant, pixel);
+   }
+   else
+      sprintf(fontname, "%s", font_name);
+   return (FontStruct_t) gdk_font_load(fontname);
 }
 
 //______________________________________________________________________________
