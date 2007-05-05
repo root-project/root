@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.41 2007/01/28 18:27:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.42 2007/05/04 22:15:36 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -100,6 +100,7 @@ protected:
    virtual void   CleanTargets();
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
+   friend class TContext;
 
 protected:
    TDirectory(const TDirectory &directory);  //Directories cannot be copied
