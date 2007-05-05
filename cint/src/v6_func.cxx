@@ -2262,7 +2262,16 @@ G__value G__getfunction(char *item,int *known3,int memfunc_flag)
   }
 
   if(castflag==1&&0==funcname[0] /* &&overflowflag */) {
-    result3=G__getexpr(result7);
+#ifndef G__OLDIMPLEMENTATION
+    if(fpara.paran==1 && strcmp(fpara.parameter[0],"@")==0) {
+      result3=fpara.para[0];
+    }
+    else {
+      result3=G__getexpr(result7); 
+    }
+#else
+    result3=G__getexpr(result7); /* THIS CAN BE DUPLICATED EVALUATION */
+#endif
     *known3 = 1;
     return(result3);
   }

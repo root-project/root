@@ -302,6 +302,13 @@ int G__blockscope::compile_core(int openBrace) {
 G__value G__blockscope::compile_expression(string& expr) {
   char *buf = new char[expr.size()+1];
   strcpy(buf,expr.c_str());
+#ifndef G__OLDIMPLEMENTATION
+  if(expr.size()>G__LONGLINE) {
+    G__fprinterr(G__serr,"Limitation: Expression is too long %d>%d %s "
+	         ,expr.size(),G__LONGLINE,buf);
+    G__genericerror((char*)NULL);
+  }
+#endif
   G__blockscope *store_scope = G__currentscope;
   int store_var_type = G__var_type;
   G__var_type = 'p';
@@ -345,6 +352,13 @@ int G__blockscope::getstaticvalue(string& expr) {
   int store_no_exec_compile = G__no_exec_compile;
   char *buf = new char[expr.size()+1];
   strcpy(buf,expr.c_str());
+#ifndef G__OLDIMPLEMENTATION
+  if(expr.size()>G__LONGLINE) {
+    G__fprinterr(G__serr,"Limitation: Expression is too long %d>%d %s "
+	         ,expr.size(),G__LONGLINE,buf);
+    G__genericerror((char*)NULL);
+  }
+#endif
   G__asm_noverflow = 0;
   G__no_exec_compile = 0;
   int result = G__int(G__getexpr(buf)); // legacy
@@ -2542,6 +2556,13 @@ int G__blockscope::compile_preprocessor(string& token,int c) {
 int G__blockscope::Istypename(const string& name) {
   char *buf = new char[name.size()+1];
   strcpy(buf,name.c_str());
+#ifndef G__OLDIMPLEMENTATION
+  if(name.size()>G__MAXNAME) {
+    G__fprinterr(G__serr,"Limitation: Symbol name is too long %d>%d %s "
+	         ,name.size(),G__MAXNAME,buf);
+    G__genericerror((char*)NULL);
+  }
+#endif
   int result=G__istypename(buf); // legacy
   delete buf;
  return(result);
