@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.125 2007/04/27 16:49:16 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.126 2007/05/04 17:32:44 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1826,6 +1826,11 @@ void TBranch::Streamer(TBuffer& b)
       b >> fOffset;
       fBranches.Streamer(b);
       fLeaves.Streamer(b);
+      fNleaves = fLeaves.GetEntriesFast();
+      for (Int_t i=0;i<fNleaves;i++) {
+         TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+         leaf->SetBranch(this);
+      }
       fBaskets.Streamer(b);
       Int_t nbaskets = fBaskets.GetEntries();
       for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
@@ -1836,7 +1841,6 @@ void TBranch::Streamer(TBuffer& b)
             ++n;
          }
       }
-      fNleaves = fLeaves.GetEntriesFast();
       fBasketEntry = new Long64_t[fMaxBaskets];
       b >> n;
       for (i=0;i<n;i++) {b >> ijunk; fBasketEntry[i] = ijunk;}
