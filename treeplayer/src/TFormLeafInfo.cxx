@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.37 2007/05/02 20:18:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.38 2007/05/03 14:10:46 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -2592,6 +2592,8 @@ Bool_t TFormLeafInfoCast::Update()
 TFormLeafInfoTTree::TFormLeafInfoTTree(TTree *tree, const char *alias, TTree *current) :
 TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fCurrent(current),fAlias(alias)
 {
+   // Constructor.
+
    if (fCurrent==0) fCurrent = fTree->GetFriend(alias);
 }
 

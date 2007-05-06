@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.164 2007/03/30 16:44:34 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.165 2007/05/03 15:27:40 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -468,9 +468,10 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNu
       if (cnt >= nfiles)
          break;
    }
-  if (fProofChain)
+   if (fProofChain) {
       // This updates the proxy chain when we will really use PROOF
       ResetBit(kProofUptodate);
+   }
 
    return 1;
 }
@@ -1457,7 +1458,7 @@ void TChain::Lookup(Bool_t force)
          element->SetTitle(elemurl.GetUrl());
          // Remember
          element->SetLookedUp();
-     } else {
+      } else {
          // Failure: remove
          fFiles->Remove(element);
          if (gSystem->AccessPathName(eurl))
@@ -2188,7 +2189,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 }
 
 //_______________________________________________________________________
-void TChain::SetEntryListFile(const char *filename, Option_t */*opt*/)
+void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
 {
 // Set the input entry list (processing the entries of the chain will then be
 // limited to the entries in the list). This function creates a special kind
