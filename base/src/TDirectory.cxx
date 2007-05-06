@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.94 2007/01/31 13:31:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.95 2007/05/04 22:15:36 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -955,7 +955,8 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
    if (!filename || strlen(filename) == 0) {
       fname = Form("%s.root",obj->GetName());
    }
-   TDirectory *local = (TDirectory*)gDirectory->OpenFile(fname.Data(),"recreate");
+   const char *cmd = Form("TFile::Open(\"%s\",\"recreate\");",fname.Data());
+   TDirectory *local = (TDirectory*)gROOT->ProcessLine(cmd);
    if (!local) return 0;
    Int_t nbytes = obj->Write();
    delete local;
