@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.30 2006/11/09 13:23:13 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.31 2007/05/04 15:16:33 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -162,8 +162,8 @@ void TGLabel::DrawText(GContext_t gc, Int_t x, Int_t y)
 {
    // draw text at position (x, y)
 
-  fTLayout->DrawText(fId, gc, x, y, 0, -1);
-  //fTLayout->UnderlineChar(fId, gc, x, y, fText->GetHotPos());
+   fTLayout->DrawText(fId, gc, x, y, 0, -1);
+   //fTLayout->UnderlineChar(fId, gc, x, y, fText->GetHotPos());
 }
 
 //______________________________________________________________________________

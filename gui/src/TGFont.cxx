@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.10 2007/05/04 15:46:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.11 2007/05/04 20:41:03 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -242,7 +242,7 @@ static char gHexChars[] = "0123456789abcdefxtnvr\\";
 // exists, and the table only maps characters less than 0x10.
 
 static char gMapChars[] = {
-  0, 0, 0, 0, 0, 0, 0, 'a', 'b', 't', 'n', 'v', 'f', 'r', 0
+   0, 0, 0, 0, 0, 0, 0, 'a', 'b', 't', 'n', 'v', 'f', 'r', 0
 };
 
 static int GetControlCharSubst(int c, char buf[4]);
@@ -883,7 +883,7 @@ wrapLine:
 //______________________________________________________________________________
 TGTextLayout::~TGTextLayout()
 {
-   // dtor
+   // destructor
 
    if (fChunks) {
       delete[] fChunks;
@@ -909,22 +909,22 @@ void TGTextLayout::DrawText(Drawable_t dst, GContext_t gc,
    // lastChar  -- The index just after the last character to draw from the
    //              given text item. A number < 0 means to draw all characters.
 
-  Int_t i, numDisplayChars, drawX;
-  LayoutChunk_t *chunk;
+   Int_t i, numDisplayChars, drawX;
+   LayoutChunk_t *chunk;
 
-  if (lastChar < 0) lastChar = 100000000;
-  chunk = fChunks;
+   if (lastChar < 0) lastChar = 100000000;
+   chunk = fChunks;
 
-  for (i = 0; i < fNumChunks; i++) {
-    numDisplayChars = chunk->fNumDisplayChars;
-    if ((numDisplayChars > 0) && (firstChar < numDisplayChars)) {
-      if (firstChar <= 0) {
-         drawX = 0;
-         firstChar = 0;
-      } else {
-         fFont->MeasureChars(chunk->fStart, firstChar, 0, 0, &drawX);
-      }
-      if (lastChar < numDisplayChars) numDisplayChars = lastChar;
+   for (i = 0; i < fNumChunks; i++) {
+      numDisplayChars = chunk->fNumDisplayChars;
+      if ((numDisplayChars > 0) && (firstChar < numDisplayChars)) {
+         if (firstChar <= 0) {
+            drawX = 0;
+            firstChar = 0;
+         } else {
+            fFont->MeasureChars(chunk->fStart, firstChar, 0, 0, &drawX);
+         }
+         if (lastChar < numDisplayChars) numDisplayChars = lastChar;
          fFont->DrawChars(dst, gc, chunk->fStart + firstChar, numDisplayChars - firstChar,
                            x + chunk->fX + drawX, y + chunk->fY);
       }
@@ -2070,7 +2070,7 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
    if ((i > XLFD_ADD_STYLE) && (FieldSpecified(field[XLFD_ADD_STYLE]))) {
       if (atoi(field[XLFD_ADD_STYLE]) != 0) {
          for (j = XLFD_NUMFIELDS - 1; j >= XLFD_ADD_STYLE; j--) {
-           field[j + 1] = field[j];
+            field[j + 1] = field[j];
          }
          field[XLFD_ADD_STYLE] = 0;
          i++;
