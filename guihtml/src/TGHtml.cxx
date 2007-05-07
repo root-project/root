@@ -1,4 +1,4 @@
-// $Id: TGHtml.cxx,v 1.2 2007/05/07 14:01:37 brun Exp $
+// $Id: TGHtml.cxx,v 1.3 2007/05/07 14:03:23 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -168,7 +168,7 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
    maxX = 0;
    maxY = 0;
 
-   fXMargin = fYMargin = HTML_INDENT/4;
+   fXMargin = fYMargin = 0; //HTML_INDENT/4;
 
    flags = RESIZE_ELEMENTS | RELAYOUT;
 
@@ -865,7 +865,7 @@ void TGHtml::_Clear()
    int i;
    TGHtmlElement *p, *pNext;
 
-   fXMargin = fYMargin = HTML_INDENT/4;
+   fXMargin = fYMargin = 0; //HTML_INDENT/4;
 
    DeleteControls();
    for (p = pFirst; p; p = pNext) {

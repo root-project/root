@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlLayout.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /**************************************************************************
@@ -1182,9 +1182,9 @@ void TGHtml::LayoutDoc()
   layoutContext.pageWidth = fCanvas->GetWidth();
   layoutContext.left = 0;
 #else
-   layoutContext.headRoom = fYMargin;
-   layoutContext.pageWidth = fCanvas->GetWidth() - fXMargin;
-   layoutContext.left = fXMargin;
+   layoutContext.headRoom = HTML_INDENT/4;
+   layoutContext.pageWidth = fCanvas->GetWidth() - HTML_INDENT/4;
+   layoutContext.left = HTML_INDENT/4;
 #endif
    layoutContext.right = 0;
    layoutContext.pStart = nextPlaced;
