@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.42 2007/05/04 22:15:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.43 2007/05/05 17:41:15 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -93,11 +93,11 @@ protected:
    TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
    
-          Bool_t cd1(const char *path);
-   static Bool_t Cd1(const char *path);
+          Bool_t  cd1(const char *path);
+   static Bool_t  Cd1(const char *path);
 
-           void   FillFullPath(TString& buf) const;
    virtual void   CleanTargets();
+           void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
    friend class TContext;
