@@ -1,4 +1,4 @@
-// $Id: TGHtml.cxx,v 1.3 2007/05/07 14:03:23 brun Exp $
+// $Id: TGHtml.cxx,v 1.4 2007/05/07 15:19:07 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -1109,6 +1109,10 @@ Bool_t TGHtml::HandleButton(Event_t *event)
 {
    //
 
+   int amount, ch;
+
+   ch = fCanvas->GetHeight();
+   amount = fScrollVal.fY * TMath::Max(ch/6, 1);
    if ((event->fType == kButtonPress) && (event->fCode == kButton1)) {
       int x = event->fX + fVisible.fX;
       int y = event->fY + fVisible.fY;
@@ -1127,6 +1131,10 @@ Bool_t TGHtml::HandleButton(Event_t *event)
             //!!delete[] uri;
          }
       }
+   } else if (event->fCode == kButton4) {
+      ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY / fScrollVal.fY - amount));
+   } else if (event->fCode == kButton5) {
+      ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY / fScrollVal.fY + amount));
    } else {
       return TGView::HandleButton(event);
   }

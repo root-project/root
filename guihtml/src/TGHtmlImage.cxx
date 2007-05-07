@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlImage.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -39,7 +39,9 @@
 #include "TGHtml.h"
 //#include <TGHtmlUri.h>
 #include "TImage.h"
-
+#include "TUrl.h"
+#include "TSocket.h"
+#include "TSystem.h"
 
 //______________________________________________________________________________
 TGHtmlImage::TGHtmlImage(TGHtml *h, const char *url, const char *width,
@@ -175,7 +177,7 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    //p->h = atoi(zHeight);
 
    for (pImage = imageList; pImage; pImage = pImage->pNext) {
-      if (strcmp(pImage->zUrl, zSrc) == 0 
+      if (strcmp(pImage->zUrl, zSrc) == 0
           &&  strcmp(pImage->zWidth, zWidth) == 0
           &&  strcmp(pImage->zHeight, zHeight) == 0) {
          delete [] zSrc;
@@ -204,24 +206,80 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 }
 
 //______________________________________________________________________________
+static TImage *ReadRemoteImage(const char *url)
+{
+   // Temporary function to read remote pictures
+
+   TImage *image = 0;
+   FILE *tmp;
+   char *buf;
+   TUrl fUrl(url);
+
+   TString msg = "GET ";
+   msg += fUrl.GetProtocol();
+   msg += "://";
+   msg += fUrl.GetHost();
+   msg += ":";
+   msg += fUrl.GetPort();
+   msg += "/";
+   msg += fUrl.GetFile();
+   msg += "\r\n";
+
+   TString uri(url);
+   if (!uri.BeginsWith("http://") || uri.EndsWith(".html"))
+      return 0;
+   TSocket s(fUrl.GetHost(), fUrl.GetPort());
+   if (!s.IsValid())
+      return 0;
+   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
+      return 0;
+   Int_t size = 1024*1024;
+   buf = (char *)calloc(size, sizeof(char));
+   if (s.RecvRaw(buf, size) == -1) {
+      free(buf);
+      return 0;
+   }
+   TString pathtmp = Form("%s/%s",
+      gSystem->TempDirectory(), gSystem->BaseName(url));
+   tmp = fopen(pathtmp.Data(), "wb");
+   fwrite(buf, sizeof(char), size, tmp);
+   fclose(tmp);
+   free(buf);
+   image = TImage::Open(pathtmp.Data());
+   if (!image->IsValid()) {
+      delete image;
+      image = 0;
+   }
+   gSystem->Unlink(pathtmp.Data());
+   return image;
+}
+
+//______________________________________________________________________________
 TImage *TGHtml::LoadImage(const char *url, int w, int h)
 {
    // This is the default LoadImage() procedure. It just tries to load the
    // image from a file in the local filesystem.
 
-   TImage *image;
+   TImage *image = 0;
 
    //TGHtmlUri uri(url);
 
-   image = TImage::Open(url);
-   if (!image->IsValid()) {
-      delete image;
-      image = 0;   
+   TString uri(url);
+   if (uri.BeginsWith("http://") && !uri.EndsWith(".html"))
+      image = ReadRemoteImage(url);
+   else
+      image = TImage::Open(url);
+   if (image) {
+      if (!image->IsValid()) {
+         delete image;
+         image = 0;
+         return 0;
+      }
+      if ((w > 0 && h > 0) && ((w != (int)image->GetWidth()) ||
+          (h != (int)image->GetHeight()))) {
+         image->Scale(w, h);
+      }
    }
-   if ((w != (int)image->GetWidth()) || (h != (int)image->GetHeight())) {
-      image->Scale(w, h);
-   }
-
    return image;
 }
 
