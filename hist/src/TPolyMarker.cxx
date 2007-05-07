@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.23 2007/01/12 16:03:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.24 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -386,6 +386,14 @@ void TPolyMarker::SetPolyMarker(Int_t n)
 {
    // If n <= 0 the current arrays of points are deleted.
 
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    SetPoint(n-1,0,0);
 }
 
