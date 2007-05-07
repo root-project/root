@@ -1,4 +1,4 @@
-// $Id: TGHtml.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
+// $Id: TGHtml.cxx,v 1.2 2007/05/07 14:01:37 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -288,7 +288,7 @@ int TGHtml::ParseText(char *text, const char *index)
    // appropriately.
 
    SHtmlIndex iStart;
-   TGHtmlElement *savePtr;
+   TGHtmlElement *savePtr=0;
 
    iStart.p = 0;
    iStart.i = 0;
