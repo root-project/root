@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.41 2007/04/19 16:23:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.42 2007/04/20 12:15:28 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1055,7 +1055,7 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          TGTextLine *line = fText->GetCurrentLine();
          char *word = line->GetWord(pos.fX);
          Clicked((const char*)word);   // emit signal
-         delete word;
+         delete [] word;
       }
       if (event->fCode == kButton2) {
          if (gVirtualX->GetPrimarySelectionOwner() != kNone) {
