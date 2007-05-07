@@ -12,6 +12,7 @@
 #include "TRandom.h"
 #include "TMultiDimFit.h"
 #include "TVectorD.h"
+#include "TMath.h"
 
 //____________________________________________________________________
 void makeData(Double_t* x, Double_t& d, Double_t& e) 

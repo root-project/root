@@ -3,6 +3,7 @@
 #include "TF1.h"
 #include "TGraphErrors.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 void fitMultiGraph()
 {

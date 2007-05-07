@@ -7,6 +7,7 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TF2.h>
+#include <TH1.h>
 
 void graph2dfit()
 {

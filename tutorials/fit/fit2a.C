@@ -1,6 +1,7 @@
 #include "TF2.h"
 #include "TH2.h"
 #include "TCutG.h"
+#include "TMath.h"
 
 // This tutorial illustrates :
 //  - how to create a 2-d function

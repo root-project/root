@@ -18,6 +18,7 @@
 #include "TF1.h"
 #include "TROOT.h"
 #include "TStyle.h"
+#include "TMath.h"
 
 Double_t langaufun(Double_t *x, Double_t *par) {
 

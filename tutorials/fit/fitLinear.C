@@ -3,6 +3,8 @@
 #include "TRandom.h"
 #include "TCanvas.h"
 #include "TLegend.h"
+#include "TMath.h"
+
 
 void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p);
 

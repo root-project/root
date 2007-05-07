@@ -2,6 +2,8 @@
 // Author: Rene Brun
 #include "TH1.h"
 #include "TF1.h"
+#include "TList.h"
+
 Bool_t reject;
 Double_t fline(Double_t *x, Double_t *par)
 {
