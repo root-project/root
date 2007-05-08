@@ -1,4 +1,4 @@
-// $Id: TGHtmlImage.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
+// $Id: TGHtmlImage.cxx,v 1.2 2007/05/07 15:28:48 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -242,6 +242,10 @@ static TImage *ReadRemoteImage(const char *url)
    TString pathtmp = Form("%s/%s",
       gSystem->TempDirectory(), gSystem->BaseName(url));
    tmp = fopen(pathtmp.Data(), "wb");
+   if (!tmp) {
+      free(buf);
+      return 0;
+   }
    fwrite(buf, sizeof(char), size, tmp);
    fclose(tmp);
    free(buf);
