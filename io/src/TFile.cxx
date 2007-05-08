@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.209 2007/03/20 11:11:02 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.210 2007/05/04 15:14:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -175,11 +175,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    //                             exists it will be overwritten.
    //           = UPDATE          open an existing file for writing.
    //                             if no file exists, it is created.
-   //           = READ            open an existing file for reading.
+   //           = READ            open an existing file for reading (default).
    //           = NET             used by derived remote file access
    //                             classes, not a user callable option
    //           = WEB             used by derived remote http access
    //                             class, not a user callable option
+   // If option = "" (default), READ is assumed.
    //
    // The file can be specified as a URL of the form:
    //    file:///user/rdm/bla.root or file:/user/rdm/bla.root
