@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.6 2004/08/12 04:33:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.7 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -37,6 +37,7 @@ TTreeFormulaManager::TTreeFormulaManager() : TObject()
    fMultiplicity = 0;
    fMultiVarDim  = kFALSE;
    fNeedSync     = kFALSE;
+   fNdata = 1;
 
    for(Int_t i=0; i<kMAXFORMDIM+1; i++) {
       fVarDims[i] = 0;
