@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.45 2007/02/14 18:10:17 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.46 2007/03/19 14:45:20 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 #include "TXNetFile.h"
 #include "TROOT.h"
 #include "TVirtualMonitoring.h"
+#include "TFileStager.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
@@ -171,8 +172,33 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 {
    // The real creation work is done here.
 
+   fClient = 0;
+
+   if (TFile::GetOpenTimeout() == TFile::kEternalTimeout) {
+      gSystem->Unsetenv("XRDCLIENTMAXWAIT");
+   } else {
+      TString xrdmaxwait("");
+      xrdmaxwait += TFile::GetOpenTimeout();
+      gSystem->Setenv("XRDCLIENTMAXWAIT",xrdmaxwait.Data());
+   }
+
+   if (GetOnlyStaged()) {
+      static TFileStager* fFileStager = 0;
+      // check if the file is staged before opening it
+      if (!fFileStager) {
+         fFileStager = TFileStager::Open(url);
+         if (fFileStager) {
+            if (!(fFileStager->IsStaged(url))) {
+               ::Warning("TXNetFile","<%s> is not staged - StageOnly flag is set!",url);
+               delete fFileStager;
+               fFileStager=0;
+               goto zombie;
+            }
+         }
+      }
+   }
+
    // Init members
-   fSize = 0;
    fIsRootd = kFALSE;
 
    // The parallel open can be forced to true in the config
@@ -180,7 +206,8 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
       parallelopen = kTRUE;
    fAsyncOpenStatus = (parallelopen) ? kAOSInProgress : fAsyncOpenStatus ;
 
-   Bool_t isRootd = kFALSE;
+   Bool_t isRootd;
+   isRootd = kFALSE;
    //
    // Setup a client instance
    fClient = new XrdClient(url);
@@ -544,8 +571,8 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    if ( nr > 0 ) {
 
       if (gDebug > 1)
-	 Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
- 	      nr, nbuf);
+         Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
+              nr, nbuf);
 
       // Where should we leave the offset ?
       // fOffset += bufferLength;
@@ -560,7 +587,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 #endif
 
       if (gMonitoringWriter)
-	 gMonitoringWriter->SendFileReadProgress(this);
+         gMonitoringWriter->SendFileReadProgress(this);
 
       return kFALSE;
    }
@@ -732,8 +759,6 @@ Int_t TXNetFile::ReOpen(const Option_t *Mode)
       return TNetFile::ReOpen(Mode);
    }
 
-   fSize = 0;
-
    return TFile::ReOpen(Mode);
 }
 
@@ -752,7 +777,6 @@ void TXNetFile::Close(const Option_t *opt)
 
    TFile::Close(opt);
 
-   fSize = 0;
    fIsRootd = kFALSE;
 }
 
@@ -891,19 +915,6 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
    return -2;
 }
 
-//_____________________________________________________________________________
-Long64_t TXNetFile::Size(void)
-{
-   // Return file size.
-
-   Long64_t size;
-   Long_t i, f, m;
-
-   SysStat((Int_t)0, &i, &size, &f, &m);
-
-   memcpy((void *)&fSize, (const void*)&size, sizeof(size));
-   return fSize;
-}
 //_____________________________________________________________________________
 void TXNetFile::SetEnv()
 {

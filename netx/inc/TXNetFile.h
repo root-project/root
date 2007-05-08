@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.11 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.12 2007/02/22 11:51:50 brun Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -64,9 +64,8 @@ friend class TXNetSystem;
 
 private:
    // Members
-   XrdClient     *fClient;       // Handle to the client object
-   Long64_t       fSize;         // File size
-   Bool_t         fIsRootd;      // Nature of remote file server
+   XrdClient         *fClient;       // Handle to the client object
+   Bool_t             fIsRootd;      // Nature of remote file server
 
    // Static members
    static Bool_t  fgInitDone;    // Avoid initializing more than once
@@ -82,8 +81,8 @@ private:
                          Bool_t parallelopen);
    void    Init(Bool_t create);
    Bool_t  Open(Option_t *option, Bool_t parallelopen);
-   Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
-                   Long_t* modtime);
+   Int_t   SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
+                   Long_t *modtime);
    Int_t   SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t   SysClose(Int_t fd);
 
@@ -93,8 +92,8 @@ private:
    static void SetEnv();
 
 public:
-   TXNetFile() : TNetFile(), fClient(NULL), fSize(0), fIsRootd(0), 
-                              fInitMtx(NULL) {}
+   TXNetFile() : TNetFile(), fClient(0), fIsRootd(0),
+                              fInitMtx(0) {}
    TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
              Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE,
              const char *logicalurl = 0);
@@ -108,7 +107,6 @@ public:
    virtual Bool_t   ReadBuffer(char *buf, Int_t len);
    virtual Bool_t   ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual Int_t    ReOpen(const Option_t *mode);
-   virtual Long64_t Size(void);
    virtual Bool_t   WriteBuffer(const char *buffer, Int_t BufferLength);
 
    ClassDef(TXNetFile,0) // TFile implementation to deal with new xrootd server.
