@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.9 2007/04/19 09:33:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.10 2007/05/03 15:27:40 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TDSetElement::TDSetElement() : TNamed("",""),
    fNum(0),
    fMsd(),
    fTDSetOffset(0),
-   fEventList(NULL),
+   fEventList(0),
    fValid(kFALSE),
    fEntries(0),
    fFriends(0),
@@ -819,7 +819,7 @@ Bool_t TDSet::Add(TCollection *filelist)
    while ((o = next())) {
       TString cn(o->ClassName());
       if (cn == "TFileInfo") {
-         TFileInfo *fi = 0;
+         TFileInfo *fi = (TFileInfo *)o;
          Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
              fi->GetFirst(), fi->GetEntries());
       } else if (cn == "TUrl") {
