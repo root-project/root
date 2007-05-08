@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.5 2007/01/30 11:24:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.6 2007/02/12 13:05:32 rdm Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -199,6 +199,7 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
    // in case of success.
    // See TDSet::Process().
 
+   fSet->SetEventList(fEventList);
    return fSet->Process(filename, option, nentries, firstentry);
 }
 
