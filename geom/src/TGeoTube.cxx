@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.71 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.72 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -608,6 +608,11 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
    Int_t nbPnts = 4*n;
    Int_t nbSegs = 8*n;
    Int_t nbPols = 4*n;
+   if (!HasRmin()) {
+      nbPnts = 2*(n+1);
+      nbSegs = 5*n;
+      nbPols = 3*n;
+   }   
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
