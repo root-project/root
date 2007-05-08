@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.4 2007/03/19 17:41:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.5 2007/03/20 16:17:22 rdm Exp $
 // Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************
@@ -63,6 +63,8 @@ public:
       { MayNotUse("SelectFile"); return kFALSE;}
    virtual Bool_t      DeselectFile(const char *, Int_t /*nstart*/ = -1, Int_t /*nstop*/ = -1)
       { MayNotUse("DeselectFile"); return kFALSE;}
+   virtual Bool_t      InvertSelection()
+      { MayNotUse("InvertSelection"); return kFALSE;}
    virtual Bool_t      DownscaleSelection(UInt_t /* scaler */ = 2)
       { MayNotUse("DownscaleSelection"); return kFALSE;}
    virtual Bool_t      ExportXML(const char *, Bool_t /*selected*/ = kTRUE, Bool_t /*online*/ = kTRUE,
@@ -88,8 +90,10 @@ public:
       { MayNotUse("OverlapCollection"); return 0;}
    virtual void         Add(TGridCollection *)
       { MayNotUse("Add");}
-   virtual Bool_t       Stage(Bool_t /*bulk*/ = kFALSE)
+   virtual Bool_t       Stage(Bool_t /*bulk*/ = kFALSE, Option_t * /*TFileStager option*/ = "")
       { MayNotUse("Stage"); return kFALSE;}
+   virtual Bool_t       Prepare(Bool_t /*bulk*/ = kFALSE)
+      { MayNotUse("Prepare"); return kFALSE;}
    virtual Bool_t       CheckIfOnline(Bool_t /*bulk*/ = kFALSE)
       { MayNotUse("CheckIfOnline"); return kFALSE;}
    virtual TDSet       *GetDataset(const char *, const char * , const char *)
