@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.94 2007/01/23 11:31:33 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.95 2007/03/13 09:31:36 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -6018,11 +6018,6 @@ int RpdLogin(int ServType, int auth)
    if (!pw) {
       ErrorInfo("RpdLogin: user %s does not exist locally\n", gUser);
       return -1;
-   } else if (gDoLogin == 2) {
-      if (chdir(pw->pw_dir) == -1) {
-         ErrorInfo("RpdLogin: can't change directory to %s", pw->pw_dir);
-         return -1;
-      }
    }
 
    if (getuid() == 0) {
@@ -6075,6 +6070,14 @@ int RpdLogin(int ServType, int auth)
       char *home = new char[8+strlen(pw->pw_dir)];
       sprintf(home, "HOME=%s", pw->pw_dir);
       putenv(home);
+   }
+
+   // Change user's HOME, if required
+   if (gDoLogin == 2) {
+      if (chdir(pw->pw_dir) == -1) {
+         ErrorInfo("RpdLogin: can't change directory to %s", pw->pw_dir);
+         return -1;
+      }
    }
 
    umask(022);
