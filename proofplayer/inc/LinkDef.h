@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.4 2007/03/19 10:34:00 rdm Exp $ */
+/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.5 2007/03/19 10:46:10 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -25,7 +25,6 @@
 
 #pragma link C++ class TVirtualPacketizer+;
 #pragma link C++ class TPacketizer+;
-#pragma link C++ class TPacketizerDev+;
 #pragma link C++ class TPacketizerProgressive+;
 #pragma link C++ class TAdaptivePacketizer+;
 

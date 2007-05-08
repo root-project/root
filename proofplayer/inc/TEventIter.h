@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.17 2007/02/12 13:05:31 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.18 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -34,7 +34,6 @@ class TList;
 class TIter;
 class TTree;
 class TEventList;
-class TTreeFileCache;
 
 //------------------------------------------------------------------------
 
@@ -108,8 +107,7 @@ private:
    TTree      *fTree;        // tree we are iterating over
    TList      *fAcquiredTrees;   // a list of acquired trees.
 
-   static TTreeFileCache *fgTreeFileCache;   // tree <-> file cache
-
+   TTree* Load(TDSetElement *elem);
    TTree* GetTrees(TDSetElement *elem);
    void   ReleaseAllTrees();
 public:

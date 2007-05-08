@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.31 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.32 2007/04/19 09:33:40 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -16,8 +16,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEventIter.h"
-#include "TObjectCache.h"
-
 #include "TCollection.h"
 #include "TDSet.h"
 #include "TFile.h"
@@ -30,6 +28,7 @@
 #include "TEventList.h"
 #include "TMap.h"
 #include "TObjString.h"
+#include "TRegexp.h"
 
 #include "TError.h"
 
@@ -292,8 +291,6 @@ Long64_t TEventIterObj::GetNextEvent()
 
 //------------------------------------------------------------------------
 
-TTreeFileCache *TEventIterTree::fgTreeFileCache = 0;
-
 ClassImp(TEventIterTree)
 
 //______________________________________________________________________________
@@ -312,9 +309,6 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 
    fTreeName = dset->GetObjName();
    fTree = 0;
-   if (!fgTreeFileCache)
-      fgTreeFileCache = new TTreeFileCache();
-
    fAcquiredTrees = new TList;
 }
 
@@ -333,10 +327,6 @@ void TEventIterTree::ReleaseAllTrees()
    // Release all acquired trees.
 
    TIter nxt(fAcquiredTrees);
-   TTree *t = 0;
-   while ((t = (TTree *) nxt()))
-      fgTreeFileCache->Release(t);
-
    fAcquiredTrees->SetOwner(kFALSE);
    fAcquiredTrees->Clear();
 }
@@ -347,10 +337,10 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    // Create a Tree for the main TDSetElement and for all the friends.
    // Returns the main tree or 0 in case of an error.
 
-   TTree* main = fgTreeFileCache->Acquire(elem->GetFileName(),
-                                          elem->GetDirectory(), elem->GetObjName());
+   TTree* main = Load(elem);
    if (!main)
       return 0;
+
    fAcquiredTrees->AddFirst(main);
 
    TList *friends = elem->GetListOfFriends();
@@ -360,19 +350,92 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
       while ((p = (TPair *) nxf())) {
          TDSetElement *dse = (TDSetElement *) p->Key();
          TObjString *str = (TObjString *) p->Value();
-         TTree* friendTree = fgTreeFileCache->Acquire(dse->GetFileName(),
-                                                      dse->GetDirectory(),
-                                                      dse->GetObjName());
+         TTree* friendTree = Load(dse);
          if (friendTree) {
             fAcquiredTrees->AddFirst(friendTree);
             main->AddFriend(friendTree, str->GetName());
          } else {
-            ReleaseAllTrees();
             return 0;
          }
       }
    }
    return main;
+}
+
+//______________________________________________________________________________
+TTree* TEventIterTree::Load(TDSetElement *e)
+{
+   // Load a tree from s TDSetElement
+
+   if (!e) {
+      Error("Load","undefined element", e->GetFileName());
+      return (TTree *)0;
+   }
+
+   const char *fn = e->GetFileName();
+   const char *dn = e->GetDirectory();
+   const char *tn = e->GetObjName();
+
+   // Open the file
+   TFile *f = TFile::Open(fn);
+   if (!f) {
+      Error("GetTrees","file '%s' could not be open", fn);
+      return (TTree *)0;
+   }
+   // Change dir, if required
+   if (dn && !f->cd(dn)) {
+      Error("Load","Cannot cd to: %s", dn);
+      return (TTree *)0;
+   }
+   PDB(kLoop,2)
+      Info("Load","cd to: %s", dn);
+
+   // If a wild card we will use the first object of the type
+   // requested compatible with the reg expression we got
+   TString on(tn);
+   TString sreg(tn);
+   if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
+      if (sreg.Contains("*"))
+         sreg.ReplaceAll("*", ".*");
+      else
+         sreg = ".*";
+      TRegexp re(sreg);
+      if (f->GetListOfKeys()) {
+         TIter nxk(f->GetListOfKeys());
+         TKey *k = 0;
+         while ((k = (TKey *) nxk())) {
+            if (!strcmp(k->GetClassName(), "TTree")) {
+               TString kn(k->GetName());
+               if (kn.Index(re) != kNPOS) {
+                  on = kn;
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   // Point to the key
+   TKey *key = f->GetKey(on);
+   if (key == 0) {
+      Error("Load", "Cannot find tree \"%s\" in %s", tn, fn);
+      return (TTree*)0;
+   }
+
+   PDB(kLoop,2)
+      Info("Load", "Reading: %s", tn);
+   TDirectory *dirsave = gDirectory;
+   f->cd();
+   TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
+   if (dirsave)
+      dirsave->cd();
+   if (tree == 0) {
+      Error("Load", "Cannot <dynamic_cast> obj to tree \"%s\"", tn);
+      return (TTree*)0;
+   }
+
+   // Done
+   return tree;
 }
 
 //______________________________________________________________________________
