@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.9 2007/03/20 08:02:11 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.10 2007/03/20 16:17:22 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -43,20 +43,20 @@ class TAlienCollection : public TGridCollection {
 
 private:
    TString      fXmlFile;            // collection XML file
-   TList       *fFileGroupList;      // list with event file maps
-   TIter       *fFileGroupListIter;  // event file list iterator
-   TMap        *fCurrent;            // current event file map
+   TList       *fFileGroupList;      //-> list with event file maps
+   TIter       *fFileGroupListIter;  //! event file list iterator
+   TMap        *fCurrent;            //! current event file map
    UInt_t       fNofGroups;          // number of file groups
    UInt_t       fNofGroupfiles;      // number of files per group
    Bool_t       fHasSUrls;           // defines if SURLs are present in the collection
    Bool_t       fHasSelection;       // defines if the user made some selection on the files to be exported for processing
    Bool_t       fHasOnline;          // defines if the collection was checked for the online status
    TString      fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
-   TFileStager *fFileStager;         // pointer to the file stager object
+   TFileStager *fFileStager;         //! pointer to the file stager object
    TString      fExportUrl;          // defines the url where to store back this collection
    TString      fInfoComment;        // comment in the info section of the XML file
    TString      fCollectionName;     // name of the collection in the collection section of the XML file
-   TList       *fTagFilterList;      // list of TObjStrings with tags to filter out in export operations
+   TList       *fTagFilterList;      //-> list of TObjStrings with tags to filter out in export operations
 
    virtual void ParseXML(UInt_t maxentries);
    Bool_t ExportXML(TFile * file, Bool_t selected, Bool_t online,
@@ -86,6 +86,7 @@ public:
    void        SetTag(const char *tag, const char *value, TMap * tagmap);
    Bool_t      SelectFile(const char *name, Int_t /*start*/ = -1, Int_t /*stop*/ = -1);
    Bool_t      DeselectFile(const char *name, Int_t /*start*/ = -1, Int_t /*stop*/ = -1);
+   Bool_t      InvertSelection();
    Bool_t      DownscaleSelection(UInt_t scaler = 2);
    Bool_t      ExportXML(const char *exporturl, Bool_t selected, Bool_t online,
                          const char *name, const char *comment);
@@ -108,7 +109,9 @@ public:
 
    Bool_t      OverlapCollection(TGridCollection *comparator);
    void        Add(TGridCollection *addcollection);
-   Bool_t      Stage(Bool_t bulk = kFALSE);
+   Bool_t      Stage(Bool_t bulk = kFALSE, Option_t* option = "");
+   Bool_t      Prepare(Bool_t bulk = kFALSE) { return Stage(bulk,"option=0"); }
+
    Bool_t      CheckIfOnline(Bool_t bulk = kFALSE);
    TDSet      *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
 
@@ -132,7 +135,7 @@ public:
    static TGridCollection *OpenQuery(TGridResult * queryresult,
                                      Bool_t nogrouping = kFALSE);
 
-   const char *GetOutputFileName(const char *infile, Bool_t rename = kTRUE);
+   const char *GetOutputFileName(const char *infile, Bool_t rename = kTRUE, const char *suffix="root");
 
    ClassDef(TAlienCollection, 1) // Manages collection of files on AliEn
 };

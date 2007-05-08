@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.25 2007/03/19 16:55:55 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.26 2007/03/20 08:02:11 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -306,19 +306,22 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
                     "didn't get the authorization to write %s",
                     purl.GetUrl());
          } else {
-            ::Error("TAlienFile::Open",
-                    "didn't get the authorization to read %s from location %u",
-                    purl.GetUrl(), imagenr);
+            if (!imageeof) {
+               ::Error("TAlienFile::Open",
+                       "didn't get the authorization to read %s from location %u",
+                       purl.GetUrl(), imagenr);
+            }
          }
-
-         ::Info("TAlienFile::Open",
-                "Command::Stdout !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-         gGrid->Stdout();
-         ::Info("TAlienFile::Open",
-                "Command::Stderr !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-         gGrid->Stderr();
-         ::Info("TAlienFile::Open",
-                "End of Output   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+         if (!imageeof) {
+            ::Info("TAlienFile::Open",
+               "Command::Stdout !!!");
+            gGrid->Stdout();
+            ::Info("TAlienFile::Open",
+               "Command::Stderr !!!");
+            gGrid->Stderr();
+            ::Info("TAlienFile::Open",
+               "End of Output   !!!");
+         }
          delete iter;
          delete result;
          fAUrl = "";
@@ -385,11 +388,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
             lUrloption += anchor;
             lUrloption += "&mkpath=1";
             lUrl.SetFile(lUrlfile);
-            //      lUrl.SetAnchor(anchor);
+            // lUrl.SetAnchor(anchor);
             lUrl.SetOptions(lUrloption);
          } else {
             TString loption;
-            loption = lUrl.GetOption();
+            loption = lUrl.GetOptions();
             if (loption.Length()) {
                loption += "&mkpath=1";
                lUrl.SetOptions(loption.Data());
@@ -425,6 +428,8 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
 
       fAUrl = nUrl;
       delete result;
+      if (gDebug > 1)
+         ::Info("TAlienFile","Opening AUrl <%s> lUrl <%s>",fAUrl.GetUrl(),lUrl.GetUrl());
       TAlienFile *alienfile =
           new TAlienFile(fAUrl.GetUrl(), fAOption, ftitle, compress,
                          parallelopen, lUrl.GetUrl(), authz);
@@ -471,6 +476,8 @@ void TAlienFile::Close(Option_t * option)
    }
    // set GCLIENT_EXTRA_ARG environment
    gSystem->Setenv("GCLIENT_EXTRA_ARG", fAuthz.Data());
+
+   Flush();
 
    // commit the envelope
    TString command("commit ");

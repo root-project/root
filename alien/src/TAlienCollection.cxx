@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.14 2007/03/20 08:02:11 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.15 2007/03/20 16:17:22 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -585,6 +585,33 @@ Bool_t TAlienCollection::DeselectFile(const char *filename, Int_t nstart, Int_t 
 }
 
 //______________________________________________________________________________
+Bool_t TAlienCollection::InvertSelection()
+{
+   // Invert the selection.
+
+   Int_t cnt=0;
+   fHasSelection = kTRUE;
+   Reset();
+   TMap *nextgroup;
+   while ((nextgroup = (TMap *) Next())) {
+      cnt++;
+      TMap *attributes;
+      TIterator *nextfile = nextgroup->MakeIterator();
+      nextfile->Reset();
+      while ((attributes = (TMap *) nextfile->Next())) {
+         if (IsSelected(attributes->GetName())) {
+            SetTag("select", "0",
+               ((TMap *) nextgroup->GetValue(attributes->GetName())));
+         } else {
+            SetTag("select", "1",
+               ((TMap *) nextgroup->GetValue(attributes->GetName())));
+         }
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TAlienCollection::DownscaleSelection(UInt_t scaler)
 {
    // downscales the selection with scaler
@@ -878,7 +905,7 @@ void TAlienCollection::Add(TGridCollection * addcollection)
       TString s2 = addcollection->GetLFN();
       while ((thismap = Next())) {
          TString s1 = GetLFN();
-         printf("%s = %s\n", s1.Data(), s2.Data());
+         // printf("%s = %s\n", s1.Data(), s2.Data());
          if (s1 == s2) {
             Error("Add",
                   "File group with lfn %s exists already in this collection - skipping",
@@ -887,7 +914,6 @@ void TAlienCollection::Add(TGridCollection * addcollection)
          }
       }
       TMap *clonemap;
-      printf("Running add %s\n", addmap->GetName());
       clonemap = (TMap *) addmap->Clone();
       fFileGroupList->Add(clonemap);
 leaveloop:
@@ -911,6 +937,8 @@ Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
       while ((attributes = (TMap *) nextfile->Next())) {
          if (TString(attributes->GetName()) != "") {
             lc++;
+            if (fHasSelection && (!IsSelected(attributes->GetName())))
+               continue;
             // there is always an "" entry in the map to point to the first file of a file group
             if (verbose)
                Info("LookupSUrls", "Lookup SURL for %s [%u/%u]",
@@ -949,7 +977,7 @@ Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
 }
 
 //_____________________________________________________________________________
-Bool_t TAlienCollection::Stage(Bool_t bulk)
+Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
 {
    // Execute the 'stage' method for all files in this collection (trigger staging).
    // The <bulk> stage method is currently not working.
@@ -971,11 +999,14 @@ Bool_t TAlienCollection::Stage(Bool_t bulk)
          while ((attributes = (TMap *) nextfile->Next())) {
             if (TString(attributes->GetName()) != "") {
                fc++;
+               if (fHasSelection && (!IsSelected(attributes->GetName())))
+                  continue;
+
                if (!fFileStager) {
                   fFileStager =
                       TFileStager::Open(GetSURL(attributes->GetName()));
                }
-               if ((fFileStager)->Stage(GetSURL(attributes->GetName()),"")) {
+               if ((fFileStager)->Stage(GetSURL(attributes->GetName()),option)) {
                   // file staged
                   Info("Stage", "[%05u/%05u] <Staged> : %s", fc,
                        GetNofGroups() * GetNofGroupfiles(),
@@ -1012,7 +1043,7 @@ Bool_t TAlienCollection::Stage(Bool_t bulk)
             fFileStager = TFileStager::Open(stagelist->First()->GetName());
          }
 
-         stageresult = (fFileStager)->Stage(stagelist,"");
+         stageresult = (fFileStager)->Stage(stagelist,option);
       }
       delete stagelist;
       return stageresult;
@@ -1042,6 +1073,8 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
          TIterator *nextfile = filemap->MakeIterator();
          TMap *attributes;
          while ((attributes = (TMap *) nextfile->Next())) {
+            if (fHasSelection && (!IsSelected(attributes->GetName())))
+               continue;
             if (TString(attributes->GetName()) != "") {
                fc++;
                // check if we have a fFileStager
@@ -1416,7 +1449,7 @@ Bool_t TAlienCollection::SetExportUrl(const char *exporturl)
 
 //_____________________________________________________________________________
 const char *TAlienCollection::GetOutputFileName(const char *infile,
-                                                Bool_t rename)
+                                                Bool_t rename, const char* suffix)
 {
    // Adds to a file given by infile the collection identification , f.e.
    // for collection files sitting in directories like 100/1/AliESD.root
@@ -1457,6 +1490,7 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
    // list the matching files
    TString pcmd("ls ");
    pcmd += infile;
+   //printf("Pipe is %s\n",pcmd.Data());
    FILE *fp = gSystem->OpenPipe(pcmd.Data(), "r");
    if (fp) {
       char rootfile[4096];
@@ -1483,8 +1517,9 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
          newrootname += lastevent;
          newrootname += ".";
          newrootname += nevents;
-         newrootname += ".root";
-         Info("GetOutputFilename", "Renaming ROOT File %s to %s", rootfile,
+         newrootname += ".";
+         newrootname += suffix;
+         Info("GetOutputFilename", "Renaming File %s to %s", rootfile,
               newrootname.Data());
          fLastOutFileName = newrootname;
          if (rename) {

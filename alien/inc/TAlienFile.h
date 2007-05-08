@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.19 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.20 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 
 class TUrl;
 
-class TAlienFile:public TXNetFile {
+class TAlienFile : public TXNetFile {
 
 private:
    TString fLfn;       // logical file name
