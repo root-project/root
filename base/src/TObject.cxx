@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.90 2007/02/12 13:09:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.91 2007/02/15 15:04:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -819,7 +819,11 @@ void TObject::DoError(int level, const char *location, const char *fmt, va_list 
 {
    // Interface to ErrorHandler (protected).
 
-   ::ErrorHandler(level, Form("%s::%s", ClassName(), location), fmt, va);
+   const char *classname = "UnknownClass";
+   if (TROOT::Initialized())
+      classname = ClassName();
+
+   ::ErrorHandler(level, Form("%s::%s", classname, location), fmt, va);
 }
 
 //______________________________________________________________________________
@@ -844,7 +848,8 @@ void TObject::Warning(const char *location, const char *va_(fmt), ...) const
    va_start(ap, va_(fmt));
    DoError(kWarning, location, va_(fmt), ap);
    va_end(ap);
-   gROOT->Message(1001,(TObject*)this);
+   if (TROOT::Initialized())
+      gROOT->Message(1001, this);
 }
 
 //______________________________________________________________________________
@@ -857,7 +862,8 @@ void TObject::Error(const char *location, const char *va_(fmt), ...) const
    va_start(ap, va_(fmt));
    DoError(kError, location, va_(fmt), ap);
    va_end(ap);
-   gROOT->Message(1002,(TObject*)this);
+   if (TROOT::Initialized())
+      gROOT->Message(1002, this);
 }
 
 //______________________________________________________________________________
@@ -870,7 +876,8 @@ void TObject::SysError(const char *location, const char *va_(fmt), ...) const
    va_start(ap, va_(fmt));
    DoError(kSysError, location, va_(fmt), ap);
    va_end(ap);
-   gROOT->Message(1003,(TObject*)this);
+   if (TROOT::Initialized())
+      gROOT->Message(1003, this);
 }
 
 //______________________________________________________________________________
@@ -883,7 +890,8 @@ void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
    va_start(ap, va_(fmt));
    DoError(kFatal, location, va_(fmt), ap);
    va_end(ap);
-   gROOT->Message(1004,(TObject*)this);
+   if (TROOT::Initialized())
+      gROOT->Message(1004, this);
 }
 
 //______________________________________________________________________________
