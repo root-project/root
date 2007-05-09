@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.131 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.132 2007/02/23 17:42:32 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -532,23 +532,6 @@ THtml::THtml(): fFoundDot(-1), fCounterFormat("%12s %5s %s"),
 
    fClasses.SetOwner();
    fModules.SetOwner();
-   Long64_t sSize;
-   Long_t sId, sFlags, sModtime;
-   Int_t st = gSystem->GetPathInfo(fOutputDir, &sId, &sSize, &sFlags, &sModtime);
-   if (st || !(sFlags & 2)) {
-      if (st == 0) {
-         Error("THtml", "output directory %s is an existing file",
-               fOutputDir.Data());
-         MakeZombie();
-         return;
-      }
-      // Try to create directory
-      if (gSystem->MakeDirectory(fOutputDir) == -1) {
-         Error("THtml", "output directory %s does not exist", fOutputDir.Data());
-         MakeZombie();
-         return;
-      }
-   }
    // insert html object in the list of special ROOT objects
    if (!gHtml) {
       gHtml = this;
@@ -745,8 +728,12 @@ void THtml::GetModuleName(TString& modulename, const char* filename) const
    // All classes not fitting into this layout are assigned to the
    // module USER.
 
-   modulename = filename;
-   const char* posSlash = strchr(filename, '/');
+   size_t offset = 0;
+   if (filename[0] == '.' && (filename[1] == '/' || filename[1] == '\\'))
+      offset = 2;
+
+   modulename = filename + offset;
+   const char* posSlash = strchr(filename + offset, '/');
    const char *srcdir = 0;
    if (posSlash) {
       // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
@@ -759,7 +746,7 @@ void THtml::GetModuleName(TString& modulename, const char* filename) const
    } else srcdir = 0;
 
    if (srcdir && srcdir == posSlash) {
-      modulename.Remove(srcdir - filename, modulename.Length());
+      modulename.Remove(srcdir - (filename + offset), modulename.Length());
       modulename.ToUpper();
    } else {
       if (posSlash && !strncmp(posSlash,"/Math/GenVector/", 16))
@@ -898,21 +885,33 @@ void THtml::CreateListOfClasses(const char* filter)
       if (!module) {
          module = new TModuleDocInfo(modulename);
 
+         TString moduledir;
          if (modulename == "MATHCORE")
-            module->SetSourceDir("$(ROOTSYS)/mathcore/src");
+            moduledir = "mathcore/src";
          else if (modulename == "MATHMORE")
-            module->SetSourceDir("$(ROOTSYS)/mathmore/src");
+            moduledir = "mathmore/src";
          else if (modulename == "REFLEX")
-            module->SetSourceDir("$(ROOTSYS)/reflex/src");
+            moduledir = "reflex/src";
          else if (modulename == "TMVA")
-            module->SetSourceDir("$(ROOTSYS)/tmva/src");
+            moduledir = "tmva/src";
          else if (modulename == "SMATRIX")
-            module->SetSourceDir("$(ROOTSYS)/smatrix/src");
+            moduledir = "smatrix/src";
+         if (moduledir.Length()) {
+            gSystem->PrependPathName("$(ROOTSYS)", moduledir);
+            module->SetSourceDir(moduledir);
+         }
 
          module->SetSelected(kFALSE);
          fModules.Add(module);
       }
       if (module) {
+         if (!strcmp(module->GetName(), "REFLEX")) {
+            TString srcFile = gSystem->BaseName(impname);
+            srcFile.ReplaceAll(".h", ".cxx");
+            gSystem->PrependPathName(module->GetSourceDir(), srcFile);
+            SetImplFileName(classPtr, srcFile);
+         }
+
          module->AddClass(cdi);
          cdi->SetModule(module);
          if (cdi->HaveSource() && cdi->IsSelected())
@@ -1169,9 +1168,9 @@ TClass *THtml::GetClass(const char *name1)
    // no doc for internal classes
    if (strstr(name1,"ROOT::")==name1) {
       Bool_t ret = kTRUE;
-      if (strstr(name1,"Math::"))   ret = kFALSE;
-      if (strstr(name1,"Reflex::")) ret = kFALSE;
-      if (strstr(name1,"Cintex::")) ret = kFALSE;
+      if (strncmp(name1 + 6,"Math", 4))   ret = kFALSE;
+      if (strncmp(name1 + 6,"Reflex", 6)) ret = kFALSE;
+      if (strncmp(name1 + 6,"Cintex", 6)) ret = kFALSE;
       if (ret) return 0;
    }
 
@@ -1206,6 +1205,24 @@ const char* THtml::GetImplFileName(TClass * cl) const
    std::map<TClass*,std::string>::const_iterator iClImpl = fGuessedImplFileNames.find(cl);
    if (iClImpl == fGuessedImplFileNames.end()) return cl->GetImplFileName();
    return iClImpl->second.c_str();
+}
+
+//______________________________________________________________________________
+const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
+{
+   if (createDir) {
+      gSystem->ExpandPathName(const_cast<THtml*>(this)->fOutputDir);
+      Long64_t sSize;
+      Long_t sId, sFlags, sModtime;
+      Int_t st = gSystem->GetPathInfo(fOutputDir, &sId, &sSize, &sFlags, &sModtime);
+      if (st || !(sFlags & 2))
+         if (st == 0)
+            Error("GetOutputDir", "output directory %s is an existing file",
+                  fOutputDir.Data());
+         else if (gSystem->MakeDirectory(fOutputDir) == -1)
+            Error("GetOutputDir", "output directory %s does not exist and can't create it", fOutputDir.Data());
+   }
+   return fOutputDir;
 }
 
 //______________________________________________________________________________

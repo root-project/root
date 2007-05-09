@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.34 2007/03/19 10:59:41 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.35 2007/03/28 15:12:35 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -135,7 +135,7 @@ public:
 
    // Configuration getters
    const TString&      GetProductName() const { return fProductName; }
-   const TString&      GetOutputDir() const { return fOutputDir; }
+   const TString&      GetOutputDir(Bool_t createDir = kTRUE) const;
    const TString&      GetSourceDir() const { return fSourceDir; }
    const TString&      GetSourcePrefix() const { return fSourcePrefix; }
    virtual const char* GetEtcDir();

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.8 2007/02/23 17:42:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.9 2007/03/16 15:25:55 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -536,6 +536,13 @@ void TDocParser::DecorateKeywords(TString& line)
                currentType.back() = 0;
                i += 2;
                fDocOutput->DecorateEntityEnd(line, i, kComment);
+               if (!fCommentAtBOL) {
+                  if (InContext(kDirective))
+                     ((TDocDirective*)fDirectiveHandlers.Last())->AddLine(line(copiedToCommentUpTo, i));
+                  else
+                     fLineComment += line(copiedToCommentUpTo, i);
+                  copiedToCommentUpTo = i;
+               }
             } else if (startOfLine == i
                && line[i] == '#'
                && context == kCode) {
@@ -1483,6 +1490,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
          } else if (fDocContext == kDocClass) {
             // write class description
             dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, fComment);
+            fLookForClassDescription = kFALSE;
+            fFoundClassDescription = kTRUE;
             fComment.Remove(0);
             fDocContext = kIgnore;
          }
@@ -1558,8 +1567,11 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    } else if (fDocContext == kDocClass) {
       // write class description
       out << fComment << "</div>" << std::endl;
-   } else if (!fFoundClassDescription && fLookForClassDescription)
+   } else if (!fFoundClassDescription && fLookForClassDescription) {
       dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
+      fLookForClassDescription = kFALSE;
+      fFoundClassDescription = kTRUE;
+   }
 
    srcHtmlOut << "</pre>" << std::endl;
    fDocOutput->WriteHtmlFooter(srcHtmlOut, "../");
@@ -1804,7 +1816,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    // Write a method, forwarding to TClassDocOutput
 
    // if we haven't found the class description until now it's too late.
-   if (!fFoundClassDescription || fLookForClassDescription) {
+   if (!fFoundClassDescription && fLookForClassDescription) {
       dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
       fLookForClassDescription = kFALSE;
       fFoundClassDescription = kTRUE;
