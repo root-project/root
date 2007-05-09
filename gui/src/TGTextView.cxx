@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.33 2007/04/27 08:45:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.34 2007/05/04 15:21:04 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -98,11 +98,12 @@ void TGTextView::Init(ULong_t back)
    fScrollTimer = new TViewTimer(this, 75);
    gSystem->AddTimer(fScrollTimer);
 
-   Atom_t *dndTypeList = new Atom_t[3];
-   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
-   dndTypeList[2] = 0;
-   gVirtualX->SetDNDAware(fId, dndTypeList);
+   // define DND types
+   fDNDTypeList = new Atom_t[3];
+   fDNDTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   fDNDTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   fDNDTypeList[2] = 0;
+   gVirtualX->SetDNDAware(fId, fDNDTypeList);
    SetDNDTarget(kTRUE);
 
    gVirtualX->ClearWindow(fCanvas->GetId());
@@ -157,6 +158,7 @@ TGTextView::~TGTextView()
    delete fScrollTimer;
    delete fText;
    delete fClipText;
+   delete [] fDNDTypeList;
 }
 
 //______________________________________________________________________________

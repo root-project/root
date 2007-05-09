@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.31 2007/04/23 10:40:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.32 2007/04/29 07:06:48 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -138,11 +138,12 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
 
    fCanvas = new TCanvas(name ? name : Form("%s_canvas", GetName()), w, h, fCWinId);
 
-   Atom_t *dndTypeList = new Atom_t[3];
-   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
-   dndTypeList[2] = 0;
-   gVirtualX->SetDNDAware(fId, dndTypeList);
+   // define DND types
+   fDNDTypeList = new Atom_t[3];
+   fDNDTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   fDNDTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   fDNDTypeList[2] = 0;
+   gVirtualX->SetDNDAware(fId, fDNDTypeList);
    SetDNDTarget(kTRUE);
 
    if (!p) {
@@ -161,6 +162,7 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
       delete fCanvas;
       delete fCanvasContainer;
    }
+   delete [] fDNDTypeList;
 }
 
 //______________________________________________________________________________

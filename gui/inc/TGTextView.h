@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.21 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.22 2007/04/20 12:15:28 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -55,6 +55,7 @@ protected:
    TGLongPosition  fMarkedStart;  // start position of marked text
    TGLongPosition  fMarkedEnd;    // end position of marked text
    TViewTimer     *fScrollTimer;  // scrollbar timer
+   Atom_t         *fDNDTypeList;  // handles DND types
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;

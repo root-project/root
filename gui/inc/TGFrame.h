@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.81 2007/02/01 16:00:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.82 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -488,6 +488,7 @@ protected:
       TGMapKey(UInt_t keycode, TGWindow *w): fKeyCode(keycode), fWindow(w) { }
    };
 
+   Atom_t       *fDNDTypeList;  // handles DND types
    TList        *fBindList;     // list with key bindings
    TString       fWindowName;   // window name
    TString       fIconName;     // icon name
