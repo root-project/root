@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.109 2007/04/29 07:06:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.110 2007/05/03 12:13:56 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1194,11 +1194,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    ClearHistory();
    SetEditDisabled(kEditDisable);
 
-   Atom_t *dndTypeList = new Atom_t[3];
-   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
-   dndTypeList[2] = 0;
-   gVirtualX->SetDNDAware(fId, dndTypeList);
+   gVirtualX->SetDNDAware(fId, fDNDTypeList);
    //SetDNDTarget(kTRUE);
    AddInput(kPointerMotionMask);
    MapSubwindows();

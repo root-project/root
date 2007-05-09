@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.119 2007/04/23 10:40:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.120 2007/04/29 07:06:48 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -581,11 +581,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    // we need to use GetDefaultSize() to initialize the layout algorithm...
    Resize(GetDefaultSize());
 
-   Atom_t *dndTypeList = new Atom_t[3];
-   dndTypeList[0] = gVirtualX->InternAtom("application/root", kFALSE);
-   dndTypeList[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
-   dndTypeList[2] = 0;
-   gVirtualX->SetDNDAware(fId, dndTypeList);
+   gVirtualX->SetDNDAware(fId, fDNDTypeList);
    SetDNDTarget(kTRUE);
 }
 
