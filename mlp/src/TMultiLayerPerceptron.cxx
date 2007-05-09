@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.40 2007/01/02 14:05:48 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.41 2007/01/29 16:14:25 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -791,9 +791,6 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    Double_t *dir = new Double_t[els];
    for (i = 0; i < els; i++)
       buffer[i] = 0;
-   TMatrixD bfgsh(els, els);
-   TMatrixD gamma(els, 1);
-   TMatrixD delta(els, 1);
    // Epoch loop. Here is the training itself.
    for (Int_t iepoch = 0; iepoch < nEpoch; iepoch++) {
       switch (fLearningMethod) {
@@ -878,6 +875,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
          }
       case TMultiLayerPerceptron::kBFGS:
          {
+            TMatrixD bfgsh(els, els);
+            TMatrixD gamma(els, 1);
+            TMatrixD delta(els, 1);
             SetGammaDelta(gamma, delta, buffer);
             if (!(iepoch % fReset)) {
                SteepestDir(dir);
