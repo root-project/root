@@ -471,6 +471,7 @@ distclean:      clean
 		@rm -rf cxx_repository
 		-@mv -f linearIO.roott linearIO.root
 		-@cd RootShower && $(MAKE) distclean
+		-@cd rhtml && $(MAKE) distclean
 
 .SUFFIXES: .$(SrcSuf)
 
