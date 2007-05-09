@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.209 2007/03/13 15:35:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.210 2007/04/18 14:28:10 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -451,15 +451,13 @@ TROOT::~TROOT()
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
-//      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
-//      fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
-//      fListHead->Delete();   SafeDelete(fListHead);    // delete objects in current directory
-//      fColors->Delete();     SafeDelete(fColors);
-//      fStyles->Delete();     SafeDelete(fStyles);
-//      fGeometries->Delete(); SafeDelete(fGeometries);
-//      fBrowsers->Delete();   SafeDelete(fBrowsers);
-//      fBrowsables->Delete(); SafeDelete(fBrowsables);
-//      fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
+      fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
+      fColors->Delete();     SafeDelete(fColors);
+      fStyles->Delete();     SafeDelete(fStyles);
+      fGeometries->Delete(); SafeDelete(fGeometries);
+      fBrowsers->Delete();   SafeDelete(fBrowsers);
+      //fBrowsables->Delete(); SafeDelete(fBrowsables);
+      fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
 //      if (fTypes) fTypes->Delete();
 //      SafeDelete(fTypes);
 //      if (fGlobals) fGlobals->Delete();
