@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.146 2007/04/18 14:56:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.147 2007/05/04 16:57:23 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1168,10 +1168,13 @@ Int_t TCint::AutoLoad(const char *cls)
       TObjArray *tokens = deplibs.Tokenize(delim);
       for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
-         gROOT->LoadClass(cls, deplib);
-         if (gDebug > 0)
-            ::Info("TCint::AutoLoad", "loaded dependent library %s for class %s",
-                   deplib, cls);
+         if (gROOT->LoadClass(cls, deplib) == 0) {
+            if (gDebug > 0)
+               ::Info("TCint::AutoLoad", "loaded dependent library %s for class %s",
+                      deplib, cls);
+         } else
+            ::Error("TCint::AutoLoad", "failure loading dependent library %s for class %s",
+                    deplib, cls);
       }
       const char *lib = ((TObjString*)tokens->At(0))->GetName();
 
@@ -1179,11 +1182,11 @@ Int_t TCint::AutoLoad(const char *cls)
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0)
                ::Info("TCint::AutoLoad", "loaded library %s for class %s",
-               lib, cls);
+                      lib, cls);
             status = 1;
          } else
             ::Error("TCint::AutoLoad", "failure loading library %s for class %s",
-            lib, cls);
+                    lib, cls);
       }
       delete tokens;
    }
