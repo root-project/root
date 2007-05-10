@@ -3183,13 +3183,18 @@ G__value G__exec_statement()
   result=G__null;
 
   while(1) {
+     if (iout>=G__LONGLINE) {
+        G__genericerror("Error: Line too long in G__exec_statement when processing ");
+        return(result);
+     }
     fake_space = 0;
     if (add_fake_space && !double_quote && !single_quote) {
       c = ' ';
       add_fake_space = 0;
       fake_space = 1;
-    } else 
+    } else { 
       c=G__fgetc();
+    }
     discard_space = 0;
 
 /*#define G__OLDIMPLEMENTATION781*/
