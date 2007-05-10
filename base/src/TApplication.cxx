@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.91 2007/05/10 16:02:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.92 2007/05/10 17:08:28 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -345,22 +345,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
          argv[i] = "";
-#if 0
-      } else if (!strcmp(argv[i], "-x")) {
-         // remote ROOT display server not operational yet
-#ifndef R__WIN32
-         if (gVirtualX != gGXBatch) delete gVirtualX;
-#endif
-         gVirtualX = new TGXClient("Root_Client");
-         if (gVirtualX->IsZombie()) {
-            delete gVirtualX;
-            gROOT->SetBatch();
-            if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
-            gGuiFactory = gBatchGuiFactory;
-            gVirtualX = gGXBatch;
-         }
-         argv[i] = "";
-#endif
       } else if (!strcmp(argv[i], "-n")) {
          fNoLog = kTRUE;
          argv[i] = "";
