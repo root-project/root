@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.17 2007/04/21 07:36:16 brun Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.18 2007/04/21 14:20:46 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -484,7 +484,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf ) const
    tf << "Creator        : " << gSystem->GetUserInfo()->fUser << endl;
    tf << "Date           : "; TDatime *d = new TDatime; tf << d->AsString() << endl; delete d;
    tf << "Host           : " << gSystem->GetBuildNode() << endl;
-   tf << "Dir            : " << gSystem->Getenv("PWD") << endl;
+   tf << "Dir            : " << gSystem->WorkingDirectory() << endl;
    tf << "Training events: " << Data().GetNEvtTrain() << endl;
    tf << endl;
 
