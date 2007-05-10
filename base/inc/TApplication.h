@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.27 2007/03/28 14:29:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.28 2007/05/10 16:02:15 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -48,7 +48,6 @@ private:
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
-   TApplication      *fAppRemote;      //Current remote application, if defined
    Bool_t             fIsRunning;      //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;  //When true return from Run()
    Bool_t             fNoLog;          //Do not process logon and logoff macros
@@ -59,7 +58,6 @@ private:
    TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
-
    Bool_t             fProcessingLine; //True if processing line; use for remote apps
 
    static Bool_t      fgGraphNeeded;   // True if graphics libs need to be initialized
@@ -69,23 +67,24 @@ private:
    TApplication& operator=(const TApplication&);  // not implemented
 
 protected:
+   TApplication      *fAppRemote;      //Current remote application, if defined
+
+   static TList      *fgApplications;  //List of available applications
+
    TApplication();
 
    void               SetProcessingLine(Bool_t on = kTRUE) { fProcessingLine = on; }
-
-   static TList      *fgApplications;  // List of available applications
+   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   virtual void       Help(const char *line);
+   virtual void       LoadGraphicsLibs();
+   virtual void       MakeBatch();
+   void               SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
    static Int_t       ParseRemoteLine(const char *ln,
                                       TString &hostdir, TString &user,
                                       Int_t &dbg, TString &script);
-   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
-   static void        Close(TApplication *app);
    static TApplication *Open(const char *url, Int_t debug, const char *script);
-
-   virtual void Help(const char *line);
-   virtual void LoadGraphicsLibs();
-   virtual void MakeBatch();
-   void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
+   static void          Close(TApplication *app);
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,

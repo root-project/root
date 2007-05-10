@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.90 2007/05/04 16:53:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.91 2007/05/10 16:02:15 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -46,7 +46,6 @@
 #include "TPluginManager.h"
 #include "TClassTable.h"
 #include "TUrl.h"
-#include "TRint.h"
 
 #ifdef R__WIN32
 #include "TWinNTSystem.h"
@@ -631,8 +630,6 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
       }
       // Return to local run
       fAppRemote = 0;
-      // Set the default prompt
-      ((TRint *) gROOT->GetApplication())->SetPrompt("root [%d] ");
       // Done
       return 1;
    } else if (rc == 1) {
@@ -650,9 +647,6 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    TApplication *ap = Open(hostdir, dbg, sc);
    if (ap) {
       fAppRemote = ap;
-      // Set the prompt in the form "<application-name>:root [i] "
-      TString prompt = Form("%s:root [%%d] ", ap->ApplicationName());
-      ((TRint *) gROOT->GetApplication())->SetPrompt(prompt);
    }
 
    // Done

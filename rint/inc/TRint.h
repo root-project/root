@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.10 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.11 2006/08/28 14:43:47 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -43,7 +43,9 @@ private:
 
    TRint(const TRint&);               // not implemented
    TRint& operator=(const TRint&);    // not implemented
-   void  ExecLogon();
+
+   void    ExecLogon();
+   Long_t  ProcessRemote(const char *line, Int_t *error = 0);
 
 public:
    TRint(const char *appClassName, int *argc, char **argv,

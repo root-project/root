@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.69 2007/02/13 08:37:12 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.70 2007/02/21 09:52:14 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -153,7 +153,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
    //  to disable the loading of these includes at startup.
    // You can set the variable to 1 (default) to load only <iostream>, <string> and <RTypesCint.h>
-   // You can set it to 2 to load in addition <vector> and <pair> 
+   // You can set it to 2 to load in addition <vector> and <pair>
    // We strongly recommend setting the variable to 2 if your scripts include <vector>
    // and you execute your scripts multiple times.
    if (includes > 0) {
@@ -571,4 +571,31 @@ void TRint::SetEchoMode(Bool_t mode)
    //  mode = kFALSE - noecho input symbols
 
    Gl_config("noecho", mode ? 0 : 1);
+}
+
+//______________________________________________________________________________
+Long_t TRint::ProcessRemote(const char *line, Int_t *)
+{
+   // Process the content of a line starting with ".R" (already stripped-off)
+   // The format is
+   //      [user@]host[:dir] [-l user] [-d dbg] [script]
+   // The variable 'dir' is the remote directory to be used as working dir.
+   // The username can be specified in two ways, "-l" having the priority
+   // (as in ssh).
+   // A 'dbg' value > 0 gives increasing verbosity.
+   // The last argument 'script' allows to specify an alternative script to
+   // be executed remotely to startup the session.
+
+   Long_t ret = TApplication::ProcessRemote(line);
+
+   if (ret == 1) {
+      if (fAppRemote) {
+         TString prompt = Form("%s:root [%%d] ", fAppRemote->ApplicationName());
+         SetPrompt(prompt);
+      } else {
+         SetPrompt("root [%d] ");
+      }
+   }
+
+   return ret;
 }
