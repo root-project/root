@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.24 2007/03/19 16:14:15 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.25 2007/03/19 21:40:25 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -46,5 +46,7 @@
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
 #pragma link C++ class TFileStager;
+#pragma link C++ class TApplicationRemote;
+#pragma link C++ class TApplicationServer;
 
 #endif

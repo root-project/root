@@ -45,6 +45,21 @@ PROOFSERVEXE :=
 PROOFSERVSH  :=
 endif
 
+##### roots.exe #####
+ROOTSEXES   := $(MODDIRS)/roots.cxx
+ROOTSEXEO   := $(ROOTSEXES:.cxx=.o)
+ROOTSEXEDEP := $(ROOTSEXEO:.o=.d)
+ifeq ($(ARCH),win32gcc)
+ROOTSEXE    := bin/roots_exe.exe
+else
+ROOTSEXE    := bin/roots.exe
+ROOTSSH     := bin/roots
+endif
+ifeq ($(PLATFORM),win32)
+ROOTSEXE    :=
+ROOTSSH     :=
+endif
+
 ##### hadd #####
 HADDS        := $(MODDIRS)/hadd.cxx
 HADDO        := $(HADDS:.cxx=.o)
@@ -98,14 +113,14 @@ endif
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(HADD) $(SSH2RPD)
+                $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifeq ($(BUILDHBOOK),yes)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
-                $(SSH2RPDDEP)
+                $(SSH2RPDDEP) $(ROOTSEXEDEP)
 
 ##### local rules #####
 $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
@@ -122,6 +137,15 @@ $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 
 $(PROOFSERVSH): main/src/proofserv.sh
 		@echo "Install proofserv wrapper."
+		@cp $< $@
+		@chmod 0755 $@
+
+$(ROOTSEXE): $(ROOTSEXEO) $(BOOTLIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) $(BOOTULIBS) \
+		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
+
+$(ROOTSSH): main/src/roots.sh
+		@echo "Install roots wrapper."
 		@cp $< $@
 		@chmod 0755 $@
 
@@ -150,15 +174,16 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 
 ifeq ($(BUILDHBOOK),yes)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-               $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+               $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
+               $(ROOTSEXE) $(ROOTSSH)
 else
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-               $(HADD) $(SSH2RPD)
+               $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 endif
 
 clean-main:
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
-		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO)
+		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO) $(ROOTSEXEO)
 
 clean::         clean-main
 
@@ -166,7 +191,7 @@ distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
 		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
-		   $(SSH2RPDDEP) $(SSH2RPD)
+		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) $(ROOTSSH)
 
 distclean::     distclean-main
 
