@@ -1,8 +1,8 @@
-// @(#)root/proof:$Name:  $:$Id: TApplicationRemote.cxx,v 1.1 2007/05/10 16:01:32 brun Exp $
-// Author: G. Ganis May 2007
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.2 2007/05/10 17:12:58 rdm Exp $
+// Author: G. Ganis  10/5/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

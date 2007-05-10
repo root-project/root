@@ -1,14 +1,13 @@
-// @(#)root/proof:$Name:  $:$Id:$
-// Author: G. Ganis Apr 2007
+// @(#)root/net:$Name:  $:$Id: RRemoteProtocol.h,v 1.1 2007/05/10 16:01:32 brun Exp $
+// Author: G. Ganis  10/5/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_RRemoteProtocol
 #define ROOT_RRemoteProtocol

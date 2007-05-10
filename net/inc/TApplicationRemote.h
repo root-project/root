@@ -1,14 +1,13 @@
-// @(#)root/proof:$Name:  $:$Id:$
-// Author: G. Ganis May 2007
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.h,v 1.1 2007/05/10 16:01:32 brun Exp $
+// Author: G. Ganis  10/5/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TApplicationRemote
 #define ROOT_TApplicationRemote
@@ -33,25 +32,24 @@
 #ifndef ROOT_TMD5
 #include "TMD5.h"
 #endif
-#ifndef ROOT_TMessage
-#include "TMessage.h"
+#ifndef ROOT_TUrl
+#include "TUrl.h"
 #endif
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
+#ifndef ROOT_TMessage
+#include "TMessage.h"
 #endif
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
-#ifndef ROOT_TUrl
-#include "TUrl.h"
-#endif
+
 
 class THashList;
 class TMonitor;
 class TSocket;
+
 
 class TApplicationRemote : public TApplication {
 
@@ -63,7 +61,6 @@ public:
    };
 
 private:
-
    class TARFileStat : public TNamed {
       public:
          TARFileStat(const char *fn, TMD5 md5, Long_t mt) :
@@ -72,22 +69,21 @@ private:
          Long_t fModtime;    //file's modification time
    };
 
-   TString       fName;             //Unique name identifying this instance
-   Int_t         fProtocol;         //server protocol version number
-   TUrl          fUrl;              //server's url
-   TSocket      *fSocket;           //socket connection to server
-   TMonitor     *fMonitor;          //monitor for the input socket
-   Bool_t        fInterrupt;        //flag interrupt state
+   TString         fName;           //Unique name identifying this instance
+   Int_t           fProtocol;       //server protocol version number
+   TUrl            fUrl;            //server's url
+   TSocket        *fSocket;         //socket connection to server
+   TMonitor       *fMonitor;        //monitor for the input socket
+   Bool_t          fInterrupt;      //flag interrupt state
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
 
-   TString       fLogFilePath;      //Full remote path to log file
+   TString         fLogFilePath;    //Full remote path to log file
 
-   THashList    *fFileList;         // List of files already uploaded
+   THashList      *fFileList;       // List of files already uploaded
 
    static Int_t  fgPortAttempts;    // number of attempts to find a port
    static Int_t  fgPortLower;       // lower bound for ports
    static Int_t  fgPortUpper;       // upper bound for ports
-
 
    Int_t         Broadcast(const TMessage &mess);
    Int_t         Broadcast(const char *mess, Int_t kind = kMESS_STRING, Int_t type = kRRT_Undef);

@@ -1,14 +1,13 @@
-// @(#)root/proof:$Name:  $:$Id:$
-// Author: G. Ganis Apr 2007
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.h,v 1.1 2007/05/10 16:01:32 brun Exp $
+// Author: G. Ganis  10/5/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TApplicationServer
 #define ROOT_TApplicationServer
@@ -57,7 +56,6 @@ private:
    TString       fWorkDir;          // Working dir
 
    Int_t         Setup();
-
    Int_t         SendCanvases();    // Send back to client any created canvas
 
 protected:
@@ -71,18 +69,17 @@ public:
    virtual ~TApplicationServer();
 
    void           GetOptions(Int_t *argc, char **argv);
-   Int_t          GetProtocol()   const { return fProtocol; }
-   Int_t          GetPort()             { return fUrl.GetPort(); }
-   const char    *GetUser()             { return fUrl.GetUser(); }
-   const char    *GetHost()             { return fUrl.GetHost(); }
-
-   TSocket       *GetSocket()     const { return fSocket; }
+   Int_t          GetProtocol() const   { return fProtocol; }
+   Int_t          GetPort() const       { return fUrl.GetPort(); }
+   const char    *GetUser() const       { return fUrl.GetUser(); }
+   const char    *GetHost() const       { return fUrl.GetHost(); }
+   TSocket       *GetSocket() const     { return fSocket; }
 
    void           HandleSocketInput();
    void           HandleUrgentData();
    void           HandleSigPipe();
    void           Interrupt() { fInterrupt = kTRUE; }
-   Bool_t         IsValid()        const { return fIsValid; }
+   Bool_t         IsValid() const { return fIsValid; }
 
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
@@ -128,9 +125,9 @@ private:
 
 public:
    TASLogHandlerGuard(const char *cmd, TSocket *s,
-                             const char *pfx = "", Bool_t on = kTRUE);
+                      const char *pfx = "", Bool_t on = kTRUE);
    TASLogHandlerGuard(FILE *f, TSocket *s,
-                             const char *pfx = "", Bool_t on = kTRUE);
+                      const char *pfx = "", Bool_t on = kTRUE);
    virtual ~TASLogHandlerGuard();
 };
 

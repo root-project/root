@@ -1,9 +1,8 @@
-// @(#)root/proof:$Name:  $:$Id:$
-
-// Author: G. Ganis Apr 2007
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.1 2007/05/10 16:01:32 brun Exp $
+// Author: G. Ganis  10/5/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -303,7 +302,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    // Default prefix for notifications
    TASLogHandler::SetDefaultPrefix(Form("roots:%s", gSystem->HostName()));
 
-   // Now we contact back the client: if we fail we set ourselves 
+   // Now we contact back the client: if we fail we set ourselves
    // as invalid
    fIsValid = kFALSE;
 
