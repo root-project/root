@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.132 2007/02/23 17:42:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.133 2007/05/09 17:01:45 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1168,9 +1168,9 @@ TClass *THtml::GetClass(const char *name1)
    // no doc for internal classes
    if (strstr(name1,"ROOT::")==name1) {
       Bool_t ret = kTRUE;
-      if (strncmp(name1 + 6,"Math", 4))   ret = kFALSE;
-      if (strncmp(name1 + 6,"Reflex", 6)) ret = kFALSE;
-      if (strncmp(name1 + 6,"Cintex", 6)) ret = kFALSE;
+      if (!strncmp(name1 + 6,"Math", 4))   ret = kFALSE;
+      if (!strncmp(name1 + 6,"Reflex", 6)) ret = kFALSE;
+      if (!strncmp(name1 + 6,"Cintex", 6)) ret = kFALSE;
       if (ret) return 0;
    }
 
