@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TApplicationRemote.cxx,v 1.1 2007/05/10 16:01:32 brun Exp $
 // Author: G. Ganis May 2007
 
 /*************************************************************************
@@ -32,6 +32,10 @@
 #include "TROOT.h"
 #include "TServerSocket.h"
 #include "TSystem.h"
+#ifdef WIN32
+#include <io.h>
+#include <sys/types.h>
+#endif
 
 //
 // TApplicationRemote Interrupt signal handler
