@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.32 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.33 2007/01/20 20:51:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #endif
 #ifndef ROOT_TStorage
 #include "TStorage.h"
+#endif
+#ifndef ROOT_TVersionCheck
+#include "TVersionCheck.h"
 #endif
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"

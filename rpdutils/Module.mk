@@ -98,3 +98,4 @@ distclean::     distclean-rpdutils
 
 ##### extra rules ######
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)
+$(RPDUTILO): PCHCXXFLAGS =

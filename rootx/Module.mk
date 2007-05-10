@@ -43,3 +43,6 @@ distclean-rootx: clean-rootx
 		@rm -f $(ROOTXDEP) $(ROOTX)
 
 distclean::     distclean-rootx
+
+##### extra rules ######
+$(ROOTXO):      PCHCXXFLAGS =

@@ -50,3 +50,6 @@ distclean-clib: clean-clib
 		@rm -f $(CLIBDEP) $(CLIBDS) $(CLIBDH)
 
 distclean::     distclean-clib
+
+##### extra rules ######
+$(CLIBO):       PCHCXXFLAGS =

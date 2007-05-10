@@ -169,3 +169,6 @@ distclean-main: clean-main
 		   $(SSH2RPDDEP) $(SSH2RPD)
 
 distclean::     distclean-main
+
+##### extra rules ######
+$(SSH2RPDO): PCHCXXFLAGS =

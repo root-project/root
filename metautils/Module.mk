@@ -49,3 +49,6 @@ distclean-metautils: clean-metautils
 		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH)
 
 distclean::     distclean-metautils
+
+##### extra rules ######
+$(METAUTILSO):  PCHCXXFLAGS =

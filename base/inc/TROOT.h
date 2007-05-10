@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.59 2007/01/29 15:10:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.60 2007/02/15 15:04:04 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -65,14 +65,15 @@ private:
    static Bool_t   fgRootInit;            //Singleton initialization flag
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
-   TROOT(const TROOT&);             //not implemented
-   TROOT& operator=(const TROOT&);  //not implemented
+   TROOT(const TROOT&);                   //Not implemented
+   TROOT& operator=(const TROOT&);        //Not implemented
 
 protected:
 
    TString         fConfigOptions;        //ROOT ./configure build options
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
    Int_t           fVersionInt;           //ROOT version in integer format (501)
+   Int_t           fVersionCode;          //ROOT version code as used in RVersion.h
    Int_t           fVersionDate;          //Date of ROOT version (ex 951226)
    Int_t           fVersionTime;          //Time of ROOT version (ex 1152)
    Int_t           fBuiltDate;            //Date of ROOT built
@@ -160,6 +161,7 @@ public:
    Int_t             GetVersionDate() const { return fVersionDate; }
    Int_t             GetVersionTime() const { return fVersionTime; }
    Int_t             GetVersionInt() const { return fVersionInt; }
+   Int_t             GetVersionCode() const { return fVersionCode; }
    const char       *GetVersion() const { return fVersion; }
    TCollection      *GetListOfClasses() const { return fClasses; }
    TSeqCollection   *GetListOfColors() const { return fColors; }
@@ -256,14 +258,16 @@ public:
    static Bool_t      Initialized();
    static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
+   static Int_t       ConvertVersionCode2Int(Int_t code);
+   static Int_t       ConvertVersionInt2Code(Int_t v);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
 
 
-R__EXTERN TROOT  *gROOT;
+R__EXTERN TROOT *gROOT;
 namespace ROOT {
-   TROOT* GetROOT();
+   TROOT *GetROOT();
 }
 #endif
 

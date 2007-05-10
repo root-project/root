@@ -26,6 +26,7 @@ make -s -t; make -s -t; make -s -t
 
 # recompile only base/src/TROOT.cxx
 touch base/src/TROOT.cxx
+touch base/inc/TVersionCheck.h
 touch rootx/src/rootxx.cxx
 make
 

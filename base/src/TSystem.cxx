@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.165 2007/03/20 10:59:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.166 2007/03/28 14:31:00 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -53,6 +53,9 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+Int_t        *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
+Int_t         gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
+static Int_t  gLibraryVersionMax = 256;
 
 ClassImp(TProcessEventTimer)
 
@@ -107,6 +110,9 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
    fInsideNotify  = kFALSE;
    fBeepDuration  = 0;
    fBeepFreq      = 0;
+
+   gLibraryVersion = new Int_t [gLibraryVersionMax];
+   memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
 }
 
 //______________________________________________________________________________
@@ -1444,8 +1450,9 @@ void TSystem::SetDynamicPath(const char *)
 int TSystem::Load(const char *module, const char *entry, Bool_t system)
 {
    // Load a shared library. Returns 0 on successful loading, 1 in
-   // case lib was already loaded and -1 in case lib does not exist
-   // or in case of error. When entry is specified the loaded lib is
+   // case lib was already loaded, -1 in case lib does not exist
+   // or in case of error and -2 in case of version mismatch.
+   // When entry is specified the loaded lib is
    // searched for this entry point (return -1 when entry does not exist,
    // 0 otherwise). When the system flag is kTRUE, the library is consisdered
    // a permanent systen library that should not be unloaded during the
@@ -1460,7 +1467,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    TString moduleBasename = BaseName(module);
    TString l(moduleBasename);
 
-   Ssiz_t idx   = l.Last('.');
+   Ssiz_t idx = l.Last('.');
    if (idx != kNPOS) {
       l.Remove(idx+1);
    }
@@ -1468,30 +1475,31 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (idx != kNPOS) {
       // The libs contains the sub-string 'l', let's make sure it is
       // not just part of a larger name.
-      if (idx==0 || libs[idx-1]=='/' || libs[idx-1]=='\\') {
+      if (idx == 0 || libs[idx-1] == '/' || libs[idx-1] == '\\') {
          Ssiz_t len = libs.Length();
          idx += l.Length();
-         while(idx<len && libs[idx]!='.') {
-            if (libs[idx]==' ' || idx+1==len)
+         while (idx < len && libs[idx] != '.') {
+            if (libs[idx] == ' ' || idx+1 == len)
                return 1;
             ++idx;
          }
       }
    }
-   if (l[l.Length()-1]=='.') {
+   if (l[l.Length()-1] == '.') {
       l.Remove(l.Length()-1);
    }
    if (l.BeginsWith("lib")) {
       l.Replace(0, 3, "-l");
       idx = libs.Index(l);
       if (idx != kNPOS &&
-          (idx==0 || libs[idx-1]==' ') &&
-          (libs[idx+l.Length()]==' ' || libs[idx+l.Length()]==0)) {
+          (idx == 0 || libs[idx-1] == ' ') &&
+          (libs[idx+l.Length()] == ' ' || libs[idx+l.Length()] == 0)) {
          return 1;
       }
    }
 
    // load any dependent libraries
+   int ret;
    TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
    if (!deplibs.IsNull()) {
       TString delim(" ");
@@ -1501,20 +1509,34 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
          if (gDebug > 0)
             Info("Load", "loading dependent library %s for library %s",
                  deplib, ((TObjString*)tokens->At(0))->GetName());
-         if (Load(deplib, "", system) == -1) {
+         if ((ret = Load(deplib, "", system)) < 0) {
             delete tokens;
-            return -1;
+            return ret;
          }
       }
       delete tokens;
    }
 
    char *path;
-   int i = -1;
+   ret = -1;
    if ((path = DynamicPathName(module))) {
-      i = gInterpreter->Load(path, system);
+      gLibraryVersionIdx++;
+      if (gLibraryVersionIdx == gLibraryVersionMax) {
+         gLibraryVersionMax *= 2;
+         TStorage::ReAllocInt(gLibraryVersion, gLibraryVersionMax, gLibraryVersionIdx);
+      }
+      ret = gInterpreter->Load(path, system);
+      if (ret < 0) ret = -1;
       if (gDebug > 0)
-         Info("Load", "loaded library %s, status %d", path, i);
+         Info("Load", "loaded library %s, status %d", path, ret);
+      if (ret == 0 && gLibraryVersion[gLibraryVersionIdx]) {
+         int v = TROOT::ConvertVersionCode2Int(gLibraryVersion[gLibraryVersionIdx]);
+         Error("Load", "version mismatch, %s = %d, ROOT = %d",
+               path, v, gROOT->GetVersionInt());
+         ret = -2;
+         gLibraryVersion[gLibraryVersionIdx] = 0;
+      }
+      gLibraryVersionIdx--;
       delete [] path;
    }
 
@@ -1523,14 +1545,14 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // library static initializer
    if (gApplication) gApplication->InitializeGraphics();
 
-   if (!entry || !entry[0]) return i;
+   if (!entry || !entry[0] || ret < 0) return ret;
 
    Func_t f = DynFindSymbol(module, entry);
    if (f) return 0;
    return -1;
 #endif
-
 }
+
 //______________________________________________________________________________
 char *TSystem::DynamicPathName(const char *, Bool_t)
 {

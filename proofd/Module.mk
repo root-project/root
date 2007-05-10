@@ -157,6 +157,8 @@ distclean::     distclean-proofd
 
 ##### extra rules ######
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
+$(PROOFDEXEO): PCHCXXFLAGS =
+$(XPDO):       PCHCXXFLAGS =
 
 $(XPDO): $(XRDPLUGINS)
 ifneq ($(ICC_GE_9),)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.210 2007/04/18 14:28:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.211 2007/05/09 09:39:18 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -179,9 +179,9 @@ static void CleanUpROOTAtExit()
 
 
 
-Int_t         TROOT::fgDirLevel = 0;
-Bool_t        TROOT::fgRootInit = kFALSE;
-Bool_t        TROOT::fgMemCheck = kFALSE;
+Int_t  TROOT::fgDirLevel = 0;
+Bool_t TROOT::fgRootInit = kFALSE;
+Bool_t TROOT::fgMemCheck = kFALSE;
 
 // This local static object initializes the ROOT system
 namespace ROOT {
@@ -195,13 +195,16 @@ namespace ROOT {
    }
 }
 
-TROOT      *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
+TROOT *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
 // via the rootrc resouce "Root.Debug", via the shell environment variable
 // ROOTDEBUG, or via the debugger.
-Int_t       gDebug;
+Int_t gDebug;
+
+// Global ROOT version code, used by TVersionCheck class
+Int_t gRootVersionCode = ROOT_VERSION_CODE;
 
 
 
@@ -273,6 +276,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fVersion         = ROOT_RELEASE;
+   fVersionCode     = ROOT_VERSION_CODE;
    fVersionInt      = IVERSQ();
    fVersionDate     = IDATQQ(ROOT_RELEASE_DATE);
    fVersionTime     = ITIMQQ(ROOT_RELEASE_TIME);
@@ -1249,8 +1253,8 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    // absolute path).
    // If check is true it will only check if libname exists and is
    // readable.
-   // Returns 0 on successful loading and -1 in case libname does not
-   // exist or in case of error.
+   // Returns 0 on successful loading, -1 in case libname does not
+   // exist or in case of error and -2 in case of version mismatch.
 
    if (TClassTable::GetDict(classname)) return 0;
 
@@ -1693,4 +1697,23 @@ void TROOT::SetDirLevel(Int_t level)
 {
    // Return Indentation level for ls().
    fgDirLevel = level;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::ConvertVersionCode2Int(Int_t code)
+{
+   // Convert version code to an integer, i.e. 331527 -> 51507.
+
+   return 10000*(code>>16) + 100*((code&65280)>>8) + (code&255);
+}
+
+//______________________________________________________________________________
+Int_t TROOT::ConvertVersionInt2Code(Int_t v)
+{
+   // Convert version as an integer to version code as used in RVersion.h.
+
+   int a = v/10000;
+   int b = (v - a*10000)/100;
+   int c = v - a*10000 - b*100;
+   return (a << 16) + (b << 8) + c;
 }
