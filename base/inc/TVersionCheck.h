@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.33 2007/01/20 20:51:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVersionCheck.h,v 1.1 2007/05/10 15:06:21 rdm Exp $
 // Author: Fons Rademakers   9/5/2007
 
 /*************************************************************************
@@ -24,10 +24,14 @@
 #ifndef ROOT_RVersion
 #include "RVersion.h"
 #endif
+#ifndef ROOT_DllImport
+#include "DllImport.h"
+#endif
 
-extern int  gRootVersionCode;     // defined in TROOT
-extern int *gLibraryVersion;      // defined in TSystem
-extern int  gLibraryVersionIdx;   // defined in TSystem
+#ifndef WIN32
+R__EXTERN int  gRootVersionCode;     // defined in TROOT
+R__EXTERN int *gLibraryVersion;      // defined in TSystem
+R__EXTERN int  gLibraryVersionIdx;   // defined in TSystem
 
 
 class TVersionCheck {
@@ -40,4 +44,5 @@ public:
 
 static TVersionCheck gVersionCheck;
 
+#endif
 #endif
