@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.211 2007/05/09 09:39:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.212 2007/05/10 15:06:21 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -203,12 +203,6 @@ TROOT *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
 // ROOTDEBUG, or via the debugger.
 Int_t gDebug;
 
-// Global ROOT version code, used by TVersionCheck class
-Int_t gRootVersionCode = ROOT_VERSION_CODE;
-
-
-
-//extern "C" void R__SetZipMode(int mode); //function defined in zip/inc/Bits.h
 
 ClassImp(TROOT)
 
@@ -1716,4 +1710,12 @@ Int_t TROOT::ConvertVersionInt2Code(Int_t v)
    int b = (v - a*10000)/100;
    int c = v - a*10000 - b*100;
    return (a << 16) + (b << 8) + c;
+}
+
+//______________________________________________________________________________
+Int_t TROOT::RootVersionCode()
+{
+   // Return ROOT version code as defined in RVersion.h.
+
+   return ROOT_VERSION_CODE;
 }

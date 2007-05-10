@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.60 2007/02/15 15:04:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.61 2007/05/10 15:06:21 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -260,6 +260,7 @@ public:
    static void        SetDirLevel(Int_t level = 0);
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
+   static Int_t       RootVersionCode();
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };

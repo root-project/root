@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.166 2007/03/28 14:31:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.167 2007/05/10 15:06:21 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -53,8 +53,9 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
-Int_t        *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
-Int_t         gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
+
+static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
+static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
 ClassImp(TProcessEventTimer)
@@ -3259,4 +3260,13 @@ void TSystem::CleanCompiledMacros()
    while ((lib = (TNamed*)next())) {
       if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle());
    }
+}
+
+//______________________________________________________________________________
+TVersionCheck::TVersionCheck(int versionCode)
+{
+   // Register version of plugin library.
+
+   if (versionCode != TROOT::RootVersionCode() && gLibraryVersion)
+      gLibraryVersion[gLibraryVersionIdx] = versionCode;
 }
