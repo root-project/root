@@ -1,4 +1,5 @@
-// Author: G Ganis 2007
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.9 2005/10/07 10:28:54 rdm Exp $
+// Author: G Ganis 10/5/2007
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +17,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 
