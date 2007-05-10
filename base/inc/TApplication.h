@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.26 2007/03/02 14:05:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.27 2007/03/28 14:29:12 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -48,6 +48,7 @@ private:
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
+   TApplication      *fAppRemote;      //Current remote application, if defined
    Bool_t             fIsRunning;      //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;  //When true return from Run()
    Bool_t             fNoLog;          //Do not process logon and logoff macros
@@ -59,6 +60,8 @@ private:
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
 
+   Bool_t             fProcessingLine; //True if processing line; use for remote apps
+
    static Bool_t      fgGraphNeeded;   // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;     // True if graphics libs initialized
 
@@ -67,6 +70,17 @@ private:
 
 protected:
    TApplication();
+
+   void               SetProcessingLine(Bool_t on = kTRUE) { fProcessingLine = on; }
+
+   static TList      *fgApplications;  // List of available applications
+
+   static Int_t       ParseRemoteLine(const char *ln,
+                                      TString &hostdir, TString &user,
+                                      Int_t &dbg, TString &script);
+   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   static void        Close(TApplication *app);
+   static TApplication *Open(const char *url, Int_t debug, const char *script);
 
    virtual void Help(const char *line);
    virtual void LoadGraphicsLibs();
@@ -105,6 +119,8 @@ public:
    virtual void    Raise()   { fAppImp->Raise(); }
    virtual void    Lower()   { fAppImp->Lower(); }
 
+   virtual void    ls(Option_t *option="") const;
+
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
    char           *Argv(Int_t index) const { return fArgv ? fArgv[index] : 0; }
@@ -117,6 +133,8 @@ public:
    Bool_t          IsRunning() const { return fIsRunning; }
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
+
+   virtual Bool_t  IsProcessingLine() const { return fProcessingLine; }
 
    static void     CreateApplication();
    static void     NeedGraphicsLibs();

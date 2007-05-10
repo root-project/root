@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.89 2007/03/28 15:43:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.90 2007/05/04 16:53:25 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -45,6 +45,8 @@
 #include "TSystemDirectory.h"
 #include "TPluginManager.h"
 #include "TClassTable.h"
+#include "TUrl.h"
+#include "TRint.h"
 
 #ifdef R__WIN32
 #include "TWinNTSystem.h"
@@ -53,6 +55,7 @@
 TApplication *gApplication = 0;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
+TList *TApplication::fgApplications = 0;  // List of available applications
 
 //______________________________________________________________________________
 class TIdleTimer : public TTimer {
@@ -81,6 +84,7 @@ TApplication::TApplication()
    fArgc          = 0;
    fArgv          = 0;
    fAppImp        = 0;
+   fAppRemote     = 0;
    fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
    fNoLog         = kFALSE;
@@ -89,6 +93,7 @@ TApplication::TApplication()
    fFiles         = 0;
    fIdleTimer     = 0;
    fSigHandler    = 0;
+   fProcessingLine = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -124,6 +129,12 @@ TApplication::TApplication(const char *appClassName,
    gROOT->SetApplication(this);
    gROOT->SetName(appClassName);
 
+   // Create the list of applications the first time
+   if (!fgApplications) {
+      fgApplications = new TList;
+      fgApplications->Add(this);
+   }
+
    if (options) { }  // use unused argument
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
@@ -157,6 +168,8 @@ TApplication::TApplication(const char *appClassName,
    fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
    fAppImp        = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+   fAppRemote     = 0;
+   fProcessingLine = kFALSE;
 
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
@@ -516,6 +529,137 @@ void TApplication::MakeBatch()
 }
 
 //______________________________________________________________________________
+Int_t TApplication::ParseRemoteLine(const char *ln,
+                                   TString &hostdir, TString &user,
+                                   Int_t &dbg, TString &script)
+{
+   // Parse the content of a line starting with ".R" (already stripped-off)
+   // The format is
+   //      [user@]host[:dir] [-l user] [-d dbg] [script]
+   // The variable 'dir' is the remote directory to be used as working dir.
+   // The username can be specified in two ways, "-l" having the priority
+   // (as in ssh).
+   // A 'dbg' value > 0 gives increasing verbosity.
+   // The last argument 'script' allows to specify an alternative script to
+   // be executed remotely to startup the session.
+
+   // Parse the content of a line starting with ".R" (already stripped-off)
+   // The format of teh remaining part is
+   //      hostdir [-l user] [-d dbg] [script]
+   // The variable 'hostdir' contains the host to connect to and the remote
+   // directory to be used as working dir.
+   // A username can also be included in hostdir in the usual form user@host.
+
+   if (!ln || strlen(ln) <= 0)
+      return 0;
+
+   Int_t rc = 0;
+   Bool_t isHostDir = kTRUE;
+   Bool_t isScript = kFALSE;
+   Bool_t isUser = kFALSE;
+   Bool_t isDbg = kFALSE;
+
+   TString line(ln);
+   TString tkn;
+   Int_t from = 0;
+   while (line.Tokenize(tkn, from, " ")) {
+      if (tkn == "-l") {
+         // Next is a user name
+         isUser = kTRUE;
+      } else if (tkn == "-d") {
+         isDbg = kTRUE;
+      } else if (tkn == "-close") {
+         rc = 1;
+      } else if (tkn.BeginsWith("-")) {
+         ::Warning("TApplication::ParseRemoteLine","unknown option: %s", tkn.Data());
+      } else {
+         if (isUser) {
+            user = tkn;
+            isUser = kFALSE;
+         } else if (isDbg) {
+            dbg = tkn.Atoi();
+            isDbg = kFALSE;
+         } else if (isHostDir) {
+            hostdir = tkn;
+            hostdir.ReplaceAll(":","/");
+            isHostDir = kFALSE;
+            isScript = kTRUE;
+         } else if (isScript) {
+            // Add everything left
+            script = line;
+            Int_t itkn = script.Index(tkn);
+            if (itkn != kNPOS)
+               script.Remove(0, itkn);
+            script.Insert(0, "\"");
+            script += "\"";
+            isScript = kFALSE;
+            break;
+         } else {
+            ::Warning("TApplication::ParseRemoteLine",
+                      "inconsistent input line %s", line.Data());
+         }
+      }
+   }
+
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Long_t TApplication::ProcessRemote(const char *line, Int_t *)
+{
+   // Process the content of a line starting with ".R" (already stripped-off)
+   // The format is
+   //      [user@]host[:dir] [-l user] [-d dbg] [script]
+   // The variable 'dir' is the remote directory to be used as working dir.
+   // The username can be specified in two ways, "-l" having the priority
+   // (as in ssh).
+   // A 'dbg' value > 0 gives increasing verbosity.
+   // The last argument 'script' allows to specify an alternative script to
+   // be executed remotely to startup the session.
+
+   if (!line) return 0;
+
+   TString hostdir, user, script;
+   Int_t dbg = 0;
+   Int_t rc = ParseRemoteLine(line, hostdir, user, dbg, script);
+   if (hostdir.Length() <= 0) {
+      // Close the remote application if required
+      if (rc == 1) {
+         TApplication::Close(fAppRemote);
+         delete fAppRemote;
+      }
+      // Return to local run
+      fAppRemote = 0;
+      // Set the default prompt
+      ((TRint *) gROOT->GetApplication())->SetPrompt("root [%d] ");
+      // Done
+      return 1;
+   } else if (rc == 1) {
+      // close an existing remote application
+      TApplication *ap = Open(hostdir, 0, 0);
+      if (ap) {
+         TApplication::Close(ap);
+         delete ap;
+      }
+   }
+   // Attach or start a remote application
+   if (user.Length() > 0)
+      hostdir.Insert(0,Form("%s@", user.Data()));
+   const char *sc = (script.Length() > 0) ? script.Data() : 0;
+   TApplication *ap = Open(hostdir, dbg, sc);
+   if (ap) {
+      fAppRemote = ap;
+      // Set the prompt in the form "<application-name>:root [i] "
+      TString prompt = Form("%s:root [%%d] ", ap->ApplicationName());
+      ((TRint *) gROOT->GetApplication())->SetPrompt(prompt);
+   }
+
+   // Done
+   return 1;
+}
+
+//______________________________________________________________________________
 Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
@@ -523,6 +667,19 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    // Return the return value of the command casted to a long.
 
    if (!line || !*line) return 0;
+
+   // If we are asked to go remote do it
+   if (!strncmp(line, ".R", 2)) {
+      Int_t n = 2;
+      while (*(line+n) == ' ')
+         n++;
+      return ProcessRemote(line+n, err);
+   }
+
+   // Redirect, if requested
+   if (fAppRemote && !(fAppRemote->IsProcessingLine())) {
+      return fAppRemote->ProcessLine(line, err);
+   }
 
    if (!strncasecmp(line, ".qqqqqqq", 7)) {
       gSystem->Abort();
@@ -856,5 +1013,98 @@ void TApplication::CreateApplication()
          Printf("<TApplication::CreateApplication>: "
                 "created default TApplication");
       delete [] a; delete [] b;
+   }
+}
+
+//______________________________________________________________________________
+TApplication *TApplication::Open(const char *url,
+                                  Int_t debug, const char *script)
+{
+   // Static function used to attach to an existing remote application
+   // or to start one
+
+   TApplication *ap = 0;
+   TUrl nu(url);
+   Int_t nnew = 0;
+
+   // Look among the existing ones
+   if (fgApplications) {
+      TIter nxa(fgApplications);
+      while ((ap = (TApplication *) nxa())) {
+         TString apn(ap->ApplicationName());
+         if (apn == url) {
+            // Found matching application
+            return ap;
+         } else {
+            // Check if same machine and user
+            TUrl au(apn);
+            if (strlen(au.GetUser()) > 0 && strlen(nu.GetUser()) > 0 &&
+                !strcmp(au.GetUser(), nu.GetUser())) {
+               if (!strncmp(au.GetHost(), nu.GetHost(), strlen(nu.GetHost())))
+                  // New session on a known machine
+                  nnew++;
+            }
+         }
+      }
+   } else {
+      ::Error("TApplication::Open", "list of applications undefined - protocol error");
+      return ap;
+   }
+
+   // If new session on a known machine pass the number as option
+   if (nnew > 0) {
+      nnew++;
+      nu.SetOptions(Form("%d", nnew));
+   }
+
+   // Instantiate the TApplication object to be run
+   TPluginHandler *h = 0;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TApplication","remote"))) {
+      if (h->LoadPlugin() == 0) {
+         ap = (TApplication *) h->ExecPlugin(3, nu.GetUrl(), debug, script);
+      } else {
+         ::Error("TApplication::Open", "failed to load plugin for TApplicationRemote");
+      }
+   } else {
+      ::Error("TApplication::Open", "failed to find plugin for TApplicationRemote");
+   }
+
+   // Add to the list
+   if (ap && !(ap->TestBit(kInvalidObject))) {
+      fgApplications->Add(ap);
+   } else {
+      SafeDelete(ap);
+      ::Error("TApplication::Open",
+              "TApplicationRemote for %s could not be instantiated", url);
+   }
+
+   // Done
+   return ap;
+}
+
+//______________________________________________________________________________
+void TApplication::Close(TApplication *app)
+{
+   // Static function used to close a remote application
+
+   if (app) {
+      app->Terminate(0);
+      fgApplications->Remove(app);
+   }
+}
+
+//______________________________________________________________________________
+void TApplication::ls(Option_t *opt) const
+{
+   // Show available sessions
+
+   if (fgApplications) {
+      TIter nxa(fgApplications);
+      TApplication *a = 0;
+      while ((a = (TApplication *) nxa())) {
+         a->Print(opt);
+      }
+   } else {
+      Print(opt);
    }
 }
