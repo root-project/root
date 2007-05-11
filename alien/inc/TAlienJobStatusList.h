@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.h,v 1.1 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.h,v 1.2 2007/03/19 17:41:37 rdm Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TAlienJob;
 class TAlienJobStatusList : public TGridJobStatusList {
 
 protected:
-   GridJobID_t  fJobID;  // the job's ID
+   TString  fJobID;  // the job's ID
 
 public:
    TAlienJobStatusList() { gGridJobStatusList = this; }

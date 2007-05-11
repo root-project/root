@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJobStatusList.h,v 1.1 2007/03/19 16:14:15 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJobStatusList.h,v 1.2 2007/03/19 17:24:53 brun Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TGridJob;
 class TGridJobStatusList : public TList {
 
 protected:
-   GridJobID_t  fJobID;  // the job's ID
+   TString  fJobID;  // the job's ID
 
 public:
    TGridJobStatusList() { }

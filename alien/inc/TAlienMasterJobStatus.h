@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJobStatus.h,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/10/2004
 
 /*************************************************************************
@@ -42,8 +42,8 @@ private:
                                  // TAlienJobStatus objects
 
 public:
-   TAlienMasterJobStatus(UInt_t jobid) : fMasterJob(0)
-      { TString name; name += jobid; SetName(name); SetTitle(name); }
+   TAlienMasterJobStatus(const char* jobid) : fMasterJob(0)
+      { TString name; name = jobid; SetName(name); SetTitle(name); }
    virtual ~TAlienMasterJobStatus();
 
    EGridJobStatus GetStatus() const;

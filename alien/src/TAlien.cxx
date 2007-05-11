@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.19 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.20 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -240,7 +240,7 @@ TGridJob *TAlien::Submit(const char *jdl)
 
    alienResult->DumpResult();
 
-   GridJobID_t jobID = 0;
+   TString jobID = "0";
 
    TIterator* iter = list->MakeIterator();
    TObject* object = 0;
@@ -250,18 +250,18 @@ TGridJob *TAlien::Submit(const char *jdl)
       TObject* jobIDObject = map->GetValue("jobId");
       TObjString* jobIDStr = dynamic_cast<TObjString*>(jobIDObject);
       if (jobIDStr) {
-         jobID = atoi(jobIDStr->GetString());
+         jobID = jobIDStr->GetString();
       }
    }
    delete iter;
    delete result;
 
-   if (jobID == 0) {
+   if (jobID == "0") {
       Error("Submit", "error submitting job");
       return 0;
    }
 
-   Info("Submit", "your job was submitted with the ID = %d", jobID);
+   Info("Submit", "your job was submitted with the ID = %s", jobID.Data());
 
    return dynamic_cast<TGridJob*>(new TAlienJob(jobID));
 }
@@ -280,7 +280,7 @@ TGridJobStatusList *TAlien::Ps(const char* /*options*/, Bool_t verbose)
    // Get job status list.
 
    GAPI_JOBARRAY* gjobarray = gapi_queryjobs("-", gGrid->GetUser(), "-", "-", "-",
-					    "-", "-", "-", "-");
+                                             "-", "-", "-", "-");
    if (!gjobarray)
       return 0;
 
@@ -342,7 +342,7 @@ TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t strea
 
          for (Int_t column = 0 ; column < (fGc->GetStreamColumns(stream)); column++) {
             TMap *gmap = new TMap();
-	    gmap->SetOwner(kTRUE);
+            gmap->SetOwner(kTRUE);
             for (Int_t row=0; row < fGc->GetStreamRows(stream,column); row++) {
                gmap->Add((TObject*)(new TObjString(fGc->GetStreamFieldKey(stream,column,row))),
                          (TObject*)(new TObjString(fGc->GetStreamFieldValue(stream,column,row))));

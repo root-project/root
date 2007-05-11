@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.3 2006/02/03 14:50:25 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -34,10 +34,10 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
    // Returns 0 in case of failure.
 
    TString jobID;
-   jobID += (static_cast<ULong_t>(fJobID));
+   jobID = fJobID;
 
    GAPI_JOBARRAY *gjobarray = gapi_queryjobs("-", "%", "-", "-", "-", "-",
-                                               jobID.Data(), "-", "-");
+                                             jobID.Data(), "-", "-");
 
    if (!gjobarray)
       return 0;

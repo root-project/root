@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.h,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  27/10/2004
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 class TAlienMasterJob : public TGridJob {
 
 public:
-   TAlienMasterJob(GridJobID_t jobID) : TGridJob(jobID) { }
+   TAlienMasterJob(TString jobID) : TGridJob(jobID) { }
    virtual ~TAlienMasterJob() { }
 
    virtual TGridJobStatus *GetJobStatus() const;

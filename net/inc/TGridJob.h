@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJob.h,v 1.1 2005/05/12 13:19:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJob.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************
@@ -25,22 +25,22 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 class TGridJobStatus;
-
-typedef ULong64_t GridJobID_t;
-
 
 class TGridJob : public TObject {
 
 protected:
-   GridJobID_t  fJobID;  // the job's ID
+   TString  fJobID;  // the job's ID
 
 public:
-   TGridJob(GridJobID_t jobID) : fJobID(jobID) { }
+   TGridJob(TString jobID) : fJobID(jobID) { }
    virtual ~TGridJob() { }
 
-   virtual GridJobID_t GetJobID() { return fJobID; }
+   virtual TString GetJobID() { return fJobID; }
 
    virtual TGridJobStatus *GetJobStatus() const = 0;
 
