@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.126 2007/05/04 17:32:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.127 2007/05/05 17:37:27 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1346,6 +1346,7 @@ Int_t TBranch::LoadBaskets()
       fBaskets.AddAt(basket,i);
       nimported++;
    }
+   fNBasketRAM = nimported;
    return nimported;
 }
 
