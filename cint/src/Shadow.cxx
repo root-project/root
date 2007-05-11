@@ -5,14 +5,13 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: Shadow.cxx,v 1.8 2006/11/24 13:14:37 rdm Exp $
+//$Id: Shadow.cxx,v 1.14 2007/03/15 17:59:30 axel Exp $
 
 #include "Shadow.h"
 #include <ostream>
 #include <string>
 #include <list>
 
-const int kMaxLen   =   1024;
 bool Cint::G__ShadowMaker::fgVetoShadow = false;
 
 Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix, 
@@ -124,23 +123,22 @@ void Cint::G__ShadowMaker::GetFullyQualifiedName(G__TypeInfo &type, std::string 
 
    const char *s = type.TmpltName();
 
-   char typeName[kMaxLen];
-   if (s) strcpy(typeName, s);
-   else typeName[0] = 0;
+   std::string typeName;
+   if (s) typeName = s;
 
-   if (!strcmp(typeName, "string")) {
+   if (typeName == "string") {
 
       fullyQualifiedName = type.TrueName();
 
-   } else if (!strcmp(typeName, "vector")
-       ||!strcmp(typeName, "list")
-       ||!strcmp(typeName, "deque")
-       ||!strcmp(typeName, "map")
-       ||!strcmp(typeName, "multimap")
-       ||!strcmp(typeName, "set")
-       ||!strcmp(typeName, "multiset")
-       ||!strcmp(typeName, "allocator")
-       ||!strcmp(typeName, "pair")
+   } else if (typeName == "vector"
+       ||typeName == "list"
+       ||typeName == "deque"
+       ||typeName == "map"
+       ||typeName == "multimap"
+       ||typeName == "set"
+       ||typeName == "multiset"
+       ||typeName == "allocator"
+       ||typeName == "pair"
       ) {
 
       GetFullyQualifiedName(type.Name(),fullyQualifiedName);
