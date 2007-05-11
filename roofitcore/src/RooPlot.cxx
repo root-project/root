@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.47 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooPlot.cxx,v 1.48 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,8 @@
 #include "RooFit.h"
 
 #include "TClass.h"
+#include "TH1D.h"
+
 #include "RooPlot.h"
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
@@ -52,36 +54,41 @@ ClassImp(RooPlot)
 ;
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), 
-  _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
+  _hist(0), _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
   _defYmin(1e-5), _defYmax(1)
 {
+  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+
   // Create an empty frame with the specified x-axis limits.
   initialize();
   
   //Because this is the default constructor (!), we must remove the object
   //from the directory when reading the object from a file
   //This default constructor should be changed to be non default!
-  if (fDirectory && xmin==0 && xmax==1) fDirectory->GetList()->Remove(this);
+  // if (fDirectory && xmin==0 && xmax==1) fDirectory->GetList()->Remove(this);
 }
 
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
+  _hist(0), _items(), _plotVarClone(0), 
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits.
+
+  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+
   SetMinimum(ymin);
   SetMaximum(ymax);
   initialize();
 }
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
-  TH1(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()), _items(),
+  _hist(0), _items(),
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
+  _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
     cout << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
@@ -102,11 +109,12 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
+  _hist(0), _items(), _plotVarClone(0), 
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
+  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -116,13 +124,15 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 }
 
 RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
-  TH1(name,title,nbins,xmin,xmax), _items(), 
+  _hist(0), _items(), 
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
+
+  _hist = new TH1D(name,title,nbins,xmin,xmax) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -137,13 +147,15 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 }
 
 RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
-  TH1(histName(),"RooPlot",nbins,xmin,xmax), _items(), 
+  _hist(0), _items(), 
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
+    
+  _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -164,10 +176,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 void RooPlot::initialize() {
   // Perform initialization that is common to all constructors.
 
-  // We hold 1D plot objects
-  fDimension=1 ;
   // We do not have useful stats of our own
-  SetStats(kFALSE);
+  _hist->SetStats(kFALSE);
   // Default vertical padding of our enclosed objects
   setPadFactor(0.05);
   // We don't know our normalization yet
@@ -192,6 +202,7 @@ RooPlot::~RooPlot() {
   delete _iterator;
   if(_plotVarSet) delete _plotVarSet;
   if(_normVars) delete _normVars;
+  delete _hist ;
 }
 
 void RooPlot::updateNormVars(const RooArgSet &vars) {
@@ -368,7 +379,7 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
   }
 
   // use the specified y-axis label if we don't have one already
-  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(label);
+  if(0 == strlen(_hist->GetYaxis()->GetTitle())) _hist->SetYTitle(label);
 }
 
 void RooPlot::Draw(Option_t *options) {
@@ -376,7 +387,7 @@ void RooPlot::Draw(Option_t *options) {
   // only apply to the drawing of our frame. The options specified in our add...()
   // methods will be used to draw each object we contain.
 
-  TH1::Draw(options);
+  _hist->Draw(options);
   _iterator->Reset();
   TObject *obj = 0;
   while((obj= _iterator->Next())) {
@@ -386,7 +397,7 @@ void RooPlot::Draw(Option_t *options) {
     }
   }
 
-  TH1::Draw("AXISSAME");
+  _hist->Draw("AXISSAME");
 }
 
 
@@ -608,13 +619,13 @@ TString RooPlot::caller(const char *method) const {
 
 void RooPlot::SetMaximum(Double_t maximum) 
 {
-  TH1::SetMaximum(maximum==-1111?_defYmax:maximum) ;
+  _hist->SetMaximum(maximum==-1111?_defYmax:maximum) ;
 }
 
 
 void RooPlot::SetMinimum(Double_t minimum) 
 {
-  TH1::SetMinimum(minimum==-1111?_defYmin:minimum) ;
+  _hist->SetMinimum(minimum==-1111?_defYmin:minimum) ;
 }
 
 
@@ -692,4 +703,33 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   cout << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
        << xlo << " to " << xhi << ", substituting full event count" << endl ;
   return getFitRangeNEvt()*scaleFactor ;
+}
+
+
+TAxis* RooPlot::GetXaxis() const { return _hist->GetXaxis() ; }
+TAxis* RooPlot::GetYaxis() const { return _hist->GetYaxis() ; }
+Int_t  RooPlot::GetNbinsX() const { return _hist->GetNbinsX() ; }
+Int_t  RooPlot::GetNdivisions(Option_t* axis) const { return _hist->GetNdivisions(axis) ; }
+Double_t  RooPlot::GetMinimum(Double_t minval) const { return _hist->GetMinimum(minval) ; }
+Double_t   RooPlot::GetMaximum(Double_t maxval) const { return _hist->GetMaximum(maxval) ; }
+void RooPlot::SetXTitle(const char *title) { _hist->SetXTitle(title) ; }
+void RooPlot::SetYTitle(const char *title) { _hist->SetYTitle(title) ; }
+void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
+
+void RooPlot::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooPlot.
+  
+  if (R__b.IsReading()) {
+    UInt_t R__s, R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+    if (R__v > 1) {
+      R__b.ReadClassBuffer(RooPlot::Class(),this);
+    } else {
+      // WVE Insert backward compatible streamer code here
+      cout << "RooPlot::Streamer V1 backward compatibility streamer not yet implemented" << endl ;
+    } 
+  } else {
+    R__b.WriteClassBuffer(RooPlot::Class(),this);
+  }
 }

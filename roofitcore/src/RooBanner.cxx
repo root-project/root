@@ -7,7 +7,7 @@
 // -- CLASS DESCRIPTION [AUX] --
 // Print banner message when RooFit library is loaded
 
-const char* VTAG="2.10" ;
+const char* VTAG="2.11" ;
 
 Int_t doBanner()
 {
