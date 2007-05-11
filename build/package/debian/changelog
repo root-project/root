@@ -1,3 +1,10 @@
+root-system (5.15.07-1) experimental; urgency=low
+
+  * New version.  
+  * New source package name to please FTP-masters. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 01 May 2007 22:18:01 +0200
+
 root (5.13.05-7) experimental; urgency=low
 
   * New release.  take out /usr/lib/root/<version> from

@@ -5,6 +5,8 @@
 @sysconfdir@/root/system.rootrc
 @sysconfdir@/root/system.rootdaemonrc
 @sysconfdir@/root/RadioNuclides.txt
+@sysconfdir@/root/gdb-backtrace.sh 
+@sysconfdir@/root/html
 @prefix@/share/man/man1/system.rootdaemonrc.1*
 @prefix@/share/root/icons/
 @prefix@/share/root/fonts/symbol.ttf

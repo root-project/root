@@ -6,8 +6,14 @@ version=$1 	; shift
 prefix=$1  	; shift
 sysconfdir=$1	; shift
 pkgdocdir=$1	; shift
-sovers=`echo $version | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
+sovers=`echo $version | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\..*/\1/'`
 rm -f $outdir/*.install
+
+# install file lists that need no substitutions 
+for i in build/package/common/*.install ; do 
+    if test ! -f $i ; then continue ; fi 
+    cp $i $outdir
+done
 
 #
 # Loop over the directories, and update the file lists based on the 
@@ -33,21 +39,34 @@ for d in * ; do
     # if it's libraries and such should go into some special package. 
     # 
     case $d in 		
-	auth)       lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	base)       lib=libroot             ; dev=libroot-dev; bin=root-bin
-	            extra="ALLLIBS=${prefix}/lib/root/libCore.so" ;;  	
-	cint)	    lib=libroot             ; dev=libroot-dev; bin=root-bin
-	    	    extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;  	
-	clib|cont|eg|foam|fitpanel|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
-	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	mathcore|matrix|meta*|net|newdelete|physics|postscript|rint|spectrum)
-	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	table|thread|tree*|unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx)
-	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	smatrix|splot|xml)    
-	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
+	auth)       lib=libroot             ; dev=libroot-dev; 
+	            bin=root-system-bin     ;;
+	base)       lib=libroot             ; dev=libroot-dev; 
+	            bin=root-system-bin
+	            extra="ALLMAPS=${prefix}/lib/root/libCore.rootmap "
+                    extra="$extra ALLLIBS=${prefix}/lib/root/libCore.so" ;; 
+	cint)	    lib=libroot             ; dev=libroot-dev; 
+	            bin=root-system-bin     ;
+	    	    extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;   
+	    	    # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" ;; 
+        clib|cont|eg|foam|fitpanel|g3d|gdml|ged*|geom*|gpad|graf|gui*|hist*)
+	            lib=libroot             ; dev=libroot-dev; 
+		    bin=root-system-bin ;;
+        html|io|math|mathcore|matrix|meta*|net|physics|postscript|rint)
+ 	            lib=libroot             ; dev=libroot-dev; 
+		    bin=root-system-bin ;;
+        spectrum*|table|thread|tree*|unix|utils|vmc|x11*|x3d|zip)
+	            lib=libroot             ; dev=libroot-dev; 
+		    bin=root-system-bin ;;
+	rpdutils)   lib=libroot             ; dev=libroot-dev; 
+		    bin=root-system-bin     ;; # extra="NOMAP=1"  ;;
+        rootx|sessionviewer|smatrix|splot|unuran|xml)    
+	            lib=libroot             ; dev=libroot-dev; 
+		    bin=root-system-bin ;;
+	newdelete)  lib=libroot		    ; dev=libroot-dev; 
+	    	    bin=libroot-dev         ;; # extra="NOMAP=1" ;;
 	reflex)     lib=libroot		    ; dev=libroot-dev; 
-	    	    bin=libroot-dev         ;;
+	    	    bin=libroot-dev         ;; # extra="NOMAP=1" ;;
 	cintex)     lib=libroot		    ; dev=libroot-dev; 
 	    	    bin=libroot-dev         ;;
 	globusauth) lib=root-plugin-globus  ; dev=$lib       ; bin=$lib ;;  
@@ -57,11 +76,14 @@ for d in * ; do
 	srputils)   lib=root-plugin-srp     ; dev=$lib       ; bin=$lib ;;  
 	xmlparser)  lib=root-plugin-xml     ; dev=$lib       ; bin=$lib ;;
 	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
-	proofd)	    lib=root-plugin-xproof  ; dev=$lib       ; bin=root-$d ;;
-	rootd)      lib=root-$d             ; dev=$lib       ; bin=$lib ;;
-	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib ;
-	            xrdlibs=
-	    	    extra="ALLLIBS= NOVERS=1" ;;     
+	proofd)	    lib=root-plugin-xproof  ; dev=$lib       ; 
+	            bin=root-system-proofd  ;; 
+	proofplayer)	    
+	            lib=root-plugin-proof   ; dev=$lib       ; bin=$lib ;; 
+	rootd)      lib=root-system-$d      ; dev=$lib       ; bin=$lib ;;
+	xrootd)     lib=root-system-$d      ; dev=$lib       ; bin=$lib ;
+	            xrdlibs=                ; extra="ALLLIBS= NOVERS=1" ;; 
+                    # NOMAP=1" ;;     
 	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
 	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
@@ -69,7 +91,8 @@ for d in * ; do
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
 	sapdb)      lib=root-plugin-maxdb   ; dev=$lib       ; bin=$lib ;;  
 	qtgsi)      lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;  
-	fftw)       lib=root-plugin-${d}3   ; dev=$lib       ; bin=$lib ;;  
+	fftw)       lib=root-plugin-${d}3   ; dev=$lib       ; bin=$lib ;;
+	            # extra="NOMAP=1"         ;;  
 	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
     esac 
 

@@ -16,7 +16,7 @@
 #
 # Header 
 #
-Name:          root
+Name:          root-system
 Version:       %{ver}
 Release:       %{rel}
 License:       GNU Lesser General Public License
@@ -54,7 +54,7 @@ ROOT web-site: http://root.cern.ch
 #
 # Prepare sources - make package output dir (e.g. ../i686)
 %prep
-%setup -n %{name}
+%setup -n root
 
 #---------------------------------------------------------------------
 # The actual build
@@ -97,12 +97,13 @@ mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/applications
 mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/pixmaps
 mkdir -p ${RPM_BUILD_ROOT}/%{_icontheme}/apps
 mkdir -p ${RPM_BUILD_ROOT}/%{_icontheme}/mimetypes
-sed 's,@prefix@,%{_prefix},' < build/package/debian/root-bin.desktop.in \
-	> ${RPM_BUILD_ROOT}/%{_prefix}/share/applications/root-bin.desktop
-cp build/package/debian/root-bin.xpm \
-	${RPM_BUILD_ROOT}/%{_prefix}/share/pixmaps/root-bin.xpm
-cp build/package/debian/root-bin.png \
-	${RPM_BUILD_ROOT}/%{_icontheme}/apps/root-bin.png
+sed 's,@prefix@,%{_prefix},' \
+    < build/package/debian/root-system-bin.desktop.in \
+    > ${RPM_BUILD_ROOT}/%{_prefix}/share/applications/root-system-bin.desktop
+cp build/package/debian/root-system-bin.xpm \
+	${RPM_BUILD_ROOT}/%{_prefix}/share/pixmaps/root-system-bin.xpm
+cp build/package/debian/root-system-bin.png \
+	${RPM_BUILD_ROOT}/%{_icontheme}/apps/root-system-bin.png
 cp build/package/debian/application-x-root.png \
 	${RPM_BUILD_ROOT}/%{_icontheme}/mimetypes/application-x-root.png
 
@@ -150,15 +151,15 @@ mkdir -p rpm
 build/package/lib/makelists.sh rpm ${RPM_BUILD_ROOT} \
     %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
-    >> rpm/root-rootd.install
+    >> rpm/root-system-rootd.install
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/proofd" \
-    >> rpm/root-proofd.install
+    >> rpm/root-system-proofd.install
 touch rpm/ttf-root-installer.install
-if test -f rpm/root-xrootd.install ; then 
+if test -f rpm/root-system-xrootd.install ; then 
     echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/xrootd" \
-	>> rpm/root-xrootd.install
+	>> rpm/root-system-xrootd.install
     echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/olbd" \
-	>> rpm/root-xrootd.install
+	>> rpm/root-system-xrootd.install
 fi
 
 # Make the empty proof log file 

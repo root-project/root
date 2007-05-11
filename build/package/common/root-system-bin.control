@@ -1,9 +1,7 @@
-Package: root-bin
+Package: root-system-bin
 Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: root-plugin-gl, root-plugin-asimage, libroot-minuit | root-fitter, libroot-dev
-Conflicts: root-cint
-Replaces: root-cint
+Depends: ${shlibs:Depends}, root-plugin-asimage
+Recommends: root-plugin-gl, libroot-minuit | root-fitter, libroot-dev
 Description: Numerical data analysis framework - general applications
  The ROOT system provides a set of OO frameworks with all the
  functionality needed to handle and analyse large amounts of data in a

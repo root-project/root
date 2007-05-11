@@ -1,6 +1,6 @@
-?package(root-bin):needs="text" \
+?package(root-system-bin):needs="text" \
   section="Apps/Science" \
   title="ROOT" \
   longtitle="ROOT's Object Oriented Technologies" \
   command="@prefix@/bin/root" \
-  icon="@prefix@/share/pixmaps/root-bin.xpm"
+  icon="@prefix@/share/pixmaps/root-system-bin.xpm"

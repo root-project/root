@@ -1,6 +1,6 @@
-Package: root-xrootd
+Package: root-system-xrootd
 Architecture: any
-Depends: root-common, lsb-base (>= 3.0-6), ${shlibs:Depends}
+Depends: root-system-common, lsb-base (>= 3.0-6), ${shlibs:Depends}
 Provides: root-file-server
 Description: Extented ROOT file server
  This package contains the xrootd server for ROOT, the eXtended

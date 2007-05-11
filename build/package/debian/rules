@@ -19,7 +19,7 @@ DEB_HOST_GNU_TYPE    ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_HOST_ARCH_CPU    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 DEB_BUILD_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_BUILD_GNU_SYSTEM ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_SYSTEM)
-DEB_BUILD_ARCH       ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DEB_BUILD_ARCH	     ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 ifeq ($(DEB_HOST_ARCH_CPU),powerpc)
 PLATFORM	= linuxppcgcc
 else
@@ -55,13 +55,18 @@ PKGDOCDIR	= $(PREFIX)/share/doc/root
 CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
 ICONTHEME	= $(PREFIX)/share/icons/hicolor/48x48
 CONFOPTIONS	:=--enable-cintex				\
+		  --enable-clarens				\
 		  --enable-explicitlink				\
+		  --enable-gdml					\
 		  --enable-fftw3				\
+		  --enable-ldap					\
 		  --enable-qt					\
 		  --enable-qtgsi				\
 		  --enable-mathcore				\
 		  --enable-mathmore				\
 		  --enable-minuit2				\
+		  --enable-mysql				\
+		  --enable-peac					\
 		  --enable-pgsql				\
 		  --enable-odbc					\
 		  --enable-reflex				\
@@ -71,6 +76,7 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --enable-shared				\
 		  --enable-soversion				\
 		  --enable-table				\
+		  --enable-unuran				\
 		  --enable-xrootd				\
 		  --disable-rpath				\
 		  --disable-afs					\
@@ -82,14 +88,13 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --disable-alien				\
 		  --disable-chirp				\
 		  --disable-dcache				\
+		  --disable-g4root				\
 		  --disable-gfal				\
 		  --disable-globus				\
 		  --disable-monalisa				\
 		  --disable-oracle				\
-		  --disable-pythia				\
 		  --disable-pythia6				\
 		  --disable-rfio				\
-		  --disable-venus				\
 		  --fail-on-missing				\
 		  $(SAPDB)					\
 		  $(HBOOK)					\
@@ -105,57 +110,57 @@ CONFOPTIONS	:=--enable-cintex				\
 #		  --disable-builtin				\
 
 VERSION		:= $(shell cat build/version_number | tr '/' '.')
-MAJOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
-MINOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+MAJOR		:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
+MINOR		:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
 SOVERS		:= $(MAJOR).$(MINOR)
 PKGLIST		:= $(shell ./configure $(PLATFORM) --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
-ESSENTIALS	:= libroot-dev 			\
-		   libroot 			\
-		   root-bin 			\
-		   root-common			\
+ESSENTIALS	:= libroot-dev			\
+		   libroot			\
+		   root-system-bin		\
+		   root-system-common		\
 		   ttf-root-installer		
-PLUGINS		:= libroot-ldap 		\
-		   libroot-mathmore 		\
-		   libroot-minuit 		\
-		   libroot-mlp	 		\
-		   libroot-quadp 		\
-		   libroot-tmva	 		\
-		   root-doc 			\
-		   root-plugin-asimage 		\
-		   root-plugin-fftw3 		\
-		   root-plugin-fumili 		\
-		   root-plugin-gl 		\
-		   root-plugin-hbook 		\
-		   root-plugin-krb5 		\
-		   root-plugin-minuit2 		\
-		   root-plugin-netx 		\
-		   root-plugin-odbc 		\
-		   root-plugin-proof 		\
-		   root-plugin-qt 		\
-		   root-plugin-sql 		\
-		   root-plugin-xml 		\
-		   root-plugin-xproof 		\
-		   root-proofd 			\
-		   root-rootd 			\
-		   root-xrootd 			
-EXTRAS		:= libroot-clarens 		\
-		   libroot-python 		\
-		   libroot-roofit 		\
-		   libroot-ruby 		\
-		   root-plugin-alien 		\
-		   root-plugin-castor 		\
-		   root-plugin-chirp  		\
-		   root-plugin-dcache 		\
-		   root-plugin-globus  		\
-		   root-plugin-peac 		\
-		   root-plugin-maxdb 		\
-		   root-plugin-mysql 		\
-		   root-plugin-oracle 		\
-		   root-plugin-pgsql 		\
-		   root-plugin-pythia5 		\
-		   root-plugin-pythia6 		\
-		   root-plugin-srp 		\
-		   root-plugin-venus 		
+PLUGINS		:= libroot-ldap			\
+		   libroot-mathmore		\
+		   libroot-minuit		\
+		   libroot-mlp			\
+		   libroot-quadp		\
+		   libroot-tmva			\
+		   root-system-doc		\
+		   root-plugin-asimage		\
+		   root-plugin-fftw3		\
+		   root-plugin-fumili		\
+		   root-plugin-gl		\
+		   root-plugin-hbook		\
+		   root-plugin-krb5		\
+		   root-plugin-minuit2		\
+		   root-plugin-netx		\
+		   root-plugin-odbc		\
+		   root-plugin-proof		\
+		   root-plugin-qt		\
+		   root-plugin-sql		\
+		   root-plugin-xml		\
+		   root-plugin-xproof		\
+		   root-system-proofd		\
+		   root-system-rootd		\
+		   root-system-xrootd		
+EXTRAS		:= libroot-clarens		\
+		   libroot-python		\
+		   libroot-roofit		\
+		   libroot-ruby			\
+		   root-plugin-alien		\
+		   root-plugin-castor		\
+		   root-plugin-chirp		\
+		   root-plugin-dcache		\
+		   root-plugin-globus		\
+		   root-plugin-peac		\
+		   root-plugin-maxdb		\
+		   root-plugin-mysql		\
+		   root-plugin-oracle		\
+		   root-plugin-pgsql		\
+		   root-plugin-pythia5		\
+		   root-plugin-pythia6		\
+		   root-plugin-srp		\
+		   root-plugin-venus		
 PLUGINLIST	:= $(filter-out $(EXTRAS) $(ESSENTIALS), $(PKGLIST))
 EXTRALIST	:= $(filter-out $(PLUGINS) $(ESSENTIALS), $(PKGLIST))
 PLUGINLIST	:= $(PLUGINLIST:libroot%=libroot%-dev)
@@ -165,9 +170,9 @@ PLUGINLIST	:= $(PLUGINHEAD:%=%,) $(lastword $(PLUGINLIST))
 EXTRAHEAD	:= $(filter-out $(lastword $(EXTRALIST)), $(EXTRALIST))
 EXTRALIST	:= $(EXTRAHEAD:%=%,) $(lastword $(EXTRALIST))
 TEMPLATES	:= $(wildcard debian/*.in)
-SPKGLIST	:= $(filter-out root-doc root-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev))
-IPKGLIST	:= root-doc ttf-root-installer root-common root
-DPKGLIST	:= $(SPKGLIST:%=%,) root-doc, root-ttf
+SPKGLIST	:= $(filter-out root-system-doc root-system-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev))
+IPKGLIST	:= root-system-doc ttf-root-installer root-system-common root-system
+DPKGLIST	:= $(SPKGLIST:%=%,) root-system-doc, root-ttf
 #root-plugins root-extra-plugins
 SPKGOPTS	:= $(SPKGLIST:%=-p%) 
 IPKGOPTS	:= $(IPKGLIST:%=-p%) 
@@ -202,6 +207,9 @@ show_libpkgs:
 	@echo "$(SPKGLIST)"
 	@echo "$(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))"
 
+show_conf:
+	./configure $(PLATFORM) --pkglist $(CONFOPTIONS)
+
 debian/%:debian/%.in  
 	@echo "Making $@ from $< "
 	@sed -e 's,@prefix@,$(PREFIX),g' \
@@ -225,7 +233,7 @@ debian/control:debian/control.in
 		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
 		-e "s/@builddepends@/$${builddep}/" \
 		-e 's/@pyvers@/$(PYVER)/g' \
-		-e 's/@pkglist@/$(DPKGLIST)/' 	\
+		-e 's/@pkglist@/$(DPKGLIST)/'	\
 		-e 's/@plugins@/$(PLUGINLIST)/'	\
 		-e 's/@extras@/$(EXTRALIST)/' < $@.tmp > $@
 	rm -rf $@.tmp 
@@ -238,7 +246,7 @@ config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
 	./configure $(PLATFORM)						\
-		    --prefix=$(PREFIX) 					\
+		    --prefix=$(PREFIX)					\
 		    --mandir=$(PREFIX)/share/man/man1			\
 		    --docdir=$(PKGDOCDIR)				\
 		    --cintincdir=$(CINTDIR)				\
@@ -246,9 +254,13 @@ config.status: configure
 		    --with-sys-iconpath=$(PREFIX)/share/pixmaps		\
 		    --libdir=$(PREFIX)/lib/root/$(SOVERS)		\
 		    $(CONFOPTIONS)
+	touch xrootd/src/headers.d 
+	touch asimage/src/headers.d 
+	touch roofit/headers.d 
+	touch unuran/src/headers.d 
 	touch configure-stamp
 
-#         --fontdir=%_datadir/root/fonts/truetype
+#	  --fontdir=%_datadir/root/fonts/truetype
 #Architecture 
 build: build-arch build-indep
 
@@ -256,7 +268,7 @@ build-arch: build-arch-cint-stamp
 build-arch-stamp:  configure-stamp
 
 	# Add here commands to compile the arch part of the package.
-	$(MAKE) ASTEPETAG= XROOTDETAG= ROOFITETAG=
+	$(MAKE) ASTEPETAG= XROOTDETAG= ROOFITETAG= UNURANETAG=
 	touch build-arch-stamp
 
 build-arch-cint-stamp:build-arch-stamp
@@ -270,7 +282,7 @@ build-indep-stamp:  configure-stamp
 	#$(MAKE) doc
 	touch build-indep-stamp
 
-clean:  $(TEMPLATES:%.in=%)
+clean:	$(TEMPLATES:%.in=%)
 	dh_testdir
 	dh_testroot
 	debconf-updatepo --podir=build/package/debian/po
@@ -280,49 +292,52 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -rf minuit2/src/Minuit-1_7_6
 	-rm -rf freetype/src/freetype-2.1.9
 	#-rm -rf asimage/src/libAfterImage 
-	-rm -rf debian/*.files 	debian/*.install	
-	-rm -f  macros/html.C 
-	-rm -f  cint/MAKEINFO
-	-rm -f  etc/daemons/proofd.rc.d
-	-rm -f  etc/daemons/proofd.xinetd
-	-rm -f  etc/daemons/rootd.rc.d
-	-rm -f  etc/daemons/rootd.xinetd
-	-rm -f  etc/daemons/olbd.rc.d
-	-rm -f  etc/daemons/xrootd.rc.d
-	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
-	-rm -f  qt/src/moc_*.cxx
-	-rm -f  G__genreflex_rootcint.h
-	-rm -f  asimage/src/libAfterImage/Makefile
-	-rm -f  asimage/src/libAfterImage/afterbase.h
-	-rm -f  asimage/src/libAfterImage/afterimage-config
-	-rm -f  asimage/src/libAfterImage/afterimage-libs
-	-rm -f  asimage/src/libAfterImage/config.h
-	-rm -f  asimage/src/libAfterImage/config.log
-	-rm -f  asimage/src/libAfterImage/config.status
-	-rm -f  asimage/src/libAfterImage/libAfterImage.a
-	-rm -f  xrootd/src/xrootd/GNUmakefile
-	-rm -f  xrootd/src/xrootd/src/GNUmake.env
-	-rm -f  xrootd/src/xrootd/src/GNUmake.options
+	-rm -rf debian/*.files	debian/*.install	
+	-rm -f	macros/html.C 
+	-rm -f	cint/MAKEINFO
+	-rm -f	etc/daemons/proofd.rc.d
+	-rm -f	etc/daemons/proofd.xinetd
+	-rm -f	etc/daemons/rootd.rc.d
+	-rm -f	etc/daemons/rootd.xinetd
+	-rm -f	etc/daemons/olbd.rc.d
+	-rm -f	etc/daemons/xrootd.rc.d
+	-rm -f	qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
+	-rm -f	qt/src/moc_*.cxx
+	-rm -f	G__genreflex_rootcint.h
+	-rm -f	asimage/src/libAfterImage/Makefile
+	-rm -f	asimage/src/libAfterImage/afterbase.h
+	-rm -f	asimage/src/libAfterImage/afterimage-config
+	-rm -f	asimage/src/libAfterImage/afterimage-libs
+	-rm -f	asimage/src/libAfterImage/config.h
+	-rm -f	asimage/src/libAfterImage/config.log
+	-rm -f	asimage/src/libAfterImage/config.status
+	-rm -f	asimage/src/libAfterImage/libAfterImage.a
+	-rm -f	xrootd/src/xrootd/GNUmakefile
+	-rm -f	xrootd/src/xrootd/src/GNUmake.env
+	-rm -f	xrootd/src/xrootd/src/GNUmake.options
 	-find . -name ".#*" | xargs rm -rf
 	-find . \( -name "G__*.cxx" -or -name "G__*.h" -or -name "G__*.c" \) \
 		-and -not -name "G__ci.h" -and -not -name G__postprocess.h \
 		-and -not -name "G__main.c" -and -not -name "G__setup.c" \
 		| xargs rm -rf
 	# Add here commands to clean up after the build process.
-	-$(MAKE) distclean ASTEPVERS=.bogus ASTEPETAG=	\
-			   XROOTDDIRD= 	    XROOTDETAG= \
-			   ROOFITDIRS=      ROOFITDIRI=    ROOFITETAG=
+	touch unuran/src/.bogus.tar.gz
+	-$(MAKE) distclean ASTEPVERS=.bogus  ASTEPETAG= \
+			   XROOTDDIRD=	     XROOTDETAG= \
+			   ROOFITDIRS=	     ROOFITDIRI=    ROOFITETAG= \
+			   UNRVERS=.bogus    UNURANETAG=
+	rm -f unuran/src/.bogus.tar.gz
 	build/unix/makecintdll.sh clean
-	rm -rf bin lib include 			\
-		system.rootrc 			\
-		config/Makefile.config 		\
-		README/Changelog 		\
-		etc/system.rootrc 		\
-		etc/system.rootauthrc 		\
-		etc/system.rootdaemonrc 	\
-		etc/root.mimes 			\
-	   	build/misc/root-help.el		\
-		debian/*.files 			\
+	rm -rf bin lib include			\
+		system.rootrc			\
+		config/Makefile.config		\
+		README/Changelog		\
+		etc/system.rootrc		\
+		etc/system.rootauthrc		\
+		etc/system.rootdaemonrc		\
+		etc/root.mimes			\
+		build/misc/root-help.el		\
+		debian/*.files			\
 		debian/*.install		\
 		debian/shlibs.local		\
 		freetype/src/freetype-2.1.3	\
@@ -341,19 +356,20 @@ clean:  $(TEMPLATES:%.in=%)
 	touch xrootd/src/headers.d 
 	touch asimage/src/headers.d 
 	touch roofit/headers.d 
+	touch unuran/src/headers.d 
 	dh_clean 
 
 pkglists:
-	-rm -rf debian/*.files 	debian/*.install	
+	-rm -rf debian/*.files	debian/*.install	
 	build/package/lib/makelists.sh debian debian/tmp \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
-# 	@for i in debian/libroot* ; do \
-# 	  if test -d $$i ; then continue ; fi ; \
-# 	  case $$i in \
-#           *-dev.*|*.in|libroot*$(SOVERS).*) continue ;; \
-# 	  *) echo "Renaming $$i to version specific" ; \
-# 	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
-# 	done 
+#	@for i in debian/libroot* ; do \
+#	  if test -d $$i ; then continue ; fi ; \
+#	  case $$i in \
+#	    *-dev.*|*.in|libroot*$(SOVERS).*) continue ;; \
+#	  *) echo "Renaming $$i to version specific" ; \
+#	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
+#	done 
 
 install: install-indep install-arch
 install-indep: 
@@ -368,33 +384,42 @@ install-indep:
 
 	# dh_install $(IPKGOPTS) --sourcedir=$(DTMP)
 	dh_install -i --sourcedir=$(DTMP)
+
 	# Fix some permissions 
-	-find debian/root-common/$(PREFIX)/share/root/icons \
+	-find debian/root-system-common/$(PREFIX)/share/root/icons \
 		-perm 0755 -and -not -type d | xargs chmod a-x 
-	mkdir -p debian/root-doc/usr/share/lintian/overrides/
-	cp debian/root-doc.overrides \
-	  debian/root-doc/usr/share/lintian/overrides/root-doc
+	mkdir -p debian/root-system-doc/usr/share/lintian/overrides/
+	cp debian/root-system-doc.overrides \
+	  debian/root-system-doc/usr/share/lintian/overrides/root-system-doc
+
+	# New Ld.so.conf file 
+	cp debian/root-system-common.conf \
+	  debian/root-system-common/$(SYSCONFDIR)/ld.so.conf.d
+
 
 install-arch: 
 	dh_testroot
 	dh_clean -k -s -X$(DTMP)
+	# Need to clean this, because we don't want to use the 
+	# symblic links made later on. 
+	rm -rf $(DTMP)$(PREFIX)/lib/root
 	dh_installdirs -s
 
 	# Add here commands to install the arch part of the package into 
 	# $(DTMP).
 	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP) \
-		ASTEPETAG= XROOTDETAG= ROOFITETAG=
+		ASTEPETAG= XROOTDETAG= ROOFITETAG=  UNURANETAG=
 
 	# Install desktop entry and icon 
 	mkdir -p $(DTMP)/$(PREFIX)/share/applications
 	mkdir -p $(DTMP)/$(PREFIX)/share/pixmaps
 	mkdir -p $(DTMP)/$(ICONTHEME)/apps
 	mkdir -p $(DTMP)/$(ICONTHEME)/mimetypes
-	-cp debian/root-bin.desktop $(DTMP)/$(PREFIX)/share/applications
-	-cp build/package/debian/root-bin.xpm \
-		$(DTMP)/$(PREFIX)/share/pixmaps/root-bin.xpm
-	-cp build/package/debian/root-bin.png \
-		$(DTMP)/$(ICONTHEME)/apps/root-bin.png
+	-cp debian/root-system-bin.desktop $(DTMP)/$(PREFIX)/share/applications
+	-cp build/package/debian/root-system-bin.xpm \
+		$(DTMP)/$(PREFIX)/share/pixmaps/root-system-bin.xpm
+	-cp build/package/debian/root-system-bin.png \
+		$(DTMP)/$(ICONTHEME)/apps/root-system-bin.png
 	-cp build/package/debian/application-x-root.png \
 		$(DTMP)/$(ICONTHEME)/mimetypes/application-x-root.png
 
@@ -412,15 +437,15 @@ install-arch:
 
 	# Rename proofserv, xrdgsiproxy, xrdpwdadmin, xrdcp, and xrd in 
 	# /usr/bin to end in `.bin' and make wrapper script in /usr/bin 
-	for i in proofserv xrdgsiproxy xrdpwdadmin xrdcp xrd ; do 	\
-	  if test -f $(DTMP)$(PREFIX)/bin/$$i && 			\
-	     test -f build/package/common/$$i.in ; then 		\
-	    mv $(DTMP)$(PREFIX)/bin/$$i 				\
-	      $(DTMP)$(PREFIX)/bin/$$i.bin ; 				\
+	for i in proofserv xrdgsiproxy xrdpwdadmin xrdcp xrd ; do	\
+	  if test -f $(DTMP)$(PREFIX)/bin/$$i &&			\
+	     test -f build/package/common/$$i.in ; then			\
+	    mv $(DTMP)$(PREFIX)/bin/$$i					\
+	      $(DTMP)$(PREFIX)/bin/$$i.bin ;				\
 	    sed -e 's,@prefix@,$(PREFIX),g'				\
 		-e 's,@libvers@,$(SOVERS),g'				\
 		< build/package/common/$$i.in				\
-		> $(DTMP)$(PREFIX)/bin/$$i	; 			\
+		> $(DTMP)$(PREFIX)/bin/$$i	;			\
 	    chmod 755 $(DTMP)$(PREFIX)/bin/$$i ; fi ; done 
 
 	# Make the empty proof log file 
@@ -467,6 +492,7 @@ install-arch:
 	-find $(DTMP)$(CINTDIR) -perm 755 -and -not -type d | xargs chmod a-x 
 	-chmod a+x $(DTMP)$(CINTDIR)/lib/pthread/setup
 	-chmod a-x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/*.py
+	-chmod a-x $(DTMP)$(SYSCONFDIR)/root/html/*
 	# -chmod a+x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/GDMLROOT.py
 
 	# Remove she-bang line from a python scripts
@@ -481,51 +507,51 @@ install-arch:
 	mkdir -p $(DTMP)/$(PREFIX)/lib/root
 	./debian/rules pkglists
 
-	#	--sourcedir=$(DTMP) $(SPKGOPTS) 		
+	#	--sourcedir=$(DTMP) $(SPKGOPTS)			
 	dh_install -s							\
-		--list-missing 						\
-		--sourcedir=$(DTMP)	 				\
-		-X$(PREFIX)/include/root/config.h 			\
-		-X$(PREFIX)/share/man/man1/rlibmap.1 			\
-		-X$(PREFIX)/include/root/rootcint.pri 			\
-		-X$(PREFIX)/include/root/rootcintrule.pri 		\
-		-X$(PREFIX)/include/root/rootlibs.pri 			\
-		-X$(PREFIX)/include/root/precompile.h 			\
-		-X$(PREFIX)/include/root/precompile.h.gch 		\
-		-X$(PREFIX)/include/root/TQtWidget.cw 			\
-		-X$(PREFIX)/share/root/fonts 				\
+		--list-missing						\
+		--sourcedir=$(DTMP)					\
+		-X$(PREFIX)/include/root/config.h			\
+		-X$(PREFIX)/include/root/rootcint.pri			\
+		-X$(PREFIX)/include/root/rootcintrule.pri		\
+		-X$(PREFIX)/include/root/rootlibs.pri			\
+		-X$(PREFIX)/include/root/precompile.h			\
+		-X$(PREFIX)/include/root/precompile.h.gch		\
+		-X$(PREFIX)/include/root/TQtWidget.cw			\
+		-X$(PREFIX)/share/root/fonts				\
 		-X$(PREFIX)/share/doc/root				\
 		-X$(PREFIX)/share/man/man1/system.rootdaemonrc.1	\
 		-X$(PREFIX)/share/man/man1/xproofd.1			\
 		-X$(PREFIX)/bin/thisroot.sh				\
 		-X$(PREFIX)/bin/thisroot.csh				\
-		-X$(PREFIX)/share/root/icons/  				\
-		-X$(SYSCONFDIR)/root/rootd 				\
+		-X$(PREFIX)/share/root/icons/				\
+		-X$(SYSCONFDIR)/root/rootd				\
 		-X$(SYSCONFDIR)/root/daemons/				\
 		-X$(SYSCONFDIR)/root/proof/				\
-		-X$(SYSCONFDIR)/root/RadioNuclides.txt 			\
+		-X$(SYSCONFDIR)/root/html				\
+		-X$(SYSCONFDIR)/root/RadioNuclides.txt			\
 		-X$(SYSCONFDIR)/root/gdb-backtrace-script		\
-		-X$(SYSCONFDIR)/root/hostcert.conf 			\
-		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
-		-X$(SYSCONFDIR)/root/root.mimes 			\
-		-X$(SYSCONFDIR)/root/system.rootrc 			\
-		-X$(SYSCONFDIR)/root/system.rootauthrc 			\
-		-X$(SYSCONFDIR)/root/system.rootdaemonrc 		\
-		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
-		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
-		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
+		-X$(SYSCONFDIR)/root/gdb-backtrace.sh			\
+		-X$(SYSCONFDIR)/root/hostcert.conf			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt			\
+		-X$(SYSCONFDIR)/root/root.mimes				\
+		-X$(SYSCONFDIR)/root/system.rootrc			\
+		-X$(SYSCONFDIR)/root/system.rootauthrc			\
+		-X$(SYSCONFDIR)/root/system.rootdaemonrc		\
+		-X$(SYSCONFDIR)/root/pdg_table.txt			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt			\
 		-X$(PREFIX)/lib/root/$(SOVERS)/libAfterImage.a		\
 		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyc		\
 		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyo		\
 		-X$(PREFIX)/lib/root/$(SOVERS)/ROOT.pyc			\
-		-X$(PREFIX)/lib/root/$(SOVERS)/ROOT.pyo			\
-		$(foreach i, \
-		   $(wildcard $(DTMP)/$(PREFIX)/lib/root/lib*.so.$(SOVERS)), \
-		    -X$(i:$(DTMP)/%=%) )
-
+		-X$(PREFIX)/lib/root/$(SOVERS)/ROOT.pyo			
+#		$(foreach i, \
+#		   $(wildcard $(DTMP)/$(PREFIX)/lib/root/lib*.so.$(SOVERS)), \
+#		    -X$(i:$(DTMP)/%=%) )
 
 	# Install Lintian overrides files 
-	for i in debian/*.overrides ; do 	\
+	for i in debian/*.overrides ; do	\
 	  if test ! -f $$i ; then continue; fi;	\
 	  b=`basename $$i .overrides` ; \
 	  echo "Installing Lintian override $$i in debian/$$b/usr/share/lintian/overrides/$$b" ; \
@@ -534,15 +560,15 @@ install-arch:
 	done 
 
 	# This is for alternatives registration, if one want's to install
-        # Richard Kreckels cint package next to ROOT
-	mv debian/root-bin/$(PREFIX)/bin/cint \
-		debian/root-bin/$(PREFIX)/bin/cint.root
-	mv debian/root-bin/$(PREFIX)/bin/makecint \
-		debian/root-bin/$(PREFIX)/bin/makecint.root
-	mv debian/root-bin/$(PREFIX)/share/man/man1/cint.1 \
-		debian/root-bin/$(PREFIX)/share/man/man1/cint.root.1
-	mv debian/root-bin/$(PREFIX)/share/man/man1/makecint.1 \
-		debian/root-bin/$(PREFIX)/share/man/man1/makecint.root.1
+	# Richard Kreckels cint package next to ROOT
+	mv debian/root-system-bin/$(PREFIX)/bin/cint \
+		debian/root-system-bin/$(PREFIX)/bin/cint.root
+	mv debian/root-system-bin/$(PREFIX)/bin/makecint \
+		debian/root-system-bin/$(PREFIX)/bin/makecint.root
+	mv debian/root-system-bin/$(PREFIX)/share/man/man1/cint.1 \
+		debian/root-system-bin/$(PREFIX)/share/man/man1/cint.root.1
+	mv debian/root-system-bin/$(PREFIX)/share/man/man1/makecint.1 \
+		debian/root-system-bin/$(PREFIX)/share/man/man1/makecint.root.1
 
 # Must not depend on anything. This is to be called by
 # binary-arch/binary-indep
@@ -582,7 +608,7 @@ binary-indep: build-indep install-indep
 binary-arch: build-arch install-arch
 	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
 	dh_pysupport -plibroot-python-dev 
-	# 	$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
+	#	$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
 	dh_pysupport -plibroot-dev \
 		$(PREFIX)/lib/root/$(SOVERS)/python/genreflex
 	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))

@@ -27,6 +27,7 @@ Group:        ROOT
 BuildRoot:    /tmp/rootdrpm
 Prefix:       %{_prefix}
 Summary:      @short@
+Conflicts:    root-system-rootd 
 
 #---------------------------------------------------------------------
 # Less concise description

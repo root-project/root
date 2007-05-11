@@ -1,6 +1,6 @@
 # Defaults for rootd initscript
-# sourced by /etc/init.d/rootd
-# installed at /etc/default/rootd by the maintainer scripts
+# sourced by /etc/init.d/root-system-xrootd
+# installed at /etc/default/root-system-xrootd by the maintainer scripts
 #
 # Please refer to the xrootd(1) and olbd(1) man(1) page for more
 # information on command line parameters. 

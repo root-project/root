@@ -34,7 +34,7 @@ endif
 all:	hello liblist devlist binlist
 hello:
 	@echo "Making list for $(DIRS) ($(SLIB),$(DEV),$(SBIN))"
-
+#	@echo "ALLLIBS=$(ALLLIBS) ALLMAPS=$(ALLMAPS) PKGLIBS=$(PKGLIBS)"
 
 # If we have a development package, get the list of headers. 
 ifneq ($(DEV),)
@@ -46,33 +46,38 @@ ifneq ($(LIB),)
 # if the development package and the library package is not the same, 
 # we need to append the soversion to the library directory 
 ifneq ($(LIB),$(DEV))
-PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER)) 
+PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) 	\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) 	\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)		\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER)) 		
 DEVLIBS := $(ALLLIBS) 
 else # ! $(LIB) = $(DEV)
 # If the development and library package is the same (plugins), then we need
 # only add the soversion to the library directory 
 ifneq ($(NOVERS),1)
-PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 
+PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) 	\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) 	\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 		
 else # ! $(NOVERS) != 1
 # Special case of xrootd 
 ifeq ($(DIRS), xrootd)
 XRDLIBS := $(patsubst lib/%, $(LPATH)/%, \
 		$(filter-out lib/libXrdProofd.so, $(wildcard lib/libXrd*.so)))
 PKGLIBS	:= $(XRDLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)
-# In case we do no have a library package 
+# In case we do not have a library package 
 else  # ! $(DIR) = xrootd
 PKGLIBS	:= $(ALLLIBS) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER))
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 		\
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER))		
 endif # $(DIRS) = xrootd
 endif # $(NOVERS) != 1
 endif # $(LIB) = $(DEV)
 endif # $(LIB)
+ifneq ($(NOMAP),1) 
+#NOXRD	:= $(filter-out $(LIBPATH)/libXrd%, $(ALLLIBS))
+#PKGLIBS := $(PKGLIBS)  $(NOXRD:$(RLIBD)/%.so=$(RLIBD)/$(SOVER)/%.rootmap)
+PKGLIBS := $(PKGLIBS)  $(ALLMAPS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)
+endif
 
 # The rule to make library lists 
 liblist:
@@ -83,7 +88,10 @@ ifneq ($(LIB),$(DEV))
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
-	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
+	      ln -fs $(SOVER)/$$b.$(SOVER) . ; done)
+
+#	      mv $(SOVER)/$$b.$(SOVER) . ; \
+#	      (cd $(SOVER) && ln -sf ../$$b.$(SOVER) .) ; done)
 else 
 ifneq ($(DIRS), xrootd) 
 	@(cd $(BUILD)/$(RLIBD) && \

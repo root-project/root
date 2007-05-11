@@ -31,8 +31,8 @@ USER=root
 test -x $DAEMON || exit 0
 
 # Include root defaults if available
-if [ -f @sysconfdir@/default/root-xrootd ] ; then
-	. @sysconfdir@/default/root-xrootd
+if [ -f @sysconfdir@/default/root-system-xrootd ] ; then
+	. @sysconfdir@/default/root-system-xrootd
 fi
 
 # Load the VERBOSE setting and other rcS variables
@@ -180,7 +180,7 @@ case "$1" in
 	[ $ret -ne 0 ] && exit $ret
 	;;
   *)
-	N=@sysconfdir@/init.d/root-$XNAME
+	N=@sysconfdir@/init.d/root-system-$XNAME
 	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
 	echo "Usage: $N {start|stop|restart|force-reload}" >&2
 	exit 1

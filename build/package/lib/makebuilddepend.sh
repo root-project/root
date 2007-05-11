@@ -7,9 +7,9 @@ if test "x$1" = "xrpm" ; then
 	case $i in 
 	    *-dev) 						        ;;
 	    libroot)							;;
-	    root-bin)							;;
+	    root-system-bin)						;;
 	    root-cint)							;;
-	    root-doc)							;;
+	    root-system-doc)						;;
 	    *alien)	echo "BuildRequires: AliEn-Client" 		;;
 # Build dependency on AfterStep-devel temporarily commented out 
 # until such a time when ROOT can use the normal libAfterImage.
@@ -79,11 +79,11 @@ EOF
 	    *tmva)							;;
 	    *venus)							;;
 	    *xml)	echo "BuildRequires: libxml2-devel"		;;
-	    root-proofd)						;;
-	    root-rootd)							;;
-	    root-xrootd) echo "BuildRequires: krb5-devel"		;;
+	    root-system-proofd)						;;
+	    root-system-rootd)						;;
+	    root-system-xrootd) echo "BuildRequires: krb5-devel"	;;
 	    ttf-root*)							;;
-	    root-common)						;;
+	    root-system-common)						;;
 	    *) 
 		echo "*** Warning *** Unknown package $i - please update $0" \
 		    > /dev/stderr 
@@ -100,9 +100,9 @@ for i in $* ; do
     case $i in 
 	*-dev)							        ;;
 	libroot)							;;
-	root-bin)							;;
+	root-system-bin)						;;
 	root-cint) 							;;
-	root-doc)  							;;
+	root-system-doc)  						;;
 	*alien)	   echo -n ", libalien-dev" 				;;
 # Build dependency libafterimage-dev temporarily commented out 
 # until such a time that ROOT can use the normal libAfterImage.
@@ -143,7 +143,7 @@ for i in $* ; do
 	*netx)	   							;;
 	*odbc)	   echo -n ", libiodbc2-dev | unixodbc-dev"		;;
 	*peac)	   							;;
-	*pgsql)	   echo -n ", postgresql-dev | libpq-dev"		;;
+	*pgsql)	   echo -n ",  libpq-dev | postgresql-dev"		;;
 	*proof)	   							;;
 	*pythia5)  echo -n ", pythia5-dev"				;;
 	*pythia6)  echo -n ", pythia6-dev"				;;
@@ -160,16 +160,16 @@ for i in $* ; do
         *tmva)	   							;;
 	*venus)	   echo -n ", libvenus-dev"				;;
 	*xml)	   echo -n ", libxml2-dev"				;;
-	root-proofd)							;;
-	root-rootd)							;;
-	root-xrootd)	
+	root-system-proofd)						;;
+	root-system-rootd)						;;
+	root-system-xrootd)	
 	    if test $have_krb -lt 1 ; then 
 		echo -n ", libkrb5-dev|heimdal-dev"		
 		have_krb=1
 	    fi
 	    ;;
 	ttf-root*)							;;
-	root-common)							;;
+	root-system-common)						;;
 	*) 
 	    echo "*** Warning *** Unknown package $i - please update $0" \
 		> /dev/stderr ;;

@@ -1,8 +1,8 @@
-Package: root-proofd
+Package: root-system-proofd
 Architecture: any
-Pre-Depends: netbase
-Depends: root-common, root-plugin-proof, lsb-base (>= 3.0-6), ${shlibs:Depends}
-Recommends: root-bin, libroot-dev, root-file-server | root-rootd
+Pre-Depends: openbsd-inetd | inet-superserver
+Depends: root-system-common, root-plugin-proof, lsb-base (>= 3.0-6), ${shlibs:Depends}
+Recommends: root-system-bin, libroot-dev, root-file-server | root-system-rootd
 Description: Parallel ROOt Facility - distributed, parallel computing
  This package contains the PROOF server.  proofd is the core daemon of
  the PROOF (Parallel ROOt Facility) system for distributed parallel

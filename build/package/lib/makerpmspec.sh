@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.14 2006/04/21 16:29:33 rdm Exp $
+# $Id: makerpmspec.sh,v 1.15 2006/08/24 13:49:53 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -103,7 +103,7 @@ for p in $pkglist ; do
 	    echo "Requires: root-fitter"   		        >> root.spec 
 	    ;;
 	libroot) 
-	    echo "Requires: root-ttf, root-common"		>> root.spec 
+	    echo "Requires: root-ttf, root-system-common"	>> root.spec 
 	    ;; 
 	*rootd) 
 	    echo "Prefix: %_prefix" >> root.spec 

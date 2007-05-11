@@ -1,6 +1,6 @@
 # Defaults for rootd initscript
-# sourced by /etc/init.d/root-rootd
-# installed at /etc/default/root-rootd by the maintainer scripts
+# sourced by /etc/init.d/root-system-rootd
+# installed at /etc/default/root-system-rootd by the maintainer scripts
 #
 # Please refer to the rootd(1) man(1) page for more information on 
 # command line parameters. 

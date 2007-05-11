@@ -26,8 +26,8 @@ USER=rootd
 test -x $DAEMON || exit 0
 
 # Include root defaults if available
-if [ -f @sysconfdir@/default/root-rootd ] ; then
-	. @sysconfdir@/default/root-rootd
+if [ -f @sysconfdir@/default/root-system-rootd ] ; then
+	. @sysconfdir@/default/root-system-rootd
 fi
 
 # Load the VERBOSE setting and other rcS variables
@@ -77,19 +77,15 @@ if test -f /var/run/xinetd.pid ; then
 	ENABLE_ROOTD=no
     fi
     # old name 
-    if test -f /etc/xinetd.d/rootd && 
-	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/rootd > /dev/null 2>&1  ; then
-	# ROOTD is controlled by xinetd. 
-	ENABLE_ROOTD=no
-	
-    fi
-    # new name 
-    if test -f /etc/xinetd.d/root-rootd && 
-	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-rootd > /dev/null 2>&1  ; then
-	# ROOTD is controlled by xinetd. 
-	ENABLE_ROOTD=no
-	
-    fi
+    for i in rootd root-rootd root-system-rootd ; do 
+	if test ! -f /etc/xinetd.d/$i ; then continue ; fi 
+	if test grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/$i \
+	    > /dev/null 2>&1  ; then
+	    # ROOTD is controlled by xinetd. 
+	    ENABLE_ROOTD=no
+	    break
+	fi
+    done
 fi
 
 # Check if we're enabled at all 

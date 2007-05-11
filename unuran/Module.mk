@@ -16,6 +16,7 @@ UNRVERS      := unuran-1.0.0-root
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
 UNURANETAG   := $(UNURANDIRS)/headers.d
+UNRCFG       := $(UNURANDIRS)/$(UNRVERS)/config.h
 
 UNRS 	     := $(wildcard $(UNRDIRS)/src/utils/*.c)\
                 $(wildcard $(UNRDIRS)/src/methods/*.c) \
@@ -70,9 +71,10 @@ include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 -include $(UNURANETAG)
 endif
+$(UNURANDEP):   $(UNRCFG)
 
 $(UNURANETAG):	$(UNRSRCS)
-		echo "** untar and configure unuran"
+		echo "** untar unuran"
 		@(if [ -d $(UNRDIRS) ]; then \
 			rm -rf $(UNRDIRS); \
 		fi; \
@@ -81,8 +83,10 @@ $(UNURANETAG):	$(UNRSRCS)
 			gunzip -c $(UNRVERS).tar.gz | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
-		fi; \
-		cd $(UNRVERS); \
+		fi); 
+$(UNRCFG):	$(UNRANETAG)
+		@echo "** configure unuran"
+		cd $(UNURANDIRS)/$(UNRVERS) ; \
 		ACC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
@@ -106,7 +110,7 @@ $(UNURANETAG):	$(UNRSRCS)
 			ACFLAGS="-MD -G5 -GX"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --prefix=`pwd`/$(MODDIRS)/$(UNRVERS) CC="$$ACC"  \
-		CFLAGS="$$ACFLAGS";)
+		CFLAGS="$$ACFLAGS";
 
 $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
@@ -154,3 +158,4 @@ endif
 ifeq ($(CC),icc)
 $(UNRO): CFLAGS += -mp
 endif
+

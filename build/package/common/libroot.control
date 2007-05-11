@@ -1,11 +1,9 @@
 Package: libroot@libvers@
 Section: libs
 Architecture: any
-Depends: root-common, ${shlibs:Depends}
-Recommends: root-bin, libroot-dev 
-Conflicts: root-cint
+Depends: root-system-common, ${shlibs:Depends}
+Recommends: root-system-bin, libroot-dev 
 Provides: libroot
-Replaces: root-cint
 Description: Numerical data analysis framework - shared runtime libraries
  This package contains the shared libraries used by the ROOT
  system. The libraries contain numerous C++ class definitions for
@@ -24,9 +22,7 @@ Package: libroot-dev
 Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends}, zlib1g-dev, libssl-dev, comerr-dev, libkrb5-dev, libx11-dev, libfreetype6-dev, libpcre3-dev, libxpm-dev, g++ | c++-compiler, ${python:Depends}, cfortran
-Suggests: root-bin, gccxml
-Replaces: root-cint
-Conflicts: root-cint
+Suggests: root-system-bin, gccxml
 Description: Header files for ROOT
  This package contains header files (Class declarations) for the ROOT
  class libraries. Please refer the package documentation for libroot
@@ -34,11 +30,9 @@ Description: Header files for ROOT
  .
  ROOT web-site: http://root.cern.ch
 
-Package: root-common
+Package: root-system-common
 Architecture: all
 Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf
-Replaces: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
-Conflicts: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
 Description: Common files for ROOT
  This package contains some common infrastructure files for ROOT.
  .

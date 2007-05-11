@@ -1,7 +1,7 @@
-Package: root-doc
+Package: root-system-doc
 Section: doc
 Architecture: all
-Suggests: root-bin
+Suggests: root-system-bin
 Description: Tutorial and test suit for the ROOT system
  This package contains the tutorial scripts and test suit for the ROOT
  system.

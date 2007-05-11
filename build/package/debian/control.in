@@ -1,13 +1,13 @@
-Source: root
+Source: root-system
 Section: science
 Priority: optional
 Maintainer: Christian Holm Christensen <cholm@nbi.dk>
 Build-Depends: debhelper (>= 5.0.37.2), po-debconf, libssl-dev, comerr-dev, libxpm-dev, libfreetype6-dev, libpcre3-dev, zlib1g-dev | libz-dev, python-dev (>= 2.1)@builddepends@
 Standards-Version: 3.7.2
 
-Package: root
+Package: root-system
 Architecture: all
-Depends: root-bin, libroot, libroot-dev
+Depends: root-system-bin, libroot, libroot-dev
 Recommends: @plugins@
 Suggests: @extras@
 Description: Meta package to install all ROOT packages

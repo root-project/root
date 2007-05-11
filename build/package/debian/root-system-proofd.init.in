@@ -28,8 +28,8 @@ DESC="Parallel ROOt Facility Server"
 test -x $DAEMON || exit 0
 
 # Include root defaults if available
-if [ -f @sysconfdir@/default/root-proofd ] ; then
-	. @sysconfdir@/default/root-proofd
+if [ -f @sysconfdir@/default/root-system-proofd ] ; then
+	. @sysconfdir@/default/root-system-proofd
 fi
 
 # Load the VERBOSE setting and other rcS variables
@@ -54,19 +54,15 @@ if test -f /var/run/xinetd.pid ; then
 	ENABLE_PROOFD=no
     fi
     # old name 
-    if test -f /etc/xinetd.d/proofd && 
-	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/proofd > /dev/null 2>&1 ; then
-	# PROOFD is controlled by xinetd. 
-	ENABLE_PROOFD=no
-	
-    fi
-    # new name 
-    if test -f /etc/xinetd.d/root-proofd && 
-	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-proofd > /dev/null 2>&1  ; then
-	# PROOFD is controlled by xinetd. 
-	ENABLE_PROOFD=no
-	
-    fi
+    for i in proofd root-proofd root-system-proofd ; do 
+	if test ! -f /etc/xinetd.d/$i ; then continue ; fi 
+	if grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/$i \ 
+	    > /dev/null 2>&1 ; then
+	    # PROOFD is controlled by xinetd. 
+	    ENABLE_PROOFD=no
+	    break
+	fi
+    done
 fi
 
 # Check if we're enabled

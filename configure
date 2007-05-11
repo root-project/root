@@ -3969,9 +3969,9 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
-    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd root-plugin-netx"
+    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-system-xrootd root-plugin-netx"
 
-    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp libroot-tmva root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-proofd root-rootd root-doc root-bin libroot root-common ttf-root-installer"
+    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp libroot-tmva root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-system-proofd root-system-rootd root-system-doc root-system-bin libroot root-system-common ttf-root-installer"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     result "packages: $pkglist"
