@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.212 2007/05/10 15:06:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.213 2007/05/10 18:16:58 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -453,7 +453,7 @@ TROOT::~TROOT()
       fColors->Delete();     SafeDelete(fColors);
       fStyles->Delete();     SafeDelete(fStyles);
       fGeometries->Delete(); SafeDelete(fGeometries);
-      fBrowsers->Delete();   SafeDelete(fBrowsers);
+      //fBrowsers->Delete();   SafeDelete(fBrowsers); //The GUI classes should be fixed !
       //fBrowsables->Delete(); SafeDelete(fBrowsables);
       fMessageHandlers->Delete(); SafeDelete(fMessageHandlers);
 //      if (fTypes) fTypes->Delete();
