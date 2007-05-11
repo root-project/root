@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.33 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooPlot.h,v 1.34 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,12 @@
 #ifndef ROO_PLOT
 #define ROO_PLOT
 
-#include "TH1.h"
+#include <float.h>
 #include "RooList.h"
 #include "RooPrintable.h"
+#include "TNamed.h"
+
+class TH1 ;
 
 class RooAbsReal;
 class RooAbsRealLValue;
@@ -32,7 +35,7 @@ class TAttMarker;
 class TAttText;
 class TClass ;
 
-class RooPlot : public TH1, public RooPrintable {
+class RooPlot : public TNamed, public RooPrintable {
 public:
   RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
   RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
@@ -48,6 +51,17 @@ public:
   virtual Stat_t GetBinContent(Int_t, Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
   virtual void Draw(Option_t *options= 0);
+
+  // forwarding of relevant TH1 interface
+  TAxis* GetXaxis() const ;
+  TAxis* GetYaxis() const ;
+  Int_t GetNbinsX() const ;
+  Int_t GetNdivisions(Option_t* axis = "X") const ;
+  Double_t GetMinimum(Double_t minval = -FLT_MAX) const ;
+  Double_t GetMaximum(Double_t maxval = FLT_MAX) const ;
+  void SetXTitle(const char *title) ;
+  void SetYTitle(const char *title) ;
+  void SetZTitle(const char *title) ;
 
   // container management
   const char* nameOf(Int_t idx) const ;
@@ -126,6 +140,8 @@ protected:
   void updateFitRangeNorm(const TH1* hist);
   void updateFitRangeNorm(const RooPlotable* rp, Bool_t refeshNorm=kFALSE);
 
+  TH1* _hist ;               // Histogram that we uses as basis for drawing the content
+
   RooList _items;            // A list of the items we contain.
   Double_t _padFactor;       // Scale our y-axis to _padFactor of our maximum contents.
   RooAbsRealLValue *_plotVarClone; // A clone of the variable we are plotting.
@@ -143,7 +159,7 @@ protected:
 
   RooPlot(const RooPlot& other); // object cannot be copied
 
-  ClassDef(RooPlot,1)        // Plot frame and container for graphics objects
+  ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
 };
 
 #endif
