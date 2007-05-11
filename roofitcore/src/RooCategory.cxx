@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.29 2005/12/08 13:19:54 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.30 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,7 @@
 // has a public interface to define the possible value states.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -28,9 +28,9 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TH1.h"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooStreamParser.hh"
+#include "RooCategory.h"
+#include "RooArgSet.h"
+#include "RooStreamParser.h"
 
 ClassImp(RooCategory) 
 ;

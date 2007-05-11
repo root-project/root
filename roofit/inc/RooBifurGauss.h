@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.rdl,v 1.9 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.rdl,v 1.10 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -16,8 +16,8 @@
 #ifndef ROO_BIFUR_GAUSS
 #define ROO_BIFUR_GAUSS
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

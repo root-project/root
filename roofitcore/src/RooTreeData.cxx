@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.71 2005/06/20 15:45:15 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.72 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 // RooTreeData is the abstract base class for data collection that
 // use a TTree as internal storage mechanism
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -45,30 +45,94 @@
 #include "TChain.h"
 #include "TROOT.h"
 
-#include "RooFitCore/RooTreeData.hh"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/Roo1DTable.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooHist.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooTrace.hh"
-#include "RooFitCore/RooAbsBinning.hh" 
-#include "RooFitCore/RooCmdConfig.hh" 
-#include "RooFitCore/RooGlobalFunc.hh"
+#include "RooTreeData.h"
+#include "RooAbsArg.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooRealVar.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "Roo1DTable.h"
+#include "RooFormula.h"
+#include "RooCategory.h"
+#include "RooPlot.h"
+#include "RooStringVar.h"
+#include "RooHist.h"
+#include "RooFormulaVar.h"
+#include "RooTrace.h"
+#include "RooAbsBinning.h" 
+#include "RooCmdConfig.h" 
+#include "RooGlobalFunc.h"
 
 ClassImp(RooTreeData)
 ;
 
 Int_t RooTreeData::_defTreeBufSize = 4096 ;
 
+
+//________________________________________________________________
+//   Interface functions to TTree
+
+//________________________________________________________________
+Int_t RooTreeData::Scan(const char* varexp, const char* selection, Option_t* option, 
+		    Int_t nentries, Int_t firstentry) 
+{
+   //   Interface function to TTree::Scan
+   return _tree->Scan(varexp,selection,option,nentries,firstentry) ;
+}
+
+//________________________________________________________________
+Int_t RooTreeData::ScanCache(const char* varexp, const char* selection, Option_t* option, 
+		    Int_t nentries, Int_t firstentry) 
+{
+   // Interface function to TTree::Scan
+   return _cacheTree->Scan(varexp,selection,option,nentries,firstentry) ;
+}
+ 
+//________________________________________________________________
+Stat_t RooTreeData::GetEntries() const
+{
+   // Interface function to TTree::GetEntries
+   return _tree->GetEntries() ;
+}
+ 
+//________________________________________________________________
+void RooTreeData::Reset(Option_t* option)
+{
+   // Interface function to TTree::Reset
+   _tree->Reset(option) ;
+}
+ 
+//________________________________________________________________
+void RooTreeData::treePrint()
+{
+   // Interface function to TTree::Print
+   _tree->Print();
+}
+ 
+//________________________________________________________________
+Int_t RooTreeData::Fill()
+{
+   // Interface function to TTree::Fill
+   return _tree->Fill() ;
+}
+ 
+//________________________________________________________________
+Int_t RooTreeData::GetEntry(Int_t entry, Int_t getall)
+{
+   // Interface function to TTree::GetEntry
+   Int_t ret1 = _tree->GetEntry(entry,getall) ; 
+   if (!ret1) return 0 ;
+   _cacheTree->GetEntry(entry,getall) ; 
+   return ret1 ;
+}
+
+//________________________________________________________________
+//   Interface functions to TTree
+//________________________________________________________________
+//   Interface functions to TTree
+//________________________________________________________________
+//   Interface functions to TTree
 
 RooTreeData::RooTreeData() 
 {

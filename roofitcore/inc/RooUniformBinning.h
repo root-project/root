@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.rdl,v 1.8 2005/02/25 14:23:04 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.rdl,v 1.9 2005/06/20 15:45:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_UNIFORM_BINNING
 
 #include "Rtypes.h"
-#include "RooFitCore/RooAbsBinning.hh"
+#include "RooAbsBinning.h"
 class TIterator ;
 
 class RooUniformBinning : public RooAbsBinning {

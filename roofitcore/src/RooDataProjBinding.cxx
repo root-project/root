@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.16 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.17 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,16 +23,16 @@
 // performing a weighted sum over the states of a RooSuperCategory that is
 // constructed from all the categories in the dataset
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooDataProjBinding.hh"
-#include "RooFitCore/RooDataProjBinding.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/Roo1DTable.hh"
-#include "RooFitCore/RooSuperCategory.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooAbsPdf.hh"
+#include "RooDataProjBinding.h"
+#include "RooDataProjBinding.h"
+#include "RooAbsReal.h"
+#include "RooAbsData.h"
+#include "Roo1DTable.h"
+#include "RooSuperCategory.h"
+#include "RooCategory.h"
+#include "RooAbsPdf.h"
 
 #include <assert.h>
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.60 2006/12/07 21:21:33 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.61 2006/12/08 10:13:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,7 +20,7 @@
 // This class also holds an error and a fit range associated with the real value
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <math.h>
 #include <math.h>
@@ -30,11 +30,11 @@
 #include <iomanip>
 #include "TObjString.h"
 #include "TTree.h"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooErrorVar.hh"
-#include "RooFitCore/RooRangeBinning.hh"
-#include "RooFitCore/RooCmdConfig.hh"
+#include "RooRealVar.h"
+#include "RooStreamParser.h"
+#include "RooErrorVar.h"
+#include "RooRangeBinning.h"
+#include "RooCmdConfig.h"
 
 ClassImp(RooRealVar)
 ;

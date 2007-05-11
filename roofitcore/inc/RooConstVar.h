@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConstVar.rdl,v 1.7 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooConstVar.rdl,v 1.8 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_CONST_VAR
 #define ROO_CONST_VAR
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsReal.h"
+#include "RooArgList.h"
+#include "RooListProxy.h"
 
 class RooArgSet ;
 

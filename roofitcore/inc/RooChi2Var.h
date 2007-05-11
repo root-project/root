@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.rdl,v 1.10 2005/02/24 22:36:06 wverkerke Exp $
+ *    File: $Id: RooChi2Var.rdl,v 1.11 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #ifndef ROO_CHI2_VAR
 #define ROO_CHI2_VAR
 
-#include "RooFitCore/RooAbsOptGoodnessOfFit.hh"
-#include "RooFitCore/RooCmdArg.hh"
-#include "RooFitCore/RooDataHist.hh"
+#include "RooAbsOptGoodnessOfFit.h"
+#include "RooCmdArg.h"
+#include "RooDataHist.h"
 
 class RooChi2Var : public RooAbsOptGoodnessOfFit {
 public:

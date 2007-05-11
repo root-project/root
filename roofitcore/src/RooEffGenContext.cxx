@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEffGenContext.cc,v 1.1 2005/06/20 15:44:51 wverkerke Exp $
+ *    File: $Id: RooEffGenContext.cc,v 1.2 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU, Gerhard.Raven@nikhf.nl                    *
  *                                                                           *
@@ -15,10 +15,10 @@
 // A class description belongs here...
                                                                                                                       
                                                                                                                       
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooEffGenContext.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooFit.h"
+#include "RooEffGenContext.h"
+#include "RooAbsPdf.h"
+#include "RooRandom.h"
 using namespace std;
 
 ClassImp(RooEffGenContext)

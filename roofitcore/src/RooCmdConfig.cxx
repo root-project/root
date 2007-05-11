@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.17 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.18 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,16 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooInt.hh"
-#include "RooFitCore/RooDouble.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooTObjWrap.hh"
-#include "RooFitCore/RooAbsData.hh"
+#include "RooCmdConfig.h"
+#include "RooCmdConfig.h"
+#include "RooInt.h"
+#include "RooDouble.h"
+#include "RooArgSet.h"
+#include "RooStringVar.h"
+#include "RooTObjWrap.h"
+#include "RooAbsData.h"
 #include "TObjString.h"
 
 ClassImp(RooCmdConfig) 

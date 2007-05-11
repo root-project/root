@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMapCatEntry.rdl,v 1.11 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooMapCatEntry.rdl,v 1.12 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,7 @@
 #include "Riostream.h"
 #include "TNamed.h"
 #include "TRegexp.h"
-#include "RooFitCore/RooCatType.hh"
+#include "RooCatType.h"
 
 class RooMapCatEntry : public TNamed {
 public:

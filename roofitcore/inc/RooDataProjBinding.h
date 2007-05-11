@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.rdl,v 1.4 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooDataProjBinding.rdl,v 1.5 2005/02/25 14:22:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_DATA_PROJ_BINDING
 #define ROO_DATA_PROJ_BINDING
 
-#include "RooFitCore/RooRealBinding.hh"
+#include "RooRealBinding.h"
 class RooAbsReal ;
 class RooAbsData ;
 class RooSuperCategory ;

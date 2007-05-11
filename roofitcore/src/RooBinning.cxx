@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.16 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.17 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,15 +21,15 @@
 // methods allow the user to add single bin boundaries, mirrored pairs,
 // or sets of uniformly spaced boundaries.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
-#include "RooFitCore/RooBinning.hh"
-#include "RooFitCore/RooDouble.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNumber.hh"
+#include "RooBinning.h"
+#include "RooDouble.h"
+#include "RooAbsPdf.h"
+#include "RooRealVar.h"
+#include "RooNumber.h"
 
 ClassImp(RooBinning)
 ;

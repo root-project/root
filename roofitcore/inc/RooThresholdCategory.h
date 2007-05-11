@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThresholdCategory.rdl,v 1.6 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooThresholdCategory.rdl,v 1.7 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #define ROO_THRESHOLD_CATEGORY
 
 #include "TSortedList.h"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooCatType.hh"
+#include "RooAbsCategory.h"
+#include "RooRealProxy.h"
+#include "RooCatType.h"
 
 class RooThresholdCategory : public RooAbsCategory {
 

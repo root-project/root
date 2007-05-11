@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.rdl,v 1.23 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.24 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 #define ROO_ABS_COLLECTION
 
 #include "TString.h"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooLinkedList.hh"
-#include "RooFitCore/RooCmdArg.hh"
+#include "RooAbsArg.h"
+#include "RooPrintable.h"
+#include "RooLinkedList.h"
+#include "RooCmdArg.h"
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:

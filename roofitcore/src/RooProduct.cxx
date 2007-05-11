@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.cc,v 1.8 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooProduct.cc,v 1.9 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,16 +21,16 @@
 // all integrals of the product are handled numerically
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
-#include "RooFitCore/RooProduct.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooProduct.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "RooErrorHandler.h"
 
 ClassImp(RooProduct)
 ;

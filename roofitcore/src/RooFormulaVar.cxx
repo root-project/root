@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.cc,v 1.35 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.36 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,13 +35,13 @@
 // doesn't hardcode any of the variable names it expects
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooNLLVar.hh"
-#include "RooFitCore/RooChi2Var.hh"
+#include "RooFormulaVar.h"
+#include "RooFormulaVar.h"
+#include "RooStreamParser.h"
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
 
 ClassImp(RooFormulaVar)
 

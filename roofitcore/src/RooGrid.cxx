@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGrid.cc,v 1.12 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooGrid.cc,v 1.13 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,13 +18,13 @@
 // RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
 // numerical integration, following the VEGAS algorithm.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooGrid.hh"
-#include "RooFitCore/RooGrid.hh"
-#include "RooFitCore/RooAbsFunc.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooGrid.h"
+#include "RooGrid.h"
+#include "RooAbsFunc.h"
+#include "RooNumber.h"
+#include "RooRandom.h"
 #include "TMath.h"
 
 #include <math.h>

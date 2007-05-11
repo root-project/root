@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooInvTransform.rdl,v 1.4 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooInvTransform.rdl,v 1.5 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_INV_TRANSFORM
 #define ROO_INV_TRANSFORM
 
-#include "RooFitCore/RooAbsFunc.hh"
+#include "RooAbsFunc.h"
 
 class RooInvTransform : public RooAbsFunc {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.rdl,v 1.9 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.rdl,v 1.10 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -18,8 +18,8 @@
 #ifndef ROO_DstD0_BG
 #define ROO_DstD0_BG
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.24 2005/06/21 16:46:33 wverkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.25 2006/07/03 15:37:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,13 +17,13 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "TMath.h"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitModels/RooBMixDecay.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooRealVar.h"
+#include "RooBMixDecay.h"
+#include "RooRandom.h"
 
 ClassImp(RooBMixDecay) 
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPullVar.rdl,v 1.1 2005/02/23 15:09:56 wverkerke Exp $
+ *    File: $Id: RooPullVar.rdl,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_PULL_VAR
 #define ROO_PULL_VAR
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsReal.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 class RooAbsReal ;

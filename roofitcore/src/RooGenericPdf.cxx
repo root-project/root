@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.26 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.27 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,12 +30,12 @@
 // The latter form, while slightly less readable, is more versatile because it
 // doesn't hardcode any of the variable names it expects
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooGenericPdf.hh"
-#include "RooFitCore/RooGenericPdf.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooGenericPdf.h"
+#include "RooGenericPdf.h"
+#include "RooStreamParser.h"
+#include "RooArgList.h"
 
 ClassImp(RooGenericPdf)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddition.rdl,v 1.1 2005/02/23 15:09:30 wverkerke Exp $
+ *    File: $Id: RooAddition.rdl,v 1.2 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_ADDITION
 #define ROO_ADDITION
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsReal.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

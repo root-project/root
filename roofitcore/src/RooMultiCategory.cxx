@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCategory.cc,v 1.9 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooMultiCategory.cc,v 1.10 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,18 +22,18 @@
 // RooMultiCategory state are automatically defined and updated whenever an input
 // category modifies its list of states
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
-#include "RooFitCore/RooMultiCategory.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooMultiCatIter.hh"
-#include "RooFitCore/RooAbsCategory.hh"
+#include "RooMultiCategory.h"
+#include "RooStreamParser.h"
+#include "RooArgSet.h"
+#include "RooMultiCatIter.h"
+#include "RooAbsCategory.h"
 
 ClassImp(RooMultiCategory)
 ;

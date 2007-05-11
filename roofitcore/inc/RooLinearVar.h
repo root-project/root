@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.rdl,v 1.17 2005/04/18 21:44:47 wverkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.18 2005/06/20 15:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,10 +20,10 @@
 #include <math.h>
 #include <float.h>
 #include "TString.h"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooLinTransBinning.hh"
+#include "RooAbsRealLValue.h"
+#include "RooRealProxy.h"
+#include "RooFormula.h"
+#include "RooLinTransBinning.h"
 
 class RooArgSet ;
 

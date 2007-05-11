@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvIntegrandBinding.rdl,v 1.1 2004/11/29 20:23:07 wverkerke Exp $
+ *    File: $Id: RooConvIntegrandBinding.rdl,v 1.2 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_CONV_INTEGRAND_BINDING
 #define ROO_CONV_INTEGRAND_BINDING
 
-#include "RooFitCore/RooAbsFunc.hh"
+#include "RooAbsFunc.h"
 
 class RooAbsRealLValue;
 class RooAbsReal;

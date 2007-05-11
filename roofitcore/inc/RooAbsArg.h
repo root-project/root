@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.89 2005/12/01 16:10:19 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.90 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,8 +20,8 @@
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooRefCountList.hh"
+#include "RooPrintable.h"
+#include "RooRefCountList.h"
 
 class TTree ;
 class RooArgSet ;

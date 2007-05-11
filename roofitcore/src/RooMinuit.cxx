@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.22 2005/06/20 18:15:16 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.23 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,9 +35,9 @@
 // Various methods are available to control verbosity, profiling,
 // automatic PDF optimization.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include <fstream>
+#include "TClass.h"
 #include <fstream>
 #include <iomanip>
 #include "TH1.h"
@@ -48,14 +48,14 @@
 #include "TFitter.h"
 #include "TMinuit.h"
 #include "TDirectory.h"
-#include "RooFitCore/RooMinuit.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFitResult.hh"
-#include "RooFitCore/RooAbsPdf.hh"
+#include "RooMinuit.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooAbsReal.h"
+#include "RooAbsRealLValue.h"
+#include "RooRealVar.h"
+#include "RooFitResult.h"
+#include "RooAbsPdf.h"
 
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)

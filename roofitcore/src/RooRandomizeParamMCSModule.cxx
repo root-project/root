@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRandomizeParamMCSModule.cc,v 1.1 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,14 +30,14 @@
 // number of expected events of an extended p.d.f/
 
 
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooDataSet.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
 #include "TString.h"
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooFitResult.hh"
-#include "RooFitCore/RooAddition.hh"
-#include "RooFitCore/RooRandomizeParamMCSModule.hh"
+#include "RooFit.h"
+#include "RooFitResult.h"
+#include "RooAddition.h"
+#include "RooRandomizeParamMCSModule.h"
 
 ClassImp(RooRandomizeParamMCSModule)
   ;

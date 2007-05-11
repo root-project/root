@@ -1,4 +1,4 @@
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Rtypes.h"
 #include "Rtypes.h"
@@ -7,7 +7,7 @@
 // -- CLASS DESCRIPTION [AUX] --
 // Print banner message when RooFit library is loaded
 
-const char* VTAG="2.11" ;
+const char* VTAG="2.10" ;
 
 Int_t doBanner()
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.rdl,v 1.11 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBCPEffDecay.rdl,v 1.12 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_BCP_EFF_DECAY
 #define ROO_BCP_EFF_DECAY
 
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
 
 class RooBCPEffDecay : public RooAbsAnaConvPdf {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.rdl,v 1.32 2005/04/18 21:44:45 wverkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.33 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 
 #include "Rtypes.h"
 #include "TFormula.h"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooPrintable.h"
+#include "RooLinkedList.h"
 
 class RooFormula : public TFormula, public RooPrintable {
 public:

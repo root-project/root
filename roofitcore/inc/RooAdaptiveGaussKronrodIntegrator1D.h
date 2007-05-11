@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.rdl,v 1.3 2005/06/20 15:44:47 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.rdl,v 1.4 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_ADAPTIVE_GAUSS_KRONROD_INTEGRATOR_1D
 #define ROO_ADAPTIVE_GAUSS_KRONROD_INTEGRATOR_1D
 
-#include "RooFitCore/RooAbsIntegrator.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsIntegrator.h"
+#include "RooNumIntConfig.h"
 
 double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
 

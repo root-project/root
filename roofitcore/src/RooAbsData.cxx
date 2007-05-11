@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.28 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.29 2006/12/08 15:50:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,13 +20,13 @@
 // points for its contents and provides an iterator over its elements
 // (bins for binned data sets, data points for unbinned datasets).
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooAbsData.h"
+#include "RooAbsData.h"
+#include "RooFormulaVar.h"
+#include "RooCmdConfig.h"
+#include "RooAbsRealLValue.h"
 
 
 ClassImp(RooAbsData)

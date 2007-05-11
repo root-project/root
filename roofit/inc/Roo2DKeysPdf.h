@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.rdl,v 1.10 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.rdl,v 1.11 2005/06/20 15:51:05 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -16,10 +16,10 @@
 #ifndef ROO_2DKEYS
 #define ROO_2DKEYS
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooDataSet.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooAbsReal.h"
+#include "RooDataSet.h"
 #include "Riostream.h"
 
 ////////////////////////////////////////////////////////////////////////////////////

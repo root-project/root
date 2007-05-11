@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.rdl,v 1.8 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.rdl,v 1.9 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #ifndef ROO_KEYS
 #define ROO_KEYS
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

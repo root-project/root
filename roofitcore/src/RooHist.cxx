@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.34 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.35 2006/12/08 15:50:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,12 +19,12 @@
 // TGraphAsymmErrors class. Error bars are calculated using either Poisson
 // or Binomial statistics.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooHist.hh"
-#include "RooFitCore/RooHist.hh"
-#include "RooFitCore/RooHistError.hh"
-#include "RooFitCore/RooCurve.hh"
+#include "RooHist.h"
+#include "RooHist.h"
+#include "RooHistError.h"
+#include "RooCurve.h"
 
 #include "TH1.h"
 #include "Riostream.h"

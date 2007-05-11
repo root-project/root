@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.cc,v 1.25 2005/06/16 09:31:31 wverkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.26 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 // -- CLASS DESCRIPTION [MISC] --
 // RooStringVar represents a fundamental string valued object.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <math.h>
 #include <math.h>
@@ -26,8 +26,8 @@
 #include <ctype.h>
 #include "TObjString.h"
 #include "TTree.h"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooStreamParser.hh"
+#include "RooStringVar.h"
+#include "RooStreamParser.h"
 
 ClassImp(RooStringVar)
 

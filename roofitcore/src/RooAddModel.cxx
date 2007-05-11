@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.41 2005/06/16 09:31:25 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.42 2005/06/20 15:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,16 +33,16 @@
 // extended likelihood configurations.
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
-#include "RooFitCore/RooAddModel.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooRealConstant.hh"
+#include "RooAddModel.h"
+#include "RooRealProxy.h"
+#include "RooArgList.h"
+#include "RooRandom.h"
+#include "RooRealConstant.h"
 
 ClassImp(RooAddModel)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.rdl,v 1.22 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooCurve.rdl,v 1.23 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_CURVE
 
 #include "TGraph.h"
-#include "RooFitCore/RooPlotable.hh"
+#include "RooPlotable.h"
 
 class RooAbsReal;
 class RooRealVar;

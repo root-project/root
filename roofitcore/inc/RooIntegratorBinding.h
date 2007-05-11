@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorBinding.rdl,v 1.2 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooIntegratorBinding.rdl,v 1.3 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_INTEGRATOR_BINDING
 #define ROO_INTEGRATOR_BINDING
 
-#include "RooFitCore/RooAbsFunc.hh"
-#include "RooFitCore/RooAbsIntegrator.hh"
+#include "RooAbsFunc.h"
+#include "RooAbsIntegrator.h"
 
 class RooIntegratorBinding : public RooAbsFunc {
 public:

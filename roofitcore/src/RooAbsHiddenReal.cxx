@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsHiddenReal.cc,v 1.10 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.cc,v 1.11 2005/06/20 15:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,12 +23,12 @@
 // has a protected version of getVal()
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsHiddenReal.hh"
-#include "RooFitCore/RooCategory.hh"
+#include "RooArgSet.h"
+#include "RooArgSet.h"
+#include "RooAbsHiddenReal.h"
+#include "RooCategory.h"
 
 ClassImp(RooAbsHiddenReal)
 ;

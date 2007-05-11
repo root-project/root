@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.rdl,v 1.15 2005/06/23 15:08:57 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.16 2005/12/08 13:19:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 #define ROO_SUPER_CATEGORY
 
 class TObject ;
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooCatType.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooSetProxy.hh"
+#include "RooAbsCategoryLValue.h"
+#include "RooCatType.h"
+#include "RooArgSet.h"
+#include "RooSetProxy.h"
  
 
 class RooSuperCategory : public RooAbsCategoryLValue {

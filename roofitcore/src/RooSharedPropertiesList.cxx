@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSharedPropertiesList.cc,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooSharedPropertiesList.cc,v 1.2 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 
 // -- CLASS DESCRIPTION [AUX] --
 
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooSharedPropertiesList.hh"
-#include "RooFitCore/RooSharedProperties.hh"
+#include "RooFit.h"
+#include "RooSharedPropertiesList.h"
+#include "RooSharedProperties.h"
 #include "TIterator.h"
 #include <iostream>
 using std::cout ;

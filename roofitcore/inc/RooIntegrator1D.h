@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.rdl,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.20 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_INTEGRATOR_1D
 #define ROO_INTEGRATOR_1D
 
-#include "RooFitCore/RooAbsIntegrator.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsIntegrator.h"
+#include "RooNumIntConfig.h"
 
 class RooIntegrator1D : public RooAbsIntegrator {
 public:

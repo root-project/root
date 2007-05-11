@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.cc,v 1.17 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.18 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,11 +18,11 @@
 // RooMultiCatIter iterators over all state permutations of a list of categories.
 // It serves as the state iterator for a RooSuperCategory.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooMultiCatIter.hh"
+#include "RooAbsCategoryLValue.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooMultiCatIter.h"
 
 ClassImp(RooMultiCatIter)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.13 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.14 2005/06/20 15:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_ABS_GOODNESS_OF_FIT
 
 #include "Riostream.h"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
+#include "RooAbsReal.h"
+#include "RooSetProxy.h"
 
 class RooArgSet ;
 class RooAbsData ;

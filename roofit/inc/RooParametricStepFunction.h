@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooParametricStepFunction.rdl,v 1.3 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.rdl,v 1.4 2006/07/03 15:37:57 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -15,9 +15,10 @@
 #ifndef ROO_PARAMETRIC_STEP_FUNCTION
 #define ROO_PARAMETRIC_STEP_FUNCTION
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "TArrayD.h"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

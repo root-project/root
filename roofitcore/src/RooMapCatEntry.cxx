@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMapCatEntry.cc,v 1.11 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMapCatEntry.cc,v 1.12 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,10 +20,10 @@
 // can be matched against the input category state label and an output
 // category state (RooCatType), which should be assign if the match is successfull.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooMapCatEntry.hh"
-#include "RooFitCore/RooMapCatEntry.hh"
+#include "RooMapCatEntry.h"
+#include "RooMapCatEntry.h"
 #include "TString.h"
 
 ClassImp(RooMapCatEntry)

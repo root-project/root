@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedListIter.cc,v 1.8 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooLinkedListIter.cc,v 1.9 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 // -- CLASS DESCRIPTION [AUX] --
 // RooLinkedListIter is the TIterator implementation for RooLinkedList
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooLinkedListIter.hh"
-#include "RooFitCore/RooLinkedListIter.hh"
+#include "RooLinkedListIter.h"
+#include "RooLinkedListIter.h"
 
 ClassImp(RooLinkedListIter)
 

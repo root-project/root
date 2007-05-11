@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDirItem.cc,v 1.10 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooDirItem.cc,v 1.11 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,15 +19,15 @@
 // to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
 // methods that can be used to safely attach and detach one self from a TDirectory
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TList.h"
-#include "TDirectory.h"
+#include "TDirectoryFile.h"
 #include "TString.h"
-#include "RooFitCore/RooDirItem.hh"
+#include "RooDirItem.h"
 
 ClassImp(RooDirItem) ;
 
@@ -52,7 +52,7 @@ void RooDirItem::removeFromDir(TObject* obj)
 {
   // Remove self from directory it was added to
   if (_dir) {
-    if (!_dir->TestBit(TDirectory::kCloseDirectory))
+    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
       _dir->GetList()->Remove(obj) ;
   }
 } 

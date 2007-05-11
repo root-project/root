@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.15 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.16 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,13 +22,13 @@
 // error, such as calculating the pull value.
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooErrorVar.hh"
-#include "RooFitCore/RooErrorVar.hh"
-#include "RooFitCore/RooAbsBinning.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooRangeBinning.hh"
+#include "RooErrorVar.h"
+#include "RooErrorVar.h"
+#include "RooAbsBinning.h"
+#include "RooStreamParser.h"
+#include "RooRangeBinning.h"
 
 ClassImp(RooErrorVar)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphEdge.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGraphEdge.rdl,v 1.9 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #ifndef ROO_GRAPH_EDGE
 #define ROO_GRAPH_EDGE
 
-#include "RooFitCore/RooGraphNode.hh"
+#include "RooGraphNode.h"
 #include "TObject.h"
 
 class RooGraphEdge : public TObject

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.46 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.47 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,21 +27,22 @@
 // and this class owns the returned object.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooPlotable.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooHist.hh"
+#include "TClass.h"
+#include "RooPlot.h"
+#include "RooAbsReal.h"
+#include "RooAbsRealLValue.h"
+#include "RooPlotable.h"
+#include "RooArgSet.h"
+#include "RooCurve.h"
+#include "RooHist.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
+#include "TDirectory.h"
 
 #include "Riostream.h"
 #include <string.h>
@@ -57,6 +58,11 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 {
   // Create an empty frame with the specified x-axis limits.
   initialize();
+  
+  //Because this is the default constructor (!), we must remove the object
+  //from the directory when reading the object from a file
+  //This default constructor should be changed to be non default!
+  if (fDirectory && xmin==0 && xmax==1) fDirectory->GetList()->Remove(this);
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.42 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.43 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_REAL_INTEGRAL
 #define ROO_REAL_INTEGRAL
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooSetProxy.hh"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooSetProxy.h"
 
 class RooArgSet ;
 class TH1F ;

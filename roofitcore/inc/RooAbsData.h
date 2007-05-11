@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.30 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.31 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #define ROO_ABS_DATA
 
 #include "TNamed.h"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooFormulaVar.hh"
+#include "RooPrintable.h"
+#include "RooArgSet.h"
+#include "RooFormulaVar.h"
 
 class RooAbsArg;
 class RooAbsReal ;

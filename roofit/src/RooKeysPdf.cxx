@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.18 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.19 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,17 +14,17 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include <math.h>
 #include <math.h>
 #include "Riostream.h"
+#include "TMath.h"
 
-#include "RooFitModels/RooKeysPdf.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooDataSet.hh"
+#include "RooKeysPdf.h"
+#include "RooAbsReal.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
+#include "RooDataSet.h"
 
 ClassImp(RooKeysPdf)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTable.cc,v 1.12 2005/06/16 09:31:32 wverkerke Exp $
+ *    File: $Id: RooTable.cc,v 1.13 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,10 +19,10 @@
 // Table objects are the category equivalent of RooPlot objects
 // (which are used for real-valued objects)
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooTable.hh"
-#include "RooFitCore/RooTable.hh"
+#include "RooTable.h"
+#include "RooTable.h"
 
 ClassImp(RooTable)
 

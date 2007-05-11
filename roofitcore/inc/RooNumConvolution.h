@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvolution.rdl,v 1.2 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooNumConvolution.rdl,v 1.3 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_NUM_CONVOLUTION
 #define ROO_NUM_CONVOLUTION
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooSetProxy.h"
+#include "RooListProxy.h"
+#include "RooNumIntConfig.h"
 
 class RooConvIntegrandBinding ;
 class RooAbsIntegrator ;

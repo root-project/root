@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.24 2005/06/20 15:44:45 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.25 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,16 +29,16 @@
 // Support for calculation in partitions is needed to allow parallel calculation
 // of goodness-of-fit values.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsOptGoodnessOfFit.hh"
-#include "RooFitCore/RooAbsOptGoodnessOfFit.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooErrorHandler.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
+#include "RooAbsOptGoodnessOfFit.h"
+#include "RooAbsOptGoodnessOfFit.h"
+#include "RooAbsPdf.h"
+#include "RooAbsData.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooErrorHandler.h"
+#include "RooGlobalFunc.h"
 
 ClassImp(RooAbsOptGoodnessOfFit)
 ;

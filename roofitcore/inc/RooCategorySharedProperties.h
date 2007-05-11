@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCategorySharedProperties.rdl,v 1.1 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_CATEGORY_SHARED_PROPERTY
 #define ROO_CATEGORY_SHARED_PROPERTY
 
-#include "RooFitCore/RooSharedProperties.hh"
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooSharedProperties.h"
+#include "RooLinkedList.h"
 
 class RooCategorySharedProperties : public RooSharedProperties {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.rdl,v 1.18 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.19 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_GENERIC_PDF
 #define ROO_GENERIC_PDF
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooFormula.h"
+#include "RooListProxy.h"
 
 class RooArgList ;
 

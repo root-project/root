@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.rdl,v 1.26 2006/08/31 14:22:47 wverkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.27 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 #define ROO_FIT_RESULT
 
 #include "Riostream.h"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooDirItem.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooAbsArg.h"
+#include "RooPrintable.h"
+#include "RooDirItem.h"
+#include "RooArgList.h"
 
 #include "RVersion.h"
 #if ROOT_VERSION_CODE >= 327680

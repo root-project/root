@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRandomizeParamMCSModule.rdl,v 1.1 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #ifndef ROO_RANDOMIZE_PARAM_MCS_MODULE
 #define ROO_RANDOMIZE_PARAM_MCS_MODULE
 
-#include "RooFitCore/RooAbsMCStudyModule.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "RooAbsMCStudyModule.h"
+#include "RooRealVar.h"
 #include <list>
 #include <string>
 

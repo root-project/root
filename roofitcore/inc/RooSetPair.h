@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetPair.rdl,v 1.1 2004/07/02 07:39:04 wverkerke Exp $
+ *    File: $Id: RooSetPair.rdl,v 1.2 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_SET_PAIR
 
 #include "TObject.h"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooArgSet.h"
 
 class RooLinkedListElem ;
 class TBuffer ;
@@ -38,7 +38,7 @@ public:
   RooArgSet* _set2 ;
 
   virtual ULong_t Hash() const {
-    return TMath::Hash((void*)&_set1,2*sizeof(void*)) ;  
+    return TString::Hash((void*)&_set1,2*sizeof(void*)) ;  
   }
 
 protected:

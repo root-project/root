@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.rdl,v 1.12 2005/04/18 21:44:46 wverkerke Exp $
+ *    File: $Id: RooHistError.rdl,v 1.13 2005/06/22 18:02:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_HIST_ERROR
 
 #include "Rtypes.h"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooAbsFunc.hh"
+#include "RooNumber.h"
+#include "RooAbsFunc.h"
 #include <math.h>
 
 class RooHistError {

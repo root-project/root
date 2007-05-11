@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.54 2005/07/12 15:43:06 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.55 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +23,7 @@
 // e.g. 'tagCat::Kaon' will resolve to the numerical value of
 // the Kaon state of the RooAbsCategory object named tagCat.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -31,10 +31,10 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TObjString.h"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooFormula.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "RooArgList.h"
 
 ClassImp(RooFormula)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.cc,v 1.17 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.18 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,14 +19,14 @@
 // of its servers.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooRealBinding.hh"
-#include "RooFitCore/RooRealBinding.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooRealBinding.h"
+#include "RooRealBinding.h"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooAbsRealLValue.h"
+#include "RooNameReg.h"
 
 #include <assert.h>
 

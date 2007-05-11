@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.50 2005/12/05 14:58:16 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.51 2006/12/08 15:50:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,19 +20,19 @@
 // or RooStringVar objects, thus data can be binned in real and/or discrete dimensions
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TH1.h"
 #include "TH1.h"
 #include "TMath.h"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooAbsLValue.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooMath.hh"
-#include "RooFitCore/RooBinning.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooHistError.hh"
+#include "RooDataHist.h"
+#include "RooAbsLValue.h"
+#include "RooArgList.h"
+#include "RooRealVar.h"
+#include "RooMath.h"
+#include "RooBinning.h"
+#include "RooPlot.h"
+#include "RooHistError.h"
 
 ClassImp(RooDataHist) 
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvolution.cc,v 1.4 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooNumConvolution.cc,v 1.5 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,20 +54,20 @@
 // calls that MINUIT needs to fit your function as function of the
 // convolution precision. 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include "TH2F.h"
-#include "RooFitCore/RooNumConvolution.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooCustomizer.hh"
-#include "RooFitCore/RooConvIntegrandBinding.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooConvGenContext.hh"
+#include "RooNumConvolution.h"
+#include "RooArgList.h"
+#include "RooRealVar.h"
+#include "RooFormulaVar.h"
+#include "RooCustomizer.h"
+#include "RooConvIntegrandBinding.h"
+#include "RooNumIntFactory.h"
+#include "RooGenContext.h"
+#include "RooConvGenContext.h"
 
 
 

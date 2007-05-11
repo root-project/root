@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.38 2005/06/20 15:45:15 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.39 2005/06/21 19:59:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_TREE_DATA
 #define ROO_TREE_DATA
 
-#include "TTree.h"
-#include "RooFitCore/RooAbsData.hh"
+#include "RooAbsData.h"
 
+class TTree;
 class TIterator;
 class TBranch;
 class TH1F;
@@ -89,10 +89,8 @@ public:
   virtual TList* split(const RooAbsCategory& splitCat) const ;
 
   // Forwarded from TTree
-  inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
-		    Int_t nentries = 1000000000, Int_t firstentry = 0) {
-    return _tree->Scan(varexp,selection,option,nentries,firstentry) ; 
-  }
+  Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
+		    Int_t nentries = 1000000000, Int_t firstentry = 0);
   const TTree& tree() const { return *_tree ; }
 
 
@@ -137,23 +135,16 @@ protected:
 	      Int_t nStart, Int_t nStop, Bool_t copyCache);
 
 
-  inline Int_t ScanCache(const char* varexp="", const char* selection="", Option_t* option="", 
-			 Int_t nentries = 1000000000, Int_t firstentry = 0) {
-    return _cacheTree->Scan(varexp,selection,option,nentries,firstentry) ; 
-  }
+  Int_t ScanCache(const char* varexp="", const char* selection="", Option_t* option="", 
+			 Int_t nentries = 1000000000, Int_t firstentry = 0);
   const TTree& cacheTree() const { return *_cacheTree ; }
 
   // Forwarded from TTree
-  inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
-  inline void Reset(Option_t* option=0) { _tree->Reset(option) ; }
-  inline Int_t Fill() { return _tree->Fill() ; }
-  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { 
-    Int_t ret1 = _tree->GetEntry(entry,getall) ; 
-    if (!ret1) return 0 ;
-    _cacheTree->GetEntry(entry,getall) ; 
-    return ret1 ;
-  }
-  void treePrint() { _tree->Print() ; }
+  Stat_t GetEntries() const;
+  void Reset(Option_t* option=0);
+  Int_t Fill();
+  Int_t GetEntry(Int_t entry = 0, Int_t getall = 0);
+  void treePrint();
 
   // Constant term  optimizer interface
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) ;

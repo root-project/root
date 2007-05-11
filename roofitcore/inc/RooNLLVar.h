@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.rdl,v 1.7 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooNLLVar.rdl,v 1.8 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_NLL_VAR
 #define ROO_NLL_VAR
 
-#include "RooFitCore/RooAbsOptGoodnessOfFit.hh"
-#include "RooFitCore/RooCmdArg.hh"
+#include "RooAbsOptGoodnessOfFit.h"
+#include "RooCmdArg.h"
 
 class RooNLLVar : public RooAbsOptGoodnessOfFit {
 public:

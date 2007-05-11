@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.10 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.11 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,15 +19,15 @@
 // numerical integration algorithm.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooSegmentedIntegrator2D.hh"
-#include "RooFitCore/RooSegmentedIntegrator2D.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooIntegratorBinding.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
+#include "TClass.h"
+#include "RooSegmentedIntegrator2D.h"
+#include "RooArgSet.h"
+#include "RooIntegratorBinding.h"
+#include "RooRealVar.h"
+#include "RooNumber.h"
+#include "RooNumIntFactory.h"
 
 #include <assert.h>
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.rdl,v 1.17 2005/06/20 15:44:42 wverkerke Exp $
+ *    File: $Id: Roo1DTable.rdl,v 1.18 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,7 @@
 #include "Riostream.h"
 #include <assert.h>
 #include "TObjArray.h"
-#include "RooFitCore/RooTable.hh"
+#include "RooTable.h"
 
 class Roo1DTable : public RooTable {
 public:

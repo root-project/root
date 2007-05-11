@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.34 2005/06/16 09:31:25 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.35 2005/06/20 15:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,16 +18,16 @@
 // A class description belongs here...
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAcceptReject.hh"
-#include "RooFitCore/RooAcceptReject.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooAcceptReject.h"
+#include "RooAcceptReject.h"
+#include "RooAbsReal.h"
+#include "RooCategory.h"
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooRandom.h"
+#include "RooErrorHandler.h"
 
 #include "TString.h"
 #include "TIterator.h"

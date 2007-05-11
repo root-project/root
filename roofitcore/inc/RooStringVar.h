@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.rdl,v 1.21 2005/04/18 21:44:53 wverkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.22 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "Riostream.h"
 #include "TString.h"
-#include "RooFitCore/RooAbsString.hh"
+#include "RooAbsString.h"
 class RooArgSet ;
 
 class RooStringVar : public RooAbsString {

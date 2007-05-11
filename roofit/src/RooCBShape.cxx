@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.14 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.15 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,16 +16,16 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
-#include "RooFitModels/RooCBShape.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooMath.hh"
+#include "RooCBShape.h"
+#include "RooAbsReal.h"
+#include "RooRealVar.h"
+#include "RooMath.h"
 #include "TMath.h"
 
 ClassImp(RooCBShape)
@@ -45,7 +45,7 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.14 2005/06/16 09:37:27 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.15 2005/06/20 15:51:06 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,

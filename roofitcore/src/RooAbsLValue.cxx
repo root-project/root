@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsLValue.cc,v 1.8 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsLValue.cc,v 1.9 2005/06/16 09:31:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,10 +22,10 @@
 //  of fit bins and change the value of the object to the central
 //  value of a given fit bin, regardless of the type of value.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsLValue.hh"
-#include "RooFitCore/RooAbsLValue.hh"
+#include "RooAbsLValue.h"
+#include "RooAbsLValue.h"
 
 ClassImp(RooAbsLValue)
 ;

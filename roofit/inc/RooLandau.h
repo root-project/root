@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooLandau.rdl,v 1.2 2004/04/05 22:42:28 wverkerke Exp $
+ *    File: $Id: RooLandau.rdl,v 1.3 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_LANDAU
 #define ROO_LANDAU
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

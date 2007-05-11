@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMappedCategory.rdl,v 1.20 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.21 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #define ROO_MAPPED_CATEGORY
 
 #include "TObjArray.h"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
-#include "RooFitCore/RooCatType.hh"
+#include "RooAbsCategory.h"
+#include "RooCategoryProxy.h"
+#include "RooCatType.h"
 
 class RooMappedCategory : public RooAbsCategory {
 public:

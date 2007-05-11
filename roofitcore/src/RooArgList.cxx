@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgList.cc,v 1.15 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.16 2005/06/20 15:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,20 +37,20 @@
 //
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include "TClass.h"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooTrace.hh"
+#include "RooArgList.h"
+#include "RooStreamParser.h"
+#include "RooFormula.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooStringVar.h"
+#include "RooTrace.h"
 
 ClassImp(RooArgList)
   ;

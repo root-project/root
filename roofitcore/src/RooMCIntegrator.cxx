@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.22 2005/06/20 15:44:54 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.23 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,16 +20,17 @@
 // in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 // based on a C version from the 0.9 beta release of the GNU scientific library.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooMCIntegrator.hh"
-#include "RooFitCore/RooMCIntegrator.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooCategory.hh"
+#include "TMath.h"
+#include "TClass.h"
+#include "RooMCIntegrator.h"
+#include "RooArgSet.h"
+#include "RooNumber.h"
+#include "RooAbsArg.h"
+#include "RooNumIntFactory.h"
+#include "RooRealVar.h"
+#include "RooCategory.h"
 
 #include <math.h>
 #include <assert.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsMCStudyModule.cc,v 1.1 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,8 +27,8 @@
 // Look at RooDLLSignificanceMCStudyModule for an example of an implementation
 //
 
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooAbsMCStudyModule.hh"
+#include "RooFit.h"
+#include "RooAbsMCStudyModule.h"
 
 ClassImp(RooAbsMCStudyModule)
   ;

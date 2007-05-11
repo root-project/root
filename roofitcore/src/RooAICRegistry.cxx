@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAICRegistry.cc,v 1.18 2005/06/16 09:31:21 wverkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.19 2005/06/20 15:44:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,11 +15,11 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooAICRegistry.h"
+#include "RooAICRegistry.h"
+#include "RooArgSet.h"
 
 ClassImp(RooAICRegistry)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.12 2005/06/21 16:46:33 wverkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.13 2006/12/08 17:52:17 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,13 +17,13 @@
 
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "TMath.h"
-#include "RooFitModels/RooBDecay.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooBDecay.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
 
 ClassImp(RooBDecay);
 

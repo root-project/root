@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooListProxy.cc,v 1.14 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooListProxy.cc,v 1.15 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,12 +26,12 @@
 // the serverRedirect changes.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooAbsArg.hh"
+#include "RooListProxy.h"
+#include "RooListProxy.h"
+#include "RooArgList.h"
+#include "RooAbsArg.h"
 
 ClassImp(RooListProxy)
 ;

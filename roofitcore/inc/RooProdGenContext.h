@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.rdl,v 1.13 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.rdl,v 1.14 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_PROD_GEN_CONTEXT
 
 #include "TList.h"
-#include "RooFitCore/RooAbsGenContext.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooAbsGenContext.h"
+#include "RooArgSet.h"
 
 class RooProdPdf;
 class RooDataSet;

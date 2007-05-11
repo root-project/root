@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.72 2005/06/20 15:44:46 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.73 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_ABS_REAL
 #define ROO_ABS_REAL
 
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooCmdArg.hh"
-#include "RooFitCore/RooCurve.hh"
+#include "RooAbsArg.h"
+#include "RooCmdArg.h"
+#include "RooCurve.h"
 
 class RooArgSet ;
 class RooArgList ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.rdl,v 1.4 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.rdl,v 1.5 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -16,8 +16,8 @@
 #ifndef ROO_NOVOSIBIRSK
 #define ROO_NOVOSIBIRSK
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 class RooAbsReal;

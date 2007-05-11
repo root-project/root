@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvIntegrandBinding.cc,v 1.4 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooConvIntegrandBinding.cc,v 1.5 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,13 +18,13 @@
 // Lightweight interface adaptor that binds a RooAbsReal object to a subset
 // of its servers.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooConvIntegrandBinding.hh"
-#include "RooFitCore/RooConvIntegrandBinding.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooConvIntegrandBinding.h"
+#include "RooConvIntegrandBinding.h"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooAbsRealLValue.h"
 
 #include <assert.h>
 

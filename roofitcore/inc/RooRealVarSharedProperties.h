@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVarSharedProperties.rdl,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooRealVarSharedProperties.rdl,v 1.2 2006/12/07 21:21:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_REAL_VAR_SHARED_PROPERTY
 
 #include "TObject.h"
-#include "RooFitCore/RooSharedProperties.hh"
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooSharedProperties.h"
+#include "RooLinkedList.h"
 
 class RooRealVarSharedProperties : public RooSharedProperties {
 public:

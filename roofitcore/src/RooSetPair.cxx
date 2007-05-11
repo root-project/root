@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetPair.cc,v 1.4 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooSetPair.cc,v 1.5 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 // -- CLASS DESCRIPTION [AUX] ---
 // RooSetPair
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooSetPair.hh"
-#include "RooFitCore/RooSetPair.hh"
+#include "RooSetPair.h"
+#include "RooSetPair.h"
 
 
 ClassImp(RooSetPair) 

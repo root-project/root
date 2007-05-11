@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.20 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.21 2005/12/05 14:58:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,16 +21,16 @@
 // separately as a PDF. The convolution variable of the physics model is 
 // subsequently explicitly smeared with the resolution model distribution.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooConvGenContext.hh"
-#include "RooFitCore/RooConvGenContext.hh"
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooNumConvPdf.hh"
-#include "RooFitCore/RooProdPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooTruthModel.hh"
+#include "RooConvGenContext.h"
+#include "RooConvGenContext.h"
+#include "RooAbsAnaConvPdf.h"
+#include "RooNumConvPdf.h"
+#include "RooProdPdf.h"
+#include "RooDataSet.h"
+#include "RooArgSet.h"
+#include "RooTruthModel.h"
 #include "Riostream.h"
 
 

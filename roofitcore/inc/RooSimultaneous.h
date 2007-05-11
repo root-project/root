@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.40 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.41 2005/07/12 11:29:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,11 +18,11 @@
 
 //#include "THashList.h"
 #include "TList.h"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
-#include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooNormListManager.hh"
+#include "RooAbsPdf.h"
+#include "RooCategoryProxy.h"
+#include "RooSetProxy.h"
+#include "RooAICRegistry.h"
+#include "RooNormListManager.h"
 class RooAbsCategoryLValue ;
 class RooFitResult ;
 class RooPlot ;

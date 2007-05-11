@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.47 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.48 2006/07/04 15:07:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,17 +18,17 @@
 // A class description belongs here...
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooAcceptReject.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooGenContext.h"
+#include "RooGenContext.h"
+#include "RooAbsPdf.h"
+#include "RooDataSet.h"
+#include "RooRealIntegral.h"
+#include "RooAcceptReject.h"
+#include "RooRealVar.h"
+#include "RooDataHist.h"
+#include "RooErrorHandler.h"
 
 #include "TString.h"
 #include "TIterator.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.37 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.38 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 // -- CLASS DESCRIPTION [CONT] --
 // RooAbsCollection is an abstract container object that can hold multiple RooAbsArg objects.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -28,18 +28,18 @@
 #include "TClass.h"
 #include "TStopwatch.h"
 #include "TRegexp.h"
-#include "RooFitCore/RooAbsCollection.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooTrace.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooLinkedListIter.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
+#include "RooAbsCollection.h"
+#include "RooStreamParser.h"
+#include "RooFormula.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooStringVar.h"
+#include "RooTrace.h"
+#include "RooArgList.h"
+#include "RooLinkedListIter.h"
+#include "RooCmdConfig.h"
+#include "RooRealVar.h"
+#include "RooGlobalFunc.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

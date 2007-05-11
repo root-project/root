@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsProxy.rdl,v 1.12 2005/02/25 14:22:51 wverkerke Exp $
+ *    File: $Id: RooAbsProxy.rdl,v 1.13 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_ABS_PROXY
 
 #include "TObject.h"
-#include "RooFitCore/RooAbsArg.hh"
+#include "RooAbsArg.h"
 
 #ifdef _WIN32
 // Turn off 'warning C4355: 'this' : used in base member initializer list'

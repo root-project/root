@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.rdl,v 1.9 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.rdl,v 1.10 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,9 +19,9 @@
 #include "Riostream.h"
 #include <assert.h>
 #include "Rtypes.h"
-#include "RooFitCore/RooNameSet.hh"
-#include "RooFitCore/RooSetPair.hh"
-#include "RooFitCore/RooHashTable.hh"
+#include "RooNameSet.h"
+#include "RooSetPair.h"
+#include "RooHashTable.h"
 
 class RooArgSet ;
 class RooSetPair ;

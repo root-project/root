@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDecay.cc,v 1.15 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.16 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,13 +17,13 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
-#include "RooFitModels/RooDecay.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooDecay.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
 
 ClassImp(RooDecay) 
 ;

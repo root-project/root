@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.rdl,v 1.5 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooPolyVar.rdl,v 1.6 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_POLY_VAR
 #define ROO_POLY_VAR
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

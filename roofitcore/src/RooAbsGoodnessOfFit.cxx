@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.20 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.21 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,18 +28,18 @@
 // processes and later combined in the main thread.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsGoodnessOfFit.hh"
-#include "RooFitCore/RooAbsGoodnessOfFit.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooSimultaneous.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNLLVar.hh"
-#include "RooFitCore/RooRealMPFE.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooAbsGoodnessOfFit.h"
+#include "RooAbsGoodnessOfFit.h"
+#include "RooAbsPdf.h"
+#include "RooSimultaneous.h"
+#include "RooAbsData.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooNLLVar.h"
+#include "RooRealMPFE.h"
+#include "RooErrorHandler.h"
 
 ClassImp(RooAbsGoodnessOfFit)
 ;

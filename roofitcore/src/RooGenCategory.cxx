@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenCategory.cc,v 1.22 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.23 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,7 @@
 // RooGenCategory builds a numerical index-to-index map from the user function
 // to achieve a high performance mapping.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "TMethodCall.h"
@@ -33,10 +33,10 @@
 #include <stdio.h>
 #include "TString.h"
 #include "Api.h"  
-#include "RooFitCore/RooGenCategory.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooMapCatEntry.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooGenCategory.h"
+#include "RooStreamParser.h"
+#include "RooMapCatEntry.h"
+#include "RooErrorHandler.h"
 
 ClassImp(RooGenCategory)
 

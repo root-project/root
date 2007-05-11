@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooClassFactory.rdl,v 1.1 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 #define ROO_CODE_FACTORY
 
 #include "TNamed.h"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooPrintable.hh"
+#include "RooArgSet.h"
+#include "RooPrintable.h"
 
 class RooClassFactory : public TNamed, public RooPrintable {
 

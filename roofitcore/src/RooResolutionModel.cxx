@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.35 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.36 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,11 +58,12 @@
 //  The choice of basis returned by basisCode() is guaranteed not to change
 //  of the lifetime of a RooResolutionModel object.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
+#include "TClass.h"
+#include "TMath.h"
 #include "Riostream.h"
-#include "Riostream.h"
-#include "RooFitCore/RooResolutionModel.hh"
+#include "RooResolutionModel.h"
 
 ClassImp(RooResolutionModel) 
 ;

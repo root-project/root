@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.19 2005/07/12 15:43:06 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.22 2006/12/08 15:50:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 
 // -- CLASS DESCRIPTION [MISC] --
 
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooHtml.hh"
+#include "RooFit.h"
+#include "RooHtml.h"
 
 #include "TDatime.h"
 #include "TClassTable.h"

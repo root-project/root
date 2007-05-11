@@ -22,18 +22,18 @@
 // i.e. all integrals of the product are handled numerically
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
-#include "RooFitCore/RooAddition.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooErrorHandler.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooNLLVar.hh"
-#include "RooFitCore/RooChi2Var.hh"
+#include "RooAddition.h"
+#include "RooAbsReal.h"
+#include "RooErrorHandler.h"
+#include "RooArgSet.h"
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
 
 ClassImp(RooAddition)
 ;
@@ -126,13 +126,14 @@ RooAddition::RooAddition(const RooAddition& other, const char* name) :
   _set2("set2",this,other._set2)
 {
   // Copy constructor
+  // Copy constructor
   _setIter1 = _set1.createIterator() ;
   if (other._setIter2) {
     _setIter2 = _set2.createIterator() ;
   } else {
     _setIter2 = 0 ;
   }
-
+  
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.23 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.24 2006/07/04 15:07:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,14 +20,14 @@
 // component generator contexts that are used to generate the dependents
 // for each component PDF sequentially. 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooProdGenContext.hh"
-#include "RooFitCore/RooProdGenContext.hh"
-#include "RooFitCore/RooProdPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
+#include "RooProdGenContext.h"
+#include "RooProdGenContext.h"
+#include "RooProdPdf.h"
+#include "RooDataSet.h"
+#include "RooRealVar.h"
+#include "RooGlobalFunc.h"
 
 ClassImp(RooProdGenContext)
 ;

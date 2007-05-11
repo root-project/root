@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.10 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.11 2006/07/04 15:07:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_GLOBAL_FUNC
 #define ROO_GLOBAL_FUNC
 
-#include "RooFitCore/RooCmdArg.hh"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealConstant.hh"
+#include "RooCmdArg.h"
+#include "RooDataHist.h"
+#include "RooAbsPdf.h"
+#include "RooRealConstant.h"
 
 class RooAbsData ;
 class RooArgSet ;

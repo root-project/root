@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameReg.cc,v 1.3 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooNameReg.cc,v 1.4 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,10 +20,10 @@
 // a unique pointer to a TNamed object is return that can be used for
 // fast searches and comparisons.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNameReg.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooNameReg.h"
+#include "RooNameReg.h"
 
 ClassImp(RooNameReg)
 ;

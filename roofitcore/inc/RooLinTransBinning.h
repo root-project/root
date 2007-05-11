@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinTransBinning.rdl,v 1.7 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooLinTransBinning.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_LIN_TRANS_BINNING
 
 #include "Rtypes.h"
-#include "RooFitCore/RooAbsBinning.hh"
+#include "RooAbsBinning.h"
 
 class RooLinTransBinning : public RooAbsBinning {
 public:

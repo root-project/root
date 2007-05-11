@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.17 2005/06/16 09:31:25 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.18 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,13 +21,13 @@
 // for each component PDF sequentially
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAddGenContext.hh"
-#include "RooFitCore/RooAddGenContext.hh"
-#include "RooFitCore/RooAddPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooAddGenContext.h"
+#include "RooAddGenContext.h"
+#include "RooAddPdf.h"
+#include "RooDataSet.h"
+#include "RooRandom.h"
 
 ClassImp(RooAddGenContext)
 ;

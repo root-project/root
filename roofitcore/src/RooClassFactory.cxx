@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooClassFactory.cc,v 1.1 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,10 +20,10 @@
 // a list of input parameter names
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooClassFactory.hh"
-#include "RooFitCore/RooClassFactory.hh"
+#include "RooClassFactory.h"
+#include "RooClassFactory.h"
 #include <fstream>
 #include <vector>
 #include <string>

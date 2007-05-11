@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.rdl,v 1.20 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooHist.rdl,v 1.21 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_HIST
 
 #include "TGraphAsymmErrors.h"
-#include "RooFitCore/RooPlotable.hh"
-#include "RooFitCore/RooAbsData.hh"
+#include "RooPlotable.h"
+#include "RooAbsData.h"
 
 class TH1;
 class RooCurve ;

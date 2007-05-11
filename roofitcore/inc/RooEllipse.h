@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEllipse.rdl,v 1.6 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooEllipse.rdl,v 1.7 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_ELLIPSE
 
 #include "TGraph.h"
-#include "RooFitCore/RooPlotable.hh"
+#include "RooPlotable.h"
 
 class RooEllipse : public TGraph, public RooPlotable {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.9 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.10 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -19,13 +19,13 @@
 //
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <math.h>
 #include "TMath.h"
 
-#include "RooFitModels/RooNovosibirsk.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "RooNovosibirsk.h"
+#include "RooRealVar.h"
 
 ClassImp(RooNovosibirsk)
 

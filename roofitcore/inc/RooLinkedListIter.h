@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedListIter.rdl,v 1.9 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooLinkedListIter.rdl,v 1.10 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "Rtypes.h"
 #include "TIterator.h"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooAbsArg.h"
+#include "RooLinkedList.h"
 
 class RooLinkedListIter : public TIterator {
 public:

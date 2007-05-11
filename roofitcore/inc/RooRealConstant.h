@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.rdl,v 1.11 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooRealConstant.rdl,v 1.12 2005/06/22 18:02:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +22,7 @@
 class RooAbsReal ;
 class RooArgList ;
 class TIterator ;
-#include "RooFitCore/RooConstVar.hh"
+#include "RooConstVar.h"
 
 class RooRealConstant {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.114 2005/06/20 15:44:46 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.115 2005/06/23 11:44:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,29 +22,29 @@
 // This class holds in addition a unit and label string, as well
 // as a plot range and number of plot bins and plot creation methods.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooArgProxy.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooRealBinding.hh"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooCustomizer.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooScaledFunc.hh"
-#include "RooFitCore/RooDataProjBinding.hh"
-#include "RooFitCore/RooAddPdf.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooAddition.hh"
+#include "RooAbsReal.h"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooPlot.h"
+#include "RooCurve.h"
+#include "RooRealVar.h"
+#include "RooArgProxy.h"
+#include "RooFormulaVar.h"
+#include "RooRealBinding.h"
+#include "RooRealIntegral.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooCustomizer.h"
+#include "RooAbsData.h"
+#include "RooScaledFunc.h"
+#include "RooDataProjBinding.h"
+#include "RooAddPdf.h"
+#include "RooCmdConfig.h"
+#include "RooCategory.h"
+#include "RooNumIntConfig.h"
+#include "RooAddition.h"
 
 #include "Riostream.h"
 

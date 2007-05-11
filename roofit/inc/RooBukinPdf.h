@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.rdl,v 1.2 2004/04/05 22:38:34 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.rdl,v 1.3 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -36,8 +36,8 @@
 #ifndef ROO_BUKINPDF
 #define ROO_BUKINPDF
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 class RooAbsReal;

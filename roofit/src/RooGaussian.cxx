@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussian.cc,v 1.25 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.26 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,17 +17,17 @@
 // -- CLASS DESCRIPTION [PDF] --
 // Gaussian PDF...
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
-#include "RooFitModels/RooGaussian.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooMath.hh"
+#include "RooGaussian.h"
+#include "RooAbsReal.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
+#include "RooMath.h"
 
 ClassImp(RooGaussian)
 

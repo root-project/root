@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgProxy.rdl,v 1.18 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooArgProxy.rdl,v 1.19 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_ARG_PROXY
 
 #include "TNamed.h"
-#include "RooFitCore/RooAbsProxy.hh"
-#include "RooFitCore/RooAbsArg.hh"
+#include "RooAbsProxy.h"
+#include "RooAbsArg.h"
 
 
 class RooArgProxy : public TNamed, public RooAbsProxy  {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.29 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.30 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,16 +19,16 @@
 // numerical integration algorithm.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooIntegratorBinding.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
+#include "TClass.h"
+#include "RooIntegrator1D.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooNumber.h"
+#include "RooIntegratorBinding.h"
+#include "RooNumIntConfig.h"
+#include "RooNumIntFactory.h"
 
 #include <assert.h>
 

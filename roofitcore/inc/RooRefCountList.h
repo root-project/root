@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.rdl,v 1.5 2004/07/02 07:39:04 wverkerke Exp $
+ *    File: $Id: RooRefCountList.rdl,v 1.6 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_REF_COUNT_LIST
 #define ROO_REF_COUNT_LIST
 
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooLinkedList.h"
 
 class RooRefCountList : public RooLinkedList {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.rdl,v 1.14 2005/02/25 14:25:05 wverkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.15 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_GEXP_MODEL
 #define ROO_GEXP_MODEL
 
-#include "RooFitCore/RooResolutionModel.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooComplex.hh"
-#include "RooFitCore/RooMath.hh"
+#include "RooResolutionModel.h"
+#include "RooRealProxy.h"
+#include "RooComplex.h"
+#include "RooMath.h"
 
 class RooGExpModel : public RooResolutionModel {
 public:

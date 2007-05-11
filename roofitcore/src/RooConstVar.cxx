@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConstVar.cc,v 1.10 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooConstVar.cc,v 1.11 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 // RooConstVar represent a constant real-valued object
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooConstVar.hh"
-#include "RooFitCore/RooConstVar.hh"
+#include "RooConstVar.h"
+#include "RooConstVar.h"
 
 ClassImp(RooConstVar)
   ;

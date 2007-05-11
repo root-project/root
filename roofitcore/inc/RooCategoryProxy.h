@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.rdl,v 1.18 2005/06/23 15:30:01 wverkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.19 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_CATEGORY_PROXY
 #define ROO_CATEGORY_PROXY
 
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooArgProxy.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooAbsCategory.h"
+#include "RooArgProxy.h"
+#include "RooAbsCategoryLValue.h"
 
 class RooCategoryProxy : public RooArgProxy {
 public:

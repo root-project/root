@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.rdl,v 1.12 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.13 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "Riostream.h"
 #include "TIterator.h"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooArgSet.h"
 #include "TObjString.h"
 class RooCategory ;
 class RooCatType ;

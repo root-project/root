@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealAnalytic.rdl,v 1.6 2005/02/14 20:44:27 wverkerke Exp $
+ *    File: $Id: RooRealAnalytic.rdl,v 1.7 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_REAL_ANALYTIC
 #define ROO_REAL_ANALYTIC
 
-#include "RooFitCore/RooRealBinding.hh"
+#include "RooRealBinding.h"
 
 class RooRealAnalytic : public RooRealBinding {
 public:

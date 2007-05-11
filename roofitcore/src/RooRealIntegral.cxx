@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.83 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.84 2005/06/23 15:08:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,23 +24,23 @@
 // The actual analytical integrations (if any) are done in the PDF themselves, the numerical
 // integration is performed in the various implemenations of the RooAbsIntegrator base class.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "Riostream.h"
+#include "TClass.h"
 #include "Riostream.h"
 #include "TObjString.h"
 #include "TH1.h"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooRealBinding.hh"
-#include "RooFitCore/RooRealAnalytic.hh"
-#include "RooFitCore/RooInvTransform.hh"
-#include "RooFitCore/RooSuperCategory.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooRealIntegral.h"
+#include "RooArgSet.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooRealBinding.h"
+#include "RooRealAnalytic.h"
+#include "RooInvTransform.h"
+#include "RooSuperCategory.h"
+#include "RooNumIntFactory.h"
+#include "RooNumIntConfig.h"
+#include "RooNameReg.h"
 
 ClassImp(RooRealIntegral) 
 ;

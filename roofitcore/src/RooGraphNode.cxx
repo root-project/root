@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.cc,v 1.15 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooGraphNode.cc,v 1.16 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,15 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooGraphNode.hh"
-#include "RooFitCore/RooGraphNode.hh"
+#include "RooGraphNode.h"
+#include "RooGraphNode.h"
 #include "TEllipse.h"
 #include "TText.h"
 #include "TString.h"
-#include "RooFitCore/RooGraphEdge.hh"
-#include "RooFitCore/RooGraphSpring.hh"
+#include "RooGraphEdge.h"
+#include "RooGraphSpring.h"
 #include "TStyle.h"
 #include "TList.h"
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.rdl,v 1.14 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.15 2005/06/20 18:33:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "Riostream.h"
 #include <assert.h>
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooLinkedList.h"
 
 class RooTrace {
 public:

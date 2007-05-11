@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.35 2005/12/08 13:19:55 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.36 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include "RooFitCore/RooTreeData.hh"
-#include "RooFitCore/RooDirItem.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooNameSet.hh"
+#include "RooTreeData.h"
+#include "RooDirItem.h"
+#include "RooArgSet.h"
+#include "RooNameSet.h"
 
 class TObject ;
 class RooAbsArg;

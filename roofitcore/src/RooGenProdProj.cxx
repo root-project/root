@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.12 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.13 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,17 +27,17 @@
 // analytically. Remaining non-factorizing observables are integrated numerically.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 
-#include "RooFitCore/RooGenProdProj.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooErrorHandler.hh"
-#include "RooFitCore/RooProduct.hh"
+#include "RooGenProdProj.h"
+#include "RooAbsReal.h"
+#include "RooAbsPdf.h"
+#include "RooErrorHandler.h"
+#include "RooProduct.h"
 
 ClassImp(RooGenProdProj)
 ;

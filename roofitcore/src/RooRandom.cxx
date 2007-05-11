@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRandom.cc,v 1.9 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRandom.cc,v 1.10 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,11 +17,11 @@
 // -- CLASS DESCRIPTION [MISC] --
 // This class provides a static interface for generating random numbers.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooQuasiRandomGenerator.hh"
+#include "RooRandom.h"
+#include "RooRandom.h"
+#include "RooQuasiRandomGenerator.h"
 
 #include "TRandom3.h"
 

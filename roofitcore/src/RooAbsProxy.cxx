@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsProxy.cc,v 1.13 2005/04/18 21:44:22 wverkerke Exp $
+ *    File: $Id: RooAbsProxy.cc,v 1.14 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,12 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsProxy.hh"
-#include "RooFitCore/RooAbsProxy.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsArg.hh"
+#include "RooAbsProxy.h"
+#include "RooAbsProxy.h"
+#include "RooArgSet.h"
+#include "RooAbsArg.h"
 
 // -- CLASS DESCRIPTION [AUX] --
 // RooAbsProxy is the abstact interface for proxy classes.

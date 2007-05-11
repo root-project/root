@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.52 2006/07/04 15:07:58 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.53 2006/12/07 21:21:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,11 +21,11 @@
 #include <float.h>
 #include "TString.h"
 
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooUniformBinning.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooSharedPropertiesList.hh"
-#include "RooFitCore/RooRealVarSharedProperties.hh"
+#include "RooAbsRealLValue.h"
+#include "RooUniformBinning.h"
+#include "RooNumber.h"
+#include "RooSharedPropertiesList.h"
+#include "RooRealVarSharedProperties.h"
 
 class RooArgSet ;
 class RooErrorVar ;

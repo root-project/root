@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.rdl,v 1.7 2004/12/03 13:18:28 wverkerke Exp $
+ *    File: $Id: RooBinning.rdl,v 1.8 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,9 +18,9 @@
 
 #include "Rtypes.h"
 #include "TList.h"
-#include "RooFitCore/RooDouble.hh"
-#include "RooFitCore/RooAbsBinning.hh"
-#include "RooFitCore/RooNumber.hh"
+#include "RooDouble.h"
+#include "RooAbsBinning.h"
+#include "RooNumber.h"
 class RooAbsPdf ;
 class RooRealVar ;
 

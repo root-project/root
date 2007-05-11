@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormManager.cc,v 1.11 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooNormManager.cc,v 1.12 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,10 +26,10 @@
 // projection configurations can be cached.
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNormManager.hh"
-#include "RooFitCore/RooNormManager.hh"
+#include "RooNormManager.h"
+#include "RooNormManager.h"
 
 ClassImp(RooNormManager)
   ;

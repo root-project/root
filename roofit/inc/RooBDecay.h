@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.rdl,v 1.5 2004/11/29 21:15:48 wverkerke Exp $
+ *    File: $Id: RooBDecay.rdl,v 1.6 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 #ifndef ROO_BDECAY
 #define ROO_BDECAY
 
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooRealProxy.h"
 
 class RooBDecay : public RooAbsAnaConvPdf
 {

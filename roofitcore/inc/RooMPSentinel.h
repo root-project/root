@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMPSentinel.rdl,v 1.5 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooMPSentinel.rdl,v 1.6 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_MP_SENTINEL
 
 #include "Rtypes.h"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooArgSet.h"
 class RooRealMPFE ;
 
 class RooMPSentinel {

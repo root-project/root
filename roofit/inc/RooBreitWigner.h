@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.rdl,v 1.6 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooBreitWigner.rdl,v 1.7 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -17,8 +17,8 @@
 #ifndef ROO_BREITWIGNER
 #define ROO_BREITWIGNER
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

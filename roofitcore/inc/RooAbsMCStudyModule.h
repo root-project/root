@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsMCStudyModule.rdl,v 1.1 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 #define ROO_ABS_MC_STUDY_MODULE
 
 #include "TList.h"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooMCStudy.hh"
+#include "RooArgSet.h"
+#include "RooMCStudy.h"
 class RooAbsPdf;
 class RooDataSet ;
 class RooAbsData ;

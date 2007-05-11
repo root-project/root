@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.45 2005/06/21 16:42:29 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.46 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@
 // The fit limits serve as integration range when interpreted
 // as a dependent and a boundaries when interpreted as a parameter.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <math.h>
 #include <math.h>
@@ -38,17 +38,17 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooAbsBinning.hh"
-#include "RooFitCore/RooBinning.hh"
-#include "RooFitCore/RooUniformBinning.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooTreeData.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "RooAbsRealLValue.h"
+#include "RooStreamParser.h"
+#include "RooRandom.h"
+#include "RooPlot.h"
+#include "RooArgList.h"
+#include "RooAbsBinning.h"
+#include "RooBinning.h"
+#include "RooUniformBinning.h"
+#include "RooCmdConfig.h"
+#include "RooTreeData.h"
+#include "RooRealVar.h"
 
 ClassImp(RooAbsRealLValue)
 

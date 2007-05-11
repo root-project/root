@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.93 2005/07/12 11:29:36 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.94 2005/12/01 16:10:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,21 +29,21 @@
 // relationships and setting/clearing/testing named attributes. The class
 // also defines a pure virtual public interface for I/O streaming.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "TObjString.h"
+#include "TClass.h"
 #include "TObjString.h"
 
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgProxy.hh"
-#include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooTrace.hh"
-#include "RooFitCore/RooStringVar.hh" 
+#include "RooAbsArg.h"
+#include "RooArgSet.h"
+#include "RooArgProxy.h"
+#include "RooSetProxy.h"
+#include "RooListProxy.h"
+#include "RooAbsData.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooAbsRealLValue.h"
+#include "RooTrace.h"
+#include "RooStringVar.h" 
 
 #include <string.h>
 #include <iomanip>

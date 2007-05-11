@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.22 2005/06/20 15:51:06 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.23 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,15 +17,15 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
-#include "RooFitModels/RooGExpModel.hh"
-#include "RooFitCore/RooMath.hh"
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooMath.hh"
+#include "RooGExpModel.h"
+#include "RooMath.h"
+#include "RooRealConstant.h"
+#include "RooRandom.h"
+#include "RooMath.h"
 #include "TMath.h"
 
 ClassImp(RooGExpModel) 

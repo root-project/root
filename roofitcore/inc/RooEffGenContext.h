@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooEffGenContext.rdl,v 1.1 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU, Gerhard.Raven@nikhf.nl                    *
  *                                                                           *
@@ -14,7 +14,7 @@
 #ifndef ROO_EFF_GEN_CONTEXT
 #define ROO_EFF_GEN_CONTEXT
                                                                                                                       
-#include "RooFitCore/RooAbsGenContext.hh"
+#include "RooAbsGenContext.h"
 class RooAbsPdf;
 class RooArgSet;
 class RooDataSet;

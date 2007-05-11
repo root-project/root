@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.100 2005/12/01 16:10:19 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.101 2006/07/04 15:07:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,34 +107,34 @@
 // the proxy holds a function, and will trigger an assert
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
+#include "TClass.h"
 #include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
+#include "TMath.h"
 #include "TObjString.h"
 #include "TPaveText.h"
 #include "TList.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgProxy.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooNLLVar.hh"
-#include "RooFitCore/RooMinuit.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooNameReg.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
-#include "RooFitCore/RooAddition.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooInt.hh"
+#include "RooAbsPdf.h"
+#include "RooDataSet.h"
+#include "RooArgSet.h"
+#include "RooArgProxy.h"
+#include "RooRealProxy.h"
+#include "RooRealVar.h"
+#include "RooGenContext.h"
+#include "RooPlot.h"
+#include "RooCurve.h"
+#include "RooNLLVar.h"
+#include "RooMinuit.h"
+#include "RooCategory.h"
+#include "RooNameReg.h"
+#include "RooCmdConfig.h"
+#include "RooGlobalFunc.h"
+#include "RooAddition.h"
+#include "RooRandom.h"
+#include "RooInt.h"
 
 ClassImp(RooAbsPdf) 
 ;

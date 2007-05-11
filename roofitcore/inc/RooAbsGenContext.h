@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.rdl,v 1.13 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.14 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #define ROO_ABS_GEN_CONTEXT
 
 #include "TNamed.h"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsPdf.hh"
+#include "RooPrintable.h"
+#include "RooArgSet.h"
+#include "RooAbsPdf.h"
 
 class RooDataSet;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.10 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.11 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,17 +16,17 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 
-#include "RooFitCore/RooPolyVar.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooPolyVar.h"
+#include "RooAbsReal.h"
+#include "RooRealVar.h"
+#include "RooArgList.h"
 #include "TMath.h"
 
 ClassImp(RooPolyVar)

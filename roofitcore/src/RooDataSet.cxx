@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.92 2005/06/20 15:44:51 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.93 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,22 +20,23 @@
 // or RooStringVar objects 
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <fstream>
+#include "TTree.h"
 #include "TH2.h"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/Roo1DTable.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooDataHist.hh"
+#include "RooDataSet.h"
+#include "RooPlot.h"
+#include "RooAbsReal.h"
+#include "Roo1DTable.h"
+#include "RooCategory.h"
+#include "RooFormulaVar.h"
+#include "RooArgList.h"
+#include "RooAbsRealLValue.h"
+#include "RooRealVar.h"
+#include "RooDataHist.h"
 #include "TROOT.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)

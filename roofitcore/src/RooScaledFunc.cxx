@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooScaledFunc.cc,v 1.8 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooScaledFunc.cc,v 1.9 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 // Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooScaledFunc.hh"
-#include "RooFitCore/RooScaledFunc.hh"
+#include "RooScaledFunc.h"
+#include "RooScaledFunc.h"
 
 ClassImp(RooScaledFunc)
 ;

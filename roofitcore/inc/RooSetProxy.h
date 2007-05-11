@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetProxy.rdl,v 1.17 2004/04/05 22:44:13 wverkerke Exp $
+ *    File: $Id: RooSetProxy.rdl,v 1.18 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,9 @@
 #define ROO_SET_PROXY
 
 #include "TObject.h"
-#include "RooFitCore/RooAbsProxy.hh"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooAbsProxy.h"
+#include "RooAbsArg.h"
+#include "RooArgSet.h"
 
 class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:

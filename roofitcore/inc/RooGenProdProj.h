@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.rdl,v 1.5 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.rdl,v 1.6 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_GEN_PROD_PROJ
 #define ROO_GEN_PROD_PROJ
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsReal.h"
+#include "RooSetProxy.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooDLLSignificanceMCSModule.rdl,v 1.1 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #ifndef ROO_DELTA_LL_SIGNIFICANCE_MCS_MODULE
 #define ROO_DELTA_LL_SIGNIFICANCE_MCS_MODULE
 
-#include "RooFitCore/RooAbsMCStudyModule.hh"
+#include "RooAbsMCStudyModule.h"
 #include <string>
 
 class RooDLLSignificanceMCSModule : public RooAbsMCStudyModule {

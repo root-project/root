@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.7 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.8 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -33,13 +33,13 @@
  *   -------------------------------------------			     *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <math.h>
 
 
-#include "RooFitModels/RooBukinPdf.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "RooBukinPdf.h"
+#include "RooRealVar.h"
 #include "TMath.h"
 
 ClassImp(RooBukinPdf)

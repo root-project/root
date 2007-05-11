@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.20 2005/06/20 15:51:05 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -37,11 +37,12 @@
 //
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitModels/Roo2DKeysPdf.hh"
-#include "RooFitModels/Roo2DKeysPdf.hh"
-#include "RooFitCore/RooRealVar.hh"
+#include "Roo2DKeysPdf.h"
+#include "Roo2DKeysPdf.h"
+#include "RooRealVar.h"
+#include "TTree.h"
 #include "TH2.h"
 #include "TFile.h"
 #include "TBranch.h"

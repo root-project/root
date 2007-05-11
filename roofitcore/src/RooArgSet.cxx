@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.61 2005/06/21 19:59:51 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.62 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,21 +39,21 @@
 //
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include "TClass.h"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooAbsRealLValue.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooTrace.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooArgSet.h"
+#include "RooStreamParser.h"
+#include "RooFormula.h"
+#include "RooAbsRealLValue.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooStringVar.h"
+#include "RooTrace.h"
+#include "RooArgList.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

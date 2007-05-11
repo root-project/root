@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.rdl,v 1.10 2004/11/29 20:23:45 wverkerke Exp $
+ *    File: $Id: RooHashTable.rdl,v 1.11 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_HASH_TABLE
 
 #include "TObject.h"
-#include "TMath.h"
+#include "TString.h"
 
 class RooAbsArg ;
 class RooLinkedList ;
@@ -50,8 +50,8 @@ public:
 protected:  
   inline ULong_t hash(const TObject* arg) const {
     switch(_hashMethod) {
-      case Pointer:   return TMath::Hash((void*)(&arg),sizeof(void*)) ;
-      case Name:      return TMath::Hash(arg->GetName()) ;
+      case Pointer:   return TString::Hash((void*)(&arg),sizeof(void*)) ;
+      case Name:      return TString::Hash(arg->GetName(),strlen(arg->GetName())) ;
       case Intrinsic: return arg->Hash() ;
     }
     return 0 ;

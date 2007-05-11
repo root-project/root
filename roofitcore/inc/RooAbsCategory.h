@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.rdl,v 1.36 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.37 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "Riostream.h"
 #include "TObjArray.h"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooCatType.hh"
+#include "RooAbsArg.h"
+#include "RooCatType.h"
 
 class TTree ;
 class RooArgSet ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.7 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.8 2006/12/08 15:50:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@
 
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <assert.h>
 #include <math.h>
@@ -44,12 +44,12 @@
 #include <stdlib.h>
 #include "Riostream.h"
 #include "TMath.h"
-#include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooIntegratorBinding.hh"
+#include "RooGaussKronrodIntegrator1D.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooNumber.h"
+#include "RooNumIntFactory.h"
+#include "RooIntegratorBinding.h"
 
 
 ClassImp(RooGaussKronrodIntegrator1D)

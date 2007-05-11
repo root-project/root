@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.cc,v 1.14 2005/06/16 09:31:32 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.15 2005/06/20 15:45:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,10 +14,10 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooUniformBinning.hh"
-#include "RooFitCore/RooUniformBinning.hh"
+#include "RooUniformBinning.h"
+#include "RooUniformBinning.h"
 
 ClassImp(RooUniformBinning)
 ;

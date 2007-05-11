@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.47 2005/06/20 15:44:50 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.48 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,17 +27,17 @@
 //  p->Draw();
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooHist.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooRealBinding.hh"
-#include "RooFitCore/RooScaledFunc.hh"
+#include "RooCurve.h"
+#include "RooCurve.h"
+#include "RooHist.h"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooRealIntegral.h"
+#include "RooRealBinding.h"
+#include "RooScaledFunc.h"
 
 #include "Riostream.h"
 #include <iomanip>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlotable.rdl,v 1.12 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.13 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "Rtypes.h"
 #include "TString.h"
-#include "RooFitCore/RooPrintable.hh"
+#include "RooPrintable.h"
 
 class TObject;
 class RooArgSet;

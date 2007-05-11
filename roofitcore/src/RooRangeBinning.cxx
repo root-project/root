@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRangeBinning.cc,v 1.3 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRangeBinning.cc,v 1.4 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,14 +18,14 @@
 // RooRangeBinning is a single bin binning used to indicate alternative
 // ranges for integration etc...
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooNumber.hh"
+#include "RooNumber.h"
+#include "RooNumber.h"
 #include "Riostream.h"
 
 
-#include "RooFitCore/RooRangeBinning.hh"
+#include "RooRangeBinning.h"
 
 ClassImp(RooRangeBinning) 
 ;

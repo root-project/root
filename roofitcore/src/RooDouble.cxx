@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDouble.cc,v 1.8 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooDouble.cc,v 1.9 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 // RooDouble is a minimal implementation of a TObject holding a Double_t
 // value.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooDouble.hh"
-#include "RooFitCore/RooDouble.hh"
+#include "RooDouble.h"
+#include "RooDouble.h"
 
 ClassImp(RooDouble)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.57 2005/06/20 15:44:51 wverkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.58 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,8 +20,8 @@ class TDirectory ;
 class RooAbsRealLValue ;
 class RooRealVar ;
 class RooDataHist ;
-#include "RooFitCore/RooTreeData.hh"
-#include "RooFitCore/RooDirItem.hh"
+#include "RooTreeData.h"
+#include "RooDirItem.h"
 
 
 class RooDataSet : public RooTreeData, public RooDirItem {

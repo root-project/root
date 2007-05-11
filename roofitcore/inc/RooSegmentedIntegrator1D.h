@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.5 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.6 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_SEGMENTED_INTEGRATOR_1D
 #define ROO_SEGMENTED_INTEGRATOR_1D
 
-#include "RooFitCore/RooAbsIntegrator.hh"
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsIntegrator.h"
+#include "RooIntegrator1D.h"
+#include "RooNumIntConfig.h"
 
 class RooSegmentedIntegrator1D : public RooAbsIntegrator {
 public:

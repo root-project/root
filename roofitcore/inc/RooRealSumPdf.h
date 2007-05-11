@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.rdl,v 1.8 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.rdl,v 1.9 2005/04/18 21:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_REAL_SUM_PDF
 #define ROO_REAL_SUM_PDF
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooAICRegistry.hh"
+#include "RooAbsPdf.h"
+#include "RooListProxy.h"
+#include "RooAICRegistry.h"
 
 class RooRealSumPdf : public RooAbsPdf {
 public:

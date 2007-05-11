@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.32 2005/06/21 16:42:31 wverkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.33 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_PLOT
 
 #include "TH1.h"
-#include "RooFitCore/RooList.hh"
-#include "RooFitCore/RooPrintable.hh"
+#include "RooList.h"
+#include "RooPrintable.h"
 
 class RooAbsReal;
 class RooAbsRealLValue;

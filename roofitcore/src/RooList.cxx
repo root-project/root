@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooList.cc,v 1.10 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooList.cc,v 1.11 2005/06/20 15:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 // A RooList is a TList with extra support for working with options
 // that are associated with each node.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooList.hh"
-#include "RooFitCore/RooList.hh"
+#include "RooList.h"
+#include "RooList.h"
 
 #include "Riostream.h"
 

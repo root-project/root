@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.rdl,v 1.16 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsIntegrator.rdl,v 1.17 2005/04/18 21:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_ABS_INTEGRATOR
 #define ROO_ABS_INTEGRATOR
 
-#include "RooFitCore/RooAbsFunc.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsFunc.h"
+#include "RooNumIntConfig.h"
 
 class RooAbsIntegrator : public TObject {
 public:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.rdl,v 1.10 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.rdl,v 1.11 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_ADD_GEN_CONTEXT
 #define ROO_ADD_GEN_CONTEXT
 
-#include "RooFitCore/RooAbsGenContext.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooAbsGenContext.h"
+#include "RooArgSet.h"
 
 class RooAddPdf;
 class RooDataSet;

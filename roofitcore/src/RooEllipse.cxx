@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEllipse.cc,v 1.10 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooEllipse.cc,v 1.11 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,10 +19,10 @@
 // an error contour.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooEllipse.hh"
-#include "RooFitCore/RooEllipse.hh"
+#include "RooEllipse.h"
+#include "RooEllipse.h"
 #include "TMath.h"
 
 #include "Riostream.h"

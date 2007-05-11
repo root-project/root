@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.11 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.12 2006/07/04 15:07:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,14 +16,14 @@
 
 // Global helper functions
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooGlobalFunc.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooGlobalFunc.h"
+#include "RooGlobalFunc.h"
+#include "RooCategory.h"
+#include "RooRealConstant.h"
+#include "RooDataSet.h"
+#include "RooNumIntConfig.h"
 
 namespace RooFit {
 

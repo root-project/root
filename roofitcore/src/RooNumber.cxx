@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumber.cc,v 1.9 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooNumber.cc,v 1.10 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 
 // -- CLASS DESCRIPTION [MISC] --
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooNumber.hh"
+#include "RooNumber.h"
+#include "RooNumber.h"
 
 ClassImp(RooNumber)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.10 2005/02/23 15:09:32 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.11 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,8 +20,8 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TList.h"
-#include "RooFitCore/RooCmdArg.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooCmdArg.h"
+#include "RooArgSet.h"
 
 
 class RooCmdConfig : public TObject {

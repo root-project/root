@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.61 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.62 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,24 +29,24 @@
 // the expected number of events for the PDF associated with the current
 // state of the index category is returned.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TObjString.h"
 #include "TObjString.h"
-#include "RooFitCore/RooSimultaneous.hh"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooCurve.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooAddPdf.hh"
-#include "RooFitCore/RooAbsData.hh"
-#include "RooFitCore/Roo1DTable.hh"
-#include "RooFitCore/RooSimGenContext.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooNameReg.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooSimultaneous.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooPlot.h"
+#include "RooCurve.h"
+#include "RooRealVar.h"
+#include "RooAddPdf.h"
+#include "RooAbsData.h"
+#include "Roo1DTable.h"
+#include "RooSimGenContext.h"
+#include "RooDataSet.h"
+#include "RooCmdConfig.h"
+#include "RooNameReg.h"
+#include "RooGlobalFunc.h"
+#include "RooNameReg.h"
 
 ClassImp(RooSimultaneous)
 ;

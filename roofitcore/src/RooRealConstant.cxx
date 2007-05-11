@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.cc,v 1.14 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.15 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,12 +25,12 @@
 // RooRealConstant keeps an internal database of previously created
 // RooRealVar objects and will recycle them as appropriate.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooConstVar.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooRealConstant.h"
+#include "RooRealConstant.h"
+#include "RooConstVar.h"
+#include "RooArgList.h"
 
 ClassImp(RooRealConstant)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSharedPropertiesList.rdl,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "TObject.h"
 #include <assert.h>
-#include "RooFitCore/RooRefCountList.hh"
-#include "RooFitCore/RooSharedProperties.hh"
+#include "RooRefCountList.h"
+#include "RooSharedProperties.h"
 
 class RooSharedPropertiesList : public TObject {
 public:

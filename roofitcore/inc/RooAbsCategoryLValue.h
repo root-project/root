@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.20 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.21 2005/06/23 15:08:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_ABS_CATEGORY_LVALUE
 
 #include "Riostream.h"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooAbsLValue.hh"
+#include "RooAbsCategory.h"
+#include "RooAbsLValue.h"
 
 class RooAbsCategoryLValue : public RooAbsCategory, public RooAbsLValue {
 public:

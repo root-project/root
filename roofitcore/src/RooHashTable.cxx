@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.15 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.16 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,15 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TMath.h"
 #include "TMath.h"
 #include "TCollection.h"
-#include "RooFitCore/RooHashTable.hh"
-#include "RooFitCore/RooLinkedList.hh"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooSetPair.hh"
+#include "RooHashTable.h"
+#include "RooLinkedList.h"
+#include "RooAbsArg.h"
+#include "RooSetPair.h"
 
 ClassImp(RooHashTable)
 ;

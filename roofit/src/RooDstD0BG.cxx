@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.17 2005/06/20 15:51:06 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.18 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -18,23 +18,23 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 
-#include "RooFitModels/RooDstD0BG.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooAbsFunc.hh"
+#include "RooDstD0BG.h"
+#include "RooAbsReal.h"
+#include "RooRealVar.h"
+#include "RooIntegrator1D.h"
+#include "RooAbsFunc.h"
 
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.17 2005/06/20 15:51:06 wverkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.18 2005/06/21 16:46:33 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooPolynomial.rdl,v 1.6 2005/02/14 20:48:04 wverkerke Exp $
+ *    File: $Id: RooPolynomial.rdl,v 1.7 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_POLYNOMIAL
 #define ROO_POLYNOMIAL
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

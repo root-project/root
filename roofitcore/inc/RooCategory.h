@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.rdl,v 1.25 2005/12/08 13:19:54 wverkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.26 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,10 +17,10 @@
 #define ROO_CATEGORY
 
 #include "Riostream.h"
-#include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooAbsCategoryLValue.h"
 
-#include "RooFitCore/RooSharedPropertiesList.hh"
-#include "RooFitCore/RooCategorySharedProperties.hh"
+#include "RooSharedPropertiesList.h"
+#include "RooCategorySharedProperties.h"
 
 class RooCategory : public RooAbsCategoryLValue {
 public:

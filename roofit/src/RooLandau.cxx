@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooLandau.cc,v 1.6 2005/04/18 21:48:30 wverkerke Exp $
+ *    File: $Id: RooLandau.cc,v 1.7 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,12 @@
 // -- CLASS DESCRIPTION [PDF] --
 // Landau Distribution PDF...
 
-#include "RooFitCore/RooFit.hh"
+#include "TMath.h"
+#include "RooFit.h"
 
-#include "RooFitModels/RooLandau.hh"
-#include "RooFitModels/RooLandau.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooLandau.h"
+#include "RooLandau.h"
+#include "RooRandom.h"
 
 ClassImp(RooLandau)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealAnalytic.cc,v 1.13 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRealAnalytic.cc,v 1.14 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,11 +19,11 @@
 // RooAbsReal object (specified by a code) to a set of dependent variables.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooRealAnalytic.hh"
-#include "RooFitCore/RooRealAnalytic.hh"
-#include "RooFitCore/RooAbsReal.hh"
+#include "RooRealAnalytic.h"
+#include "RooRealAnalytic.h"
+#include "RooAbsReal.h"
 
 #include <assert.h>
 

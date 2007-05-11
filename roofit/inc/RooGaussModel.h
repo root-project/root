@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.rdl,v 1.19 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.20 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_GAUSS_MODEL
 #define ROO_GAUSS_MODEL
 
-#include "RooFitCore/RooResolutionModel.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooComplex.hh"
-#include "RooFitCore/RooMath.hh"
+#include "RooResolutionModel.h"
+#include "RooRealProxy.h"
+#include "RooComplex.h"
+#include "RooMath.h"
 
 class RooGaussModel : public RooResolutionModel {
 public:

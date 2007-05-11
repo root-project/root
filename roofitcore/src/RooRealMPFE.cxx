@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.cc,v 1.12 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.cc,v 1.13 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,18 +26,18 @@
 // is deleted
 
 #ifndef _WIN32
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <unistd.h>
 #include <unistd.h>
 #endif
 #include <errno.h>
-#include "RooFitCore/RooRealMPFE.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooMPSentinel.hh"
+#include "RooRealMPFE.h"
+#include "RooArgSet.h"
+#include "RooAbsCategory.h"
+#include "RooRealVar.h"
+#include "RooCategory.h"
+#include "RooMPSentinel.h"
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 

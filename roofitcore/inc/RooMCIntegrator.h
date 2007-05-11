@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.rdl,v 1.13 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.14 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_MC_INTEGRATOR
 #define ROO_MC_INTEGRATOR
 
-#include "RooFitCore/RooAbsIntegrator.hh"
-#include "RooFitCore/RooGrid.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
+#include "RooAbsIntegrator.h"
+#include "RooGrid.h"
+#include "RooNumIntConfig.h"
 #include "TStopwatch.h"
 
 class RooMCIntegrator : public RooAbsIntegrator {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.rdl,v 1.13 2004/07/02 07:39:03 wverkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.14 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_LINKED_LIST
 
 #include "TObject.h"
-#include "RooFitCore/RooLinkedListElem.hh"
-#include "RooFitCore/RooHashTable.hh"
+#include "RooLinkedListElem.h"
+#include "RooHashTable.h"
 class RooLinkedListIter ;
 class TIterator ;
 

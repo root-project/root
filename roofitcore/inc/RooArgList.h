@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgList.rdl,v 1.12 2005/06/20 15:44:48 wverkerke Exp $
+ *    File: $Id: RooArgList.rdl,v 1.13 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,8 +16,8 @@
 #ifndef ROO_ARG_LIST
 #define ROO_ARG_LIST
 
-#include "RooFitCore/RooAbsCollection.hh"
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooAbsCollection.h"
+#include "RooErrorHandler.h"
 
 class RooArgList : public RooAbsCollection {
 public:

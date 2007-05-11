@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRangeBinning.rdl,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRangeBinning.rdl,v 1.3 2005/04/18 21:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_RANGE_BINNING
 #define ROO_RANGE_BINNING
 
-#include "RooFitCore/RooAbsBinning.hh"
+#include "RooAbsBinning.h"
 
 class RooRangeBinning : public RooAbsBinning {
 public:

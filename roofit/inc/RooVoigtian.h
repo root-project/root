@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.rdl,v 1.4 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooVoigtian.rdl,v 1.5 2005/02/25 14:25:10 wverkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,          schieti@slac.stanford.edu        *
  *                                                                           *
@@ -16,8 +16,8 @@
 #ifndef ROO_VOIGTIAN
 #define ROO_VOIGTIAN
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
 
 class RooRealVar;
 

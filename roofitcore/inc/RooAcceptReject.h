@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.rdl,v 1.14 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.15 2005/06/20 15:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_ACCEPT_REJECT
 
 #include "TNamed.h"
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooPrintable.h"
+#include "RooArgSet.h"
 
 class RooAbsReal;
 class RooRealVar;

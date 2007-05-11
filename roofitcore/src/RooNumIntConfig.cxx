@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.10 2005/12/08 13:19:55 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.11 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,13 +19,13 @@
 // numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 // use this class in the (normalization) integral configuration interface
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsIntegrator.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
+#include "RooNumIntConfig.h"
+#include "RooNumIntConfig.h"
+#include "RooArgSet.h"
+#include "RooAbsIntegrator.h"
+#include "RooNumIntFactory.h"
 
 #include "TClass.h"
 

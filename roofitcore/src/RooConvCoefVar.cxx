@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.cc,v 1.11 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooConvCoefVar.cc,v 1.12 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,11 +20,11 @@
 // to be able to interface these coefficient terms with RooRealIntegreal
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooConvCoefVar.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooAbsAnaConvPdf.h"
+#include "RooConvCoefVar.h"
 
 ClassImp(RooConvCoefVar)
 ;

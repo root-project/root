@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.rdl,v 1.20 2005/02/23 15:09:26 wverkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.21 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #ifndef ROO_ADD_MODEL
 #define ROO_ADD_MODEL
 
-#include "RooFitCore/RooResolutionModel.hh"
-#include "RooFitCore/RooAICRegistry.hh"
+#include "RooResolutionModel.h"
+#include "RooAICRegistry.h"
 #include "TList.h"
 
 class RooAddModel : public RooResolutionModel {

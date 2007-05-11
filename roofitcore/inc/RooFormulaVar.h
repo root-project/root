@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.rdl,v 1.26 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.27 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_FORMULA_VAR
 #define ROO_FORMULA_VAR
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooFormula.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsReal.h"
+#include "RooFormula.h"
+#include "RooArgList.h"
+#include "RooListProxy.h"
 
 class RooArgSet ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSharedProperties.cc,v 1.2 2006/12/07 21:21:33 wverkerke Exp $
+ *    File: $Id: RooSharedProperties.cc,v 1.3 2006/12/08 10:13:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 
 // -- CLASS DESCRIPTION [AUX] --
 
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooSharedProperties.hh"
-#include "RooFitCore/RooTrace.hh"
+#include "RooFit.h"
+#include "RooSharedProperties.h"
+#include "RooTrace.h"
 
 #include <iostream>
 using std::cout ;

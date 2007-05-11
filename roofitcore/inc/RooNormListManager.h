@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.rdl,v 1.6 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooNormListManager.rdl,v 1.7 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 
 #include "Rtypes.h"
 
-#include "RooFitCore/RooNormSetCache.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooNormSetCache.h"
+#include "RooAbsReal.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
 
 class RooNameSet ;
 typedef RooArgList* pRooArgList ;

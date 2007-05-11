@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.rdl,v 1.9 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooCustomizer.rdl,v 1.10 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,8 +21,8 @@
 #include "TList.h"
 #include "TNamed.h"
 #include "TString.h"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooPrintable.hh"
+#include "RooArgSet.h"
+#include "RooPrintable.h"
 class RooAbsCategoryLValue ; 
 class RooAbsCategory ;
 class RooAbsArg ;

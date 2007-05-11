@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.rdl,v 1.5 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.rdl,v 1.6 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_REAL_MPFE
 #define ROO_REAL_MPFE
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooMPSentinel.hh"
+#include "RooAbsReal.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
+#include "RooArgList.h"
+#include "RooMPSentinel.h"
 
 class RooArgSet ;
 

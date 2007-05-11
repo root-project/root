@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.22 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.23 2005/12/05 14:58:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,11 +19,11 @@
 // for each bin of a RooHist object. Errors are calculated by integrating
 // a specified area of a Poisson or Binomail error distribution.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooHistError.hh"
-#include "RooFitCore/RooHistError.hh"
-#include "RooFitCore/RooBrentRootFinder.hh"
+#include "RooHistError.h"
+#include "RooHistError.h"
+#include "RooBrentRootFinder.h"
 #include "TMath.h"
 
 #include "Riostream.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.rdl,v 1.4 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooChebychev.rdl,v 1.5 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -15,9 +15,9 @@
 #ifndef ROO_CHEBYCHEV
 #define ROO_CHEBYCHEV
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
 
 class RooRealVar;
 class RooArgList ;

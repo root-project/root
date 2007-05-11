@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenCategory.rdl,v 1.10 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooGenCategory.rdl,v 1.11 2005/12/08 13:19:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,10 +16,10 @@
 #ifndef ROO_GEN_CATEGORY
 #define ROO_GEN_CATEGORY
 
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooSuperCategory.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
-#include "RooFitCore/RooCatType.hh"
+#include "RooAbsCategory.h"
+#include "RooSuperCategory.h"
+#include "RooCategoryProxy.h"
+#include "RooCatType.h"
 
 #include "TString.h"
 class TObject ;

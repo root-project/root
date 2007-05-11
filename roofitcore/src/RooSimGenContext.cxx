@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.cc,v 1.21 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.22 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,16 +19,16 @@
 // specific for RooSimultaneous PDFs when generating more than one of the
 // component pdfs.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooSimGenContext.hh"
-#include "RooFitCore/RooSimGenContext.hh"
-#include "RooFitCore/RooSimultaneous.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/Roo1DTable.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooSimGenContext.h"
+#include "RooSimGenContext.h"
+#include "RooSimultaneous.h"
+#include "RooRealProxy.h"
+#include "RooDataSet.h"
+#include "Roo1DTable.h"
+#include "RooCategory.h"
+#include "RooRandom.h"
 
 
 ClassImp(RooSimGenContext)

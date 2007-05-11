@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.28 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.29 2005/06/20 15:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,21 +35,21 @@
 // member function.
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "TClass.h"
 #include "TObjString.h"
 #include "TTree.h"
-#include "RooFitCore/RooLinearVar.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooNumber.hh"
-#include "RooFitCore/RooBinning.hh"
+#include "RooLinearVar.h"
+#include "RooStreamParser.h"
+#include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooNumber.h"
+#include "RooBinning.h"
 
 ClassImp(RooLinearVar)
 

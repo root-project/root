@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCatType.rdl,v 1.18 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.19 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,7 +18,7 @@
 
 #include "Riostream.h"
 #include "TObject.h"
-#include "RooFitCore/RooPrintable.hh"
+#include "RooPrintable.h"
 
 class RooCatType : public TObject, public RooPrintable {
 public:

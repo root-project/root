@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMath.rdl,v 1.14 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.15 2005/06/23 11:44:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_MATH
 #define ROO_MATH
 
-#include "RooFitCore/RooComplex.hh"
+#include "RooComplex.h"
 
 #include <math.h>
 #include <fstream>

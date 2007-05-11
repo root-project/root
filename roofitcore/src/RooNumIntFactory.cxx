@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.cc,v 1.8 2005/12/08 13:19:55 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.cc,v 1.9 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,23 +21,23 @@
 
 #include "TClass.h"
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooNumIntFactory.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooAbsFunc.hh"
-#include "RooFitCore/RooNumIntConfig.hh"
-#include "RooFitCore/RooNumber.hh"
+#include "RooNumIntFactory.h"
+#include "RooNumIntFactory.h"
+#include "RooArgSet.h"
+#include "RooAbsFunc.h"
+#include "RooNumIntConfig.h"
+#include "RooNumber.h"
 
-#include "RooFitCore/RooIntegrator1D.hh"
-#include "RooFitCore/RooIntegrator2D.hh"
-#include "RooFitCore/RooSegmentedIntegrator1D.hh"
-#include "RooFitCore/RooSegmentedIntegrator2D.hh"
-#include "RooFitCore/RooImproperIntegrator1D.hh"
-#include "RooFitCore/RooMCIntegrator.hh"
-#include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
-#include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
+#include "RooIntegrator1D.h"
+#include "RooIntegrator2D.h"
+#include "RooSegmentedIntegrator1D.h"
+#include "RooSegmentedIntegrator2D.h"
+#include "RooImproperIntegrator1D.h"
+#include "RooMCIntegrator.h"
+#include "RooGaussKronrodIntegrator1D.h"
+#include "RooAdaptiveGaussKronrodIntegrator1D.h"
 
 
 ClassImp(RooNumIntFactory)

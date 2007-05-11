@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.cc,v 1.21 2005/06/20 15:44:50 wverkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.22 2005/12/08 13:19:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -101,20 +101,19 @@
 //
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "TString.h"
-#include "TString.h"
+#include "TClass.h"
 #include "TStopwatch.h"
 
-#include "RooFitCore/RooAbsCategoryLValue.hh" 
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooAbsArg.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooAbsCategoryLValue.h" 
+#include "RooAbsCategory.h"
+#include "RooAbsArg.h"
+#include "RooAbsPdf.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
 
-#include "RooFitCore/RooCustomizer.hh"
+#include "RooCustomizer.h"
 
 ClassImp(RooCustomizer) 
 ;

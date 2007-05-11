@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.84 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.85 2006/07/04 15:07:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,12 +16,12 @@
 #ifndef ROO_ABS_PDF
 #define ROO_ABS_PDF
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooNameSet.hh"
-#include "RooFitCore/RooNormSetCache.hh"
-#include "RooFitCore/RooNormManager.hh"
-#include "RooFitCore/RooCmdArg.hh"
+#include "RooAbsReal.h"
+#include "RooRealIntegral.h"
+#include "RooNameSet.h"
+#include "RooNormSetCache.h"
+#include "RooNormManager.h"
+#include "RooCmdArg.h"
 
 class RooDataSet;
 class RooArgSet ;

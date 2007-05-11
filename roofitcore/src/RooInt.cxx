@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooInt.cc,v 1.7 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooInt.cc,v 1.8 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,10 @@
 // RooInt is a minimal implementation of a TObject holding a Int_t
 // value.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooInt.hh"
-#include "RooFitCore/RooInt.hh"
+#include "RooInt.h"
+#include "RooInt.h"
 
 ClassImp(RooInt)
 ;

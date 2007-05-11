@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.rdl,v 1.10 2004/04/05 22:44:13 wverkerke Exp $
+ *    File: $Id: RooSimGenContext.rdl,v 1.11 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,8 @@
 #define ROO_SIM_GEN_CONTEXT
 
 #include "TList.h"
-#include "RooFitCore/RooAbsGenContext.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooAbsGenContext.h"
+#include "RooArgSet.h"
 
 class RooSimultaneous;
 class RooDataSet;

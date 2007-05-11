@@ -17,8 +17,8 @@
 #define ROO_NUM_INT_CONFIG
 
 #include "TObject.h"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooLinkedList.hh"
+#include "RooCategory.h"
+#include "RooLinkedList.h"
 class RooNumIntFactory ;
 class RooAbsIntegrator ;
 

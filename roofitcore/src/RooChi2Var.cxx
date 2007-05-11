@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.19 2005/06/20 15:44:49 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.20 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,13 +25,13 @@
 // If no user-defined errors are defined for the dataset, poisson errors
 // are used. In extended PDF mode, N_tot is substituted with N_expected.
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooChi2Var.hh"
-#include "RooFitCore/RooChi2Var.hh"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooCmdConfig.hh"
+#include "RooChi2Var.h"
+#include "RooChi2Var.h"
+#include "RooDataHist.h"
+#include "RooAbsPdf.h"
+#include "RooCmdConfig.h"
 
 ClassImp(RooChi2Var)
 ;

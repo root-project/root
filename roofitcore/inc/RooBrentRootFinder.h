@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBrentRootFinder.rdl,v 1.4 2004/04/05 22:44:10 wverkerke Exp $
+ *    File: $Id: RooBrentRootFinder.rdl,v 1.5 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_BRENT_ROOT_FINDER
 #define ROO_BRENT_ROOT_FINDER
 
-#include "RooFitCore/RooAbsRootFinder.hh"
+#include "RooAbsRootFinder.h"
 
 class RooBrentRootFinder : public RooAbsRootFinder {
 public:

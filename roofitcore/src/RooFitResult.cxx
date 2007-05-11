@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.35 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.36 2006/12/07 21:21:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,24 +25,25 @@
 //
 // No references to the fitted PDF and dataset are stored
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <iomanip>
 #include <iomanip>
 #include "TMinuit.h"
+#include "TMath.h"
 #include "TMarker.h"
 #include "TLine.h"
 #include "TBox.h"
 #include "TGaxis.h"
 #include "TMatrix.h"
 #include "TVector.h"
-#include "RooFitCore/RooFitResult.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooEllipse.hh"
-#include "RooFitCore/RooRandom.hh"
+#include "RooFitResult.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooRealVar.h"
+#include "RooPlot.h"
+#include "RooEllipse.h"
+#include "RooRandom.h"
 
 ClassImp(RooFitResult) 
 ;

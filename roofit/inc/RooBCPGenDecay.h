@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.rdl,v 1.11 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBCPGenDecay.rdl,v 1.12 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   JS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu  *
  *                                                                           *
@@ -16,9 +16,9 @@
 #ifndef ROO_BCPGEN_DECAY
 #define ROO_BCPGEN_DECAY
 
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
 
 class RooBCPGenDecay : public RooAbsAnaConvPdf {
 public:

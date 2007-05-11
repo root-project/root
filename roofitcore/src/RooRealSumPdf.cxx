@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.14 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.15 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,18 +28,18 @@
 // In the present version coef_i may not depend on x, but this limitation will be removed in the future
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
-#include "RooFitCore/RooRealSumPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooAddGenContext.hh"
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooRealIntegral.hh"
+#include "RooRealSumPdf.h"
+#include "RooRealProxy.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooAddGenContext.h"
+#include "RooRealConstant.h"
+#include "RooRealIntegral.h"
 
 ClassImp(RooRealSumPdf)
 ;

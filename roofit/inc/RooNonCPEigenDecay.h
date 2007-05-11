@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.11 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.12 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -26,9 +26,9 @@
 #ifndef ROO_NONCPEIGEN_DECAY
 #define ROO_NONCPEIGEN_DECAY
 
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
 
 class RooNonCPEigenDecay : public RooAbsAnaConvPdf {
 
