@@ -17,11 +17,15 @@ done
 if [ "$dll" != "bin/rmkdepend.exe" -a \
      "$dll" != "bin/bindexplib.exe" -a \
      "$dll" != "bin/cint.exe" -a \
+     "$dll" != "bin/cint7.exe" -a \
      "$dll" != "bin/makecint.exe" -a \
+     "$dll" != "bin/makecint7.exe" -a \
      "$dll" != "bin/rootcint.exe" -a \
+     "$dll" != "bin/rootcint7.exe" -a \
      "$dll" != "bin/rlibmap.exe" -a \
      "$dll" != "bin/genmap.exe" -a \
      "$dll" != "cint/main/cint_tmp.exe" -a \
+     "$dll" != "cint/main/cint_tmp7.exe" -a \
      "$dll" != "utils/src/rootcint_tmp.exe" -a \
      "$dll" != "bin/libCint.dll" -a \
      "$dll" != "bin/libReflex.dll" -a \
