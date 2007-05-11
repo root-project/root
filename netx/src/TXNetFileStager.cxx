@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.3 2007/03/19 14:45:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.4 2007/05/03 11:52:08 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TXNetFileStager::~TXNetFileStager()
 //_____________________________________________________________________________
 Bool_t TXNetFileStager::IsStaged(const char *path)
 {
-   // Check if the file defined by 'path' is ready to be used
+   // Check if the file defined by 'path' is ready to be used.
 
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
@@ -60,7 +60,7 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
       TString p(path);
       if (!p.BeginsWith("root:"))
          p.Insert(0, fPrefix);
-      return !(fSystem->AccessPathName(p, kFileExists));
+      return (fSystem->IsOnline(p));
    }
 
    // Failure
