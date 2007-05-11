@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.18 2007/03/08 12:09:09 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.19 2007/05/03 11:52:08 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -450,7 +450,8 @@ Bool_t TXNetSystem::IsOnline(const char *path)
    if (cg.IsValid()) {
       vecBool vb;
       vecString vs;
-      XrdOucString pathname = TUrl(path).GetFile();
+      XrdOucString pathname = TUrl(path).GetFileAndOptions();
+      pathname.replace("\n","\r");
       vs.Push_back(pathname);
       if (gDebug > 1 )
          Info("IsOnline", "Checking %s\n",path);
@@ -488,7 +489,7 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
       vecString vs;
       vs.Push_back(pathname);
       cg.ClientAdmin()->Prepare(vs, (kXR_char)option, (kXR_char)priority);
-      if (gDebug >0) 
+      if (gDebug >0)
          Info("Prepare", "Got Status %d for %s",
               cg.ClientAdmin()->LastServerResp()->status, pathname.c_str());
       if (!(cg.ClientAdmin()->LastServerResp()->status)){
@@ -532,7 +533,8 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
          }
          u.SetUrl(pn);
          // The path
-         path = u.GetFile();
+         path = u.GetFileAndOptions();
+         path.ReplaceAll("\n","\r");
          npaths++;
          *buf += Form("%s\n", path.Data());
       }
@@ -541,7 +543,7 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
       cg.ClientAdmin()->Prepare(buf->Data(), (kXR_char)opt, (kXR_char)prio);
       if (!bufout)
          delete buf;
-      if (gDebug >0) 
+      if (gDebug >0)
          Info("Prepare", "Got Status %d",
               cg.ClientAdmin()->LastServerResp()->status);
       if (!(cg.ClientAdmin()->LastServerResp()->status)){
@@ -569,7 +571,7 @@ Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
    TXNetSystemConnectGuard cg(this, "");
    if (cg.IsValid()) {
       cg.ClientAdmin()->SysStatX(paths, info);
-      if (gDebug >0) 
+      if (gDebug >0)
          Info("GetPathsInfo", "Got Status %d",
               cg.ClientAdmin()->LastServerResp()->status);
       if (!(cg.ClientAdmin()->LastServerResp()->status)){
