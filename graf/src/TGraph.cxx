@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.214 2007/04/27 08:36:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.215 2007/04/30 20:38:08 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1804,7 +1804,9 @@ TH1F *TGraph::GetHistogram() const
    rwxmax = uxmax;
    Int_t npt = 100;
    if (fNpoints > npt) npt = fNpoints;
-   ((TGraph*)this)->fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   const char *gname = GetName();
+   if (strlen(gname) == 0) gname = "Graph";
+   ((TGraph*)this)->fHistogram = new TH1F(gname,GetTitle(),npt,rwxmin,rwxmax);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(minimum);
    fHistogram->SetBit(TH1::kNoStats);
@@ -2383,11 +2385,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
          rwxmax = uxmax;
          npt = 100;
          if (fNpoints > npt) npt = fNpoints;
-         if (gDirectory->GetList()->FindObject(GetName())) {
-            fHistogram = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-         } else {
-            fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-         }
+         fHistogram = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
          if (!fHistogram) return;
          fHistogram->SetMinimum(rwymin);
          fHistogram->SetMaximum(rwymax);
