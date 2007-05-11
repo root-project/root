@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindOffset.cc,v 1.9 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooUnblindOffset.cc,v 1.10 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,11 +27,11 @@
 // the error on the blind parameters is indentical to that
 // of the unblind parameter
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitModels/RooUnblindOffset.hh"
+#include "RooArgSet.h"
+#include "RooArgSet.h"
+#include "RooUnblindOffset.h"
 
 
 ClassImp(RooUnblindOffset)

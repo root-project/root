@@ -30,15 +30,14 @@
 #pragma link C++ class RooTObjWrap+ ;
 #pragma link C++ class RooTrace+ ;
 #pragma link C++ class RooTreeData+ ;
-#pragma link C++ class RooUnblindCPAsymVar+ ;
-#pragma link C++ class RooUnblindOffset+ ;
-#pragma link C++ class RooUnblindPrecision+ ;
-#pragma link C++ class RooUnblindUniform+ ;
 #pragma link C++ class RooUniformBinning+ ;
 #pragma link C++ class RooSimultaneous+ ;
-#pragma link C++ class RooRealSumPdf ;
-#pragma link C++ class RooResolutionModel ;
-#pragma link off class RooSimPdfBuilder ;
+#pragma link C++ class RooRealSumPdf+ ;
+#pragma link C++ class RooResolutionModel+ ;
+#pragma link C++ class RooTruthModel+ ;
+#pragma link C++ class RooProdPdf+ ;
+#pragma link C++ class RooSimPdfBuilder+ ;
+#pragma link C++ class RooMCStudy+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

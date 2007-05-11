@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.32 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.33 2005/12/05 14:58:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -416,7 +416,7 @@
 #ifndef _REENTRANT
  #define _REENTRANT
 #endif
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include <string.h>
 #include <string.h>
@@ -430,32 +430,32 @@
 #include <strings.h>
 #endif
 
-#include "RooFitCore/RooSimPdfBuilder.hh"
+#include "RooSimPdfBuilder.h"
 
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooStringVar.hh"
-#include "RooFitCore/RooMappedCategory.hh"
-#include "RooFitCore/RooRealIntegral.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooArgSet.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooAddPdf.hh"
-#include "RooFitCore/RooLinearVar.hh"
-#include "RooFitCore/RooTruthModel.hh"
-#include "RooFitCore/RooAddModel.hh"
-#include "RooFitCore/RooProdPdf.hh"
-#include "RooFitCore/RooCustomizer.hh"
-#include "RooFitCore/RooThresholdCategory.hh"
-#include "RooFitCore/RooMultiCategory.hh"
-#include "RooFitCore/RooSuperCategory.hh"
-#include "RooFitCore/RooSimultaneous.hh"
-#include "RooFitCore/RooTrace.hh"
-#include "RooFitCore/RooFitResult.hh"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooGenericPdf.hh"
+#include "RooRealVar.h"
+#include "RooFormulaVar.h"
+#include "RooAbsCategory.h"
+#include "RooCategory.h"
+#include "RooStringVar.h"
+#include "RooMappedCategory.h"
+#include "RooRealIntegral.h"
+#include "RooDataSet.h"
+#include "RooArgSet.h"
+#include "RooPlot.h"
+#include "RooAddPdf.h"
+#include "RooLinearVar.h"
+#include "RooTruthModel.h"
+#include "RooAddModel.h"
+#include "RooProdPdf.h"
+#include "RooCustomizer.h"
+#include "RooThresholdCategory.h"
+#include "RooMultiCategory.h"
+#include "RooSuperCategory.h"
+#include "RooSimultaneous.h"
+#include "RooTrace.h"
+#include "RooFitResult.h"
+#include "RooDataHist.h"
+#include "RooGenericPdf.h"
 
 
 ClassImp(RooSimPdfBuilder)

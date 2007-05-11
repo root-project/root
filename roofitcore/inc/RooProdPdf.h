@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.40 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.41 2005/07/12 11:29:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,12 +17,12 @@
 #define ROO_PROD_PDF
 
 #include "Riostream.h"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooLinkedList.hh"
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooNormListManager.hh"
-#include "RooFitCore/RooCmdArg.hh"
+#include "RooAbsPdf.h"
+#include "RooListProxy.h"
+#include "RooLinkedList.h"
+#include "RooAICRegistry.h"
+#include "RooNormListManager.h"
+#include "RooCmdArg.h"
 
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;

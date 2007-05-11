@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.71 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.72 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,19 +39,19 @@
 //
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
-#include "RooFitCore/RooAddPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooAddGenContext.hh"
-#include "RooFitCore/RooRealConstant.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooAddPdf.h"
+#include "RooDataSet.h"
+#include "RooRealProxy.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooAddGenContext.h"
+#include "RooRealConstant.h"
+#include "RooNameReg.h"
 
 ClassImp(RooAddPdf)
 ;

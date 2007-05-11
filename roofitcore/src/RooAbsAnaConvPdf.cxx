@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.10 2005/06/20 18:15:16 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.11 2005/12/01 16:10:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,19 +55,19 @@
 //  valid for all coefficients.
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
-#include "RooFitCore/RooAbsAnaConvPdf.hh"
-#include "RooFitCore/RooResolutionModel.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooConvGenContext.hh"
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooTruthModel.hh"
-#include "RooFitCore/RooConvCoefVar.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooAbsAnaConvPdf.h"
+#include "RooResolutionModel.h"
+#include "RooRealVar.h"
+#include "RooFormulaVar.h"
+#include "RooConvGenContext.h"
+#include "RooGenContext.h"
+#include "RooTruthModel.h"
+#include "RooConvCoefVar.h"
+#include "RooNameReg.h"
 
 ClassImp(RooAbsAnaConvPdf) 
 ;

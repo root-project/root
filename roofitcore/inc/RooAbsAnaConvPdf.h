@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.5 2005/06/20 15:44:43 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.6 2005/12/01 16:10:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,12 +18,12 @@
 
 
 class TIterator ;
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooNormListManager.hh"
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooListProxy.h"
+#include "RooDataSet.h"
+#include "RooAICRegistry.h"
+#include "RooNormListManager.h"
 
 class RooResolutionModel ;
 class RooRealVar ;

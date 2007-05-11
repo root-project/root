@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.rdl,v 1.16 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.17 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,7 +17,7 @@
 #define ROO_MC_STUDY
 
 #include "TList.h"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooArgSet.h"
 #include <list>
 class RooAbsPdf;
 class RooDataSet ;

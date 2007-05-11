@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindOffset.rdl,v 1.4 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooUnblindOffset.rdl,v 1.5 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,9 +16,9 @@
 #ifndef ROO_UNBLIND_OFFSET
 #define ROO_UNBLIND_OFFSET
 
-#include "RooFitCore/RooAbsHiddenReal.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitModels/RooBlindTools.hh"
+#include "RooAbsHiddenReal.h"
+#include "RooRealProxy.h"
+#include "RooBlindTools.h"
 
 class RooUnblindOffset : public RooAbsHiddenReal {
 public:

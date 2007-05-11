@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBlindTools.cc,v 1.13 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.14 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
@@ -17,12 +17,12 @@
 //-----------------------
 // This Class's Header --
 //-----------------------
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitModels/RooBlindTools.hh"
-#include "RooFitModels/RooBlindTools.hh"
+#include "RooBlindTools.h"
+#include "RooBlindTools.h"
 
-#include "RooFitCore/RooErrorHandler.hh"
+#include "RooErrorHandler.h"
 #include "Riostream.h"
 #include <fstream>
 #include <math.h>  

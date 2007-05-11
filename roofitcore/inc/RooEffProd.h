@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooEffProd.rdl,v 1.1 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU                                            *
  *                                                                           *
@@ -12,9 +12,9 @@
 #ifndef ROO_EFF_PROD
 #define ROO_EFF_PROD
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooRealProxy.hh"
+#include "RooAbsPdf.h"
+#include "RooAbsReal.h"
+#include "RooRealProxy.h"
 
 class RooEffProd: public RooAbsPdf {
 public:

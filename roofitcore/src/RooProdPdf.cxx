@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.61 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.62 2005/12/08 15:26:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,16 +37,16 @@
 // have to appear in any specific place in the list.
 // 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
 #include "TIterator.h"
 #include "TIterator.h"
-#include "RooFitCore/RooProdPdf.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooProdGenContext.hh"
-#include "RooFitCore/RooGenProdProj.hh"
-#include "RooFitCore/RooProduct.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooProdPdf.h"
+#include "RooRealProxy.h"
+#include "RooProdGenContext.h"
+#include "RooGenProdProj.h"
+#include "RooProduct.h"
+#include "RooNameReg.h"
 
 ClassImp(RooProdPdf)
 ;

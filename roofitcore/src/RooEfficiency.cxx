@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEfficiency.cc,v 1.7 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooEfficiency.cc,v 1.8 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,12 +24,12 @@
 // C is 'reject'. Values of F below 0 and above 1 are clipped.
 // F may have an arbitrary number of dependents and parameters
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooEfficiency.hh"
-#include "RooFitCore/RooEfficiency.hh"
-#include "RooFitCore/RooStreamParser.hh"
-#include "RooFitCore/RooArgList.hh"
+#include "RooEfficiency.h"
+#include "RooEfficiency.h"
+#include "RooStreamParser.h"
+#include "RooArgList.h"
 
 ClassImp(RooEfficiency)
   ;

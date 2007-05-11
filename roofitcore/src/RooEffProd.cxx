@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEffProd.cc,v 1.1 2005/06/20 15:44:51 wverkerke Exp $
+ *    File: $Id: RooEffProd.cc,v 1.2 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU                                            *
  *                                                                           *
@@ -18,9 +18,9 @@
 // the event generation in a more efficient for cases where the PDF has an internal
 // generator that is smarter than accept reject. 
 
-#include "RooFitCore/RooFit.hh"
-#include "RooFitCore/RooEffProd.hh"
-#include "RooFitCore/RooEffGenContext.hh"
+#include "RooFit.h"
+#include "RooEffProd.h"
+#include "RooEffGenContext.h"
 
 ClassImp(RooEffProd)
   ;

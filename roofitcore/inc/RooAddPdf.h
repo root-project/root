@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.43 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.44 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,12 +16,12 @@
 #ifndef ROO_ADD_PDF
 #define ROO_ADD_PDF
 
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooListProxy.hh"
-#include "RooFitCore/RooAICRegistry.hh"
-#include "RooFitCore/RooNormSetCache.hh"
-#include "RooFitCore/RooNameSet.hh"
-#include "RooFitCore/RooNormListManager.hh"
+#include "RooAbsPdf.h"
+#include "RooListProxy.h"
+#include "RooAICRegistry.h"
+#include "RooNormSetCache.h"
+#include "RooNameSet.h"
+#include "RooNormListManager.h"
 
 class RooAddPdf : public RooAbsPdf {
 public:

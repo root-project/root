@@ -33,7 +33,6 @@
 #pragma link C++ class RooArgProxy+ ;
 #pragma link C++ class RooArgSet+ ;
 #pragma link C++ class RooBinning+ ;
-#pragma link C++ class RooBlindTools+ ;
 #pragma link C++ class RooBrentRootFinder+ ;
 #pragma link C++ class RooCategory+ ;
 #pragma link C++ class RooCategoryProxy+ ;
@@ -55,6 +54,11 @@
 #pragma link C++ class RooDataSet+ ;
 #pragma link C++ class RooDirItem+ ;
 #pragma link C++ class RooDLLSignificanceMCSModule+ ;
+#pragma link C++ class RooAbsAnaConvPdf+ ;
+#pragma link C++ class RooAddPdf+ ;
+#pragma link C++ class RooEfficiency+ ; 
+#pragma link C++ class RooEffProd+ ;
+#pragma link C++ class RooExtendPdf+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

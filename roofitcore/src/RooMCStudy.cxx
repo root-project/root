@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.31 2006/03/06 21:29:18 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.32 2006/10/06 11:51:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,26 +30,26 @@
 
 
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooMCStudy.hh"
-#include "RooFitCore/RooAbsMCStudyModule.hh"
+#include "RooMCStudy.h"
+#include "RooAbsMCStudyModule.h"
 
-#include "RooFitCore/RooGenContext.hh"
-#include "RooFitCore/RooAbsPdf.hh"
-#include "RooFitCore/RooDataSet.hh"
-#include "RooFitCore/RooDataHist.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFitResult.hh"
-#include "RooFitCore/RooErrorVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooGenericPdf.hh"
-#include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooCmdConfig.hh"
-#include "RooFitCore/RooGlobalFunc.hh"
-#include "RooFitCore/RooPullVar.hh"
+#include "RooGenContext.h"
+#include "RooAbsPdf.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooRealVar.h"
+#include "RooFitResult.h"
+#include "RooErrorVar.h"
+#include "RooFormulaVar.h"
+#include "RooArgList.h"
+#include "RooPlot.h"
+#include "RooGenericPdf.h"
+#include "RooRandom.h"
+#include "RooCmdConfig.h"
+#include "RooGlobalFunc.h"
+#include "RooPullVar.h"
 
 
 ClassImp(RooMCStudy)

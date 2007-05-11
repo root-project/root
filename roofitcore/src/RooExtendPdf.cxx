@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.19 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.20 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,14 +36,14 @@
 //  the nominal integration range normRegion[x[]
 //
 
-#include "RooFitCore/RooFit.hh"
+#include "RooFit.h"
 
-#include "RooFitCore/RooExtendPdf.hh"
-#include "RooFitCore/RooExtendPdf.hh"
-#include "RooFitCore/RooArgList.hh"
-#include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooNameReg.hh"
+#include "RooExtendPdf.h"
+#include "RooExtendPdf.h"
+#include "RooArgList.h"
+#include "RooRealVar.h"
+#include "RooFormulaVar.h"
+#include "RooNameReg.h"
 
 ClassImp(RooExtendPdf)
 ;

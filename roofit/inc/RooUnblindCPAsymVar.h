@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.13 2004/04/05 22:38:35 wverkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.14 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,11 @@
 #ifndef ROO_UNBLIND_CPASYM_VAR
 #define ROO_UNBLIND_CPASYM_VAR
 
-#include "RooFitCore/RooAbsHiddenReal.hh"
-#include "RooFitCore/RooAbsCategory.hh"
-#include "RooFitCore/RooRealProxy.hh"
-#include "RooFitCore/RooCategoryProxy.hh"
-#include "RooFitModels/RooBlindTools.hh"
+#include "RooAbsHiddenReal.h"
+#include "RooAbsCategory.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
+#include "RooBlindTools.h"
 
 class RooCategory ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTruthModel.rdl,v 1.16 2005/02/14 20:44:30 wverkerke Exp $
+ *    File: $Id: RooTruthModel.rdl,v 1.17 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_TRUTH_MODEL
 #define ROO_TRUTH_MODEL
 
-#include "RooFitCore/RooResolutionModel.hh"
+#include "RooResolutionModel.h"
 
 class RooTruthModel : public RooResolutionModel {
 public:
