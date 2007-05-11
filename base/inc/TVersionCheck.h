@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVersionCheck.h,v 1.2 2007/05/10 16:04:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVersionCheck.h,v 1.3 2007/05/10 18:16:58 rdm Exp $
 // Author: Fons Rademakers   9/5/2007
 
 /*************************************************************************
@@ -30,6 +30,8 @@ public:
    TVersionCheck(int versionCode);  // implemented in TSystem.cxx
 };
 
+#ifndef __CINT__
 static TVersionCheck gVersionCheck(ROOT_VERSION_CODE);
+#endif
 
 #endif
