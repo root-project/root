@@ -29,6 +29,7 @@ if [ "$dll" != "bin/rmkdepend.exe" -a \
      "$dll" != "utils/src/rootcint_tmp.exe" -a \
      "$dll" != "bin/libCint.dll" -a \
      "$dll" != "bin/libReflex.dll" -a \
+     "$dll" == "`echo $dll | sed 's,^cint/,,'`" -a \
      -r base/src/precompile.o ]; then
   args="$args base/src/precompile.o"
 fi
