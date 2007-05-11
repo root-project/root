@@ -1,0 +1,38 @@
+#ifdef __CINT__ 
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+#pragma link C++ class Roo2DKeysPdf+ ;
+#pragma link C++ class RooAbsAnaConvPdf+ ;
+#pragma link C++ class RooAddPdf+ ;
+#pragma link C++ class RooArgusBG+ ;
+#pragma link C++ class RooBCPEffDecay+ ;
+#pragma link C++ class RooBCPGenDecay+ ;
+#pragma link C++ class RooBDecay+ ;
+#pragma link C++ class RooBifurGauss+ ;
+#pragma link C++ class RooBMixDecay+ ;
+#pragma link C++ class RooBreitWigner+ ;
+#pragma link C++ class RooBukinPdf+ ;
+#pragma link C++ class RooCBShape+ ;
+#pragma link C++ class RooChebychev+ ;
+#pragma link C++ class RooDecay+ ;
+#pragma link C++ class RooDstD0BG+ ;
+#pragma link C++ class RooEfficiency+ ;
+#pragma link C++ class RooEffProd+ ;
+#pragma link C++ class RooExponential+ ;
+#pragma link C++ class RooExtendPdf+ ;
+#pragma link C++ class RooGaussian+ ;
+#pragma link C++ class RooGaussModel+ ;
+#pragma link C++ class RooGExpModel+ ;
+#pragma link C++ class RooHistPdf+ ;
+#pragma link C++ class RooKeysPdf+ ;
+#pragma link C++ class RooLandau+ ;
+#pragma link C++ class RooNonCPEigenDecay+ ;
+#pragma link C++ class RooNovosibirsk+ ;
+#pragma link C++ class RooNumConvPdf+ ;
+#pragma link C++ class RooParametricStepFunction+ ;
+#pragma link C++ class RooPolynomial+ ;
+#pragma link C++ class RooProdPdf+ ;
+#pragma link C++ class RooTruthModel+ ;
+#pragma link C++ class RooVoigtian+ ;
+#endif 
