@@ -42,6 +42,8 @@ staticFunc.log: MyClass_cxx.$(DllSuf)
 staticFunc: staticFunc.log
 	$(TestDiff)
 
+all_C.$(DllSuf): A.h B.h ALinkDef.h BLinkDef.h
+
 test.root: write.C all_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l runwrite.C > write.log 2>&1
 
