@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.36 2007/04/17 12:08:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.37 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -632,6 +632,7 @@ void TGFileContainer::CreateFileList()
    while ((name = gSystem->GetDirEntry(dirp)) != 0) {
       if (strcmp(name, ".") && strcmp(name, ".."))
          AddFile(name);
+      gSystem->ProcessEvents();
    }
    gSystem->FreeDirectory(dirp);
 
