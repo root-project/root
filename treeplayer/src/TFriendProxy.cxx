@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.3 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.4 2007/02/01 15:26:19 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -36,7 +36,7 @@ namespace ROOT {
       if (main) {
          TObject *obj = main->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
-         fDirector.SetTree(element->GetTree());
+         if (element) fDirector.SetTree(element->GetTree());
       }
       director->Attach(this);
    }
@@ -65,7 +65,8 @@ namespace ROOT {
       if (newmain) {
          TObject *obj = newmain->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
-         fDirector.SetTree(element->GetTree());
+         if (element) fDirector.SetTree(element->GetTree());
+         else fDirector.SetTree(0);
       } else {
          fDirector.SetTree(0);
       }
