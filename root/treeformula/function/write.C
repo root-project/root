@@ -34,6 +34,8 @@ int write() {
       //A*   a = new A();
       ((A*)ar[k])->val=1;
       ((A*)ar[k])->tv=TVector3(1,2,3)*(i+1.);
+
+      b->fVecA.push_back( *((A*)ar[k]) );
     }
     tree->Fill();
   }

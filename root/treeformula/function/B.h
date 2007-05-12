@@ -3,6 +3,7 @@
 
 #include "TObject.h"
 #include "TClonesArray.h"
+#include <vector>
 
 class B : public TObject
 {
@@ -11,6 +12,9 @@ public:
   ~B();
 
   TClonesArray *fA;//->
+  std::vector<A> fVecA;
+  A GetA() { return *(A*)fA->At(0); };
+  std::vector<AD> GetVecA() { return fVecA; }
 
   ClassDef(B,1)
 };

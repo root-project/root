@@ -1,6 +1,5 @@
 {
-  gSystem->Load("libPhysics");
-  gSystem->Load("all_C");
-  gROOT->ProcessLine(".L write.C");
-  write();
+   gROOT->ProcessLine(".L all.C+");
+   gROOT->ProcessLine(".L write.C");
+   write();
 }  
