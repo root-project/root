@@ -10,7 +10,7 @@ public:
   A();
   ~A();
 
-  TVector3  GetV() { return tv; }
+  TVector3  GetV() const { return tv; }
   TVector3  tv;
   int       val;
 

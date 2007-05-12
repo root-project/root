@@ -13,8 +13,8 @@ public:
 
   TClonesArray *fA;//->
   std::vector<A> fVecA;
-  A GetA() { return *(A*)fA->At(0); };
-  std::vector<A> GetVecA() { return fVecA; }
+  A GetACopy() const { return *(A*)fA->At(0); };
+  std::vector<A> GetVecACopy() const { return fVecA; }
 
   ClassDef(B,1)
 };
