@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.5 2006/10/23 13:15:05 couet Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.6 2007/01/23 11:09:42 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
       binz = 1 + Int_t(fPositionZ[i] + 0.5);      
       fPositionX[i] = hin->GetXaxis()->GetBinCenter(binx);
       fPositionY[i] = hin->GetYaxis()->GetBinCenter(biny);
-      fPositionZ[i] = hin->GetYaxis()->GetBinCenter(binz);      
+      fPositionZ[i] = hin->GetZaxis()->GetBinCenter(binz);      
    }
    for (i = 0; i < sizex; i++) {
       for (j = 0; j < sizey; j++){
