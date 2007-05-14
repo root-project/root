@@ -25,7 +25,7 @@
 #pragma link C++ class RooLandau+ ;
 #pragma link C++ class RooNonCPEigenDecay+ ;
 #pragma link C++ class RooNovosibirsk+ ;
-#pragma link C++ class RooNumConvPdf+ ;
+//#pragma link C++ class RooNumConvPdf+ ;
 #pragma link C++ class RooParametricStepFunction+ ;
 #pragma link C++ class RooPolynomial+ ;
 #pragma link C++ class RooUnblindCPAsymVar+ ;
