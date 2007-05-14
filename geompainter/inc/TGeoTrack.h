@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.h,v 1.2 2004/03/05 11:53:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.h,v 1.3 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -48,6 +48,10 @@ private :
    Int_t          fPointsSize; // capacity of points array
    Int_t          fNpoints;    // number of stored points
    Double_t      *fPoints;     //[fNpoints] array of points (x,y,z,t) belonging to this track
+
+protected:
+   TGeoTrack(const TGeoTrack&);
+   TGeoTrack& operator=(const TGeoTrack&);
 
 public:
    TGeoTrack();

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.7 2004/03/05 11:53:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.8 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -48,6 +48,9 @@ protected:
    TVirtualGeoTrack *fParent;     // id of parent
    TObject          *fParticle;   // particle for this track
    TObjArray        *fTracks;     // daughter tracks
+
+   TVirtualGeoTrack(const TVirtualGeoTrack&);
+   TVirtualGeoTrack& operator=(const TVirtualGeoTrack&);
 
 public:
    TVirtualGeoTrack();

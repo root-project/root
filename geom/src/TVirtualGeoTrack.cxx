@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.cxx,v 1.2 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -46,6 +46,36 @@ TVirtualGeoTrack::TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *pa
    fParent     = parent;
    fParticle   = particle;
    fTracks     = 0;
+}
+
+//_____________________________________________________________________________
+TVirtualGeoTrack::TVirtualGeoTrack(const TVirtualGeoTrack& other)
+                 :TObject(other), TGeoAtt(other), TAttLine(other), TAttMarker(other),
+                  fPDG(other.fPDG),
+                  fId(other.fId),
+                  fParent(other.fParent),
+                  fParticle(other.fParticle),
+                  fTracks(other.fTracks)
+{
+// Copy ctor. NOT TO BE CALLED.
+}
+
+//_____________________________________________________________________________
+TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv) 
+{
+   // Assignment operator. NOT TO BE CALLED.
+   if(this!=&gv) {
+      TObject::operator=(gv);
+      TGeoAtt::operator=(gv);
+      TAttLine::operator=(gv);
+      TAttMarker::operator=(gv);
+      fPDG=gv.fPDG;
+      fId=gv.fId;
+      fParent=gv.fParent;
+      fParticle=gv.fParticle;
+      fTracks=gv.fTracks;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________

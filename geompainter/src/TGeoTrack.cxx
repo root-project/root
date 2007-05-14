@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.6 2005/08/30 09:58:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.7 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -61,6 +61,29 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
       SetLineColor(4);
       SetLineWidth(2);
    }  
+}
+
+//_____________________________________________________________________________
+TGeoTrack::TGeoTrack(const TGeoTrack& other)
+                 :TVirtualGeoTrack(other),
+                  fPointsSize(other.fPointsSize),
+                  fNpoints(other.fNpoints),
+                  fPoints(other.fPoints)
+{
+// Copy ctor. NOT TO BE CALLED.
+}
+
+//_____________________________________________________________________________
+TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv) 
+{
+   // Assignment operator. NOT TO BE CALLED.
+   if(this!=&gv) {
+      TVirtualGeoTrack::operator=(gv);
+      fPointsSize=gv.fPointsSize;
+      fNpoints=gv.fNpoints;
+      fPoints=gv.fPoints;
+   } 
+   return *this;
 }
 
 //______________________________________________________________________________
