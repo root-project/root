@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooGaussModel.cxx,v 1.37 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooGaussModel.cxx,v 1.38 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -134,7 +134,7 @@ Double_t RooGaussModel::evaluate() const
 
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     Double_t xprime = (x-(mean*msf))/(sigma*ssf) ;
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 1st form" << endl ;
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 1st form" << endl ;
     
     Double_t result = exp(-0.5*xprime*xprime)/(sigma*ssf*root2pi) ;
     if (_basisCode!=0 && basisSign==Both) result *= 2 ;
@@ -144,7 +144,7 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 2nd form: 0, used for sinBasis, linBasis, and quadBasis with tau=0 ***
   if (tau==0) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 2nd form" << endl ;
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
@@ -156,7 +156,7 @@ Double_t RooGaussModel::evaluate() const
   Double_t u = xprime/(2*c) ;
 
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
     Double_t result(0) ;
     if (basisSign!=Minus) result += exp(-xprime+c*c) * RooMath::erfc(-u+c) ;
     if (basisSign!=Plus)  result += exp(xprime+c*c) * RooMath::erfc(u+c) ;
@@ -170,7 +170,7 @@ Double_t RooGaussModel::evaluate() const
   // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
   Double_t wt = omega *tau ;
   if (basisType==sinBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 4th form omega = " 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 4th form omega = " 
 			     << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (wt==0.) return result ;
@@ -182,7 +182,7 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (basisType==cosBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() 
 			     << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (basisSign!=Minus) result += evalCerfRe(-wt,-u,c) ; 
@@ -193,7 +193,7 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
   if (basisType==linBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() 
 			     << ") 6th form tau = " << tau << endl ;
 
     assert(basisSign==Plus);  // This should only be for positive times
@@ -206,7 +206,7 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 7th form: Convolution with (t/tau)^2*exp(-t/tau), used for quadBasis ***
   if (basisType==quadBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() 
 			     << ") 7th form tau = " << tau << endl ;
 
     assert(basisSign==Plus);  // This should only be for positive times
@@ -221,7 +221,7 @@ Double_t RooGaussModel::evaluate() const
 
   // ***8th form: Convolution with exp(-|t|/tau)*cosh(dgamma*t/2), used for         coshBasisSum ***
   if (basisType==coshBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() 
 			     << ") 8th form tau = " << tau << endl ;
 
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
@@ -248,7 +248,7 @@ Double_t RooGaussModel::evaluate() const
 
   // *** 9th form: Convolution with exp(-|t|/tau)*sinh(dgamma*t/2), used for        sinhBasisSum ***
   if (basisType==sinhBasis) {
-    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() 
 			     << ") 9th form tau = " << tau << endl ;
 
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
@@ -348,7 +348,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   }
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     Double_t xscale = root2*(sigma*ssf);
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
     
     Double_t xpmin = (x.min(rangeName)-(mean*msf))/xscale ;
     Double_t xpmax = (x.max(rangeName)-(mean*msf))/xscale ;
@@ -376,7 +376,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
   // *** 2nd form: unity, used for sinBasis and linBasis with tau=0 (PDF is zero) ***
   if (tau==0) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 2nd form" << endl ;
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
@@ -390,7 +390,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   Double_t umax = xpmax/(2*c) ;
 
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 3d form tau=" << tau << endl ;
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 3d form tau=" << tau << endl ;
 
     Double_t result(0) ;
     if (_asympInt) {   // modified FMV, 07/24/03
@@ -415,7 +415,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   Double_t wt = omega * tau ;
     
   if (basisType==sinBasis) {    
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 4th form omega = " 
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 4th form omega = " 
 			     << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (wt==0) return result*ssfInt ;
@@ -441,7 +441,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
   // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (basisType==cosBasis) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() 
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() 
 			     << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (basisSign!=Minus) {
@@ -466,7 +466,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
   // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
   if (basisType==linBasis) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
 			     << ") 6th form tau=" << tau << endl ;
 
     Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
@@ -489,7 +489,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
   // *** 7th form: Convolution with (t/tau)*(t/tau)*exp(-t/tau), used for quadBasis ***
   if (basisType==quadBasis) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
 			     << ") 7th form tau=" << tau << endl ;
 
     Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
@@ -517,7 +517,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
   // *** 8th form: Convolution with exp(-|t|/tau)*cosh(dgamma*t/2), used for coshBasis ***
   if (basisType==coshBasis) {
-    if (_verboseEval>0) {cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 8th form tau=" << tau << endl ; }
+    if (verboseEval()>0) {cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 8th form tau=" << tau << endl ; }
     
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
     Double_t tau1 = 1/(1/tau-dgamma/2) ; 
@@ -565,7 +565,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
    
   // *** 9th form: Convolution with exp(-|t|/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {
-    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 9th form tau=" << tau << endl ; 
+    if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 9th form tau=" << tau << endl ; 
     
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
     Double_t tau1 = 1/(1/tau-dgamma/2) ; 

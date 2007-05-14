@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooGExpModel.cxx,v 1.24 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooGExpModel.cxx,v 1.25 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -145,7 +145,7 @@ Double_t RooGExpModel::evaluate() const
 
   // *** 1st form: Straight GExp, used for unconvoluted PDF or expBasis with 0 lifetime ***
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 1st form" << endl ;    
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 1st form" << endl ;    
 
     Double_t expArg = sig*sig/(2*rtau*rtau) + fsign*x/rtau ;
 
@@ -175,7 +175,7 @@ Double_t RooGExpModel::evaluate() const
   
   // *** 2nd form: 0, used for sinBasis and cosBasis with tau=0 ***
   if (tau==0) {
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 2nd form" << endl ;
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
@@ -183,7 +183,7 @@ Double_t RooGExpModel::evaluate() const
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
     Double_t result(0) ;
     if (basisSign!=Minus) result += calcDecayConv(+1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
     if (basisSign!=Plus)  result += calcDecayConv(-1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
@@ -194,7 +194,7 @@ Double_t RooGExpModel::evaluate() const
   // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
   Double_t wt = omega *tau ;
   if (basisType==sinBasis) {
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 4th form omega = " 
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 4th form omega = " 
 			     << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (wt==0.) return result ;
@@ -206,7 +206,7 @@ Double_t RooGExpModel::evaluate() const
 
   // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (basisType==cosBasis) {
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName() 
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() 
 			     << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (basisSign!=Minus) result += calcSinConv(+1,sig,tau,omega,rtau,fsign).re() ;
@@ -220,7 +220,7 @@ Double_t RooGExpModel::evaluate() const
   if (basisType==sinhBasis) {
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
    
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName()
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
 			     << ") 6th form = " << dgamma << ", tau = " << tau << endl;
     Double_t result(0);
     //if (basisSign!=Minus) result += calcSinhConv(+1,+1,-1,tau,dgamma,sig,rtau,fsign);
@@ -240,7 +240,7 @@ Double_t RooGExpModel::evaluate() const
   if (basisType==coshBasis) {
     Double_t dgamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
     
-    if (_verboseEval>2) cout << "RooGExpModel::evaluate(" << GetName()
+    if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName()
 		         << ") 7th form = " << dgamma << ", tau = " << tau << endl;
     Double_t result(0);
     //if (basisSign!=Minus) result += calcCoshConv(+1,tau,dgamma,sig,rtau,fsign);
@@ -539,7 +539,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // *** 1st form????
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;
 
     //Double_t result = 1.0 ; // WVE inferred from limit(tau->0) of cosBasisNorm
     // finite+asymtotic normalization, added FMV, 07/24/03
@@ -565,7 +565,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
   // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
   //if (tau==0&&omega!=0) {
   if (tau==0) {  // modified, FMV 07/24/03
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 2nd form" << endl ;
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
@@ -584,7 +584,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
   // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
   Double_t wt = omega * tau ;    
   if (basisType==sinBasis) {    
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 4th form omega = " 
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() << ") 4th form omega = " 
 			     << omega << ", tau = " << tau << endl ;
     //cout << "sin integral" << endl;
     Double_t result(0) ;
@@ -600,7 +600,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
  
   // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (basisType==cosBasis) {
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
 			     << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     //cout << "cos integral" << endl;
     Double_t result(0) ;
@@ -617,7 +617,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
  
   // *** 6th form: Convolution with exp(-t/tau)*sinh(dgamma*t/2), used for sinhBasis ***
   if (basisType==sinhBasis) {
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
 			     << ") 6th form dgamma = " << dgamma << ", tau = " << tau << endl ;
     Double_t tau1 = 1/(1/tau-dgamma/2);
     Double_t tau2 = 1/(1/tau+dgamma/2);
@@ -636,7 +636,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // ** 7th form: Convolution with exp(-t/tau)*cosh(dgamma*t/2), used for coshBasis ***
   if (basisType==coshBasis) {
-    if (_verboseEval>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
+    if (verboseEval()>0) cout << "RooGExpModel::analyticalIntegral(" << GetName() 
 			     << ") 6th form dgamma = " << dgamma << ", tau = " << tau << endl ;
     //cout << "cosh integral" << endl;
     Double_t tau1 = 1/(1/tau-dgamma/2);
