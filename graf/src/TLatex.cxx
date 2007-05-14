@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.70 2007/02/23 15:02:33 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.71 2007/04/30 16:01:37 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1353,8 +1353,9 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
-      Char_t *nb = new Char_t[opSquareCurly-opColor-7];
+      Char_t *nb = new Char_t[opSquareCurly-opColor-6];
       strncpy(nb,text+opColor+7,opSquareCurly-opColor-7);
+      nb[opSquareCurly-opColor-7] = 0;
       if (sscanf(nb,"%d",&newSpec.fColor) < 1) {
          delete[] nb;
          // color number is invalid
@@ -1375,8 +1376,9 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
-      Char_t *nb = new Char_t[opSquareCurly-opFont-6];
+      Char_t *nb = new Char_t[opSquareCurly-opFont-5];
       strncpy(nb,text+opFont+6,opSquareCurly-opFont-6);
+      nb[opSquareCurly-opFont-6] = 0;
       if (sscanf(nb,"%d",&newSpec.fFont) < 1) {
          delete[] nb;
          // font number is invalid
