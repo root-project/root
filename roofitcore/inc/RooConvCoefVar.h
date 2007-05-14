@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.h,v 1.12 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooConvCoefVar.h,v 1.13 2007/05/14 14:01:41 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,7 +24,7 @@
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
-class RooAbsAnaConfPdf ;
+class RooAbsAnaConvPdf ;
 
 class RooConvCoefVar : public RooAbsReal {
 public:
