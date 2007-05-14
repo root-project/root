@@ -60,7 +60,7 @@ ROOFITCOREH2   := RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h 
                   RooMultiCategory.h RooMultiCatIter.h RooNameReg.h \
                   RooNameSet.h RooNLLVar.h RooNormListManager.h \
                   RooNormManager.h RooNormSetCache.h RooNumber.h \
-                  RooNumConvolution.h RooNumIntConfig.h RooNumIntFactory.h \
+                  RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h \
                   RooPlotable.h RooPlot.h RooPolyVar.h RooPrintable.h \
                   RooProdGenContext.h RooProduct.h RooPullVar.h \
                   RooQuasiRandomGenerator.h RooRandom.h

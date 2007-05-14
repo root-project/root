@@ -53,6 +53,7 @@
 #pragma link C++ class RooNormSetCache+ ;
 #pragma link C++ class RooNumber+ ;
 #pragma link C++ class RooNumConvolution+ ;
+#pragma link C++ class RooNumConvPdf+ ;
 #pragma link C++ class RooNumIntConfig+ ;
 #pragma link C++ class RooNumIntFactory+ ;
 #pragma link C++ class RooPlotable+ ;
