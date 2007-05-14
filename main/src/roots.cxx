@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.9 2005/10/07 10:28:54 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: roots.cxx,v 1.2 2007/05/10 16:25:13 rdm Exp $
 // Author: G Ganis 10/5/2007
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 static Int_t MakeCleanupScript(Int_t loglevel);
 static FILE *RedirectOutput(TString &logfile, const char *loc);
 
-static const char *apname = "roots";
+static const char *gAppName = "roots";
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
    // Prepare the application
    if (argc < 4) {
       fprintf(stderr, "%s: insufficient input:"
-                      " client URL must to be provided\n", apname);
+                      " client URL must to be provided\n", gAppName);
       gSystem->Exit(1);
    }
 
@@ -53,26 +53,26 @@ int main(int argc, char **argv)
       loglevel = argdbg.Atoi();
    }
    if (loglevel > 0) {
-      fprintf(stderr,"%s: Starting remote session on %s\n", apname, gSystem->HostName());
+      fprintf(stderr,"%s: Starting remote session on %s\n", gAppName, gSystem->HostName());
       if (loglevel > 1) {
-         fprintf(stderr,"%s:    argc: %d\n", apname, argc);
+         fprintf(stderr,"%s:    argc: %d\n", gAppName, argc);
          for (Int_t i = 0; i < argc; i++)
-            fprintf(stderr,"%s:    argv[%d]: %s\n", apname, i, argv[i]);
+            fprintf(stderr,"%s:    argv[%d]: %s\n", gAppName, i, argv[i]);
       }
    }
 
    // Cleanup script
    if (MakeCleanupScript(loglevel) != 0)
-      fprintf(stderr,"%s: Error: failed to create cleanup script\n", apname);
+      fprintf(stderr,"%s: Error: failed to create cleanup script\n", gAppName);
 
    // Redirect the output
    TString logfile;
-   FILE *fLog = RedirectOutput(logfile, ((loglevel > 1) ? apname : 0));
+   FILE *fLog = RedirectOutput(logfile, ((loglevel > 1) ? gAppName : 0));
    if (fLog) {
       if (loglevel > 0)
-         fprintf(stderr,"%s: output redirected to %s\n", apname, logfile.Data());
+         fprintf(stderr,"%s: output redirected to %s\n", gAppName, logfile.Data());
    } else {
-      fprintf(stderr,"%s: problems redirecting output\n", apname);
+      fprintf(stderr,"%s: problems redirecting output\n", gAppName);
       gSystem->Exit(1);
    }
 
@@ -92,17 +92,17 @@ int main(int argc, char **argv)
       if (h->LoadPlugin() == 0) {
          theApp = (TApplication *) h->ExecPlugin(4, &argc, argv, fLog, logfile.Data());
       } else {
-         fprintf(stderr, "%s: failed to load plugin for TApplicationServer\n", apname);
+         fprintf(stderr, "%s: failed to load plugin for TApplicationServer\n", gAppName);
       }
    } else {
-      fprintf(stderr, "%s: failed to find plugin for TApplicationServer\n", apname);
+      fprintf(stderr, "%s: failed to find plugin for TApplicationServer\n", gAppName);
    }
 
    // Run it
    if (theApp) {
       theApp->Run();
    } else {
-      fprintf(stderr, "%s: failed to instantiate TApplicationServer\n", apname);
+      fprintf(stderr, "%s: failed to instantiate TApplicationServer\n", gAppName);
       gSystem->Exit(1);
    }
 
@@ -178,15 +178,15 @@ Int_t MakeCleanupScript(Int_t loglevel)
       // Close file
       fclose(fc);
       if (chmod(cleanup.Data(), S_IRUSR | S_IWUSR | S_IXUSR) != 0) {
-         fprintf(stderr,"%s: Error: cannot make script %s executable\n", apname, cleanup.Data());
+         fprintf(stderr,"%s: Error: cannot make script %s executable\n", gAppName, cleanup.Data());
          unlink(cleanup.Data());
          return -1;
       } else {
          if (loglevel > 1)
-            fprintf(stderr,"%s: Path to cleanup script %s\n", apname, cleanup.Data());
+            fprintf(stderr,"%s: Path to cleanup script %s\n", gAppName, cleanup.Data());
       }
    } else {
-      fprintf(stderr,"%s: Error: file %s could not be created\n", apname, cleanup.Data());
+      fprintf(stderr,"%s: Error: file %s could not be created\n", gAppName, cleanup.Data());
       return -1;
    }
 
