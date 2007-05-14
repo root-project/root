@@ -1010,10 +1010,6 @@ int G__shl_load(char *shlfile)
     if (initsl) G__initpermanentsl->push_back(initsl);
     --G__allsl;
   }
-  else {
-     G__initpermanentsl->clear();
-  }
-
 
   strcpy(G__ifile.name,"");
   return(allsl);

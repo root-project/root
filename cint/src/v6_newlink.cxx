@@ -7056,9 +7056,10 @@ int G__parse_parameter_link(char* paras)
     G__separate_parameter(paras, &os, c_reftype_const);
     reftype_const = std::atoi(c_reftype_const);
 #ifndef G__OLDIMPLEMENTATION1861
-    if (typenum != -1) {
-      reftype_const += G__newtype.isconst[typenum] * 10;
-    }
+    //if (typenum != -1) {
+    // NO - this is already taken into account when writing the dictionary
+    //  reftype_const += G__newtype.isconst[typenum] * 10;
+    //}
 #endif
     G__separate_parameter(paras, &os, c_default);
     if ((c_default[0] == '-') && (c_default[1] == '\0')) {
@@ -7202,7 +7203,7 @@ int G__cppif_p2memfunc(FILE *fp)
   fprintf(fp,"*********************************************************/\n");
   fprintf(fp,"class G__Sizep2memfunc%s {\n",G__DLLID);
   fprintf(fp," public:\n");
-  fprintf(fp,"  G__Sizep2memfunc%s() {p=&G__Sizep2memfunc%s::sizep2memfunc;}\n"
+  fprintf(fp,"  G__Sizep2memfunc%s(): p(&G__Sizep2memfunc%s::sizep2memfunc) {}\n"
           ,G__DLLID,G__DLLID);
   fprintf(fp,"    size_t sizep2memfunc() { return(sizeof(p)); }\n");
   fprintf(fp,"  private:\n");
