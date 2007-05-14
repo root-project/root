@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.17 2006/08/16 14:04:10 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.18 2006/09/14 13:38:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -121,19 +121,20 @@ std::string Tools::BuildTypeName( Type & t,
 std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
 //-------------------------------------------------------------------------------
 // Return a vector of template arguments from a template type string.
-   std::string tpl = "";
-   std::vector<std::string> tl = std::vector<std::string>();
+   std::string tpl;
+   std::vector<std::string> tl;
    unsigned long int pos1 = Name.find("<");
    unsigned long int pos2 = Name.rfind(">");
    if ( pos1 == std::string::npos && pos2 == std::string::npos ) return tl; 
-   else tpl = Name.substr(pos1+1, pos2-pos1-1);
+   tpl = Name.substr(pos1+1, pos2-pos1-1);
    if (tpl[tpl.size()-1] == ' ') {
       tpl = tpl.substr(0,tpl.size()-1);
    }
    unsigned int par = 0;
-   std::string argName = "";
-   for (unsigned int i = 0; i < tpl.length(); ++i) {
-      char c = tpl[i];
+   std::string argName;
+   char c = 0;
+   for (std::string::size_type i = 0; i < tpl.length(); ++i) {
+      c = tpl[i];
       if ( c == ',' ) {
          if ( ! par ) {
             StringStrip(argName);
@@ -265,12 +266,12 @@ void Tools::StringSplit( std::vector < std::string > & splitValues,
    while (( pos = str2.find_first_of( delim )) != std::string::npos ) {
       std::string s = str2.substr(0, pos);
       StringStrip( s );
-      if ( s.length()) { splitValues.push_back( s ); }
+      splitValues.push_back( s );
       str2 = str2.substr( pos + delim.length());
    }
   
    StringStrip( str2 );
-   if ( str2.length()) { splitValues.push_back( str2 ); }
+   splitValues.push_back( str2 );
 }
 
 
