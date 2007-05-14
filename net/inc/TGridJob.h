@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJob.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJob.h,v 1.3 2007/05/11 14:23:34 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TString.h"
 #endif
 
+
 class TGridJobStatus;
 
 class TGridJob : public TObject {
@@ -43,6 +44,7 @@ public:
    virtual TString GetJobID() { return fJobID; }
 
    virtual TGridJobStatus *GetJobStatus() const = 0;
+   virtual Int_t           GetOutputSandbox(const char *localpath, Option_t *opt = 0);
 
    ClassDef(TGridJob,1)  // ABC defining interface to a GRID job
 };

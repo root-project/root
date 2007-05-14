@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJob.cxx,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJob.cxx,v 1.1 2005/05/12 13:19:39 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -22,3 +22,14 @@
 #include "TGridJob.h"
 
 ClassImp(TGridJob)
+
+
+//______________________________________________________________________________
+Int_t TGridJob::GetOutputSandbox(const char *, Option_t *)
+{
+   // Must be implemented by actual GRID job implementation. Returns -1 in
+   // case of error, 0 otherwise.
+
+   MayNotUse("GetOutputSandbox");
+   return -1;
+}
