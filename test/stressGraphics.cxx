@@ -186,6 +186,7 @@ void stressGraphics(Int_t verbose)
 
    gVerbose = verbose;
    gTestNum = 0;
+   gC       = 0;
 
    gBenchmark->Start("stress");
 
@@ -360,7 +361,7 @@ void EndTest(const TString &title)
                                 gRefNb[gTestNum-1],
                                 gErrNb[gTestNum-1]);
 
-   delete gC;
+   if (gC) {delete gC; gC = 0;}
    return;
 }
 
