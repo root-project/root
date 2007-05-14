@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.133 2007/05/09 17:01:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.134 2007/05/10 11:02:02 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1210,6 +1210,9 @@ const char* THtml::GetImplFileName(TClass * cl) const
 //______________________________________________________________________________
 const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
 {
+   // Return the output directory as set by SetOutputDir().
+   // Create it if it doesn't exist and if createDir is kTRUE.
+
    if (createDir) {
       gSystem->ExpandPathName(const_cast<THtml*>(this)->fOutputDir);
       Long64_t sSize;
