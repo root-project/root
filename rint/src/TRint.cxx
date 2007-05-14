@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.70 2007/02/21 09:52:14 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.71 2007/05/10 17:08:28 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -502,6 +502,10 @@ Bool_t TRint::HandleTermInput()
       if (gROOT->Timer()) timer.Start();
 
       Bool_t added = kFALSE;
+
+      // This is needed when working with remote sessions
+      SetBit(kTerminalInput);
+
 #ifdef R__EH
       try {
 #endif
