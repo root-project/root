@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.102 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.103 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1975,3 +1975,16 @@ Double_t RooAbsPdf::expectedEvents(const RooArgSet*) const
 { 
   return 0 ; 
 } 
+
+
+void RooAbsPdf::verboseEval(Int_t stat) 
+{ 
+  // Change global level of verbosity for p.d.f. evaluations
+  _verboseEval = stat ; 
+}
+
+Int_t RooAbsPdf::verboseEval() 
+{ 
+  // Return global level of verbosity for p.d.f. evaluations
+  return _verboseEval ;
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.rdl,v 1.24 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.h,v 1.25 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,13 +42,14 @@ public:
   virtual void normLeafServerList(RooArgSet& list) const ;
   Double_t getNorm(const RooArgSet* nset=0) const ;
 
-  inline const RooFormulaVar& basis() const { return _basis?*_basis:*_identity ; }
+  inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
 
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
 
-  static RooFormulaVar* _identity ;  // Identity basis function pointer
+  static RooFormulaVar* _identity ;  // Identity basis function pointe
+  static RooFormulaVar* identity() ;
 
 
   friend class RooConvGenContext ;

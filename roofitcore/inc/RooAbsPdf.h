@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.85 2006/07/04 15:07:57 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.h,v 1.86 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -152,7 +152,8 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
-  static void verboseEval(Int_t stat) { _verboseEval = stat ; }
+  static void verboseEval(Int_t stat) ;
+  static int verboseEval() ;
 
   inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooResolutionModel.cxx,v 1.37 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooResolutionModel.cxx,v 1.38 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -117,6 +117,13 @@ RooResolutionModel::~RooResolutionModel()
   }
 }
 
+
+
+RooFormulaVar* RooResolutionModel::identity() 
+{ 
+  // Return identity formula pointer
+  return _identity ; 
+}
 
 
 RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
