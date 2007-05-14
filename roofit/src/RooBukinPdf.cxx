@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.8 2005/06/21 16:46:33 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooBukinPdf.cxx,v 1.9 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *

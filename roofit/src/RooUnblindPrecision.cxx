@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindPrecision.cc,v 1.10 2005/06/16 09:37:28 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooUnblindPrecision.cxx,v 1.11 2007/05/11 10:15:52 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

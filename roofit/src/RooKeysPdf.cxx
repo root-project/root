@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.19 2005/06/20 15:51:06 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooKeysPdf.cxx,v 1.20 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

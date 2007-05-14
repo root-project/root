@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.11 2005/06/20 15:51:06 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooChebychev.cxx,v 1.12 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *

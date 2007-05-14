@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.18 2005/06/21 16:46:33 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooDstD0BG.cxx,v 1.19 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -34,7 +34,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.18 2005/06/21 16:46:33 wverkerke Exp $";
+"$Id: RooDstD0BG.cxx,v 1.19 2007/05/11 09:13:47 verkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,

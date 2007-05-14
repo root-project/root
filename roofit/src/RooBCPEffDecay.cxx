@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.cc,v 1.19 2005/06/20 15:51:05 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooBCPEffDecay.cxx,v 1.20 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

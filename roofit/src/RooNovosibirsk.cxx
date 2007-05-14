@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.10 2005/06/21 16:46:33 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooNovosibirsk.cxx,v 1.11 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *

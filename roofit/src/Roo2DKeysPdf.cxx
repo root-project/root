@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.20 2005/06/20 15:51:05 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: Roo2DKeysPdf.cxx,v 1.21 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *

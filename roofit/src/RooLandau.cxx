@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooLandau.cc,v 1.7 2005/06/16 09:37:28 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooLandau.cxx,v 1.8 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

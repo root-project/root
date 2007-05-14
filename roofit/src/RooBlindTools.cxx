@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBlindTools.cc,v 1.14 2005/06/20 15:51:06 wverkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooBlindTools.cxx,v 1.15 2007/05/11 10:15:52 verkerke Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
