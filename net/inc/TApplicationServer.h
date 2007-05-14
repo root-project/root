@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationServer.h,v 1.1 2007/05/10 16:01:32 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TUrl.h"
 #endif
 
+class TList;
 class TMessage;
 class TSocket;
 
@@ -55,6 +56,9 @@ private:
 
    TString       fWorkDir;          // Working dir
 
+   TList        *fSentCanvases;     // List of canvases already sent
+
+   void          ExecLogon();
    Int_t         Setup();
    Int_t         SendCanvases();    // Send back to client any created canvas
 
@@ -80,6 +84,8 @@ public:
    void           HandleSigPipe();
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsValid() const { return fIsValid; }
+
+   Long_t         ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0);
 
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);

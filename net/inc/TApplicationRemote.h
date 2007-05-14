@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.h,v 1.1 2007/05/10 16:01:32 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -55,9 +55,13 @@ class TApplicationRemote : public TApplication {
 
 public:
    enum ESendFileOpt {
-      kAscii               = 0x0,
-      kBinary              = 0x1,
-      kForce               = 0x2
+      kAscii            = 0x0,
+      kBinary           = 0x1,
+      kForce            = 0x2
+   };
+   // TApplication specific bits
+   enum EStatusBits {
+      kCollecting       = BIT(16)   // TRUE while collecting from server
    };
 
 private:

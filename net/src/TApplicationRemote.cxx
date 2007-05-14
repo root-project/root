@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.2 2007/05/10 17:12:58 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.3 2007/05/10 17:31:09 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -84,6 +84,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    fSocket = 0;
    fMonitor = 0;
    fFileList = 0;
+   ResetBit(kCollecting);
 
    // Create server socket; generate randomly a port to find a free one
    Int_t port = -1;
@@ -279,6 +280,9 @@ Int_t TApplicationRemote::Collect(Long_t timeout)
    if (fIntHandler)
       fIntHandler->Add();
 
+   // We are now going to collect from the server
+   SetBit(kCollecting);
+
    Int_t rc = 0, cnt = 0;
    while (fMonitor->GetActive() && (nto < 0 || nto > 0)) {
 
@@ -309,6 +313,9 @@ Int_t TApplicationRemote::Collect(Long_t timeout)
             nto--;
       }
    }
+
+   // Collection is over
+   ResetBit(kCollecting);
 
    // If timed-out, deactivate everything
    if (nto == 0)
@@ -420,6 +427,67 @@ Int_t TApplicationRemote::CollectInput()
                         fprintf(stderr,"%s\n", msg.Data());
                      else
                         fprintf(stderr,"%s\r", msg.Data());
+                  }
+                  break;
+
+               case kRRT_SendFile:
+                  {  TString fname;
+                     (*mess) >> fname;
+                     // Prepare the reply
+                     TMessage m(kMESS_ANY);
+                     m << (Int_t) kRRT_SendFile;
+                     // The server needs a file: we send also the related header
+                     // if we have it.
+                     char *imp = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
+                     if (!imp) {
+                        Error("CollectInput", "file %s not found in path(s) %s",
+                                         fname.Data(), TROOT::GetMacroPath());
+                        m << (Bool_t) kFALSE;
+                        Broadcast(m);
+                     } else {
+                        TString impfile = imp;
+                        delete [] imp;
+                        Int_t dot = impfile.Last('.');
+
+                        // Is there any associated header file
+                        Bool_t hasHeader = kTRUE;
+                        TString headfile = impfile;
+                        if (dot != kNPOS)
+                           headfile.Remove(dot);
+                        headfile += ".h";
+                        if (gSystem->AccessPathName(headfile, kReadPermission)) {
+                           TString h = headfile;
+                           headfile.Remove(dot);
+                           headfile += ".hh";
+                           if (gSystem->AccessPathName(headfile, kReadPermission)) {
+                              hasHeader = kFALSE;
+                              if (gDebug > 0)
+                                 Info("CollectInput", "no associated header file"
+                                                 " found: tried: %s %s",
+                                                 h.Data(), headfile.Data());
+                           }
+                        }
+
+                        // Send files now;
+                        m << (Bool_t) kTRUE;
+                        Broadcast(m);
+                        if (SendFile(impfile, kForce) == -1) {
+                           Info("CollectInput", "problems sending file %s", impfile.Data());
+                           return 0;
+                        }
+                        if (hasHeader) {
+                           Broadcast(m);
+                           if (SendFile(headfile, kForce) == -1) {
+                              Info("CollectInput", "problems sending file %s", headfile.Data());
+                              return 0;
+                           }
+                        }
+                     }
+                     // End of transmission
+                     m.Reset(kMESS_ANY);
+                     m << (Int_t) kRRT_SendFile;
+                     m << (Bool_t) kFALSE;
+                     Broadcast(m);
                   }
                   break;
 
@@ -688,8 +756,9 @@ Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfil
    }
    close(fd);
 
-   // Get the log
-   Collect();
+   // Get the log (during collection this will be done at the end
+   if (!TestBit(kCollecting))
+      Collect();
 
    // Done
    return IsValid() ? 0 : -1;
@@ -749,61 +818,8 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
       return 1;
    }
 
-
    // Init graphics
    InitializeGraphics();
-
-   // If load or execute request we must make sure that the file
-   // is on the server
-   if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2) ||
-       !strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      TString aclicMode;
-      TString arguments;
-      TString io;
-      TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments, io);
-
-      char *imp = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
-      if (!imp) {
-         Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
-               TROOT::GetMacroPath());
-      } else {
-         TString impfile = imp;
-         delete [] imp;
-         Int_t dot = impfile.Last('.');
-
-         // Is there any associated header file
-         Bool_t hasHeader = kTRUE;
-         TString headfile = impfile;
-         if (dot != kNPOS)
-            headfile.Remove(dot);
-         headfile += ".h";
-         if (gSystem->AccessPathName(headfile, kReadPermission)) {
-            TString h = headfile;
-            headfile.Remove(dot);
-            headfile += ".hh";
-            if (gSystem->AccessPathName(headfile, kReadPermission)) {
-               hasHeader = kFALSE;
-               if (gDebug > 0)
-                  Info("ProcessLine", "no associated header file found: tried: %s %s",
-                                      h.Data(), headfile.Data());
-         }
-
-         // Send files now; the md5 check is run here; see SendFile for more
-         // details.
-         if (SendFile(impfile) == -1) {
-            Info("ProcessLine", "problems sending file %s", impfile.Data());
-            TApplication::SetProcessingLine(kFALSE);
-            return 0;
-         }
-         if (hasHeader)
-            if (SendFile(headfile) == -1) {
-               Info("ProcessLine", "problems sending file %s", headfile.Data());
-               TApplication::SetProcessingLine(kFALSE);
-               return 0;
-            }
-         }
-      }
-   }
 
    // Ok, now we pack the command and we send it over for processing
    Broadcast(line, kMESS_CINT);

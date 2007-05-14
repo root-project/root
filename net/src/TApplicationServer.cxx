@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.1 2007/05/10 16:01:32 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.2 2007/05/10 17:31:09 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -298,6 +298,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
       // For some reason we failed setting a redirection; we cannot continue
       Terminate(0);
    fRealTimeLog     = kFALSE;
+   fSentCanvases    = 0;
 
    // Default prefix for notifications
    TASLogHandler::SetDefaultPrefix(Form("roots:%s", gSystem->HostName()));
@@ -332,7 +333,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
 
    // Load user functions
    const char *logon;
-   logon = gEnv->GetValue("Root.Load", (char *)0);
+   logon = gEnv->GetValue("Rint.Load", (char *)0);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -341,13 +342,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    }
 
    // Execute logon macro
-   logon = gEnv->GetValue("Root.Logon", (char *)0);
-   if (logon && !NoLogOpt()) {
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
-      if (mac)
-         ProcessFile(logon);
-      delete [] mac;
-   }
+   ExecLogon();
 
    // Save current interpreter context
    gInterpreter->SaveContext();
@@ -443,6 +438,8 @@ TApplicationServer::~TApplicationServer()
    // Cleanup. Not really necessary since after this dtor there is no
    // live anyway.
 
+   fSentCanvases->SetOwner(kFALSE);
+   SafeDelete(fSentCanvases);
    SafeDelete(fSocket);
    close(fLogFileDes);
 }
@@ -883,14 +880,32 @@ Int_t TApplicationServer::SendCanvases()
 
    Int_t nc = 0;
 
+   // Send back new canvases
    TMessage mess(kMESS_OBJECT);
    TIter next(gROOT->GetListOfCanvases());
    TObject *o = 0;
    while ((o = next())) {
-      mess.Reset(kMESS_OBJECT);
-      mess.WriteObject(o);
-      fSocket->Send(mess);
-      nc++;
+      if (!fSentCanvases)
+         fSentCanvases = new TList;
+      Bool_t sentalready = kFALSE;
+      // We cannot use FindObject here because there may be invalid
+      // objects in the send list (i.e. deleted canvases) 
+      TObjLink *lnk = fSentCanvases->FirstLink();
+      while (lnk) {
+         TObject *sc = lnk->GetObject();
+         lnk = lnk->Next();
+         if ((sc->TestBit(kNotDeleted)) && sc == o)
+            sentalready = kTRUE;
+      }
+      if (!sentalready) {
+         if (gDebug > 0)
+            Info("SendCanvases","new canvas found: %p", o);
+         mess.Reset(kMESS_OBJECT);
+         mess.WriteObject(o);
+         fSocket->Send(mess);
+         nc++;
+         fSentCanvases->Add(o);
+      }
    }
    return nc;
 }
@@ -903,7 +918,9 @@ void TApplicationServer::Terminate(Int_t status)
    // Close and remove the log file; remove the cleanup script
    if (fLogFile) {
       fclose(fLogFile);
-      gSystem->Unlink(fLogFilePath);
+      // Delete the log file unless we are in debug mode
+      if (gDebug <= 0)
+         gSystem->Unlink(fLogFilePath);
       TString cleanup = fLogFilePath;
       cleanup.ReplaceAll(".log", ".cleanup");
       gSystem->Unlink(cleanup);
@@ -1043,5 +1060,147 @@ void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *loc
       fflush(stderr);
       gSystem->StackTrace();
       gSystem->Abort();
+   }
+}
+
+//______________________________________________________________________________
+Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
+{
+   // Parse a command line received from the client, making sure that the files
+   // needed for the execution, if any, are available. The line is either a C++
+   // statement or an interpreter command starting with a ".".
+   // Return the return value of the command casted to a long.
+
+   if (!line || !*line) return 0;
+
+   // If load or execute request we must make sure that we have the files.
+   // If not we ask the client to send them, blocking until we have everything.
+   if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2) ||
+       !strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
+      TString aclicMode;
+      TString arguments;
+      TString io;
+      TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments, io);
+
+      char *imp = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
+      if (!imp) {
+
+         // Make sure that we can write in the directory where we are
+         if (gSystem->AccessPathName(gSystem->WorkingDirectory(), kWritePermission)) {
+            Error("ProcessLine","no write permission in %s", gSystem->WorkingDirectory());
+            return 0;
+         }
+
+         if (gDebug > 0)
+            Info("ProcessLine", "macro %s not found in path %s: asking the client",
+                                fname.Data(), TROOT::GetMacroPath());
+         TMessage m(kMESS_ANY);
+         m << (Int_t) kRRT_SendFile << TString(gSystem->BaseName(fname));
+         fSocket->Send(m);
+
+         // Wait for the reply(ies)
+         Int_t what, type;
+         Bool_t filefollows = kTRUE;
+
+         while (filefollows) {
+
+            // Get a message
+            TMessage *rm = 0;
+            if (fSocket->Recv(rm) <= 0) {
+               Error("ProcessLine","ask-file: received empty message from client");
+               return 0;
+            }
+            if (rm->What() != kMESS_ANY) {
+               Error("ProcessLine","ask-file: wrong message received (what: %d)", what);
+               return 0;
+            }
+            (*rm) >> type;
+            if (type != kRRT_SendFile) {
+               Error("ProcessLine","ask-file: wrong sub-type received (type: %d)", type);
+               return 0;
+            }
+            (*rm) >> filefollows;
+            if (filefollows) {
+               // Read the file specifications
+               if (fSocket->Recv(rm) <= 0) {
+                  Error("ProcessLine","file: received empty message from client");
+                  return 0;
+               }
+               if (rm->What() != kMESS_ANY) {
+                  Error("ProcessLine","file: wrong message received (what: %d)", what);
+                  return 0;
+               }
+               (*rm) >> type;
+               if (type != kRRT_File) {
+                  Error("ProcessLine","file: wrong sub-type received (type: %d)", type);
+                  return 0;
+               }
+               // A file follows
+               char str[2048];
+               rm->ReadString(str, sizeof(str));
+               Long_t size;
+               Int_t  bin;
+               char name[1024];
+               sscanf(str, "%s %d %ld", name, &bin, &size);
+               ReceiveFile(name, bin ? kTRUE : kFALSE, size);
+            }
+         }
+
+      }
+   }
+
+   // Process the line now
+   return TApplication::ProcessLine(line);
+}
+
+//______________________________________________________________________________
+void TApplicationServer::ExecLogon()
+{
+   // Execute logon macro's. There are three levels of logon macros that
+   // will be executed: the system logon etc/system.rootlogon.C, the global
+   // user logon ~/.rootlogon.C and the local ./.rootlogon.C. For backward
+   // compatibility also the logon macro as specified by the Rint.Logon
+   // environment setting, by default ./rootlogon.C, will be executed.
+   // No logon macros will be executed when the system is started with
+   // the -n option.
+
+   if (NoLogOpt()) return;
+
+   TString name = ".rootlogon.C";
+   TString sname = "system";
+   sname += name;
+#ifdef ROOTETCDIR
+   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   char *s = gSystem->ConcatFileName(etc, sname);
+#endif
+   if (!gSystem->AccessPathName(s, kReadPermission)) {
+      ProcessFile(s);
+   }
+   delete [] s;
+   s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
+   if (!gSystem->AccessPathName(s, kReadPermission)) {
+      ProcessFile(s);
+   }
+   delete [] s;
+   // avoid executing ~/.rootlogon.C twice
+   if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
+      if (!gSystem->AccessPathName(name, kReadPermission))
+         ProcessFile(name);
+   }
+
+   // execute also the logon macro specified by "Rint.Logon"
+   const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
+   if (logon) {
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      if (mac)
+         ProcessFile(logon);
+      delete [] mac;
    }
 }
