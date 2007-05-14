@@ -21,6 +21,7 @@ GUIDS3       := $(MODDIRS)/G__Gui3.cxx
 GUIDO1       := $(GUIDS1:.cxx=.o)
 GUIDO2       := $(GUIDS2:.cxx=.o)
 GUIDO3       := $(GUIDS3:.cxx=.o)
+GUIL         := $(GUIL1) $(GUIL2) $(GUIL3)
 GUIDS        := $(GUIDS1) $(GUIDS2) $(GUIDS3)
 GUIDO        := $(GUIDO1) $(GUIDO2) $(GUIDO3)
 GUIDH        := $(GUIDS:.cxx=.h)
@@ -88,9 +89,9 @@ $(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 
-$(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL1) $(GUIL2) $(GUIL3)
+$(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
 		$(RLIBMAP) -o $(GUIMAP) -l $(GUILIB) \
-		   -d $(GUILIBDEPM) -c $(GUIL1) $(GUIL2) $(GUIL3)
+		   -d $(GUILIBDEPM) -c $(GUIL)
 
 all-gui:        $(GUILIB) $(GUIMAP)
 
