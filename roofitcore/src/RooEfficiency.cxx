@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEfficiency.cc,v 1.8 2005/06/16 09:31:27 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooEfficiency.cxx,v 1.9 2007/05/11 10:14:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

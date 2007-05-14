@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.cc,v 1.9 2005/06/20 15:45:14 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooRefCountList.cxx,v 1.10 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

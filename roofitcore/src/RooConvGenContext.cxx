@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.21 2005/12/05 14:58:16 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooConvGenContext.cxx,v 1.22 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

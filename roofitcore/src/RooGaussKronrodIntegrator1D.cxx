@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.8 2006/12/08 15:50:40 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooGaussKronrodIntegrator1D.cxx,v 1.9 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEffGenContext.cc,v 1.2 2005/06/23 07:37:30 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooEffGenContext.cxx,v 1.3 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU, Gerhard.Raven@nikhf.nl                    *
  *                                                                           *

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.35 2005/06/20 15:44:47 wverkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAcceptReject.cxx,v 1.36 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
