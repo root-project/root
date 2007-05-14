@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.108 2007/03/01 10:32:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.109 2007/04/04 15:46:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -134,7 +134,8 @@ TH2::TH2(const TH2 &h) : TH1()
 {
    // Copy constructor.
    // The list of functions is not copied. (Use Clone if needed)
-   Copy((TObject&)h);
+
+   ((TH2&)h).Copy(*this);
 }
 
 //______________________________________________________________________________

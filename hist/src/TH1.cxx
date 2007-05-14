@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.342 2007/04/23 10:58:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.343 2007/04/27 08:35:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -673,7 +673,8 @@ TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
    // Copy constructor.
    // The list of functions is not copied. (Use Clone if needed)
-   Copy((TObject&)h);
+
+   ((TH1&)h).Copy(*this);
 }
 
 //______________________________________________________________________________

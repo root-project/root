@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.93 2007/04/04 15:46:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.94 2007/04/05 06:52:15 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -124,7 +124,8 @@ TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
 {
    // Copy constructor.
    // The list of functions is not copied. (Use Clone if needed)
-   Copy((TObject&)h);
+
+   ((TH3&)h).Copy(*this);
 }
 
 //______________________________________________________________________________
