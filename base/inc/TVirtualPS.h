@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.11 2007/02/18 14:56:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.12 2007/02/19 18:51:48 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -38,6 +38,10 @@
 #endif
 
 class TVirtualPS : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {
+
+private:
+   TVirtualPS(const TVirtualPS&); // Not implemented
+   TVirtualPS& operator=(const TVirtualPS&); // Not implemented
 
 protected:
    Int_t        fNByte;           //Number of bytes written in the file (PDF)
