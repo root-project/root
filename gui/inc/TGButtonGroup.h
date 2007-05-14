@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.11 2004/09/15 17:37:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.12 2006/07/03 16:10:45 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -35,6 +35,10 @@ class TGButton;
 class TGButtonGroup : public TGGroupFrame {
 
 friend class TGButton;
+
+private:
+   TGButtonGroup(const TGButtonGroup&); // Not implemented
+   TGButtonGroup& operator=(const TGButtonGroup&); // Not implemented
 
 protected:
    Bool_t  fExclGroup;       // kTRUE if group is exclusive

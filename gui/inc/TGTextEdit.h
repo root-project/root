@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.19 2007/04/19 16:23:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.20 2007/04/27 08:45:15 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -32,6 +32,10 @@ class TGSearchType;
 class TGTextEditHist;
 
 class TGTextEdit : public TGTextView {
+
+private:
+   TGTextEdit(const TGTextEdit&); // Not implemented
+   TGTextEdit& operator=(const TGTextEdit&); // Not implemented
 
 public:
    enum EInsertMode { kInsert, kReplace };
