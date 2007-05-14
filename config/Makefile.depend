@@ -54,7 +54,7 @@ HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 GEOMLIBDEPM            = $(IOLIB)
 GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
 GEOMBUILDERLIBDEPM     = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
-		         $(GEDLIB)
+                         $(GEDLIB)
 QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
 GQTLIBDEPM             = $(GPADLIB) $(GRAFLIB) $(RINTLIB)
 RUBYLIBDEPM            = $(HISTLIB)
@@ -62,8 +62,9 @@ GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB)
 XMLLIBDEPM             = $(IOLIB)
 FOAMLIBDEPM            = $(HISTLIB)
 ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFLIB)
-ROOFITLIBDEPM          = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
+ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                          $(MINUITLIB) $(HTMLLIB) $(IOLIB)
+ROOFITLIBDEPM          = $(ROOFITCORELIB)
 CINT7LIBDEPM           = $(REFLEXLIB)
 CINTEXLIBDEPM          = $(REFLEXLIB)
 REFLEXDICTLIBDEPM      = $(REFLEXLIB)
@@ -139,6 +140,7 @@ GUIBLDLIBDEP           = $(GUIBLDLIBDEPM)
 XMLLIBDEP              = $(XMLLIBDEPM)
 FOAMLIBDEP             = $(FOAMLIBDEPM)
 ALIENLIBDEP            = $(ALIENLIBDEPM)
+ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
 ROOFITLIBDEP           = $(ROOFITLIBDEPM)
 CINT7LIBDEP            = $(CINT7LIBDEPM)
 CINTEXLIBDEP           = $(CINTEXLIBDEPM)
@@ -235,9 +237,10 @@ XMLLIBEXTRA             = lib/libRIO.lib
 FOAMLIBEXTRA            = lib/libHist.lib
 ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
                           lib/libProof.lib
-ROOFITLIBEXTRA          = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
+ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib \
                           lib/libRIO.lib
+ROOFITLIBEXTRA          = lib/libRooFitCore.lib
 CINT7LIBEXTRA           = lib/libReflex.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
@@ -316,7 +319,8 @@ GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
 FOAMLIBEXTRA            = -Llib -lHist
 ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof
-ROOFITLIBEXTRA          = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml -lRIO
+ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml -lRIO
+ROOFITLIBEXTRA          = -lLib -lRooFitCore
 CINT7LIBEXTRA           = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
