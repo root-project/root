@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.92 2007/05/10 17:08:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.93 2007/05/10 18:20:33 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -93,6 +93,7 @@ TApplication::TApplication()
    fIdleTimer     = 0;
    fSigHandler    = 0;
    fProcessingLine = kFALSE;
+   ResetBit(kTerminalInput);
 }
 
 //______________________________________________________________________________
@@ -169,6 +170,7 @@ TApplication::TApplication(const char *appClassName,
    fAppImp        = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
    fAppRemote     = 0;
    fProcessingLine = kFALSE;
+   ResetBit(kTerminalInput);
 
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
@@ -655,7 +657,9 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    // Redirect, if requested
-   if (fAppRemote && !(fAppRemote->IsProcessingLine())) {
+   if (fAppRemote && TestBit(kTerminalInput) &&
+      !(fAppRemote->IsProcessingLine())) {
+      ResetBit(kTerminalInput);
       return fAppRemote->ProcessLine(line, err);
    }
 

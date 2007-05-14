@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.28 2007/05/10 16:02:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.29 2007/05/10 17:08:28 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -67,6 +67,11 @@ private:
    TApplication& operator=(const TApplication&);  // not implemented
 
 protected:
+   // TApplication specific bits
+   enum EStatusBits {
+      kTerminalInput    = BIT(15)   // if processing input from the command line
+   };
+
    TApplication      *fAppRemote;      //Current remote application, if defined
 
    static TList      *fgApplications;  //List of available applications
