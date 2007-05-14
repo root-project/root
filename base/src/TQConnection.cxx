@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.24 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.25 2007/03/06 14:53:54 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -430,7 +430,7 @@ void TQSlot::Print(Option_t *) const
 class TQSlotPool : public THashTable {
 public:
    TQSlotPool() : THashTable(50) { }
-   virtual ~TQSlotPool() { Delete(); }
+   virtual ~TQSlotPool() { Clear("nodelete"); }
 
    TQSlot  *New(const char *class_name, const char *funcname);
    TQSlot  *New(TClass *cl, const char *method, const char *func);
