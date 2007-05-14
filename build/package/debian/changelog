@@ -1,3 +1,13 @@
+root-system (5.15.07-2) experimental; urgency=low
+
+  * Previous source package broken due to tar-balls not unpacked.
+  * Fixes for new lib*.rootmap instead of global system.rootmap.
+  * Fixes for new ld.so.conf.d/ scheme of configuring ld.so's search path.
+  * Split off unuran into it's own package libroot-unuran, since it is 
+    GPL'ed. 
+	
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 11 May 2007 02:04:02 +0200
+
 root-system (5.15.07-1) experimental; urgency=low
 
   * New version.  

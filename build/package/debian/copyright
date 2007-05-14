@@ -495,6 +495,10 @@ copyright statements.  These are reproduced below.
     THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
     SUCH DAMAGE.
   
+  unuran/src/unuran-*-root
+    Copyright (c) 2000-2007 Wolfgang Hoermann and Josef Leydold 
+    Licensed under the GNU GPL version 2
+
   x11/inc/Xpm.h
     Copyright (C) 1989-95 GROUPE BULL
 

@@ -60,7 +60,7 @@ for d in * ; do
 		    bin=root-system-bin ;;
 	rpdutils)   lib=libroot             ; dev=libroot-dev; 
 		    bin=root-system-bin     ;; # extra="NOMAP=1"  ;;
-        rootx|sessionviewer|smatrix|splot|unuran|xml)    
+        rootx|sessionviewer|smatrix|splot|xml)    
 	            lib=libroot             ; dev=libroot-dev; 
 		    bin=root-system-bin ;;
 	newdelete)  lib=libroot		    ; dev=libroot-dev; 
@@ -85,7 +85,7 @@ for d in * ; do
 	            xrdlibs=                ; extra="ALLLIBS= NOVERS=1" ;; 
                     # NOMAP=1" ;;     
 	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
-	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva)
+	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva|unuran)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  

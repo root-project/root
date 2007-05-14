@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.15 2006/08/24 13:49:53 rdm Exp $
+# $Id: makedebdir.sh,v 1.16 2007/05/11 15:02:30 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -42,7 +42,7 @@ purge ()
 	EOF
     # Now, remove files we definitely don't want 
     # rm -f fonts/*.ttf 
-    echo 1 -n "Removing unwanted files ... "
+    echo -n "Removing unwanted files ... "
     rm -f \
 	build/package/common/root-cint.control			\
 	build/package/common/root-cint.copyright		\
@@ -75,8 +75,9 @@ purge ()
 	fonts/LICENSE						
     rm -rf asimage/src/libAfterImage				
     rm -rf xrootd/src/xrootd 
-    rm -rf rootfit/src/
-    rm -rf rootfit/inc/
+    rm -rf roofit/src/
+    rm -rf roofit/inc/
+    rm -rf unuran/src/unuran-*-root
     for i in fonts/*.ttf ; do 
 	if test ! -f ${i} ; then continue ; fi 
 	case $i in 

@@ -3968,6 +3968,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-rfio"
     test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
+    test "x$enable_unuran"  = "xyes" && pkglist="$pkglist libroot-unuran"
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
     test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-system-xrootd root-plugin-netx"
 

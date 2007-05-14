@@ -92,13 +92,13 @@ ifneq ($(LIB),$(DEV))
 
 #	      mv $(SOVER)/$$b.$(SOVER) . ; \
 #	      (cd $(SOVER) && ln -sf ../$$b.$(SOVER) .) ; done)
-else 
-ifneq ($(DIRS), xrootd) 
-	@(cd $(BUILD)/$(RLIBD) && \
-	   for i in $(ALLLIBS) ; do \
-	      b=`basename $$i` ; \
-	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
-endif
+#else 
+#ifneq ($(DIRS), xrootd) 
+#	@(cd $(BUILD)/$(RLIBD) && \
+#	   for i in $(ALLLIBS) ; do \
+#	      b=`basename $$i` ; \
+#	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
+#endif
 endif # $(LIB) = $(DEV)
 endif # $(LIB)
 

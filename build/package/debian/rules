@@ -125,6 +125,7 @@ PLUGINS		:= libroot-ldap			\
 		   libroot-mlp			\
 		   libroot-quadp		\
 		   libroot-tmva			\
+		   libroot-unuran		\
 		   root-system-doc		\
 		   root-plugin-asimage		\
 		   root-plugin-fftw3		\
@@ -319,7 +320,8 @@ clean:	$(TEMPLATES:%.in=%)
 	-find . \( -name "G__*.cxx" -or -name "G__*.h" -or -name "G__*.c" \) \
 		-and -not -name "G__ci.h" -and -not -name G__postprocess.h \
 		-and -not -name "G__main.c" -and -not -name "G__setup.c" \
-		| xargs rm -rf
+	        -and -not -name "G__ci_fproto.h" \
+		-and -not -name "G__security.h") | xargs rm -rf
 	# Add here commands to clean up after the build process.
 	touch unuran/src/.bogus.tar.gz
 	-$(MAKE) distclean ASTEPVERS=.bogus  ASTEPETAG= \
@@ -538,9 +540,6 @@ install-arch:
 		-X$(SYSCONFDIR)/root/system.rootrc			\
 		-X$(SYSCONFDIR)/root/system.rootauthrc			\
 		-X$(SYSCONFDIR)/root/system.rootdaemonrc		\
-		-X$(SYSCONFDIR)/root/pdg_table.txt			\
-		-X$(SYSCONFDIR)/root/pdg_table.txt			\
-		-X$(SYSCONFDIR)/root/pdg_table.txt			\
 		-X$(PREFIX)/lib/root/$(SOVERS)/libAfterImage.a		\
 		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyc		\
 		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyo		\
