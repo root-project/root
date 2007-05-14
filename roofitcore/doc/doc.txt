@@ -1,0 +1,7 @@
+This directory contains the RooFit toolkit classes. For documentation see: 
+BEGIN_HTML
+<ul>
+<li><a href="http://roofit.sourceforge.net">The RooFit Toolkit for Data Modeling
+    </a></li>
+</ul>
+END_HTML
