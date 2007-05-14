@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.5 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.6 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TMessageHandler:: ~TMessageHandler()
    Remove();
    if (fSize <= 0) return;
    delete [] fCnts;
-   delete fMessIds;
+   delete [] fMessIds;
 }
 
 //______________________________________________________________________________
