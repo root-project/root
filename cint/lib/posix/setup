@@ -1,4 +1,0 @@
-makecint -mk Makefile -dl ../../include/posix.dll -h posix.h exten.h -C exten.c -cint -Z0
-make -f Makefile
-rm G__* Makefile
-rm *.o
