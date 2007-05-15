@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.71 2007/04/30 16:01:37 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.72 2007/05/14 14:32:36 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1945,7 +1945,9 @@ Double_t TLatex::GetXsize()
    fError = 0 ;
 
    const Char_t *text = newText.Data() ;
+   Double_t angle_old = GetTextAngle();
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
+   SetTextAngle(angle_old);
    delete[] fTabSize;
    return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
 }
