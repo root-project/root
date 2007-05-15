@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.217 2007/04/24 10:00:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.218 2007/05/02 20:18:39 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1274,6 +1274,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   maininfo=previnfo=collectioninfo;
                }
                leafinfo = new TFormLeafInfoCollectionSize(cl);
+               cl = 0;
             } else {
                if (cl->GetClassInfo()==0) {
                   Error("DefinedVariable",
@@ -1332,6 +1333,33 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             prevUseCollectionObject = kFALSE;
             prevUseReferenceObject = kFALSE;
             useCollectionObject = kFALSE;
+
+            if (cl && cl->GetCollectionProxy()) {
+               if (numberOfVarDim>1) {
+                  Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                     cl->GetName());
+                  leafinfo = new TFormLeafInfo(cl,0,0);
+                  useCollectionObject = kTRUE;
+               } else if (numberOfVarDim==0) {
+                  R__ASSERT(maininfo);
+                  leafinfo = new TFormLeafInfoCollection(cl,0,cl);
+                  numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
+               } else if (numberOfVarDim==1) {
+                  R__ASSERT(maininfo);
+                  leafinfo =
+                     new TFormLeafInfoMultiVarDimCollection(cl,0,
+                     (TStreamerElement*)0,maininfo);
+                  previnfo->fNext = leafinfo;
+                  previnfo = leafinfo;
+                  leafinfo = new TFormLeafInfoCollection(cl,0,cl);
+
+                  fHasMultipleVarDim[code] = kTRUE;
+                  numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
+               }
+               previnfo->fNext = leafinfo;
+               previnfo = leafinfo;
+               leafinfo = 0;
+            }
             continue;
          } else if (right[i] == ')') {
             // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
