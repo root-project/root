@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.13 2007/02/05 18:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.14 2007/02/22 15:40:02 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -442,9 +442,11 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li)
 
    TIter iM(&allMethods);
    TMethod* m=0;
-   while ((m=(TMethod*)iM()))
-      if (TMethodBrowsable::IsMethodBrowsable(m))
+   while ((m=(TMethod*)iM())) {
+      if (TMethodBrowsable::IsMethodBrowsable(m)) {
          li.Add(m);
+      }
+   }
 }
 
 
@@ -467,8 +469,9 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
    GetBrowsableMethodsForClass(cl, listMethods);
    TMethod* method=0;
    TIter iMethods(&listMethods);
-   while ((method=(TMethod*)iMethods()))
+   while ((method=(TMethod*)iMethods())) {
       li.Add(new TMethodBrowsable(branch, method, parent));
+   }
    return listMethods.GetSize();
 }
 
@@ -588,7 +591,8 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 
    // branch has to be unsplit, i.e. without sub-branches
    if (branch && const_cast<TBranch*>(branch)->GetListOfBranches() 
-      && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0) 
+      && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0
+      && parent==0) // !(parent && parent->IsA()==TMethodBrowsable::Class()))
       return 0;
    // we only expand our own parents
    //if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;
