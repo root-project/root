@@ -1,3 +1,7 @@
+#include <TH1.h>
+#include <TCanvas.h>
+#include <TQObject.h>
+
 void exec3()
 {
    // Example of using signal/slot in TCanvas/TPad to get feedback
@@ -10,7 +14,7 @@ void exec3()
    TCanvas *c1=new TCanvas("c1");
    h->Draw();
    c1->Update();
-   c1->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)", 0, "",
+   c1->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)", 0, 0,
                "exec3event(Int_t,Int_t,Int_t,TObject*)");
 }
 
