@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.3 2007/05/10 17:31:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.4 2007/05/14 13:27:17 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -55,7 +55,7 @@ Bool_t TARInterruptHandler::Notify()
 
 ClassImp(TApplicationRemote)
 
-static const char *gScript = "$ROOTSYS/bin/roots $ROOTSYS ";
+static const char *gScript = "roots ";
 
 Int_t TApplicationRemote::fgPortAttempts = 100; // number of attempts to find a port
 Int_t TApplicationRemote::fgPortLower =  49152; // lower bound for ports
@@ -117,7 +117,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    TString userhost = fUrl.GetHost();
    if (strlen(fUrl.GetUser()) > 0)
       userhost.Insert(0, Form("%s@", fUrl.GetUser()));
-   TString cmd = Form("ssh -f %s -R %d:localhost:%d \"%s %d localhost:%d/%s -d=%d\"",
+   TString cmd = Form("ssh -f4 %s -R %d:localhost:%d \"$SHELL -l -c \'%s %d localhost:%d/%s -d=%d\'\"",
                       userhost.Data(), rport, port,
                       sc.Data(), kRRemote_Protocol, rport, fUrl.GetFile(), debug);
 

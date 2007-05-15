@@ -3,7 +3,7 @@
 #
 # In case of problems with 'ssh' not executing the relevant <shell>rc init
 # script, an ad hoc version of this script can be put, for example, under
-# $HOME/bin, defining explicitely $ROOTSYS and removing 'shift'; e.g.
+# $HOME/bin, defining explicitely $ROOTSYS, e.g.
 #
 # ----------------------------------------------------------------------
 # #!/bin/sh
@@ -24,8 +24,6 @@
 #    lxplus:root [1]
 #
 
-ROOTSYS=$1
-shift
 cd $ROOTSYS
 source bin/thisroot.sh
 cd
