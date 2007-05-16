@@ -406,6 +406,10 @@ N: David Gonzalez Maline
 E: firemanworld@gmail.com
 D: contribution to GUI classes
 
+N: Diego Marcos Segura
+E: diego.marcos@gmail.com
+D: Fundamental CINT call wrapper improvements
+
 N: John Marraffino
 E: marafino@fnal.gov
 D: improvements in TUnixSystem::StackTrace()
