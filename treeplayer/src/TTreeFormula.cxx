@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.218 2007/05/02 20:18:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.219 2007/05/15 19:59:51 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2035,47 +2035,46 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          char *params = strchr(work,'(');
          if (params) {
             *params = 0; params++;
-         } else params = (char *) ")";
 
-         if (branch && !leaf) {
-            // We have a branch but not a leaf.  We are likely to have found
-            // the top of split branch.
-            if (BranchHasMethod(0, branch, work, params, readentry)) {
-               //fprintf(stderr, "Does have a method %s for %s.\n", work, branch->GetName());
-            }
-         }
-
-         // What we have so far might be a member function of one of the
-         // leaves that are not splitted (for example "GetNtrack" for the Event class).
-         TIter next(fTree->GetIteratorOnAllLeaves());
-         TLeaf* leafcur = 0;
-         while (!leaf && (leafcur = (TLeaf*) next())) {
-            if (leafcur) {
-               TBranch* br = leafcur->GetBranch();
-               Bool_t yes = BranchHasMethod(leafcur, br, work, params, readentry);
-               if (yes) {
-                  leaf = leafcur;
-                  //fprintf(stderr, "Does have a method %s for %s found in leafcur %s.\n", work, leafcur->GetBranch()->GetName(), leafcur->GetName());
+            if (branch && !leaf) {
+               // We have a branch but not a leaf.  We are likely to have found
+               // the top of split branch.
+               if (BranchHasMethod(0, branch, work, params, readentry)) {
+                  //fprintf(stderr, "Does have a method %s for %s.\n", work, branch->GetName());
                }
-            } else {
-               Fatal("FindLeafForExpression", "Tree has no leaves!");
             }
-         }
-         if (!leaf) {
-            // Check for an alias.
-            if (strlen(left) && left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
-            const char *aliasValue = fTree->GetAlias(left);
-            if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
-               // First check whether we are using this alias recursively (this would
-               // lead to an infinite recursion.
-               if (find(aliasUsed.begin(),
-                  aliasUsed.end(),
-                  left) != aliasUsed.end()) {
-                     Error("DefinedVariable",
-                        "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
-                        "\tbecause \"%s\" is used [recursively] in its own definition!",
-                        left,aliasValue,fullExpression,left);
-                     return -3;
+
+            // What we have so far might be a member function of one of the
+            // leaves that are not splitted (for example "GetNtrack" for the Event class).
+            TIter next(fTree->GetIteratorOnAllLeaves());
+            TLeaf* leafcur = 0;
+            while (!leaf && (leafcur = (TLeaf*) next())) {
+               if (leafcur) {
+                  TBranch* br = leafcur->GetBranch();
+                  Bool_t yes = BranchHasMethod(leafcur, br, work, params, readentry);
+                  if (yes) {
+                     leaf = leafcur;
+                     //fprintf(stderr, "Does have a method %s for %s found in leafcur %s.\n", work, leafcur->GetBranch()->GetName(), leafcur->GetName());
+                  }
+               } else {
+                  Fatal("FindLeafForExpression", "Tree has no leaves!");
+               }
+            }
+            if (!leaf) {
+               // Check for an alias.
+               if (strlen(left) && left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
+               const char *aliasValue = fTree->GetAlias(left);
+               if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
+                  // First check whether we are using this alias recursively (this would
+                  // lead to an infinite recursion.
+                  if (find(aliasUsed.begin(),
+                     aliasUsed.end(),
+                     left) != aliasUsed.end()) {
+                        Error("DefinedVariable",
+                           "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
+                           "\tbecause \"%s\" is used [recursively] in its own definition!",
+                           left,aliasValue,fullExpression,left);
+                        return -3;
                   }
                   aliasUsed.push_back(left);
                   TString newExpression = aliasValue;
@@ -2088,30 +2087,31 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                      return -3;
                   }
                   return res;
+               }
+
+               // This is actually not really any error, we probably received something
+               // like "abs(some_val)", let TFormula decompose it first.
+               return -1;
             }
-
-            // This is actually not really any error, we probably received something
-            // like "abs(some_val)", let TFormula decompose it first.
-            return -1;
-         }
-         //         if (!leaf->InheritsFrom("TLeafObject") ) {
-         // If the leaf that we found so far is not a TLeafObject then there is
+            //         if (!leaf->InheritsFrom("TLeafObject") ) {
+            // If the leaf that we found so far is not a TLeafObject then there is
             // nothing we would be able to do.
-         //   Error("DefinedVariable","Need a TLeafObject to call a function!");
-         // return -1;
-         //}
-         // We need to recover the info not used.
-         strcpy(right,work);
-         strcat(right,"(");
-         strcat(right,params);
-         final = kTRUE;
+            //   Error("DefinedVariable","Need a TLeafObject to call a function!");
+            // return -1;
+            //}
+            // We need to recover the info not used.
+            strcpy(right,work);
+            strcat(right,"(");
+            strcat(right,params);
+            final = kTRUE;
 
-         // we reset work
-         current = &(work[0]);
-         *current = 0;
-         break;
+            // we reset work
+            current = &(work[0]);
+            *current = 0;
+            break;
+         }
       }
-      if (cname[i] == '.' || cname[i] == '\0' ) {
+      if (cname[i] == '.' || cname[i] == '\0' || cname[i] == ')') {
          // A delimiter happened let's see if what we have seen
          // so far does point to a leaf.
          *current = '\0';
