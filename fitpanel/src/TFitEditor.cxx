@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.28 2007/03/19 09:57:11 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.29 2007/03/20 09:55:09 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -1169,8 +1169,10 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 
    Bool_t hasf = HasFitFunction(obj);
    if (hasf) {
-      fFunction = fFitFunc->GetTitle(); 
-      fEnteredFunc->SetText(fFunction.Data()); 
+      fFunction = fFitFunc->GetTitle();
+      fEnteredFunc->SetText(fFunction.Data());
+      TGLBEntry *en = fFuncList->FindEntry(fFunction.Data());
+      if (en) fFuncList->Select(en->EntryId());
    } else {
       TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
       if (fNone->GetState() == kButtonDown)
@@ -1765,10 +1767,11 @@ void TFitEditor::DoReset()
 
    fParentPad->Modified();
    fParentPad->Update();
-   fFitOption = 'R';
+   fFitOption = "";
    fDrawOption = GetDrawOption();
    fFunction = "gaus";
    if (fFitFunc) {
+      fFitFunc->SetParent(0);
       delete fFitFunc;
       fFitFunc = new TF1("fitFunc", fFunction.Data(), fXmin, fXmax);
    }
@@ -1804,6 +1807,7 @@ void TFitEditor::DoReset()
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
    fNone->SetState(kButtonDown);
    fFuncList->Select(1, kTRUE);
+   fEnteredFunc->SetText("gaus");
 
    // minimization tab
    if (fLibMinuit->GetState() != kButtonDown)
@@ -1812,12 +1816,18 @@ void TFitEditor::DoReset()
       fMigrad->SetState(kButtonDown, kTRUE);
    if (fOptDefault->GetState() != kButtonDown)
       fOptDefault->SetState(kButtonDown, kTRUE);
-   fErrorScale->SetNumber(1.0);
-   fErrorScale->ReturnPressed();
-   fTolerance->SetNumber(1e-6);
-   fTolerance->ReturnPressed();
-   fIterations->SetIntNumber(5000);
-   fIterations->ReturnPressed();
+   if (fErrorScale->GetNumber() != 1.0) {
+      fErrorScale->SetNumber(1.0);
+      fErrorScale->ReturnPressed();
+   }   
+   if (fTolerance->GetNumber() != 1e-6) {
+      fTolerance->SetNumber(1e-6);
+      fTolerance->ReturnPressed();
+   }
+   if (fIterations->GetNumber() != 5000) {
+      fIterations->SetIntNumber(5000);
+      fIterations->ReturnPressed();
+   }
 }
 
 //______________________________________________________________________________
@@ -2531,6 +2541,7 @@ void TFitEditor::GetFunctionsFromList(TList *list)
    TIter next(list, kIterBackward);
    while ((obj = next())) {
       if (obj->InheritsFrom(TF1::Class())) {
+         if (!strcmp(obj->GetName(), "fitFunc")) continue;
          fFuncList->AddEntry(obj->GetName(), newid);
          newid++;
          f1 = new TF1();
@@ -2554,6 +2565,29 @@ void TFitEditor::CheckRange(TF1 *f1)
    xmin = fXaxis->GetXmin();
    xmax = fXaxis->GetXmax();
    fXrange = fXaxis->GetNbins();
+
+   if (fFitObject->InheritsFrom(TGraph::Class())) {
+      TGraph *gr = (TGraph *)fFitObject;
+      Int_t npoints = gr->GetN();
+      Double_t *gx = gr->GetX();
+      Double_t gxmin, gxmax;
+      gxmin = gx[0];
+      gxmax = gx[npoints-1];
+      Double_t err0 = gr->GetErrorX(0);
+      Double_t errn = gr->GetErrorX(npoints-1);
+      if (err0 > 0)
+         gxmin -= 2*err0;
+      if (errn > 0)
+         gxmax += 2*errn;
+      for (Int_t i=0; i<npoints; i++) {
+         if (gx[i] < xmin)
+            gxmin = gx[i];
+         if (gx[i] > xmax)
+            gxmax = gx[i];
+      }
+      if (xmin < gxmin) xmin = gxmin;
+      if (xmax > gxmax) xmax = gxmax;
+   }
    if ((fxmin > xmin) || (fxmax < xmax)) {
       fXmin = fXaxis->FindBin(fxmin);
       fXmax = fXaxis->FindBin(fxmax);
