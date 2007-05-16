@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.5 2007/05/15 12:49:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.6 2007/05/16 11:14:35 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -55,7 +55,17 @@ Bool_t TARInterruptHandler::Notify()
 
 ClassImp(TApplicationRemote)
 
-static const char *gScript = "roots ";
+static const char *gScript = "roots";
+static const char *gScriptCmd = "\'%s %d localhost:%d/%s -d=%d\'";
+static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
+   \"\\\"(sh=\\`basename \\\\\\$SHELL\\`; \
+   if test \"xbash\" = \"x\\\\\\$sh\" -o \"xsh\" = \"x\\\\\\$sh\"; then \
+      \\\\\\$SHELL -l -c %s; \
+   elif test \"xcsh\" = \"x\\\\\\$sh\" -o \"xtcsh\" = \"x\\\\\\$sh\"; then \
+      \\\\\\$SHELL -c %s; \
+   else \
+      echo \\\\\\\"Unknown shell \\\\\\$SHELL\\\\\\\"; \
+   fi)\\\"\"";
 
 Int_t TApplicationRemote::fgPortAttempts = 100; // number of attempts to find a port
 Int_t TApplicationRemote::fgPortLower =  49152; // lower bound for ports
@@ -100,7 +110,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
       if (ss->IsValid())
          break;
    }
-   if (!ss || !(ss->IsValid())) {
+   if (!ss || !ss->IsValid()) {
       Error("TApplicationRemote","unable to find a free port for connections");
       SetBit(kInvalidObject);
       return;
@@ -117,12 +127,16 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    TString userhost = fUrl.GetHost();
    if (strlen(fUrl.GetUser()) > 0)
       userhost.Insert(0, Form("%s@", fUrl.GetUser()));
-   TString cmd = Form("ssh -f4 %s -R %d:localhost:%d \"$SHELL -l -c \'%s %d localhost:%d/%s -d=%d\'\"",
-                      userhost.Data(), rport, port,
-                      sc.Data(), kRRemote_Protocol, rport, fUrl.GetFile(), debug);
+   const char *verb = "";
+   if (debug > 0)
+      verb = "-v";
+   TString scriptCmd;
+   scriptCmd.Form(gScriptCmd, sc.Data(), kRRemote_Protocol, rport, fUrl.GetFile(), debug);
+   TString cmd;
+   cmd.Form(gSshCmd, verb, userhost.Data(), rport, port, scriptCmd.Data(), scriptCmd.Data());
 
    if (gDebug > 0)
-      Info("TApplicationRemote","Executing: ' %s '", cmd.Data());
+      Info("TApplicationRemote","Executing: %s", cmd.Data());
    if (gSystem->Exec(cmd) != 0)
       Info("TApplicationRemote","Some error occured during SSH connection");
 
