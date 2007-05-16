@@ -785,3 +785,16 @@ void *Cint::G__MethodInfo::GetUserParam()
    }
    else return 0;
 }
+///////////////////////////////////////////////////////////////////////////
+// GetThisPointerOffset 
+// Return: Return the this-pointer offset, to adjust it in case of non left-most
+// multiple inheritance
+///////////////////////////////////////////////////////////////////////////
+long Cint::G__MethodInfo::GetThisPointerOffset()
+{
+   if (IsValid()) {
+      struct G__ifunc_table_internal* ifunc_internal = G__get_ifunc_internal((struct G__ifunc_table*)ifunc());
+      return ifunc_internal->entry[0].ptradjust;
+   }
+   else return 0;
+}

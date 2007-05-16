@@ -145,13 +145,116 @@ unsigned long G__uint_cast(G__value buf) /* used to be int */
 }
 
 /******************************************************************
-* G__value G__castvalue()
+* char *G__asm_cast()
+*
+* Called by
+*   G__exec_asm()
+*
+******************************************************************/
+void G__asm_cast(int type,G__value *buf,int tagnum,int reftype)
+{
+  switch((char)type) {
+  case 'd':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letdouble(buf,(char)type ,(double)G__double(*buf));
+    break;
+  case 'f':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letdouble(buf,(char)type ,(float)G__double(*buf));
+    break;
+  case 'b':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(unsigned char)G__int_cast(*buf));
+    break;
+  case 'c':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(char)G__int_cast(*buf));
+    break;
+  case 'r':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(unsigned short)G__int_cast(*buf));
+    break;
+  case 's':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(short)G__int_cast(*buf));
+    break;
+  case 'h':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(unsigned int)G__int_cast(*buf));
+    break;
+  case 'i':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(int)G__int_cast(*buf));
+    break;
+  case 'k':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(unsigned long)G__int_cast(*buf));
+    break;
+  case 'l':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(long)G__int_cast(*buf));
+    break;
+  case 'g':
+    if(type!=buf->type) buf->ref = 0; /* questionable */
+    G__letint(buf,(char)type ,(unsigned char)(G__int_cast(*buf)?1:0));
+    break;
+  case 'U':
+    {
+      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
+      if(-1!=offset) buf->obj.i += offset;
+    }
+  case 'u':
+    if(G__PARAREFERENCE==reftype) {
+      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
+      if(-1!=offset) {
+        buf->obj.i += offset;
+        buf->ref += offset;
+      }
+    }
+  default:
+    G__letint(buf,(char)type ,G__int(*buf));
+    buf->ref = buf->obj.i;
+    break;
+  }
+}
+
+} /* extern "C" */
+
+/*
+ * Local Variables:
+ * c-tab-always-indent:nil
+ * c-indent-level:2
+ * c-continued-statement-offset:2
+ * c-brace-offset:-2
+ * c-brace-imaginary-offset:0
+ * c-argdecl-indent:0
+ * c-label-offset:-2
+ * compile-command:"make -k"
+ * End:
+ */
+
+/******************************************************************
+* G__value G__this_adjustment()
 *
 *
 ******************************************************************/
-G__value G__castvalue(char *casttype,G__value result3)
+void G__this_adjustment(G__ifunc_table_internal *ifunc, int ifn)
 {
-  int lenitem,castflag,type;
+
+   if (ifunc && ifunc->pentry[ifn])
+      G__store_struct_offset += ifunc->pentry[ifn]->ptradjust;
+
+}
+
+/******************************************************************
+* G__value G__castvalue_bc()
+*
+*
+******************************************************************/
+G__value G__castvalue_bc(char *casttype,G__value result3, int bc)
+{
+
+   int lenitem,castflag,type;
   int tagnum;
   long offset;
   int reftype=G__PARANORMAL;
@@ -625,12 +728,17 @@ G__value G__castvalue(char *casttype,G__value result3)
       G__fprinterr(G__serr,"%3x: CAST to %c\n",G__asm_cp,type);
     }
 #endif
-    G__asm_inst[G__asm_cp]=G__CAST;
-    G__asm_inst[G__asm_cp+1]=type;
-    G__asm_inst[G__asm_cp+2]=result3.typenum;
-    G__asm_inst[G__asm_cp+3]=result3.tagnum;
-    G__asm_inst[G__asm_cp+4]=reftype;
-    G__inc_cp_asm(5,0);
+
+    if (bc){
+
+       G__asm_inst[G__asm_cp]=G__CAST;
+       G__asm_inst[G__asm_cp+1]=type;
+       G__asm_inst[G__asm_cp+2]=result3.typenum;
+       G__asm_inst[G__asm_cp+3]=result3.tagnum;
+       G__asm_inst[G__asm_cp+4]=reftype;
+       G__inc_cp_asm(5,0);
+
+    }
   }
 #endif /* G__ASM */
 
@@ -694,94 +802,15 @@ G__value G__castvalue(char *casttype,G__value result3)
     break;
   }
   return(result3);
-}
 
+}
 
 /******************************************************************
-* char *G__asm_cast()
+* G__value G__castvalue()
 *
-* Called by
-*   G__exec_asm()
 *
 ******************************************************************/
-void G__asm_cast(int type,G__value *buf,int tagnum,int reftype)
+G__value G__castvalue(char *casttype,G__value result3)
 {
-  switch((char)type) {
-  case 'd':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letdouble(buf,(char)type ,(double)G__double(*buf));
-    break;
-  case 'f':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letdouble(buf,(char)type ,(float)G__double(*buf));
-    break;
-  case 'b':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(unsigned char)G__int_cast(*buf));
-    break;
-  case 'c':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(char)G__int_cast(*buf));
-    break;
-  case 'r':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(unsigned short)G__int_cast(*buf));
-    break;
-  case 's':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(short)G__int_cast(*buf));
-    break;
-  case 'h':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(unsigned int)G__int_cast(*buf));
-    break;
-  case 'i':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(int)G__int_cast(*buf));
-    break;
-  case 'k':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(unsigned long)G__int_cast(*buf));
-    break;
-  case 'l':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(long)G__int_cast(*buf));
-    break;
-  case 'g':
-    if(type!=buf->type) buf->ref = 0; /* questionable */
-    G__letint(buf,(char)type ,(unsigned char)(G__int_cast(*buf)?1:0));
-    break;
-  case 'U':
-    {
-      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
-      if(-1!=offset) buf->obj.i += offset;
-    }
-  case 'u':
-    if(G__PARAREFERENCE==reftype) {
-      int offset = G__ispublicbase(buf->tagnum,tagnum,buf->obj.i);
-      if(-1!=offset) {
-        buf->obj.i += offset;
-        buf->ref += offset;
-      }
-    }
-  default:
-    G__letint(buf,(char)type ,G__int(*buf));
-    buf->ref = buf->obj.i;
-    break;
-  }
+  return G__castvalue_bc(casttype,result3, 1);
 }
-
-} /* extern "C" */
-
-/*
- * Local Variables:
- * c-tab-always-indent:nil
- * c-indent-level:2
- * c-continued-statement-offset:2
- * c-brace-offset:-2
- * c-brace-imaginary-offset:0
- * c-argdecl-indent:0
- * c-label-offset:-2
- * compile-command:"make -k"
- * End:
- */

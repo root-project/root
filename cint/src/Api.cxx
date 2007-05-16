@@ -17,7 +17,7 @@
 #include "common.h"
 
 #include "bc_eh.h"
-
+#include <string>
 
 /*********************************************************************
 * $xxx object resolution function Generic form
@@ -349,11 +349,18 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
 				   ,struct G__param *libp
 				   ,int hash)
 {
+
   if(!G__catchexception) {
-    return((*funcp)(result7,funcname,libp,hash));
+
+    // Stub Calling
+    return (*funcp)(result7,funcname,libp,hash);
+   
   }
   try {
-    return((*funcp)(result7,funcname,libp,hash));
+
+	// Stub Calling
+	return (*funcp)(result7,funcname,libp,hash);
+
   }
   catch(G__bc_exception& /* x */) {
     throw;
@@ -413,7 +420,7 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
     G__return = G__RETURN_TRY;
     G__no_exec = 1;
   }
-  catch(string x) {
+  catch(std::string x) {
     G__fprinterr(G__serr,"Exception: %s\n",x.c_str());
     G__genericerror((char*)NULL);
     //G__return = G__RETURN_TRY;
@@ -426,7 +433,7 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
     }
     G__genericerror("Error: C++ exception caught");
   }
-  return 0;
+ return 0;
 }
 #endif
 ////////////////////////////////////////////////////////////////////

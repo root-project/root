@@ -42,9 +42,11 @@ extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int if
     G__asm_inst[pc+1] = (long)m.Name();
     // preserve hash:2 and paran:3
     G__asm_inst[pc+4] = (long)m.InterfaceMethod();
-    G__asm_inst[pc+5] = G__JMP;
-    G__asm_inst[pc+6] = pc+8;
-    G__asm_inst[pc+7] = G__NOP;
+    G__asm_inst[pc+5] = 0;
+    if (ifunc && ifunc->pentry[ifn]) G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
+    G__asm_inst[pc+6] = G__JMP;
+    G__asm_inst[pc+7] = pc+8;
+    // G__asm_inst[pc+8] = G__NOP;
     return(1);
   }
   else if(m.Property()&G__BIT_ISBYTECODE) {
@@ -55,9 +57,11 @@ extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int if
     G__asm_inst[pc+1] = (long)m.GetBytecode();
     // preserve hash:2 and paran:3
     G__asm_inst[pc+4] = (long)G__exec_bytecode;
-    G__asm_inst[pc+5] = G__JMP;
-    G__asm_inst[pc+6] = pc+8;
-    G__asm_inst[pc+7] = G__NOP;
+    G__asm_inst[pc+5] = 0;
+    if (ifunc && ifunc->pentry[ifn]) G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
+    G__asm_inst[pc+6] = G__JMP;
+    G__asm_inst[pc+7] = pc+8;
+    //G__asm_inst[pc+7] = G__NOP;
     return(1);
   }
   return(0);
@@ -258,7 +262,7 @@ void G__bc_inst::POP() {
 /**************************************************************************
 * LD_FUNC
 **************************************************************************/
-void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc) {
+void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc, G__ifunc_table_internal* ifunc, int ifn) {
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,
 			      "%3x: LD_FUNC compiled %s paran=%d\n"
@@ -273,10 +277,12 @@ void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc) {
   G__asm_inst[G__asm_cp+2]=hash;
   G__asm_inst[G__asm_cp+3]=paran;
   G__asm_inst[G__asm_cp+4]=(long)pfunc;
+  G__asm_inst[G__asm_cp+5] = 0;
+  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
   if(G__asm_name_p+strlen(funcname)+1<G__ASM_FUNCNAMEBUF) {
     strcpy(G__asm_name+G__asm_name_p,funcname);
     G__asm_name_p += strlen(funcname)+1;
-    inc_cp_asm(5,0);
+    inc_cp_asm(6,0);
   }
   else {
     G__abortbytecode();
@@ -292,18 +298,21 @@ void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc) {
 /**************************************************************************
 * LD_FUNC_BC
 **************************************************************************/
-void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* ifunc,int ifn,int paran,void* pfunc) {
+void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* iref,int ifn,int paran,void* pfunc) {
+ G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,
 			      "%3x: LD_FUNC bytecode %s paran=%d\n"
-			      ,G__asm_cp,G__get_ifunc_internal(ifunc)->funcname[ifn],paran);
+			      ,G__asm_cp,iref->funcname[ifn],paran);
 #endif
   G__asm_inst[G__asm_cp]=G__LD_FUNC;
   G__asm_inst[G__asm_cp+1]=(long)ifunc;
   G__asm_inst[G__asm_cp+2]= ifn;
   G__asm_inst[G__asm_cp+3]=paran;
   G__asm_inst[G__asm_cp+4]=(long)pfunc;
-  inc_cp_asm(5,0);
+  G__asm_inst[G__asm_cp+5] = 0;
+  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+  inc_cp_asm(6,0);
 }
 
 /**************************************************************************
@@ -322,7 +331,9 @@ void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* iref,int ifn,int paran,v
                            +(ifunc->vtblbasetagnum[ifn]*0x10000);
   G__asm_inst[G__asm_cp+3]=paran;
   G__asm_inst[G__asm_cp+4]=(long)pfunc;
-  inc_cp_asm(5,0);
+  G__asm_inst[G__asm_cp+5] = 0;
+  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+  inc_cp_asm(6,0);
 }
 
 /**************************************************************************
@@ -712,7 +723,9 @@ void G__bc_inst::LD_IFUNC(struct G__ifunc_table *iref,int ifn,int hash
     LD_FUNC((char*)(p_ifunc->pentry[ifn]->bytecode)
 	    ,hash
 	    ,paran
-	    ,(void*)G__exec_bytecode);
+	    ,(void*)G__exec_bytecode,
+            p_ifunc,
+            ifn);
   }
   else {
     G__asm_inst[G__asm_cp]=G__LD_IFUNC;

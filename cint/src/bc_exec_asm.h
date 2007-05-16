@@ -603,6 +603,7 @@ long localmem;
       * 2 hash
       * 3 paran
       * 4 (*func)()
+      * 5 this ptr offset for multiple inheritance
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -653,6 +654,9 @@ long localmem;
         store_step=G__step;
         G__step=0;
       }
+      // This-pointer adjustment in case the multiple inheritance
+      G__store_struct_offset += G__asm_inst[pc+5];
+
 #ifdef G__EXCEPTIONWRAPPER
       G__asm_exec=0;
       dtorfreeoffset = 
@@ -661,8 +665,12 @@ long localmem;
 #else
       dtorfreeoffset = (*pfunc)(result,funcname,&fpara,G__asm_inst[pc+2]);
 #endif
+
+      // restore previous G__store_struct_offset
+      G__store_struct_offset -= G__asm_inst[pc+5];
+
       if(G__stepover) G__step |= store_step;
-      pc+=5;
+      pc+=6;
       if(result->type) ++sp;
       if(G__return==G__RETURN_TRY) {
 	if(G__CATCH!=G__dasm(G__serr,1)) {
@@ -1390,9 +1398,11 @@ long localmem;
 	G__asm_inst[pc] = G__LD_FUNC;
 	G__asm_inst[pc+1] = (long)(ifunc->pentry[G__asm_index]->bytecode);
 	G__asm_inst[pc+4] = (long)G__exec_bytecode;
-	G__asm_inst[pc+5] = G__JMP;
-	G__asm_inst[pc+6] = pc+8;
-	G__asm_inst[pc+7] = G__NOP;
+        G__asm_inst[pc+5] = 0;
+        if (ifunc && ifunc->pentry[G__asm_index]) G__asm_inst[pc+5] = ifunc->pentry[G__asm_index]->ptradjust;
+	G__asm_inst[pc+6] = G__JMP;
+	G__asm_inst[pc+7] = pc+8;
+	//G__asm_inst[pc+7] = G__NOP;
 	goto ld_func;
       }
 #endif
