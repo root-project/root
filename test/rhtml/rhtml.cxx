@@ -1,4 +1,4 @@
-// @(#)root/test/rhtml/:$Name$:$Id$
+// @(#)root/test/rhtml/:$Name:  $:$Id: rhtml.cxx,v 1.1 2007/05/09 10:01:35 brun Exp $
 // Author: Bertrand Bellenot   09/05/2007
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TGTextEntry.h"
 #include "TGStatusBar.h"
 #include "TGFileDialog.h"
+#include "TFile.h"
 #include "TBrowser.h"
 #include "TGHtml.h"
 #include "TString.h"
@@ -179,7 +180,7 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fComboBox->Resize(200, fURL->GetDefaultHeight());
    fURL->Connect("ReturnPressed()", "TGHtmlBrowser", this, "URLChanged()");
 
-   fComboBox->AddEntry(filename,0);
+   fComboBox->AddEntry(filename,1);
    fURL->SetText(filename);
 
    fComboBox->Select(0);
@@ -268,6 +269,15 @@ void TGHtmlBrowser::Selected(const char *uri)
    TString surl(gSystem->UnixPathName(uri));
    if (!surl.BeginsWith("http://") && !surl.BeginsWith("file://"))
       surl.Prepend("file://");
+   if (surl.EndsWith(".root")) {
+      gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
+      TFile *f = TFile::Open(surl.Data());
+      if (f && !f->IsZombie()) {
+         f->Browse(new TBrowser());
+      }
+      gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
+      return;
+   }
    TUrl url(surl.Data());
    if ((!strcmp(url.GetProtocol(), "http"))) {
       buf = ReadRemote(url.GetUrl());
@@ -279,7 +289,7 @@ void TGHtmlBrowser::Selected(const char *uri)
          free(buf);
          fURL->SetText(surl.Data());
          if (!fComboBox->FindEntry(surl.Data()))
-            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries());
+            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
       }
       else {
          fHtml->Clear();
@@ -304,7 +314,7 @@ void TGHtmlBrowser::Selected(const char *uri)
          fclose(f);
          fURL->SetText(surl.Data());
          if (!fComboBox->FindEntry(surl.Data()))
-            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries());
+            fComboBox->AddEntry(surl.Data(), fComboBox->GetNumberOfEntries()+1);
       }
       else {
          fHtml->Clear();
@@ -361,7 +371,7 @@ void TGHtmlBrowser::Forward()
    TGLBEntry * lbe1 = fComboBox->FindEntry(string);
    if (lbe1)
       index = lbe1->EntryId();
-   if (index < fComboBox->GetNumberOfEntries()-1) {
+   if (index < fComboBox->GetNumberOfEntries()) {
       fComboBox->Select(index + 1, kTRUE);
       TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
       if (entry) {
