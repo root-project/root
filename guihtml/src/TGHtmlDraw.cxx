@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlDraw.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -214,8 +214,8 @@ void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
 
    int xLeft, xRight;        // Left and right bounds of box to draw
    int yTop, yBottom;        // Top and bottom of box
-   TGHtmlElement *p = 0;      // First element of the block
-   TGFont *font;             // Font
+   TGHtmlElement *p = 0;     // First element of the block
+   TGFont *font=0;           // Font
    GContext_t gc;            // GC for drawing
 
    if (pBlock == 0 || (pBlock->flags & HTML_Selected) == 0) return;
