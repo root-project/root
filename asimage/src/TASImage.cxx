@@ -1084,7 +1084,8 @@ void TASImage::Draw(Option_t *option)
 
 //______________________________________________________________________________
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
-                              Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc)
+                              Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc,
+                              Option_t *opt)
 {
    // Draw asimage on drawable.
 
@@ -1166,8 +1167,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
       Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
       if (pic) {
-         SETBIT(wsrc,31);
-         SETBIT(hsrc,31);
+         TString option = opt;
+         option.ToLower();
+         if (!option.Contains("opaque")) {
+            SETBIT(wsrc,31);
+            SETBIT(hsrc,31);
+         }
          gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
          gVirtualX->DeletePixmap(pic);
       } else {
@@ -1188,7 +1193,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
 //______________________________________________________________________________
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ysrc,
-                          UInt_t wsrc, UInt_t hsrc)
+                          UInt_t wsrc, UInt_t hsrc, Option_t *opt)
 {
    // Draw image on the drawable wid (pixmap, window) at x,y position.
    //
@@ -1198,7 +1203,7 @@ void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ys
    // wsrc, hsrc : Widh and height image area to be drawn.
 
    Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y,
-                  xsrc, ysrc, wsrc, hsrc);
+                  xsrc, ysrc, wsrc, hsrc, opt);
 }
 
 //______________________________________________________________________________

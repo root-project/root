@@ -484,7 +484,7 @@ void TGSpeedo::DrawNeedle()
       // draw line (used to render the needle) directly on the image
       img->DrawLine(xch0, ych0, xch1, ych1, "#ff0000", 2);
       // finally paint image to the widget
-      img->PaintImage(fId, 0, 0);
+      img->PaintImage(fId, 0, 0, 0, 0, 0, 0, "opaque");
       // and finally, to avoid memory leaks
       delete img;
    }
@@ -634,7 +634,7 @@ void TGSpeedo::DoRedraw()
       // draw line (used to render the needle) directly on the image
       img->DrawLine(xch0, ych0, xch1, ych1, "#ff0000", 2);
       // finally paint image to the widget
-      img->PaintImage(fId, 0, 0);
+      img->PaintImage(fId, 0, 0, 0, 0, 0, 0, "opaque");
       // and finally, to avoid memory leaks
       delete img;
    }
