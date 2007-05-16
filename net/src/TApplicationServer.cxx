@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.2 2007/05/10 17:31:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.3 2007/05/14 13:27:17 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "RRemoteProtocol.h"
 
 #include "TApplicationServer.h"
+#include "TBenchmark.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
@@ -343,6 +344,9 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
 
    // Execute logon macro
    ExecLogon();
+
+   // Init benchmarking
+   gBenchmark = new TBenchmark();
 
    // Save current interpreter context
    gInterpreter->SaveContext();
@@ -1099,7 +1103,7 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
          fSocket->Send(m);
 
          // Wait for the reply(ies)
-         Int_t what, type;
+         Int_t type;
          Bool_t filefollows = kTRUE;
 
          while (filefollows) {
@@ -1111,7 +1115,7 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
                return 0;
             }
             if (rm->What() != kMESS_ANY) {
-               Error("ProcessLine","ask-file: wrong message received (what: %d)", what);
+               Error("ProcessLine","ask-file: wrong message received (what: %d)", rm->What());
                return 0;
             }
             (*rm) >> type;
@@ -1127,7 +1131,7 @@ Long_t TApplicationServer::ProcessLine(const char *line, Bool_t, Int_t *)
                   return 0;
                }
                if (rm->What() != kMESS_ANY) {
-                  Error("ProcessLine","file: wrong message received (what: %d)", what);
+                  Error("ProcessLine","file: wrong message received (what: %d)", rm->What());
                   return 0;
                }
                (*rm) >> type;
