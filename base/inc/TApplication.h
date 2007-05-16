@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.29 2007/05/10 17:08:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.30 2007/05/14 13:26:46 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,6 +44,12 @@ class TSignalHandler;
 
 class TApplication : public TObject, public TQObject {
 
+public:
+   // TApplication specific bits
+   enum EStatusBits {
+      kProcessRemotely = BIT(15)   // TRUE if this line has to be processed remotely 
+   };
+
 private:
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
@@ -58,7 +64,6 @@ private:
    TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
-   Bool_t             fProcessingLine; //True if processing line; use for remote apps
 
    static Bool_t      fgGraphNeeded;   // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;     // True if graphics libs initialized
@@ -67,18 +72,12 @@ private:
    TApplication& operator=(const TApplication&);  // not implemented
 
 protected:
-   // TApplication specific bits
-   enum EStatusBits {
-      kTerminalInput    = BIT(15)   // if processing input from the command line
-   };
-
    TApplication      *fAppRemote;      //Current remote application, if defined
 
    static TList      *fgApplications;  //List of available applications
 
    TApplication();
 
-   void               SetProcessingLine(Bool_t on = kTRUE) { fProcessingLine = on; }
    virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
@@ -137,8 +136,6 @@ public:
    Bool_t          IsRunning() const { return fIsRunning; }
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
-
-   virtual Bool_t  IsProcessingLine() const { return fProcessingLine; }
 
    static void     CreateApplication();
    static void     NeedGraphicsLibs();

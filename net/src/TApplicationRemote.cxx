@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.4 2007/05/14 13:27:17 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.5 2007/05/15 12:49:41 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -803,18 +803,14 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
 
    if (!line || !*line) return 0;
 
-   TApplication::SetProcessingLine();
-
    if (!strncasecmp(line, ".q", 2)) {
       // terminate the session
-      TApplication::SetProcessingLine(kFALSE);
       gApplication->ProcessLine(".R -close");
       return 0;
    }
 
    if (!strncmp(line, "?", 1)) {
       Help(line);
-      TApplication::SetProcessingLine(kFALSE);
       return 1;
    }
 
@@ -828,7 +824,6 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
    Collect();
 
    // Done
-   TApplication::SetProcessingLine(kFALSE);
    return 1;
 }
 

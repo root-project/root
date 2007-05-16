@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.71 2007/05/10 17:08:28 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.72 2007/05/14 13:34:21 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -504,7 +504,7 @@ Bool_t TRint::HandleTermInput()
       Bool_t added = kFALSE;
 
       // This is needed when working with remote sessions
-      SetBit(kTerminalInput);
+      SetBit(kProcessRemotely);
 
 #ifdef R__EH
       try {
