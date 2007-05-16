@@ -11,8 +11,8 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 Event.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) ./copiedEvent 20 1 9 1
 
-Simple.log: Simple_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -l -b -q Run.C > Simple.log
+Simple.log: Simple_cxx.$(DllSuf) Read.C Create.C
+	$(CMDECHO) root.exe -l -b -q Run.C > Simple.log 2>&1
 
 Simple: Simple.log
 	$(CMDECHO) diff -ubw Simple.log Simple.ref

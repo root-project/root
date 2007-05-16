@@ -25,10 +25,10 @@ int Read(bool debug = false)
   const char* select2 = "((TTUBE*)fShape)->GetRmin() > 0";
 
   TTreeFormula* treeformula1 = new TTreeFormula("myselection",select1,tree);
-  if (treeformula1->GetNdim()==0) return 1;
+  if (treeformula1->GetNdim()==0) return 0;
 
   TTreeFormula* treeformula2 = new TTreeFormula("myselection",select2,tree);
-  if (treeformula2->GetNdim()==0) return 1;
+  if (treeformula2->GetNdim()==0) return 0;
 
   Int_t npass1 = 0;
   Int_t npass2 = 0;
