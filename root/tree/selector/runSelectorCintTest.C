@@ -5,6 +5,10 @@
    TTree *tree; f->GetObject("T1",tree);
    
    tree->Process(&isel);
+
+   c = new TChain("T1");
+   c->Add("Event1.root");
+   c->Process(&isel);
    
    gROOT->ProcessLine(".L sel01.C+");
    sel01 csel;
@@ -13,6 +17,10 @@
    TTree *tree; f->GetObject("T1",tree);
    
    tree->Process(&csel);
-  
+
+   c = new TChain("T1");
+   c->Add("Event1.root");
+   c->Process(&csel);
+
 }
    
