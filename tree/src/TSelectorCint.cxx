@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.22 2006/07/04 23:35:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.23 2006/08/06 07:15:00 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -26,27 +26,30 @@
 ClassImp(TSelectorCint)
 
 //______________________________________________________________________________
-TSelectorCint::TSelectorCint() : TSelector()
+TSelectorCint::TSelectorCint() : TSelector(),
+   fClass(0),
+   fFuncVersion  (0),
+   fFuncInit     (0),
+   fFuncBegin    (0),
+   fFuncSlBegin  (0),
+   fFuncNotif    (0),
+   fFuncSlTerm   (0),
+   fFuncTerm     (0),
+   fFuncCut      (0),
+   fFuncFill     (0),
+   fFuncProc     (0),
+   fFuncOption   (0),
+   fFuncObj      (0),
+   fFuncInp      (0),
+   fFuncOut      (0),
+   fFuncGetAbort (0),
+   fFuncGetStat  (0),
+   fIntSelector(0),fIsOwner(kFALSE)
+
+
 {
    // Default constructor for a Selector.
 
-   fFuncVersion  = 0;
-   fFuncInit     = 0;
-   fFuncBegin    = 0;
-   fFuncSlBegin  = 0;
-   fFuncNotif    = 0;
-   fFuncSlTerm   = 0;
-   fFuncTerm     = 0;
-   fFuncCut      = 0;
-   fFuncFill     = 0;
-   fFuncProc     = 0;
-   fFuncOption   = 0;
-   fFuncObj      = 0;
-   fFuncInp      = 0;
-   fFuncOut      = 0;
-   fIntSelector  = 0;
-   fFuncGetAbort = 0;
-   fFuncGetStat  = 0;
 }
 
 //______________________________________________________________________________
@@ -71,7 +74,7 @@ TSelectorCint::~TSelectorCint()
    delete fFuncGetAbort;
    delete fFuncGetStat;
 
-   if (fIntSelector) fClass->Delete(fIntSelector);
+   if (fIsOwner && fIntSelector) fClass->Delete(fIntSelector);
    delete fClass;
 }
 
@@ -94,9 +97,29 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
 }
 
 //______________________________________________________________________________
-void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
+void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl, Bool_t isowner)
 {
    // Initialize the CallFunc objects when selector is interpreted.
+
+   delete fFuncVersion;
+   delete fFuncInit;
+   delete fFuncBegin;
+   delete fFuncSlBegin;
+   delete fFuncNotif;
+   delete fFuncSlTerm;
+   delete fFuncTerm;
+   delete fFuncCut;
+   delete fFuncFill;
+   delete fFuncProc;
+   delete fFuncOption;
+   delete fFuncObj;
+   delete fFuncInp;
+   delete fFuncOut;
+   delete fFuncGetAbort;
+   delete fFuncGetStat;
+
+   if (fIsOwner && fIntSelector) fClass->Delete(fIntSelector);
+   delete fClass;
 
    R__ASSERT(cl);
 
@@ -105,6 +128,7 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    fClass        = new G__ClassInfo(*cl);
 
    fIntSelector  = iselector;
+   fIsOwner      = isowner;
    fFuncVersion  = new G__CallFunc();
    fFuncInit     = new G__CallFunc();
    fFuncBegin    = new G__CallFunc();

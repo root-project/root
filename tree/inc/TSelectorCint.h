@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.14 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.15 2006/11/24 14:24:54 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -56,11 +56,12 @@ protected:
    G__CallFunc   *fFuncGetAbort; //!
    G__CallFunc   *fFuncGetStat;  //!
    TSelector     *fIntSelector;  //Pointer to interpreted selector (if interpreted)
+   Bool_t        fIsOwner;      //True if fIntSelector shoudl be deleted when the this object is deleted.
 
 public:
    TSelectorCint();
    virtual            ~TSelectorCint();
-   virtual void        Build(TSelector *iselector, G__ClassInfo *cl);
+   virtual void        Build(TSelector *iselector, G__ClassInfo *cl, Bool_t isowner = kTRUE);
    virtual int         Version() const;
    virtual void        Init(TTree *);
    virtual void        Begin(TTree *tree);
