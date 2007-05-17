@@ -1,4 +1,4 @@
-// @(#)root/test/rhtml/:$Name:  $:$Id: rhtml.cxx,v 1.1 2007/05/09 10:01:35 brun Exp $
+// @(#)root/test/rhtml/:$Name:  $:$Id: rhtml.cxx,v 1.2 2007/05/16 07:45:58 brun Exp $
 // Author: Bertrand Bellenot   09/05/2007
 
 /*************************************************************************
@@ -278,6 +278,7 @@ void TGHtmlBrowser::Selected(const char *uri)
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
       return;
    }
+   gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
    TUrl url(surl.Data());
    if ((!strcmp(url.GetProtocol(), "http"))) {
       buf = ReadRemote(url.GetUrl());
@@ -325,6 +326,7 @@ void TGHtmlBrowser::Selected(const char *uri)
          }
       }
    }
+   gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
    fHtml->Layout();
    SetWindowName(Form("%s - RHTML",surl.Data()));
 }
