@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.169 2007/03/05 20:38:05 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.170 2007/04/02 11:07:21 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -427,12 +427,12 @@ namespace {
       //
 
       while (1) {
-         if(gROOT->GetApplication()) {
+         if (gROOT->GetApplication()) {
             if (gConsoleEvent) {
                ::WaitForSingleObject(gConsoleEvent, INFINITE);
             }
 
-            if(!gApplication->HandleTermInput()) break; // no terminal input
+            if (!gApplication->HandleTermInput()) break; // no terminal input
 
             if (gSplash) {    // terminate splash window after first key press
                delete gSplash;
@@ -2199,7 +2199,8 @@ int TWinNTSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
    const char *fsNames[] = { "FAT", "NTFS" };
    int i;
    for (i = 0; i < 2; i++) {
-      strncmp(fileSystemNameBuffer, fsNames[i], nFileSystemNameSize);
+      if (!strncmp(fileSystemNameBuffer, fsNames[i], nFileSystemNameSize))
+         break;
    }
    *id = i;
 
