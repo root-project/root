@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.h,v 1.34 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooPlot.h,v 1.35 2007/05/11 13:11:50 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,7 @@ class TAttFill;
 class TAttMarker;
 class TAttText;
 class TClass ;
+class TAxis;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
