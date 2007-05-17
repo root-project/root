@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.69 2007/03/17 15:08:25 axel Exp $
+# $Id: Rules.mk,v 1.70 2007/04/17 17:19:12 pcanal Exp $
 #
 
 all: tests
@@ -418,6 +418,6 @@ $(CMDECHO) ( touch dummy$$$$.C && \
 endef
 
 RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
-RemoveDirs := sed -e 's?([A-Za-z]:|[/]).*[/\]??'
+RemoveDirs := sed -e 's?\([A-Za-z]:\|[/]\).*[/\]??'
 RemoveSizes := sed -e 's?size=0x[0-9a-fA-F]*?size=n/a?'
 
