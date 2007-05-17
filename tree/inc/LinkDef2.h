@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.2 2004/07/01 04:55:05 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.1 2005/01/12 07:50:03 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun, Fons Rademakers and al.           *
@@ -20,16 +20,17 @@
 //     rm tree/src/ManualTree2.cxx
 //     gmake tree/src/ManualTree2.cxx
 //     replace the implementation of the 2 wrappers by 
-//         #include "ManualTree2Body.cxx"
+//         #include "ManualTree2Body.h"
 //     you might have to update the syntax in ManualTree2Body.cxx
 //
 //     You also we need to remove 
 //       #include "base/inc/TROOT.h"
 //       #include "base/inc/TDataMember.h"
+//     from tree/inc/ManualTree2.h
 //     and replace the string "SetBranchAddress<void>" by "SetBranchAddress"
 
 #pragma link C++ function TTree::Branch(const char *, const char *, void **, Int_t, Int_t);
 #pragma link C++ function TTree::Branch(const char *, void **, Int_t, Int_t);
 #pragma link C++ function TTree::SetBranchAddress(const char*, void**);
-
+#pragma link C++ function TTree::Process(void*, Option_t*, Long64_t, Long64_t);
 #endif

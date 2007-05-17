@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.101 2007/04/27 08:34:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.102 2007/05/02 20:18:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -330,7 +330,13 @@ public:
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+#if defined(__CINT__) 
+#if defined(R__MANUAL_DICT)
+   virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+#endif
+#else
    virtual Long64_t        Process(TSelector* selector, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+#endif
    virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "");

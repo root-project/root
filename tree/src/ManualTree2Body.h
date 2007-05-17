@@ -1,7 +1,46 @@
 #include "TEmulatedCollectionProxy.h"
 #include "TROOT.h"
-   
-static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+#include "TSelectorCint.h"
+
+static int G__ManualTree2_126_0_132(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   // We need to emulate TTree::Process and properly capture the fact that we go an intepreted TSelector object.
+
+   G__ClassInfo ti( libp->para[0].tagnum );
+   TClass *ptrClass = TClass::GetClass(ti.Name());
+   TSelector *sel = (TSelector*) G__int(libp->para[0]);
+
+   //Interpreted selector: cannot be used as such
+   //create a fake selector
+   TSelectorCint *selectcint = 0;
+   if (ptrClass && !ptrClass->IsLoaded()) {
+      selectcint = new TSelectorCint();
+      selectcint->Build(sel, &ti, kFALSE);
+      sel = selectcint;
+   }
+
+   switch (libp->paran) {
+   case 4:
+      G__letLonglong(result7, 110, (G__int64) ((TTree*) G__getstructoffset())->Process(sel, (Option_t*) G__int(libp->para[1])
+, (Long64_t) G__Longlong(libp->para[2]), (Long64_t) G__Longlong(libp->para[3])));
+      break;
+   case 3:
+      G__letLonglong(result7, 110, (G__int64) ((TTree*) G__getstructoffset())->Process(sel, (Option_t*) G__int(libp->para[1])
+, (Long64_t) G__Longlong(libp->para[2])));
+      break;
+   case 2:
+      G__letLonglong(result7, 110, (G__int64) ((TTree*) G__getstructoffset())->Process(sel, (Option_t*) G__int(libp->para[1])));
+      break;
+   case 1:
+      G__letLonglong(result7, 110, (G__int64) ((TTree*) G__getstructoffset())->Process(sel));
+      break;
+   }
+
+   delete selectcint;
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
   // We need to emulate
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -71,7 +110,7 @@ static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,str
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualTree2_169_3_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -137,8 +176,11 @@ static int G__ManualTree2_169_3_18(G__value *result7,G__CONST char *funcname,str
 
 #include "TDataType.h"
 
-static int G__ManualTree2_169_5_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_126_0_190(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
+   // Emulate:
+   // template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr);
+
    G__setnull(result7);
 
    G__TypeInfo ti( libp->para[1] );
