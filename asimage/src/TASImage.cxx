@@ -61,7 +61,7 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TArrayD.h"
 #include "TVectorD.h"
 #include "TVirtualPS.h"
@@ -1001,8 +1001,8 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    gSystem->Sleep(10);
    gSystem->ProcessEvents();
 
-   TCanvas *canvas = pad->GetCanvas();
-   Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
+   TVirtualPad *canvas = (TVirtualPad*)pad->GetCanvas();
+   Int_t wid = (pad == canvas) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
    Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
@@ -1056,8 +1056,9 @@ void TASImage::Draw(Option_t *option)
       h = Int_t(h*cx) + 28;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
-      new TCanvas(rname.Data(), Form("%s (%d x %d)", rname.Data(),
-                  fImage->width, fImage->height), w, h);
+		rname += Form("\", \"%s (%d x %d)", rname.Data(), fImage->width, fImage->height);
+		rname = "new TCanvas(\"" + rname + Form("\", %d, %d);", w, h);
+		gROOT->ProcessLineFast(rname.Data());
    }
 
    if (!opt.Contains("x")) {

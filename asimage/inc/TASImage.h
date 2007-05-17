@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.28 2007/04/27 11:07:34 couet Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.29 2007/05/16 10:04:01 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -149,7 +149,7 @@ public:
    void  DrawText(Int_t  x = 0, Int_t y = 0, const char *text = "", Int_t size = 12,
                   const char *color = 0, const char *font = "fixed", EText3DType type = TImage::kPlain,
                   const char *fore_file = 0, Float_t angle = 0);
- void DrawText(TText *text, Int_t x = 0, Int_t y = 0);
+   void DrawText(TText *text, Int_t x = 0, Int_t y = 0);
 
    // Vector graphics
    void  BeginPaint(Bool_t fast = kTRUE);
