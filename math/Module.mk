@@ -17,7 +17,9 @@ MATHDS       := $(MODDIRS)/G__Math.cxx
 MATHDO       := $(MATHDS:.cxx=.o)
 MATHDH       := $(MATHDS:.cxx=.h)
 
-MATHH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MATHH1       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MATHH2       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+MATHH        := $(MATHH1) $(MATHH2)
 MATHS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHO        := $(MATHS:.cxx=.o)
 
@@ -27,7 +29,7 @@ MATHLIB      := $(LPATH)/libRMath.$(SOEXT)
 MATHMAP      := $(MATHLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHH))
 #ALLLIBS     += $(MATHLIB)
 #ALLMAPS     += $(MATHMAP)
 
@@ -35,6 +37,13 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHH))
 INCLUDEFILES += $(MATHDEP)
 
 ##### local rules #####
+include/Math/%.h: $(MATHDIRI)/Math/%.h
+		@(if [ ! -d "include/Math" ]; then     \
+		   mkdir -p include/Math;              \
+		fi)
+		cp $< $@
+
+
 include/%.h:    $(MATHDIRI)/%.h
 		cp $< $@
 
@@ -61,5 +70,6 @@ clean::         clean-math
 
 distclean-math: clean-math
 		@rm -f $(MATHDEP) $(MATHDS) $(MATHDH) $(MATHLIB) $(MATHMAP)
+		@rm -rf include/Math
 
 distclean::     distclean-math
