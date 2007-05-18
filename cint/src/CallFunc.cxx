@@ -396,12 +396,8 @@ G__value Cint::G__CallFunc::Execute(void *pobject)
   G__LockCriticalSection();
   // Set object address
   store_struct_offset = G__store_struct_offset;
-
-  // This-pointer in case of non left-most multiple inheritance
-  G__store_struct_offset = (long)pobject + method.GetThisPointerOffset();
-
+  G__store_struct_offset = (long)pobject;
   SetFuncType();
-
   // Call function
   long index = method.Index();
   G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), &index);
@@ -464,4 +460,5 @@ void Cint::G__CallFunc::SetFuncType() {
     }
   }
 }
+///////////////////////////////////////////////////////////////////////////
 

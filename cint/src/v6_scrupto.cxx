@@ -846,9 +846,8 @@ void G__close_inputfiles_upto(G__dictposition* pos)
             G__struct.comment[itag].p.com = NULL;
             G__struct.comment[itag].filenum = -1;
             G__struct.friendtag[itag] = 0;
-            // Clean up G__setup_memfunc and G__setup_memvar pointers list
-            G__struct.incsetup_memvar[itag]->clear();
-            G__struct.incsetup_memfunc[itag]->clear();
+            G__struct.incsetup_memvar[itag] = 0;
+            G__struct.incsetup_memfunc[itag] = 0;
             G__struct.rootflag[itag] = 0;
             G__struct.rootspecial[itag] = 0;
             G__struct.isctor[itag] = 0;

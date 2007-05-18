@@ -1548,7 +1548,7 @@ static void G__create_input_tmpfile(G__input_file& ftemp) {
    ftemp.fp = fopen(ftemp.name, "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
 #else
    ftemp.fp = tmpfile();
-   strcpy(ftemp.name, "(tmpfile)");
+   strcmp(ftemp.name, "(tmpfile)");
 #endif
 }
 

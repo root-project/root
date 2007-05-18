@@ -941,10 +941,8 @@ int G__search_tagname(const char *tagname,int type)
     G__struct.comment[i].p.com = (char*)NULL;
     G__struct.comment[i].filenum = -1;
 
-    // G__setup_memfunc and G__setup_memvar pointers list initialisation
-     G__struct.incsetup_memvar[i] = new std::list<G__incsetup>();
-     G__struct.incsetup_memfunc[i] = new std::list<G__incsetup>();
-
+    G__struct.incsetup_memvar[i] = (G__incsetup)NULL;
+    G__struct.incsetup_memfunc[i] = (G__incsetup)NULL;
     G__struct.rootflag[i] = 0;
     G__struct.rootspecial[i] = (struct G__RootSpecial*)NULL;
 
@@ -1871,9 +1869,6 @@ int G__callfunc0(G__value *result, G__ifunc_table *iref, int ifn
   G__store_struct_offset = (long)p;
   store_asm_exec = G__asm_exec;
   G__asm_exec = 0;
-
-  // this-pointer adjustment
-  G__this_adjustment(ifunc, ifn);
 
 #ifdef G__EXCEPTIONWRAPPER
   if(-1==ifunc->pentry[ifn]->size) {

@@ -98,7 +98,6 @@ G__MethodInfo {
 
   void  SetUserParam(void*);
   void *GetUserParam();
-  long  GetThisPointerOffset();
 
  protected:
   long handle;

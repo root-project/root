@@ -5247,9 +5247,7 @@ asm_ifunc_start:   /* loop compilation execution label */
                                  +(p_ifunc->vtblbasetagnum[ifn]*0x10000);
         G__asm_inst[G__asm_cp+3]=libp->paran;
         G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_virtual_bytecode;
-        G__asm_inst[G__asm_cp+5] = 0;
-        if (ifunc && p_ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
-        G__inc_cp_asm(6,0);
+        G__inc_cp_asm(5,0);
       }
       else {
 #ifdef G__ASM_DBG
@@ -5269,9 +5267,7 @@ asm_ifunc_start:   /* loop compilation execution label */
         else {
           G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
         }
-        G__asm_inst[G__asm_cp+5] = 0;
-        if (ifunc && p_ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
-        G__inc_cp_asm(6,0);
+        G__inc_cp_asm(5,0);
       }
     }
     else {
