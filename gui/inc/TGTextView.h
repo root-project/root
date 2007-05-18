@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.22 2007/04/20 12:15:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.23 2007/05/09 15:03:34 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -125,6 +125,7 @@ public:
    virtual void   SetBackground(Pixel_t p);
    virtual void   SetSelectBack(Pixel_t p);
    virtual void   SetSelectFore(Pixel_t p);
+   virtual void   SetForegroundColor(Pixel_t);
 
    TGText        *GetText() const { return fText; }
 

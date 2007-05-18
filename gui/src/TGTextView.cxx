@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.34 2007/05/04 15:21:04 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.35 2007/05/09 15:03:34 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -169,7 +169,6 @@ void TGTextView::SetBackground(Pixel_t p)
    fCanvas->SetBackgroundColor(p);
    fWhiteGC.SetBackground(p);
    fWhiteGC.SetForeground(p);
-   Update();
 }
 
 //______________________________________________________________________________
@@ -179,7 +178,6 @@ void TGTextView::SetSelectBack(Pixel_t p)
 
    fSelbackGC.SetBackground(p);
    fSelbackGC.SetForeground(p);
-   Update();
 }
 
 //______________________________________________________________________________
@@ -189,7 +187,6 @@ void TGTextView::SetSelectFore(Pixel_t p)
 
    fSelGC.SetBackground(p);
    fSelGC.SetForeground(p);
-   Update();
 }
 
 //______________________________________________________________________________
@@ -200,7 +197,7 @@ void TGTextView::SetText(TGText *text)
    Clear();
    delete fText;
    fText = text;
-   Update();
+   Layout();
 }
 
 //______________________________________________________________________________
@@ -214,6 +211,11 @@ void TGTextView::AddText(TGText *text)
    Layout();
 
    UInt_t h2 = (UInt_t)ToScrYCoord(fText->RowCount());
+
+   if (h2 <= h1) {
+      return;
+   }
+
    if (h2 < fCanvas->GetHeight()) {
       UpdateRegion(0, h1, fCanvas->GetWidth(), h2 - h1);
    }
@@ -231,6 +233,9 @@ void TGTextView::AddLine(const char *string)
 
    UInt_t h2 = (UInt_t)ToScrYCoord(fText->RowCount());
 
+   if (h2 <= h1) {
+      return;
+   }
    if (h2 < fCanvas->GetHeight()) {
       UpdateRegion(0, h1, fCanvas->GetWidth(), h2 - h1);
    }
@@ -452,7 +457,7 @@ Bool_t TGTextView::LoadFile(const char *filename, Long_t startpos, Long_t length
 
    Clear();
    fText->Load(filename, startpos, length);
-   Update();
+   Layout();
    return kTRUE;
 }
 
@@ -467,7 +472,7 @@ Bool_t TGTextView::LoadBuffer(const char *txtbuf)
 
    Clear();
    fText->LoadBuffer(txtbuf);
-   Update();
+   Layout();
    return kTRUE;
 }
 
@@ -551,8 +556,10 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       pos.fX = ToObjXCoord(fVisible.fX + rect.fX, pos.fY);
       xoffset = ToScrXCoord(pos.fX, pos.fY);
       len = fText->GetLineLength(pos.fY) - pos.fX;
-      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(), x, Int_t(ToScrYCoord(pos.fY)),
-                               rect.fWidth, UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
+
+      gVirtualX->ClearArea(fCanvas->GetId(), x, Int_t(ToScrYCoord(pos.fY)),
+                           rect.fWidth, UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
+
 
       if (len > 0) {
          if (len > ToObjXCoord(fVisible.fX + rect.fX + rect.fWidth, pos.fY) - pos.fX) {
@@ -1495,6 +1502,15 @@ void TGTextView::ShowTop()
 
    SetVsbPosition(0);
    Layout();
+}
+
+//______________________________________________________________________________
+void TGTextView::SetForegroundColor(Pixel_t col)
+{
+   // Set text color.
+
+   fNormGC.SetBackground(col);
+   fNormGC.SetForeground(col);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.42 2007/04/20 12:15:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.43 2007/05/07 15:11:36 antcheva Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -588,7 +588,7 @@ void TGTextEdit::Delete(Option_t *)
 
    // clear
    if ((th < 0) || (th < (Int_t)fCanvas->GetHeight())) {
-      gVirtualX->FillRectangle(fCanvas->GetId(), fWhiteGC(),  0, ys,
+      gVirtualX->ClearArea(fCanvas->GetId(), 0, ys,
                                fCanvas->GetWidth(), fCanvas->GetHeight() - ys);
    }
 
