@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.49 2007/05/11 13:12:26 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.50 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -726,8 +726,24 @@ void RooPlot::Streamer(TBuffer &R__b)
     if (R__v > 1) {
       R__b.ReadClassBuffer(RooPlot::Class(),this);
     } else {
-      // WVE Insert backward compatible streamer code here
-      cout << "RooPlot::Streamer V1 backward compatibility streamer not yet implemented" << endl ;
+      // backward compatible streamer code here
+      // Version 1 of RooPlot was deriving from TH1 and RooPrintable
+      // Version 2 derives instead from TNamed and RooPrintable
+      _hist = new TH1F();
+      _hist->TH1::Streamer(R__b);
+      SetName(_hist->GetName());
+      SetTitle(_hist->GetTitle());
+      RooPrintable::Streamer(R__b);
+      _items.Streamer(R__b);
+      R__b >> _padFactor;
+      R__b >> _plotVarClone;
+      R__b >> _plotVarSet;
+      R__b >> _normVars;
+      R__b >> _normNumEvts;
+      R__b >> _normBinWidth;
+      R__b >> _defYmin;
+      R__b >> _defYmax;
+      R__b.CheckByteCount(R__s, R__c, RooPlot::IsA());
     } 
   } else {
     R__b.WriteClassBuffer(RooPlot::Class(),this);
