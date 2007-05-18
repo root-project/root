@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlForm.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -154,7 +154,7 @@ static int InputType(TGHtmlElement *p) {
     case Html_INPUT:
       z = p->MarkupArg("type", "text");
       if (z == 0) break;
-      for (i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
+      for (i = 0; i < int(sizeof(types) / sizeof(types[0])); i++) {
         if (strcasecmp(types[i].zName, z) == 0) {
           type = types[i].type;
           break;
@@ -223,7 +223,7 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem) {
     int bg = pElem->style.bgcolor;
     int fg = pElem->style.color;
     ColorStruct_t *cbg = apColor[bg];
-    ColorStruct_t *cfg = apColor[fg];
+    //ColorStruct_t *cfg = apColor[fg];
     pElem->frame->ChangeOptions(pElem->frame->GetOptions() | kOwnBackground);
     pElem->frame->SetBackgroundColor(cbg->fPixel);
   }
@@ -257,7 +257,7 @@ void TGHtml::AppendText(TGString *str,
           int cnt;
           static char zSpaces[] = "                             ";
           cnt = pFirst->count;
-          while (cnt > sizeof(zSpaces) - 1) {
+          while (cnt > (int)sizeof(zSpaces) - 1) {
             str->Append(zSpaces, sizeof(zSpaces) - 1);
             cnt -= sizeof(zSpaces) - 1;
           }
@@ -307,7 +307,7 @@ void TGHtml::AddSelectOptions(TGListBox *lb,
       TGString *str;
 
       char *zValue = p->MarkupArg("value", "");
-      int selected = (p->MarkupArg("selected", 0) != 0);
+      //int selected = (p->MarkupArg("selected", 0) != 0);
 
       p = p->pNext;
 
@@ -476,9 +476,9 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
     case INPUT_TYPE_TextArea: {
       pElem->cnt = ++nInput;
       char *z = pElem->MarkupArg("rows", 0);
-      int rows = z ? atoi(z) : 10;
+      //int rows = z ? atoi(z) : 10;
       z = pElem->MarkupArg("cols", 0);
-      int cols = z ? atoi(z) : 10;
+      //int cols = z ? atoi(z) : 10;
       TGTextEdit *f = new TGTextEdit(fCanvas, 300, 200, pElem->cnt);
       TGString str("");
       AppendText(&str, pElem, pElem->pEnd);
@@ -488,7 +488,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
     }
 
     case INPUT_TYPE_Applet: {
-      int result;
+      //int result;
 
       TGFrame *f = ProcessApplet(pElem);
       if (!f) {
