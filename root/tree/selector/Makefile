@@ -13,9 +13,7 @@ selector.log: run.C $(ROOTCORELIBS)
 SelectorTest: selector.log
 	$(CMDECHO) diff -b selector.log selector.ref
 
-
-
-SelectorCintTest.log: sel01_C.$(DllSuf)
+SelectorCintTest.log: sel01_C.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) root.exe -q -l -b runSelectorCintTest.C 2>&1 | $(RemoveDirs) > $@ 
 
 SelectorCintTest: SelectorCintTest.log
