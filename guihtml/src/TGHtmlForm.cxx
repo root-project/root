@@ -1,4 +1,4 @@
-// $Id: TGHtmlForm.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
+// $Id: TGHtmlForm.cxx,v 1.2 2007/05/18 15:55:20 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem) {
 #else
   if (pElem->frame) {
     int bg = pElem->style.bgcolor;
-    int fg = pElem->style.color;
+    //int fg = pElem->style.color;
     ColorStruct_t *cbg = apColor[bg];
     //ColorStruct_t *cfg = apColor[fg];
     pElem->frame->ChangeOptions(pElem->frame->GetOptions() | kOwnBackground);
