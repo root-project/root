@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.7 2006/08/21 16:38:02 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
+// Last update: $Id: 3DConversions.cxx,v 1.7 2006/08/21 16:38:02 moneta Exp $
 //
 
 // TODO - For now, all conversions are grouped in this one compilation unit.
@@ -536,7 +536,7 @@ void convert( RotationZ const & from, Quaternion  & to)
 {
    // conversion from RotationZ to Quaternion
    
-   to.SetComponents (0, 0, std::cos(from.Angle()/2), std::sin(from.Angle()/2));
+   to.SetComponents (std::cos(from.Angle()/2), 0, 0, std::sin(from.Angle()/2));
 }
 
 } //namespace gv_detail
