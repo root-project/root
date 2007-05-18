@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.22 2007/02/03 18:33:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.23 2007/05/04 17:32:45 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -157,6 +157,10 @@ void TLeafI::ReadBasket(TBuffer &b)
       b >> fValue[0];
    } else {
       if (fLeafCount) {
+         Long64_t entry = fBranch->GetReadEntry();
+         if (fLeafCount->GetBranch()->GetReadEntry() != entry) {
+            fLeafCount->GetBranch()->GetEntry(entry);
+         }
          Int_t len = Int_t(fLeafCount->GetValue());
          if (len > fLeafCount->GetMaximum()) {
             printf("ERROR leaf:%s, len=%d and max=%d\n",GetName(),len,fLeafCount->GetMaximum());
