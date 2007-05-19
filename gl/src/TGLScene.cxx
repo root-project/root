@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.45 2006/12/09 23:05:17 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.46 2007/04/03 11:10:20 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -87,7 +87,9 @@ TGLScene::~TGLScene()
 {
    // Purge out the DL cache - when per drawable DL purging implemented
    // this no longer really required. However should be faster....
-   TGLDisplayListCache::Instance().Purge();
+   
+   //Next line must be commented. Otherwise Purge crashes when deleting a GL window on the MAC
+   //TGLDisplayListCache::Instance().Purge();
 
    // Delete clip objects
    ClearClips();
