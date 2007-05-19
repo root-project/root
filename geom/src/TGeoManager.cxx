@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.177 2007/03/19 15:54:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.178 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -878,8 +878,10 @@ TGeoManager::~TGeoManager()
 // Destructor
    if (gGeoManager != this) gGeoManager = this;
 
-   gROOT->GetListOfGeometries()->Remove(this);
-   gROOT->GetListOfBrowsables()->Remove(this);
+   if (gROOT->GetListOfFiles()) { //in case this function is called from TROOT destructor
+      gROOT->GetListOfGeometries()->Remove(this);
+      gROOT->GetListOfBrowsables()->Remove(this);
+   }
 //   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
 //   TIter next(brlist);
 //   TBrowser *browser = 0;
