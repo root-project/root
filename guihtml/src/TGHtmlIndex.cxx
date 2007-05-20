@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlIndex.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -258,7 +258,10 @@ int TGHtml::IndexMod(TGHtmlElement **pp, int *ip, char *cp)
    while (*cp && x < 2) {
       cnt = 0;
       i = 1;
-      while (i < 45 && isdigit(cp[i])) nbuf[i-1] = cp[i++];
+      while (i < 45 && isdigit(cp[i])) {
+         nbuf[i-1] = cp[i];
+         i++;
+      }
       if (i > 1) {
          nbuf[i-1] = 0;
          cnt = atoi(nbuf);
@@ -375,7 +378,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                maxIndex(p, pIndex, 0);
                (*pIndex)++;
             } else {
-               if (n == 1 && p && p->IsMarkup() && base[i] == '.' && 
+               if (n == 1 && p && p->IsMarkup() && base[i] == '.' &&
                    p->MarkupArg(zBase + i + 1, 0)) {
                   *pIndex = 0;
                } else {
