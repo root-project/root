@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.9 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.10 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -95,7 +95,7 @@ public:
    void           SetInterruptSyscalls(Bool_t set = kTRUE);
    void           SetTime(Long_t milliSec) { fTime = milliSec; }
    void           SetTimerID(UInt_t id = 0) { fTimeID = id; }
-   virtual void   Start(Int_t milliSec = -1, Bool_t singleShot = kFALSE);
+   virtual void   Start(Long_t milliSec = -1, Bool_t singleShot = kFALSE);
    virtual void   Stop() { TurnOff(); }
    virtual void   TurnOn();                         //*SIGNAL*
    virtual void   TurnOff();                        //*SIGNAL*

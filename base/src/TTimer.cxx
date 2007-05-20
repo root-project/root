@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.15 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.16 2007/02/05 10:38:04 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -127,7 +127,7 @@ Bool_t TTimer::CheckTimer(const TTime &now)
    // To prevent from time-drift related problems observed on some dual-processor
    // machines, we make the resolution proportional to the timeout period for
    // periods longer than 200s, with a proportionality factor of 5*10**-5
-   // hand-calculated to ensure 10ms (the minimal resolution) at transition.   
+   // hand-calculated to ensure 10ms (the minimal resolution) at transition.
    TTime xnow = TMath::Max((ULong_t)kItimerResolution,
                            (ULong_t) (0.05 * (ULong_t)fTime));
    xnow += now;
@@ -204,7 +204,7 @@ void TTimer::SetInterruptSyscalls(Bool_t set)
 }
 
 //___________________________________________________________________
-void TTimer::Start(Int_t milliSec, Bool_t singleShot)
+void TTimer::Start(Long_t milliSec, Bool_t singleShot)
 {
    // Starts the timer with a milliSec timeout. If milliSec is 0
    // then the timeout will be the minimum timeout (see TSystem::ESysConstants,
