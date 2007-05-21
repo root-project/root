@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.172 2007/03/23 13:08:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.173 2007/04/17 09:05:57 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2119,6 +2119,17 @@ Int_t TProofServ::Setup()
          m << fSessionTag;
          fSocket->Send(m);
       }
+   }
+
+   // Send "ROOTversion|ArchCompiler" flag
+   if (fProtocol > 12) {
+      TString vac = gROOT->GetVersion();
+      if (gSystem->Getenv("ROOTVERSIONTAG"))
+         vac += Form("-%s", gSystem->Getenv("ROOTVERSIONTAG"));
+      vac += Form("|%s-%s",gSystem->GetBuildArch(), gSystem->GetBuildCompilerVersion());
+      TMessage m(kPROOF_VERSARCHCOMP);
+      m << vac;
+      fSocket->Send(m);
    }
 
    // Incoming OOB should generate a SIGURG

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.32 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.33 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -760,6 +760,17 @@ Int_t TXProofServ::Setup()
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
       m << fSessionTag;
+      fSocket->Send(m);
+   }
+
+   // Send "ROOTversion|ArchCompiler" flag
+   if (fProtocol > 12) {
+      TString vac = gROOT->GetVersion();
+      if (gSystem->Getenv("ROOTVERSIONTAG"))
+         vac += Form("-%s", gSystem->Getenv("ROOTVERSIONTAG"));
+      vac += Form("|%s-%s",gSystem->GetBuildArch(), gSystem->GetBuildCompilerVersion());
+      TMessage m(kPROOF_VERSARCHCOMP);
+      m << vac;
       fSocket->Send(m);
    }
 
