@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.110 2007/03/19 14:43:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.111 2007/05/21 00:21:44 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -100,9 +100,10 @@ class TVirtualMutex;
 // 9 -> 10: new features requested, tested at CAF
 // 10 -> 11: new merging strategy
 // 11 -> 12: new progress message
+// 12 -> 13: exchange version/architecture/compiler info
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 12;            // protocol version number
+const Int_t       kPROOF_Protocol        = 13;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir

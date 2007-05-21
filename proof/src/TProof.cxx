@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.197 2007/05/02 19:18:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.198 2007/05/21 00:21:44 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2400,6 +2400,22 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          }
          break;
 
+      case kPROOF_VERSARCHCOMP:
+         {
+            TString vac;
+            (*mess) >> vac;
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_VERSARCHCOMP: %s", vac.Data());
+            Int_t from = 0;
+            TString vers, archcomp;
+            if (vac.Tokenize(vers, from, "|"))
+               vac.Tokenize(archcomp, from, "|");
+            if ((sl = FindSlave(s))) {
+               sl->SetArchCompiler(archcomp);
+               sl->SetROOTVersion(vers);
+            }
+         }
+         break;
+
       default:
          Error("Collect", "unknown command received from slave (what = %d)", what);
          break;
@@ -2549,6 +2565,9 @@ void TProof::Print(Option_t *option) const
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
+      Printf("ROOT version:             %s", gROOT->GetVersion());
+      Printf("Architecture-Compiler:    %s-%s", gSystem->GetBuildArch(),
+                                                gSystem->GetBuildCompilerVersion());
       TSlave *sl = (TSlave *)fActiveSlaves->First();
       if (sl) {
          TString sc;
@@ -2579,6 +2598,13 @@ void TProof::Print(Option_t *option) const
       Printf("Master host name:           %s", gSystem->HostName());
       Printf("Port number:                %d", GetPort());
       Printf("User:                       %s", GetUser());
+      if (gSystem->Getenv("ROOTVERSIONTAG"))
+         Printf("ROOT version:               %s-%s", gROOT->GetVersion(),
+                                                     gSystem->Getenv("ROOTVERSIONTAG"));
+      else
+         Printf("ROOT version:               %s", gROOT->GetVersion());
+      Printf("Architecture-Compiler:      %s-%s", gSystem->GetBuildArch(),
+                                                  gSystem->GetBuildCompilerVersion());
       Printf("Protocol version:           %d", GetClientProtocol());
       Printf("Image name:                 %s", GetImage());
       Printf("Working directory:          %s", gSystem->WorkingDirectory());
