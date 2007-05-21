@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.37 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.38 2007/05/21 08:38:48 moneta Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 
 //______________________________________________________________________________
 TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
-      :TF1(name,formula,xmin,xmax)
+      :TF1(name,formula,xmax,xmin)
 {
 // F2 constructor using a formula definition
 //
