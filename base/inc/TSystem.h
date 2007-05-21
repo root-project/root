@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.65 2006/12/01 11:49:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.66 2006/12/01 19:47:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -267,6 +267,8 @@ protected:
    TString          fListLibs;         //List shared libraries, cache used by GetLibraries
 
    TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
+   TString          fBuildCompiler;    // Compiler used to build this ROOT
+   TString          fBuildCompilerVersion; //Compiler version used to build this ROOT 
    TString          fBuildNode;        //Detailed information where ROOT was built
    TString          fBuildDir;         //Location where to build ACLiC shared library and use as scratch area.
    TString          fFlagsDebug;       //Flags for debug compilation
@@ -464,6 +466,8 @@ public:
    virtual void            AddLinkedLibs(const char *linkedLib);
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "");
    virtual const char     *GetBuildArch() const;
+   virtual const char     *GetBuildCompiler() const;
+   virtual const char     *GetBuildCompilerVersion() const;
    virtual const char     *GetBuildNode() const;
    virtual const char     *GetBuildDir() const;
    virtual const char     *GetFlagsDebug() const;

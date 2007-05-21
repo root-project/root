@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.167 2007/05/10 15:06:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.168 2007/05/10 18:16:58 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -172,6 +172,8 @@ Bool_t TSystem::Init()
    fTimers        = new TOrdCollection;
 
    fBuildArch     = BUILD_ARCH;
+   fBuildCompiler = COMPILER;
+   fBuildCompilerVersion = COMPILERVERS;
    fBuildNode     = BUILD_NODE;
    fFlagsDebug    = CXXDEBUG;
    fFlagsOpt      = CXXOPT;
@@ -2865,6 +2867,20 @@ const char *TSystem::GetBuildArch() const
 {
    // Return the build architecture.
    return fBuildArch;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetBuildCompiler() const
+{
+   // Return the build compiler
+   return fBuildCompiler;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetBuildCompilerVersion() const
+{
+   // Return the build compiler version
+   return fBuildCompilerVersion;
 }
 
 //______________________________________________________________________________
