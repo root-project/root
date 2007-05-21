@@ -1369,7 +1369,9 @@ void TH2Editor::DoAddText(Bool_t on)
    }
    if (make) {
       DoHistChanges();
-   }    
+      // next line is needed for marker editor refresh
+      fGedEditor->GetCanvas()->Selected(fGedEditor->GetPad(), fHist, 1);    
+   }
 }
 
 //______________________________________________________________________________

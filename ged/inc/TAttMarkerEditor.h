@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.4 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.5 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -36,7 +36,8 @@ protected:
    TGNumberEntry       *fMarkerSize;      // marker size combo box
    TGColorSelect       *fColorSelect;     // marker color
    TGedMarkerSelect    *fMarkerType;      // marker type
-
+   Bool_t              fSizeForText;      // true if "text" draw option uses marker size
+   
    virtual void        ConnectSignals2Slots();
 
 public:

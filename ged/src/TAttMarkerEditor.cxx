@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.11 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.12 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -47,6 +47,7 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
    // Constructor of marker attributes GUI.
 
    fAttMarker = 0;
+   fSizeForText = kFALSE;
    
    MakeTitle("Marker");
 
@@ -95,8 +96,15 @@ void TAttMarkerEditor::SetModel(TObject* obj)
 
    fAttMarker = dynamic_cast<TAttMarker *>(obj);
 
+   TString str = GetDrawOption();
+   str.ToUpper();
+   if (obj->InheritsFrom("TH2") && str.Contains("TEXT")) {
+      fSizeForText = kTRUE;
+   } else {
+      fSizeForText = kFALSE;
+   }   
    Style_t marker = fAttMarker->GetMarkerStyle();
-   if (marker==1 || marker==6 || marker==7) {
+   if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
       fMarkerSize->SetNumber(1.);
       fMarkerSize->SetState(kFALSE);
    } else {
@@ -131,7 +139,7 @@ void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
    // Slot connected to the marker type.
 
    if (fAvoidSignal) return;
-   if (marker==1 || marker==6 || marker==7) {
+   if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
       fMarkerSize->SetNumber(1.);
       fMarkerSize->SetState(kFALSE);
    } else
@@ -147,6 +155,12 @@ void TAttMarkerEditor::DoMarkerSize()
    // Slot connected to the marker size.
 
    if (fAvoidSignal) return;
+   Style_t marker = fAttMarker->GetMarkerStyle();
+   if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
+      fMarkerSize->SetNumber(1.);
+      fMarkerSize->SetState(kFALSE);
+   } else
+      fMarkerSize->SetState(kTRUE);
    Float_t size = fMarkerSize->GetNumber();
    fAttMarker->SetMarkerSize(size);
    Update();
