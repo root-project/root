@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.46 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.47 2007/04/19 09:33:40 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -266,14 +266,13 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fTimeUpdt = -1.;
 
    fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
-   TObject *obj = input->FindObject("PROOF_ProgressCircularity");
-   TParameter<Long_t> *par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
-   fCircN = (par == 0) ? 10 : par->GetVal();
+   fCircN = 10;
+   TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
 
-   obj = input->FindObject("PROOF_MaxSlavesPerNode");
-   par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
-   fMaxSlaveCnt = (par == 0) ? 4 : par->GetVal();
+   Long_t maxSlaveCnt = 4;
+   TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);
+   fMaxSlaveCnt = (Int_t)maxSlaveCnt;
 
    fPackets = new TList;
    fPackets->SetOwner();
@@ -428,28 +427,21 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    // packet size is (#events processed by 1 slave) / fPacketSizeAsAFraction.
    // It substitutes 20 in the old formula to calculate the fPacketSize:
    // fPacketSize = fTotalEntries / (20 * nslaves)
-   TObject *packetSizeManipulation;
-   if ((packetSizeManipulation =
-        input->FindObject("PROOF_PacketAsAFraction")) != 0) {
-      fPacketAsAFraction =
-         (dynamic_cast<TParameter<Long_t>*>(packetSizeManipulation))->GetVal();
-      Info("Process",
-           "Using Alternate fraction of query time as a packet Size: %d",
-           fPacketAsAFraction);
-   } else
-      fPacketAsAFraction = 20;
+   Long_t packetAsAFraction = 20;
+   if (TProof::GetParameter(input, "PROOF_PacketAsAFraction", packetAsAFraction) == 0)
+      Info("Process", "using alternate fraction of query time as a packet Size: %ld",
+           packetAsAFraction);
+   fPacketAsAFraction = (Int_t)packetAsAFraction;
 
-   if ((packetSizeManipulation =
-        input->FindObject("PROOF_PacketSize")) != 0) {
-      fPacketSize =
-         (dynamic_cast<TParameter<Long_t>*>(packetSizeManipulation))->GetVal();
-      Info("Process","Using Alternate Packet Size: %d", fPacketSize);
+   fPacketSize = 1;
+   if (TProof::GetParameter(input, "PROOF_PacketSize", fPacketSize) == 0) {
+      Info("Process","using alternate packet size: %lld", fPacketSize);
    } else {
       // Heuristic for starting packet size
       Int_t nslaves = fSlaveStats->GetSize();
       if (nslaves > 0) {
          fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves);
-         if ( fPacketSize < 1 ) fPacketSize = 1;
+         if (fPacketSize < 1) fPacketSize = 1;
       } else {
          fPacketSize = 1;
       }
@@ -458,11 +450,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    PDB(kPacketizer,1) Info("TPacketizer", "Base Packetsize = %lld", fPacketSize);
 
    if (fValid) {
-      TParameter<Int_t> *par = 0;
-      TObject *obj = input->FindObject("PROOF_ProgressPeriod");
-      Int_t period = 500;
-      if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-         period = par->GetVal();
+      Long_t period = 500;
+      TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(period, kFALSE);

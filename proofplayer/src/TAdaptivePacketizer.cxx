@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.6 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.7 2007/04/19 09:33:40 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -348,7 +348,7 @@ void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
 
 ClassImp(TAdaptivePacketizer)
 
-Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 2;
+Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 4;
 
 //______________________________________________________________________________
 TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
@@ -381,22 +381,17 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fTimeUpdt = -1.;
 
    fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
-   TObject *obj = input->FindObject("PROOF_ProgressCircularity");
-
-   TParameter<Long_t> *par = (obj == 0) ? 0 :
-                             dynamic_cast<TParameter<Long_t>*>(obj);
-
-   fCircN = (par == 0) ? 10 : par->GetVal();
+   fCircN = 10;
+   TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
 
-   obj = input->FindObject("PROOF_MaxSlavesPerNode");
-   par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
-   fgMaxSlaveCnt = (par == 0) ? 4 : par->GetVal();
+   Long_t maxSlaveCnt = 4;
+   TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);
+   fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
 
-   obj = input->FindObject("PROOF_BaseLocalPreference");
-   TParameter<Float_t> *localPrefPar = (obj == 0) ? 0 :
-                             dynamic_cast<TParameter<Float_t>*>(obj);
-   fBaseLocalPreference = (localPrefPar == 0) ? 1.2 : localPrefPar->GetVal();
+   Double_t baseLocalPreference = 1.2;
+   TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
+   fBaseLocalPreference = (Float_t)baseLocalPreference;
 
    fPackets = new TList;
    fPackets->SetOwner();
@@ -563,12 +558,9 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fFractionOfRemoteFiles = noRemoteFiles / totalNumberOfFiles;
    Printf("fraction of remote files %f", fFractionOfRemoteFiles);
 
-   if ( fValid ) {
-      TParameter<Int_t> *par = 0;
-      TObject *obj = input->FindObject("PROOF_ProgressPeriod");
-      Int_t period = 500;
-      if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-         period = par->GetVal();
+   if (fValid) {
+      Long_t period = 500;
+      TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(period, kFALSE);

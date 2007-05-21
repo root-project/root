@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.106 2007/04/19 09:25:56 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.107 2007/04/20 12:28:22 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -833,7 +833,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
    } ENDTRY;
 
-   PDB(kGlobal,2) 
+   PDB(kGlobal,2)
       Info("Process","%lld events processed",fEventsProcessed);
 
    if (gMonitoringWriter) {
@@ -1057,12 +1057,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
 
       delete fPacketizer;
-      TNamed *packetizer;
-      if ((packetizer = (TNamed*)fInput->FindObject("PROOF_Packetizer")) != 0) {
-         Info("Process","Using Alternate Packetizer: %s", packetizer->GetTitle());
-         TClass *cl = TClass::GetClass(packetizer->GetTitle());
+      TString packetizer;
+      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) == 0) {
+         Info("Process","Using Alternate Packetizer: %s", packetizer.Data());
+         TClass *cl = TClass::GetClass(packetizer);
          if (cl == 0) {
-            Error("Process","Class '%s' not found", packetizer->GetTitle());
+            Error("Process","Class '%s' not found", packetizer.Data());
             fExitStatus = kAborted;
             return -1;
          }
@@ -1101,7 +1101,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                        first, nentries, fInput);
       }
 
-      if ( !fPacketizer->IsValid() ) {
+      if (!fPacketizer->IsValid()) {
          fExitStatus = kAborted;
          return -1;
       }
@@ -1988,11 +1988,8 @@ void TProofPlayerRemote::SetupFeedback()
 
    // OK, feedback was requested, setup the timer
    SafeDelete(fFeedbackTimer);
-   TParameter<Int_t> *par = 0;
-   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
    fFeedbackPeriod = 2000;
-   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-      fFeedbackPeriod = par->GetVal();
+   TProof::GetParameter(fInput, "PROOF_FeedbackPeriod", fFeedbackPeriod);
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
    fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
@@ -2158,11 +2155,8 @@ void TProofPlayerSlave::SetupFeedback()
    // OK, feedback was requested, setup the timer
 
    SafeDelete(fFeedbackTimer);
-   TParameter<Int_t> *par = 0;
-   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
    fFeedbackPeriod = 2000;
-   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-      fFeedbackPeriod = par->GetVal();
+   TProof::GetParameter(fInput, "PROOF_FeedbackPeriod", fFeedbackPeriod);
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
    fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
@@ -2529,11 +2523,8 @@ void TProofPlayerSuperMaster::SetupFeedback()
 
    // setup the timer for progress message
    SafeDelete(fFeedbackTimer);
-   TParameter<Int_t> *par = 0;
-   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
    fFeedbackPeriod = 2000;
-   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-      fFeedbackPeriod = par->GetVal();
+   TProof::GetParameter(fInput, "PROOF_FeedbackPeriod", fFeedbackPeriod);
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
    fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);

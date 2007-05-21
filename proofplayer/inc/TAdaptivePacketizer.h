@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.2 2007/01/29 15:17:56 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.3 2007/03/19 10:46:10 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -67,7 +67,7 @@ private:
    Float_t        fTimeUpdt;     // time between updates
    TNtupleD      *fCircProg;     // Keeps circular info for "instantenous"
                                  // rate calculations
-   Int_t          fCircN;        // Circularity
+   Long_t         fCircN;        // Circularity
 
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files

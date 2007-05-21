@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.43 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.44 2007/03/19 01:36:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -60,7 +60,7 @@ protected:
    TSelector    *fSelector;        //!  the latest selector
    TClass       *fSelectorClass;   //!  class of the latest selector
    TTimer       *fFeedbackTimer;   //!  timer for sending intermediate results
-   Int_t         fFeedbackPeriod;  //!  period (ms) for sending intermediate results
+   Long_t        fFeedbackPeriod;  //!  period (ms) for sending intermediate results
    TEventIter   *fEvIter;          //!  iterator on events or objects
    TStatus      *fSelStatus;       //!  status of query in progress
    EExitStatus   fExitStatus;      //   exit status

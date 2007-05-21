@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.h,v 1.19 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.h,v 1.20 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -60,7 +60,7 @@ private:
    Float_t   fTimeUpdt;     // time between updates
    TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
                             // rate calculations
-   Int_t     fCircN;        // Circularity
+   Long_t    fCircN;        // Circularity
 
    TList    *fFileNodes;    // nodes with files
    TList    *fUnAllocated;  // nodes with unallocated files
