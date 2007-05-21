@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.30 2007/02/01 14:21:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.31 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -109,7 +109,10 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 
 //______________________________________________________________________________
 TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
-      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
+   : TF2(name,fcn,xmin,xmax,ymin,ymax,npar),
+   fZmin(zmin), 
+   fZmax(zmax), 
+   fNpz(30) 
 {
 //*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
 //*-*          ===============================================
@@ -123,11 +126,60 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   fZmin   = zmin;
-   fZmax   = zmax;
-   fNpz    = 30;
    fNdim   = 3;
 }
+
+//______________________________________________________________________________
+TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
+   : TF2(name, f, xmin, xmax, ymin, ymax,  npar), 
+   fZmin(zmin), 
+   fZmax(zmax), 
+   fNpz(30) 
+{
+//*-*-*-*-*-*-*F3 constructor using a ParamFunctor, 
+//*-*          a functor class implementing operator() (double *, double *)  
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fNdim   = 3;
+}
+
+//______________________________________________________________________________
+TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className)
+   : TF2(name, ptr, xmin, xmax, ymin, ymax,  npar, className), 
+   fZmin(zmin), 
+   fZmax(zmax), 
+   fNpz(30) 
+{
+//*-*-*-*-*-*-*F2 constructor used by CINT for interpreted function objects
+//*-*          Used for having same syntax as the template constructor from callable C++ objects 
+//*-*          which can be used only in compile C++ mode.   
+//*-*          
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fNdim   = 3;
+}
+
+//______________________________________________________________________________
+TF3::TF3(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, char *className, char * methodName)
+   : TF2(name, ptr, (void*)0,xmin, xmax, ymin, ymax, npar,className, methodName), 
+   fZmin(zmin), 
+   fZmax(zmax), 
+   fNpz(30) 
+{
+//*-*-*-*-*-*-*F2 constructor used by CINT for member functions of interpreted classes
+//*-*          Used for having same syntax as the template constructor from a generic 
+//*-*          class pointer and a member function type 
+//*-*          which can be used only in compile C++ mode  
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fNdim   = 3;
+}
+
 
 //______________________________________________________________________________
 TF3& TF3::operator=(const TF3 &rhs) 

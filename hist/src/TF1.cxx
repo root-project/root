@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.135 2007/02/27 16:08:25 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.136 2007/04/03 14:37:50 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TClass.h"
 #include "TMethodCall.h"
 
+//#include <iostream>
+
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 static TF1 *gHelper = 0;
@@ -46,6 +48,8 @@ The following types of functions can be created:
 <li><a href="#F1">A - Expression using variable x and no parameters</a></li>
 <li><a href="#F2">B - Expression using variable x with parameters</a></li>
 <li><a href="#F3">C - A general C function with parameters</a></li>
+<li><a href="#F4">D - A general C++ function object (functor) with parameters</a></li>
+<li><a href="#F5">E - A member function with parameters of a general C++ class</a></li>
 </ul>
 
 <a name="F1"></a><h3>A - Expression using variable x and no parameters</h3>
@@ -104,7 +108,8 @@ The parameters must be initialized via:
 Parameters may be given a name:
 <pre>
    fa->SetParName(0,"Constant");
-</pre> </li>
+</pre> 
+</li>
 <li> Example b:
 <div class="code"><pre>
    TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
@@ -112,6 +117,7 @@ Parameters may be given a name:
 <tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt>
 and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>.
 <tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.
+</li>
 </ul>
 
 <h4>Case 2: inline expression using TMath functions with parameters</h4>
@@ -158,12 +164,22 @@ Consider the macro myfunc.C below:
       h1.Fit("myfunc");
    }
 </pre></div><div class="clear" />
+
+End_Html
+Begin_Html
+
+<p>
 In an interactive session you can do:
 <div class="code"><pre>
    Root > .L myfunc.C
    Root > myfunc();
    Root > myfit();
-</pre></div><div class="clear" />
+</pre></div>
+<div class="clear" />
+
+End_Html
+Begin_Html
+
 <tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John 
 Odonnell) of type A or B defined above. This excludes CINT interpreted functions
 and compiled functions. However, there is a restriction. A function cannot
@@ -185,10 +201,63 @@ reference a basic function if the basic function is a polynomial polN.
    }
 </pre></div><div class="clear" />
 
-<h3>Why TF1 cannot accept a class member function ?</h3>
-This is a frequently asked question. C++ is a strongly typed language. There is
-no way for TF1 (without recompiling this class) to know about all possible user
-defined data types.  This also apply to the case of a static class function.
+End_Html
+Begin_Html
+
+
+<a name="F4"></a><h3>D - A general C++ function object (functor) with parameters</h3>
+A TF1 can be created from any C++ class implementing the operator()(double *x, double *p).  
+The advantage of the function object is that he can have a state and reference therefore what-ever other object. 
+In this way the user can customize his function. 
+<p>Example: 
+<div class="code"><pre>
+class  MyFunctionObject { 
+ public: 
+   // use constructor to customize your function object 
+   
+   double operator() (double *x, double *p) { 
+      // function implementation using class data members
+   } 
+};
+{ 
+    ....
+   MyFunctionObject * fobj = new MyFunctionObject(....);       // create the function object 
+   TF1 * f = new TF1("f",fobj,0,1,npar,"MyFunctionObject");    // create TF1 class.  
+   .....
+}
+</pre></div><div class="clear" />
+When constructing the TF1 class, the name of the function object class is required only if running in CINT 
+and it is not needed in compiled C++ mode. In addition in compiled mode the cfnution object can be passed to TF1 
+by value. 
+See also the tutorial math/exampleFunctor.C for a running example.  
+
+End_Html
+Begin_Html
+
+<a name="F5"></a><h3>E - A member function with parameters of a general C++ class</h3>
+A TF1 can be created in this case from any member function of a class which has the signature of 
+(double * , double *) and returning a double. 
+<p>Example: 
+<div class="code"><pre>
+class  MyFunction { 
+ public: 
+   ...
+   double Evaluate() (double *x, double *p) { 
+      // function implementation 
+   } 
+};
+{ 
+    ....
+   MyFunction * fptr = new MyFunction(....);  // create the user function class  
+   TF1 * f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class. 
+
+   .....
+}
+</pre></div><div class="clear" />
+When constructing the TF1 class, the name of the function class and of the member function are required only 
+if running in CINT and they are not need in compiled C++ mode.
+See also the tutorial math/exampleFunctor.C for a running example.  
+
 End_Html */
 
 TF1 *TF1::fgCurrent = 0;
@@ -208,7 +277,6 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fNsave     = 0;
    fChisquare = 0;
    fIntegral  = 0;
-   fFunction  = 0;
    fParErrors = 0;
    fParMin    = 0;
    fParMax    = 0;
@@ -221,6 +289,7 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fMinimum   = -1111;
    fMaximum   = -1111;
    fMethodCall = 0;
+   fCintFunc   = 0;
    SetFillStyle(0);
 }
 
@@ -251,7 +320,6 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    }
    fNpx       = 100;
    fType      = 0;
-   fFunction  = 0;
    if (fNpar) {
       fParErrors = new Double_t[fNpar];
       fParMin    = new Double_t[fNpar];
@@ -280,6 +348,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fMinimum    = -1111;
    fMaximum    = -1111;
    fMethodCall = 0;
+   fCintFunc   = 0;
    
    if (fNdim != 1 && xmin < xmax) {
       Error("TF1","function: %s/%s has %d parameters instead of 1",name,formula,fNdim);
@@ -312,7 +381,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fXmax       = xmax;
    fNpx        = 100;
    fType       = 2;
-   fFunction   = 0;
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
@@ -345,6 +413,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fMinimum    = -1111;
    fMaximum    = -1111;
    fMethodCall = 0;
+   fCintFunc   = 0;
    fNdim       = 1;
 
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
@@ -393,11 +462,365 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    //
    //  This constructor is called for functions of type C by CINT.
 
+
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
    fType       = 2;
-   fFunction   = 0;
+   //fFunction   = 0;
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+   fChisquare  = 0;
+   fIntegral   = 0;
+   fAlpha      = 0;
+   fBeta       = 0;
+   fGamma      = 0;
+   fParent     = 0;
+   fNpfits     = 0;
+   fNDF        = 0;
+   fNsave      = 0;
+   fSave       = 0;
+   fHistogram  = 0;
+   fMinimum    = -1111;
+   fMaximum    = -1111;
+   fMethodCall = 0;
+   fCintFunc   = 0;
+   fNdim       = 1;
+
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
+   SetName(name);
+
+   if (gStyle) {
+      SetLineColor(gStyle->GetFuncColor());
+      SetLineWidth(gStyle->GetFuncWidth());
+      SetLineStyle(gStyle->GetFuncStyle());
+   }
+   SetFillStyle(0);
+
+   if (!fcn) return;
+   char *funcname = G__p2f2funcname(fcn);
+   SetTitle(funcname);
+   if (funcname) {
+      fMethodCall = new TMethodCall();
+      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
+      fNumber = -1;
+      gROOT->GetListOfFunctions()->Add(this);
+      if (! fMethodCall->IsValid() ) {
+         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
+      }
+   } else {
+      Error("TF1","can not find any function at the address 0x%x. This function requested for %s",fcn,name);
+   }
+
+
+}
+
+
+//______________________________________________________________________________
+TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // F1 constructor using a pointer to a real function.
+   //
+   //   npar is the number of free parameters used by the function
+   //
+   //   This constructor creates a function of type C when invoked
+   //   with the normal C++ compiler.
+   //
+   //   see test program test/stress.cxx (function stress1) for an example.
+   //   note the interface with an intermediate pointer.
+
+   fXmin       = xmin;
+   fXmax       = xmax;
+   fNpx        = 100;
+
+   fType       = 1;
+   fMethodCall = 0;
+   fCintFunc   = 0;
+   fFunctor = ROOT::Math::ParamFunctor(fcn);
+
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+   fChisquare  = 0;
+   fIntegral   = 0;
+   fAlpha      = 0;
+   fBeta       = 0;
+   fGamma      = 0;
+   fNsave      = 0;
+   fSave       = 0;
+   fParent     = 0;
+   fNpfits     = 0;
+   fNDF        = 0;
+   fHistogram  = 0;
+   fMinimum    = -1111;
+   fMaximum    = -1111;
+   fNdim       = 1;
+
+   // Store formula in linked list of formula in ROOT
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
+   SetName(name);
+   gROOT->GetListOfFunctions()->Add(this);
+
+   if (!gStyle) return;
+   SetLineColor(gStyle->GetFuncColor());
+   SetLineWidth(gStyle->GetFuncWidth());
+   SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
+
+}
+
+//______________________________________________________________________________
+TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // F1 constructor using a pointer to real function.
+   //
+   //   npar is the number of free parameters used by the function
+   //
+   //   This constructor creates a function of type C when invoked
+   //   with the normal C++ compiler.
+   //
+   //   see test program test/stress.cxx (function stress1) for an example.
+   //   note the interface with an intermediate pointer.
+
+   fXmin       = xmin;
+   fXmax       = xmax;
+   fNpx        = 100;
+
+   fType       = 1;
+   fMethodCall = 0;
+   fCintFunc   = 0;
+   fFunctor = ROOT::Math::ParamFunctor(fcn);
+
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+   fChisquare  = 0;
+   fIntegral   = 0;
+   fAlpha      = 0;
+   fBeta       = 0;
+   fGamma      = 0;
+   fNsave      = 0;
+   fSave       = 0;
+   fParent     = 0;
+   fNpfits     = 0;
+   fNDF        = 0;
+   fHistogram  = 0;
+   fMinimum    = -1111;
+   fMaximum    = -1111;
+   fNdim       = 1;
+
+   // Store formula in linked list of formula in ROOT
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
+   SetName(name);
+   gROOT->GetListOfFunctions()->Add(this);
+
+   if (!gStyle) return;
+   SetLineColor(gStyle->GetFuncColor());
+   SetLineWidth(gStyle->GetFuncWidth());
+   SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
+
+}
+
+
+//______________________________________________________________________________
+TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar ) : 
+   TFormula(), 
+   TAttLine(), 
+   TAttFill(), 
+   TAttMarker(), 
+   fXmin      ( xmin ),
+   fXmax      ( xmax ),
+   fNpx       ( 100 ),
+   fType      ( 1 ),
+   fNpfits    ( 0 ),
+   fNDF       ( 0 ),
+   fNsave     ( 0 ),
+   fChisquare ( 0 ),
+   fIntegral  ( 0 ),
+   fParErrors ( 0 ),
+   fParMin    ( 0 ),
+   fParMax    ( 0 ),
+   fSave      ( 0 ),
+   fAlpha     ( 0 ),
+   fBeta      ( 0 ),
+   fGamma     ( 0 ),
+   fParent    ( 0 ),
+   fHistogram ( 0 ),
+   fMaximum   ( -1111 ),
+   fMinimum   ( -1111 ),
+   fMethodCall( 0 ), 
+   fCintFunc  ( 0 ),
+   fFunctor   ( ROOT::Math::ParamFunctor(f) )
+{
+//*-*-*-*-*-*-*F1 constructor using the Functor class *-*-*-*-*-*-*-*
+//*-*          ===============================================
+//*-* 
+//*-*   xmin and xmax define the plotting range of the function 
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*   This constructor can be used only in compiled code 
+//*-*
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   CreateFromFunctor(name, npar);
+}
+
+
+//______________________________________________________________________________
+void TF1::CreateFromFunctor(const char *name, Int_t npar)
+{
+//*-*-*-*-*-*-*Internal Function to Create a TF1  using a Functor*-*-*-*-*-*-*-*
+//*-*          ===============================================
+//*-*
+//*-*          Used by the template constructors 
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fNdim       = 1;
+
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+
+   // Store formula in linked list of formula in ROOT
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   if (f1old) delete f1old;
+   SetName(name);
+   gROOT->GetListOfFunctions()->Add(this);
+
+   if (!gStyle) return;
+   SetLineColor(gStyle->GetFuncColor());
+   SetLineWidth(gStyle->GetFuncWidth());
+   SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
+
+}
+
+//______________________________________________________________________________
+TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className )
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // F1 constructor from an interpreted class defining the operator() or Eval().  
+   // This constructor emulate the syntax of the template constructor using a C++ callable object (functor) 
+   // which can be used only in C++ compiled mode. 
+   // The class name is required to get the type of class given the void pointer ptr. 
+   // For the method name is used the operator() (double *, double * ). 
+   // Use the other constructor taking the method name for different method names. 
+   //
+   //  xmin and xmax specify the function plotting range 
+   //  npar are the number of function parameters
+   //
+   //  see tutorial  math.exampleFunctor.C for an example of using this constructor 
+   //
+   //  This constructor is used only when using CINT.
+   //  In compiled mode the template constructor is used and in that case className is not needed 
+   
+   CreateFromCintClass(name, ptr, xmin, xmax, npar, className, 0 );
+}
+
+//______________________________________________________________________________
+TF1::TF1(const char *name,void *ptr, void * , Double_t xmin, Double_t xmax, Int_t npar, char * className, char * methodName)
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // F1 constructor from an interpreter class using a specidied member function.
+   // This constructor emulate the syntax of the template constructor using a C++ class and a given 
+   // member function pointer, which can be used only in C++ compiled mode. 
+   // The class name is required to get the type of class given the void pointer ptr. 
+   // The second void * is not needed for the CINT case, but is kept for emulating the API of the 
+   // template constructor. 
+   // The method name is optional. By default is looked for operator() (double *, double *) or 
+   // Eval(double *, double*)  
+   //
+   //  xmin and xmax specify the function plotting range 
+   //  npar are the number of function parameters.
+   //
+   //
+   //  see tutorial  math.exampleFunctor.C for an example of using this constructor 
+   //
+   //  This constructor is used only when using CINT.
+   //  In compiled mode the template constructor is used and in that case className is not needed 
+   
+   CreateFromCintClass(name, ptr, xmin, xmax, npar, className, methodName);
+}
+
+//______________________________________________________________________________
+void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className, char * methodName)
+{
+   // Internal function used to create from TF1 from an interpreter CINT class 
+   // with the specified type (className) and member function name (methodName).
+   //
+
+
+   fXmin       = xmin;
+   fXmax       = xmax;
+   fNpx        = 100;
+   fType       = 3;
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
@@ -443,162 +866,41 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    }
    SetFillStyle(0);
 
-   if (!fcn) return;
-   char *funcname = G__p2f2funcname(fcn);
-   SetTitle(funcname);
-   if (funcname) {
+   if (!ptr) return;
+   fCintFunc = ptr;
+
+   if (!className) return;
+   
+   TClass *cl = TClass::GetClass(className);
+
+   if (cl) {
       fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
+
+
+      if (methodName) 
+         fMethodCall->InitWithPrototype(cl,methodName,"Double_t*,Double_t*");
+      else { 
+         fMethodCall->InitWithPrototype(cl,"operator()","Double_t*,Double_t*");
+         if (! fMethodCall->IsValid() ) 
+            // try with Eval if operator() is not found
+            fMethodCall->InitWithPrototype(cl,"Eval","Double_t*,Double_t*");
+      }
+
       fNumber = -1;
       gROOT->GetListOfFunctions()->Add(this);
       if (! fMethodCall->IsValid() ) {
-         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
+         if (methodName)
+            Error("TF1","No function found in class %s with the signature %s(Double_t*,Double_t*)",className,methodName);
+         else
+            Error("TF1","No function found in class %s with the signature operator() (Double_t*,Double_t*) or Eval(Double_t*,Double_t*)",className);
       }
    } else {
-      Error("TF1","can not find any function at the address 0x%x. This function requested for %s",fcn,name);
+      Error("TF1","can not find any class with name %s at the address 0x%x",className,ptr);
    }
-}
 
-
-//______________________________________________________________________________
-TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
-      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
-{
-   // F1 constructor using a pointer to real function.
-   //
-   //   npar is the number of free parameters used by the function
-   //
-   //   This constructor creates a function of type C when invoked
-   //   with the normal C++ compiler.
-   //
-   //   see test program test/stress.cxx (function stress1) for an example.
-   //   note the interface with an intermediate pointer.
-
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-
-   fType       = 1;
-   fMethodCall = 0;
-   fFunction   = fcn;
-
-   if (npar > 0 ) fNpar = npar;
-   if (fNpar) {
-      fNames      = new TString[fNpar];
-      fParams     = new Double_t[fNpar];
-      fParErrors  = new Double_t[fNpar];
-      fParMin     = new Double_t[fNpar];
-      fParMax     = new Double_t[fNpar];
-      for (int i = 0; i < fNpar; i++) {
-         fParams[i]     = 0;
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-   fNdim       = 1;
-
-   // Store formula in linked list of formula in ROOT
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
-   SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
-
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
 
 }
 
-
-//______________________________________________________________________________
-TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
-      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
-{
-   // F1 constructor using a pointer to real function.
-   //
-   //   npar is the number of free parameters used by the function
-   //
-   //   This constructor creates a function of type C when invoked
-   //   with the normal C++ compiler.
-   //
-   //   see test program test/stress.cxx (function stress1) for an example.
-   //   note the interface with an intermediate pointer.
-
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-
-   fType       = 1;
-   fMethodCall = 0;
-   typedef Double_t (*Function_t) (Double_t *, Double_t *);
-   fFunction   = (Function_t)fcn;
-
-   if (npar > 0 ) fNpar = npar;
-   if (fNpar) {
-      fNames      = new TString[fNpar];
-      fParams     = new Double_t[fNpar];
-      fParErrors  = new Double_t[fNpar];
-      fParMin     = new Double_t[fNpar];
-      fParMax     = new Double_t[fNpar];
-      for (int i = 0; i < fNpar; i++) {
-         fParams[i]     = 0;
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-   fNdim       = 1;
-
-   // Store formula in linked list of formula in ROOT
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
-   SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
-
-   if (!gStyle) return;
-   SetLineColor(gStyle->GetFuncColor());
-   SetLineWidth(gStyle->GetFuncWidth());
-   SetLineStyle(gStyle->GetFuncStyle());
-   SetFillStyle(0);
-
-}
 
 
 //______________________________________________________________________________
@@ -647,7 +949,6 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    fNsave     = 0;
    fChisquare = 0;
    fIntegral  = 0;
-   fFunction  = 0;
    fParErrors = 0;
    fParMin    = 0;
    fParMax    = 0;
@@ -660,6 +961,7 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    fMinimum   = -1111;
    fMaximum   = -1111;
    fMethodCall = 0;
+   fCintFunc   = 0;
    SetFillStyle(0);
 
    ((TF1&)f1).Copy(*this);
@@ -712,7 +1014,8 @@ void TF1::Copy(TObject &obj) const
    ((TF1&)obj).fXmax = fXmax;
    ((TF1&)obj).fNpx  = fNpx;
    ((TF1&)obj).fType = fType;
-   ((TF1&)obj).fFunction  = fFunction;
+   ((TF1&)obj).fCintFunc  = fCintFunc;
+   ((TF1&)obj).fFunctor   = fFunctor;
    ((TF1&)obj).fChisquare = fChisquare;
    ((TF1&)obj).fNpfits  = fNpfits;
    ((TF1&)obj).fNDF     = fNDF;
@@ -1144,14 +1447,26 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    if (fType == 0) return TFormula::EvalPar(x,params);
    Double_t result = 0;
    if (fType == 1)  {
-      if (fFunction) {
-         if (params) result = (*fFunction)((Double_t*)x,(Double_t*)params);
-         else        result = (*fFunction)((Double_t*)x,fParams);
+//       if (fFunction) {
+//          if (params) result = (*fFunction)((Double_t*)x,(Double_t*)params);
+//          else        result = (*fFunction)((Double_t*)x,fParams);
+      if (!fFunctor.Empty()) {
+         if (params) result = fFunctor((Double_t*)x,(Double_t*)params);
+         else        result = fFunctor((Double_t*)x,fParams);
+
       }else          result = GetSave(x);
+      return result;
    }
    if (fType == 2) {
       if (fMethodCall) fMethodCall->Execute(result);
       else             result = GetSave(x);
+      return result;
+   }
+   if (fType == 3) {
+      //std::cout << "Eval interp function object  " << fCintFunc << " result = " << result << std::endl; 
+      if (fMethodCall) fMethodCall->Execute(fCintFunc,result);
+      else             result = GetSave(x);
+      return result;
    }
    return result;
 }
@@ -2535,7 +2850,11 @@ L90:
    rgncmp  = rgnvol*(wpn1[n-2]*sum1+wp2*sum2+wpn3[n-2]*sum3+wp4*sum4);
    rgnval  = wn1[n-2]*sum1+w2*sum2+wn3[n-2]*sum3+w4*sum4+wn5[n-2]*sum5;
    rgnval *= rgnvol;
-   rgnerr  = TMath::Abs(rgnval-rgncmp);
+   // avoid difference of too small numbers 
+   //rgnval = 1.0E-30;
+   //rgnerr  = TMath::Max( TMath::Abs(rgnval-rgncmp), TMath::Max(TMath::Abs(rgncmp), TMath::Abs(rgnval) )*4.0E-16 );
+   rgnerr  = TMath::Abs(rgnval-rgncmp); 
+
    result += rgnval;
    abserr += rgnerr;
    ifncls += irlcls;
@@ -2587,7 +2906,11 @@ L160:
       isbrgn  = isbrgs;
       goto L20;
    }
-   relerr = abserr/aresult;
+
+   relerr = abserr;
+   if (aresult != 0)  relerr = abserr/aresult;
+
+
    if (relerr < 1e-1 && aresult < 1e-20) ifail = 0;
    if (relerr < 1e-3 && aresult < 1e-10) ifail = 0;
    if (relerr < 1e-5 && aresult < 1e-5)  ifail = 0;

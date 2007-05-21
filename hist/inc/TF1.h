@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.58 2006/11/24 13:44:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.59 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -36,6 +36,10 @@
 #include "TAttMarker.h"
 #endif
 
+#ifndef ROOT_Math_ParamFunctor
+#include "Math/ParamFunctor.h"
+#endif
+
 class TF1;
 class TH1;
 class TAxis;
@@ -65,11 +69,12 @@ protected:
    Double_t     fMaximum;    //Maximum value for plotting
    Double_t     fMinimum;    //Minimum value for plotting
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
-
+   void *       fCintFunc;              //! pointer to interpreted function class
+   ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
+
          
 public:
     // TF1 status bits
@@ -79,11 +84,108 @@ public:
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar);
-   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
+   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar); 
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
    TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
 #endif
+
+   // Constructors using functors (compiled mode only)
+   TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0);  
+
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
+   // and returning a double.    
+   // The class name is not needed when using compile code, while it is required when using 
+   // interpreted code via the specialized constructor with void *. 
+   // An instance of the C++ function class or its pointer can both be used. The former is reccomended when using 
+   // C++ compiled code, but if CINT compatibility is needed, then a pointer to the function class must be used. 
+   // xmin and xmax specify the plotting range,  npar is the number of parameters. 
+   // See the tutorial math/exampleFunctor.C for an example of using this constructor
+   template <typename Func> 
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, char * = 0  ) : 
+      TFormula(), 
+      TAttLine(), 
+      TAttFill(), 
+      TAttMarker(), 
+      fXmin      ( xmin ),
+      fXmax      ( xmax ),
+      fNpx       ( 100 ),
+      fType      ( 1 ),
+      fNpfits    ( 0 ),
+      fNDF       ( 0 ),
+      fNsave     ( 0 ),
+      fChisquare ( 0 ),
+      fIntegral  ( 0 ),
+      fParErrors ( 0 ),
+      fParMin    ( 0 ),
+      fParMax    ( 0 ),
+      fSave      ( 0 ),
+      fAlpha     ( 0 ),
+      fBeta      ( 0 ),
+      fGamma     ( 0 ),
+      fParent    ( 0 ),
+      fHistogram ( 0 ),
+      fMaximum   ( -1111 ),
+      fMinimum   ( -1111 ),
+      fMethodCall ( 0), 
+      fCintFunc  ( 0 ),
+      fFunctor( ROOT::Math::ParamFunctor(f) )
+   { 
+      CreateFromFunctor(name, npar); 
+   }
+
+   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
+   // MemFn. 
+   // The member function must have the signature of  (double * , double *) and returning a double. 
+   // The class name and the method name are not needed when using compile code 
+   // (the member function pointer is used in this case), while they are required when using interpreted 
+   // code via the specialized constructor with void *. 
+   // xmin and xmax specify the plotting range,  npar is the number of parameters. 
+   // See the tutorial math/exampleFunctor.C for an example of using this constructor
+   template <class PtrObj, typename MemFn>
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, char * = 0, char * = 0) : 
+      TFormula(), 
+      TAttLine(), 
+      TAttFill(), 
+      TAttMarker(), 
+      fXmin      ( xmin ),
+      fXmax      ( xmax ),
+      fNpx       ( 100 ),
+      fType      ( 1 ),
+      fNpfits    ( 0 ),
+      fNDF       ( 0 ),
+      fNsave     ( 0 ),
+      fChisquare ( 0 ),
+      fIntegral  ( 0 ),
+      fParErrors ( 0 ),
+      fParMin    ( 0 ),
+      fParMax    ( 0 ),
+      fSave      ( 0 ),
+      fAlpha     ( 0 ),
+      fBeta      ( 0 ),
+      fGamma     ( 0 ),
+      fParent    ( 0 ),
+      fHistogram ( 0 ),
+      fMaximum   ( -1111 ),
+      fMinimum   ( -1111 ),
+      fMethodCall( 0 ), 
+      fCintFunc  ( 0 ), 
+      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ) 
+   { 
+      CreateFromFunctor(name, npar); 
+   }
+
+   // constructor used by CINT 
+   TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char *className ); 
+   TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, char *className, char *methodName = 0); 
+
+
+protected: 
+   void CreateFromFunctor(const char *name, Int_t npar);   
+   void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, char * cname, char * fname);   
+public:
+
+
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
@@ -101,6 +203,8 @@ public:
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
+   // for using TF1 as a callable object (functor)
+   virtual Double_t operator()(const Double_t *x, const Double_t *params=0) { return EvalPar(x,params); }
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
@@ -152,7 +256,7 @@ public:
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
-   virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { fFunction = fcn;}
+   virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { fFunctor = ROOT::Math::ParamFunctor(fcn);}
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);

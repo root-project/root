@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.20 2005/11/21 09:47:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.21 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -46,6 +46,39 @@ public:
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
 #endif
+
+   // constructor using a functor
+   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0);  
+
+   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
+   // MemFn. 
+   template <class PtrObj, typename MemFn>
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * c1, char * c2) : 
+      TF1(name,p,memFn,xmin,xmax,npar,c1,c2),
+      fYmin(ymin), fYmax(ymax) 
+   {
+      fNpx = 30; 
+      fNpy = 30;
+      fNdim = 2;
+      fContour.Set(0);
+   } 
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
+   // and returning a double.    
+   template <typename Func> 
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * tmp  ) : 
+      TF1(name,f,xmin,xmax,npar,tmp),
+      fYmin(ymin), fYmax(ymax) 
+   {
+      fNpx = 30; 
+      fNpy = 30;
+      fNdim = 2;
+      fContour.Set(0);
+   } 
+
+   // constructor used by CINT 
+   TF2(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className ); 
+   TF2(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className, char *methodName = 0);
+
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
    virtual   ~TF2();

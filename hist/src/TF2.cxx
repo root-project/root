@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.36 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.37 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 
 //______________________________________________________________________________
 TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
-      :TF1(name,formula,xmax,xmin)
+      :TF1(name,formula,xmin,xmax)
 {
 // F2 constructor using a formula definition
 //
@@ -150,6 +150,67 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
    fContour.Set(0);
 
 }
+
+//______________________________________________________________________________
+TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
+      : TF1(name, f, xmin, xmax, npar)
+{
+//*-*-*-*-*-*-*F2 constructor using a ParamFunctor, 
+//*-*          a functor class implementing operator() (double *, double *)  
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fNdim   = 2;
+   fContour.Set(0);
+
+}
+
+//______________________________________________________________________________
+TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className)
+      : TF1(name, ptr, xmin, xmax, npar,className)
+{
+//*-*-*-*-*-*-*F2 constructor used by CINT for interpreted function objects
+//*-*          Used for having same syntax as the template constructor from callable C++ objects 
+//*-*          which can be used only in compile C++ mode.   
+//*-*          
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fNdim   = 2;
+   fContour.Set(0);
+
+}
+
+//______________________________________________________________________________
+TF2::TF2(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className, char * methodName)
+      : TF1(name, ptr, (void*)0,xmin, xmax, npar,className, methodName)
+{
+//*-*-*-*-*-*-*F2 constructor used by CINT for member functions of interpreted classes
+//*-*          Used for having same syntax as the template constructor from a generic 
+//*-*          class pointer and a member function type 
+//*-*          which can be used only in compile C++ mode  
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fNdim   = 2;
+   fContour.Set(0);
+
+}
+
 
 //______________________________________________________________________________
 TF2& TF2::operator=(const TF2 &rhs)
