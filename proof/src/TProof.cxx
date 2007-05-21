@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.196 2007/04/17 09:05:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.197 2007/05/02 19:18:01 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -6838,3 +6838,75 @@ void TProof::SaveWorkerInfo()
    return;
 }
 
+//______________________________________________________________________________
+Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
+{
+   // Get the value from the specified parameter from the specified collection.
+   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
+   // or value type does not match), 0 otherwise.
+
+   TObject *obj = c->FindObject(par);
+   if (obj) {
+      TNamed *par = dynamic_cast<TNamed*>(obj);
+      if (par) {
+         value = par->GetTitle();
+         return 0;
+      }
+   }
+   return -1;
+
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
+{
+   // Get the value from the specified parameter from the specified collection.
+   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
+   // or value type does not match), 0 otherwise.
+
+   TObject *obj = c->FindObject(par);
+   if (obj) {
+      TParameter<Long_t> *par = dynamic_cast<TParameter<Long_t>*>(obj);
+      if (par) {
+         value = par->GetVal();
+         return 0;
+      }
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
+{
+   // Get the value from the specified parameter from the specified collection.
+   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
+   // or value type does not match), 0 otherwise.
+
+   TObject *obj = c->FindObject(par);
+   if (obj) {
+      TParameter<Long64_t> *par = dynamic_cast<TParameter<Long64_t>*>(obj);
+      if (par) {
+         value = par->GetVal();
+         return 0;
+      }
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
+{
+   // Get the value from the specified parameter from the specified collection.
+   // Returns -1 in case of error (i.e. list is 0, parameter does not exist
+   // or value type does not match), 0 otherwise.
+
+   TObject *obj = c->FindObject(par);
+   if (obj) {
+      TParameter<Double_t> *par = dynamic_cast<TParameter<Double_t>*>(obj);
+      if (par) {
+         value = par->GetVal();
+         return 0;
+      }
+   }
+   return -1;
+}

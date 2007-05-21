@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.109 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.110 2007/03/19 14:43:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -67,6 +67,7 @@ class TDrawFeedback;
 class TDSet;
 class TEventList;
 class TList;
+class TCollection;
 class TMessage;
 class TMonitor;
 class TPluginHandler;
@@ -711,6 +712,7 @@ public:
    const char *GetDataPoolUrl() const { return fDataPoolUrl; }
    void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
 
+   // Opening and managing PROOF connections
    static TProof       *Open(const char *url = 0, const char *conffile = 0,
                              const char *confdir = 0, Int_t loglevel = 0);
    static TProofMgr    *Mgr(const char *url);
@@ -720,6 +722,12 @@ public:
    static void          DelEnvVar(const char *name);
    static const TList  *GetEnvVars();
    static void          ResetEnvVars();
+
+   // Input/output list utilities
+   static Int_t         GetParameter(TCollection *c, const char *par, TString &value);
+   static Int_t         GetParameter(TCollection *c, const char *par, Long_t &value);
+   static Int_t         GetParameter(TCollection *c, const char *par, Long64_t &value);
+   static Int_t         GetParameter(TCollection *c, const char *par, Double_t &value);
 
    ClassDef(TProof,0)  //PROOF control class
 };
