@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.6 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.7 2007/01/12 16:03:17 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 /*************************************************************************
@@ -46,6 +46,9 @@ public:
 
    // Construct user geometry
    virtual void ConstructGeometry() = 0;
+
+   // Misalign user geometry (optional)
+   virtual Bool_t MisalignGeometry() {return kFALSE;}
 
    // Define parameters for optical processes (optional)
    virtual void ConstructOpGeometry() {}
