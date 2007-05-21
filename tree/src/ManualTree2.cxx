@@ -50,8 +50,8 @@ namespace ROOT {
 extern "C" void G__cpp_reset_tagtableManualTree2();
 
 extern "C" void G__set_cpp_environmentManualTree2() {
-  G__add_compiledheader("TTree.h");
-  G__cpp_reset_tagtableManualTree2();
+   G__add_compiledheader("TTree.h");
+   G__cpp_reset_tagtableManualTree2();
 }
 #include <new>
 extern "C" int G__cpp_dllrevManualTree2() { return(30051515); }
@@ -77,18 +77,18 @@ extern "C" int G__cpp_dllrevManualTree2() { return(30051515); }
 * Get size of pointer to member function
 *********************************************************/
 class G__Sizep2memfuncManualTree2 {
- public:
-  G__Sizep2memfuncManualTree2(): p(&G__Sizep2memfuncManualTree2::sizep2memfunc) {}
-    size_t sizep2memfunc() { return(sizeof(p)); }
-  private:
-    size_t (G__Sizep2memfuncManualTree2::*p)();
+public:
+   G__Sizep2memfuncManualTree2(): p(&G__Sizep2memfuncManualTree2::sizep2memfunc) {}
+   size_t sizep2memfunc() { return(sizeof(p)); }
+private:
+   size_t (G__Sizep2memfuncManualTree2::*p)();
 };
 
 size_t G__get_sizep2memfuncManualTree2()
 {
-  G__Sizep2memfuncManualTree2 a;
-  G__setsizep2memfunc((int)a.sizep2memfunc());
-  return((size_t)a.sizep2memfunc());
+   G__Sizep2memfuncManualTree2 a;
+   G__setsizep2memfunc((int)a.sizep2memfunc());
+   return((size_t)a.sizep2memfunc());
 }
 
 
@@ -96,7 +96,7 @@ size_t G__get_sizep2memfuncManualTree2()
 * virtual base class offset calculation interface
 *********************************************************/
 
-   /* Setting up class inheritance */
+/* Setting up class inheritance */
 
 /*********************************************************
 * Inheritance information setup/
@@ -124,7 +124,7 @@ extern "C" void G__cpp_setup_typetableManualTree2() {
 * Data Member information setup/
 *********************************************************/
 
-   /* Setting up class,struct,union tag member variable */
+/* Setting up class,struct,union tag member variable */
 extern "C" void G__cpp_setup_memvarManualTree2() {
 }
 /***********************************************************
@@ -143,18 +143,18 @@ static void G__setup_memfuncTTree(void) {
    /* TTree */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__ManualTree2LN_TTree));
    G__memfunc_setup("Process",735,G__ManualTree2_126_0_132, 110, -1, G__defined_typename("Long64_t"), 0, 4, 1, 1, 0, 
-"Y - - 0 - selector C - 'Option_t' 10 '\"\"' option "
-"n - 'Long64_t' 0 '1000000000' nentries n - 'Long64_t' 0 '0' firstentry", (char*)NULL, (void*) NULL, 1);
+      "Y - - 0 - selector C - 'Option_t' 10 '\"\"' option "
+      "n - 'Long64_t' 0 '1000000000' nentries n - 'Long64_t' 0 '0' firstentry", (char*)NULL, (void*) NULL, 1);
    G__memfunc_setup("Branch",590,G__ManualTree2_126_0_187, 85, G__get_linked_tagnum(&G__ManualTree2LN_TBranch), -1, 0, 5, 1, 1, 0, 
-"C - - 10 - name C - - 10 - classname "
-"Y - - 3 - addobj i - 'Int_t' 0 '32000' bufsize "
-"i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
+      "C - - 10 - name C - - 10 - classname "
+      "Y - - 3 - addobj i - 'Int_t' 0 '32000' bufsize "
+      "i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("Branch",590,G__ManualTree2_126_0_188, 85, G__get_linked_tagnum(&G__ManualTree2LN_TBranch), -1, 0, 4, 1, 1, 0, 
-"C - - 10 - name Y - - 3 - addobj "
-"i - 'Int_t' 0 '32000' bufsize i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
+      "C - - 10 - name Y - - 3 - addobj "
+      "i - 'Int_t' 0 '32000' bufsize i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("SetBranchAddress",1600,G__ManualTree2_126_0_190, 121, -1, -1, 0, 3, 1, 1, 0, 
-"C - - 10 - bname Y - - 2 - add "
-"U 'TBranch' - 2 '0' ptr", (char*)NULL, (void*) NULL, 0);
+      "C - - 10 - bname Y - - 2 - add "
+      "U 'TBranch' - 2 '0' ptr", (char*)NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
@@ -183,9 +183,9 @@ static void G__cpp_setup_global2() {
    G__resetglobalenv();
 }
 extern "C" void G__cpp_setup_globalManualTree2() {
-  G__cpp_setup_global0();
-  G__cpp_setup_global1();
-  G__cpp_setup_global2();
+   G__cpp_setup_global0();
+   G__cpp_setup_global1();
+   G__cpp_setup_global2();
 }
 
 /*********************************************************
@@ -205,9 +205,9 @@ static void G__cpp_setup_func2() {
 }
 
 extern "C" void G__cpp_setup_funcManualTree2() {
-  G__cpp_setup_func0();
-  G__cpp_setup_func1();
-  G__cpp_setup_func2();
+   G__cpp_setup_func0();
+   G__cpp_setup_func1();
+   G__cpp_setup_func2();
 }
 
 /*********************************************************
@@ -220,9 +220,9 @@ G__linked_taginfo G__ManualTree2LN_TSelector = { "TSelector" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableManualTree2() {
-  G__ManualTree2LN_TTree.tagnum = -1 ;
-  G__ManualTree2LN_TBranch.tagnum = -1 ;
-  G__ManualTree2LN_TSelector.tagnum = -1 ;
+   G__ManualTree2LN_TTree.tagnum = -1 ;
+   G__ManualTree2LN_TBranch.tagnum = -1 ;
+   G__ManualTree2LN_TSelector.tagnum = -1 ;
 }
 
 
@@ -234,26 +234,26 @@ extern "C" void G__cpp_setup_tagtableManualTree2() {
    G__get_linked_tagnum_fwd(&G__ManualTree2LN_TSelector);
 }
 extern "C" void G__cpp_setupManualTree2(void) {
-  G__check_setup_version(30051515,"G__cpp_setupManualTree2()");
-  G__set_cpp_environmentManualTree2();
-  G__cpp_setup_tagtableManualTree2();
+   G__check_setup_version(30051515,"G__cpp_setupManualTree2()");
+   G__set_cpp_environmentManualTree2();
+   G__cpp_setup_tagtableManualTree2();
 
-  G__cpp_setup_inheritanceManualTree2();
+   G__cpp_setup_inheritanceManualTree2();
 
-  G__cpp_setup_typetableManualTree2();
+   G__cpp_setup_typetableManualTree2();
 
-  G__cpp_setup_memvarManualTree2();
+   G__cpp_setup_memvarManualTree2();
 
-  G__cpp_setup_memfuncManualTree2();
-  G__cpp_setup_globalManualTree2();
-  G__cpp_setup_funcManualTree2();
+   G__cpp_setup_memfuncManualTree2();
+   G__cpp_setup_globalManualTree2();
+   G__cpp_setup_funcManualTree2();
 
    if(0==G__getsizep2memfunc()) G__get_sizep2memfuncManualTree2();
-  return;
+   return;
 }
 class G__cpp_setup_initManualTree2 {
-  public:
-    G__cpp_setup_initManualTree2() { G__add_setup_func("ManualTree2",(G__incsetup)(&G__cpp_setupManualTree2)); G__call_setup_funcs(); }
+public:
+   G__cpp_setup_initManualTree2() { G__add_setup_func("ManualTree2",(G__incsetup)(&G__cpp_setupManualTree2)); G__call_setup_funcs(); }
    ~G__cpp_setup_initManualTree2() { G__remove_setup_func("ManualTree2"); }
 };
 G__cpp_setup_initManualTree2 G__cpp_setup_initializerManualTree2;
