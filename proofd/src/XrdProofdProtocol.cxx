@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.45 2007/04/19 09:27:55 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.46 2007/05/02 19:20:59 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -241,6 +241,10 @@ std::list<XrdProofdPInfo *> XrdProofdProtocol::fgTerminatedProcess; // List of p
 
 #ifndef XPDSWAP
 #define XPDSWAP(a,b,t) { t = a ; a = b; b = t; }
+#endif
+
+#ifndef XpdBadPGuard
+#define XpdBadPGuard(g,u) (!(g.Valid()) && (geteuid() != (uid_t)u))
 #endif
 
 #undef  TRACELINK
@@ -834,7 +838,7 @@ static int AssertDir(const char *path, XrdProofUI ui)
    if ((int) st.st_uid != ui.fUid || (int) st.st_gid != ui.fGid) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (!pGuard.Valid()) {
+      if (XpdBadPGuard(pGuard, ui.fUid)) {
          TRACE(XERR, "AsserDir: could not get privileges");
          return -1;
       }
@@ -3414,7 +3418,7 @@ int XrdProofdProtocol::MapClient(bool all)
          TRACEI(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-         if (!pGuard.Valid()) {
+         if (XpdBadPGuard(pGuard, fUI.fUid)) {
             TRACEI(XERR, "MapClient: could not get privileges");
             return -1;
          }
@@ -4088,12 +4092,10 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
 
    // ROOT Version tag if not the default one
-   if (fPClient->ROOT() != fgROOT.front()) {
-      ev = new char[strlen("ROOTVERSIONTAG=")+strlen(fPClient->ROOT()->Tag())+2];
-      sprintf(ev, "ROOTVERSIONTAG=%s", fPClient->ROOT()->Tag());
-      putenv(ev);
-      MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
-   }
+   ev = new char[strlen("ROOTVERSIONTAG=")+strlen(fPClient->ROOT()->Tag())+2];
+   sprintf(ev, "ROOTVERSIONTAG=%s", fPClient->ROOT()->Tag());
+   putenv(ev);
+   MTRACE(DBG, "xpd:child: ", "SetProofServEnv: "<<ev);
 
    // Create the env file
    MTRACE(DBG, "xpd:child: ", "SetProofServEnv: creating env file");
@@ -4682,11 +4684,11 @@ int XrdProofdProtocol::Create()
    if (fSrvType != kXPD_Internal) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (pGuard.Valid()) {
+      if (XpdBadPGuard(pGuard, fUI.fUid)) {
+         TRACEI(REQ, "Create: could not get privileges to run AddNewSession");
+      } else {
          if (XrdProofdProtocol::AddNewSession(fPClient, xps->Tag()) == -1)
             TRACEI(REQ, "Create: problems recording session in sandbox");
-      } else {
-         TRACEI(REQ, "Create: could not get privileges to run AddNewSession");
       }
    }
 
@@ -5695,7 +5697,7 @@ int XrdProofdProtocol::SetUserEnvironment()
       if ((int) geteuid() != fUI.fUid) {
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-         if (!pGuard.Valid()) {
+         if (XpdBadPGuard(pGuard, fUI.fUid)) {
             MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: could not get privileges");
             return -1;
          }
@@ -5729,7 +5731,7 @@ int XrdProofdProtocol::SetUserEnvironment()
    if ((int) geteuid() != fUI.fUid) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (!pGuard.Valid()) {
+      if (XpdBadPGuard(pGuard, fUI.fUid)) {
          MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: could not get privileges");
          return -1;
       }
@@ -6348,7 +6350,11 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
       // We need the right privileges to do this
       XrdOucMutexHelper mtxh(&gSysPrivMutex);
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (pGuard.Valid()) {
+      if (XpdBadPGuard(pGuard, fUI.fUid)) {
+        XrdOucString msg = "KillProofServ: could not get privileges";
+        TRACEI(XERR, msg.c_str());
+        return -1;
+      } else {
          bool signalled = 1;
          if (forcekill)
             // Hard shutdown via SIGKILL
@@ -6394,10 +6400,6 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
          } else {
             TRACEI(DBG, "KillProofServ: process ID "<<pid<<" not found in the process table");
          }
-      } else {
-        XrdOucString msg = "KillProofServ: could not get privileges";
-        TRACEI(XERR, msg.c_str());
-        return -1;
       }
    } else {
       return -1;
