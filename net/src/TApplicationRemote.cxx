@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.6 2007/05/16 11:14:35 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.7 2007/05/16 23:53:22 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -137,8 +137,15 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
 
    if (gDebug > 0)
       Info("TApplicationRemote","Executing: %s", cmd.Data());
-   if (gSystem->Exec(cmd) != 0)
+   if (gSystem->Exec(cmd) != 0) {
       Info("TApplicationRemote","Some error occured during SSH connection");
+      mon->DeActivateAll();
+      delete mon;
+      delete ss;
+      SafeDelete(fSocket);
+      SetBit(kInvalidObject);
+      return;
+   }
 
    // Wait for activity on the socket
    mon->Select();
@@ -381,8 +388,8 @@ Int_t TApplicationRemote::CollectInput()
             // If a canvas, draw it
             if (TString(o->ClassName()) == "TCanvas")
                o->Draw();
-          }
-          break;
+         }
+         break;
 
       case kMESS_ANY:
          // Generic message: read out the type
