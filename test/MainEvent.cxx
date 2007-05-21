@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.30 2005/12/02 17:43:04 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.31 2005/12/02 18:50:07 pcanal Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -151,10 +151,10 @@ int main(int argc, char **argv)
    if (read) {
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
-         hfile->UseCache(10);
       } else
          hfile = new TFile("Event.root");
       tree = (TTree*)hfile->Get("T");
+      tree->SetCacheSize(10000000); //this is the default value: 10 MBytes
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
@@ -185,7 +185,6 @@ int main(int argc, char **argv)
       // This file is now becoming the current directory.
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
-         hfile->UseCache(10);
       } else
          hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
@@ -202,7 +201,8 @@ int main(int argc, char **argv)
 
      // Create a ROOT Tree and one superbranch
       TTree *tree = new TTree("T","An example of a ROOT tree");
-      tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
+      tree->SetAutoSave(1000000000); // autosave when 1 Gbyte written
+      tree->SetCacheSize(10000000);  //set a 10 MBytes cache (useless when writing local files)
       bufsize = 64000;
       if (split)  bufsize /= 4;
       event = new Event();
