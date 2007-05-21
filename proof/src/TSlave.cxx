@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.56 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.57 2006/12/03 23:34:03 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -346,6 +346,8 @@ void TSlave::Print(Option_t *) const
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), sst[st]);
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
+   Printf("    ROOT version:            %s", GetROOTVersion());
+   Printf("    Architecture-Compiler:   %s", GetArchCompiler());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());
       if (fSocket->GetSecContext())

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.24 2006/12/03 23:34:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.25 2007/02/12 13:05:32 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -95,6 +95,9 @@ protected:
    Int_t         fParallel;  //number of active slaves
    TString       fMsd;       //mass storage domain of slave
 
+   TString       fROOTVers;  //ROOT version run by worker
+   TString       fArchComp;  //Build architecture, compiler on worker (e.g. linux-gcc345)
+
    TSlave();
    virtual void  FlushSocket() { }
    void          Init(TSocket *s, Int_t stype);
@@ -134,6 +137,9 @@ public:
    TFileHandler  *GetInputHandler() const { return fInput; }
    void           SetInputHandler(TFileHandler *ih);
 
+   const char    *GetArchCompiler() const { return fArchComp; }
+   const char    *GetROOTVersion() const { return fROOTVers; }
+
    virtual Bool_t IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
    void           Print(Option_t *option="") const;
@@ -141,6 +147,9 @@ public:
    virtual Int_t  SetupServ(Int_t stype, const char *conffile);
 
    virtual void   SetInterruptHandler(Bool_t /* on */) { }
+
+   void           SetArchCompiler(const char *ac) { fArchComp = ac; }
+   void           SetROOTVersion(const char *rv) { fROOTVers = rv; }
 
    static void    SetTXSlaveHook(TSlave_t xslavehook);
 
