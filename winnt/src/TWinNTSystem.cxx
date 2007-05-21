@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.170 2007/04/02 11:07:21 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.171 2007/05/17 15:04:52 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3344,14 +3344,14 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Exit the application.
 
-   gVirtualX->CloseDisplay();
-
    // Insures that the files and sockets are closed before any library is unloaded!
    if (gROOT) {
       if (gROOT->GetListOfFiles()) gROOT->GetListOfFiles()->Delete("slow");
       if (gROOT->GetListOfSockets()) gROOT->GetListOfSockets()->Delete();
       if (gROOT->GetListOfMappedFiles()) gROOT->GetListOfMappedFiles()->Delete("slow");
+      if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->Delete();
    }
+   gVirtualX->CloseDisplay();
 
    if (mode) {
       ::exit(code);
