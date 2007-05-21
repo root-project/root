@@ -47,6 +47,9 @@ if [ "$HAVEMT" == "1" ]; then
    HAVEMTEXE=' && if EXIST \"$ExeName.exe.manifest\" ( mt -nologo -manifest \"$ExeName.exe.manifest\" \"-outputresource:$ExeName.exe;1\" && del \"$ExeName.exe.manifest\" )'
 fi
 
+# Determine the compiler version
+COMPILERVERS="$CXX"
+
 rm -f __compiledata
 
 echo "Running $0"
@@ -54,6 +57,7 @@ echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
+echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then 
    echo "#define  MAKESHAREDLIB \"cl \$Opt -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles -Fo\$ObjectFiles && bindexplib \$LibName \$ObjectFiles > \$BuildDir\\\\\$LibName.def && lib -nologo -MACHINE:IX86 -out:\$BuildDir\\\\\$LibName.lib \$ObjectFiles -def:\$BuildDir\\\\\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$BuildDir\\\\\$LibName.dll \$BuildDir\\\\\$LibName.exp -LIBPATH:%ROOTSYS%\\\\lib  \$LinkedLibs libCore.lib libCint.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib $HAVEMTDLL \" " >> __compiledata
 else

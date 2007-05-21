@@ -62,6 +62,27 @@ fi
 # Remove -Iinclude since it is 'location' depedent
 CXXFLAGS=`echo $CXXFLAGS | sed 's/-Iinclude //' `
 
+# Determine the compiler version
+COMPILERVERS="$CXX"
+if [ "$CXX" = "g++" ] || [ "$CXX" = "icc" ]; then
+   cxxTemp=`$CXX -dumpversion`
+   cxxMajor=`echo $cxxTemp 2>&1 | cut -d'.' -f1`
+   cxxMinor=`echo $cxxTemp 2>&1 | cut -d'.' -f2`
+   cxxPatch=`echo $cxxTemp 2>&1 | cut -d'.' -f3`
+   if [ "$CXX" = "g++" ] ; then
+      COMPILERVERS="gcc"
+   fi
+   if [ "$cxxMajor" != "x" ] ; then
+      COMPILERVERS="$COMPILERVERS$cxxMajor"
+      if [ "$cxxMinor" != "x" ] ; then
+         COMPILERVERS="$COMPILERVERS$cxxMinor"
+         if [ "$cxxPatch" != "x" ] ; then
+            COMPILERVERS="$COMPILERVERS$cxxPatch"
+         fi
+      fi
+   fi
+fi
+
 rm -f __compiledata
 
 echo "Running $0"
@@ -69,6 +90,7 @@ echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
+echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
       echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $MACOSXTARGET $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
 else
