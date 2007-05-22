@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Util.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Math.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Author: L. Moneta Tue Nov 14 15:44:38 2006
 
 /**********************************************************************
@@ -8,45 +8,31 @@
  *                                                                    *
  **********************************************************************/
 
-// Utility functions for all ROOT Math
+// mathematical constants like Pi
 
-#ifndef ROOT_Math_Util
-#define ROOT_Math_Util
+#ifndef ROOT_Math_Math
+#define ROOT_Math_Math
 
-#include <string> 
-#include <sstream> 
-
+#ifdef _WIN32
+#define _USE_MATH_DEFINES 
+#endif
+#include <cmath>
+#ifndef M_PI
+#define M_PI        3.14159265358979323846   /* pi */
+#endif
 
 namespace ROOT { 
 
    namespace Math { 
 
-
-
 /** 
-   namespace defining Utility functions needed by mathcore 
+    Mathematical constants 
 */ 
-namespace Util { 
-
-/**
-   Utility function for conversion to strings
-*/
-template<class T>
-std::string ToString(const T& val)
-{
-   std::ostringstream buf;
-   buf << val;
-   
-   std::string ret = buf.str();
-   return ret;
-}
-
-}  // end namespace Util
-
-
+inline double Pi() { return M_PI; } 
+      
    } // end namespace Math
 
 } // end namespace ROOT
 
 
-#endif /* ROOT_Math_Util */
+#endif /* ROOT_Math_Math */

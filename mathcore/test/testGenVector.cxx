@@ -1,6 +1,10 @@
 
 #include "Math/Vector3D.h"
 #include "Math/Point3D.h"
+
+#include "Math/Vector2D.h"
+#include "Math/Point2D.h"
+
 #include "Math/EulerAngles.h"
 
 #include "Math/Transform3D.h"
@@ -191,6 +195,154 @@ int testPoint3D() {
 
   if (iret == 0) std::cout << "\t\t\t\t\tOK\n"; 
   else std::cout << "\t\t\t\tFAILED\n"; 
+
+  return iret;
+}
+
+
+
+typedef  DisplacementVector2D<Cartesian2D<double>, GlobalCoordinateSystemTag>  GlobalXYVector; 
+typedef  DisplacementVector2D<Cartesian2D<double>, LocalCoordinateSystemTag>   LocalXYVector; 
+typedef  DisplacementVector2D<Polar2D<double>, GlobalCoordinateSystemTag>      GlobalPolar2DVector; 
+
+
+
+
+int testVector2D() { 
+
+  int iret = 0;
+
+  std::cout << "testing Vector2D   \t:\t"; 
+
+  // test the vector tags 
+
+  GlobalXYVector vg(1.,2.); 
+  GlobalXYVector vg2(vg); 
+
+  GlobalPolar2DVector vpg(vg);
+
+  iret |= compare(vpg.R(), vg2.R() );
+ 
+//   std::cout << vg2 << std::endl;
+
+  double r = vg.Dot(vpg); 
+  iret |= compare(r, vg.Mag2() );
+
+//   std::cout << vg.Dot(vpg) << std::endl;
+ 
+
+  GlobalXYVector vg3 = vg + vpg;  
+  iret |= compare(vg3.R(), 2*vg.R() );
+
+  GlobalXYVector vg4 = vg - vpg;  
+  iret |= compare(vg4.R(), 0.0,"diff",10 );
+
+
+  double angle = 1.;
+  vg.Rotate(angle); 
+  iret |= compare(vg.Phi(), vpg.Phi() + angle );
+  iret |= compare(vg.R(), vpg.R()  );
+
+  GlobalXYZVector v3d(1,2,0);
+  GlobalXYZVector vr3d = RotationZ(angle) * v3d; 
+  iret |= compare(vg.X(), vr3d.X() );
+  iret |= compare(vg.Y(), vr3d.Y()  );
+  
+  GlobalXYVector vu = vg3.Unit();
+  iret |= compare(vu.R(), 1. );
+  
+
+#ifdef TEST_COMPILE_ERROR
+   LocalXYVector vl; vl = vg; 
+  LocalXYVector vl2(vg2);
+  LocalXYVector vl3(vpg);
+  vg.Dot(vl);
+  vg3 = vg + vl;
+  vg4 = vg - vl;
+#endif
+
+
+  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\tFAILED\n";
+
+
+  return iret;
+}
+
+
+typedef  PositionVector2D<Cartesian2D<double>, GlobalCoordinateSystemTag>   GlobalXYPoint; 
+typedef  PositionVector2D<Cartesian2D<double>, LocalCoordinateSystemTag>    LocalXYPoint; 
+typedef  PositionVector2D<Polar2D<double>, GlobalCoordinateSystemTag>       GlobalPolar2DPoint; 
+typedef  PositionVector2D<Polar2D<double>, LocalCoordinateSystemTag>       LocalPolar2DPoint; 
+
+
+
+int testPoint2D() { 
+
+  int iret = 0;
+
+  std::cout << "testing Point2D    \t:\t"; 
+
+  // test the vector tags 
+
+  GlobalXYPoint pg(1.,2.); 
+  GlobalXYPoint pg2(pg); 
+
+  GlobalPolar2DPoint ppg(pg);
+
+  iret |= compare(ppg.R(), pg2.R() );
+  //std::cout << pg2 << std::endl;
+  
+
+
+
+  GlobalXYVector vg(pg);
+
+  double r = pg.Dot(vg); 
+  iret |= compare(r, pg.Mag2() );
+
+  GlobalPolar2DVector vpg(pg);
+
+  GlobalPolar2DPoint pg3 = ppg + vg; 
+  iret |= compare(pg3.R(), 2*pg.R() );
+
+  GlobalXYVector vg4 = pg - ppg; 
+  iret |= compare(vg4.R(), 0.0,"diff",10 );
+
+
+#ifdef TEST_COMPILE_ERROR
+  LocalXYPoint pl; pl = pg; 
+  LocalXYVector pl2(pg2);
+  LocalXYVector pl3(ppg);
+  pl.Dot(vg);
+  pl.Cross(vg);
+  pg3 = ppg + pg;
+  pg3 = ppg + pl;
+  vg4 = pg - pl;
+#endif
+
+  // operator - 
+  XYPoint q1(1.,2.);
+  XYPoint q2 = -1.* q1; 
+  XYVector v2 = -XYVector(q1);
+  iret |= compare(XYVector(q2) == v2,true,"reflection");
+
+
+
+  double angle = 1.;
+  pg.Rotate(angle); 
+  iret |= compare(pg.Phi(), ppg.Phi() + angle );
+  iret |= compare(pg.R(), ppg.R()  );
+
+  GlobalXYZVector v3d(1,2,0);
+  GlobalXYZVector vr3d = RotationZ(angle) * v3d; 
+  iret |= compare(pg.X(), vr3d.X() );
+  iret |= compare(pg.Y(), vr3d.Y()  );
+  
+
+
+  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\tFAILED\n"; 
 
   return iret;
 }
@@ -462,6 +614,9 @@ int main() {
   int iret = 0; 
   iret |= testVector3D(); 
   iret |= testPoint3D(); 
+
+  iret |= testVector2D(); 
+  iret |= testPoint2D(); 
 
   iret |= testRotations3D(); 
 

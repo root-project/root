@@ -14,10 +14,23 @@ ifeq ($(PLATFORM),win32)
 EXTRALIBS        = -include:_G__cpp_setupG__MathCore -include:_G__cpp_setupG__MathCore32 "$(ROOTSYS)/lib/libMathCore.lib"
 else
 EXTRALIBS        = -lMathCore
+CXXFLAGS += -g
+endif
+
+ifeq ($(DIM),2)
+CXXFLAGS += -DDIM_2
+endif
+ifeq ($(DIM),3)
+CXXFLAGS += -DDIM_3
+endif
+ifneq ($(USE_CLHEP),)
+CXXFLAGS += -DUSE_CLHEP
+endif
+ifneq ($(USE_ROOT),)
+CXXFLAGS += -DUSE_ROOT
 endif
 
 
-CXXFLAGS += -g
 # use reflex
 #useReflex=yes
 ifneq ($(useReflex),)
@@ -27,6 +40,18 @@ ifeq ($(PLATFORM),win32)
 EXTRAIOLIBS = "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
 else
 EXTRAIOLIBS = -lReflex -lCintex
+endif
+endif
+
+
+# if have clhep
+ifneq ($(CLHEPBASE),)
+CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+ifeq ($(PLATFORM),win32)
+EXTRALIBS += "$(CLHEPBASE)/lib/CLHEP.lib"
+else
+#EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+EXTRALIBS+=  -L$(CLHEPBASE)/lib -lCLHEP
 endif
 endif
 
@@ -63,12 +88,24 @@ STRESS3DOBJ     = stress3D.$(ObjSuf)
 STRESS3DSRC     = stress3D.$(SrcSuf)
 STRESS3D        = stress3D$(ExeSuf)
 
+STRESS2DOBJ     = stress2D.$(ObjSuf)
+STRESS2DSRC     = stress2D.$(SrcSuf)
+STRESS2D        = stress2D$(ExeSuf)
+
+VECTOROPOBJ     = vectorOperation.$(ObjSuf)
+VECTOROPSRC     = vectorOperation.$(SrcSuf)
+VECTOROP        = vectorOperation$(ExeSuf)
+
+#VECTORSCALEOBJ     = testVectorScale.$(ObjSuf)
+#VECTORSCALESRC     = testVectorScale.$(SrcSuf)
+#VECTORSCALE        = testVectorScale$(ExeSuf)
 
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ) $(STRESS3DOBJ) $(ITERATOROBJ)
+
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ) $(STRESS3DOBJ) $(STRESS2DOBJ) $(ITERATOROBJ) $(VECTOROPOBJ) 
 
 
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO) $(STRESS3D) $(ITERATOR)
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO) $(STRESS3D) $(STRESS2D) $(ITERATOR) $(VECTOROP) 
 
 
 		  
@@ -106,9 +143,23 @@ $(STRESS3D):      $(STRESS3DOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
+$(STRESS2D):      $(STRESS2DOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
 $(ITERATOR):           $(ITERATOROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
+
+
+$(VECTOROP):   	$(VECTOROPOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+# $(VECTORSCALE):   	$(VECTORSCALEOBJ)
+# 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
+# 		    @echo "$@ done"
+
 
 ifneq ($(useReflex),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml

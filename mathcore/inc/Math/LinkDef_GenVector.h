@@ -1,9 +1,12 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.10 2007/02/20 15:53:13 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.11 2007/03/16 15:05:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
 
 #ifdef __CINT__
+
+#pragma link C++ class ROOT::Math::Cartesian2D<double>+;
+#pragma link C++ class ROOT::Math::Polar2D<double>+;
 
 
 #pragma link C++ class ROOT::Math::Cartesian3D<double>+;
@@ -14,6 +17,13 @@
 #pragma link C++ class ROOT::Math::DefaultCoordinateSystemTag+; 
 #pragma link C++ class ROOT::Math::LocalCoordinateSystemTag+; 
 #pragma link C++ class ROOT::Math::GlobalCoordinateSystemTag+; 
+
+#pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Cartesian2D<double> >+;
+#pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Polar2D<double> >+;
+
+#pragma link C++ class ROOT::Math::PositionVector2D<ROOT::Math::Cartesian2D<double> >+;
+#pragma link C++ class ROOT::Math::PositionVector2D<ROOT::Math::Polar2D<double> >+;
+
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >+;
@@ -59,6 +69,11 @@
 
 //#endif
 
+#pragma link C++ typedef ROOT::Math::XYVector;
+#pragma link C++ typedef ROOT::Math::Polar2DVector;
+
+#pragma link C++ typedef ROOT::Math::XYPoint;
+#pragma link C++ typedef ROOT::Math::Polar2DPoint;
 
 #pragma link C++ typedef ROOT::Math::XYZVector;
 #pragma link C++ typedef ROOT::Math::RhoEtaPhiVector;

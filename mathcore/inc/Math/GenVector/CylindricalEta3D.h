@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.7 2006/03/06 14:40:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,17 +14,24 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.7 2006/03/06 14:40:11 moneta Exp $
 
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #define ROOT_Math_GenVector_CylindricalEta3D  1
 
-#include "Math/GenVector/etaMax.h"
+#ifndef ROOT_Math_Math
+#include "Math/Math.h"
+#endif
 
-#include <cmath>
+#ifndef ROOT_Math_GenVector_etaMax
+#include "Math/GenVector/etaMax.h"
+#endif
+
+
 #include <limits>
 
+#include "Math/Math.h"
  
 
 namespace ROOT { 
@@ -67,188 +74,202 @@ public :
     static Scalar bigEta = 
     			-.3 *std::log(std::numeric_limits<Scalar>::epsilon());
     if ( std::fabs(fEta) > bigEta ) {
-      fRho *= v.Z()/Z(); // This gives a small absolute adjustment in rho,
-    		 	 // which, for large eta, results in a significant
-			 // improvement in the faithfullness of reproducing z.
+       fRho *= v.Z()/Z(); // This gives a small absolute adjustment in rho,
+       // which, for large eta, results in a significant
+       // improvement in the faithfullness of reproducing z.
     }
   } 
 
-  // no reason for a custom destructor  ~Cartesian3D() {}
+   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower 
+   // re-implement them ( there is no no need to have them with g++4)
 
-  /**
-     Set internal data based on an array of 3 Scalar numbers
+   /**
+      copy constructor
+   */
+   CylindricalEta3D(const CylindricalEta3D & v) :
+      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )  {   } 
+
+   /**
+      assignment operator 
+   */
+   CylindricalEta3D & operator= (const CylindricalEta3D & v) { 
+      fRho = v.Rho();  
+      fEta = v.Eta(); 
+      fPhi = v.Phi(); 
+      return *this;
+   } 
+
+   /**
+      Set internal data based on an array of 3 Scalar numbers
    */ 
-  void SetCoordinates( const Scalar src[] ) 
-  			{ fRho=src[0]; fEta=src[1]; fPhi=src[2]; Restrict(); }
+   void SetCoordinates( const Scalar src[] ) 
+   { fRho=src[0]; fEta=src[1]; fPhi=src[2]; Restrict(); }
 
-  /**
-     get internal data into an array of 3 Scalar numbers
+   /**
+      get internal data into an array of 3 Scalar numbers
    */ 
-  void GetCoordinates( Scalar dest[] ) const 
-  			{ dest[0] = fRho; dest[1] = fEta; dest[2] = fPhi; }
+   void GetCoordinates( Scalar dest[] ) const 
+   { dest[0] = fRho; dest[1] = fEta; dest[2] = fPhi; }
 
-  /**
-     Set internal data based on 3 Scalar numbers
+   /**
+      Set internal data based on 3 Scalar numbers
    */ 
-  void SetCoordinates(Scalar  rho, Scalar  eta, Scalar  phi) 
-  			{ fRho=rho; fEta=eta; fPhi=phi; Restrict(); }
+   void SetCoordinates(Scalar  rho, Scalar  eta, Scalar  phi) 
+   { fRho=rho; fEta=eta; fPhi=phi; Restrict(); }
 
-  /**
-     get internal data into 3 Scalar numbers
+   /**
+      get internal data into 3 Scalar numbers
    */ 
-  void GetCoordinates(Scalar& rho, Scalar& eta, Scalar& phi) const 
-  			{rho=fRho; eta=fEta; phi=fPhi;}  				
+   void GetCoordinates(Scalar& rho, Scalar& eta, Scalar& phi) const 
+   {rho=fRho; eta=fEta; phi=fPhi;}  				
 
-  private:
-    inline static double pi() { return 3.14159265358979323; } 
-    inline void Restrict() {
+private:
+   inline static double pi() { return M_PI; } 
+   inline void Restrict() {
       if ( fPhi <= -pi() || fPhi > pi() ) 
-        fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
-    return;
-    } 
-  public:
+         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+      return;
+   } 
+public:
    
-  // accessors
+   // accessors
  
-  T Rho()   const { return fRho; }
-  T Eta()   const { return fEta; } 
-  T Phi()   const { return fPhi; }
-  T X()     const { return fRho*std::cos(fPhi); }
-  T Y()     const { return fRho*std::sin(fPhi); }
-  T Z()     const { return fRho >  0 ? fRho*std::sinh(fEta) : 
-                           fEta == 0 ? 0                    :
-                           fEta >  0 ? fEta - etaMax<T>()   :
-		                       fEta + etaMax<T>()   ; }
-  T R()     const { return fRho > 0          ? fRho*std::cosh(fEta) :
-  		           fEta >  etaMax<T>() ?  fEta - etaMax<T>()   :
- 		           fEta < -etaMax<T>() ? -fEta - etaMax<T>()   :
-			                             0		   ; }
-  T Mag2()  const { return R()*R();              }
-  T Perp2() const { return fRho*fRho;            }
-  T Theta() const { return  fRho >  0 ? 2* std::atan( std::exp( - fEta ) ) :
-  			   (fEta >= 0 ? 0 :
-			    pi() );  }
+   T Rho()   const { return fRho; }
+   T Eta()   const { return fEta; } 
+   T Phi()   const { return fPhi; }
+   T X()     const { return fRho*std::cos(fPhi); }
+   T Y()     const { return fRho*std::sin(fPhi); }
+   T Z()     const { return fRho >  0 ? fRho*std::sinh(fEta) : 
+      fEta == 0 ? 0                    :
+      fEta >  0 ? fEta - etaMax<T>()   :
+      fEta + etaMax<T>()   ; }
+   T R()     const { return fRho > 0          ? fRho*std::cosh(fEta) :
+      fEta >  etaMax<T>() ?  fEta - etaMax<T>()   :
+      fEta < -etaMax<T>() ? -fEta - etaMax<T>()   :
+      0		   ; }
+   T Mag2()  const { return R()*R();              }
+   T Perp2() const { return fRho*fRho;            }
+   T Theta() const { return  fRho >  0 ? 2* std::atan( std::exp( - fEta ) ) :
+      (fEta >= 0 ? 0 :
+       pi() );  }
  
-  // setters (only for data members) 
+   // setters (only for data members) 
 
-  /**
-     set all the data members ( rho, eta, phi) 
-   */ 
-  void setValues(T rho, T eta, T phi) { 
-    fRho = rho;  
-    fEta = eta;  
-    fPhi = phi;   
-    Restrict();
-  }
   
-  /** 
-      set the rho coordinate value keeping eta and phi constant
+   /** 
+       set the rho coordinate value keeping eta and phi constant
    */ 
-  void SetRho(T rho) { 
-        fRho = rho;      
-  }
+   void SetRho(T rho) { 
+      fRho = rho;      
+   }
 
-  /** 
-      set the eta coordinate value keeping rho and phi constant
+   /** 
+       set the eta coordinate value keeping rho and phi constant
    */ 
-  void SetEta(T eta) { 
-        fEta = eta;      
-  }
+   void SetEta(T eta) { 
+      fEta = eta;      
+   }
 
-  /** 
-      set the phi coordinate value keeping rho and eta constant
+   /** 
+       set the phi coordinate value keeping rho and eta constant
    */ 
-  void SetPhi(T phi) { 
-        fPhi = phi;      
-	Restrict();
-  }
+   void SetPhi(T phi) { 
+      fPhi = phi;      
+      Restrict();
+   }
 
-  /**
-     scale by a scalar quantity a -- 
-     for cylindrical eta coords, as long as a >= 0, only rho changes!
-  */ 
-  void Scale (T a) { 
-    if (a < 0) {
-      Negate();
-      a = -a;
-    }
-    // angles do not change when scaling by a positive quantity
-    if (fRho > 0) {
-      fRho *= a;   
-    } else if ( fEta >  etaMax<T>() ) {
-      fEta =  ( fEta-etaMax<T>())*a + etaMax<T>();
-    } else if ( fEta < -etaMax<T>() ) {  
-      fEta =  ( fEta+etaMax<T>())*a - etaMax<T>();
-    } // when rho==0 and eta is not above etaMax, vector represents 0 
+   /** 
+       set all values using cartesian coordinates  
+   */
+   void SetXYZ(Scalar x, Scalar y, Scalar z); 
+
+
+   /**
+      scale by a scalar quantity a -- 
+      for cylindrical eta coords, as long as a >= 0, only rho changes!
+   */ 
+   void Scale (T a) { 
+      if (a < 0) {
+         Negate();
+         a = -a;
+      }
+      // angles do not change when scaling by a positive quantity
+      if (fRho > 0) {
+         fRho *= a;   
+      } else if ( fEta >  etaMax<T>() ) {
+         fEta =  ( fEta-etaMax<T>())*a + etaMax<T>();
+      } else if ( fEta < -etaMax<T>() ) {  
+         fEta =  ( fEta+etaMax<T>())*a - etaMax<T>();
+      } // when rho==0 and eta is not above etaMax, vector represents 0 
       // and remains unchanged
-  }
+   }
 
-  /**
-     negate the vector
-  */ 
-  void Negate ( ) { 
-    fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi() );
-    fEta = -fEta;
-  }
+   /**
+      negate the vector
+   */ 
+   void Negate ( ) { 
+      fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi() );
+      fEta = -fEta;
+   }
 
-  // assignment operators
-  /**
-    generic assignment operator from any coordinate system 
-  */ 
-  template <class CoordSystem > 
-  CylindricalEta3D & operator= ( const CoordSystem & c ) { 
-    fRho = c.Rho();  
-    fEta = c.Eta(); 
-    fPhi = c.Phi(); 
-    return *this;
-  }
+   // assignment operators
+   /**
+      generic assignment operator from any coordinate system 
+   */ 
+   template <class CoordSystem > 
+   CylindricalEta3D & operator= ( const CoordSystem & c ) { 
+      fRho = c.Rho();  
+      fEta = c.Eta(); 
+      fPhi = c.Phi(); 
+      return *this;
+   }
 
-  /**
-    Exact component-by-component equality 
-    Note: Peculiar representaions of the zero vector such as (0,1,0) will
-    not test as equal to one another.     
-    */  
-  bool operator==(const CylindricalEta3D & rhs) const {
-    return fRho == rhs.fRho && fEta == rhs.fEta && fPhi == rhs.fPhi;
-  }
-  bool operator!= (const CylindricalEta3D & rhs) const 
-  						{return !(operator==(rhs));}
+   /**
+      Exact component-by-component equality 
+      Note: Peculiar representaions of the zero vector such as (0,1,0) will
+      not test as equal to one another.     
+   */  
+   bool operator==(const CylindricalEta3D & rhs) const {
+      return fRho == rhs.fRho && fEta == rhs.fEta && fPhi == rhs.fPhi;
+   }
+   bool operator!= (const CylindricalEta3D & rhs) const 
+   {return !(operator==(rhs));}
   
 
-  // ============= Compatibility section ==================
+   // ============= Compatibility section ==================
   
-  // The following make this coordinate system look enough like a CLHEP
-  // vector that an assignment member template can work with either
-  T x() const { return X();}
-  T y() const { return Y();}
-  T z() const { return Z(); } 
+   // The following make this coordinate system look enough like a CLHEP
+   // vector that an assignment member template can work with either
+   T x() const { return X();}
+   T y() const { return Y();}
+   T z() const { return Z(); } 
   
-  // ============= Specializations for improved speed ==================
+   // ============= Specializations for improved speed ==================
 
-  // (none)
+   // (none)
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 
-  // ====== Set member functions for coordinates in other systems =======
+   // ====== Set member functions for coordinates in other systems =======
 
-  void SetX(Scalar x); 
+   void SetX(Scalar x); 
 
-  void SetY(Scalar y); 
+   void SetY(Scalar y); 
   
-  void SetZ(Scalar z); 
+   void SetZ(Scalar z); 
   
-  void SetR(Scalar r);
+   void SetR(Scalar r);
   
-  void SetTheta(Scalar theta);  
+   void SetTheta(Scalar theta);  
 
 
 #endif
 
 
 private:
-  T fRho;
-  T fEta;
-  T fPhi;
+   T fRho;
+   T fEta;
+   T fPhi;
 
 };
 
@@ -257,65 +278,75 @@ private:
 } // end namespace ROOT
 
 
+// move implementations here to avoid circle dependencies
+
+#ifndef ROOT_Math_Cartesian3D
+#include "Math/GenVector/Cartesian3D.h"
+#endif
+
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-// need to put here setter methods to resolve nasty cyclical dependencies 
-// I need to include other coordinate systems only when Cartesian is already defined 
-// since they depend on it
-
 #include "Math/GenVector/GenVector_exception.h"
-#include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/Polar3D.h"
-
-  // ====== Set member functions for coordinates in other systems =======
+#endif
 
 namespace ROOT { 
 
   namespace Math { 
 
 template <class T>  
+void CylindricalEta3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {  
+   *this = Cartesian3D<Scalar>(x, y, z);
+}
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+
+     // ====== Set member functions for coordinates in other systems =======
+
+
+template <class T>  
 void CylindricalEta3D<T>::SetX(Scalar x) {  
-    GenVector_exception e("CylindricalEta3D::SetX() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetX(x); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+   GenVector_exception e("CylindricalEta3D::SetX() is not supposed to be called");
+   Throw(e);
+   Cartesian3D<Scalar> v(*this); v.SetX(x); 
+   *this = CylindricalEta3D<Scalar>(v);
+}
 template <class T>  
 void CylindricalEta3D<T>::SetY(Scalar y) {  
-    GenVector_exception e("CylindricalEta3D::SetY() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetY(y); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+   GenVector_exception e("CylindricalEta3D::SetY() is not supposed to be called");
+   Throw(e);
+   Cartesian3D<Scalar> v(*this); v.SetY(y); 
+   *this = CylindricalEta3D<Scalar>(v);
+}
 template <class T>  
 void CylindricalEta3D<T>::SetZ(Scalar z) {  
-    GenVector_exception e("CylindricalEta3D::SetZ() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetZ(z); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+   GenVector_exception e("CylindricalEta3D::SetZ() is not supposed to be called");
+   Throw(e);
+   Cartesian3D<Scalar> v(*this); v.SetZ(z); 
+   *this = CylindricalEta3D<Scalar>(v);
+}
 template <class T>  
 void CylindricalEta3D<T>::SetR(Scalar r) {  
-    GenVector_exception e("CylindricalEta3D::SetR() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetR(r); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+   GenVector_exception e("CylindricalEta3D::SetR() is not supposed to be called");
+   Throw(e);
+   Polar3D<Scalar> v(*this); v.SetR(r); 
+   *this = CylindricalEta3D<Scalar>(v);
+}
 template <class T>  
 void CylindricalEta3D<T>::SetTheta(Scalar theta) {  
-    GenVector_exception e("CylindricalEta3D::SetTheta() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetTheta(theta); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+   GenVector_exception e("CylindricalEta3D::SetTheta() is not supposed to be called");
+   Throw(e);
+   Polar3D<Scalar> v(*this); v.SetTheta(theta); 
+   *this = CylindricalEta3D<Scalar>(v);
+}
 
+#endif
 
 
   } // end namespace Math
-
+   
 } // end namespace ROOT
 
-#endif
 
 
 #endif /* ROOT_Math_GenVector_CylindricalEta3D  */

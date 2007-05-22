@@ -29,6 +29,8 @@ MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
                  $(MODDIRI)/Math/Vector4D.h \
+                 $(MODDIRI)/Math/Vector2D.h \
+                 $(MODDIRI)/Math/Point2D.h \
                  $(MODDIRI)/Math/Rotation3D.h \
                  $(MODDIRI)/Math/RotationX.h \
                  $(MODDIRI)/Math/RotationY.h \
