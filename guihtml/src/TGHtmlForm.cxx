@@ -1,4 +1,4 @@
-// $Id: TGHtmlForm.cxx,v 1.2 2007/05/18 15:55:20 brun Exp $
+// $Id: TGHtmlForm.cxx,v 1.3 2007/05/18 16:00:28 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -242,21 +242,21 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem) {
 // the given TString.  [ OXTextEdit ]
 
 void TGHtml::AppendText(TGString *str,
-                        TGHtmlElement *pFirst, TGHtmlElement *pEnd) {
+                        TGHtmlElement *pFirs, TGHtmlElement *pEnd) {
 
-  while (pFirst && pFirst != pEnd) {
-    switch (pFirst->type) {
+  while (pFirs && pFirs != pEnd) {
+    switch (pFirs->type) {
       case Html_Text:
-        str->Append(((TGHtmlTextElement *)pFirst)->zText);
+        str->Append(((TGHtmlTextElement *)pFirs)->zText);
         break;
 
       case Html_Space:
-        if (pFirst->flags & HTML_NewLine) {
+        if (pFirs->flags & HTML_NewLine) {
           str->Append("\n");
         } else {
           int cnt;
           static char zSpaces[] = "                             ";
-          cnt = pFirst->count;
+          cnt = pFirs->count;
           while (cnt > (int)sizeof(zSpaces) - 1) {
             str->Append(zSpaces, sizeof(zSpaces) - 1);
             cnt -= sizeof(zSpaces) - 1;
@@ -271,7 +271,7 @@ void TGHtml::AppendText(TGString *str,
         break;
     }
 
-    pFirst = pFirst->pNext;
+    pFirs = pFirs->pNext;
   }
 }
 
