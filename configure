@@ -2915,7 +2915,7 @@ if test "x$enable_globus" = "xyes"; then
    globuslibdir=""
 
    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
-      libssl_$flavour libcrypto_$flavour ; do
+      libglobus_gsi_credential_$flavor libssl_$flavour libcrypto_$flavour ; do
       check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
       /usr/local/lib
       if test "x$found_lib" = "x" ; then
