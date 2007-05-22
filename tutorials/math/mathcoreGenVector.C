@@ -16,6 +16,7 @@
 
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#include "TMath.h"
 
 
 #ifndef __CINT__
