@@ -8,6 +8,7 @@ void PhaseSpace() {
    TLorentzVector beam(0.0, 0.0, .65, .65);
    TLorentzVector W = beam + target;
 
+   //(Momentum, Energy units are Gev/C, GeV)
    Double_t masses[3] = { 0.938, 0.139, 0.139} ;
 
    TGenPhaseSpace event;

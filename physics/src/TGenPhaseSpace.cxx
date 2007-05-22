@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.12 2006/12/12 14:19:18 couet Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.13 2007/04/16 15:52:33 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -15,6 +15,8 @@
 //      F. James, Monte Carlo Phase Space, CERN 68-15 (1968)
 //
 // see example of use in $ROOTSYS/tutorials/physics/PhaseSpace.C
+//
+// Note that Momentum, Energy units are Gev/C, GeV
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
@@ -68,6 +70,8 @@ Double_t TGenPhaseSpace::Generate()
    //  Generate a random final state.
    //  The function returns the weigth of the current event.
    //  The TLorentzVector of each decay product can be obtained using GetDecay(n).
+   //
+   // Note that Momentum, Energy units are Gev/C, GeV
 
    Double_t rno[kMAXP];
    rno[0] = 0;
@@ -153,7 +157,7 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
    Double_t *mass, Option_t *opt) 
 {
    // input:
-   // TLorentzVector &P:    decay particle
+   // TLorentzVector &P:    decay particle (Momentum, Energy units are Gev/C, GeV)
    // Int_t nt:             number of decay products
    // Double_t *mass:       array of decay product masses
    // Option_t *opt:        default -> constant cross section
