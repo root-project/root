@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.49 2006/10/25 08:03:31 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.50 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -355,6 +355,12 @@ void TGTextEntry::Init()
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 1; // NorthWestGravity
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
    SetWindowName();
    fHasOwnFont = kFALSE;
