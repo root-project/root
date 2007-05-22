@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.25 2007/04/21 07:57:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.26 2007/05/04 15:15:12 antcheva Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -203,6 +203,7 @@ void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    x = x < 0 ? 0 : x;
    y = y < 0 ? 0 : y;
+
    w = x + w > fCanvas->GetWidth() ? fCanvas->GetWidth() - x : w;
    h = y + h > fCanvas->GetHeight() ? fCanvas->GetHeight() - y : h;
 
@@ -213,8 +214,9 @@ void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       fExposedRegion.fH = h;
    } else {
       TGRectangle r(x, y, w, h);
-      fExposedRegion.Merge(r); 
+      fExposedRegion.Merge(r);
    }
+
    fClient->NeedRedraw(this);
 }
 
@@ -284,11 +286,20 @@ Bool_t TGView::HandleExpose(Event_t *event)
       TGPosition pos(event->fX, event->fY);
       TGDimension dim(event->fWidth, event->fHeight);
       TGRectangle rect(pos, dim);
+
       if (fExposedRegion.IsEmpty()) {
          fExposedRegion = rect;
       } else {
-         fExposedRegion.Merge(rect);
+         if (((!rect.fX && !fExposedRegion.fY) || 
+              (!rect.fY && !fExposedRegion.fX)) && 
+             ((rect.fX >= (int)fExposedRegion.fW) || 
+              (rect.fY >= (int)fExposedRegion.fH))) {
+            DrawRegion(rect.fX, rect.fY, rect.fW, rect.fY);
+         } else {
+            fExposedRegion.Merge(rect);
+         }
       }
+
       fClient->NeedRedraw(this);
    } else {
       return TGCompositeFrame::HandleExpose(event);
