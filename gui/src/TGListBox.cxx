@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.57 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.58 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -482,6 +482,7 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
+   fChangeStatus = kFALSE;
 
    SetWindowName();
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable | kEditDisableKeyEnable;
@@ -1449,7 +1450,7 @@ void TGListBox::Layout()
    }
 
    fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
-   //fClient->NeedRedraw(container);
+   fClient->NeedRedraw(container);
 }
 
 //______________________________________________________________________________

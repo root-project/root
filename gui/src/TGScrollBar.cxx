@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.24 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.25 2007/05/04 15:14:30 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -347,7 +347,8 @@ void TGHScrollBar::Layout()
    // Should also recalculate the slider size and range, etc.
    fHead->MoveResize(0, 0, fgScrollBarWidth, fgScrollBarWidth);
    fTail->MoveResize(fWidth-fgScrollBarWidth, 0, fgScrollBarWidth, fgScrollBarWidth);
-   fSlider->MoveResize(fX0, 0, 50, fgScrollBarWidth);
+
+   if (fSlider->GetX() != fX0) fSlider->MoveResize(fX0, 0, 50, fgScrollBarWidth);
 }
 
 //______________________________________________________________________________
@@ -593,7 +594,8 @@ void TGVScrollBar::Layout()
 
    fHead->MoveResize(0, 0, fgScrollBarWidth, fgScrollBarWidth);
    fTail->MoveResize(0, fHeight-fgScrollBarWidth, fgScrollBarWidth, fgScrollBarWidth);
-   fSlider->MoveResize(0, fY0, fgScrollBarWidth, 50);
+
+   if (fSlider->GetY() != fY0) fSlider->MoveResize(0, fY0, fgScrollBarWidth, 50);
 }
 
 //______________________________________________________________________________
