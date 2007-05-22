@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.13 2007/04/20 15:16:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.14 2007/04/27 09:27:55 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -24,7 +24,8 @@ There are two types of entry lists:
   Some blocks, obviously, might be empty. The internal representation of entry
   numbers in the blocks is described in the TEntryListBlock class description, and
   this representation might be changed by calling OptimizeStorage() function
-  (when the list is filled via the Enter() function, this is done automatically).
+  (when the list is filled via the Enter() function, this is done automatically,
+  except for the last block).
   Individual entry lists can be merged (functions Merge() and Add())
   to make an entry list for a TChain of corresponding TTrees.
 End_Html

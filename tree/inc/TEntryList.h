@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.7 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.8 2007/03/15 11:33:00 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -36,6 +36,7 @@ class TEntryList: public TNamed
    Int_t            fNBlocks;   //number of TEntryListBlocks
    TObjArray       *fBlocks;    //blocks with indices of passing events (TEntryListBlocks)
    Long64_t         fN;         //number of entries in the list
+   Long64_t         fEntriesToProcess; //used on proof to set the number of entries to process in a packet
    TString          fTreeName;  //name of the tree
    TString          fFileName;  //name of the file, where the tree is
    ULong_t          fStringHash;//! Hash value of a string of treename and filename
@@ -67,6 +68,7 @@ class TEntryList: public TNamed
    virtual TEntryList *GetEntryList(const char *treename, const char *filename);
    virtual Long64_t    GetEntry(Int_t index);
    virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
+   virtual Long64_t    GetEntriesToProcess() const {return fEntriesToProcess;}
    virtual TList      *GetLists() const { return fLists; }
    virtual TDirectory *GetDirectory() const { return fDirectory; }
    virtual Long64_t    GetN() const { return fN; }
@@ -84,6 +86,7 @@ class TEntryList: public TNamed
    virtual void        Print(const Option_t* option = "") const;
 
    virtual void        SetDirectory(TDirectory *dir);
+   virtual void        SetEntriesToProcess(Long64_t nen) { fEntriesToProcess = nen; }
    virtual void        SetShift(Bool_t shift) { fShift = shift; };
    virtual void        SetTree(const TTree *tree);
    virtual void        SetTree(const char *treename, const char *filename);

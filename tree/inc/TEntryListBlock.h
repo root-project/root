@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.2 2006/10/31 08:51:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.3 2006/10/31 15:18:33 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -45,13 +45,14 @@
 class TEntryListBlock:public TObject 
 {
  protected:
-   Int_t    fNPassed;    //number of entries in the entry list 
+   Int_t    fNPassed;    //number of entries in the entry list (if fPassing=0 - number of entries
+                         //not in the entry list
    Int_t    fN;          //size of fIndices for I/O  =fNPassed for list, fBlockSize for bits
    UShort_t *fIndices;   //[fN]
    Int_t    fType;       //0 - bits, 1 - list
    Bool_t   fPassing;    //1 - stores entries that belong to the list
-                         //0 - stores entries that don't belong to the list (not there yet)
-   UShort_t fCurrent;    //! to fasten Enter() and Contains() in list mode
+                         //0 - stores entries that don't belong to the list
+   UShort_t fCurrent;    //! to fasten  Contains() in list mode
    Int_t    fLastIndexQueried; //! to optimize GetEntry() in a loop
    Int_t    fLastIndexReturned; //! to optimize GetEntry() in a loop
 
@@ -73,7 +74,7 @@ class TEntryListBlock:public TObject
    Int_t   GetEntry(Int_t entry);
    void    ResetIndices() {fLastIndexQueried = -1, fLastIndexReturned = -1;}
    Int_t   GetType() { return fType; }
-   Int_t   GetNPassed() { return fNPassed; }
+   Int_t   GetNPassed();
    virtual void Print(const Option_t *option = "") const;
    void    PrintWithShift(Int_t shift) const;
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.6 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.7 2007/03/17 08:45:36 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -16,9 +16,13 @@
 <ol>
  <li> as bits, where passing entry numbers are assigned 1, not passing - 0
  <li> as a simple array of entry numbers
+<ul>
+<li> storing the numbers of entries that pass
+<li> storing the numbers of entries that don't pass
+</ul>
  </ol>
  In both cases, a UShort_t* is used. The second option is better in case
- less than 1/16 of entries passes the selection, and the representation can be
+ less than 1/16 or more than 15/16 of entries pass the selection, and the representation can be
  changed by calling OptimizeStorage() function. 
  When the block is being filled, it's always stored as bits, and the OptimizeStorage()
  function is called by TEntryList when it starts filling the next block. If
@@ -134,9 +138,12 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 Bool_t TEntryListBlock::Remove(Int_t entry)
 {
 //Remove entry #entry
+//If the block has already been optimized and the entries
+//are stored as a list and not as bits, trying to remove a new entry
+//will make the block switch to bits representation
 
    if (entry > kBlockSize*16) {
-      printf("illegal entry value!\n");
+      Error("Remove", "Illegal entry value!\n");
       return 0;
    }
    if (fType==0){
@@ -154,8 +161,8 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
    //change to bits
    UShort_t *bits = new UShort_t[kBlockSize];
    Transform(1, bits);
-   Remove(entry);
-   return 0;
+   return Remove(entry);
+   //return 0;
 }
 //______________________________________________________________________________
 Int_t TEntryListBlock::Contains(Int_t entry)
@@ -163,10 +170,10 @@ Int_t TEntryListBlock::Contains(Int_t entry)
 //true if the block contains entry #entry
 
    if (entry > kBlockSize*16) {
-      printf("illegal entry value!\n");
+      Error("Contains", "Illegal entry value!\n");
       return 0;
    }
-   if (!fIndices)
+   if (!fIndices && fPassing)
       return 0;
    if (fType==0){
       //bits
@@ -177,11 +184,29 @@ Int_t TEntryListBlock::Contains(Int_t entry)
    }
    //list
    if (entry < fCurrent) fCurrent = 0;
-  
-   for (Int_t i = fCurrent; i<fNPassed; i++){
-      if (fIndices[i]==entry){
-         fCurrent = i;
+   if (fPassing){
+      for (Int_t i = fCurrent; i<fNPassed; i++){
+         if (fIndices[i]==entry){
+            fCurrent = i;
+            return kTRUE;
+         }
+      }
+   } else {
+      if (!fIndices || fNPassed==0){
+         //all entries pass
          return kTRUE;
+      } 
+      if (entry > fIndices[fNPassed-1])
+         return kTRUE;
+      for (Int_t i= fCurrent; i<fNPassed; i++){
+         if (fIndices[i]==entry){
+            fCurrent = i;
+            return kFALSE;
+         } 
+         if (fIndices[i]>entry){
+            fCurrent = i;
+            return kTRUE;
+         }
       }
    }
    return 0;
@@ -193,9 +218,10 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
    //Merge with the other block
    //Returns the resulting number of entries in the block
 
-   Int_t i;
-   if (block->fNPassed == 0) return fNPassed;
-   if (fNPassed == 0){
+   Int_t i, j;
+   if (block->GetNPassed() == 0) return GetNPassed();
+   if (GetNPassed() == 0){
+      //this block is empty
       fN = block->fN;
       fIndices = new UShort_t[fN];
       for (Int_t i=0; i<fN; i++)
@@ -216,18 +242,38 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
                Enter(i);
          }
       } else {
-         for (i=0; i<block->fNPassed; i++){
-            Enter(block->fIndices[i]);
+         if (block->fPassing){
+            //the other block stores entries that pass
+            for (i=0; i<block->fNPassed; i++){
+               Enter(block->fIndices[i]);
+            }
+         } else {
+            //the other block stores entries that don't pass
+            if (block->fNPassed==0){
+               for (Int_t i=0; i<kBlockSize*16; i++){
+                  Enter(i);
+               }
+            }
+            for (j=0; j<block->fIndices[0]; j++)
+               Enter(j);
+            for (i=0; i<block->fNPassed-1; i++){
+               for (j=block->fIndices[i]+1; j<block->fIndices[i+1]; j++){
+                  Enter(j);
+               }
+            }
+            for (j=block->fIndices[block->fNPassed-1]+1; j<kBlockSize*16; j++)
+               Enter(j);
          }
       }
    } else {
       //stored as a list
-      if (fNPassed + block->fNPassed > kBlockSize){
+      if (GetNPassed() + block->GetNPassed() > kBlockSize){
          //change to bits
          UShort_t *bits = new UShort_t[kBlockSize];
          Transform(1, bits);
          Merge(block);
       } else {
+         //this is only possible if fPassing=1 in both blocks
          if (block->fType==1){
             //second block stored as a list
             //make a bigger list
@@ -289,7 +335,20 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
    }
    fLastIndexQueried = -1;
    fLastIndexReturned = -1;
-   return fNPassed;
+   OptimizeStorage();
+   return GetNPassed();
+}
+
+//______________________________________________________________________________
+Int_t TEntryListBlock::GetNPassed()
+{
+//Returns the number of entries, passing the selection.
+//In case, when the block stores entries that pass (fPassing=1) returns fNPassed
+
+   if (fPassing)
+      return fNPassed;
+   else
+      return kBlockSize*16-fNPassed;
 }
 
 //______________________________________________________________________________
@@ -298,14 +357,12 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
 //Return entry #entry
 //See also Next()
 
-   if (entry>kBlockSize*16) return -1;
-   if (entry>fNPassed) return -1;
-   if (entry==fLastIndexQueried+1) return Next();
+   if (entry > kBlockSize*16) return -1;
+   if (entry > GetNPassed()) return -1;
+   if (entry == fLastIndexQueried+1) return Next();
    else {
+      Int_t i=0; Int_t j=0; Int_t entries_found=0;
       if (fType==0){
-         Int_t entries_found = 0;
-         Int_t i=0; 
-         Int_t j=0;
          if ((fIndices[i] & (1<<j))!=0)
             entries_found++;
          while (entries_found<entry+1){
@@ -319,9 +376,36 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
          return fLastIndexReturned;
       }
       if (fType==1){
-         fLastIndexQueried = entry;
-         fLastIndexReturned = fIndices[entry];
-         return fIndices[entry];
+         if (fPassing){
+            fLastIndexQueried = entry;
+            fLastIndexReturned = fIndices[entry];
+            return fIndices[entry];
+         } else {
+            fLastIndexQueried = entry;
+            for (i=0; i<fIndices[0]; i++){               
+               entries_found++;
+               if (entries_found==entry+1){
+                  fLastIndexReturned = i;
+                  return fLastIndexReturned;
+               }
+            }
+            for (i=0; i<fNPassed-1; i++){
+               for (j=fIndices[i]+1; j<fIndices[i+1]; j++){
+                  entries_found++;
+                  if (entries_found==entry+1){
+                     fLastIndexReturned = j;
+                     return fLastIndexReturned;
+                  }
+               }
+            }
+            for (j=fIndices[fNPassed-1]+1; j<kBlockSize*16; j++){
+               entries_found++;
+               if (entries_found==entry+1){
+                  fLastIndexReturned = j;
+                  return fLastIndexReturned;
+               }
+            }
+         }   
       }
       return -1;
    }
@@ -333,7 +417,7 @@ Int_t TEntryListBlock::Next()
 //Return the next non-zero entry
 //Faster than GetEntry() function
 
-   if (fLastIndexQueried==fNPassed-1){
+   if (fLastIndexQueried==GetNPassed()-1){
       fLastIndexQueried=-1;
       fLastIndexReturned = -1;
       return -1;
@@ -359,16 +443,17 @@ Int_t TEntryListBlock::Next()
    } 
    if (fType==1) {
       fLastIndexQueried++;
-
-      if (fLastIndexQueried==kBlockSize) {
-         fLastIndexQueried = -1;
-         fLastIndexReturned = -1;
-         return -1;
-      }
-      else {
-         return fIndices[fLastIndexQueried];
+      if (fPassing){
          fLastIndexReturned = fIndices[fLastIndexQueried];
+         return fIndices[fLastIndexQueried];
+      } else {
+         fLastIndexReturned++;
+         while (!Contains(fLastIndexReturned)){
+            fLastIndexReturned++;
+            }
+         return fLastIndexReturned;
       }
+      
    }
    return -1;
 }
@@ -381,22 +466,8 @@ void TEntryListBlock::Print(const Option_t *option) const
    TString opt = option;
    opt.ToUpper();
    if (opt.Contains("A")){
-      if (fType==0){
-         Int_t ibit, ibite;
-         Bool_t result;
-         for (Int_t i=0; i<kBlockSize; i++){
-            ibite = i>>4;
-            ibit = i & 15;
-            result = (fIndices[ibite] & (1<<ibit))!=0;
-            if (result)
-               printf("%d\n", i);
-         }
-      } else {
-         for (Int_t i=0; i<fNPassed; i++){
-            printf("%d\n", fIndices[i]);
-         }
-      }
-   }
+      PrintWithShift(0);
+    }
 }
 
 //______________________________________________________________________________
@@ -417,8 +488,27 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
             printf("%d\n", i+shift);
       }
    } else {
-      for (i=0; i<fNPassed; i++){
-         printf("%d\n", fIndices[i]+shift);
+      if (fPassing){
+         for (i=0; i<fNPassed; i++){
+            printf("%d\n", fIndices[i]+shift);
+         }
+      } else {
+         if (fNPassed==0){
+            for (Int_t i=0; i<kBlockSize*16; i++)
+               printf("%d\n", i+shift);
+            return;
+         }
+         for (Int_t i=0; i<fIndices[0]; i++){
+            printf("%d\n", i+shift);
+         }
+         for (Int_t i=0; i<fNPassed-1; i++){
+            for (Int_t j=fIndices[i]+1; j<fIndices[i+1]; j++){
+               printf("%d\n", j+shift);
+            }
+         }
+         for (Int_t j=fIndices[fNPassed-1]+1; j<kBlockSize*16; j++){
+            printf("%d\n", j+shift);
+         }
       }
    }
 }
@@ -427,10 +517,12 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
 //______________________________________________________________________________
 void TEntryListBlock::OptimizeStorage()
 {
-   //if there are < kBlockSize entries, change to an array representation
+   //if there are < kBlockSize or >kBlockSize*15 entries, change to an array representation
 
    if (fType!=0) return;
-   if (fNPassed<kBlockSize){
+   if (fNPassed > kBlockSize*15)
+      fPassing = 0;
+   if (fNPassed<kBlockSize || !fPassing){
       //less than 4000 entries passing, makes sense to change from bits to list
       UShort_t *indexnew = new UShort_t[fNPassed];
       Transform(0, indexnew);
@@ -449,34 +541,55 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
    Int_t ilist = 0;
    Int_t ibite, ibit;
    if (!dir) {
-      for (i=0; i<kBlockSize*16; i++){
-         ibite = i >> 4;
-         ibit = i & 15;
-         Bool_t result = (fIndices[ibite] & (1<<ibit))!=0;
-         if (result){
-            indexnew[ilist] = i;
-            ilist++;
+         for (i=0; i<kBlockSize*16; i++){
+            ibite = i >> 4;
+            ibit = i & 15;
+            Bool_t result = (fIndices[ibite] & (1<<ibit))!=0;
+            if (result && fPassing){
+               //fill with the entries that pass
+               indexnew[ilist] = i;
+               ilist++;
+            }
+            else if (!result && !fPassing){
+               //fill with the entries that don't pass
+               indexnew[ilist] = i;
+               ilist++;
+            }
          }
-      }
       if (fIndices)
          delete [] fIndices;
       fIndices = indexnew;
       fType = 1;
+      if (!fPassing)
+         fNPassed = kBlockSize*16-fNPassed;
       fN = fNPassed;
       return;
    }
 
-   for (i=0; i<kBlockSize; i++)
-      indexnew[i] = 0;
-   for (i=0; i<fNPassed; i++){
-      ibite = fIndices[i]>>4;
-      ibit = fIndices[i] & 15;
-      indexnew[ibite] |= 1<<ibit;
-   }
+
+   if (fPassing){
+      for (i=0; i<kBlockSize; i++)
+         indexnew[i] = 0;
+      for (i=0; i<fNPassed; i++){
+         ibite = fIndices[i]>>4;
+         ibit = fIndices[i] & 15;
+         indexnew[ibite] |= 1<<ibit;
+      }
+   } else {
+      for (i=0; i<kBlockSize; i++)
+         indexnew[i] = 65535;
+      for (i=0; i<fNPassed; i++){
+         ibite = fIndices[i]>>4;
+         ibit = fIndices[i] & 15;
+         indexnew[ibite] ^= 1<<ibit;
+      }
+      fNPassed = kBlockSize*16-fNPassed;
+   } 
    if (fIndices)
       delete [] fIndices;
    fIndices = indexnew;
    fType = 0;
    fN = kBlockSize;
+   fPassing = 1;
    return;
 }
