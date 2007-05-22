@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.37 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.38 2007/05/12 20:11:41 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -247,7 +247,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    char tmp[256];
    Long64_t fsize, bsize;
 
-   fBuf = new TBufferFile(TBuffer::kWrite);
+   fBuf = 0;
    fDNDData.fData = 0;
    fDNDData.fDataLength = 0;
    fDNDData.fDataType = 0;
@@ -345,6 +345,14 @@ TGFileItem::TGFileItem(const TGWindow *p,
                                      fSubnames[i]->GetLength());
 
    SetWindowName();
+}
+
+//______________________________________________________________________________
+TGFileItem::~TGFileItem()
+{
+   // dtor
+
+   delete fBuf;
 }
 
 //______________________________________________________________________________

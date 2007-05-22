@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.31 2007/05/04 15:16:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.32 2007/05/06 08:04:39 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -129,6 +129,8 @@ TGLabel::~TGLabel()
    if (fFont != fgDefaultFont) {
       fClient->GetFontPool()->FreeFont(fFont);
    }
+
+   delete fTLayout;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.110 2007/05/03 12:13:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.111 2007/05/09 15:04:17 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -263,6 +263,7 @@ public:
       else
          object = fObj;
       if (object) {
+         if (!fBuf) fBuf = new TBufferFile(TBuffer::kWrite);
          fBuf->WriteObject(object);
          fDNDData.fData = fBuf->Buffer();
          fDNDData.fDataLength = fBuf->Length();
@@ -279,7 +280,6 @@ public:
 
 protected:
    TObject     *fObj;
-   TBufferFile *fBuf;
    TDNDdata     fDNDData;
 };
 
@@ -294,14 +294,16 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
    fObj = obj;
    fDNDData.fData = 0;
    fDNDData.fDataLength = 0;
+
+   if (fSubnames) {
+      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
+   }
    delete [] fSubnames;
    fSubnames = new TGString* [2];
 
    fSubnames[0] = new TGString(obj->GetTitle());
 
    fSubnames[1] = 0;
-
-   fBuf = new TBufferFile(TBuffer::kWrite);
 
    if (obj->IsA()->HasDefaultConstructor()) {
       SetDNDSource(kTRUE);
@@ -572,8 +574,10 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       }
 
       TIconBoxThumb *thumb = 0;
+      char *thumbname = gSystem->ConcatFileName(gSystem->WorkingDirectory(), name);
       thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name :
-                                      gSystem->ConcatFileName(gSystem->WorkingDirectory(), name));
+                                                       thumbname);
+      delete thumbname;
 
       if (thumb) {
          spic = thumb->fSmall;
@@ -584,13 +588,13 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       if (fi) {
          fi->SetUserData(obj);
          if (obj->IsA() == TSystemFile::Class()) {
-            char str[256];
+            TString str;
             TDNDdata data;
-            sprintf(str, "file://%s/%s\r\n",
+            str = Form("file://%s/%s\r\n",
                     gSystem->UnixPathName(obj->GetTitle()),
                     obj->GetName());
-            data.fData = (void *)strdup(str);
-            data.fDataLength = strlen(str)+1;
+            data.fData = (void *)strdup(str.Data());
+            data.fDataLength = str.Length()+1;
             data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
             fi->SetDNDdata(&data);
             fi->SetDNDSource(kTRUE);

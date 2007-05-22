@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.20 2007/04/17 12:08:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.21 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -76,6 +76,8 @@ public:
               Int_t uid = 0, Int_t gid = 0, Long_t modtime = 0,
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
+
+   virtual ~TGFileItem();
 
    virtual void SetViewMode(EListViewMode viewMode);
 
