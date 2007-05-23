@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.94 2007/05/14 13:26:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.95 2007/05/16 11:14:35 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -325,7 +325,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 1; i < *argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [file1.C ... fileN.C]\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", argv[0]);
          fprintf(stderr, "Options:\n");
          fprintf(stderr, "  -b : run in batch mode without graphics\n");
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");

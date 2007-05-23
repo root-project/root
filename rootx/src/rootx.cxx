@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.22 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.23 2007/01/21 06:52:00 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -290,7 +290,7 @@ static void PrintUsage(char *pname)
 {
    // This is a copy of the text in TApplication::GetOptions().
 
-   fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [file1.C ... fileN.C]\n", pname);
+   fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", pname);
    fprintf(stderr, "Options:\n");
    fprintf(stderr, "  -b : run in batch mode without graphics\n");
    fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
