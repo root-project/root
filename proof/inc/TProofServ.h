@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.51 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.52 2007/03/19 14:43:25 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -114,6 +114,8 @@ private:
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
 
+   TString       fPrefix;           //Prefix identifying the node
+
    Bool_t        fRealTimeLog;      //TRUE if log messages should be send back in real-time
 
    Bool_t        fShutdownWhenIdle; // If TRUE, start shutdown delay countdown when idle
@@ -167,8 +169,8 @@ protected:
 
    virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 
-   static void  ErrorHandler(Int_t level, Bool_t abort, const char *location,
-                             const char *msg);
+   static void   ErrorHandler(Int_t level, Bool_t abort, const char *location,
+                              const char *msg);
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
@@ -194,6 +196,10 @@ public:
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
 
+   const char    *GetPrefix()     const { return fPrefix; }
+
+   void           FlushLogFile();
+
    Int_t          CopyFromCache(const char *name);
    Int_t          CopyToCache(const char *name, Int_t opt = 0);
 
@@ -217,6 +223,7 @@ public:
    TDSetElement  *GetNextPacket(Long64_t totalEntries = -1);
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
+   virtual Int_t  SendAsynMessage(const char *msg, Bool_t lf = kTRUE);
    virtual void   SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void           SendStatistics();
    void           SendParallel();

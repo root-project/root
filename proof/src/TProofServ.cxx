@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.173 2007/04/17 09:05:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.174 2007/05/21 00:46:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -90,6 +90,26 @@ static volatile Int_t gProofServDebug = 1;
 // Max number of queries kept (-1 to disable)
 Int_t TProofServ::fgMaxQueries = -1;
 
+//______________________________________________________________________________
+static void SetTDSetWriteV3(TDSet *d, Bool_t on = kTRUE)
+{
+   // Set/Reset the 'OldStreamer' bit in TDSet and its elements.
+   // Needed for backward compatibility in talking to old client / masters.
+
+   if (d) {
+      TIter nxe(d->GetListOfElements());
+      if (on)
+         d->SetBit(TDSet::kWriteV3);
+      else
+         d->ResetBit(TDSet::kWriteV3);
+      TObject *o = 0;
+      while ((o = nxe()))
+         if (on)
+            o->SetBit(TDSetElement::kWriteV3);
+         else
+            o->ResetBit(TDSetElement::kWriteV3);
+   }
+}
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -406,10 +426,10 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    GetOptions(argc, argv);
 
    // Default prefix in the form '<role>-<ordinal>'
-   TString pfx = (IsMaster() ? "master-" : "worker-");
+   fPrefix = (IsMaster() ? "master-" : "worker-");
    if (fOrdinal != "-1")
-      pfx += fOrdinal;
-   TProofServLogHandler::SetDefaultPrefix(pfx);
+      fPrefix += fOrdinal;
+   TProofServLogHandler::SetDefaultPrefix(fPrefix);
 
    // Set global to this instance
    gProofServ = this;
@@ -2285,12 +2305,21 @@ R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
    // Increment sequential number
    fSeqNum++;
 
+   // Locally we always use the current streamer
+   Bool_t olds = (dset->TestBit(TDSet::kWriteV3)) ? kTRUE : kFALSE;
+   if (olds)
+      SetTDSetWriteV3(dset, kFALSE);
+
    // Create the instance and add it to the list
    TProofQueryResult *pqr =
       new TProofQueryResult(fSeqNum, opt, inlist, nent, fst, dset, selec, evl);
 
    // Title is the session identifier
    pqr->SetTitle(gSystem->BaseName(fQueryDir));
+
+   // Restore old streamer info
+   if (olds)
+      SetTDSetWriteV3(dset, kTRUE);
 
    return pqr;
 }
@@ -3115,15 +3144,11 @@ void TProofServ::HandleProcess(TMessage *mess)
             PDB(kGlobal, 2) Info("HandleProcess","Sending results");
             if (fProtocol > 10) {
                // Send objects one-by-one to optimize transfer and merging
-               TMessage m(kPROOF_MESSAGE);
                TMessage mbuf(kPROOF_OUTPUTOBJECT);
                // Objects in the output list
                Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
-               m << TString(Form("master-%s: sending output: %d objs",
-                                 fOrdinal.Data(), olsz));
-               m << (Bool_t) kFALSE;
-               fSocket->Send(m);
+               SendAsynMessage(Form("%s: sending output: %d objs",fPrefix.Data(), olsz), kFALSE);
                // Send light query info
                mbuf << (Int_t) 0;
                mbuf.WriteObject(pqr);
@@ -3140,19 +3165,13 @@ void TProofServ::HandleProcess(TMessage *mess)
                   mbuf << type;
                   mbuf.WriteObject(o);
                   totsz += mbuf.Length();
-                  m.Reset();
-                  m << TString(Form("master-%s: sending obj %d/%d (%d bytes)",
-                                    fOrdinal.Data(), ns, olsz, mbuf.Length()));
-                  m << (Bool_t) kFALSE;
-                  fSocket->Send(m);
+                  SendAsynMessage(Form("%s: sending obj %d/%d (%d bytes)",fPrefix.Data(),
+                                       ns, olsz, mbuf.Length()), kFALSE);
                   fSocket->Send(mbuf);
                }
                // Total size
-               m.Reset();
-               m << TString(Form("master-%s: grand total: sent %d objects, size: %d bytes",
-                                 fOrdinal.Data(), olsz, totsz));
-               m << (Bool_t) kTRUE;
-               fSocket->Send(m);
+               SendAsynMessage(Form("%s: grand total: sent %d objects, size: %d bytes",
+                                    fPrefix.Data(), olsz, totsz));
             } else if (fProtocol > 6) {
 
                // Buffer to be sent
@@ -3162,11 +3181,8 @@ void TProofServ::HandleProcess(TMessage *mess)
                Int_t blen = mbuf.Length();
                Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
-               TString cmsg = Form("master-%s: sending output: %d objs, %d bytes",
-                                   fOrdinal.Data(), olsz, blen);
-               TMessage m(kPROOF_MESSAGE);
-               m << cmsg;
-               fSocket->Send(m);
+               SendAsynMessage(Form("%s: sending output: %d objs, %d bytes",
+                                     fPrefix.Data(), olsz, blen));
                fSocket->Send(mbuf);
 
             } else {
@@ -3412,9 +3428,20 @@ void TProofServ::HandleRetrieve(TMessage *mess)
       while ((k = (TKey *)nxk())) {
          if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
             pqr = (TProofQueryResult *) f->Get(k->GetName());
+            // For backward compatibility
+            if (fProtocol < 13) {
+               TDSet *d = 0;
+               TObject *o = 0;
+               TIter nxi(pqr->GetInputList());
+               while ((o = nxi())) {
+                  Info("HandleRetrieve","obj name: %s", o->ClassName());
+                  if ((d = dynamic_cast<TDSet *>(o)))
+                     break;
+               }
+               SetTDSetWriteV3(d, kTRUE);
+            }
             if (pqr) {
 
-               TMessage m(kPROOF_MESSAGE);
                // Message for the client
                Float_t qsz = (Float_t) f->GetSize();
                Int_t ilb = 0;
@@ -3423,11 +3450,9 @@ void TProofServ::HandleRetrieve(TMessage *mess)
                   qsz /= 1000.;
                   ilb++;
                }
-               m << TString(Form("master-%s: sending result of %s:%s (%'.1f %s)",
-                                  fOrdinal.Data(), pqr->GetTitle(), pqr->GetName(),
-                                  qsz, clb[ilb]));
-               m << (Bool_t) kTRUE;
-               fSocket->Send(m);
+               SendAsynMessage(Form("%s: sending result of %s:%s (%'.1f %s)",
+                                    fPrefix.Data(), pqr->GetTitle(), pqr->GetName(),
+                                    qsz, clb[ilb]));
                fSocket->SendObject(pqr, kPROOF_RETRIEVE);
             } else {
                Info("HandleRetrieve",
@@ -3748,11 +3773,9 @@ Int_t TProofServ::HandleCache(TMessage *mess)
    TMessage msg;
 
    // Notification message
-   TMessage notm(kPROOF_MESSAGE);
    TString noth = Form("worker-%s", fOrdinal.Data());
    if (IsMaster())
       noth.ReplaceAll("worker", "master");
-   Bool_t notln = kTRUE;
 
    TString package, pdir, ocwd;
    (*mess) >> type;
@@ -3843,9 +3866,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             // check for BUILD.sh and execute
             if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
                // Notify the upper level
-               notm.Reset();
-               notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
-               fSocket->Send(notm);
+               SendAsynMessage(Form("%s: building %s ...", noth.Data(), package.Data()));
 
                // read version from file proofvers.txt, and if current version is
                // not the same do a "BUILD.sh clean"
@@ -3889,9 +3910,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          if (status) {
             // Notify the upper level
-            notm.Reset();
-            notm << TString(Form("%s: failure building %s ...", noth.Data(), package.Data())) << notln;
-            fSocket->Send(notm);
+            SendAsynMessage(Form("%s: failure building %s ...", noth.Data(), package.Data()));
          } else {
             // collect built results from slaves
             if (IsMaster())
@@ -3931,9 +3950,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          if (status) {
 
             // Notify the upper level
-            notm.Reset();
-            notm << TString(Form("%s: failure loading %s ...", noth.Data(), package.Data())) << notln;
-            fSocket->Send(notm);
+            SendAsynMessage(Form("%s: failure loading %s ...", noth.Data(), package.Data()));
 
          } else {
 
@@ -4528,25 +4545,23 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       type = "Fatal";
    }
 
-   TString node = "proof";
-   TString user = "unknown";
-
-   if (gProofServ) {
-      node = gProofServ->IsMaster() ? "master" : "slave";
-      node += gProofServ->GetOrdinal();
-      user = gProofServ->GetUser();
-   }
-
    TString buf;
 
    if (!location || strlen(location) == 0 ||
        (level >= kPrint && level < kInfo) ||
        (level >= kBreak && level < kSysError)) {
-      fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
-      buf.Form("%s:%s:%s:%s", user.Data(), node.Data(), type, msg);
+      fprintf(stderr, "%s on %s: %s\n", type,
+                     (gProofServ ? gProofServ->GetPrefix() : "proof"), msg);
+      buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
+                              (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                              type, msg);
    } else {
-      fprintf(stderr, "%s in <%s> on %s: %s\n", type, location, node.Data(), msg);
-      buf.Form("%s:%s:%s:<%s>:%s", user.Data(), node.Data(), type, location, msg);
+      fprintf(stderr, "%s in <%s> on %s: %s\n",
+                      type, location,
+                      (gProofServ ? gProofServ->GetPrefix() : "proof"), msg);
+      buf.Form("%s:%s:%s:<%s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
+                                   (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                                   type, location, msg);
    }
    fflush(stderr);
 
@@ -4752,6 +4767,36 @@ void TProofServ::DeletePlayer()
    else
       delete fPlayer;
    fPlayer = 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
+{
+   // Send an asychronous message to the master / client .
+   // Masters will forward up the message to the client.
+   // The client prints 'msg' of stderr and adds a '\n'/'\r' depending on
+   // 'lf' being kTRUE (default) or kFALSE.
+   // Returns the return value from TSocket::Send(TMessage &) .
+   static TMessage m(kPROOF_MESSAGE);
+
+   if (fSocket && msg) {
+      m.Reset(kPROOF_MESSAGE);
+      m << TString(msg) << lf;
+      return fSocket->Send(m);
+   }
+
+   // No message
+   return -1;
+}
+
+//______________________________________________________________________________
+void TProofServ::FlushLogFile()
+{
+   // Reposition the read pointer in the log file to the very end.
+   // This allows to "hide" useful debug messages durign normal operations
+   // while preserving the possibility to have them in case of problems.
+
+   lseek(fLogFileDes, lseek(fileno(stdout), (off_t)0, SEEK_END), SEEK_SET);
 }
 
 //______________________________________________________________________________
