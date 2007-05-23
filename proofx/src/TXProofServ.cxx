@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.33 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.34 2007/05/21 00:46:19 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1212,7 +1212,7 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
    }
 
    // To avoid having the client notified about this at reconnection
-   lseek(fLogFileDes, lseek(fileno(stdout), (off_t)0, SEEK_END), SEEK_SET);
+   FlushLogFile();
 }
 
 //______________________________________________________________________________
