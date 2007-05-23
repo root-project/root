@@ -795,8 +795,8 @@ install: all
 	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
 	      $(INSTALLDATA) bin/*.dll             $(DESTDIR)$(BINDIR); \
 	      for f in $(DESTDIR)$(LIBDIR)/*.dll; do \
-	         bindll=$$(basename $$f | sed 's,\..*$$,,'); \
-	         bindll=$$(ls $(DESTDIR)$(BINDIR)/$${bindll}.*dll); \
+	         bindll=`basename $$f | sed 's,\..*$$,,'`; \
+	         bindll=`ls $(DESTDIR)$(BINDIR)/$${bindll}.*dll`; \
 	         ln -sf $${bindll} $$f; \
 	      done; \
            elif [ x"$(PLATFORM)" = x"win32" ]; then \
