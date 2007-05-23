@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.73 2007/05/16 11:14:35 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.74 2007/05/23 15:38:36 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TTabCom.h"
 #include "TError.h"
 #include "G__ci.h"
+#include "snprintf.h"
 
 #ifdef R__UNIX
 #include <signal.h>
