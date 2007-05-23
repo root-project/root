@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root
-TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange
+TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -105,3 +105,7 @@ ReadFixedArrayOldWithNew : ReadFixedArrayOldWithNew.clog
 ReadFixedArrayNewWithOld : ReadFixedArrayNewWithOld.clog
 	$(TestDiff)
 
+ClonesArrayEvo.log: Event_3_cxx.$(DllSuf)
+
+ClonesArrayEvo: ClonesArrayEvo.log
+	$(TestDiff)
