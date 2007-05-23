@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.27 2006/10/10 06:41:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.28 2006/11/22 12:31:55 couet Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -196,7 +196,6 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->SetCleanup(kDeepCleanup);
    fLeftVerticalFrame->GetList()->AddFirst(fe);
 
-   fGedEditor->SetModel(fPad, this, kButton1Down);
    Show();
 }  
 
@@ -246,7 +245,6 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    fFrame->SetCleanup(kDeepCleanup);
    fLeftVerticalFrame->GetList()->AddFirst(fe);
 
-   fGedEditor->SetModel(fPad, this, kButton1Down);
    Show();
 }
 
