@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.10 2007/05/03 15:27:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.11 2007/05/08 14:54:46 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -67,6 +67,8 @@
 #include "TSystem.h"
 #include "THashList.h"
 
+#include "TStreamerInfo.h"
+
 ClassImp(TDSetElement)
 ClassImp(TDSet)
 
@@ -84,6 +86,7 @@ TDSetElement::TDSetElement() : TNamed("",""),
    fIsTree(kFALSE)
 {
    // Default constructor
+   ResetBit(kWriteV3);
 }
 
 //______________________________________________________________________________
@@ -114,6 +117,8 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
 
    if (dir)
       fDirectory = dir;
+
+   ResetBit(kWriteV3);
 }
 
 //______________________________________________________________________________
@@ -131,6 +136,7 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fEntries = elem.fEntries;
    fIsTree = elem.fIsTree;
    fFriends = 0;
+   ResetBit(kWriteV3);
 }
 
 //______________________________________________________________________________
@@ -491,6 +497,7 @@ TDSet::TDSet()
    fCurrent   = 0;
    fEventList = 0;
    fProofChain = 0;
+   ResetBit(kWriteV3);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -521,6 +528,7 @@ TDSet::TDSet(const char *name,
    fCurrent  = 0;
    fEventList = 0;
    fProofChain = 0;
+   ResetBit(kWriteV3);
 
    fType = "TTree";
    TClass *c = 0;
@@ -581,6 +589,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    fCurrent  = 0;
    fEventList = 0;
    fProofChain = 0;
+   ResetBit(kWriteV3);
 
    fType = "TTree";
    fIsTree = kTRUE;
@@ -1219,6 +1228,156 @@ void TDSet::Validate(TDSet* dset)
             TDSetElement* validelem = dynamic_cast<TDSetElement*>(p->Value());
             elem->Validate(validelem);
          }
+      }
+   }
+}
+
+//
+// To handle requests coming from version 3 client / masters we need
+// a special streamer
+//______________________________________________________________________________
+void TDSetElement::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TDSetElement.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      ResetBit(kWriteV3);
+      if (R__v > 4) {
+         R__b.ReadClassBuffer(TDSetElement::Class(), this, R__v, R__s, R__c);
+      } else {
+         // For version 3 client / masters we need a special streamer
+         SetBit(kWriteV3);
+         if (R__v > 3) {
+            TNamed::Streamer(R__b);
+         } else {
+            // Old versions were not deriving from TNamed and had the
+            // file name and the object type name in the first two members
+            TObject::Streamer(R__b);
+            TString name, title;
+            R__b >> name >> title;
+            SetNameTitle(name, title);
+         }
+         // Now we read the standard part
+         R__b >> fDirectory;
+         R__b >> fFirst;
+         R__b >> fNum;
+         R__b >> fMsd;
+         R__b >> fTDSetOffset;
+         R__b >> fEventList;
+         R__b >> fValid;
+         R__b >> fEntries;
+
+         // Special treatment waiting for proper retrieving of stl containers 
+         FriendsList_t *friends = new FriendsList_t;
+         ((TStreamerInfo*)TClass::GetClass(typeid(FriendsList_t))->
+            GetStreamerInfo())->ReadBuffer(R__b,(char**)&friends,0);
+         if (friends) {
+            // Convert friends to a TList (to be written)
+            fFriends = new TList();
+            fFriends->SetOwner();
+            for (FriendsList_t::iterator i = friends->begin();
+                 i != friends->end(); ++i) {
+               TDSetElement *dse = (TDSetElement *) i->first->Clone();
+               fFriends->Add(new TPair(dse, new TObjString(i->second.Data())));
+            }
+         }
+         R__b >> fIsTree;
+         R__b.CheckByteCount(R__s, R__c, TDSetElement::IsA());
+      }
+   } else {
+      if (TestBit(kWriteV3)) {
+         // For version 3 client / masters we need a special streamer
+         R__b << Version_t(3);
+         TObject::Streamer(R__b);
+         R__b << TString(GetName());
+         R__b << TString(GetTitle());
+         R__b << fDirectory;
+         R__b << fFirst;
+         R__b << fNum;
+         R__b << fMsd;
+         R__b << fTDSetOffset;
+         R__b << fEventList;
+         R__b << fValid;
+         R__b << fEntries;
+
+         // Special treatment waiting for proper retrieving of stl containers 
+         FriendsList_t *friends = new FriendsList_t;
+         if (fFriends) {
+            TIter nxf(fFriends);
+            TPair *p = 0;
+            while ((p = (TPair *)nxf()))
+               friends->push_back(std::make_pair((TDSetElement *)p->Key(),
+                                   TString(((TObjString *)p->Value())->GetName())));
+         }
+         ((TStreamerInfo*)TClass::GetClass(typeid(FriendsList_t))->
+            GetStreamerInfo())->WriteBuffer(R__b,(char *)friends,0);
+
+         R__b << fIsTree;
+      } else {
+         R__b.WriteClassBuffer(TDSetElement::Class(),this);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TDSet::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TDSet.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      ResetBit(kWriteV3);
+      if (R__v > 3) {
+         R__b.ReadClassBuffer(TDSet::Class(), this, R__v, R__s, R__c);
+      } else {
+         // For version 3 client / masters we need a special streamer
+         SetBit(kWriteV3);
+         TNamed::Streamer(R__b);
+         R__b >> fDir;
+         R__b >> fType;
+         R__b >> fObjName;
+         TList elems;
+         elems.Streamer(R__b);
+         elems.SetOwner(kFALSE);
+         if (elems.GetSize() > 0) {
+            fElements = new THashList;
+            fElements->SetOwner();
+            TDSetElement *e = 0;
+            TIter nxe(&elems);
+            while (e = (TDSetElement *)nxe()) {
+               fElements->Add(e);
+            }
+         } else {
+            fElements = 0;
+         }
+         R__b >> fIsTree;
+      }
+   } else {
+      if (TestBit(kWriteV3)) {
+         // For version 3 client / masters we need a special streamer
+         R__b << Version_t(3);
+         TNamed::Streamer(R__b);
+         R__b << fDir;
+         R__b << fType;
+         R__b << fObjName;
+         TList elems;
+         if (fElements) {
+            if (fElements->GetSize() > 0) {
+               elems.SetOwner(kTRUE);
+               fElements->SetOwner(kFALSE);
+               TDSetElement *e = 0;
+               TIter nxe(fElements);
+               while (e = (TDSetElement *)nxe())
+                  elems.Add(e);
+            }
+         }
+         elems.Streamer(R__b);
+         R__b << fIsTree;
+      } else {
+         R__b.WriteClassBuffer(TDSet::Class(),this);
       }
    }
 }

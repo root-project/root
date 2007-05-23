@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.7 2007/04/19 09:33:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.8 2007/05/03 15:27:40 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -59,13 +59,20 @@ class TProof;
 class TProofChain;
 class TTree;
 
+// For backward compatibility (handle correctly requests from old clients)
+#include <set>
+#include <list>
+
 class TDSetElement : public TNamed {
-private:
+public:
+   typedef  std::list<std::pair<TDSetElement*, TString> > FriendsList_t;
    // TDSetElement status bits
    enum EStatusBits {
-      kHasBeenLookedUp = BIT(15)
+      kHasBeenLookedUp = BIT(15),
+      kWriteV3 = BIT(16)
    };
 
+private:
    TString          fDirectory;  // directory in file where to look for objects
    Long64_t         fFirst;      // first entry to process
    Long64_t         fNum;        // number of entries to process
@@ -122,6 +129,12 @@ public:
 
 
 class TDSet : public TNamed {
+
+public:
+   // TDSet status bits
+   enum EStatusBits {
+      kWriteV3 = BIT(16)
+   };
 
 private:
 
