@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.5 2006/05/01 16:36:40 rdm Exp $
+// @(#)root/gfal:$Name: v5-14-00-patches $:$Id: TGFALFile.cxx,v 1.6 2006/06/21 13:57:53 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -84,6 +84,8 @@ TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
    // object. Use IsZombie() to see if the file is accessable.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
+
+   fStatCached = kFALSE;
 
    fOption = option;
    fOption.ToUpper();
