@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.42 2007/03/19 10:33:59 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.43 2007/04/19 09:33:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,8 +22,8 @@
 #pragma link C++ global gProofDebugMask;
 #pragma link C++ global gProofDebugLevel;
 
-#pragma link C++ class TDSet+;
-#pragma link C++ class TDSetElement+;
+#pragma link C++ class TDSet-;
+#pragma link C++ class TDSetElement-;
 #pragma link C++ class TProofChain+;
 #pragma link C++ class TProofMgr;
 #pragma link C++ class TProofDesc;
@@ -44,5 +44,9 @@
 #pragma link C++ class TProofNodeInfo;
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
+
+// For backward compatibility with old client / masters
+#pragma link C++ class std::pair<TDSetElement*, TString>;
+#pragma link C++ class std::list<std::pair<TDSetElement*,TString> >;
 
 #endif
