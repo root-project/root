@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.72 2007/05/14 13:34:21 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.73 2007/05/16 11:14:35 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -314,17 +314,17 @@ void TRint::Run(Bool_t retrn)
          Int_t nfile = 0;
          TObjString *file;
          while ((file = (TObjString *)next())) {
-            char cmd[256];
+            char cmd[kMAXPATHLEN+50];
             if (!fNcmd)
                printf("\n");
-            if (file->String().EndsWith(".root")) {
+            if (file->String().EndsWith(".root") || file->String().BeginsWith("file:")) {
                file->String().ReplaceAll("\\","/");
                const char *rfile = (const char*)file->String();
                Printf("Attaching file %s as _file%d...", rfile, nfile);
-               sprintf(cmd, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
+               snprintf(cmd, kMAXPATHLEN+50, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
             } else {
                Printf("Processing %s...", (const char*)file->String());
-               sprintf(cmd, ".x %s", (const char*)file->String());
+               snprintf(cmd, kMAXPATHLEN+50, ".x %s", (const char*)file->String());
             }
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
