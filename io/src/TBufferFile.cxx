@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.11 2007/03/16 19:56:03 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.12 2007/04/17 08:05:39 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -2763,13 +2763,13 @@ void TBufferFile::ForceWriteInfo(TClonesArray *a)
 }
 
 //______________________________________________________________________________
-Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects)
+Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
 {
    // Interface to TStreamerInfo::ReadBufferClones.
 
    char **arr = (char **)a->GetObjectRef(0);
    //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
+   TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo(objvers);
    return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
 }
 

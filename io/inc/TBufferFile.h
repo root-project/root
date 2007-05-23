@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.h,v 1.8 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.h,v 1.9 2007/02/13 20:28:34 rdm Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -275,7 +275,7 @@ public:
 
    // Utilities for TClonesArray
    virtual   void   ForceWriteInfo(TClonesArray *a);
-   virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects);
+   virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers);
    virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
 
    // Utilities for TClass
