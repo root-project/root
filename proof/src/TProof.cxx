@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.198 2007/05/21 00:21:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.199 2007/05/21 00:45:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2387,15 +2387,24 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             if (!IsMaster()) {
 
-               // Notify locally taking care of redirection, windows logs, ...
-               NotifyLogMsg(msg, (lfeed ? "\n" : "\r"));
-
+               if (fSync) {
+                  // Notify locally
+                  fprintf(stderr,"%s%c", msg.Data(), (lfeed ? '\n' : '\r'));
+               } else {
+                  // Notify locally taking care of redirection, windows logs, ...
+                  NotifyLogMsg(msg, (lfeed ? "\n" : "\r"));
+               }
             } else {
 
-               // Just send the message one level up
-               TMessage m(kPROOF_MESSAGE);
-               m << msg << lfeed;
-               gProofServ->GetSocket()->Send(m);
+               // The message is logged for debugging purposes.
+               fprintf(stderr,"%s%c", msg.Data(), (lfeed ? '\n' : '\r'));
+               if (gProofServ) {
+                  // We hide it during normal operations
+                  gProofServ->FlushLogFile();
+
+                  // And send the message one level up
+                  gProofServ->SendAsynMessage(msg, lfeed);
+               }
             }
          }
          break;
