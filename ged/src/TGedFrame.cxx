@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.20 2007/01/29 17:14:34 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.21 2007/02/07 09:00:41 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include "TGToolTip.h"
 #include "TGCanvas.h"
 #include "TGScrollBar.h"
-#include <snprintf.h>
+#include "snprintf.h"
 
 
 ClassImp(TGedFrame)
