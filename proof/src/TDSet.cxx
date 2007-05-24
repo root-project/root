@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.11 2007/05/08 14:54:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.12 2007/05/23 09:08:59 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -1347,7 +1347,7 @@ void TDSet::Streamer(TBuffer &R__b)
             fElements->SetOwner();
             TDSetElement *e = 0;
             TIter nxe(&elems);
-            while (e = (TDSetElement *)nxe()) {
+            while ((e = (TDSetElement *)nxe())) {
                fElements->Add(e);
             }
          } else {
@@ -1370,7 +1370,7 @@ void TDSet::Streamer(TBuffer &R__b)
                fElements->SetOwner(kFALSE);
                TDSetElement *e = 0;
                TIter nxe(fElements);
-               while (e = (TDSetElement *)nxe())
+               while ((e = (TDSetElement *)nxe()))
                   elems.Add(e);
             }
          }
