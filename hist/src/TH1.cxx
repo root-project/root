@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.343 2007/04/27 08:35:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.344 2007/05/14 12:26:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -392,7 +392,8 @@ All histogram classes are derived from the base class TH1
 <h4>Normalizing histograms</h4>
 
      One can scale an histogram such that the bins integral is equal to
-     the normalization parameter via TH1::Scale(Double_t norm).
+     the normalization parameter via TH1::Scale(Double_t norm), where norm
+     is the desired normalization divided by the integral of the histogram.   
 
 <h4>Drawing histograms</h4>
 
@@ -5331,7 +5332,11 @@ void TH1::Scale(Double_t c1)
    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
    // you should call Sumw2 before making this operation.
    // This is particularly important if you fit the histogram after TH1::Scale
-
+   //
+   // One can scale an histogram such that the bins integral is equal to
+   // the normalization parameter via TH1::Scale(Double_t norm), where norm
+   // is the desired normalization divided by the integral of the histogram.   
+ 
    Double_t ent = fEntries;
    Add(this,this,c1,0);
    fEntries = ent;
