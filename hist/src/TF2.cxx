@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.38 2007/05/21 08:38:48 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.39 2007/05/21 09:41:52 moneta Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    Double_t relerr  = 0;
    Int_t n = 2;
    Int_t minpts = 2*2+2*n*(n+1)+1; //ie 17
-   Int_t maxpts = 10000;
+   Int_t maxpts = 20*fNpx*fNpy;
    Int_t nfnevl,ifail;
    Double_t result = IntegralMultiple(n,a,b,minpts,maxpts,epsilon,relerr,nfnevl,ifail);
    if (ifail > 0) {
