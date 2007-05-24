@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.59 2007/02/07 15:24:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.60 2007/02/21 17:13:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -80,6 +80,7 @@ ClassImp(TGLViewer)
 //______________________________________________________________________________
 TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
                      UInt_t width, UInt_t height) :
+   fGLArea(0),
    fPad(pad),
    fContextMenu(0),
    fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
@@ -130,6 +131,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 
 //______________________________________________________________________________
 TGLViewer::TGLViewer(TVirtualPad * pad) :
+   fGLArea(0),
    fPad(pad),
    fContextMenu(0),
    fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
@@ -187,6 +189,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
 TGLViewer::~TGLViewer()
 {
    // Destroy viewer object
+   delete fGLArea;
    delete fContextMenu;
    delete fRedrawTimer;
    if (fPadEditor) fPadEditor = 0;

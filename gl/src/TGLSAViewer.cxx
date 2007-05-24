@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.28 2006/11/22 12:31:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.29 2007/05/23 13:37:22 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -153,7 +153,6 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFileSaveMenu(0),
    fCameraMenu(0), 
    fHelpMenu(0), 
-   fGLArea(0),
    fLeftVerticalFrame(0),
    fGedEditor(0),
    fPShapeWrap(0),
@@ -206,7 +205,6 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    fFileMenu(0), 
    fCameraMenu(0), 
    fHelpMenu(0), 
-   fGLArea(0),
    fLeftVerticalFrame(0),
    fGedEditor(0),
    fPShapeWrap(0)
@@ -252,10 +250,9 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
 TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object.
-
+   MakeCurrent();
    fGedEditor->DisconnectFromCanvas();
 
-   delete fGLArea;
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;

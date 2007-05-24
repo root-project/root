@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.34 2006/12/09 23:06:32 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.35 2007/01/29 08:52:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 class TGLFaceSet;
 class TGLRedrawTimer;
 class TGLViewerEditor;
+class TGLRenderArea;
 class TGLWindow; // Remove - TGLManager
 class TContextMenu;
 class TGLCameraMarkupStyle;
@@ -104,7 +105,7 @@ protected:
    ///////////////////////////////////////////////////////////////////////
    // Fields
    ///////////////////////////////////////////////////////////////////////
-
+   TGLRenderArea *fGLArea;
    // External handles
    TVirtualPad  * fPad;            //! external pad - remove replace with signal
    
