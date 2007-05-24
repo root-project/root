@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.46 2007/05/02 19:20:59 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.47 2007/05/21 00:26:24 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -725,7 +725,7 @@ XrdClientMessage *XrdProofdProtocol::SendCoordinator(const char *url,
       if (ok)
          xrsp = conn->SendReq(&reqhdr, buf, vout, "XrdProofdProtocol::SendCoordinator");
 
-      // Print error mag, if any
+      // Print error msg, if any
       if (!xrsp && conn->GetLastErr()) {
          XrdOucString cmsg = url;
          cmsg += ": ";
