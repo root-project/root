@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.63 2007/01/29 15:10:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.64 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -647,7 +647,7 @@ void TClonesArray::Streamer(TBuffer &b)
             fCont[i] = fKeep->fCont[i];
          }
          //sinfo->ReadBufferClones(b,this,nobjects,-1,0);
-         b.ReadClones(this,nobjects);
+         b.ReadClones(this,nobjects,v);
 
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
