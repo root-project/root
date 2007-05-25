@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.8 2007/05/03 15:27:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.9 2007/05/23 09:08:59 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -83,7 +83,6 @@ private:
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
    TList           *fFriends;    // friend elements
-   Bool_t           fIsTree;     // true if type is a TTree (or TTree derived)
 
    Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
 
@@ -155,7 +154,8 @@ protected:
 
 public:
    TDSet();
-   TDSet(const char *name, const char *objname = "*", const char *dir = "/", const char *type=0);
+   TDSet(const char *name, const char *objname = "*",
+         const char *dir = "/", const char *type = 0);
    TDSet(const TChain &chain, Bool_t withfriends = kTRUE);
    virtual ~TDSet();
 

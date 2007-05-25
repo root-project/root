@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.12 2007/05/23 09:08:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.13 2007/05/24 07:19:39 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -82,8 +82,7 @@ TDSetElement::TDSetElement() : TNamed("",""),
    fEventList(0),
    fValid(kFALSE),
    fEntries(0),
-   fFriends(0),
-   fIsTree(kFALSE)
+   fFriends(0)
 {
    // Default constructor
    ResetBit(kWriteV3);
@@ -134,7 +133,6 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fEventList = 0;
    fValid = elem.fValid;
    fEntries = elem.fEntries;
-   fIsTree = elem.fIsTree;
    fFriends = 0;
    ResetBit(kWriteV3);
 }
@@ -270,7 +268,6 @@ Int_t TDSetElement::Compare(const TObject *obj) const
    }
    return order;
 }
-
 
 //______________________________________________________________________________
 void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
@@ -579,9 +576,9 @@ TDSet::TDSet(const char *name,
 TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 {
    // Create a named TDSet object from existing TChain 'chain'.
-   // If 'eithfriends' is kTRUE add allso friends.
-   // This constructor substitutes for the static methods TChain::MakeTDSet
-   // allowing to keep all PROOF references in 'proof'.
+   // If 'withfriends' is kTRUE add also friends.
+   // This constructor substituted the static methods TChain::MakeTDSet
+   // removing any residual dependence of 'tree' on 'proof'.
 
    fElements = new THashList;
    fElements->SetOwner();
@@ -654,6 +651,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 TDSet::~TDSet()
 {
    // Cleanup.
+
    SafeDelete(fElements);
    SafeDelete(fIterator);
    SafeDelete(fProofChain);
@@ -830,7 +828,7 @@ Bool_t TDSet::Add(TCollection *filelist)
       if (cn == "TFileInfo") {
          TFileInfo *fi = (TFileInfo *)o;
          Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
-             fi->GetFirst(), fi->GetEntries());
+             (fi->GetFirst() >= 0) ? fi->GetFirst() : 0, fi->GetEntries());
       } else if (cn == "TUrl") {
          Add(((TUrl *)o)->GetUrl());
       } else if (cn == "TObjString") {
@@ -1269,7 +1267,7 @@ void TDSetElement::Streamer(TBuffer &R__b)
          R__b >> fValid;
          R__b >> fEntries;
 
-         // Special treatment waiting for proper retrieving of stl containers 
+         // Special treatment waiting for proper retrieving of stl containers
          FriendsList_t *friends = new FriendsList_t;
          ((TStreamerInfo*)TClass::GetClass(typeid(FriendsList_t))->
             GetStreamerInfo())->ReadBuffer(R__b,(char**)&friends,0);
@@ -1283,7 +1281,9 @@ void TDSetElement::Streamer(TBuffer &R__b)
                fFriends->Add(new TPair(dse, new TObjString(i->second.Data())));
             }
          }
-         R__b >> fIsTree;
+         // the value for fIsTree (only older versions are sending it)
+         Bool_t tmpIsTree;
+         R__b >> tmpIsTree;
          R__b.CheckByteCount(R__s, R__c, TDSetElement::IsA());
       }
    } else {
@@ -1302,7 +1302,7 @@ void TDSetElement::Streamer(TBuffer &R__b)
          R__b << fValid;
          R__b << fEntries;
 
-         // Special treatment waiting for proper retrieving of stl containers 
+         // Special treatment waiting for proper retrieving of stl containers
          FriendsList_t *friends = new FriendsList_t;
          if (fFriends) {
             TIter nxf(fFriends);
@@ -1314,7 +1314,9 @@ void TDSetElement::Streamer(TBuffer &R__b)
          ((TStreamerInfo*)TClass::GetClass(typeid(FriendsList_t))->
             GetStreamerInfo())->WriteBuffer(R__b,(char *)friends,0);
 
-         R__b << fIsTree;
+         // Older versions had an unused boolean called fIsTree: we fill it
+         // with its default value
+         R__b << kFALSE;
       } else {
          R__b.WriteClassBuffer(TDSetElement::Class(),this);
       }
