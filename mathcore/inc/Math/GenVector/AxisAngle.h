@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.12 2006/11/10 11:04:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -41,301 +41,268 @@ class AxisAngle {
 
 public:
 
-  typedef double Scalar;
+   typedef double Scalar;
 
-  /**
-     definition of vector axis
+   /**
+      definition of vector axis
    */
-  typedef DisplacementVector3D<Cartesian3D<Scalar> > AxisVector;
+   typedef DisplacementVector3D<Cartesian3D<Scalar> > AxisVector;
 
 
-  /**
-     Default constructor (axis is z and angle is zero)
-  */
-  AxisAngle() : fAxis(0,0,1), fAngle(0) { }
-
-  /**
-     Construct from a non-zero vector (x,y,z) and an angle.
-     Precondition:  the Vector needs to implement x(), y(), z(), and unit()
-  */
-  template<class AnyVector>
-  AxisAngle(const AnyVector & v, Scalar angle) :
-                                        fAxis(v.unit()), fAngle(angle) { }
-
-  /**
-     Construct given a pair of pointers or iterators defining the
-     beginning and end of an array of four Scalars, to be treated as
-     the x, y, and z components of a unit axis vector, and the angle
-     of rotation.
-     Precondition:  The first three components are assumed to represent
-     the rotation axis vector and the 4-th the rotation angle.  
-     The angle is assumed to be in the range (-pi,pi].
-     The axis vector is automatically normalized to be a unit vector  
+   /**
+      Default constructor (axis is z and angle is zero)
    */
-  template<class IT>
-  AxisAngle(IT begin, IT end) { SetComponents(begin,end); }
+   AxisAngle() : fAxis(0,0,1), fAngle(0) { }
 
-  // The compiler-generated copy ctor, copy assignment, and dtor are OK.
-
-  /**
-     Re-adjust components to eliminate small deviations from the axis
-     being a unit vector and angles out of the canonical range (-pi,pi]
+   /**
+      Construct from a non-zero vector (x,y,z) and an angle.
+      Precondition:  the Vector needs to implement x(), y(), z(), and unit()
    */
-  void Rectify();
+   template<class AnyVector>
+   AxisAngle(const AnyVector & v, Scalar angle) :
+      fAxis(v.unit()), fAngle(angle) { }
 
-  // ======== Construction From other Rotation Forms ==================
-
-  /**
-     Construct from a rotation matrix
-  */
-  explicit AxisAngle(const Rotation3D & r) {gv_detail::convert(r,*this);}
-
-  /**
-     Construct from EulerAngles
-  */
-  explicit AxisAngle(const EulerAngles & e) {gv_detail::convert(e,*this);}
-
-  /**
-     Construct from a rotation represented by a Quaternion
-  */
-  explicit AxisAngle(const Quaternion & q) {gv_detail::convert(q,*this);}
-
-  /**
-     Construct from an axial rotation
-  */
-  explicit AxisAngle( RotationZ const & r ) { gv_detail::convert(r, *this); }
-  explicit AxisAngle( RotationY const & r ) { gv_detail::convert(r, *this); }
-  explicit AxisAngle( RotationX const & r ) { gv_detail::convert(r, *this); }
-
-  /**
-     Assign from a Rotation3D
-  */
-  AxisAngle &
-  operator=( Rotation3D const  & r ) { return operator=(AxisAngle(r)); }
-
-  /**
-     Assign from EulerAngles
-  */
-  AxisAngle &
-  operator=( EulerAngles const & e ) { return operator=(AxisAngle(e)); }
-
-  /**
-     Assign from a Quaternion
-  */
-  AxisAngle &
-  operator=( Quaternion const  & q ) {return operator=(AxisAngle(q)); }
-
-  /**
-     Assign from an axial rotation
-  */
-  AxisAngle &
-  operator=( RotationZ const & r ) { return operator=(AxisAngle(r)); }
-  AxisAngle &
-  operator=( RotationY const & r ) { return operator=(AxisAngle(r)); }
-  AxisAngle &
-  operator=( RotationX const & r ) { return operator=(AxisAngle(r)); }
-
-  // ======== Components ==============
-
-  /**
-     Set the axis and then the angle given a pair of pointers or iterators
-     defining the beginning and end of an array of four Scalars.
-     Precondition:  The first three components are assumed to represent
-     the rotation axis vector and the 4-th the rotation angle. 
-     The angle is assumed to be in the range (-pi,pi].
-     The axis vector is automatically normalized to be a unit vector  
+   /**
+      Construct given a pair of pointers or iterators defining the
+      beginning and end of an array of four Scalars, to be treated as
+      the x, y, and z components of a unit axis vector, and the angle
+      of rotation.
+      Precondition:  The first three components are assumed to represent
+      the rotation axis vector and the 4-th the rotation angle.  
+      The angle is assumed to be in the range (-pi,pi].
+      The axis vector is automatically normalized to be a unit vector  
    */
-  template<class IT>
-  void SetComponents(IT begin, IT end) {
-    IT a = begin; IT b = ++begin; IT c = ++begin;
-    fAxis.SetCoordinates(*a,*b,*c);
-    fAngle = *(++begin); 
-    assert (++begin==end);
-    // re-normalize the vector
-    double tot = fAxis.R();
-    if (tot >  0) fAxis /= tot;
-  }
+   template<class IT>
+   AxisAngle(IT begin, IT end) { SetComponents(begin,end); }
 
-  /**
-     Get the axis and then the angle into data specified by an iterator begin
-     and another to the end of the desired data (4 past start).
+   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+
+   /**
+      Re-adjust components to eliminate small deviations from the axis
+      being a unit vector and angles out of the canonical range (-pi,pi]
    */
-  template<class IT>
-  void GetComponents(IT begin, IT end) const {
-    IT a = begin; IT b = ++begin; IT c = ++begin;
-    fAxis.GetCoordinates(*a,*b,*c);
-    *(++begin) = fAngle;  
-    assert (++begin==end);
-  }
+   void Rectify();
 
-  /**
-     Get the axis and then the angle into data specified by an iterator begin
+   // ======== Construction From other Rotation Forms ==================
+
+   /**
+      Construct from another supported rotation type (see gv_detail::convert )
    */
-  template<class IT>
-  void GetComponents(IT begin) const {
-     double ax,ay,az = 0;
-     fAxis.GetCoordinates(ax,ay,az);
-     *begin++ = ax; 
-     *begin++ = ay; 
-     *begin++ = az; 
-     *begin = fAngle;
-  }
+   template <class OtherRotation> 
+   explicit AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
-  /**
-     Set components from a non-zero vector (x,y,z) and an angle.
-     Precondition:  the Vector needs to implement x(), y(), z(), and unit()
-  */
-  template<class AnyVector>
-  void SetComponents(const AnyVector & v, Scalar angle) {
-    fAxis=v.unit();
-    fAngle=angle;
-  }
 
-  /**
-     Set components into a non-zero vector (x,y,z) and an angle.
-     The vector is intended to be a cartesian dispalcement vector
-     but any vector class assignable from one will work.
-  */
-  template<class AnyVector>
-  void GetComponents(AnyVector & axis, Scalar & angle) const {
-    axis  = fAxis;
-    angle = fAngle;
-  }
-
-  /**
-     accesss to rotation axis
+   /**
+      Assign from another supported rotation type (see gv_detail::convert )
    */
-  AxisVector Axis() const { return fAxis; }
+   template <class OtherRotation> 
+   AxisAngle & operator=( OtherRotation const  & r ) { 
+      gv_detail::convert(r,*this);
+      return *this;
+   }
 
-  /**
-     access to rotation angle
+   // ======== Components ==============
+
+   /**
+      Set the axis and then the angle given a pair of pointers or iterators
+      defining the beginning and end of an array of four Scalars.
+      Precondition:  The first three components are assumed to represent
+      the rotation axis vector and the 4-th the rotation angle. 
+      The angle is assumed to be in the range (-pi,pi].
+      The axis vector is automatically normalized to be a unit vector  
    */
-  Scalar Angle() const { return fAngle; }
+   template<class IT>
+   void SetComponents(IT begin, IT end) {
+      IT a = begin; IT b = ++begin; IT c = ++begin;
+      fAxis.SetCoordinates(*a,*b,*c);
+      fAngle = *(++begin); 
+      assert (++begin==end);
+      // re-normalize the vector
+      double tot = fAxis.R();
+      if (tot >  0) fAxis /= tot;
+   }
 
-  // =========== operations ==============
-
-  /**
-     Rotation operation on a cartesian vector
+   /**
+      Get the axis and then the angle into data specified by an iterator begin
+      and another to the end of the desired data (4 past start).
    */
-  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
-  XYZVector operator() (const XYZVector & v) const;
+   template<class IT>
+   void GetComponents(IT begin, IT end) const {
+      IT a = begin; IT b = ++begin; IT c = ++begin;
+      fAxis.GetCoordinates(*a,*b,*c);
+      *(++begin) = fAngle;  
+      assert (++begin==end);
+   }
 
-  /**
-     Rotation operation on a displacement vector in any coordinate system
+   /**
+      Get the axis and then the angle into data specified by an iterator begin
    */
-  template <class CoordSystem, class Tag>
-  DisplacementVector3D<CoordSystem, Tag>
-  operator() (const DisplacementVector3D<CoordSystem, Tag> & v) const {
-     DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
-     DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-     DisplacementVector3D< CoordSystem, Tag > vNew;
-     vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
-     return vNew; 
-  }
+   template<class IT>
+   void GetComponents(IT begin) const {
+      double ax,ay,az = 0;
+      fAxis.GetCoordinates(ax,ay,az);
+      *begin++ = ax; 
+      *begin++ = ay; 
+      *begin++ = az; 
+      *begin = fAngle;
+   }
 
-  /**
-     Rotation operation on a position vector in any coordinate system
+   /**
+      Set components from a non-zero vector (x,y,z) and an angle.
+      Precondition:  the Vector needs to implement x(), y(), z(), and unit()
    */
-  template <class CoordSystem, class Tag>
-  PositionVector3D<CoordSystem, Tag>
-  operator() (const PositionVector3D<CoordSystem,Tag> & p) const {
-    DisplacementVector3D< Cartesian3D<double>,Tag > xyz(p);
-    DisplacementVector3D< Cartesian3D<double>,Tag > rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,Tag> ( rxyz );
-  }
+   template<class AnyVector>
+   void SetComponents(const AnyVector & v, Scalar angle) {
+      fAxis=v.unit();
+      fAngle=angle;
+   }
 
-  /**
-     Rotation operation on a Lorentz vector in any 4D coordinate system
+   /**
+      Set components into a non-zero vector (x,y,z) and an angle.
+      The vector is intended to be a cartesian dispalcement vector
+      but any vector class assignable from one will work.
    */
-  template <class CoordSystem>
-  LorentzVector<CoordSystem>
-  operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
-    xyz = operator()(xyz);
-    LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
-    return LorentzVector<CoordSystem> ( xyzt );
-  }
+   template<class AnyVector>
+   void GetComponents(AnyVector & axis, Scalar & angle) const {
+      axis  = fAxis;
+      angle = fAngle;
+   }
 
-
-  /**
-     Rotation operation on an arbitrary vector v.
-     Preconditions:  v must implement methods x(), y(), and z()
-     and the arbitrary vector type must have a constructor taking (x,y,z)
+   /**
+      accesss to rotation axis
    */
-  template <class ForeignVector>
-  ForeignVector
-  operator() (const  ForeignVector & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
-  }
+   AxisVector Axis() const { return fAxis; }
 
-  /**
-     Overload operator * for rotation on a vector
+   /**
+      access to rotation angle
    */
-  template <class AVector>
-  inline
-  AVector operator* (const AVector & v) const
-  {
-    return operator()(v);
-  }
+   Scalar Angle() const { return fAngle; }
 
-  /**
+   // =========== operations ==============
+
+   /**
+      Rotation operation on a cartesian vector
+   */
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+   XYZVector operator() (const XYZVector & v) const;
+
+   /**
+      Rotation operation on a displacement vector in any coordinate system
+   */
+   template <class CoordSystem, class Tag>
+   DisplacementVector3D<CoordSystem, Tag>
+   operator() (const DisplacementVector3D<CoordSystem, Tag> & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
+      DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+      DisplacementVector3D< CoordSystem, Tag > vNew;
+      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
+      return vNew; 
+   }
+
+   /**
+      Rotation operation on a position vector in any coordinate system
+   */
+   template <class CoordSystem, class Tag>
+   PositionVector3D<CoordSystem, Tag>
+   operator() (const PositionVector3D<CoordSystem,Tag> & p) const {
+      DisplacementVector3D< Cartesian3D<double>,Tag > xyz(p);
+      DisplacementVector3D< Cartesian3D<double>,Tag > rxyz = operator()(xyz);
+      return PositionVector3D<CoordSystem,Tag> ( rxyz );
+   }
+
+   /**
+      Rotation operation on a Lorentz vector in any 4D coordinate system
+   */
+   template <class CoordSystem>
+   LorentzVector<CoordSystem>
+   operator() (const LorentzVector<CoordSystem> & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
+      xyz = operator()(xyz);
+      LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
+      return LorentzVector<CoordSystem> ( xyzt );
+   }
+
+
+   /**
+      Rotation operation on an arbitrary vector v.
+      Preconditions:  v must implement methods x(), y(), and z()
+      and the arbitrary vector type must have a constructor taking (x,y,z)
+   */
+   template <class ForeignVector>
+   ForeignVector
+   operator() (const  ForeignVector & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v);
+      DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+      return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+   }
+
+   /**
+      Overload operator * for rotation on a vector
+   */
+   template <class AVector>
+   inline
+   AVector operator* (const AVector & v) const
+   {
+      return operator()(v);
+   }
+
+   /**
       Invert an AxisAngle rotation in place
    */
-  void Invert() { fAngle = -fAngle; }
+   void Invert() { fAngle = -fAngle; }
 
-  /**
+   /**
       Return inverse of an AxisAngle rotation
    */
-  AxisAngle Inverse() const { AxisAngle result(*this); result.Invert(); return result; }
+   AxisAngle Inverse() const { AxisAngle result(*this); result.Invert(); return result; }
 
-  // ========= Multi-Rotation Operations ===============
+   // ========= Multi-Rotation Operations ===============
 
-  /**
-     Multiply (combine) two rotations
+   /**
+      Multiply (combine) two rotations
    */
-  AxisAngle operator * (const Rotation3D  & r) const;
-  AxisAngle operator * (const AxisAngle   & a) const;
-  AxisAngle operator * (const EulerAngles & e) const;
-  AxisAngle operator * (const Quaternion  & q) const;
-  AxisAngle operator * (const RotationX  & rx) const;
-  AxisAngle operator * (const RotationY  & ry) const;
-  AxisAngle operator * (const RotationZ  & rz) const;
+   AxisAngle operator * (const Rotation3D  & r) const;
+   AxisAngle operator * (const AxisAngle   & a) const;
+   AxisAngle operator * (const EulerAngles & e) const;
+   AxisAngle operator * (const Quaternion  & q) const;
+   AxisAngle operator * (const RotationZYX & r) const;
+   AxisAngle operator * (const RotationX  & rx) const;
+   AxisAngle operator * (const RotationY  & ry) const;
+   AxisAngle operator * (const RotationZ  & rz) const;
 
-  /**
-     Post-Multiply (on right) by another rotation :  T = T*R
+   /**
+      Post-Multiply (on right) by another rotation :  T = T*R
    */
-  template <class R>
-  AxisAngle & operator *= (const R & r) { return *this = (*this)*r; }
+   template <class R>
+   AxisAngle & operator *= (const R & r) { return *this = (*this)*r; }
 
 
-  /**
-     Distance between two rotations
+   /**
+      Distance between two rotations
    */
-  template <class R>
-  Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
+   template <class R>
+   Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
 
-  /**
-     Equality/inequality operators
+   /**
+      Equality/inequality operators
    */
-  bool operator == (const AxisAngle & rhs) const {
-    if( fAxis  != rhs.fAxis  )  return false;
-    if( fAngle != rhs.fAngle )  return false;
-    return true;
-  }
-  bool operator != (const AxisAngle & rhs) const {
-    return ! operator==(rhs);
-  }
+   bool operator == (const AxisAngle & rhs) const {
+      if( fAxis  != rhs.fAxis  )  return false;
+      if( fAngle != rhs.fAngle )  return false;
+      return true;
+   }
+   bool operator != (const AxisAngle & rhs) const {
+      return ! operator==(rhs);
+   }
 
 private:
 
-  AxisVector  fAxis;
-  Scalar      fAngle;
+   AxisVector  fAxis;
+   Scalar      fAngle;
 
-  void RectifyAngle();
+   void RectifyAngle();
 
-  static double Pi() { return 3.14159265358979323; }
+   static double Pi() { return 3.14159265358979323; }
 
 };  // AxisAngle
 

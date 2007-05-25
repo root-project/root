@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DDistances.h,v 1.2 2005/08/08 16:51:02 wbrown Exp $
+// Last update: $Id: 3DDistances.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_3DDistances 
 #define ROOT_Math_GenVector_3DDistances  1
@@ -22,6 +22,7 @@
 #include "Math/GenVector/AxisAnglefwd.h"
 #include "Math/GenVector/EulerAnglesfwd.h"
 #include "Math/GenVector/Quaternionfwd.h"
+#include "Math/GenVector/RotationZYXfwd.h"
 #include "Math/GenVector/RotationXfwd.h"
 #include "Math/GenVector/RotationYfwd.h"
 #include "Math/GenVector/RotationZfwd.h"
@@ -49,6 +50,7 @@ double dist( Rotation3D const & r1, Rotation3D  const & r2);
 double dist( Rotation3D const & r1, AxisAngle   const & r2);
 double dist( Rotation3D const & r1, EulerAngles const & r2);
 double dist( Rotation3D const & r1, Quaternion  const & r2);
+double dist( Rotation3D const & r1, RotationZYX const & r2);
 double dist( Rotation3D const & r1, RotationX   const & r2);
 double dist( Rotation3D const & r1, RotationY   const & r2);
 double dist( Rotation3D const & r1, RotationZ   const & r2);
@@ -61,6 +63,7 @@ double dist( AxisAngle const & r1, Rotation3D  const & r2);
 double dist( AxisAngle const & r1, AxisAngle   const & r2);
 double dist( AxisAngle const & r1, EulerAngles const & r2);
 double dist( AxisAngle const & r1, Quaternion  const & r2);
+double dist( AxisAngle const & r1, RotationZYX const & r2);
 double dist( AxisAngle const & r1, RotationX   const & r2);
 double dist( AxisAngle const & r1, RotationY   const & r2);
 double dist( AxisAngle const & r1, RotationZ   const & r2);
@@ -73,6 +76,7 @@ double dist( EulerAngles const & r1, Rotation3D  const & r2);
 double dist( EulerAngles const & r1, AxisAngle   const & r2);
 double dist( EulerAngles const & r1, EulerAngles const & r2);
 double dist( EulerAngles const & r1, Quaternion  const & r2);
+double dist( EulerAngles const & r1, RotationZYX const & r2);
 double dist( EulerAngles const & r1, RotationX   const & r2);
 double dist( EulerAngles const & r1, RotationY   const & r2);
 double dist( EulerAngles const & r1, RotationZ   const & r2);
@@ -85,11 +89,24 @@ double dist( Quaternion const & r1, Rotation3D  const & r2);
 double dist( Quaternion const & r1, AxisAngle   const & r2);
 double dist( Quaternion const & r1, EulerAngles const & r2);
 double dist( Quaternion const & r1, Quaternion  const & r2);
+double dist( Quaternion const & r1, RotationZYX const & r2);
 double dist( Quaternion const & r1, RotationX   const & r2);
 double dist( Quaternion const & r1, RotationY   const & r2);
 double dist( Quaternion const & r1, RotationZ   const & r2);
 
-#ifdef NOTYET
+// ----------------------------------------------------------------------
+// Distance from RotationZYX
+
+double dist( RotationZYX const & r1, Rotation3D  const & r2);
+double dist( RotationZYX const & r1, AxisAngle   const & r2);
+double dist( RotationZYX const & r1, EulerAngles const & r2);
+double dist( RotationZYX const & r1, Quaternion  const & r2);
+double dist( RotationZYX const & r1, RotationZYX const & r2);
+double dist( RotationZYX const & r1, RotationX   const & r2);
+double dist( RotationZYX const & r1, RotationY   const & r2);
+double dist( RotationZYX const & r1, RotationZ   const & r2);
+
+
 
 // ----------------------------------------------------------------------
 // Distance from RotationX
@@ -126,7 +143,6 @@ double dist( RotationZ const  & r1, RotationX   const & r2);
 double dist( RotationZ const  & r1, RotationY   const & r2);
 double dist( RotationZ const  & r1, RotationZ   const & r2);
 
-#endif // NOTYET
 
 } //namespace gv_detail
 } //namespace Math

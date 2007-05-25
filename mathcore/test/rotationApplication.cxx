@@ -28,6 +28,7 @@
 #include "Math/GenVector/AxisAngle.h"
 #include "Math/GenVector/EulerAngles.h"
 #include "Math/GenVector/Quaternion.h"
+#include "Math/GenVector/RotationZYX.h"
 #include "Math/GenVector/RotationX.h"
 #include "Math/GenVector/RotationY.h"
 #include "Math/GenVector/RotationZ.h"
@@ -518,6 +519,7 @@ int exerciseTestCase (TestRotation const & testRotation,
   ret |= doTestOfR <AxisAngle>   (testRotation,testVector);
   ret |= doTestOfR <EulerAngles> (testRotation,testVector);
   ret |= doTestOfR <Quaternion>  (testRotation,testVector);
+  ret |= doTestOfR <RotationZYX> (testRotation,testVector);
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif

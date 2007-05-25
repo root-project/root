@@ -32,6 +32,7 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/Point2D.h \
                  $(MODDIRI)/Math/Rotation3D.h \
+                 $(MODDIRI)/Math/RotationZYX.h \
                  $(MODDIRI)/Math/RotationX.h \
                  $(MODDIRI)/Math/RotationY.h \
                  $(MODDIRI)/Math/RotationZ.h \

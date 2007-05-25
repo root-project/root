@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.10 2006/11/10 11:04:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.10 2006/11/10 11:04:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -53,282 +53,249 @@ public:
   /**
       Default constructor (identity rotation)
   */
-  Quaternion()
-  : fU(1.0)
-  , fI(0.0)
-  , fJ(0.0)
-  , fK(0.0)
-  { }
+   Quaternion()
+      : fU(1.0)
+      , fI(0.0)
+      , fJ(0.0)
+      , fK(0.0)
+   { }
 
-  /**
-     Construct given a pair of pointers or iterators defining the
-     beginning and end of an array of four Scalars
+   /**
+      Construct given a pair of pointers or iterators defining the
+      beginning and end of an array of four Scalars
    */
-  template<class IT>
-  Quaternion(IT begin, IT end) { SetComponents(begin,end); }
+   template<class IT>
+   Quaternion(IT begin, IT end) { SetComponents(begin,end); }
 
-  // ======== Construction From other Rotation Forms ==================
+   // ======== Construction From other Rotation Forms ==================
 
-  /**
-     Construct from a Rotation3D
-  */
-  explicit Quaternion( Rotation3D const  & r ) { gv_detail::convert(r, *this); }
-
-  /**
-     Construct from an AxisAngle
-  */
-  explicit Quaternion( AxisAngle const   & a ) { gv_detail::convert(a, *this); }
-
-  /**
-     Construct from EulerAngles
-  */
-  explicit Quaternion( EulerAngles const & e ) { gv_detail::convert(e, *this); }
-
-  /**
-     Construct from an axial rotation
-  */
-  explicit Quaternion( RotationZ const & r ) { gv_detail::convert(r, *this); }
-  explicit Quaternion( RotationY const & r ) { gv_detail::convert(r, *this); }
-  explicit Quaternion( RotationX const & r ) { gv_detail::convert(r, *this); }
-
-  /**
-     Construct from four Scalars representing the coefficients of u, i, j, k
+   /**
+      Construct from another supported rotation type (see gv_detail::convert )
    */
-  Quaternion(Scalar u, Scalar i, Scalar j, Scalar k) :
-                        fU(u), fI(i), fJ(j), fK(k) { }
+   template <class OtherRotation> 
+   explicit Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
-  // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
-  /**
-     Re-adjust components to eliminate small deviations from |Q| = 1
-     orthonormality.
+   /**
+      Construct from four Scalars representing the coefficients of u, i, j, k
    */
-  void Rectify();
+   Quaternion(Scalar u, Scalar i, Scalar j, Scalar k) :
+      fU(u), fI(i), fJ(j), fK(k) { }
 
-  /**
-     Assign from a Rotation3D
-  */
-  Quaternion &
-  operator=( Rotation3D const  & r ) { return operator=(Quaternion(r)); }
+   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
-  /**
-     Assign from an AxisAngle
-  */
-  Quaternion &
-  operator=( AxisAngle const &   a ) { return operator=(Quaternion(a)); }
-
-  /**
-     Assign from EulerAngles
-  */
-  Quaternion &
-  operator=( EulerAngles const & e ) {return operator=(Quaternion(e)); }
-
-  /**
-     Assign from an axial rotation
-  */
-  Quaternion &
-  operator=( RotationZ const & r ) { return operator=(Quaternion(r)); }
-  Quaternion &
-  operator=( RotationY const & r ) { return operator=(Quaternion(r)); }
-  Quaternion &
-  operator=( RotationX const & r ) { return operator=(Quaternion(r)); }
-
-  // ======== Components ==============
-
-  /**
-     Set the four components given an iterator to the start of
-     the desired data, and another to the end (4 past start).
+   /**
+      Re-adjust components to eliminate small deviations from |Q| = 1
+      orthonormality.
    */
-  template<class IT>
-  void SetComponents(IT begin, IT end) {
-    fU = *begin++;
-    fI = *begin++;
-    fJ = *begin++;
-    fK = *begin++;
-    assert (end==begin);
-  }
+   void Rectify();
 
-  /**
-     Get the components into data specified by an iterator begin
-     and another to the end of the desired data (4 past start).
+   /**
+      Assign from another supported rotation type (see gv_detail::convert )
    */
-  template<class IT>
-  void GetComponents(IT begin, IT end) const {
-    *begin++ = fU;
-    *begin++ = fI;
-    *begin++ = fJ;
-    *begin++ = fK;
-    assert (end==begin);
-  }
+   template <class OtherRotation> 
+   Quaternion & operator=( OtherRotation const  & r ) { 
+      gv_detail::convert(r,*this);
+      return *this;
+   }
 
-  /**
-     Get the components into data specified by an iterator begin
+   // ======== Components ==============
+
+   /**
+      Set the four components given an iterator to the start of
+      the desired data, and another to the end (4 past start).
    */
-  template<class IT>
-  void GetComponents(IT begin ) const {
-    *begin++ = fU;
-    *begin++ = fI;
-    *begin++ = fJ;
-    *begin   = fK;
-  }
+   template<class IT>
+   void SetComponents(IT begin, IT end) {
+      fU = *begin++;
+      fI = *begin++;
+      fJ = *begin++;
+      fK = *begin++;
+      assert (end==begin);
+   }
 
-  /**
-     Set the components based on four Scalars.  The sum of the squares of
-     these Scalars should be 1; no checking is done.
+   /**
+      Get the components into data specified by an iterator begin
+      and another to the end of the desired data (4 past start).
    */
-  void SetComponents(Scalar u, Scalar i, Scalar j, Scalar k) {
-    fU=u; fI=i; fJ=j; fK=k;
-  }
+   template<class IT>
+   void GetComponents(IT begin, IT end) const {
+      *begin++ = fU;
+      *begin++ = fI;
+      *begin++ = fJ;
+      *begin++ = fK;
+      assert (end==begin);
+   }
 
-  /**
-     Get the components into four Scalars.
-    */
-  void GetComponents(Scalar & u, Scalar & i, Scalar & j, Scalar & k) const {
-    u=fU; i=fI; j=fJ; k=fK;
-  }
-
-  /**
-     Access to the four quaternion components:
-     U() is the coefficient of the identity Pauli matrix,
-     I(), J() and K() are the coefficients of sigma_x, sigma_y, sigma_z
+   /**
+      Get the components into data specified by an iterator begin
    */
-  Scalar U() const { return fU; }
-  Scalar I() const { return fI; }
-  Scalar J() const { return fJ; }
-  Scalar K() const { return fK; }
+   template<class IT>
+   void GetComponents(IT begin ) const {
+      *begin++ = fU;
+      *begin++ = fI;
+      *begin++ = fJ;
+      *begin   = fK;
+   }
 
-  // =========== operations ==============
-
-  /**
-     Rotation operation on a cartesian vector
+   /**
+      Set the components based on four Scalars.  The sum of the squares of
+      these Scalars should be 1; no checking is done.
    */
-  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
-  XYZVector operator() (const XYZVector & v) const;
+   void SetComponents(Scalar u, Scalar i, Scalar j, Scalar k) {
+      fU=u; fI=i; fJ=j; fK=k;
+   }
 
-  /**
-     Rotation operation on a displacement vector in any coordinate system
+   /**
+      Get the components into four Scalars.
    */
-  template <class CoordSystem,class Tag>
-  DisplacementVector3D<CoordSystem,Tag>
-  operator() (const DisplacementVector3D<CoordSystem,Tag> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
-    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-    DisplacementVector3D< CoordSystem,Tag > vNew;
-    vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
-    return vNew; 
-  }
+   void GetComponents(Scalar & u, Scalar & i, Scalar & j, Scalar & k) const {
+      u=fU; i=fI; j=fJ; k=fK;
+   }
 
-  /**
-     Rotation operation on a position vector in any coordinate system
+   /**
+      Access to the four quaternion components:
+      U() is the coefficient of the identity Pauli matrix,
+      I(), J() and K() are the coefficients of sigma_x, sigma_y, sigma_z
    */
-  template <class CoordSystem, class Tag>
-  PositionVector3D<CoordSystem,Tag>
-  operator() (const PositionVector3D<CoordSystem,Tag> & p) const {
-    DisplacementVector3D< Cartesian3D<double>,Tag > xyz(p);
-    DisplacementVector3D< Cartesian3D<double>,Tag > rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,Tag> ( rxyz );
-  }
+   Scalar U() const { return fU; }
+   Scalar I() const { return fI; }
+   Scalar J() const { return fJ; }
+   Scalar K() const { return fK; }
 
-  /**
-     Rotation operation on a Lorentz vector in any 4D coordinate system
+   // =========== operations ==============
+
+   /**
+      Rotation operation on a cartesian vector
    */
-  template <class CoordSystem>
-  LorentzVector<CoordSystem>
-  operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
-    xyz = operator()(xyz);
-    LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
-    return LorentzVector<CoordSystem> ( xyzt );
-  }
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+   XYZVector operator() (const XYZVector & v) const;
 
-  /**
-     Rotation operation on an arbitrary vector v.
-     Preconditions:  v must implement methods x(), y(), and z()
-     and the arbitrary vector type must have a constructor taking (x,y,z)
+   /**
+      Rotation operation on a displacement vector in any coordinate system
    */
-  template <class ForeignVector>
-  ForeignVector
-  operator() (const  ForeignVector & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
-  }
+   template <class CoordSystem,class Tag>
+   DisplacementVector3D<CoordSystem,Tag>
+   operator() (const DisplacementVector3D<CoordSystem,Tag> & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
+      DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+      DisplacementVector3D< CoordSystem,Tag > vNew;
+      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
+      return vNew; 
+   }
 
-  /**
-     Overload operator * for rotation on a vector
+   /**
+      Rotation operation on a position vector in any coordinate system
    */
-  template <class AVector>
-  inline
-  AVector operator* (const AVector & v) const
-  {
-    return operator()(v);
-  }
+   template <class CoordSystem, class Tag>
+   PositionVector3D<CoordSystem,Tag>
+   operator() (const PositionVector3D<CoordSystem,Tag> & p) const {
+      DisplacementVector3D< Cartesian3D<double>,Tag > xyz(p);
+      DisplacementVector3D< Cartesian3D<double>,Tag > rxyz = operator()(xyz);
+      return PositionVector3D<CoordSystem,Tag> ( rxyz );
+   }
 
-  /**
+   /**
+      Rotation operation on a Lorentz vector in any 4D coordinate system
+   */
+   template <class CoordSystem>
+   LorentzVector<CoordSystem>
+   operator() (const LorentzVector<CoordSystem> & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
+      xyz = operator()(xyz);
+      LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
+      return LorentzVector<CoordSystem> ( xyzt );
+   }
+
+   /**
+      Rotation operation on an arbitrary vector v.
+      Preconditions:  v must implement methods x(), y(), and z()
+      and the arbitrary vector type must have a constructor taking (x,y,z)
+   */
+   template <class ForeignVector>
+   ForeignVector
+   operator() (const  ForeignVector & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v);
+      DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+      return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+   }
+
+   /**
+      Overload operator * for rotation on a vector
+   */
+   template <class AVector>
+   inline
+   AVector operator* (const AVector & v) const
+   {
+      return operator()(v);
+   }
+
+   /**
       Invert a rotation in place
    */
-  void Invert() { fI = -fI; fJ = -fJ; fK = -fK; }
+   void Invert() { fI = -fI; fJ = -fJ; fK = -fK; }
 
-  /**
+   /**
       Return inverse of a rotation
    */
-  Quaternion Inverse() const { return Quaternion(fU, -fI, -fJ, -fK); }
+   Quaternion Inverse() const { return Quaternion(fU, -fI, -fJ, -fK); }
 
-  // ========= Multi-Rotation Operations ===============
+   // ========= Multi-Rotation Operations ===============
 
-  /**
-     Multiply (combine) two rotations
+   /**
+      Multiply (combine) two rotations
    */
-  /**
-     Multiply (combine) two rotations
+   /**
+      Multiply (combine) two rotations
    */
-  Quaternion operator * (const Quaternion  & q) const;
-  Quaternion operator * (const Rotation3D  & r) const;
-  Quaternion operator * (const AxisAngle   & a) const;
-  Quaternion operator * (const EulerAngles & e) const;
-  Quaternion operator * (const RotationX  & rx) const;
-  Quaternion operator * (const RotationY  & ry) const;
-  Quaternion operator * (const RotationZ  & rz) const;
+   Quaternion operator * (const Quaternion  & q) const;
+   Quaternion operator * (const Rotation3D  & r) const;
+   Quaternion operator * (const AxisAngle   & a) const;
+   Quaternion operator * (const EulerAngles & e) const;
+   Quaternion operator * (const RotationZYX & r) const;
+   Quaternion operator * (const RotationX  & rx) const;
+   Quaternion operator * (const RotationY  & ry) const;
+   Quaternion operator * (const RotationZ  & rz) const;
 
-  /**
-     Post-Multiply (on right) by another rotation :  T = T*R
+   /**
+      Post-Multiply (on right) by another rotation :  T = T*R
    */
-  template <class R>
-  Quaternion & operator *= (const R & r) { return *this = (*this)*r; }
+   template <class R>
+   Quaternion & operator *= (const R & r) { return *this = (*this)*r; }
 
 
-  /**
-     Distance between two rotations in Quaternion form
-     Note:  The rotation group is isomorphic to a 3-sphere
-            with diametrically opposite points identified.
-            The (rotation group-invariant) is the smaller
-            of the two possible angles between the images of
-            the two totations on that sphere.  Thus the distance
-            is never greater than pi/2.
+   /**
+      Distance between two rotations in Quaternion form
+      Note:  The rotation group is isomorphic to a 3-sphere
+      with diametrically opposite points identified.
+      The (rotation group-invariant) is the smaller
+      of the two possible angles between the images of
+      the two totations on that sphere.  Thus the distance
+      is never greater than pi/2.
    */
 
-  Scalar Distance(const Quaternion & q) const ;
+   Scalar Distance(const Quaternion & q) const ;
 
-  /**
-     Equality/inequality operators
+   /**
+      Equality/inequality operators
    */
-  bool operator == (const Quaternion & rhs) const {
-    if( fU != rhs.fU )  return false;
-    if( fI != rhs.fI )  return false;
-    if( fJ != rhs.fJ )  return false;
-    if( fK != rhs.fK )  return false;
-    return true;
-  }
-  bool operator != (const Quaternion & rhs) const {
-    return ! operator==(rhs);
-  }
+   bool operator == (const Quaternion & rhs) const {
+      if( fU != rhs.fU )  return false;
+      if( fI != rhs.fI )  return false;
+      if( fJ != rhs.fJ )  return false;
+      if( fK != rhs.fK )  return false;
+      return true;
+   }
+   bool operator != (const Quaternion & rhs) const {
+      return ! operator==(rhs);
+   }
 
 private:
 
-  Scalar fU;
-  Scalar fI;
-  Scalar fJ;
-  Scalar fK;
+   Scalar fU;
+   Scalar fI;
+   Scalar fJ;
+   Scalar fK;
 
 };  // Quaternion
 

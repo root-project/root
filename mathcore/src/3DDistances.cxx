@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.2 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.3 2006/06/16 09:26:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -22,6 +22,7 @@
 #include "Math/GenVector/AxisAngle.h"
 #include "Math/GenVector/EulerAngles.h"
 #include "Math/GenVector/Quaternion.h"
+#include "Math/GenVector/RotationZYX.h"
 #include "Math/GenVector/RotationX.h"
 #include "Math/GenVector/RotationY.h"
 #include "Math/GenVector/RotationZ.h"
@@ -58,6 +59,10 @@ double dist( Rotation3D const & from, EulerAngles const & to)
 double dist( Rotation3D const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
 
+double dist( Rotation3D const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
 double dist( Rotation3D const & from, RotationX const & to)
 { /*TODO better */
   return Quaternion(from).Distance(Quaternion(to));
@@ -91,6 +96,11 @@ double dist( AxisAngle const & from, EulerAngles const & to)
 
 double dist( AxisAngle const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
+
+double dist( AxisAngle const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
 
 double dist( AxisAngle const & from, RotationX const & to)
 { /*TODO*/ 
@@ -126,6 +136,11 @@ double dist( EulerAngles const & from, EulerAngles const & to)
 double dist( EulerAngles const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
 
+double dist( EulerAngles const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
 double dist( EulerAngles const & from, RotationX const & to)
 { /*TODO*/ 
   return Quaternion(from).Distance(Quaternion(to));
@@ -158,6 +173,11 @@ double dist( Quaternion const & from, EulerAngles const & to)
 double dist( Quaternion const & from, Quaternion const & to)
 {  return from.Distance(to); }
 
+double dist( Quaternion const & from, RotationZYX const & to)
+{ 
+  return from.Distance(Quaternion(to));
+}
+
 double dist( Quaternion const & from, RotationX const & to)
 { /*TODO*/ 
   return from.Distance(Quaternion(to)); 
@@ -172,6 +192,42 @@ double dist( Quaternion const & from, RotationZ const & to)
 { /*TODO*/ 
   return from.Distance(Quaternion(to)); 
 }
+
+// ----------------------------------------------------------------------
+// distance from RotationZYX
+
+double dist( RotationZYX const & from, Rotation3D const & to)
+{  return Quaternion(from).Distance(Quaternion(to)); }
+
+double dist( RotationZYX const & from, AxisAngle const & to)
+{  return Quaternion(from).Distance(Quaternion(to)); }
+
+double dist( RotationZYX const & from, EulerAngles const & to)
+{  return Quaternion(from).Distance(Quaternion(to)); }
+
+double dist( RotationZYX const & from, Quaternion const & to)
+{  return Quaternion(from).Distance(to); }
+
+double dist( RotationZYX const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
+double dist( RotationZYX const & from, RotationX const & to)
+{ /*TODO*/ 
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
+double dist( RotationZYX const & from, RotationY const & to)
+{ /*TODO*/ 
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
+double dist( RotationZYX const & from, RotationZ const & to)
+{ /*TODO*/ 
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
 
 
 // ----------------------------------------------------------------------
@@ -188,6 +244,11 @@ double dist( RotationX const & from, EulerAngles const & to)
 
 double dist( RotationX const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
+
+double dist( RotationX const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
 
 double dist( RotationX const & from, RotationX const & to)
 { /*TODO*/ 
@@ -221,6 +282,11 @@ double dist( RotationY const & from, EulerAngles const & to)
 double dist( RotationY const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
 
+double dist( RotationY const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
+
 double dist( RotationY const & from, RotationX const & to)
 { /*TODO*/ 
   return Quaternion(from).Distance(Quaternion(to));
@@ -252,6 +318,11 @@ double dist( RotationZ const & from, EulerAngles const & to)
 
 double dist( RotationZ const & from, Quaternion const & to)
 {  return Quaternion(from).Distance(to); }
+
+double dist( RotationZ const & from, RotationZYX const & to)
+{ /*TODO better */
+  return Quaternion(from).Distance(Quaternion(to));
+}
 
 double dist( RotationZ const & from, RotationX const & to)
 { /*TODO*/ 

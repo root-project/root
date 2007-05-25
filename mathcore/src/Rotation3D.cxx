@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.9 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.11 2006/11/07 16:24:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -157,6 +157,11 @@ Rotation3D Rotation3D::operator * (const EulerAngles & e) const {
 Rotation3D Rotation3D::operator * (const Quaternion  & q) const {
    // combine with a Quaternion rotation
    return operator* ( Rotation3D(q) );
+}
+
+Rotation3D Rotation3D::operator * (const RotationZYX  & r) const {
+   // combine with a RotastionZYX rotation
+   return operator* ( Rotation3D(r) );
 }
 
 std::ostream & operator<< (std::ostream & os, const Rotation3D & r) {

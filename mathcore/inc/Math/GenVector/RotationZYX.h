@@ -1,59 +1,90 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.13 2006/11/10 11:04:42 moneta Exp $
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// @(#)root/mathcore:$Name:  $:$Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// Authors: J. Palacios, L. Moneta    2007  
 
  /**********************************************************************
   *                                                                    *
-  * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+  * Copyright (c) 2007 , LCG ROOT MathLib Team                         *
   *                                                                    *
   *                                                                    *
   **********************************************************************/
 
-// Header file for class EulerAngles
+// Header file for class Rotation in 3 dimensions, described by 3 Z-Y-X  Euler angles 
+// representing a rotation along Z, Y and X
 //
-// Created by: Lorenzo Moneta  at Tue May 10 17:55:10 2005
+// Created by: Lorenzo Moneta, Wed. May 22, 2007
 //
-// Last update: Tue May 10 17:55:10 2005
+// Last update: $Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 //
-#ifndef ROOT_Math_GenVector_EulerAngles 
-#define ROOT_Math_GenVector_EulerAngles  1
+#ifndef ROOT_Math_GenVector_RotationZYX 
+#define ROOT_Math_GenVector_RotationZYX  1
 
+#ifndef ROOT_Math_Math
+#include "Math/Math.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_Rotation3D 
 #include "Math/GenVector/Rotation3D.h"
+#endif
+
+
+#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_PositionVector3D
 #include "Math/GenVector/PositionVector3D.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_LorentzVector
 #include "Math/GenVector/LorentzVector.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_3DConversions
 #include "Math/GenVector/3DConversions.h"
+#endif
+
+
 #include <algorithm>
 #include <cassert>
+#include <iostream>
+
 
 namespace ROOT {
 namespace Math {
 
 
   /**
-     EulerAngles class describing rotation as three angles (Euler Angles).
-     The Euler angles definition matches that of Classical Mechanics (Goldstein).
-     It is also the same convention defined in 
-     <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
-     and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines 
-     a slightly different convention. 
+     Rotation class with the (3D) rotation represented by
+     angles describing first a rotation of 
+     an angle phi (yaw) about the  Z axis, 
+     followed by a rotation of an angle theta (pitch) about the new Y' axis, 
+     folowed by a third rotation of an angle psi (roll) about the final X'' axis. 
+     This is  sometimes referred to as the Euler 321 sequence.
+     It has not to be confused with the typical Goldstein definition of the Euler Angles 
+     (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class.  
+
 
      @ingroup GenVector
   */
-class EulerAngles {
+
+class RotationZYX {
 
 public:
 
-   typedef double Scalar;
+  typedef double Scalar;
+
+
+  // ========== Constructors and Assignment =====================
 
   /**
      Default constructor
   */
-   EulerAngles() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
+  RotationZYX() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
 
    /**
       Constructor from phi, theta and psi
    */
-   EulerAngles( Scalar phi, Scalar theta, Scalar psi ) :
+   RotationZYX( Scalar phi, Scalar theta, Scalar psi ) :
       fPhi(phi), fTheta(theta), fPsi(psi)
    {Rectify();}			// Added 27 Jan. 06   JMM
 
@@ -63,7 +94,7 @@ public:
       the angles phi, theta and psi.
    */
    template<class IT>
-   EulerAngles(IT begin, IT end) { SetComponents(begin,end); }
+   RotationZYX(IT begin, IT end) { SetComponents(begin,end); }
 
    // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
@@ -73,72 +104,24 @@ public:
    void Rectify();
 
 
-   // ======== Construction and assignement from any other rotation ==================
+   // ======== Construction and Assignment From other Rotation Forms ==================
 
    /**
-      Create from any other supported rotation (see gv_detail::convert )
-    */
-   template <class OtherRotation> 
-   explicit EulerAngles(const OtherRotation & r) {gv_detail::convert(r,*this);}
-
-   /**
-      Assign from any other rotation (see gv_detail::convert )
+      Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation> 
-   EulerAngles &  operator=( OtherRotation const  & r ) { 
-      gv_detail::convert(r,*this); 
+   explicit RotationZYX(const OtherRotation & r) {gv_detail::convert(r,*this);}
+
+
+   /**
+      Assign from another supported rotation type (see gv_detail::convert )
+   */
+   template <class OtherRotation> 
+   RotationZYX & operator=( OtherRotation const  & r ) { 
+      gv_detail::convert(r,*this);
       return *this;
    }
 
-#ifdef OLD
-   explicit EulerAngles(const Rotation3D & r) {gv_detail::convert(r,*this);}
-
-   /**
-      Construct from a rotation matrix
-   */
-   explicit EulerAngles(const Rotation3D & r) {gv_detail::convert(r,*this);}
-
-   /**
-      Construct from a rotation represented by a Quaternion
-   */
-   explicit EulerAngles(const Quaternion & q) {gv_detail::convert(q,*this);}
-
-   /**
-      Construct from an AxisAngle
-   */
-   explicit EulerAngles(const AxisAngle & a ) { gv_detail::convert(a, *this); }
-
-   /**
-      Construct from an axial rotation
-   */
-   explicit EulerAngles( RotationZ const & r ) { gv_detail::convert(r, *this); }
-   explicit EulerAngles( RotationY const & r ) { gv_detail::convert(r, *this); }
-   explicit EulerAngles( RotationX const & r ) { gv_detail::convert(r, *this); }
-
-
-   /**
-      Assign from an AxisAngle
-   */
-   EulerAngles &
-   operator=( AxisAngle const & a ) { return operator=(EulerAngles(a)); }
-
-   /**
-      Assign from a Quaternion
-   */
-   EulerAngles &
-   operator=( Quaternion const  & q ) {return operator=(EulerAngles(q)); }
-
-   /**
-      Assign from an axial rotation
-   */
-   EulerAngles &
-   operator=( RotationZ const & r ) { return operator=(EulerAngles(r)); }
-   EulerAngles &
-   operator=( RotationY const & r ) { return operator=(EulerAngles(r)); }
-   EulerAngles &
-   operator=( RotationX const & r ) { return operator=(EulerAngles(r)); }
-
-#endif
 
    // ======== Components ==============
 
@@ -152,7 +135,7 @@ public:
       fTheta = *begin++;
       fPsi   = *begin++;
       assert(begin == end); 
-      Rectify();			// Added 27 Jan. 06   JMM
+      Rectify();		
    }
 
    /**
@@ -182,7 +165,7 @@ public:
    */
    void SetComponents(Scalar phi, Scalar theta, Scalar psi) {
       fPhi=phi; fTheta=theta; fPsi=psi; 
-      Rectify();			// Added 27 Jan. 06   JMM
+      Rectify();			
    }
 
    /**
@@ -193,32 +176,32 @@ public:
    }
 
    /**
-      Set Phi Euler angle		// JMM 30 Jan. 2006
+      Set Phi angle (Z rotation angle) 		
    */
    void SetPhi(Scalar phi) { fPhi=phi; Rectify(); }
 
    /**
-      Return Phi Euler angle
+      Return Phi angle (Z rotation angle) 		
    */
    Scalar Phi() const { return fPhi; }
 
    /**
-      Set Theta Euler angle		// JMM 30 Jan. 2006
+      Set Theta angle (Y' rotation angle) 				
    */
    void SetTheta(Scalar theta) { fTheta=theta; Rectify(); }
 
    /**
-      Return Theta Euler angle
+      Return Theta angle (Y' rotation angle) 				
    */
    Scalar Theta() const { return fTheta; }
 
    /**
-      Set Psi Euler angle		// JMM 30 Jan. 2006
+      Set Psi angle (X'' rotation angle)	    
    */
    void SetPsi(Scalar psi) { fPsi=psi; Rectify(); }
 
    /**
-      Return Psi Euler angle
+      Return Psi angle (X'' rotation angle)
    */
    Scalar Psi() const { return fPsi; }
 
@@ -283,38 +266,37 @@ public:
    /**
       Invert a rotation in place
    */
-   // theta stays the same and negative rotation in Theta is done via a rotation 
-   // of + PI in pohi and Psi 
-   void Invert() {
-      Scalar tmp = -fPhi; 
-      fPhi = -fPsi + Pi(); 
-      fTheta = fTheta; 
-      fPsi=tmp + Pi();
-   }
+   void Invert(); 
 
    /**
       Return inverse of a rotation
    */
-   EulerAngles Inverse() const { return EulerAngles(-fPsi + Pi(), fTheta, -fPhi + Pi()); }
+   RotationZYX Inverse() const { 
+      RotationZYX r(*this); 
+      r.Invert(); 
+      return r;
+   }
+
 
    // ========= Multi-Rotation Operations ===============
 
    /**
       Multiply (combine) two rotations
    */
-   EulerAngles operator * (const Rotation3D  & r) const;
-   EulerAngles operator * (const AxisAngle   & a) const;
-   EulerAngles operator * (const EulerAngles & e) const;
-   EulerAngles operator * (const Quaternion  & q) const;
-   EulerAngles operator * (const RotationX  & rx) const;
-   EulerAngles operator * (const RotationY  & ry) const;
-   EulerAngles operator * (const RotationZ  & rz) const;
+   RotationZYX operator * (const RotationZYX & e) const;
+   RotationZYX operator * (const Rotation3D  & r) const;
+   RotationZYX operator * (const AxisAngle   & a) const;
+   RotationZYX operator * (const Quaternion  & q) const;
+   RotationZYX operator * (const EulerAngles & q) const;
+   RotationZYX operator * (const RotationX  & rx) const;
+   RotationZYX operator * (const RotationY  & ry) const;
+   RotationZYX operator * (const RotationZ  & rz) const;
 
    /**
       Post-Multiply (on right) by another rotation :  T = T*R
    */
    template <class R>
-   EulerAngles & operator *= (const R & r) { return *this = (*this)*r; }
+   RotationZYX & operator *= (const R & r) { return *this = (*this)*r; }
 
    /**
       Distance between two rotations
@@ -325,13 +307,13 @@ public:
    /**
       Equality/inequality operators
    */
-   bool operator == (const EulerAngles & rhs) const {
+   bool operator == (const RotationZYX & rhs) const {
       if( fPhi   != rhs.fPhi   ) return false;
       if( fTheta != rhs.fTheta ) return false;
       if( fPsi   != rhs.fPsi   ) return false;
       return true;
    }
-   bool operator != (const EulerAngles & rhs) const {
+   bool operator != (const RotationZYX & rhs) const {
       return ! operator==(rhs);
    }
 
@@ -343,32 +325,32 @@ private:
 
    static double Pi() { return M_PI; }
 
-};  // EulerAngles
+};  // RotationZYX
 
 /**
    Distance between two rotations
  */
 template <class R>
 inline
-typename EulerAngles::Scalar
-Distance ( const EulerAngles& r1, const R & r2) {return gv_detail::dist(r1,r2);}
+typename RotationZYX::Scalar
+Distance ( const RotationZYX& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 
 /**
    Multiplication of an axial rotation by an AxisAngle
  */
-EulerAngles operator* (RotationX const & r1, EulerAngles const & r2);
-EulerAngles operator* (RotationY const & r1, EulerAngles const & r2);
-EulerAngles operator* (RotationZ const & r1, EulerAngles const & r2);
+RotationZYX operator* (RotationX const & r1, RotationZYX const & r2);
+RotationZYX operator* (RotationY const & r1, RotationZYX const & r2);
+RotationZYX operator* (RotationZ const & r1, RotationZYX const & r2);
 
 /**
    Stream Output and Input
  */
   // TODO - I/O should be put in the manipulator form 
 
-std::ostream & operator<< (std::ostream & os, const EulerAngles & e);
-
+std::ostream & operator<< (std::ostream & os, const RotationZYX & e);
+ 
+  
 } // namespace Math
 } // namespace ROOT
 
-
-#endif /* ROOT_Math_GenVector_EulerAngles  */
+#endif // ROOT_Math_GenVector_RotationZYX 

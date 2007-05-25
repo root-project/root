@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -24,19 +24,34 @@
 #include "Math/GenVector/RotationXfwd.h"
 #include "Math/GenVector/RotationYfwd.h"
 #include "Math/GenVector/RotationZfwd.h"
+#include "Math/GenVector/RotationZYXfwd.h"
 
 
 namespace ROOT {
 namespace Math {
+
+
 namespace gv_detail {
 
+// flag a compile time error when a wrong conversion is instantiated
+struct ERROR_This_Rotation_Conversion_is_NOT_Supported;
+template<class R1, class R2> 
+void convert( R1 const &, R2 const) {
+   ERROR_This_Rotation_Conversion_is_NOT_Supported();
+}
 
 // ----------------------------------------------------------------------
 // conversions from Rotation3D
+/**
+   conversion functions from 3D rotation. 
+   For converting to Euler Angles see 
+   <A><HREF="http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf">here</A>
+ */
 
 void convert( Rotation3D const & from, AxisAngle   & to);
 void convert( Rotation3D const & from, EulerAngles & to);
 void convert( Rotation3D const & from, Quaternion  & to);
+void convert( Rotation3D const & from, RotationZYX & to);
 
 
 // ----------------------------------------------------------------------
@@ -45,6 +60,7 @@ void convert( Rotation3D const & from, Quaternion  & to);
 void convert( AxisAngle const & from, Rotation3D  & to);
 void convert( AxisAngle const & from, EulerAngles & to);
 void convert( AxisAngle const & from, Quaternion  & to);
+void convert( AxisAngle const & from, RotationZYX & to);
 
 
 // ----------------------------------------------------------------------
@@ -53,6 +69,7 @@ void convert( AxisAngle const & from, Quaternion  & to);
 void convert( EulerAngles const & from, Rotation3D  & to);
 void convert( EulerAngles const & from, AxisAngle   & to);
 void convert( EulerAngles const & from, Quaternion  & to);
+void convert( EulerAngles const & from, RotationZYX & to);
 
 
 // ----------------------------------------------------------------------
@@ -61,12 +78,22 @@ void convert( EulerAngles const & from, Quaternion  & to);
 void convert( Quaternion const & from, Rotation3D  & to);
 void convert( Quaternion const & from, AxisAngle   & to);
 void convert( Quaternion const & from, EulerAngles & to);
+void convert( Quaternion const & from, RotationZYX & to);
+
+// ----------------------------------------------------------------------
+// conversions from RotationZYX
+
+void convert( RotationZYX const & from, Rotation3D  & to);
+void convert( RotationZYX const & from, AxisAngle   & to);
+void convert( RotationZYX const & from, EulerAngles & to);
+void convert( RotationZYX const & from, Quaternion  & to);
 
 
 // ----------------------------------------------------------------------
 // conversions from RotationX
 
 void convert( RotationX const & from, Rotation3D  & to);
+void convert( RotationX const & from, RotationZYX & to);
 void convert( RotationX const & from, AxisAngle   & to);
 void convert( RotationX const & from, EulerAngles & to);
 void convert( RotationX const & from, Quaternion  & to);
@@ -76,6 +103,7 @@ void convert( RotationX const & from, Quaternion  & to);
 // conversions from RotationY
 
 void convert( RotationY const & from, Rotation3D  & to);
+void convert( RotationY const & from, RotationZYX & to);
 void convert( RotationY const & from, AxisAngle   & to);
 void convert( RotationY const & from, EulerAngles & to);
 void convert( RotationY const & from, Quaternion  & to);
@@ -85,6 +113,7 @@ void convert( RotationY const & from, Quaternion  & to);
 // conversions from RotationZ
 
 void convert( RotationZ const & from, Rotation3D  & to);
+void convert( RotationZ const & from, RotationZYX & to);
 void convert( RotationZ const & from, AxisAngle   & to);
 void convert( RotationZ const & from, EulerAngles & to);
 void convert( RotationZ const & from, Quaternion  & to);

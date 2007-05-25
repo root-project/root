@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -58,356 +58,368 @@ class Rotation3D {
 
 public:
 
-  typedef double Scalar;
+   typedef double Scalar;
 
-  enum ERotation3DMatrixIndex {
+   enum ERotation3DMatrixIndex {
       kXX = 0, kXY = 1, kXZ = 2
-    , kYX = 3, kYY = 4, kYZ = 5
-    , kZX = 6, kZY = 7, kZZ = 8
-    };
+      , kYX = 3, kYY = 4, kYZ = 5
+      , kZX = 6, kZY = 7, kZZ = 8
+   };
 
-  // ========== Constructors and Assignment =====================
+   // ========== Constructors and Assignment =====================
 
-  /**
+   /**
       Default constructor (identity rotation)
-  */
-  Rotation3D();
-
-  /**
-     Construct given a pair of pointers or iterators defining the
-     beginning and end of an array of nine Scalars
    */
-  template<class IT>
-  Rotation3D(IT begin, IT end) { SetComponents(begin,end); }
+   Rotation3D();
 
-  /**
-     Construct from an AxisAngle
-  */
-  explicit Rotation3D( AxisAngle const   & a ) { gv_detail::convert(a, *this); }
-
-  /**
-     Construct from EulerAngles
-  */
-  explicit Rotation3D( EulerAngles const & e ) { gv_detail::convert(e, *this); }
-
-  /**
-     Construct from a Quaternion
-  */
-  explicit Rotation3D( Quaternion const  & q ) { gv_detail::convert(q, *this); }
-
-  /**
-     Construct from an axial rotation
-  */
-  explicit Rotation3D( RotationZ const & r ) { gv_detail::convert(r, *this); }
-  explicit Rotation3D( RotationY const & r ) { gv_detail::convert(r, *this); }
-  explicit Rotation3D( RotationX const & r ) { gv_detail::convert(r, *this); }
-
-  /**
-     Construct from a linear algebra matrix of size at least 3x3,
-     which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
-     Precondition:  The matrix is assumed to be orthonormal.  NO checking
-     or re-adjusting is performed.
-  */
-  template<class ForeignMatrix>
-  explicit Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
-
-  /**
-     Construct from three orthonormal vectors (which must have methods
-     x(), y() and z()) which will be used as the columns of the rotation
-     matrix.  The orthonormality will be checked, and values adjusted
-     so that the result will always be a good rotation matrix.
-  */
-  template<class ForeignVector>
-  Rotation3D(const ForeignVector& v1,
-             const ForeignVector& v2,
-             const ForeignVector& v3 ) { SetComponents(v1, v2, v3); }
-
-  // The compiler-generated copy ctor, copy assignment, and dtor are OK.
-
-  /**
-     Raw constructor from nine Scalar components (without any checking)
-  */
-  Rotation3D(Scalar  xx, Scalar  xy, Scalar  xz,
-             Scalar  yx, Scalar  yy, Scalar  yz,
-             Scalar  zx, Scalar  zy, Scalar  zz)
- {
-    SetComponents (xx, xy, xz, yx, yy, yz, zx, zy, zz);
- }
-
-  /**
-     Assign from an AxisAngle
-  */
-  Rotation3D &
-  operator=( AxisAngle const   & a ) { return operator=(Rotation3D(a)); }
-
-  /**
-     Assign from EulerAngles
-  */
-  Rotation3D &
-  operator=( EulerAngles const & e ) { return operator=(Rotation3D(e)); }
-
-  /**
-     Assign from a Quaternion
-  */
-  Rotation3D &
-  operator=( Quaternion const  & q ) {return operator=(Rotation3D(q)); }
-
-  /**
-     Assign from an axial rotation
-  */
-  Rotation3D &
-  operator=( RotationZ const & r ) { return operator=(Rotation3D(r)); }
-  Rotation3D &
-  operator=( RotationY const & r ) { return operator=(Rotation3D(r)); }
-  Rotation3D &
-  operator=( RotationX const & r ) { return operator=(Rotation3D(r)); }
-
-  /**
-     Assign from an orthonormal linear algebra matrix of size 3x3,
-     which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
-  */
-  template<class ForeignMatrix>
-  Rotation3D &
-  operator=(const ForeignMatrix & m) { SetComponents(m); return *this; }
-
-  /**
-     Re-adjust components to eliminate small deviations from perfect
-     orthonormality.
+   /**
+      Construct given a pair of pointers or iterators defining the
+      beginning and end of an array of nine Scalars
    */
-  void Rectify();
+   template<class IT>
+   Rotation3D(IT begin, IT end) { SetComponents(begin,end); }
 
-  // ======== Components ==============
-
-  /**
-     Set components from three orthonormal vectors (which must have methods
-     x(), y() and z()) which will be used as the columns of the rotation
-     matrix.  The orthonormality will be checked, and values adjusted
-     so that the result will always be a good rotation matrix.
-  */
-  template<class ForeignVector>
-  void
-  SetComponents (const ForeignVector& v1,
-                 const ForeignVector& v2,
-                 const ForeignVector& v3 ) {
-    fM[kXX]=v1.x();  fM[kXY]=v2.x();  fM[kXZ]=v3.x();
-    fM[kYX]=v1.y();  fM[kYY]=v2.y();  fM[kYZ]=v3.y();
-    fM[kZX]=v1.z();  fM[kZY]=v2.z();  fM[kZZ]=v3.z();
-    Rectify();
-  }
-
-  /**
-     Get components into three vectors which will be the (orthonormal) 
-     columns of the rotation matrix.  (The vector class must have a 
-     constructor from 3 Scalars.) 
-  */
-  template<class ForeignVector>
-  void
-  GetComponents ( ForeignVector& v1,
-                  ForeignVector& v2,
-                  ForeignVector& v3 ) const {
-    v1 = ForeignVector ( fM[kXX], fM[kYX], fM[kZX] );
-    v2 = ForeignVector ( fM[kXY], fM[kYY], fM[kZY] );
-    v3 = ForeignVector ( fM[kXZ], fM[kYZ], fM[kZZ] );
-  }
-
-  /**
-     Set the 9 matrix components given an iterator to the start of
-     the desired data, and another to the end (9 past start).
+   /**
+      Construct from an AxisAngle
    */
-  template<class IT>
-  void SetComponents(IT begin, IT end) {
-     for (int i = 0; i <9; ++i) { 
-        fM[i] = *begin;
-        ++begin;  
-     }
-     assert (end==begin);
-  }
+   explicit Rotation3D( AxisAngle const   & a ) { gv_detail::convert(a, *this); }
 
-  /**
-     Get the 9 matrix components into data specified by an iterator begin
-     and another to the end of the desired data (9 past start).
+   /**
+      Construct from EulerAngles
    */
-  template<class IT>
-  void GetComponents(IT begin, IT end) const {
-     for (int i = 0; i <9; ++i) { 
-        *begin = fM[i];
-        ++begin; 
-     }
-     assert (end==begin);
-  }
+   explicit Rotation3D( EulerAngles const & e ) { gv_detail::convert(e, *this); }
 
-  /**
-     Get the 9 matrix components into data specified by an iterator begin
+   /**
+      Construct from RotationZYX
    */
-  template<class IT>
-  void GetComponents(IT begin) const {
-    std::copy ( fM, fM+9, begin );
-  }
+   explicit Rotation3D( RotationZYX const & e ) { gv_detail::convert(e, *this); }
 
-  /**
-     Set components from a linear algebra matrix of size at least 3x3,
-     which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
-     Precondition:  The matrix is assumed to be orthonormal.  NO checking
-     or re-adjusting is performed.
-  */
-  template<class ForeignMatrix>
-  void
-  SetRotationMatrix (const ForeignMatrix & m) {
-    fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);
-    fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);
-    fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);
-  }
-
-  /**
-     Get components into a linear algebra matrix of size at least 3x3,
-     which must support operator()(i,j) for write access to elements
-     (0,0) thru (2,2).
-  */
-  template<class ForeignMatrix>
-  void
-  GetRotationMatrix (ForeignMatrix & m) const {
-    m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];
-    m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];
-    m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];
-  }
-
-  /**
-     Set the components from nine scalars -- UNCHECKED for orthonormaility
+   /**
+      Construct from a Quaternion
    */
-  void
-  SetComponents (Scalar  xx, Scalar  xy, Scalar  xz,
-                 Scalar  yx, Scalar  yy, Scalar  yz,
-                 Scalar  zx, Scalar  zy, Scalar  zz) {
-                 fM[kXX]=xx;  fM[kXY]=xy;  fM[kXZ]=xz;
-                 fM[kYX]=yx;  fM[kYY]=yy;  fM[kYZ]=yz;
-                 fM[kZX]=zx;  fM[kZY]=zy;  fM[kZZ]=zz;
-  }
+   explicit Rotation3D( Quaternion const  & q ) { gv_detail::convert(q, *this); }
 
-  /**
-     Get the nine components into nine scalars
+   /**
+      Construct from an axial rotation
    */
-  void
-  GetComponents (Scalar &xx, Scalar &xy, Scalar &xz,
-                 Scalar &yx, Scalar &yy, Scalar &yz,
-                 Scalar &zx, Scalar &zy, Scalar &zz) const {
-                 xx=fM[kXX];  xy=fM[kXY];  xz=fM[kXZ];
-                 yx=fM[kYX];  yy=fM[kYY];  yz=fM[kYZ];
-                 zx=fM[kZX];  zy=fM[kZY];  zz=fM[kZZ];
-  }
+   explicit Rotation3D( RotationZ const & r ) { gv_detail::convert(r, *this); }
+   explicit Rotation3D( RotationY const & r ) { gv_detail::convert(r, *this); }
+   explicit Rotation3D( RotationX const & r ) { gv_detail::convert(r, *this); }
 
-  // =========== operations ==============
-
-
-  /**
-     Rotation operation on a displacement vector in any coordinate system
+   /**
+      Construct from a linear algebra matrix of size at least 3x3,
+      which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
+      Precondition:  The matrix is assumed to be orthonormal.  No checking
+      or re-adjusting is performed.
    */
-  template <class CoordSystem, class U>
-  DisplacementVector3D<CoordSystem,U>
-  operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
-    DisplacementVector3D< Cartesian3D<double>,U > xyz;
-    xyz.SetXYZ( fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z() ,
-		fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z() , 
-		fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
-    return  DisplacementVector3D<CoordSystem,U>( xyz ); 
-  }
+   template<class ForeignMatrix>
+   explicit Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
 
-  /**
-     Rotation operation on a position vector in any coordinate system
+   /**
+      Construct from three orthonormal vectors (which must have methods
+      x(), y() and z()) which will be used as the columns of the rotation
+      matrix.  The orthonormality will be checked, and values adjusted
+      so that the result will always be a good rotation matrix.
    */
-  template <class CoordSystem, class U>
-  PositionVector3D<CoordSystem,U>
-  operator() (const PositionVector3D<CoordSystem,U> & v) const {
-    DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
-    DisplacementVector3D< Cartesian3D<double>,U > rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem,U> ( rxyz );
-  }
+   template<class ForeignVector>
+   Rotation3D(const ForeignVector& v1,
+              const ForeignVector& v2,
+              const ForeignVector& v3 ) { SetComponents(v1, v2, v3); }
 
-  /**
-     Rotation operation on a Lorentz vector in any spatial coordinate system
+   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+
+   /**
+      Raw constructor from nine Scalar components (without any checking)
    */
-  template <class CoordSystem>
-  LorentzVector<CoordSystem>
-  operator() (const LorentzVector<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
-    xyz = operator()(xyz);
-    LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
-    return LorentzVector<CoordSystem> ( xyzt );
-  }
+   Rotation3D(Scalar  xx, Scalar  xy, Scalar  xz,
+              Scalar  yx, Scalar  yy, Scalar  yz,
+              Scalar  zx, Scalar  zy, Scalar  zz)
+   {
+      SetComponents (xx, xy, xz, yx, yy, yz, zx, zy, zz);
+   }
 
-  /**
-     Rotation operation on an arbitrary vector v.
-     Preconditions:  v must implement methods x(), y(), and z()
-     and the arbitrary vector type must have a constructor taking (x,y,z)
+   /**
+      Assign from an AxisAngle
    */
-  template <class ForeignVector>
-  ForeignVector
-  operator() (const  ForeignVector & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
-    return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
-  }
+   Rotation3D &
+   operator=( AxisAngle const   & a ) { return operator=(Rotation3D(a)); }
 
-  /**
-     Overload operator * for rotation on a vector
+   /**
+      Assign from EulerAngles
    */
-  template <class AVector>
-  inline
-  AVector operator* (const AVector & v) const
-  {
-    return operator()(v);
-  }
+   Rotation3D &
+   operator=( EulerAngles const & e ) { return operator=(Rotation3D(e)); }
 
-  /**
+   /**
+      Assign from RotationZYX
+   */
+   Rotation3D &
+   operator=( RotationZYX const & r ) { return operator=(Rotation3D(r)); }
+
+   /**
+      Assign from a Quaternion
+   */
+   Rotation3D &
+   operator=( Quaternion const  & q ) {return operator=(Rotation3D(q)); }
+
+   /**
+      Assign from an axial rotation
+   */
+   Rotation3D &
+   operator=( RotationZ const & r ) { return operator=(Rotation3D(r)); }
+   Rotation3D &
+   operator=( RotationY const & r ) { return operator=(Rotation3D(r)); }
+   Rotation3D &
+   operator=( RotationX const & r ) { return operator=(Rotation3D(r)); }
+
+   /**
+      Assign from an orthonormal linear algebra matrix of size 3x3,
+      which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
+   */
+   template<class ForeignMatrix>
+   Rotation3D &
+   operator=(const ForeignMatrix & m) { SetComponents(m); return *this; }
+
+   /**
+      Re-adjust components to eliminate small deviations from perfect
+      orthonormality.
+   */
+   void Rectify();
+
+   // ======== Components ==============
+
+   /**
+      Set components from three orthonormal vectors (which must have methods
+      x(), y() and z()) which will be used as the columns of the rotation
+      matrix.  The orthonormality will be checked, and values adjusted
+      so that the result will always be a good rotation matrix.
+   */
+   template<class ForeignVector>
+   void
+   SetComponents (const ForeignVector& v1,
+                  const ForeignVector& v2,
+                  const ForeignVector& v3 ) {
+      fM[kXX]=v1.x();  fM[kXY]=v2.x();  fM[kXZ]=v3.x();
+      fM[kYX]=v1.y();  fM[kYY]=v2.y();  fM[kYZ]=v3.y();
+      fM[kZX]=v1.z();  fM[kZY]=v2.z();  fM[kZZ]=v3.z();
+      Rectify();
+   }
+
+   /**
+      Get components into three vectors which will be the (orthonormal) 
+      columns of the rotation matrix.  (The vector class must have a 
+      constructor from 3 Scalars.) 
+   */
+   template<class ForeignVector>
+   void
+   GetComponents ( ForeignVector& v1,
+                   ForeignVector& v2,
+                   ForeignVector& v3 ) const {
+      v1 = ForeignVector ( fM[kXX], fM[kYX], fM[kZX] );
+      v2 = ForeignVector ( fM[kXY], fM[kYY], fM[kZY] );
+      v3 = ForeignVector ( fM[kXZ], fM[kYZ], fM[kZZ] );
+   }
+
+   /**
+      Set the 9 matrix components given an iterator to the start of
+      the desired data, and another to the end (9 past start).
+   */
+   template<class IT>
+   void SetComponents(IT begin, IT end) {
+      for (int i = 0; i <9; ++i) { 
+         fM[i] = *begin;
+         ++begin;  
+      }
+      assert (end==begin);
+   }
+
+   /**
+      Get the 9 matrix components into data specified by an iterator begin
+      and another to the end of the desired data (9 past start).
+   */
+   template<class IT>
+   void GetComponents(IT begin, IT end) const {
+      for (int i = 0; i <9; ++i) { 
+         *begin = fM[i];
+         ++begin; 
+      }
+      assert (end==begin);
+   }
+
+   /**
+      Get the 9 matrix components into data specified by an iterator begin
+   */
+   template<class IT>
+   void GetComponents(IT begin) const {
+      std::copy ( fM, fM+9, begin );
+   }
+
+   /**
+      Set components from a linear algebra matrix of size at least 3x3,
+      which must support operator()(i,j) to obtain elements (0,0) thru (2,2).
+      Precondition:  The matrix is assumed to be orthonormal.  NO checking
+      or re-adjusting is performed.
+   */
+   template<class ForeignMatrix>
+   void
+   SetRotationMatrix (const ForeignMatrix & m) {
+      fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);
+      fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);
+      fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);
+   }
+
+   /**
+      Get components into a linear algebra matrix of size at least 3x3,
+      which must support operator()(i,j) for write access to elements
+      (0,0) thru (2,2).
+   */
+   template<class ForeignMatrix>
+   void
+   GetRotationMatrix (ForeignMatrix & m) const {
+      m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];
+      m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];
+      m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];
+   }
+
+   /**
+      Set the components from nine scalars -- UNCHECKED for orthonormaility
+   */
+   void
+   SetComponents (Scalar  xx, Scalar  xy, Scalar  xz,
+                  Scalar  yx, Scalar  yy, Scalar  yz,
+                  Scalar  zx, Scalar  zy, Scalar  zz) {
+      fM[kXX]=xx;  fM[kXY]=xy;  fM[kXZ]=xz;
+      fM[kYX]=yx;  fM[kYY]=yy;  fM[kYZ]=yz;
+      fM[kZX]=zx;  fM[kZY]=zy;  fM[kZZ]=zz;
+   }
+
+   /**
+      Get the nine components into nine scalars
+   */
+   void
+   GetComponents (Scalar &xx, Scalar &xy, Scalar &xz,
+                  Scalar &yx, Scalar &yy, Scalar &yz,
+                  Scalar &zx, Scalar &zy, Scalar &zz) const {
+      xx=fM[kXX];  xy=fM[kXY];  xz=fM[kXZ];
+      yx=fM[kYX];  yy=fM[kYY];  yz=fM[kYZ];
+      zx=fM[kZX];  zy=fM[kZY];  zz=fM[kZZ];
+   }
+
+   // =========== operations ==============
+
+
+   /**
+      Rotation operation on a displacement vector in any coordinate system
+   */
+   template <class CoordSystem, class U>
+   DisplacementVector3D<CoordSystem,U>
+   operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
+      DisplacementVector3D< Cartesian3D<double>,U > xyz;
+      xyz.SetXYZ( fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z() ,
+                  fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z() , 
+                  fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
+      return  DisplacementVector3D<CoordSystem,U>( xyz ); 
+   }
+
+   /**
+      Rotation operation on a position vector in any coordinate system
+   */
+   template <class CoordSystem, class U>
+   PositionVector3D<CoordSystem,U>
+   operator() (const PositionVector3D<CoordSystem,U> & v) const {
+      DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
+      DisplacementVector3D< Cartesian3D<double>,U > rxyz = operator()(xyz);
+      return PositionVector3D<CoordSystem,U> ( rxyz );
+   }
+
+   /**
+      Rotation operation on a Lorentz vector in any spatial coordinate system
+   */
+   template <class CoordSystem>
+   LorentzVector<CoordSystem>
+   operator() (const LorentzVector<CoordSystem> & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v.Vect());
+      xyz = operator()(xyz);
+      LorentzVector< PxPyPzE4D<double> > xyzt (xyz.X(), xyz.Y(), xyz.Z(), v.E());
+      return LorentzVector<CoordSystem> ( xyzt );
+   }
+
+   /**
+      Rotation operation on an arbitrary vector v.
+      Preconditions:  v must implement methods x(), y(), and z()
+      and the arbitrary vector type must have a constructor taking (x,y,z)
+   */
+   template <class ForeignVector>
+   ForeignVector
+   operator() (const  ForeignVector & v) const {
+      DisplacementVector3D< Cartesian3D<double> > xyz(v);
+      DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
+      return ForeignVector ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+   }
+
+   /**
+      Overload operator * for rotation on a vector
+   */
+   template <class AVector>
+   inline
+   AVector operator* (const AVector & v) const
+   {
+      return operator()(v);
+   }
+
+   /**
       Invert a rotation in place
    */
-  void Invert();
+   void Invert();
 
-  /**
+   /**
       Return inverse of  a rotation
    */
-  Rotation3D Inverse() const { Rotation3D t(*this); t.Invert(); return t; }
+   Rotation3D Inverse() const { Rotation3D t(*this); t.Invert(); return t; }
 
-  // ========= Multi-Rotation Operations ===============
+   // ========= Multi-Rotation Operations ===============
 
-  /**
-     Multiply (combine) two rotations
+   /**
+      Multiply (combine) two rotations
    */
-  Rotation3D operator * (const Rotation3D  & r) const;
-  Rotation3D operator * (const AxisAngle   & a) const;
-  Rotation3D operator * (const EulerAngles & e) const;
-  Rotation3D operator * (const Quaternion  & q) const;
-  Rotation3D operator * (const RotationX  & rx) const;
-  Rotation3D operator * (const RotationY  & ry) const;
-  Rotation3D operator * (const RotationZ  & rz) const;
+   Rotation3D operator * (const Rotation3D  & r) const;
+   Rotation3D operator * (const AxisAngle   & a) const;
+   Rotation3D operator * (const EulerAngles & e) const;
+   Rotation3D operator * (const Quaternion  & q) const;
+   Rotation3D operator * (const RotationZYX & r) const;
+   Rotation3D operator * (const RotationX  & rx) const;
+   Rotation3D operator * (const RotationY  & ry) const;
+   Rotation3D operator * (const RotationZ  & rz) const;
 
-  /**
-     Post-Multiply (on right) by another rotation :  T = T*R
+   /**
+      Post-Multiply (on right) by another rotation :  T = T*R
    */
-  template <class R>
-  Rotation3D & operator *= (const R & r) { return *this = (*this)*r; }
+   template <class R>
+   Rotation3D & operator *= (const R & r) { return *this = (*this)*r; }
 
-  /**
-     Equality/inequality operators
+   /**
+                    Equality/inequality operators
    */
-  bool operator == (const Rotation3D & rhs) const {
-    if( fM[0] != rhs.fM[0] )  return false;
-    if( fM[1] != rhs.fM[1] )  return false;
-    if( fM[2] != rhs.fM[2] )  return false;
-    if( fM[3] != rhs.fM[3] )  return false;
-    if( fM[4] != rhs.fM[4] )  return false;
-    if( fM[5] != rhs.fM[5] )  return false;
-    if( fM[6] != rhs.fM[6] )  return false;
-    if( fM[7] != rhs.fM[7] )  return false;
-    if( fM[8] != rhs.fM[8] )  return false;
-    return true;
-  }
-  bool operator != (const Rotation3D & rhs) const {
-    return ! operator==(rhs);
-  }
+   bool operator == (const Rotation3D & rhs) const {
+      if( fM[0] != rhs.fM[0] )  return false;
+      if( fM[1] != rhs.fM[1] )  return false;
+      if( fM[2] != rhs.fM[2] )  return false;
+      if( fM[3] != rhs.fM[3] )  return false;
+      if( fM[4] != rhs.fM[4] )  return false;
+      if( fM[5] != rhs.fM[5] )  return false;
+      if( fM[6] != rhs.fM[6] )  return false;
+      if( fM[7] != rhs.fM[7] )  return false;
+      if( fM[8] != rhs.fM[8] )  return false;
+      return true;
+   }
+   bool operator != (const Rotation3D & rhs) const {
+      return ! operator==(rhs);
+   }
 
 private:
 
-  Scalar fM[9];
+   Scalar fM[9];
 
 };  // Rotation3D
 

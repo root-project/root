@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.11 2007/03/16 15:05:16 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.12 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -54,6 +54,7 @@
 #pragma link C++ class ROOT::Math::AxisAngle+;
 #pragma link C++ class ROOT::Math::EulerAngles+;
 #pragma link C++ class ROOT::Math::Quaternion+;
+#pragma link C++ class ROOT::Math::RotationZYX+;
 #pragma link C++ class ROOT::Math::RotationX+;
 #pragma link C++ class ROOT::Math::RotationY+;
 #pragma link C++ class ROOT::Math::RotationZ+;
@@ -100,10 +101,6 @@
 
 // rotation functions
 //#pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D> &);
-#pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (double *, double*);
-#pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Rotation3D::GetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZTVector &);
 
 // #include "TMatrix.h"
 // #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (const TMatrixD &m);

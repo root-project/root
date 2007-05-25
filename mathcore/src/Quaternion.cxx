@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
+// Last update: $Id: Quaternion.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -90,6 +90,11 @@ Quaternion Quaternion::operator * (const AxisAngle   & a) const {
 Quaternion Quaternion::operator * (const EulerAngles & e) const {
    // combination of rotations
    return operator* ( Quaternion(e) );
+}
+
+Quaternion Quaternion::operator * (const RotationZYX & r) const {
+   // combination of rotations
+   return operator* ( Quaternion(r) );
 }
 
 Quaternion::Scalar Quaternion::Distance(const Quaternion & q) const {
