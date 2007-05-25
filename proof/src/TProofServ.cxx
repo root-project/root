@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.174 2007/05/21 00:46:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.175 2007/05/23 09:10:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3002,6 +3002,30 @@ void TProofServ::HandleProcess(TMessage *mess)
 
    if (IsTopMaster()) {
 
+      if (dset->GetListOfElements()->GetSize() == 0) {
+         // The received message included an empty dataset, with only the name
+         // defined: assume that a dataset, stored on the PROOF master by that
+         // name, should be processed.
+         TList *files = GetDataSet(dset->GetName());
+         if (!files) {
+            SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
+                                 fPrefix.Data(), dset->GetName()));
+            Error("HandleProcess", "No such dataset on the master: %s",
+                  dset->GetName());
+            return;
+         }
+         files->SetOwner();
+         if (!dset->Add(files)) {
+            SendAsynMessage(Form("HandleProcess on %s: error retrieving"
+                                 " dataset: %s", fPrefix.Data(), dset->GetName()));
+            Error("HandleProcess", "Error retrieving dataset %s",
+                  dset->GetName());
+            delete files;
+            return;
+         }
+         delete files;
+      }
+
       TProofQueryResult *pq = 0;
 
       // Create instance of query results
@@ -3433,11 +3457,9 @@ void TProofServ::HandleRetrieve(TMessage *mess)
                TDSet *d = 0;
                TObject *o = 0;
                TIter nxi(pqr->GetInputList());
-               while ((o = nxi())) {
-                  Info("HandleRetrieve","obj name: %s", o->ClassName());
+               while ((o = nxi()))
                   if ((d = dynamic_cast<TDSet *>(o)))
                      break;
-               }
                SetTDSetWriteV3(d, kTRUE);
             }
             if (pqr) {

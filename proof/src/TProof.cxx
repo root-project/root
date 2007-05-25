@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.199 2007/05/21 00:45:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.200 2007/05/23 09:10:58 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2695,6 +2695,21 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 }
 
 //______________________________________________________________________________
+Long64_t TProof::Process(const char *dsetname, const char *selector,
+                         Option_t *option, Long64_t nentries,
+                         Long64_t first, TEventList *evl)
+{
+   // Process a dataset which is stored on the master with name 'dsetname'
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   TDSet *dset = new TDSet(dsetname);
+   Long64_t retval = Process(dset, selector, option, nentries, first, evl);
+   delete dset;
+   return retval;
+}
+
+//______________________________________________________________________________
 Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
 {
    // Get reference for the qry-th query in fQueries (as
@@ -2976,11 +2991,12 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 }
 
 //______________________________________________________________________________
-Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp, const char *selection, Option_t *option,
+Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
+                            const char *selection, Option_t *option,
                             Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
-   // Returns -1 in case of error or number of selected events in case of success.
+   // Returns -1 in case of error or number of selected events otherwise.
 
    if (!IsValid()) return -1;
 
