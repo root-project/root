@@ -575,25 +575,32 @@ int testRotation() {
   // initiate rotation with some non -trivial angles to test all matrix
   EulerAngles r1( pi/2.,pi/4., pi/3 );
   Rotation3D  r2(r1);
-  AxisAngle   r3(r1);
-  Quaternion  r4(r2);
+  // only operator= is in CINT for the other rotations
+  Quaternion  r3; r3 = r2;
+  AxisAngle   r4; r4 = r3;
+  RotationZYX r5; r5 = r2;
 
-  XYZPoint v1 = r1(v);
-  XYZPoint v2 = r2(v);
-  XYZPoint v3 = r3(v);
-  XYZPoint v4 = r4(v);
+  XYZPoint v1 = r1 * v;
+  XYZPoint v2 = r2 * v;
+  XYZPoint v3 = r3 * v;
+  XYZPoint v4 = r4 * v;
+  XYZPoint v5 = r5 * v;
   
   ok+= compare(v1.X(), v2.X(), "x",2); 
   ok+= compare(v1.Y(), v2.Y(), "y",2); 
   ok+= compare(v1.Z(), v2.Z(), "z",2); 
 
-  ok+= compare(v1.X(), v3.X(), "x",5); 
-  ok+= compare(v1.Y(), v3.Y(), "y",5); 
-  ok+= compare(v1.Z(), v3.Z(), "z",5); 
+  ok+= compare(v1.X(), v3.X(), "x",2); 
+  ok+= compare(v1.Y(), v3.Y(), "y",2); 
+  ok+= compare(v1.Z(), v3.Z(), "z",2); 
 
-  ok+= compare(v1.X(), v4.X(), "x",2); 
-  ok+= compare(v1.Y(), v4.Y(), "y",2); 
-  ok+= compare(v1.Z(), v4.Z(), "z",2); 
+  ok+= compare(v1.X(), v4.X(), "x",5); 
+  ok+= compare(v1.Y(), v4.Y(), "y",5); 
+  ok+= compare(v1.Z(), v4.Z(), "z",5); 
+
+  ok+= compare(v1.X(), v5.X(), "x",2); 
+  ok+= compare(v1.Y(), v5.Y(), "y",2); 
+  ok+= compare(v1.Z(), v5.Z(), "z",2); 
 
   // test with matrix
   double rdata[9]; 
@@ -604,12 +611,12 @@ int testRotation() {
   TVectorD q(3,vdata);
   TVectorD q2 = m*q; 
   
-  XYZPoint v5; 
-  v5.SetCoordinates( q2.GetMatrixArray() );
+  XYZPoint v6; 
+  v6.SetCoordinates( q2.GetMatrixArray() );
 
-  ok+= compare(v1.X(), v5.X(), "x"); 
-  ok+= compare(v1.Y(), v5.Y(), "y"); 
-  ok+= compare(v1.Z(), v5.Z(), "z"); 
+  ok+= compare(v1.X(), v6.X(), "x"); 
+  ok+= compare(v1.Y(), v6.Y(), "y"); 
+  ok+= compare(v1.Z(), v6.Z(), "z"); 
 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
@@ -626,6 +633,12 @@ int testRotation() {
   Rotation3D r3y(ry);
   Rotation3D r3z(rz);
 
+  Quaternion qx; qx = rx;
+  Quaternion qy; qy = ry;
+  Quaternion qz; qz = rz;
+
+  RotationZYX rzyx( rz.Angle(), ry.Angle(), rx.Angle() );
+
   XYZPoint vrot1 = rx * ry * rz * v;
   XYZPoint vrot2 = r3x * r3y * r3z * v;
 
@@ -633,6 +646,19 @@ int testRotation() {
   ok+= compare(vrot1.Y(), vrot2.Y(), "y"); 
   ok+= compare(vrot1.Z(), vrot2.Z(), "z"); 
 
+  vrot2 = qx * qy * qz * v;
+
+  ok+= compare(vrot1.X(), vrot2.X(), "x",2); 
+  ok+= compare(vrot1.Y(), vrot2.Y(), "y",2); 
+  ok+= compare(vrot1.Z(), vrot2.Z(), "z",2); 
+
+  vrot2 = rzyx * v;
+
+  ok+= compare(vrot1.X(), vrot2.X(), "x"); 
+  ok+= compare(vrot1.Y(), vrot2.Y(), "y"); 
+  ok+= compare(vrot1.Z(), vrot2.Z(), "z"); 
+
+  // now inverse (first x then y then z)
   vrot1 = rz * ry * rx * v;
   vrot2 = r3z * r3y * r3x * v;
 
@@ -657,14 +683,14 @@ int testRotation() {
   double b[4] = { 6,8,10,3.14159265358979323 };
   AxisAngle  arPi(b,b+4 );
   Rotation3D rPi(arPi);
-  AxisAngle  a1(rPi);
+  AxisAngle  a1; a1 = rPi;
   ok+= compare(arPi.Axis().X(), a1.Axis().X(),"x"); 
   ok+= compare(arPi.Axis().Y(), a1.Axis().Y(),"y"); 
   ok+= compare(arPi.Axis().Z(), a1.Axis().Z(),"z");   
   ok+= compare(arPi.Angle(), a1.Angle(),"angle");   
 
-  EulerAngles ePi(rPi);
-  EulerAngles e1(a1);
+  EulerAngles ePi; ePi=rPi;
+  EulerAngles e1; e1=Rotation3D(a1);
   ok+= compare(ePi.Phi(), e1.Phi(),"phi");   
   ok+= compare(ePi.Theta(), e1.Theta(),"theta");   
   ok+= compare(ePi.Psi(), e1.Psi(),"ps1");   
@@ -675,13 +701,13 @@ int testRotation() {
   std::cout << "Test Inversions :               "; 
   ok = 0; 
 
+
   EulerAngles s1 = r1.Inverse();
   Rotation3D  s2 = r2.Inverse();
-  AxisAngle   s3 = r3.Inverse();
-  Quaternion  s4 = r4.Inverse();
+  Quaternion  s3 = r3.Inverse();
+  AxisAngle   s4 = r4.Inverse();
+  RotationZYX s5 = r5.Inverse();
 
-//   cout << r2 << endl;
-//   cout << s2 << endl;
   
   // euler angles not yet impl.
   XYZPoint p = s2 * r2 * v; 
@@ -690,18 +716,35 @@ int testRotation() {
   ok+= compare(p.Y(), v.Y(), "y",10); 
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
-  p = s3 * r3 * v; 
-  // axis angle inversion not very precise
-  ok+= compare(p.X(), v.X(), "x",1E9); 
-  ok+= compare(p.Y(), v.Y(), "y",1E9); 
-  ok+= compare(p.Z(), v.Z(), "z",1E9); 
 
-  p = s4 * r4 * v; 
+  p = s3 * r3 * v; 
   
   ok+= compare(p.X(), v.X(), "x",10); 
   ok+= compare(p.Y(), v.Y(), "y",10); 
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
+  p = s4 * r4 * v; 
+  // axis angle inversion not very precise
+  ok+= compare(p.X(), v.X(), "x",1E9); 
+  ok+= compare(p.Y(), v.Y(), "y",1E9); 
+  ok+= compare(p.Z(), v.Z(), "z",1E9); 
+
+  p = s5 * r5 * v; 
+  
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
+
+  Rotation3D r6(r5);
+  Rotation3D s6 = r6.Inverse();
+
+  p = s6 * r6 * v; 
+  
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+  
   if (ok == 0) std::cout << "\t OK " << std::endl;
   else  std::cout << std::endl;
 
@@ -715,7 +758,7 @@ int testRotation() {
   XYZVector u3(0.0316832,0.0372921,0.998802); 
   Rotation3D rr(u1,u2,u3); 
   // check orto-normality
-  XYZPoint vrr = rr(v); 
+  XYZPoint vrr = rr* v; 
   ok+= compare(v.R(), vrr.R(), "R",1.E9); 
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
