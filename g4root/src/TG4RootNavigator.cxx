@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.7 2007/03/02 08:52:02 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.8 2007/04/23 09:03:03 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -122,7 +122,7 @@ G4double TG4RootNavigator::ComputeStep(const G4ThreeVector &pGlobalPoint,
    fLastSafety = pNewSafety;
    G4double step = (gGeoManager->GetStep()+tol)*cm;
 //   if (step >= pCurrentProposedStepLength) step = kInfinity;
-   if (step < 2.*tol*cm) step = 0.;
+   if (step < 1.e3*tol*cm) step = 0.;
    fStepEntering = fGeometry->IsStepEntering();
    fStepExiting  = fGeometry->IsStepExiting();
    if (fStepEntering || fStepExiting) {
