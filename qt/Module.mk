@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.21 2007/01/29 07:38:36 brun Exp $
+# $Id: Module.mk,v 1.22 2007/04/02 09:42:28 rdm Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -40,7 +40,11 @@ GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 
-GQTCXXFLAGS   := -DQT_DLL  -DQT_NO_DEBUG -DQT_SHARED -DQT_THREAD_SUPPORT -I$(QTDIR)/mkspecs/default -I. $(QTINCDIR:%=-I%)
+QT3CPPFLAGS   := -DQT_DLL  -DQT_NO_DEBUG  -DQT_THREAD_SUPPORT
+QT4CPPFLAGS   := -DQT_QT3SUPPORT_LIB -DQT3_SUPPORT -DQT_GUI_LIB -DQT_CORE_LIB 
+QT3QT4CPPFLAGS:= -DQT_SHARED
+
+GQTCXXFLAGS   := $(QT4CPPFLAGS) $(QT3CPPFLAGS) $(QT3QT4CPPFLAGS) -I$(QTDIR)/mkspecs/default -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 GQTMAP        := $(GQTLIB:.$(SOEXT)=.rootmap)

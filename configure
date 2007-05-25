@@ -420,6 +420,7 @@ check_library() {
 	    found_dir=""
 	else
 	    found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
+       found_raw_dir=${found_dir}
 	    found_dir=-L${found_dir}
             # Avoid inclusion of /usr/lib, which is always included anyway
             if test "x$found_dir" = "x-L/usr/lib"   || \
@@ -1813,16 +1814,56 @@ if test ! "x$enable_qt" = "xno" || \
         /usr/include/qt /usr/include/qt3
     qtinc=$found_hdr
     qtincdir=$found_dir
-
+    if  test "x$qtinc" = "x"; then
+      echo No Qt3 was found, let\'s try to find Qt4 instead
+        check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
+          /usr/local/include/  /usr/local/qt/include  \
+          /usr/include
+      if ! test "x$found_hdr" = "x"; then
+        qt4="yes"
+        qtinc=$found_hdr
+        qtmainincdir=$found_dir
+        qtincdir=$qtmainincdir
+        qtdirlist=`ls $qtmainincdir`
+        for i in $qtdirlist ; do
+          if test -r $qtmainincdir/$i ; then 
+           qtincdir="$qtincdir  $qtmainincdir/$i"
+          fi
+        done
+      fi
+   fi
+   if  test "x$qt4" = "x"; then
     check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" "$enable_shared" \
         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
         /usr/lib /usr/qt/lib
     qtlib=$found_lib
     qtlibdir=$found_dir
+   else
+     check_library "libQtCore QtCore" "$enable_shared" \
+         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
+         /usr/lib /usr/qt/lib
+     qtlib=$found_lib
+     qtlibdir=$found_dir
+     check_library "libQtGui QtGui" "$enable_shared" \
+         "$found_raw_dir"  ""
+     qtlib="$qtlib $found_lib"
+     check_library "libQt3Support Qt3Support" "$enable_shared" \
+         "$found_raw_dir"  ""
+     qtlib="$qtlib $found_lib"
+     check_library "libQtOpenGL QtOpenGL" "$enable_shared" \
+         "$found_raw_dir"  ""
+     qtlib="$qtlib $found_lib"
+     check_library "libQtSvg QtSvg" "$enable_shared" \
+         "$found_raw_dir"  ""
+     qtlib="$qtlib $found_lib"
+     check_library "libQtXml QtXml" "$enable_shared" \
+         "$found_raw_dir"  ""
+     qtlib="$qtlib $found_lib"
+   fi    
 
     message "Checking for moc or moc.exe"
-    qtmocexe=`$cwhich moc`
-    if test $? -ne 0 ; then
+#  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
+#  we can pick the wrong moc this way  --  if test $? -ne 0 ; then
        for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
            /usr/qt3/bin /usr/share/qt3/bin ; do
 	  logmsg "Checking for $qtmocexe in $i"
@@ -1836,7 +1877,7 @@ if test ! "x$enable_qt" = "xno" || \
 	      break
 	  fi
        done
-    fi
+#  we can pick the wrong moc this way  --  fi
     result "$qtmocexe"
 
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
@@ -1844,11 +1885,19 @@ if test ! "x$enable_qt" = "xno" || \
         enable_qt="no"
         enable_qtgsi="no"
     else
+   qttestdir=$qtincdir
+   if test "x$qt4" = "x"; then
 	qtverneed="3.3.0"
 	qttoonew="4.0.0"
-        message "Checking whether $qtverneed <= Qt version < $qttoonew"
-	logmsg "grep '# *define *QT_VERSION_STR *' $qtincdir/qglobal.h"
-	qtverstr=`grep "# *define *QT_VERSION_STR *" $qtincdir/qglobal.h | \
+     qttestdir=$qtincdir
+   else
+	  qtverneed="4.3.0"
+	  qttoonew="5.0.0"
+     qttestdir=$qtmainincdir/Qt
+   fi
+        message "Checking whether $qtverneed <= Qt version < $qttoonew under $qttestdir/qglobal.h "
+	logmsg "grep '# *define *QT_VERSION_STR *' $qttestdir/qglobal.h"
+	qtverstr=`grep "# *define *QT_VERSION_STR *" $qttestdir/qglobal.h | \
           sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
 	if test $? -eq 0 ; then
 	    logmsg "Got Qt version $qtverstr"

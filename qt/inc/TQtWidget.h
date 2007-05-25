@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.16 2006/11/10 14:44:42 pcanal Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.17 2007/01/26 07:51:09 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -138,7 +138,11 @@ protected:
    bool paintingActive () const;
 
    virtual void enterEvent       ( QEvent *      );
+#if (QT_VERSION > 0x039999)
+   virtual void customEvent      ( QEvent *      );
+#else   
    virtual void customEvent      ( QCustomEvent *);
+#endif   
    virtual void focusInEvent     ( QFocusEvent * );
    virtual void focusOutEvent    ( QFocusEvent * );
    virtual void leaveEvent       ( QEvent *      );

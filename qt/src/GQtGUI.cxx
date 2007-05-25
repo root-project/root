@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.28 2006/08/30 14:44:34 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.29 2007/02/10 16:28:27 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -11,8 +11,8 @@
  *************************************************************************/
 
 #include <assert.h>
-#include "TGQt.h"
 #include "TQUserEvent.h"
+#include "TGQt.h"
 #include "TQtClientFilter.h"
 #include "TQtWidget.h"
 #include "TQtClientWidget.h"
