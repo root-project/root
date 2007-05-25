@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.25 2006/05/23 04:47:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.26 2007/04/02 10:32:34 rdm Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -206,6 +206,7 @@ public:
    virtual Int_t        PushState(Bool_t ovlp, Int_t ntmany=0, Int_t startlevel=0, Double_t *point=0);
    virtual Bool_t       PopState(Int_t &nmany, Double_t *point=0);
    virtual Bool_t       PopState(Int_t &nmany, Int_t level, Double_t *point=0);
+   virtual Bool_t       RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point=0);
    virtual void         PopDummy(Int_t ipop=9999) {fStackLevel=(ipop>fStackLevel)?(fStackLevel-1):(ipop-1);}
    virtual void         Refresh();
    void                 SetDefaultLevel(Int_t level) {fDefaultLevel = level;}

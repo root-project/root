@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.44 2006/05/26 09:09:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.45 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -596,9 +596,18 @@ Bool_t TGeoNodeCache::PopState(Int_t &nmany, Int_t level, Double_t *point)
 {
 // Pop next state/point from heap and restore matrices starting from LEVEL.
    if (level<=0) return 0;
-   ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,nmany,point);
+   Bool_t ovlp = ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,nmany,point);
    Refresh();
-   return level;
+   return ovlp;
+}
+
+//_____________________________________________________________________________
+Bool_t TGeoNodeCache::RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point)
+{
+// Pop next state/point from a backed-up state.
+   Bool_t ovlp = state->GetState(fLevel,nmany,point);
+   Refresh();
+   return ovlp;
 }
 
 //_____________________________________________________________________________
