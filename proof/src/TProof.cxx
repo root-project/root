@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.200 2007/05/23 09:10:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.201 2007/05/25 13:53:59 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2702,6 +2702,11 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    // Process a dataset which is stored on the master with name 'dsetname'
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
+
+   if (fProtocol < 13) {
+      Info("Process", "processing 'by name' not supported by the server");
+      return -1;
+   }
 
    TDSet *dset = new TDSet(dsetname);
    Long64_t retval = Process(dset, selector, option, nentries, first, evl);
