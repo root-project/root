@@ -11,8 +11,8 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
-#UNRVERS      := unuran-1.0.devel-root
-UNRVERS      := unuran-1.0.0-root
+UNRVERS      := unuran-1.0.1-root
+
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
 UNURANETAG   := $(UNURANDIRS)/headers.d
@@ -86,7 +86,7 @@ $(UNURANETAG):	$(UNRSRCS)
 		fi); 
 $(UNRCFG):	$(UNRANETAG)
 		@echo "** configure unuran"
-		cd $(UNURANDIRS)/$(UNRVERS) ; \
+		@(cd $(UNURANDIRS)/$(UNRVERS) ; \
 		ACC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
@@ -110,7 +110,7 @@ $(UNRCFG):	$(UNRANETAG)
 			ACFLAGS="-MD -G5 -GX"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --prefix=`pwd`/$(MODDIRS)/$(UNRVERS) CC="$$ACC"  \
-		CFLAGS="$$ACFLAGS";
+		CFLAGS="$$ACFLAGS");
 
 $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
