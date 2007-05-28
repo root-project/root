@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.39 2007/05/21 09:41:52 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.40 2007/05/24 08:56:37 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -94,6 +94,8 @@ TF2::TF2(const char *name, void *fcn, Double_t xmin, Double_t xmax, Double_t ymi
 //*-*
 //*-*  This constructor is called for functions of type C by CINT.
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    fYmin   = ymin;
@@ -116,6 +118,8 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 //*-*
 //*-*   This constructor creates a function of type C when invoked
 //*-*   with the normal C++ compiler.
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -140,6 +144,8 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 //*-*   This constructor creates a function of type C when invoked
 //*-*   with the normal C++ compiler.
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    fYmin   = ymin;
@@ -159,6 +165,8 @@ TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 //*-*          a functor class implementing operator() (double *, double *)  
 //*-*
 //*-*   npar is the number of free parameters used by the function
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 
    fYmin   = ymin;
@@ -180,6 +188,8 @@ TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ym
 //*-*          
 //*-*   npar is the number of free parameters used by the function
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 
    fYmin   = ymin;
    fYmax   = ymax;
@@ -200,6 +210,8 @@ TF2::TF2(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Doub
 //*-*          which can be used only in compile C++ mode  
 //*-*
 //*-*   npar is the number of free parameters used by the function
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 
    fYmin   = ymin;

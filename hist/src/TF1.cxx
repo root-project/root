@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.136 2007/04/03 14:37:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.137 2007/05/21 08:38:48 moneta Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -376,7 +376,9 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    //     Double_t fcn(Double_t *x, Double_t *params)
    //
    //  This constructor is called for functions of type C by CINT.
-
+   //
+   // WARNING! A function created with this constructor cannot be Cloned.
+   
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
@@ -461,6 +463,8 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    //
    //
    //  This constructor is called for functions of type C by CINT.
+   //
+   //  WARNING! A function created with this constructor cannot be Cloned.
 
 
    fXmin       = xmin;
@@ -546,6 +550,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    //
    //   see test program test/stress.cxx (function stress1) for an example.
    //   note the interface with an intermediate pointer.
+   //
+   // WARNING! A function created with this constructor cannot be Cloned.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -616,6 +622,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    //
    //   see test program test/stress.cxx (function stress1) for an example.
    //   note the interface with an intermediate pointer.
+   //
+   // WARNING! A function created with this constructor cannot be Cloned.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -711,6 +719,8 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 //*-*   npar is the number of free parameters used by the function
 //*-*
 //*-*   This constructor can be used only in compiled code 
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

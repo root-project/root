@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.32 2007/05/21 08:38:48 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.33 2007/05/24 08:58:55 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -77,6 +77,8 @@ TF3::TF3(const char *name,void *fcn, Double_t xmin, Double_t xmax, Double_t ymin
 //*-*
 //*-*  This constructor is called for functions of type C by CINT.
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    fZmin   = zmin;
@@ -98,6 +100,8 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 //*-*      looks like:
 //*-*    Double_t fun1(Double_t *x, Double_t *par)
 //*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -124,6 +128,8 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 //*-*    Double_t fun1(Double_t *x, Double_t *par)
 //*-*        return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    fNdim   = 3;
@@ -140,6 +146,8 @@ TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 //*-*          a functor class implementing operator() (double *, double *)  
 //*-*
 //*-*   npar is the number of free parameters used by the function
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 
    fNdim   = 3;
@@ -158,6 +166,8 @@ TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ym
 //*-*          
 //*-*   npar is the number of free parameters used by the function
 //*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
 
    fNdim   = 3;
 }
@@ -175,6 +185,8 @@ TF3::TF3(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Doub
 //*-*          which can be used only in compile C++ mode  
 //*-*
 //*-*   npar is the number of free parameters used by the function
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
 //*-*
 
    fNdim   = 3;
