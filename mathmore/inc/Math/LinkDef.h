@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.8 2006/11/20 11:07:54 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.9 2007/02/20 15:53:40 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -61,6 +61,8 @@
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngTaus>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLux>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngGFSR4>+;
+
+#pragma link C++ class ROOT::Math::KelvinFunctions+;
 
 
 

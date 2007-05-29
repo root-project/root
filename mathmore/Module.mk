@@ -41,6 +41,7 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 		$(MODDIRI)/Math/Chebyshev.h  \
 		$(MODDIRI)/Math/Random.h \
 		$(MODDIRI)/Math/GSLRndmEngines.h \
+		$(MODDIRI)/Math/KelvinFunctions.h \
 		$(MODDIRS)/GSLError.h
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
