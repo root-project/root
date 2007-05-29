@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.46 2007/03/19 14:45:20 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.47 2007/05/08 13:49:20 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -174,13 +174,8 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 
    fClient = 0;
 
-   if (TFile::GetOpenTimeout() == TFile::kEternalTimeout) {
-      gSystem->Unsetenv("XRDCLIENTMAXWAIT");
-   } else {
-      TString xrdmaxwait("");
-      xrdmaxwait += TFile::GetOpenTimeout();
-      gSystem->Setenv("XRDCLIENTMAXWAIT",xrdmaxwait.Data());
-   }
+   // Set the timeout (default 999999999 secs, i.e. far, far in the future)
+   gSystem->Setenv("XRDCLIENTMAXWAIT", Form("%d",TFile::GetOpenTimeout()));
 
    if (GetOnlyStaged()) {
       static TFileStager* fFileStager = 0;
