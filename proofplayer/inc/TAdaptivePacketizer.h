@@ -56,24 +56,12 @@ public:              // public because of Sun CC bug
    class TSlaveStat;
 
 private:
-   Long64_t       fProcessed;    // number of entries processed
-   Long64_t       fBytesRead;    // number of bytes processed
    TList         *fPackets;      // all processed packets
-
-   Long64_t       fTotalEntries; // total number of entries to be distributed
-   // Members for progress info
-   Long_t         fStartTime;    // time offset
-   Float_t        fInitTime;     // time before processing
-   Float_t        fTimeUpdt;     // time between updates
-   TNtupleD      *fCircProg;     // Keeps circular info for "instantenous"
-                                 // rate calculations
-   Long_t         fCircN;        // Circularity
 
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
    TList         *fActive;       // nodes with unfinished files
    TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
-   TTimer        *fProgress;     // progress updates timer
 
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
@@ -81,7 +69,6 @@ private:
                                           // that are on non slaves
    Long64_t       fNEventsOnRemLoc;       // number of events in currently
                                           // unalloc files on non-worker loc.
-   Float_t        fProcTime;      // sum of proc time of all packets so far
 
    Float_t        fBaseLocalPreference;   // indicates how much more likely
    // the nodes will be to open their local files (1 means indifferent)
@@ -89,8 +76,6 @@ private:
    TAdaptivePacketizer();
    TAdaptivePacketizer(const TAdaptivePacketizer&);    // no implementation, will generate
    void operator=(const TAdaptivePacketizer&);         // error on accidental usage
-
-   virtual Bool_t HandleTimer(TTimer *timer);
 
    TFileNode     *NextNode();
    void           RemoveUnAllocNode(TFileNode *);
@@ -104,24 +89,17 @@ private:
 
    void           Reset();
    void           ValidateFiles(TDSet *dset, TList *slaves);
-   void           SplitEventList(TDSet *dset);
-   TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
 
 public:
    static Int_t   fgMaxSlaveCnt;  // maximum number of slaves per filenode
 
    TAdaptivePacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-                TList *input);
+                       TList *input);
    virtual ~TAdaptivePacketizer();
 
-   Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    Int_t         CalculatePacketSize(TObject *slstat);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
-
-   Long64_t      GetBytesRead() const { return fBytesRead; }
-   Float_t       GetInitTime() const { return fInitTime; }
-   Float_t       GetProcTime() const { return fProcTime; }
 
    ClassDef(TAdaptivePacketizer,0)  //Generate work packets for parallel processing
 };

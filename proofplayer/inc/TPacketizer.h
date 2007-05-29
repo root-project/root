@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.h,v 1.20 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.h,v 1.21 2007/05/21 00:22:51 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -35,7 +35,6 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
-class TNtupleD;
 class TProofStats;
 
 
@@ -47,26 +46,12 @@ public:              // public because of Sun CC bug
    class TSlaveStat;
 
 private:
-   Long64_t  fProcessed;    // number of entries processed
-   Long64_t  fBytesRead;    // number of bytes processed
    TList    *fPackets;      // all processed packets
-
-   Long64_t  fTotalEntries; // total number of entries to be distributed
-
-   // Members for progress info
-   Long_t    fStartTime;    // time offset
-   Float_t   fInitTime;     // time before processing
-   Float_t   fProcTime;     // time since start of processing
-   Float_t   fTimeUpdt;     // time between updates
-   TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
-                            // rate calculations
-   Long_t    fCircN;        // Circularity
 
    TList    *fFileNodes;    // nodes with files
    TList    *fUnAllocated;  // nodes with unallocated files
    TList    *fActive;       // nodes with unfinished files
    TMap     *fSlaveStats;   // slave status, keyed by correspondig TSlave
-   TTimer   *fProgress;     // progress updates timer
 
    Long64_t  fPacketSize;   // global base packet size
                                  // It can be set with PROOF_PacketSize
@@ -85,8 +70,6 @@ private:
    TPacketizer(const TPacketizer&);     // no implementation, will generate
    void operator=(const TPacketizer&);  // error on accidental usage
 
-   virtual Bool_t HandleTimer(TTimer *timer);
-
    TFileNode     *NextUnAllocNode();
    void           RemoveUnAllocNode(TFileNode *);
 
@@ -99,21 +82,14 @@ private:
 
    void           Reset();
    void           ValidateFiles(TDSet *dset, TList *slaves);
-   void           SplitEventList(TDSet *dset);
-   TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                 TList *input);
    virtual ~TPacketizer();
 
-   Long64_t      GetEntriesProcessed() const { return fProcessed; }
-   Long64_t      GetEntriesProcessed(TSlave *sl) const;
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
-
-   Long64_t      GetBytesRead() const { return fBytesRead; }
-   Float_t       GetInitTime() const { return fInitTime; }
-   Float_t       GetProcTime() const { return fProcTime; }
+   Long64_t      GetEntriesProcessed(TSlave *sl) const;
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
 };

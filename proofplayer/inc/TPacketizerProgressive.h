@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.h,v 1.4 2007/02/12 13:05:31 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.h,v 1.5 2007/03/19 10:46:10 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -13,16 +13,18 @@
 //                                                                      //
 // TPacketizerProgressive                                               //
 //                                                                      //
-// This class generates packets to be processed on PROOF slave servers. //
+// This class is one of PROOF packetizers.                              //
+// Packetizer generates packets to be processed on PROOF worker servers.//
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
 // (entries) or a directory (objects) in a file.                        //
 // Packets are generated taking into account the performance of the     //
 // remote machine, the time it took to process a previous packet on     //
 // the remote machine, the locality of the database files, etc.         //
-// This packetizer does not pre-open the files to calculate the total   //
-// number of events, it just walks sequentially through the list of     //
-// files.                                                               //
+//                                                                      //
+// The TPacketizerProgressive does not pre-open the files to calculate  //
+// the total number of events. It just walks sequentially through the   //
+// list of files.                                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +134,6 @@ private:
    Long64_t    fEntriesSeen;      // number of entries found so far
    Long64_t    fFilesOpened;      // total number of files with their entries recorded
    Long64_t    fEstTotalEntries;  // estimated total number of entries
-   Long64_t    fEntriesProcessed; // total number of entries processed
    TMap       *fSlaveStats;       // map of slave addresses to its TSlaveStat object
    THashTable *fNewFileSlaves;    // slaves that have just opened a new file and need to
                                   // record the number of entries in them (keyed by TSlaveStat)
@@ -144,8 +145,6 @@ private:
 
    TList      *fLastEntrySizes;   // list of the last kEntryListSize TDSetElement sizes (in entries)
    Long64_t    fPacketSize;       // current packet size based on estimate of total number of entries
-
-   TTimer     *fProgress;         // progress bar timer
 
    TPacketizerProgressive();
    TPacketizerProgressive(const TPacketizerProgressive&);
@@ -165,7 +164,6 @@ public:
                           TList *input);
    virtual ~TPacketizerProgressive();
 
-   Long64_t      GetEntriesProcessed() const { return fEntriesProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *s) const;
    TDSetElement *GetNextPacket(TSlave *s, TMessage *r);
 

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.6 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.7 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -17,13 +17,16 @@
 // TVirtualPacketizer                                                   //
 //                                                                      //
 // XXX update Comment XXX                                               //
-// This class generates packets to be processed on PROOF slave servers. //
+// Packetizer generates packets to be processed on PROOF worker servers.//
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
 // (entries) or a directory (objects) in a file.                        //
 // Packets are generated taking into account the performance of the     //
 // remote machine, the time it took to process a previous packet on     //
 // the remote machine, the locality of the database files, etc.         //
+//                                                                      //
+// TVirtualPacketizer includes common parts of PROOF packetizers.       //
+// Look in subclasses for details.                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -36,14 +39,40 @@ class TDSet;
 class TDSetElement;
 class TSlave;
 class TMessage;
+class TNtupleD;
 
 
 
 class TVirtualPacketizer : public TObject {
 
+friend class TPacketizer;
+friend class TAdaptivePacketizer;
+friend class TPacketizerProgressive;
+
 private:
+   Long64_t  fProcessed;    // number of entries processed
+   Long64_t  fBytesRead;    // number of bytes processed
+   TTimer   *fProgress;     // progress updates timer
+
+   Long64_t  fTotalEntries; // total number of entries to be distributed;
+                            // not used in the progressive packetizer
+
+   // Members for progress info
+   Long_t    fStartTime;    // time offset
+   Float_t   fInitTime;     // time before processing
+   Float_t   fProcTime;     // time since start of processing
+   Float_t   fTimeUpdt;     // time between updates
+   TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
+                            // rate calculations
+   Long_t     fCircN;       // Circularity
+
    TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
    void operator=(const TVirtualPacketizer &);      // error on accidental usage
+
+   virtual Bool_t HandleTimer(TTimer *timer);
+
+   void           SplitEventList(TDSet *dset);
+   TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
 
 protected:
    Bool_t   fValid;           // Constructed properly?
@@ -56,14 +85,14 @@ public:
    virtual ~TVirtualPacketizer() { }
 
    Bool_t                  IsValid() const { return fValid; }
-   virtual Long64_t        GetEntriesProcessed() const;
+   Long64_t                GetEntriesProcessed() const { return fProcessed; }
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            StopProcess(Bool_t abort);
 
-   virtual Long64_t        GetBytesRead() const = 0;
-   virtual Float_t         GetInitTime() const = 0;
-   virtual Float_t         GetProcTime() const = 0;
+   Long64_t      GetBytesRead() const { return fBytesRead; }
+   Float_t       GetInitTime() const { return fInitTime; }
+   Float_t       GetProcTime() const { return fProcTime; }
 
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };

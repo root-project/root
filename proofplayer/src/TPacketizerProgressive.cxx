@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.9 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.10 2007/04/19 09:33:40 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -13,16 +13,18 @@
 //                                                                      //
 // TPacketizerProgressive                                               //
 //                                                                      //
-// This class generates packets to be processed on PROOF slave servers. //
+// This class is one of PROOF packetizers.                              //
+// Packetizer generates packets to be processed on PROOF worker servers.//
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
 // (entries) or a directory (objects) in a file.                        //
 // Packets are generated taking into account the performance of the     //
 // remote machine, the time it took to process a previous packet on     //
 // the remote machine, the locality of the database files, etc.         //
-// This packetizer does not pre-open the files to calculate the total   //
-// number of events, it just walks sequentially through the list of     //
-// files.                                                               //
+//                                                                      //
+// The TPacketizerProgressive does not pre-open the files to calculate  //
+// the total number of events. It just walks sequentially through the   //
+// list of files.                                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -222,16 +224,19 @@ TPacketizerProgressive::TPacketizerProgressive(TDSet* dset,
                                                Long64_t num,
                                                TList* /*input*/)
    : fDset(dset), fSlaves(slaves), fSlavesRemaining(0), fFirstEvent(first),
-     fTotalEvents(num), fEntriesSeen(0), fFilesOpened(0),
-     fEstTotalEntries(0), fEntriesProcessed(0)
+     fTotalEvents(num), fEntriesSeen(0), fFilesOpened(0), fEstTotalEntries(0)
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TPacketizerProgressive", "enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TPacketizerProgressive",
+                           "enter (first %lld, num %lld)", first, num);
+
+   fProcessed = 0;
 
    if (fTotalEvents != -1) {
       // -1 events indicate to process the entire TDSet
-      Error("TPacketizerProgressive", "this packetizer does not handle TDSet regions");
+      Error("TPacketizerProgressive",
+            "this packetizer does not handle TDSet regions");
    }
 
    fSlavesRemaining = new TList;
@@ -312,11 +317,13 @@ void TPacketizerProgressive::Init()
    while ((e = (TDSetElement*) fDset->Next())) {
       TUrl url = e->GetFileName();
       TObjString host = url.GetHost();
-      PDB(kPacketizer, 3) Info("Init", "found TDSetElement on host %s", host.GetString().Data());
+      PDB(kPacketizer, 3) Info("Init", "found TDSetElement on host %s",
+                               host.GetString().Data());
       TFileNode* fn = (TFileNode*) host_map.GetValue(&host);
       if (! fn) {
          if (! (fn = (TFileNode*) nonslaves_added.GetValue(&host))) {
-            PDB(kPacketizer, 3) Info("Init", "adding info for non-slave %s", host.GetString().Data());
+            PDB(kPacketizer, 3) Info("Init", "adding info for non-slave %s",
+                                     host.GetString().Data());
             // the element is on a non-slave host: make a new
             // TFileNode and add it to the list of unallocated non-slaves
             fn = new TFileNode(host.GetString().Data());
@@ -382,29 +389,10 @@ TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
                            size, num, fs->GetNextEntry(), elem_entries);
 
    TDSetElement* base = stat->GetCurrentElement();
-   TDSetElement* packet = new TDSetElement(base->GetFileName(), base->GetObjName(),
-                                           base->GetDirectory(), fs->GetNextEntry(), num);
-   // NOTE: I have no idea whether the following friends code works.  It was more or less
-   // lifted directly from TPacketizer
-
-   // begin friends code
-   // create TDSetElements for all the friends of elem.
-   TList *friends = base->GetListOfFriends();
-   if (friends) {
-      TIter nxf(friends);
-      TPair *p = 0;
-      while ((p = (TPair *) nxf())) {
-         TDSetElement *fe = (TDSetElement *) p->Key();
-         packet->AddFriend(new TDSetElement(fe->GetFileName(), fe->GetObjName(),
-                                          fe->GetDirectory(), fs->GetNextEntry(), num),
-                                         ((TObjString *)(p->Value()))->GetName());
-      }
-   }
-   // end friends code
-
+   TDSetElement* packet = CreateNewPacket(base, fs->GetNextEntry(), num);
    fs->MoveNextEntry(num);
    stat->IncEntriesProcessed(num);
-   fEntriesProcessed += num;
+   fProcessed += num;
    // cleanup if this file is done
    if ( fs->GetNextEntry() == elem_entries) {
       fs->SetDone();
@@ -701,7 +689,7 @@ Bool_t TPacketizerProgressive::HandleTimer(TTimer *)
    // Send progress message to client.
 
    PDB(kPacketizer, 4) Info("HandlerTimer", "estimated total entries: %lld, entries processed: %lld",
-                            fEstTotalEntries, fEntriesProcessed);
+                            fEstTotalEntries, fProcessed);
 
    if (fProgress == 0) return kFALSE; // timer stopped already
 
@@ -709,7 +697,7 @@ Bool_t TPacketizerProgressive::HandleTimer(TTimer *)
    if (fEstTotalEntries <= 0) return kFALSE;
 
    TMessage m(kPROOF_PROGRESS);
-   m << fEstTotalEntries << fEntriesProcessed;
+   m << fEstTotalEntries << fProcessed;
 
    // send message to client;
    gProofServ->GetSocket()->Send(m);
