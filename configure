@@ -2865,9 +2865,18 @@ if test "x$enable_globus" = "xyes"; then
    searchlibdir=$globuslibdir
    globuslibdir=""
 
-   for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
-      libssl_$flavour libcrypto_$flavour ; do
-      check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
+   globuslibs="libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour
+              libglobus_gsi_credential_$flavour libglobus_common_$flavour
+              libglobus_gsi_callback_$flavour libglobus_proxy_ssl_$flavour
+              libglobus_gsi_sysconfig_$flavour libglobus_openssl_error_$flavour
+              libglobus_gssapi_gsi_$flavour libglobus_gsi_callback_$flavour
+              libglobus_oldgaa_$flavour libglobus_gsi_cert_utils_$flavour
+              libglobus_openssl_$flavour  libglobus_gsi_proxy_core_$flavour
+              libglobus_callout_$flavour  libltdl_$flavour 
+              libssl_$flavour libcrypto_$flavour"
+
+   for i in $globuslibs ; do
+      check_library $i "no" "$searchlibdir" /opt/globus /usr/lib \
       /usr/local/lib
       if test "x$found_lib" = "x" ; then
          globuslib=""
@@ -2883,26 +2892,6 @@ if test "x$enable_globus" = "xyes"; then
 fi
 
 if test "x$enable_globus" = "xyes"; then
-
-   # In more recent versions some functions are found in a separated library
-   # so, if it exists, add it to the list
-   check_library libglobus_gsi_credential_$flavour "$enable_shared" \
-          "$globuslibdir" /usr/lib /usr/local/lib
-   if test ! "x$found_lib" = "x" ; then
-      globuslib="$globuslib $found_lib"
-      if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
-         globuslibdir="$found_dir"
-      fi
-   fi
-   case $platform in
-       linux*)
-	   tmplibdir=$globuslibdir
-	   for i in $tmplibdir ; do
-	       extra=`echo $i | sed 's/-L/-Wl,-rpath,/'`
-	       globuslibdir="$globuslibdir $extra"
-	   done
-	   ;;
-   esac
 
    # Need to source this before init proxies
    sourcepath=""
@@ -3103,13 +3092,8 @@ if test "x$enable_ssl" = "xyes" ; then
      # libssl
      #
      libssl="libssl"
-     if test "x$enable_globus" = "xyes" ; then
-        libssl="libssl_$flavour"
-        tmpglbslibdir="$globusdir/lib"
-     else
-        tmpglbslibdir=$ssllibdir
-     fi
-     check_library "$libssl" "$enable_shared" "$tmpglbslibdir" \
+     tmpssllibdir=""
+     check_library "$libssl" "$enable_shared" "$ssllibdir" \
          $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
      if test "x$found_lib" != "x" ; then
          ssllib="$found_lib"
@@ -3131,10 +3115,7 @@ if test "x$enable_ssl" = "xyes" ; then
          # libcrypto, in the same dir
          #
          libcrypto="libcrypto"
-         if test "x$enable_globus" = "xyes" ; then
-             libcrypto="libcrypto_$flavour"
-         fi
-         check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
+         check_library "$libcrypto" "$enable_shared" "$ssllibdir" \
                       /usr/lib /opt/lib /usr/local/lib $finkdir/lib
          if test "x$found_lib" != "x" ; then
              ssllib="$ssllib $found_lib"
@@ -3153,14 +3134,9 @@ fi
 
 if test "x$enable_ssl" = "xyes" ; then
     incssl="bio.h blowfish.h err.h pem.h rand.h rsa.h"
-    if test "x$enable_globus" = "xyes" ; then
-        tmpglbsincdir="$globusdir/include/$flavour"
-    else
-        tmpglbsincdir=$sslincdir
-    fi
-
+    ssl_incdir=""
     for i in $incssl ; do
-        check_header "openssl/$i" "$tmpglbsincdir" $SSL $SSL/include \
+        check_header "openssl/$i" "$sslincdir" $SSL $SSL/include \
            /usr/include /usr/local/include /opt/include $finkdir/include
         if test "x$found_hdr" = "x" ; then
             ssl_incdir=""
