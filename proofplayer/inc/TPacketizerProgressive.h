@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.h,v 1.5 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.h,v 1.6 2007/05/29 16:06:55 ganis Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -166,6 +166,10 @@ public:
 
    Long64_t      GetEntriesProcessed(TSlave *s) const;
    TDSetElement *GetNextPacket(TSlave *s, TMessage *r);
+
+   Long64_t      GetBytesRead() const { return 0; }
+   Float_t       GetInitTime() const { return 0; }
+   Float_t       GetProcTime() const { return 0; }
 
    ClassDef(TPacketizerProgressive, 0);  // Packetizer that does not pre-open any files
 };
