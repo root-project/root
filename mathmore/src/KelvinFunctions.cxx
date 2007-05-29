@@ -19,7 +19,7 @@
 // ---------------------------------------------------------------------------------
 
 #include "Math/KelvinFunctions.h"
-#include <cmath>
+#include <math.h>
 
 
 namespace ROOT {
