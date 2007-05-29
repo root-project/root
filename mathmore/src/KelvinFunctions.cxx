@@ -68,7 +68,7 @@ double KelvinFunctions::Ber(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fBer = new TF1("fBer","KelvinFunctions::Ber(x)",-10,10);
+  //   TF1 *fBer = new TF1("fBer","ROOT::Math::KelvinFunctions::Ber(x)",-10,10);
   //   fBer->Draw();
   //   return c;
   // }
@@ -126,7 +126,7 @@ double KelvinFunctions::Bei(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fBei = new TF1("fBei","KelvinFunctions::Bei(x)",-10,10);
+  //   TF1 *fBei = new TF1("fBei","ROOT::Math::KelvinFunctions::Bei(x)",-10,10);
   //   fBei->Draw();
   //   return c;
   // }
@@ -191,7 +191,7 @@ double KelvinFunctions::Ker(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fKer = new TF1("fKer","KelvinFunctions::Ker(x)",-10,10);
+  //   TF1 *fKer = new TF1("fKer","ROOT::Math::KelvinFunctions::Ker(x)",-10,10);
   //   fKer->Draw();
   //   return c;
   // }
@@ -258,7 +258,7 @@ double KelvinFunctions::Kei(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fKei = new TF1("fKei","KelvinFunctions::Kei(x)",-10,10);
+  //   TF1 *fKei = new TF1("fKei","ROOT::Math::KelvinFunctions::Kei(x)",-10,10);
   //   fKei->Draw();
   //   return c;
   // }
@@ -311,7 +311,7 @@ double KelvinFunctions::DBer(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fDBer = new TF1("fDBer","KelvinFunctions::DBer(x)",-10,10);
+  //   TF1 *fDBer = new TF1("fDBer","ROOT::Math::KelvinFunctions::DBer(x)",-10,10);
   //   fDBer->Draw();
   //   return c;
   // }
@@ -355,7 +355,7 @@ double KelvinFunctions::DBei(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fDBei = new TF1("fDBei","KelvinFunctions::DBei(x)",-10,10);
+  //   TF1 *fDBei = new TF1("fDBei","ROOT::Math::KelvinFunctions::DBei(x)",-10,10);
   //   fDBei->Draw();
   //   return c;
   // }
@@ -399,7 +399,7 @@ double KelvinFunctions::DKer(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fDKer = new TF1("fDKer","KelvinFunctions::DKer(x)",-10,10);
+  //   TF1 *fDKer = new TF1("fDKer","ROOT::Math::KelvinFunctions::DKer(x)",-10,10);
   //   fDKer->Draw();
   //   return c;
   // }
@@ -446,7 +446,7 @@ double KelvinFunctions::DKei(double x)
   // Begin_Macro
   // {
   //   TCanvas *c = new TCanvas("c","c",0,0,500,300);
-  //   TF1 *fDKei = new TF1("fDKei","KelvinFunctions::DKei(x)",-10,10);
+  //   TF1 *fDKei = new TF1("fDKei","ROOT::Math::KelvinFunctions::DKei(x)",-10,10);
   //   fDKei->Draw();
   //   return c;
   // }
