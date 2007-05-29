@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.22 2007/02/18 14:58:56 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.23 2007/02/18 16:50:28 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -535,7 +535,7 @@ void TVolumeView::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11,0,0);
+      view = TView::CreateView(1,0,0);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
