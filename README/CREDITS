@@ -151,6 +151,7 @@ D: class TGraphPolar
 
 N: Jason Detwiler
 E: jasondet@gmail.com
+D: Implementation of class KelvinFunctions
 D: Implementation of multiple columns in TLegend class
 
 N: Mat Dobbs
