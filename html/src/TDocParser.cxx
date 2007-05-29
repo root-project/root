@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.9 2007/03/16 15:25:55 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.10 2007/05/09 17:01:45 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1596,7 +1596,7 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    // take unscoped version
    Ssiz_t posLastScope = kNPOS;
    while ((posLastScope = pattern.Index("::")) != kNPOS)
-      pattern.Remove(0, posLastScope + 1);
+      pattern.Remove(0, posLastScope + 2);
    pattern += "::";
    
    const char* implFileName = fHtml->GetImplFileName(fCurrentClass);

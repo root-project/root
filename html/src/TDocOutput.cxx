@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.6 2007/02/15 18:20:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.7 2007/03/19 10:59:41 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -533,10 +533,10 @@ void TDocOutput::CreateModuleIndex()
    std::ofstream libDepDotFile(filename + ".dot");
    libDepDotFile << "strict digraph G {" << endl
                  << "ratio=auto;" << endl
-                 << "rankdir=TB;" << endl
+                 << "rankdir=RL;" << endl
                  << "compound=true;" << endl
                  << "constraint=false;" << endl
-                 << "ranksep=0.1;" << endl
+                 << "ranksep=3;" << endl
                  << "nodesep=0.1;" << endl
                  << "ratio=compress;" << endl
                  << "node [fontsize=10];" << endl
@@ -735,6 +735,8 @@ void TDocOutput::CreateModuleIndex()
                const std::string& mod = iModDep->first;
                sstrDeps << "\"" << iModule->first << "\" -> \"" << mod << "\" [lhead=cluster" << *iLib << "];" << endl;
             }
+            // make sure libCore ends up at the bottom
+            sstrDeps << "\"" << iModule->first <<  "\" -> \"CONT\" [style=invis];" << endl;
          }
       } // for modules in lib
       sstrCluster << endl 

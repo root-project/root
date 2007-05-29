@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.134 2007/05/10 11:02:02 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.135 2007/05/14 14:29:58 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -905,11 +905,14 @@ void THtml::CreateListOfClasses(const char* filter)
          fModules.Add(module);
       }
       if (module) {
-         if (!strcmp(module->GetName(), "REFLEX")) {
+         if (!strcmp(module->GetName(), "REFLEX")
+            || !strcmp(module->GetName(), "MATHCORE")
+            || !strcmp(module->GetName(), "MATHMORE")) {
             TString srcFile = gSystem->BaseName(impname);
             srcFile.ReplaceAll(".h", ".cxx");
             gSystem->PrependPathName(module->GetSourceDir(), srcFile);
-            SetImplFileName(classPtr, srcFile);
+            if (!gSystem->AccessPathName(srcFile))
+               SetImplFileName(classPtr, srcFile);
          }
 
          module->AddClass(cdi);
