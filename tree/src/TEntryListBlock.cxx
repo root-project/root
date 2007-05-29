@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.7 2007/03/17 08:45:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.8 2007/05/22 13:47:43 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -467,7 +467,7 @@ void TEntryListBlock::Print(const Option_t *option) const
    opt.ToUpper();
    if (opt.Contains("A")){
       PrintWithShift(0);
-    }
+   }
 }
 
 //______________________________________________________________________________
