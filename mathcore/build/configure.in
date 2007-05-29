@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/Rotation3D.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(MathCore, 5.14.00)
+AM_INIT_AUTOMAKE(MathCore, 5.15.08)
 
 dnl Checks for programs.
 AC_PROG_CXX
