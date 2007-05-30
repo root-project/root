@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.8 2007/05/22 13:47:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.9 2007/05/29 13:16:31 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -461,13 +461,11 @@ Int_t TEntryListBlock::Next()
 //______________________________________________________________________________
 void TEntryListBlock::Print(const Option_t *option) const
 {
-//Print the entries in this block
+   //Print the entries in this block
 
    TString opt = option;
    opt.ToUpper();
-   if (opt.Contains("A")){
-      PrintWithShift(0);
-   }
+   if (opt.Contains("A")) PrintWithShift(0);
 }
 
 //______________________________________________________________________________

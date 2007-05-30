@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.4 2007/05/25 10:46:29 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.5 2007/05/29 13:15:29 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -174,9 +174,7 @@ double dist( Quaternion const & from, Quaternion const & to)
 {  return from.Distance(to); }
 
 double dist( Quaternion const & from, RotationZYX const & to)
-{ 
-   return from.Distance(Quaternion(to));
-}
+{  return from.Distance(Quaternion(to)); }
 
 double dist( Quaternion const & from, RotationX const & to)
 { /*TODO*/ 
