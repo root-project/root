@@ -197,8 +197,9 @@ linuxrh42 | linuxrh51)
    auxlibs="-lg++ -lm -ldl -rdynamic"
    ;;
 linux)
-   # Linux with gcc 2.9x, gcc 3.x
-   auxcflags=
+   # Linux with gcc >= 3.x
+   auxcflags="-m32"
+   auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxdeb | linuxsuse6)
