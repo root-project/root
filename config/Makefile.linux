@@ -17,15 +17,15 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual \
+CXXFLAGS      = -pipe -m32 -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual \
+CFLAGS        = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -m32 -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 -DG__STD_EXCEPTION
@@ -33,7 +33,7 @@ COMPILER      = gnu
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -m32 $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
