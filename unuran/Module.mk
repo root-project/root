@@ -112,7 +112,7 @@ $(UNRCFG):	$(UNRANETAG)
 		GNUMAKE=$(MAKE) ./configure --prefix=`pwd`/$(MODDIRS)/$(UNRVERS) CC="$$ACC"  \
 		CFLAGS="$$ACFLAGS");
 
-$(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS)
+$(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS) $(UNURANLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
 		   "$(UNURANO) $(UNURANDO)"             \
