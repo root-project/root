@@ -12,8 +12,8 @@ constTest: const.log
 	$(CMDECHO) diff -bw const.log good.output
 
 const.log : runConst.C runConst_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q runConst.C  2>&1 | grep -v 'Info in <TUnixSystem::ACLiC>' > const.log  2>&1
-	$(CMDECHO) root.exe -b -l -q runConst.C+ 2>&1 | grep -v 'Info in <TUnixSystem::ACLiC>' >> const.log 2>&1 
+	$(CMDECHO) root.exe -b -l -q runConst.C  2>&1 | grep -v 'Info in <T.*System::ACLiC>' > const.log  2>&1
+	$(CMDECHO) root.exe -b -l -q runConst.C+ 2>&1 | grep -v 'Info in <T.*System::ACLiC>' >> const.log 2>&1 
 
 constCharTest: 
 	$(CMDECHO) root.exe -b -q -l ../../root/build.C\(\"constissue.h\"\) > constCharTest.log 2>&1 
