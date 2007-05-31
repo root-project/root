@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.54 2007/04/20 15:07:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.55 2007/04/23 09:07:27 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1990,7 +1990,12 @@ void TGCanvas::MapSubwindows()
    if (fVScrollbar) fVScrollbar->MapSubwindows();
 
    if (fVport) {
-      fVport->GetContainer()->MapSubwindows();
+   TGFrame *container = fVport->GetContainer();
+   if (!container) {
+      Error("MapSubwindows", "no canvas container set yet");
+      return;
+   }
+      container->MapSubwindows();
       fVport->MapSubwindows();
       fVport->MapWindow();
    }
