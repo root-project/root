@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.23 2006/09/28 19:19:52 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.24 2006/11/25 09:07:05 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,6 +17,7 @@
 #pragma link C++ enum EErrorType;
 
 #pragma link C++ class TAxis-;
+#pragma link C++ class TBinomialEfficiencyFitter+;
 #pragma link C++ class TFormula-;
 #pragma link C++ class TFormulaPrimitive+;
 #pragma link C++ class TFractionFitter+;
