@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.16 2007/02/05 18:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.17 2007/05/04 17:32:45 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -304,14 +304,24 @@ void TTreeCloner::CopyStreamerInfos()
       TStreamerInfo *curInfo = 0;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
-      // Insure that the TStreamerInfo is loaded
-      curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
-      if (oldInfo->GetClassVersion()==1) {
-         // We may have a Foreign class let's look using the
-         // checksum:
-         curInfo = (TStreamerInfo*)cl->FindStreamerInfo(oldInfo->GetCheckSum());
+      if ((cl->IsLoaded() && (cl->GetNew()!=0 || cl->HasDefaultConstructor()))
+          || !cl->IsLoaded())  {
+         // Insure that the TStreamerInfo is loaded
+         curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
+         if (oldInfo->GetClassVersion()==1) {
+            // We may have a Foreign class let's look using the
+            // checksum:
+            curInfo = (TStreamerInfo*)cl->FindStreamerInfo(oldInfo->GetCheckSum());
+         }
+         curInfo->TagFile(toFile);
+      } else {
+         // If there is no default constructor the GetStreamerInfo
+         // will not work. It also means (hopefully) that an
+         // inheriting class has a streamerInfo in the list (which
+         // will induces the setting of this streamerInfo)
+
+         oldInfo->TagFile(toFile);
       }
-      curInfo->TagFile(toFile);
    }
    delete l;
 }
