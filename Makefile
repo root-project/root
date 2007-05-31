@@ -767,11 +767,11 @@ html: $(ROOTEXE) changelog
 	@$(MAKEHTML)
 
 install: all
-	@if [ -d $(BINDIR) ]; then \
-	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	@if [ -d $(DESTDIR)$(BINDIR) ]; then \
+	   inode1=`ls -id $(DESTDIR)$(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if [ -d $(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
+	if ([ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]) || [ "$(USECONFIG)" = "FALSE" ]; then \
 	   echo "Everything already installed..."; \
 	else \
 	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
@@ -860,11 +860,11 @@ install: all
 	fi
 
 uninstall:
-	@if [ -d $(BINDIR) ]; then \
-	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	@if [ -d $(DESTDIR)$(BINDIR) ]; then \
+	   inode1=`ls -id $(DESTDIR)$(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if [ -d $(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
+	if [ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]; then \
 	   $(MAKE) distclean ; \
 	else \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
@@ -888,17 +888,40 @@ uninstall:
 	   for lib in $(ALLLIBS) $(CINTLIB) $(ALLMAPS); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
 	   done ; \
+	   if test "x$(RFLX_GRFLXPY)" != "x"; then \
+	      rm -f $(DESTDIR)$(LIBDIR)/$(RFLX_GRFLXPY); \
+	   fi; \
+	   if test "x$(RFLX_GRFLXPYC)" != "x"; then \
+	      rm -f $(DESTDIR)$(LIBDIR)/$(RFLX_GRFLXPYC); \
+	   fi; \
+	   if test "x$(RFLX_GRFLXPY)$(RFLX_GRFLXPYC)" != "x"; then \
+	      dir=$(RFLX_GRFLXDD:lib/=); \
+	      while test "x$${dir}" != "x" && \
+	         test -d $(DESTDIR)$(LIBDIR)/$${dir} && \
+	         test "x`ls $(DESTDIR)$(INCDIR)/$${dir}`" = "x"; do \
+	         rm -rf $(DESTDIR)$(INCDIR)/$${dir}; \
+	         dir=$(dirname $${dir}); \
+	      done; \
+	   fi; \
 	   if test -d $(DESTDIR)$(LIBDIR) && \
-	      test "x`ls $(DESTDIR)$(LIBDIR)`" = "x" ; then \
+	      test "x`ls $(DESTDIR)$(LIBDIR)`" = "x"; then \
 	      rm -rf $(DESTDIR)$(LIBDIR); \
 	   fi ; \
-	   for i in include/*.h ; do \
-	      rm -f $(DESTDIR)$(INCDIR)/`basename $$i`; \
-	   done ; \
-	   if test -d $(DESTDIR)$(INCDIR) && \
-	      test "x`ls $(DESTDIR)$(INCDIR)`" = "x" ; then \
-	      rm -rf $(DESTDIR)$(INCDIR); \
-	   fi ; \
+	   for subdir in \
+              . \
+              Math/GenVector Math \
+              Reflex/internal Reflex/Builder Reflex \
+              Cintex TMVA Minuit2; do \
+              if test -d include/$${subdir}; then \
+	         for i in include/$${subdir}/*.h ; do \
+	            rm -f $(DESTDIR)$(INCDIR)/$${subdir}/`basename $$i`; \
+	         done ; \
+	         if test -d $(DESTDIR)$(INCDIR)/$${subdir} && \
+	            test "x`ls $(DESTDIR)$(INCDIR)/$${subdir}`" = "x" ; then \
+	            rm -rf $(DESTDIR)$(INCDIR)/$${subdir}; \
+	         fi; \
+              fi; \
+	   done; \
 	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
 	   rm -rf $(DESTDIR)$(CINTINCDIR); \
 	   for i in icons/*.xpm ; do \
