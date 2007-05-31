@@ -88,18 +88,21 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
+F77           =
 ifeq ($(MACOSX_MINOR),4)
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
-F77           = g95
-F77LIBS       = -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
+F77          := g95
+F77LIBS      := -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
                 -lf95
 else
-F77           = gfortran
+ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
+F77          := gfortran
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
 endif
+endif
 else
-F77           = g77
+F77          := g77
 F77LIBS       =
 endif
 
@@ -110,8 +113,10 @@ ifeq ($(MACOSX_CPU),powerpc)
 F77LIBS += -L$(FINK_DIR)/lib -lg2c
 endif
 
+ifneq ($(F77),)
 ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
 BUILDHBOOK   := no
+endif
 endif
 
 # Override default in Makefile.config
@@ -120,7 +125,7 @@ INSTALLDATA  := /bin/cp -pPR
 
 # Extras
 ifeq ($(NEEDFINK),yes)
-FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
+FINK_CXXFLAGS := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_CFLAGS   := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_LDFLAGS  := $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
 endif
