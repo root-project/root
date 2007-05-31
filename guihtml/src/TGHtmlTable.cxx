@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtmlTable.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /**************************************************************************
@@ -393,7 +393,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int hspace;                        // Value of HSPACE parameter
    int separation;                    // Space between columns
    int margin;                        // Space between left margin and 1st col
-   int availWidth;                    // Part of lineWidth still available
+   int availWidth=0;                  // Part of lineWidth still available
    int maxTableWidth;                 // Amount of lineWidth available to table
    int fromAbove[HTML_MAX_COLUMNS+1]; // Cell above extends thru this row
    int min0span[HTML_MAX_COLUMNS+1];  // Min for colspan=0 cells
@@ -1452,7 +1452,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
       // Position every cell whose bottom edge ends on this row
       for (iCol = 1; iCol <= pTable->nCol; iCol++) {
-         int dy;    // Extra space at top of cell used for vertical alignment
+         int dy = 0;    // Extra space at top of cell used for vertical alignment
          TGHtmlCell *apCell = (TGHtmlCell *) apElem[iCol];
 
          // Skip any unused cells or cells that extend down thru 

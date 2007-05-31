@@ -1,4 +1,4 @@
-// $Id: TGHtmlIndex.cxx,v 1.1 2007/05/04 17:07:01 brun Exp $
+// $Id: TGHtmlIndex.cxx,v 1.2 2007/05/20 23:22:13 rdm Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -342,7 +342,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
    // But the function still returns 0 for success.
 
    int i, n, x, y;
-   TGHtmlElement *p;
+   TGHtmlElement *p = 0;
    TGHtmlBlock *pBlock;
    TGHtmlBlock *pNearby;
    int dist = 1000000;
