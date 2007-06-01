@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.125 2007/03/28 14:32:09 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.126 2007/04/27 13:06:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -695,11 +695,6 @@ deletepad:
 void TCanvas::CopyPixmaps()
 {
    // Copy the canvas pixmap of the pad to the canvas.
-
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
-      gInterpreter->Execute(this, IsA(), "CopyPixmaps", "");
-      return;
-   }
 
    if (!IsBatch()) {
       CopyPixmap();
