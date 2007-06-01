@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.111 2007/05/09 15:04:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.112 2007/05/22 11:47:14 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -577,7 +577,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       char *thumbname = gSystem->ConcatFileName(gSystem->WorkingDirectory(), name);
       thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name :
                                                        thumbname);
-      delete thumbname;
+      delete []thumbname;
 
       if (thumb) {
          spic = thumb->fSmall;
