@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.2 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.3 2007/02/03 17:28:54 brun Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************
@@ -43,6 +43,8 @@ public:
    class TChainIndexEntry {
       // holds a description of indices of trees in the chain. 
    public:
+      TChainIndexEntry() : fMinIndexValue(0), fMaxIndexValue(0), fTreeIndex(0) {}
+
       Long64_t    fMinIndexValue;           // the minimum value of the index
       Long64_t    fMaxIndexValue;           // the maximum value of the index
       TVirtualIndex* fTreeIndex;            // the tree index in case it was created in the constructor,
