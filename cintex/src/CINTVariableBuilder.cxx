@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.6 2006/11/06 15:33:14 brun Exp $
+// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTVariableBuilder.cxx,v 1.7 2006/12/08 09:36:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -146,7 +146,9 @@ namespace ROOT { namespace Cintex {
       int member_indir    = 0;
       int member_tagnum   = -1;
       int member_typnum   = -1;
-      int member_isstatic = dm.IsStatic() ? G__LOCALSTATIC : G__AUTO;
+      int member_isstatic = G__AUTO;
+      if (dm.IsStatic() || dm.DeclaringScope().IsNamespace())
+         member_isstatic = G__LOCALSTATIC;
       switch(indir.first)  {
       case 0: 
          break;
