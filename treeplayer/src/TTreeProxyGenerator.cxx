@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.28 2007/02/05 18:11:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.29 2007/04/19 17:23:37 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -152,26 +152,24 @@ namespace ROOT {
          result += "Array";
          result += subtype;
          result += "Proxy";
-      } else if (ndim==2) {
-         result = "T";
-         result += middle;
-         result += "Array2Proxy<";
-         result += element->GetTypeName();
-         result += ",";
-         result += element->GetMaxIndex(1);
-         result += " >";
-      }  else if (ndim==3) {
-         result = "T";
-         result += middle;
-         result += "Array3Proxy<";
-         result += element->GetTypeName();
-         result += ",";
-         result += element->GetMaxIndex(1);
-         result += ",";
-         result += element->GetMaxIndex(2);
-         result += " >";
       } else {
-         Error("GetArrayTyep","Array of more than 3 dimentsions not implemented yet.");
+         result = "T";
+         result += middle;
+         result += "ArrayProxy<";
+         for(Int_t ind = ndim - 2; ind > 0; --ind) {
+            result += "TMultiArrayType<";
+         }
+         result += "TArrayType<";
+         result += element->GetTypeName();
+         result += ",";
+         result += element->GetMaxIndex(ndim-1);
+         result += "> ";
+         for(Int_t ind = ndim - 2; ind > 0; --ind) {
+            result += ",";
+            result += element->GetMaxIndex(ind);
+            result += "> ";
+         }
+         result += ">";
       }
       return result;
 
@@ -1017,8 +1015,8 @@ namespace ROOT {
       TLeaf *leafcount = leaf->GetLeafCount();
 
       UInt_t dim = 0;
-      Int_t maxDim[3];
-      maxDim[0] = maxDim[1] = maxDim[2] = 1;
+      std::vector<Int_t> maxDim;
+      //maxDim[0] = maxDim[1] = maxDim[2] = 1;
 
       TString dimensions;
       TString temp = leaf->GetName();
@@ -1044,20 +1042,16 @@ namespace ROOT {
          while (current) {
             current++;
             if (current[0] == ']') {
-               maxDim[dim] = -1; // Loop over all elements;
+               maxDim.push_back(-1); // maxDim[dim] = -1; // Loop over all elements;
             } else {
                scanindex = sscanf(current,"%d",&index);
                if (scanindex) {
-                  maxDim[dim] = index;
+                  maxDim.push_back(index); // maxDim[dim] = index;
                } else {
-                  maxDim[dim] = -2; // Index is calculated via a variable.
+                  maxDim.push_back(-2); // maxDim[dim] = -2; // Index is calculated via a variable.
                }
             }
             dim ++;
-            if (dim >= 3) {
-               // NOTE: test that dim this is NOT too big!!
-               break;
-            }
             current = (char*)strstr( current, "[" );
          }
 
@@ -1083,27 +1077,23 @@ namespace ROOT {
             type += "Proxy";
             break;
          }
-         case 2: {
-            type = "TArray2Proxy<";
+         default: {
+            type = "TArrayProxy<";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += "TMultiArrayType<";
+            }
+            type += "TArrayType<";
             type += leaf->GetTypeName();
             type += ",";
-            type += maxDim[1];
-            type += " >";
+            type += maxDim[dim-1];
+            type += "> ";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += ",";
+               type += maxDim[ind];
+               type += "> ";
+            }
+            type += ">";
             break;
-         }
-         case 3: {
-            type = "TArray3Proxy<";
-            type += leaf->GetTypeName();
-            type += ",";
-            type += maxDim[1];
-            type += ",";
-            type += maxDim[2];
-            type += " >";
-            break;
-         }
-         default:  {
-            Error("AnalyzeOldLeaf","Array of more than 3 dimentsions not implemented yet.");
-            return 0;
          }
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.241 2007/04/27 08:34:25 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.242 2007/05/02 20:18:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2328,6 +2328,29 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
    // is more efficient than
    //   if (fEventNumber<10 || fEventNumber>10)
    //
+   // Access to TClonesArray.
+   //
+   // If a branch (or member) is a TClonesArray (let's say fTracks), you 
+   // can access the TClonesArray itself by using ->:
+   //    fTracks->GetLast();
+   // However this will load the full TClonesArray object and its content.  
+   // To quickly read the size of the TClonesArray use (note the dot):
+   //    fTracks.GetEntries();
+   // This will read only the size from disk if the TClonesArray has been
+   // split.
+   // To access the content of the TClonesArray, use the [] operator:
+   //    float px = fTracks[i].fPx; // fPx of the i-th track 
+   //
+   // Warning:
+   //    The variable actually use for access are 'wrapper' around the 
+   // real data type (to add autoload for example) and hence getting to 
+   // the data involves the implicit call to a C++ conversion operator.
+   // This conversion is automatic in most case.  However it is not invoked
+   // in a few cases, in particular in variadic function (like printf).
+   // So when using printf you should either explicitly cast the value or
+   // use any intermediary variable:
+   //      fprintf(stdout,"trs[%d].a = %d\n",i,(int)trs.a[i]);
+   // 
    // Also, optionally, the generated selector will also call methods named
    // macrofilename_methodname in each of 6 main selector methods if the method
    // macrofilename_methodname exist (Where macrofilename is stripped of its

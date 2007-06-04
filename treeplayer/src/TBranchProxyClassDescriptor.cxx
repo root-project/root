@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.10 2007/01/30 11:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.11 2007/02/05 18:11:29 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -333,6 +333,8 @@ namespace ROOT {
          //Can the real type contain a leading 'const'? If so the following is incorrect.
          if ( IsClones() ) {
             fprintf(hf,"%-*sconst %s* operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
+            fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
+            fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
             fprintf(hf,"%-*sTClaObjProxy<%s > obj;\n", offset+3, " ", type);
          } else {
             fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type);
@@ -342,6 +344,7 @@ namespace ROOT {
       } else if ( IsClones()) {
 
          fprintf(hf,"%-*sInjecTBranchProxyInterface();\n", offset+3," ");
+         fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
          fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
          fprintf(hf,"%-*sTClaProxy obj;\n", offset+3," ");
 

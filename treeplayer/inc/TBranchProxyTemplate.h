@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.4 2004/10/18 21:07:05 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.5 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -60,45 +60,6 @@ namespace ROOT {
 
    };
 
-#if !defined(_MSC_VER) || (_MSC_VER>1300)
-  template <class T, int d2 >
-   class TArray2Proxy {
-   public:
-      TBranchProxy obj;
-      InjecTBranchProxyInterface();
-
-      TArray2Proxy() : obj() {}
-      TArray2Proxy(TBranchProxyDirector *director, const char *name) : obj(director,name) {};
-      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         obj(director,top,name) {};
-      TArray2Proxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         obj(director,top,name,data) {};
-      TArray2Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director, parent, name) {};
-      ~TArray2Proxy() {};
-
-      typedef T array_t[d2];
-
-      void Print() {
-         TBranchProxy::Print();
-         cout << "fWhere " << obj.GetWhere() << endl;
-         if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
-      }
-
-      const array_t &At(int i) {
-         static array_t default_val;
-         if (!obj.Read()) return default_val;
-         // should add out-of bound test
-         array_t *arr = 0;
-         arr = (array_t*)((T*)(obj.GetStart()));
-         if (arr) return arr[i];
-         else return default_val;
-      }
-
-      const array_t &operator [](int i) { return At(i); }
-
-   };
-#endif
-
    template <class T>
    class TClaObjProxy  {
       TClaProxy obj;
@@ -119,6 +80,10 @@ namespace ROOT {
          obj(director,top,name,data) {};
       TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
       ~TClaObjProxy() {};
+
+      const TClonesArray* GetPtr() { return obj.GetPtr(); }
+
+      Int_t GetEntries() { return obj.GetEntries(); }
 
       const T* At(int i) {
          static T default_val;
