@@ -2882,6 +2882,8 @@ if test ! "x$enable_globus" = "xno"; then
          result "$GLOBUS_LOCATION"
       else
          result "no"
+         # Do not build libGlobusAuth
+         enable_globus="no"
       fi
    else
       result "$globusdir"
@@ -4410,7 +4412,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
-    -e "s|@buildxrdgsi@|$enable_xrdgsi|"        \
+    -e "s|@buildxrdgsi@|$buildxrdgsi|"        \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     < Makefile.tmp > $MAKEOUT
