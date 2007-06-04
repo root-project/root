@@ -32,6 +32,10 @@ shift
 ROOTBUILD=$9
 shift
 
+if [ "x$ROOTSYS" = "x" ]; then
+   ROOTSYS=$PWD
+fi
+
 if [ "$(cd $INCDIR && cygpath -u $PWD)" = "$(cd $ROOTSYS/include && cygpath -u $PWD)" ]; then
    INCDIR=%ROOTSYS%/include
 fi
