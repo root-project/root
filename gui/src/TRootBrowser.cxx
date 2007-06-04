@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.112 2007/05/22 11:47:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.113 2007/06/01 14:13:41 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2061,7 +2061,7 @@ void TRootBrowser::Chdir(TGListTreeItem *item)
       while (i) {
          TObject *obj = (TObject*) i->GetUserData();
          if (obj) {
-            if (obj->IsA() == TDirectory::Class()) {
+            if (obj->IsA() == TDirectoryFile::Class()) {
                dir = "/" + dir;
                dir = obj->GetName() + dir;
             }
@@ -2070,7 +2070,7 @@ void TRootBrowser::Chdir(TGListTreeItem *item)
                dir = obj->GetName() + dir;
             }
             if (obj->IsA() == TKey::Class()) {
-               if (strcmp(((TKey*)obj)->GetClassName(), "TDirectory") == 0) {
+               if (strcmp(((TKey*)obj)->GetClassName(), "TDirectoryFile") == 0) {
                   dir = "/" + dir;
                   dir = obj->GetName() + dir;
                }
@@ -2236,7 +2236,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                   item = parent;
                }
             }
-         } else if (obj->InheritsFrom(TDirectory::Class()))
+         } else if (obj->InheritsFrom(TDirectoryFile::Class()))
             Chdir(item->GetParent());
 
          if (!fListLevel || !fListLevel->IsActive()) {
