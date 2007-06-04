@@ -57,6 +57,8 @@ int G__matchregex(char *pattern,char *string);
 #endif
 void G__castclass(G__value *result3,int tagnum,int castflag,int *ptype,int reftype);
 G__value G__castvalue(char *casttype,G__value result3);
+G__value G__castvalue_bc(char *casttype,G__value result3, int i);
+  void G__this_adjustment(struct G__ifunc_table_internal *ifunc, int ifn);
 void G__asm_cast(int type,G__value *buf,int tagnum,int reftype);
   /* void G__setdebugcond(void); */
 int G__findposition(char *string,struct G__input_file view,int *pline,int *pfnum);
@@ -670,8 +672,6 @@ void G__delete_autoobjectstack(int scopelevel);
 int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int ifn ,long *inst,int pc);
 
 int G__bc_compile_function(struct G__ifunc_table_internal *ifunc,int iexist);
-int G__bc_throw_compile_error();
-int G__bc_throw_runtime_error();
 int G__bc_objassignment(G__value *plresult ,G__value *prresult);
 
 int G__bc_exec_virtual_bytecode(G__value *result7

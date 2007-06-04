@@ -48,6 +48,7 @@ typedef struct {
 static G__setup_func_struct **G__setup_func_list;
 static int G__max_libs;
 static int G__nlibs;
+static char G__memsetup_init;
 typedef void G__parse_hook_t ();
 static G__parse_hook_t* G__afterparse_hook;
 static G__parse_hook_t* G__beforeparse_hook;
@@ -63,6 +64,14 @@ void G__platformMacro();
 void G__add_setup_func(const char *libname,G__incsetup func)
 {
    int i, islot = -1;
+
+   if (!G__memsetup_init){ 
+      for (int i = 0; i < G__MAXSTRUCT; i++){
+         G__struct.incsetup_memvar[i] = 0; 
+         G__struct.incsetup_memfunc[i] = 0; 
+         G__memsetup_init=1;
+      }
+   }
 
    if (!G__setup_func_list) {
       G__max_libs = 10;

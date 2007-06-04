@@ -4812,7 +4812,6 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
   long store_struct_offset; /* used to be int */
   int store_inherit_tagnum;
   long store_inherit_offset;
-  struct G__ifunc_table_internal *ifunc;
   int iexist,virtualtag;
   int store_def_struct_member;
   int store_var_typeB;
@@ -5247,7 +5246,9 @@ asm_ifunc_start:   /* loop compilation execution label */
                                  +(p_ifunc->vtblbasetagnum[ifn]*0x10000);
         G__asm_inst[G__asm_cp+3]=libp->paran;
         G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_virtual_bytecode;
-        G__inc_cp_asm(5,0);
+        G__asm_inst[G__asm_cp+5] = 0;
+        if (p_ifunc && p_ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
+        G__inc_cp_asm(6,0);
       }
       else {
 #ifdef G__ASM_DBG
@@ -5267,7 +5268,9 @@ asm_ifunc_start:   /* loop compilation execution label */
         else {
           G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
         }
-        G__inc_cp_asm(5,0);
+        G__asm_inst[G__asm_cp+5] = 0;
+        if (p_ifunc && p_ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
+        G__inc_cp_asm(6,0);
       }
     }
     else {
@@ -5358,7 +5361,7 @@ asm_ifunc_start:   /* loop compilation execution label */
       int nxbase=0,nybase;
       int basen;
       G__incsetup_memfunc(virtualtag);
-      ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+      G__ifunc_table_internal* ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
                            ,0xffff);
       for(basen=0;!ifunc&&basen<baseclass->basen;basen++) {
         virtualtag = baseclass->herit[basen]->basetagnum;

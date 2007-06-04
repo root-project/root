@@ -4674,10 +4674,10 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
             if(ig2 && G__asm_noverflow) {
               int x;
               G__asm_dt = store_dt;
-              if(G__LD_FUNC==G__asm_inst[G__asm_cp-5]) {
-                for(x=0;x<5;x++) 
-                  G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-5+x];
-                G__asm_cp = store_cp + 5;
+              if(G__LD_FUNC==G__asm_inst[G__asm_cp-6]) {
+                for(x=0;x<6;x++) 
+                  G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-6+x];
+                G__asm_cp = store_cp + 6;
               }
               else if(G__LD_IFUNC==G__asm_inst[G__asm_cp-8]) {
                 for(x=0;x<8;x++) 
@@ -6128,7 +6128,8 @@ G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglo
           G__asm_inst[G__asm_cp+2] = 677;
           G__asm_inst[G__asm_cp+3] = 2;
           G__asm_inst[G__asm_cp+4] = (long) G__compiled_func;
-          G__inc_cp_asm(5, 0);
+          G__asm_inst[G__asm_cp+5] = 0;
+          G__inc_cp_asm(6, 0);
         }
       }
       break;

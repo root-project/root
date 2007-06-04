@@ -620,7 +620,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 /***********************************************************************
 * G__bc_throw_compile_error()
 ***********************************************************************/
-extern "C" int G__bc_throw_compile_error() {
+int G__bc_throw_compile_error() {
   throw G__bc_compile_error();
   return 0;
 }
@@ -628,7 +628,7 @@ extern "C" int G__bc_throw_compile_error() {
 /***********************************************************************
 * G__bc_throw_runtime_error()
 ***********************************************************************/
-extern "C" int G__bc_throw_runtime_error() {
+int G__bc_throw_runtime_error() {
   throw G__bc_runtime_error();
   return 0;
 }

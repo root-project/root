@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter header file
  ************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2007  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * For the licensing terms see the file COPYING
  *
@@ -20,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010019
-#define G__CINTVERSIONSTR_V6  "6.1.19, March 16, 2007"
-#define G__CINTVERSION_V5      50160019
-#define G__CINTVERSIONSTR_V5  "5.16.19, March 16, 2007"
+#define G__CINTVERSION_V6      60010020
+#define G__CINTVERSIONSTR_V6  "6.1.20, June 1, 2007"
+#define G__CINTVERSION_V5      50160020
+#define G__CINTVERSIONSTR_V5  "5.16.20, June 1, 2007"
 
 #define G__ALWAYS
 /* #define G__NEVER */

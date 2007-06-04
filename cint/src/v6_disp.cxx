@@ -2400,7 +2400,7 @@ int G__system(char *com)
 **************************************************************************/
 const char* G__tmpfilenam() {
    char dirname[MAX_PATH];
-   char filename[MAX_PATH];
+   static char filename[MAX_PATH];
    if (!::GetTempPath(MAX_PATH, dirname)) return 0;
    if (!::GetTempFileName(dirname, "cint_", 0, filename)) return 0;
    return filename;

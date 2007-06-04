@@ -4905,6 +4905,12 @@
 * - remove temporary files on windows once they are unused (fixes problem 
 *   with tmp file flooding)
 *
+* 5.16.20 June 1, 2007
+* 6.1.20 June 1, 2007
+* - from Diego Marcos: use base classes' function call stubs / wrappers for virtual functions
+* - implement '#pragma link option=...' syntax (for ROOT dictionary flags)
+* - several minor bug fixes: buffer overflow checks, uninitialized vars, 
+*   template class memfunc improvements, default values for function arguments, etc
 
 
 * ---------------------------------------------------------------------

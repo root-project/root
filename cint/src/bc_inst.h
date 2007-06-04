@@ -100,7 +100,8 @@ public:
   int CNDJMP(int addr=0);
   int JMP(int addr=0);
   void POP(void);
-  void LD_FUNC(const char* fname,int hash,int paran,void* pfunc);
+  void LD_FUNC(const char* fname,int hash,int paran,void* pfunc,
+               struct G__ifunc_table_internal* ifunc, int ifn);
   void LD_FUNC_BC(struct G__ifunc_table* ifunc,int ifn,int paran,void *pfunc);
   void LD_FUNC_VIRTUAL(struct G__ifunc_table* ifunc,int ifn,int paran,void *pfunc);
   void RETURN(void);

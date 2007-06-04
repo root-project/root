@@ -6790,6 +6790,7 @@ int G__asm_optimize3(int *start)
       * 2 hash
       * 3 paran
       * 4 (*func)()
+      * 5 this ptr offset for multiple inheritance
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -6807,7 +6808,7 @@ int G__asm_optimize3(int *start)
       }
 #endif
       /* no optimization */
-      pc+=5;
+      pc+=6;
       break;
 
     case G__RETURN:
@@ -8479,6 +8480,7 @@ int G__dasm(FILE *fout,int isthrow)
       * 2 hash
       * 3 paran
       * 4 (*func)()
+      * 5 this ptr offset for multiple inheritance
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -8493,7 +8495,7 @@ int G__dasm(FILE *fout,int isthrow)
           fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
                   ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
-      pc+=5;
+      pc+=6;
       break;
 
     case G__RETURN:
