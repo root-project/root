@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.153 2007/05/03 12:12:36 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.154 2007/05/09 15:03:34 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1577,9 +1577,6 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
       Emit("CloseWindow()");
       if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
          CloseWindow();
-   }
-   if (gDNDManager) {
-      gDNDManager->HandleClientMessage(event);
    }
    return kTRUE;
 }
