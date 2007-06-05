@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.44 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.45 2007/05/21 00:22:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TProofPlayer                                                         //
+//                                                                      //
+// Object of this class is responsible for a query.                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -177,6 +179,16 @@ public:
 
 
 //------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TProofPlayerRemote                                                   //
+//                                                                      //
+// Object of this class is responsible for a query on the master and    //
+// on the client.                                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 class TProofPlayerRemote : public TProofPlayer {
 

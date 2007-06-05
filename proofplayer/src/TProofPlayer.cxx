@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.107 2007/04/20 12:28:22 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.108 2007/05/21 00:22:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 #include "THashList.h"
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
-#include "TPacketizer.h"
-#include "TPacketizerProgressive.h"
-#include "TAdaptivePacketizer.h"
 #include "TSelector.h"
 #include "TSocket.h"
 #include "TProofServ.h"
@@ -1021,6 +1018,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                      Long64_t first, TEventList * /*evl*/)
 {
    // Process specified TDSet on PROOF.
+   // This method is called on client and on the PROOF master.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -1055,50 +1053,43 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
                             dset->GetDirectory() );
-
-      delete fPacketizer;
       TString packetizer;
-      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) == 0) {
-         Info("Process","Using Alternate Packetizer: %s", packetizer.Data());
-         TClass *cl = TClass::GetClass(packetizer);
-         if (cl == 0) {
-            Error("Process","Class '%s' not found", packetizer.Data());
-            fExitStatus = kAborted;
-            return -1;
-         }
+      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
+         // Using standard packetizer TAdaptivePacketizer
+         packetizer = "TAdaptivePacketizer";
+      else
+         Info("Process", "using Alternate Packetizer: %s", packetizer.Data());
 
-         TMethodCall callEnv;
+      // Get linked to the related class
+      TClass *cl = TClass::GetClass(packetizer);
+      if (cl == 0) {
+         Error("Process", "class '%s' not found", packetizer.Data());
+         fExitStatus = kAborted;
+         return -1;
+      }
 
-         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
+      // Init the constructor
+      TMethodCall callEnv;
+      callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
+      if (!callEnv.IsValid()) {
+         Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
+         fExitStatus = kAborted;
+         return -1;
+      }
+      callEnv.ResetParam();
+      callEnv.SetParam((Long_t) dset);
+      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Long64_t) first);
+      callEnv.SetParam((Long64_t) nentries);
+      callEnv.SetParam((Long_t) fInput);
 
-         if (!callEnv.IsValid()) {
-            Error("Process","Cannot find correct constructor for '%s'", cl->GetName());
-            fExitStatus = kAborted;
-            return -1;
-         }
-
-         callEnv.ResetParam();
-         callEnv.SetParam((Long_t) dset);
-         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
-         callEnv.SetParam((Long64_t) first);
-         callEnv.SetParam((Long64_t) nentries);
-         callEnv.SetParam((Long_t) fInput);
-
-         Long_t ret = 0;
-         callEnv.Execute(ret);
-
-         fPacketizer = (TVirtualPacketizer*) ret;
-
-         if (fPacketizer == 0) {
-            Error("Process","Cannot construct '%s'", cl->GetName());
-            fExitStatus = kAborted;
-            return -1;
-         }
-
-      } else {
-         PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
-         fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
-                                       first, nentries, fInput);
+      // Get an instance of the packetizer
+      Long_t ret = 0;
+      callEnv.Execute(ret);
+      if ((fPacketizer = (TVirtualPacketizer *)ret) == 0) {
+         Error("Process", "cannot construct '%s'", cl->GetName());
+         fExitStatus = kAborted;
+         return -1;
       }
 
       if (!fPacketizer->IsValid()) {

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.8 2007/05/21 00:22:51 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.9 2007/05/29 16:06:55 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -135,14 +135,14 @@ public:
    Int_t       GetNumberOfFiles() { return fFiles->GetSize(); }
    void        IncProcessed(Long64_t nEvents)
                   { fProcessed += nEvents; }
-   Long64_t    GetProcessed() { return fProcessed; }
+   Long64_t    GetProcessed() const { return fProcessed; }
    // this method is used by Compare() it adds 1, so it returns a number that
    // would be true if one more slave is added.
    Long64_t    GetEventsLeftPerSlave() const
       { return ((fEvents - fProcessed)/(fRunSlaveCnt + 1)); }
    void        IncEvents(Long64_t nEvents) { fEvents += nEvents; }
    const char *GetName() const { return fNodeName.Data(); }
-   Long64_t GetNEvents() { return fEvents; }
+   Long64_t    GetNEvents() const { return fEvents; }
 
    void Add(TDSetElement *elem)
    {
@@ -189,73 +189,106 @@ public:
    {
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
-      // smaller means more needing a slave
-      // filenodes are sorted by number of remote slaves
-      // in addition filenodes with the same number of remote slaves
-      // are sorted by number of their own slaves.
-      // If that is equal as well,
-      // they are sorted by  number of Events left per slave
+      // smaller means more needing a new worker.
+      // Two cases are considered depending on
+      // relation between harddrive speed and network bandwidth.
 
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
       R__ASSERT(obj != 0);
       // how many more events it has than obj
-      Long64_t diffEvents =
-         GetEventsLeftPerSlave() - obj->GetEventsLeftPerSlave();
-      Int_t myExtSlaves = GetExtSlaveCnt();
-      Int_t otherExtSlaves = obj->GetExtSlaveCnt();
-      Long64_t avEventsLeft = (GetEventsLeftPerSlave() + obj->GetEventsLeftPerSlave())/2;
-      // # my workers processing remote files
-      Int_t mySlavesProcRemote = GetSlaveCnt() - GetRunSlaveCnt();
-      Int_t otherSlavesProcRemote = obj->GetSlaveCnt() - obj->GetRunSlaveCnt();
-      if ( mySlavesProcRemote < otherSlavesProcRemote ) {
-         if (diffEvents < -(avEventsLeft / 2)
-             && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
-            return 1;
-         else
+
+      if (fgNetworkFasterThanHD) {
+         // The network bandwidth is greater than hard disk transfer.
+         // Smaller means having fewer workers processing its data.
+         // If equal, the numer of events left for processing decides.
+
+         Int_t myVal = GetRunSlaveCnt();
+         Int_t otherVal = obj->GetRunSlaveCnt();
+         if (myVal < otherVal) {
             return -1;
-      } else if ( mySlavesProcRemote > otherSlavesProcRemote ) {
-         if (diffEvents > (avEventsLeft / 2)
-             && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
-            return -1;
-         else
+         } else if (myVal > otherVal) {
             return 1;
-      } else if (myExtSlaves < otherExtSlaves) {
-         if (diffEvents < -(avEventsLeft / 3)
-             && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
-            return 1;
-         else
-            return -1;
-      } else if (myExtSlaves > otherExtSlaves) {
-         if (diffEvents > (avEventsLeft / 3)
-             && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
-            return -1;
-         else
-            return 1;
+         } else {
+            // if this has more events to process than obj
+            if ((fEvents - fProcessed) >
+                (obj->GetNEvents() - obj->GetProcessed())) {
+               return -1;
+            } else {
+               return 1;
+            }
+         }
       } else {
-         Int_t myOwnSlaves = GetMySlaveCnt();
-         Int_t otherOwnSlaves = obj->GetMySlaveCnt();
-         if (myOwnSlaves < otherOwnSlaves) {
-            // if the other node has much more to process
+         // Network bandwidth is smaller than Hard Disk transfer
+         // TODO: Do more tests when such environment will be available.
+
+         // File nodes are sorted by number of remote workers.
+         // In addition filenodes with the same number of remote workers
+         // are sorted by number of their own ones.
+         // If that is equal as well,
+         // they are sorted by the number of events left per worker
+         // The decision can be reversed if the diffEvents
+         // is greater or smaller than half or 1/3 of avEventsLeft.
+
+         Long64_t diffEvents =
+            GetEventsLeftPerSlave() - obj->GetEventsLeftPerSlave();
+         Int_t myExtSlaves = GetExtSlaveCnt();
+         Int_t otherExtSlaves = obj->GetExtSlaveCnt();
+         Long64_t avEventsLeft = (GetEventsLeftPerSlave()
+                                  + obj->GetEventsLeftPerSlave())/2;
+         // # my workers processing remote files
+         Int_t mySlavesProcRemote = GetSlaveCnt() - GetRunSlaveCnt();
+         Int_t otherSlavesProcRemote = obj->GetSlaveCnt()
+                                       - obj->GetRunSlaveCnt();
+         if ( mySlavesProcRemote < otherSlavesProcRemote ) {
+            if (diffEvents < -(avEventsLeft / 2)
+                && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+               return 1;
+            else
+               return -1;
+         } else if ( mySlavesProcRemote > otherSlavesProcRemote ) {
+            if (diffEvents > (avEventsLeft / 2)
+                && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+               return -1;
+            else
+               return 1;
+         } else if (myExtSlaves < otherExtSlaves) {
             if (diffEvents < -(avEventsLeft / 3)
                 && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
                return 1;
             else
                return -1;
-         } else if (myOwnSlaves > otherOwnSlaves) {
+         } else if (myExtSlaves > otherExtSlaves) {
             if (diffEvents > (avEventsLeft / 3)
                 && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
                return -1;
             else
                return 1;
          } else {
+            Int_t myOwnSlaves = GetMySlaveCnt();
+            Int_t otherOwnSlaves = obj->GetMySlaveCnt();
+            if (myOwnSlaves < otherOwnSlaves) {
+               // if the other node has much more to process
+               if (diffEvents < -(avEventsLeft / 3)
+                   && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                  return 1;
+               else
+                  return -1;
+            } else if (myOwnSlaves > otherOwnSlaves) {
+               if (diffEvents > (avEventsLeft / 3)
+                   && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                  return -1;
+               else
+                  return 1;
+            } else {
 
-         if (diffEvents > 0) {
-               return -1;
-            } else if (diffEvents < 0) {
-               return 1;
-            } else
-               return 0;
+            if (diffEvents > 0) {
+                  return -1;
+               } else if (diffEvents < 0) {
+                  return 1;
+               } else
+                  return 0;
             }
+         }
       }
    }
 
@@ -348,7 +381,8 @@ void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
 
 ClassImp(TAdaptivePacketizer)
 
-Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 4;
+Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 2;
+Int_t TAdaptivePacketizer::fgNetworkFasterThanHD = 1;
 
 //______________________________________________________________________________
 TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
@@ -356,7 +390,8 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TDynPacketizer", "Enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TDynPacketizer",
+                           "Enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
    fSlaveStats = 0;
@@ -369,7 +404,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
 
    fProcessed = 0;
    fBytesRead = 0;
-   fProcTime = 0;
+   fCumProcTime = 0;
 
    fMaxPerfIdx = 1;
 
@@ -385,9 +420,16 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
 
-   Long_t maxSlaveCnt = 4;
-   TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);
-   fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
+   Long_t maxSlaveCnt = 0;
+   if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt)))
+      fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
+
+   Long_t networkFasterThanHD = 0;
+   if (!(TProof::GetParameter(input, "PROOF_NetworkFasterThanHD",
+                              networkFasterThanHD))) {
+      Printf("Setting fgNetworkFasterThanHD to %d", networkFasterThanHD);
+      fgNetworkFasterThanHD = (Int_t) networkFasterThanHD;
+   }
 
    Double_t baseLocalPreference = 1.2;
    TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
@@ -615,7 +657,6 @@ TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *n
    return file;
 }
 
-
 //______________________________________________________________________________
 TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextNode()
 {
@@ -638,7 +679,6 @@ TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextNode()
    return fn;
 }
 
-
 //______________________________________________________________________________
 void TAdaptivePacketizer::RemoveUnAllocNode(TFileNode * node)
 {
@@ -646,7 +686,6 @@ void TAdaptivePacketizer::RemoveUnAllocNode(TFileNode * node)
 
    fUnAllocated->Remove(node);
 }
-
 
 //______________________________________________________________________________
 TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextActive()
@@ -685,7 +724,6 @@ TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextActiveNode()
 
    return fn;
 }
-
 
 //______________________________________________________________________________
 void TAdaptivePacketizer::RemoveActive(TFileStat *file)
@@ -985,7 +1023,7 @@ Int_t TAdaptivePacketizer::CalculatePacketSize(TObject *slStatPtr)
    if (!rate)
       rate = slstat->GetAvgRate();
    if (rate) {
-      Float_t avgProcRate = (fProcessed/(fProcTime / fSlaveStats->GetSize()));
+      Float_t avgProcRate = (fProcessed/(fCumProcTime / fSlaveStats->GetSize()));
       Float_t packetTime;
       packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/packetSizeAsFraction;
       if (packetTime < 2)
@@ -1048,7 +1086,7 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
       // update processing rate
       slstat->UpdateRates(numev, proctime);
-      fProcTime += proctime;
+      fCumProcTime += proctime;
 
       PDB(kPacketizer,2)
          Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
@@ -1105,7 +1143,7 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible ) {
-            //openLocal is set to kFALSE
+            // openLocal is set to kFALSE
             if ( slstat->GetFileNode()->GetRunSlaveCnt() >
                  slstat->GetFileNode()->GetMySlaveCnt() - 1 )
                 // external slaves help slstat -> don't open nonlocal files
@@ -1126,18 +1164,17 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
             } else {
                // at this point slstat has a non zero avg rate > 0
                Float_t slaveTime = slstat->GetLocalEventsLeft()/slaveRate;
-               // and thus fProcTime, fProcessed > 0
-               Float_t avgTime = avgEventsLeftPerSlave/(fProcessed/fProcTime);
-               // TODO: this favours non local packets
+               // and thus fCumProcTime, fProcessed > 0
+               Float_t avgTime = avgEventsLeftPerSlave/(fProcessed/fCumProcTime);
                if (slaveTime * localPreference > avgTime)
                   openLocal = kTRUE;
                else if ((firstNonLocalNode->GetEventsLeftPerSlave())
-                     < slstat->GetLocalEventsLeft() * localPreference)
+                        < slstat->GetLocalEventsLeft() * localPreference)
                   openLocal = kTRUE;
             }
          }
          if (openLocal) {
-            // Try its own node first
+            // Try its own node
             file = slstat->GetFileNode()->GetNextUnAlloc();
             if (!file)
                file = slstat->GetFileNode()->GetNextActive();

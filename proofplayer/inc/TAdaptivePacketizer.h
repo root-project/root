@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.3 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.5 2007/05/29 16:06:55 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -69,7 +69,7 @@ private:
                                           // that are on non slaves
    Long64_t       fNEventsOnRemLoc;       // number of events in currently
                                           // unalloc files on non-worker loc.
-
+   Float_t        fCumProcTime;   // sum of proc time of all packets so far
    Float_t        fBaseLocalPreference;   // indicates how much more likely
    // the nodes will be to open their local files (1 means indifferent)
 
@@ -92,6 +92,7 @@ private:
 
 public:
    static Int_t   fgMaxSlaveCnt;  // maximum number of slaves per filenode
+   static Int_t   fgNetworkFasterThanHD; // 1 if network faster than hard disk
 
    TAdaptivePacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input);
