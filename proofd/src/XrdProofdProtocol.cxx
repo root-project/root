@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.47 2007/05/21 00:26:24 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.48 2007/05/24 10:39:10 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -4854,6 +4854,7 @@ int XrdProofdProtocol::SendMsg()
 
    } else {
 
+      bool saveStartMsg = 0;
       XrdSrvBuffer *savedBuf = 0;
       // Additional info about the message
       if (opt & kXPD_setidle) {
@@ -4874,7 +4875,8 @@ int XrdProofdProtocol::SendMsg()
          TRACEI(DBG, "SendMsg: INT: setting proofserv in 'running' state");
          xps->SetStatus(kXPD_running);
          // Save start processing message for later clients
-         savedBuf = xps->StartMsg();
+         xps->DeleteStartMsg();
+         saveStartMsg = 1;
          // Update counters in client instance
          if (xps->SrvType() == kXPD_WorkerServer)
             fPClient->CountWorker();
@@ -4939,6 +4941,10 @@ int XrdProofdProtocol::SendMsg()
             return rc;
          }
       }
+      // Save start processing messages, if required
+      if (saveStartMsg)
+         xps->SetStartMsg(savedBuf);
+
       TRACEP(DBG, "SendMsg: INT: message sent to "<<crecv[xps->SrvType()]<<
                   " ("<<len<<" bytes)");
       // Notify to proofsrv
