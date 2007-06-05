@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.18 2006/05/23 10:49:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TStyle.h"
 #include "TPaveLabel.h"
 #include "TLatex.h"
 #include "TVirtualPad.h"
@@ -37,7 +38,7 @@ TPaveLabel::TPaveLabel(): TPave(), TAttText()
 
 //______________________________________________________________________________
 TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
-           :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,62,0.99)
+           :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,gStyle->GetTextFont(),0.99)
 {
    // Pavelabel normal constructor.
    //

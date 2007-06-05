@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.33 2007/03/16 07:48:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.34 2007/03/19 10:04:33 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TLegend::TLegend(): TPave(), TAttText()
 
 //____________________________________________________________________________
 TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char *header, Option_t *option)
-        :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,42,0)
+        :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetTextFont(),0)
 {
    // TLegend normal Contructor
    //
