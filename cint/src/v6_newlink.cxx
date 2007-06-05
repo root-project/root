@@ -144,6 +144,7 @@ static int G__privateaccess = 0;
 
       struct G__ifunc_table_internal *G__incset_p_ifunc;
       int G__incset_tagnum;
+
       int G__incset_func_now;
       int G__incset_func_page;
       struct G__var_array *G__incset_p_local;
@@ -4053,16 +4054,13 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 *           NOT NULL Method Found. Method's ifunc table pointer
 **************************************************************************/
 
-G__ifunc_table_internal* G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
+int G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
 {
 
    // tagnum's Base Classes structure
    G__inheritance* cbases = G__struct.baseclass[ifunc->tagnum];
 
-   // if Method 'ifn' exists in any Base Class -> base not null
-   G__ifunc_table_internal* found = 0;
-
-  int base=0;
+   int base=-1;
 
    // If there are still base classes
    if (cbases){
@@ -4077,18 +4075,34 @@ G__ifunc_table_internal* G__method_inbase(int ifn, G__ifunc_table_internal *ifun
         G__ifunc_table_internal * ifunct = G__struct.memfunc[basetagnum];
 
         // Continue if there are still ifuncs and the method 'ifn' is not found yet
-        while(ifunct&&!found){
+        while(ifunct&&(base==-1)){
 
            // Does the Method 'ifn' (in ifunc) exist in the current ifunct?
-           found = G__ifunc_exist(ifunc, ifn, ifunct, &base, 0xffff);
+           G__ifunc_exist(ifunc, ifn, ifunct, &base, 0xffff);
 
+	   //If the number of default parameters numbers is different between the base and the derived
+	   //class we generete the stub
+	   if (base!=-1){
+	     int derived_def_n = -1;
+	     
+	     // Counting derived class default parameters
+	     for(int i = ifunc->para_nu[ifn] - 1; i >= 0; --i)
+	       if (ifunc->param[ifn][i]->def)
+		 derived_def_n = i;
+               else break;
+	    
+	     //Counting base class default parameters
+	     if (derived_def_n != -1
+                 && !ifunct->param[base][derived_def_n]->def)
+	       return 0;
+	   }	
            // Next ifunct
            ifunct=ifunct->next;
         }
      }
    }
 
-   return found;
+   return (base!=-1);
 }
 
 /**************************************************************************
@@ -6573,7 +6587,6 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
   char buf[G__ONELINE];
 #endif
 
-  // DIEGO
   if (G__struct.incsetup_memvar[tagnum]==0)
      G__struct.incsetup_memvar[tagnum] = new std::list<G__incsetup>();
   
@@ -8697,7 +8710,6 @@ void G__incsetup_memvar(int tagnum)
   int store_static_alloc = G__static_alloc;
   int store_constvar = G__constvar;
 
-  // DIEGO 
   if (G__struct.incsetup_memvar[tagnum]==0)
      G__struct.incsetup_memvar[tagnum] = new std::list<G__incsetup>();
   
@@ -8765,7 +8777,6 @@ void G__incsetup_memfunc(int tagnum)
   char store_var_type;
   int store_asm_exec;
 
-   // DIEGO 
    if (G__struct.incsetup_memfunc[tagnum]==0)
      G__struct.incsetup_memfunc[tagnum] = new std::list<G__incsetup>();
 
