@@ -22,12 +22,6 @@ else
    echo '"--dry-run" specified - running in debug mode without an actual import.'
 fi
 
-TEMP="/tmp"
-if test ! -d ${TEMP}; then
-    echo "Cannot find TEMP directory ${TEMP}."
-    exit 1
-fi
-
 USER=$LOGNAME
 if test "x${USER}" = "x"; then
    USER=${USERNAME}
@@ -35,6 +29,12 @@ if test "x${USER}" = "x"; then
       echo 'Neither $USER nor $USERNAME are set - but I need them.'
       exit 1
    fi
+fi
+
+TEMP="/tmp/${USER}"
+if test ! -d ${TEMP}; then
+    echo "Cannot find TEMP directory ${TEMP}."
+    exit 1
 fi
 
 CINT=$1
@@ -50,7 +50,7 @@ else
    CINTVENDORBRANCH=CINT7_VENDOR_BRANCH
 fi
 
-NEWTAG=$(cvs -z9 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h cint/inc/G__ci.h | \
+NEWTAG=$(cvs -z3 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h cint/inc/G__ci.h | \
 	 egrep '^[[:space:]]'${REVFILTER}':' | \
 	 head -n1 | \
 	 sed -e 's,^[[:space:]]*v\(.*\):.*$,\1,' )
@@ -60,7 +60,7 @@ if test "x${NEWTAG}" = "x"; then
    exit 1
 fi
 
-OLDVENDORTAG=$(cvs -z9 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h ${ROOTCVSROOT}/${CINT}/inc/G__ci.h | \
+OLDVENDORTAG=$(cvs -z3 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h ${ROOTCVSROOT}/${CINT}/inc/G__ci.h | \
 	       egrep '^[[:space:]]'${CINT}'.*:' | \
 	       head -n1 | \
 	       sed -e 's,^[[:space:]]*\(.*\):.*$,\1,' )
@@ -91,11 +91,11 @@ if test -d root; then
    exit 1
 fi
 
-cvs -z9 -Q -d :pserver:cvs@root.cern.ch:/user/cvs checkout -r "v${NEWTAG}" cint || exit 1
+cvs -z3 -Q -d :pserver:cvs@root.cern.ch:/user/cvs checkout -r "v${NEWTAG}" cint || exit 1
 find cint -type d -name 'CVS' -exec rm -rf {} \; -prune || exit 1
 
 cd cint
-${ECHO} cvs -z9 -q -d :ext:${USER}@root.cern.ch:/user/cvs import \
+${ECHO} cvs -z3 -q -d :ext:${USER}@pcroot.cern.ch:/user/cvs import \
    -m "import v${NEWTAG}" -I! -Ireflex -ko \
    ${ROOTCVSROOT}/${CINT} ${CINTVENDORBRANCH} cint"${NEWTAG}" || exit 1
 
@@ -104,17 +104,29 @@ rm -rf cint
 
 echo "Updating ROOT/${CINT}..."
 
-cvs -z9 -Q -d :ext:${USER}@root.cern.ch:/user/cvs checkout ${ROOTCVSROOT}/${CINT} || exit 1
+cvs -z3 -Q -d :ext:${USER}@pcroot.cern.ch:/user/cvs checkout ${ROOTCVSROOT}/${CINT} || exit 1
 cd ${ROOTCVSROOT}/${CINT} || exit 1
 
 ${ECHO} cvs update -j "${OLDVENDORTAG}" -j "cint${NEWTAG}" || exit 1
 
 # see the changes
-cvs -z9 -q update
+
+echo ""
+echo ""
+echo 'And here are the changes from your import - fix all the conflicts!'
+echo 'New files might have a conflict in the CVS tag line.'
+# This is for our convenience, so we can diff easier.
+echo 'Use the original one (usually 1.x, not 1.1.1.y)!'
+echo ""
+echo ""
+
+cvs -z3 -q update
 
 echo
-echo You will now have to run
-echo '  cvs -z9 -q commit -m "apply changes from CINT vendor branch, importing cint'"${NEWTAG}"'"'
+echo You will now have to
+echo '  cd '${TEMP}/root/cint
+echo Fix remaining conflicts, and run
+echo '  cvs -z3 -q commit -m "From ...: import of cint'"${NEWTAG}"'"'
 echo yourself, to upload the changes into ROOT.
 
 exit 0
