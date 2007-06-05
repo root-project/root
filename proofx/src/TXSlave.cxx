@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.20 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.21 2007/03/30 16:46:06 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -541,6 +541,9 @@ Bool_t TXSlave::HandleError(const void *)
          TProofMgr *mgr= fProof->GetManager();
          if (mgr)
             mgr->ShutdownSession(fProof);
+         Close("P");
+         SafeDelete(fSocket);
+         fValid = kFALSE;
       }
    } else {
       Warning("HandleError", "%p: reference to PROOF missing", this);
