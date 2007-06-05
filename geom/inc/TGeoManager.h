@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.86 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.87 2007/05/25 12:28:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -97,7 +97,7 @@ private :
    Bool_t                fActivity;         //! switch ON/OFF volume activity (default OFF - all volumes active))
    Bool_t                fIsNodeSelectable; //! flag that nodes are the selected objects in pad rather than volumes
    TGeoNodeCache        *fCache;            //! cache for physical nodes
-   TGeoCacheStateDummy  *fBackupState;      //! backup state
+   TGeoCacheState       *fBackupState;      //! backup state
    TVirtualGeoPainter   *fPainter;          //! current painter
 
    TObjArray            *fMatrices;         //-> list of local transformations
@@ -449,6 +449,7 @@ public:
    TObjArray             *GetListOfVolumes() const      {return fVolumes;}
    TObjArray             *GetListOfGVolumes() const     {return fGVolumes;}
    TObjArray             *GetListOfShapes() const       {return fShapes;}
+   TObjArray             *GetListOfGShapes() const      {return fGShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
    TGeoElementTable      *GetElementTable() const       {return fElementTable;}

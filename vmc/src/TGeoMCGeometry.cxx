@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.11 2006/12/12 16:12:55 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.12 2007/01/12 16:03:17 brun Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 // for building TGeo geometry.
 //______________________________________________________________________________
 
+#include <ctype.h>
 #include "TError.h"
 #include "TArrayD.h"
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.15 2006/08/25 09:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.16 2006/09/14 17:22:12 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -81,6 +81,7 @@
 #pragma link C++ class TVirtualGeoPainter+;
 #pragma link C++ class TVirtualGeoTrack+;
 #pragma link C++ class TGeoIterator;
+#pragma link C++ class TGeoBuilder;
 
 
 #endif
