@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.109 2007/04/04 15:46:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.110 2007/05/14 12:26:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2348,6 +2348,7 @@ void TH2C::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Char_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -2610,6 +2611,7 @@ void TH2S::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Short_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -2872,6 +2874,7 @@ void TH2I::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Int_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3097,6 +3100,7 @@ void TH2F::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Float_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3368,6 +3372,7 @@ void TH2D::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Double_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________

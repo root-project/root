@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.344 2007/05/14 12:26:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.345 2007/05/24 13:30:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -7648,6 +7648,7 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    }
    fArray[bin] = Char_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -7885,6 +7886,7 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    }
    fArray[bin] = Short_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8121,6 +8123,7 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    }
    fArray[bin] = Int_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8354,6 +8357,7 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    }
    fArray[bin] = Float_t (content);
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8588,6 +8592,7 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    }
    fArray[bin] = content;
    fEntries++;
+   fTsumw = 0;
 }
 
 //______________________________________________________________________________
