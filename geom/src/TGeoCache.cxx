@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.46 2007/05/25 12:28:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.47 2007/06/05 06:34:47 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -85,7 +85,6 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    fNodeBranch[0] = top;
    fNodeIdArray = 0;
    if (nodeid) BuildIdArray();
-   else        printf("--- node ID tracking disabled\n");
    CdTop();
 }
 
