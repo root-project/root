@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.9 2007/05/29 16:06:55 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.10 2007/06/05 05:47:25 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -597,6 +597,12 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       }
    }
 
+   if (totalNumberOfFiles == 0) {
+      // No valid files: set invalid and return
+      fValid = kFALSE;
+      return;
+   }
+
    fFractionOfRemoteFiles = noRemoteFiles / totalNumberOfFiles;
    Printf("fraction of remote files %f", fFractionOfRemoteFiles);
 
@@ -608,7 +614,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       fProgress->Start(period, kFALSE);
    }
 
-   PDB(kPacketizer,1) Info("TDynPacketizer", "Return");
+   PDB(kPacketizer,1) Info("TAdaptivePacketizer", "Return");
 }
 
 //______________________________________________________________________________
