@@ -47,7 +47,6 @@ $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-
 $(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
 		$(RLIBMAP) -o $(MYSQLMAP) -l $(MYSQLLIB) \
 		   -d $(MYSQLLIBDEPM) -c $(MYSQLL)
