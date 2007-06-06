@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.52 2007/03/19 14:43:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.53 2007/05/23 09:10:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
 private:
    TString       fService;          //service we are running, either "proofserv" or "proofslave"
    TString       fUser;             //user as which we run
+   TString       fGroup;            //group the user belongs to
    TString       fConfDir;          //directory containing cluster config information
    TString       fConfFile;         //file containing config information
    TString       fWorkDir;          //directory containing all proof related info
@@ -183,6 +184,7 @@ public:
    const char    *GetConfDir()    const { return fConfDir; }
    const char    *GetConfFile()   const { return fConfFile; }
    const char    *GetUser()       const { return fUser; }
+   const char    *GetGroup()      const { return fGroup; }
    const char    *GetWorkDir()    const { return fWorkDir; }
    const char    *GetImage()      const { return fImage; }
    const char    *GetSessionDir() const { return fSessionDir; }
