@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.13 2007/03/29 12:08:32 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.14 2007/04/10 13:23:07 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TMath.h"
 #include "TH1.h"
 #include "TH3.h"
+#include "TF3.h"
 
 #include "TGLPlotPainter.h"
 #include "TGLOrthoCamera.h"
@@ -551,7 +552,7 @@ void TGLPlotCoordinates::ResetModified()
 {
    // Reset modified.
 
-   fModified = kFALSE;
+   fModified = !fModified;//kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1311,7 +1312,24 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoor
                  fCoord(coord),
                  fBox(box),
                  fSliceWidth(1),
-                 fHist(hist)
+                 fHist(hist),
+                 fF3(0)
+{
+   //Ctor.
+   fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
+}
+
+//______________________________________________________________________________
+TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, const TGLPlotCoordinates *coord, 
+                         const TGLPlotBox *box, ESliceAxis axis)
+               : TNamed(name, name),
+                 fAxisType(axis),
+                 fAxis(0),
+                 fCoord(coord),
+                 fBox(box),
+                 fSliceWidth(1),
+                 fHist(hist),
+                 fF3(fun)
 {
    //Ctor.
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
@@ -1353,13 +1371,13 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
          up  = bin + (fSliceWidth - (bin - fAxis->GetFirst() + 1)) + 1;
       }
       
-      Double_t min = 0., max =0.;
-      FindMinMax(min, max, low, up);
+      if (!fF3)
+         FindMinMax(low, up);
 
-      if (!PreparePalette(min, max))
+      if (!PreparePalette())
          return;
 
-      PrepareTexCoords();
+      PrepareTexCoords(pos, low, up);
 
       if (fPalette.EnableTexture(GL_REPLACE)) {
          const TGLDisableGuard lightGuard(GL_LIGHTING);   
@@ -1372,60 +1390,51 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
 }
 
 //______________________________________________________________________________
-void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)const
+void TGLTH3Slice::FindMinMax(Int_t low, Int_t up)const
 {
-   // Find minimum and maximum.
-
-   min = 0.;
+   // Find minimum and maximum for slice.
+   fMinMax.first = 0.;
+      
    switch (fAxisType) {
    case kXOZ:
-      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNZBins());
-      fTexCoords.SetRowLen(fCoord->GetNXBins());
       for (Int_t level = low; level < up; ++ level)
-         min += fHist->GetBinContent(fCoord->GetFirstXBin(), level, fCoord->GetFirstZBin());
-      max = min;
+         fMinMax.first += fHist->GetBinContent(fCoord->GetFirstXBin(), level, fCoord->GetFirstZBin());
+      fMinMax.second = fMinMax.first;
       for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
          for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
             Double_t val = 0.;
             for (Int_t level = low; level < up; ++ level)
                val += fHist->GetBinContent(i, level, j);
-            max = TMath::Max(max, val);
-            min = TMath::Min(min, val);
-            fTexCoords[jt][it] = val;
+            fMinMax.second = TMath::Max(fMinMax.second, val);
+            fMinMax.first = TMath::Min(fMinMax.first, val);
          }
       }
       break;
    case kYOZ:
-      fTexCoords.resize(fCoord->GetNYBins() * fCoord->GetNZBins());
-      fTexCoords.SetRowLen(fCoord->GetNYBins());
       for (Int_t level = low; level < up; ++ level)
-         min += fHist->GetBinContent(level, fCoord->GetFirstYBin(), fCoord->GetFirstZBin());
-      max = min;
+         fMinMax.first += fHist->GetBinContent(level, fCoord->GetFirstYBin(), fCoord->GetFirstZBin());
+      fMinMax.second = fMinMax.first;
       for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
          for (Int_t i = fCoord->GetFirstYBin(), it = 0, ei = fCoord->GetLastYBin(); i <= ei; ++i, ++it) {
             Double_t val = 0.;
             for (Int_t level = low; level < up; ++ level)
                val += fHist->GetBinContent(level, i, j);
-            max = TMath::Max(max, val);
-            min = TMath::Min(min, val);
-            fTexCoords[jt][it] = val;
+            fMinMax.second = TMath::Max(fMinMax.second, val);
+            fMinMax.first = TMath::Min(fMinMax.first, val);
          }
       }
       break;
    case kXOY:
-      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNYBins());
-      fTexCoords.SetRowLen(fCoord->GetNYBins());
       for (Int_t level = low; level < up; ++ level)
-         min += fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin(), level);
-      max = min;
+         fMinMax.first += fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin(), level);
+      fMinMax.second = fMinMax.first;
       for (Int_t i = fCoord->GetFirstXBin(), ir = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++ir) {
          for (Int_t j = fCoord->GetFirstYBin(), jr = 0, ej = fCoord->GetLastYBin(); j <= ej; ++j, ++jr) {
             Double_t val = 0.;
             for (Int_t level = low; level < up; ++ level)
                val += fHist->GetBinContent(i, j, level);
-            max = TMath::Max(max, val);
-            min = TMath::Min(min, val);
-            fTexCoords[ir][jr] = val;
+            fMinMax.second = TMath::Max(fMinMax.second, val);
+            fMinMax.first = TMath::Min(fMinMax.first, val);
          }
       }
       break;
@@ -1433,36 +1442,97 @@ void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)c
 }
 
 //______________________________________________________________________________
-Bool_t TGLTH3Slice::PreparePalette(Double_t min, Double_t max)const
+Bool_t TGLTH3Slice::PreparePalette()const
 {
    //Initialize color palette.
    UInt_t paletteSize = ((TH1 *)fHist)->GetContour();
    if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
       paletteSize = 20;
 
-   return fPalette.GeneratePalette(paletteSize, Rgl::Range_t(min, max));
+   return fPalette.GeneratePalette(paletteSize, fMinMax);
 }
 
 //______________________________________________________________________________
-void TGLTH3Slice::PrepareTexCoords()const
+void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
 {
    // Prepare TexCoords.
-
    switch (fAxisType) {
    case kXOZ:
-      for (Int_t j = 0, ej = fCoord->GetNZBins(); j < ej; ++j)
-         for (Int_t i = 0, ei = fCoord->GetNXBins(); i < ei; ++i)
-            fTexCoords[j][i] = fPalette.GetTexCoord(fTexCoords[j][i]);
+      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNZBins());
+      fTexCoords.SetRowLen(fCoord->GetNXBins());
+      if (!fF3) {
+      
+         for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+            for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
+               Double_t val = 0.;
+               for (Int_t level = low; level < up; ++ level)
+                  val += fHist->GetBinContent(i, level, j);
+               fTexCoords[jt][it] = fPalette.GetTexCoord(val);
+            }
+         }
+      } else {
+         for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+            for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
+               Double_t val = fF3->Eval(fHist->GetXaxis()->GetBinCenter(i), pos, fHist->GetZaxis()->GetBinCenter(j));
+               if (val > fMinMax.second)
+                  val = fMinMax.second;
+               else if (val < fMinMax.first)
+                  val = fMinMax.first;
+               fTexCoords[jt][it] = fPalette.GetTexCoord(val);
+            }
+         }
+      }
       break;
    case kYOZ:
-      for (Int_t j = 0, ej = fCoord->GetNZBins(); j < ej; ++j)
-         for (Int_t i = 0, ei = fCoord->GetNYBins(); i < ei; ++i)
-            fTexCoords[j][i] = fPalette.GetTexCoord(fTexCoords[j][i]);
+      fTexCoords.resize(fCoord->GetNYBins() * fCoord->GetNZBins());
+      fTexCoords.SetRowLen(fCoord->GetNYBins());
+      if (!fF3) {
+         for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+            for (Int_t i = fCoord->GetFirstYBin(), it = 0, ei = fCoord->GetLastYBin(); i <= ei; ++i, ++it) {
+               Double_t val = 0.;
+               for (Int_t level = low; level < up; ++ level)
+                  val += fHist->GetBinContent(level, i, j);
+               fTexCoords[jt][it] = fPalette.GetTexCoord(val);
+            }
+         }
+      } else {
+         for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
+            for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
+               Double_t val = fF3->Eval(pos, fHist->GetYaxis()->GetBinCenter(i), fHist->GetZaxis()->GetBinCenter(j));
+               if (val > fMinMax.second)
+                  val = fMinMax.second;
+               else if (val < fMinMax.first)
+                  val = fMinMax.first;
+               fTexCoords[jt][it] = fPalette.GetTexCoord(val);
+            }
+         }
+      }
       break;
    case kXOY:
-      for (Int_t i = 0, ei = fCoord->GetNXBins(); i < ei; ++i)
-         for (Int_t j = 0, ej = fCoord->GetNYBins(); j < ej; ++j)
-            fTexCoords[i][j] = fPalette.GetTexCoord(fTexCoords[i][j]);
+      fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNYBins());
+      fTexCoords.SetRowLen(fCoord->GetNYBins());
+      if (!fF3) {
+         for (Int_t i = fCoord->GetFirstXBin(), ir = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++ir) {
+            for (Int_t j = fCoord->GetFirstYBin(), jr = 0, ej = fCoord->GetLastYBin(); j <= ej; ++j, ++jr) {
+               Double_t val = 0.;
+               for (Int_t level = low; level < up; ++ level)
+                  val += fHist->GetBinContent(i, j, level);
+               fTexCoords[ir][jr] = fPalette.GetTexCoord(val);
+            }
+         }
+      } else {
+         for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
+            for (Int_t j = fCoord->GetFirstYBin(), jt = 0, ej = fCoord->GetLastYBin(); j <= ej; ++j, ++jt) {
+               Double_t val = fF3->Eval(fHist->GetXaxis()->GetBinCenter(i), fHist->GetYaxis()->GetBinCenter(j), pos);
+               if (val > fMinMax.second)
+                  val = fMinMax.second;
+               else if (val < fMinMax.first)
+                  val = fMinMax.first;
+               fTexCoords[it][jt] = fPalette.GetTexCoord(val);
+            }
+         }
+      
+      }
       break;
    }
 }

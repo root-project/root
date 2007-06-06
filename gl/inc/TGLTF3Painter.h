@@ -35,6 +35,10 @@ private:
    std::vector<TriFace_t> fMesh;
    TF3 *fF3;
 
+   TGLTH3Slice fXOZSlice;
+   TGLTH3Slice fYOZSlice;
+   TGLTH3Slice fXOYSlice;
+
 public:
    TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                  Int_t glContext = -1);
@@ -51,6 +55,7 @@ private:
    void    DrawPlot()const;
 
    void    SetSurfaceColor()const;
+   Bool_t  HasSections()const;
 
    void    DrawSectionXOZ()const;
    void    DrawSectionYOZ()const;

@@ -16,9 +16,12 @@ ClassImp(TGLTF3Painter)
 //______________________________________________________________________________
 TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, 
                              TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, camera, coord, ctx, kFALSE, kFALSE, kFALSE),
+                  : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
                     fStyle(kDefault),
-                    fF3(fun)
+                    fF3(fun),
+                    fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
+                    fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
+                    fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
 {
    // Constructor.
 }
@@ -33,7 +36,8 @@ char *TGLTF3Painter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 namespace {
    void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
-                     const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh);
+                     const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh,
+                     Rgl::Range_t &minMax);
 }
 
 //______________________________________________________________________________
@@ -62,18 +66,34 @@ Bool_t TGLTF3Painter::InitGeometry()
    const Double_t zMin = fZAxis->GetBinLowEdge(fZAxis->GetFirst());
    const Double_t zStep = (fZAxis->GetBinUpEdge(fZAxis->GetLast()) - zMin) / nZ;
 
+   Rgl::Range_t minMax;
+   minMax.first  = fF3->Eval(xMin, yMin, zMin);
+   minMax.second = minMax.first;
+
    for (Int_t i = 0; i < nX; ++i) {
       for (Int_t j= 0; j < nY; ++j) {
          for (Int_t k = 0; k < nZ; ++k) {
             MarchingCube(xMin + i * xStep, yMin + j * yStep, zMin + k * zStep,
                          xStep, yStep, zStep, fCoord->GetXScale(), fCoord->GetYScale(), 
-                         fCoord->GetZScale(), fF3, fMesh);
+                         fCoord->GetZScale(), fF3, fMesh, minMax);
          }
       }
    }
+   
+   //Not sure about this part :(
+   minMax.second = 0.001 * minMax.first;
+
+   fXOZSlice.SetMinMax(minMax);
+   fYOZSlice.SetMinMax(minMax);
+   fXOYSlice.SetMinMax(minMax);
+   
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
+      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];
+      fXOZSectionPos = vertex.Y();
+      fYOZSectionPos = vertex.X();
+      fXOYSectionPos = vertex.Z();
       fCoord->ResetModified();
    }
 
@@ -99,13 +119,23 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
    if (!MakeGLContextCurrent())
       return;
 
-   if (fSelectedPart) {
-      if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
-         fBoxCut.MoveBox(px, fCamera->GetHeight() - py, fSelectedPart);
-      else
-         fCamera->Pan(px, py);
+   if (fSelectedPart >= fSelectionBase)//Pan camera.
+      fCamera->Pan(px, py);
+   else if (fSelectedPart > 0) {
+      //Convert py into bottom-top orientation.
+      //Possibly, move box here
+      py = fCamera->GetHeight() - py;
+      if (!fHighColor) {
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+            fBoxCut.MoveBox(px, py, fSelectedPart);
+         else
+            MoveSection(px, py);
+      } else {
+         MoveSection(px, py);
+      }
    }
-   
+
+   fMousePosition.fX = px, fMousePosition.fY = py;
    fUpdateSelection = kTRUE;
 }
 
@@ -131,8 +161,14 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
             fUpdateSelection = kTRUE;
          }
       }
-   } else if (event == kButton1Double && fBoxCut.IsActive()) {
-      fBoxCut.TurnOnOff();
+   } else if (event == kButton1Double && (fBoxCut.IsActive() || HasSections())) {
+      if (fBoxCut.IsActive())
+         fBoxCut.TurnOnOff();
+      const TGLVertex3 *frame = fBackBox.Get3DBox();
+      fXOZSectionPos = frame[0].Y();
+      fYOZSectionPos = frame[0].X();
+      fXOYSectionPos = frame[0].Z();
+
       gGLManager->PaintSingleObject(this);
    }
 }
@@ -149,7 +185,7 @@ void TGLTF3Painter::InitGL()const
 }
 
 namespace {
-   void GetColor(TGLVector3 &rfColor, const TGLVector3 &normal);
+   void GetColor(Double_t *color, const TGLVector3 &normal);
 }
 
 //______________________________________________________________________________
@@ -157,6 +193,17 @@ void TGLTF3Painter::DrawPlot()const
 {
    //Draw mesh.
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
+   DrawSections();
+
+   if (!fSelectionPass && HasSections() && fStyle < kMaple2) {
+      //Surface is semi-transparent during dynamic profiling.
+      //Having several complex nested surfaces, it's not easy
+      //(possible?) to implement correct and _efficient_ transparency
+      //drawing. So, artefacts are possbile.
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glDepthMask(GL_FALSE);
+   }
 
    //Draw TF3 surface
    if (!fSelectionPass)
@@ -171,21 +218,21 @@ void TGLTF3Painter::DrawPlot()const
    if (!fBoxCut.IsActive()) {
       glBegin(GL_TRIANGLES);
 
-      TGLVector3 color;
+      Double_t color[] = {0., 0., 0., 0.15};
 
       if (!fSelectionPass) {
          for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
             glNormal3dv(fMesh[i].fNormals[0].CArr());
             GetColor(color, fMesh[i].fNormals[0]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(fMesh[i].fXYZ[0].CArr());
             glNormal3dv(fMesh[i].fNormals[1].CArr());
             GetColor(color, fMesh[i].fNormals[1]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(fMesh[i].fXYZ[1].CArr());
             glNormal3dv(fMesh[i].fNormals[2].CArr());
             GetColor(color, fMesh[i].fNormals[2]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(fMesh[i].fXYZ[2].CArr());
          }
       } else {
@@ -202,7 +249,7 @@ void TGLTF3Painter::DrawPlot()const
       if (fStyle == kMaple1 && !fSelectionPass) {
          glDisable(GL_POLYGON_OFFSET_FILL);//1]
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
-         glColor3d(0., 0., 0.);
+         glColor4d(0., 0., 0., 0.25);
 
          glBegin(GL_TRIANGLES);
 
@@ -222,7 +269,8 @@ void TGLTF3Painter::DrawPlot()const
    } else {
       glBegin(GL_TRIANGLES);
 
-      TGLVector3 color;
+      //TGLVector3 color;
+      Double_t color[] = {0., 0., 0., 0.15};
 
       if (!fSelectionPass) {
          for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
@@ -239,15 +287,15 @@ void TGLTF3Painter::DrawPlot()const
 
             glNormal3dv(tri.fNormals[0].CArr());
             GetColor(color, tri.fNormals[0]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(tri.fXYZ[0].CArr());
             glNormal3dv(tri.fNormals[1].CArr());
             GetColor(color, tri.fNormals[1]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(tri.fXYZ[1].CArr());
             glNormal3dv(tri.fNormals[2].CArr());
             GetColor(color, tri.fNormals[2]);
-            glColor3dv(color.CArr());
+            glColor4dv(color);
             glVertex3dv(tri.fXYZ[2].CArr());
          }
       } else {
@@ -273,7 +321,7 @@ void TGLTF3Painter::DrawPlot()const
       if (fStyle == kMaple1 && !fSelectionPass) {
          glDisable(GL_POLYGON_OFFSET_FILL);//1]
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
-         glColor3d(0., 0., 0.);
+         glColor4d(0., 0., 0., 0.25);
 
          glBegin(GL_TRIANGLES);
 
@@ -302,6 +350,12 @@ void TGLTF3Painter::DrawPlot()const
          glEnable(GL_LIGHTING); //0]
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
    }
+   
+   if (!fSelectionPass && HasSections() && fStyle < kMaple2) {
+      glDisable(GL_BLEND);
+      glDepthMask(GL_TRUE);   
+   }
+
 
 }
 
@@ -309,7 +363,7 @@ void TGLTF3Painter::DrawPlot()const
 void TGLTF3Painter::SetSurfaceColor()const
 {
    //Set color for surface.
-   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.65f};
+   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.15f};
 
    if (fF3->GetFillColor() != kWhite)
       if (const TColor *c = gROOT->GetColor(fF3->GetFillColor()))
@@ -324,22 +378,40 @@ void TGLTF3Painter::SetSurfaceColor()const
 }
 
 //______________________________________________________________________________
+Bool_t TGLTF3Painter::HasSections()const
+{
+   //Any section exists.
+   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
+          fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
+}
+
+//______________________________________________________________________________
 void TGLTF3Painter::DrawSectionXOZ()const
 {
-   //XOZ parallel section.
+   // Draw XOZ parallel section.
+   if (fSelectionPass)
+      return;
+   fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
 
 //______________________________________________________________________________
 void TGLTF3Painter::DrawSectionYOZ()const
 {
-   //YOZ parallel section.
+   // Draw YOZ parallel section.
+   if (fSelectionPass)
+      return;
+   fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
 }
 
 //______________________________________________________________________________
 void TGLTF3Painter::DrawSectionXOY()const
 {
-   //XOY parallel section
+   // Draw XOY parallel section.
+   if (fSelectionPass)
+      return;
+   fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
+
 
 ClassImp(TGLIsoPainter)
 
@@ -995,14 +1067,14 @@ namespace {
    }
 
    //GetColor generates a color from a given normal
-   void GetColor(TGLVector3 &rfColor, const TGLVector3 &normal)
+   void GetColor(Double_t *rfColor, const TGLVector3 &normal)
    {
       Double_t x = normal.X();
       Double_t y = normal.Y();
       Double_t z = normal.Z();
-      rfColor.X() = (x > 0. ? x : 0.) + (y < 0. ? -0.5 * y : 0.) + (z < 0. ? -0.5 * z : 0.);
-      rfColor.Y() = (y > 0. ? y : 0.) + (z < 0. ? -0.5 * z : 0.) + (x < 0. ? -0.5 * x : 0.);
-      rfColor.Z() = (z > 0. ? z : 0.) + (x < 0. ? -0.5 * x : 0.) + (y < 0. ? -0.5 * y : 0.);
+      rfColor[0] = (x > 0. ? x : 0.) + (y < 0. ? -0.5 * y : 0.) + (z < 0. ? -0.5 * z : 0.);
+      rfColor[1] = (y > 0. ? y : 0.) + (z < 0. ? -0.5 * z : 0.) + (x < 0. ? -0.5 * x : 0.);
+      rfColor[2] = (z > 0. ? z : 0.) + (x < 0. ? -0.5 * x : 0.) + (y < 0. ? -0.5 * y : 0.);
    }
 
    void GetNormal(TGLVector3 &normal, Double_t x, Double_t y, Double_t z, const TF3 *fun)
@@ -1024,7 +1096,8 @@ namespace {
    //MarchingCube performs the Marching Cubes algorithm on a single cube
    void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
-                     const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh)
+                     const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh,
+                     Rgl::Range_t &minMax)
    {
       Double_t afCubeValue[8] = {0.};
       TGLVector3 asEdgeVertex[12];
@@ -1035,6 +1108,8 @@ namespace {
          afCubeValue[iVertex] = fun->Eval(x + gA2VertexOffset[iVertex][0] * stepX,
                                           y + gA2VertexOffset[iVertex][1] * stepY,
                                           z + gA2VertexOffset[iVertex][2] * stepZ);
+         minMax.first  = TMath::Min(minMax.first,  afCubeValue[iVertex]);
+         minMax.second = TMath::Max(minMax.second, afCubeValue[iVertex]);
       }
 
       //Find which vertices are inside of the surface and which are outside

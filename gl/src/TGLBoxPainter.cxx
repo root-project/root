@@ -271,7 +271,7 @@ void TGLBoxPainter::DrawPlot()const
    if (!fSelectionPass && fType != kBox1) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
       TGLDisableGuard lightGuard(GL_LIGHTING);//[2 - 2]
-      glColor4d(0., 0., 0., 0.4);
+      glColor4d(0., 0., 0., 0.25);
       glPolygonMode(GL_FRONT, GL_LINE);//[3
 
       const TGLEnableGuard blendGuard(GL_BLEND);//[4-4] + 1]
@@ -310,7 +310,7 @@ void TGLBoxPainter::SetPlotColor()const
 {
    // Set boxes color.
 
-   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.25f};
+   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.05f};
 
    if (fHist->GetFillColor() != kWhite)
       if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))

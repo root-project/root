@@ -408,8 +408,10 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
 void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &addOption)
 {
    // Create painter.
-   if (option.fPlotType != fPlotType)
+   if (option.fPlotType != fPlotType) {
+      fCoord.ResetModified();
       fGLPainter.reset(0);
+   }
 
    if (option.fPlotType == kGLLegoPlot) {
       if (!fGLPainter.get())

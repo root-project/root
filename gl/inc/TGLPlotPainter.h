@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.12 2007/01/26 14:06:54 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.13 2007/03/29 12:08:32 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -37,6 +37,7 @@ class TColor;
 class TAxis;
 class TH1;
 class TH3;
+class TF3;
 
 /*
    Box cut. When attached to a plot, cuts away a part of it.
@@ -100,8 +101,11 @@ private:
    Int_t                     fSliceWidth;
 
    const TH3                *fHist;
+   const TF3                *fF3;
 
    mutable TGL2DArray<Double_t> fTexCoords;
+   
+   mutable Rgl::Range_t         fMinMax;
 
 public:
    TGLTH3Slice(const TString &sliceName, 
@@ -109,15 +113,26 @@ public:
                const TGLPlotCoordinates *coord, 
                const TGLPlotBox * box,
                ESliceAxis axis);
+   TGLTH3Slice(const TString &sliceName, 
+               const TH3 *hist, const TF3 *fun,
+               const TGLPlotCoordinates *coord, 
+               const TGLPlotBox * box,
+               ESliceAxis axis);
 
-   void DrawSlice(Double_t pos)const;
+   void   DrawSlice(Double_t pos)const;
    //SetSliceWidth must have "menu" comment.
-   void SetSliceWidth(Int_t width = 1); // *MENU*
+   void   SetSliceWidth(Int_t width = 1); // *MENU*
+   
+   void   SetMinMax(const Rgl::Range_t &newRange)
+   {
+      fMinMax = newRange;
+   }
+   
 
 private:
-   void   PrepareTexCoords()const;
-   void   FindMinMax(Double_t &minVal, Double_t &maxVal, Int_t low, Int_t max)const;
-   Bool_t PreparePalette(Double_t minVal, Double_t maxVal)const;
+   void   PrepareTexCoords(Double_t pos, Int_t sliceBegin, Int_t sliceEnd)const;
+   void   FindMinMax(Int_t sliceBegin, Int_t sliceEnd)const;
+   Bool_t PreparePalette()const;
    void   DrawSliceTextured(Double_t pos)const;
    void   DrawSliceFrame(Int_t low, Int_t up)const;
 
