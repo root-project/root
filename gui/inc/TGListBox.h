@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.35 2006/10/11 17:55:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.36 2007/05/22 11:47:46 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -244,7 +244,6 @@ protected:
                                    // moves over a multi selectable list box
 
    virtual void OnAutoScroll();
-   virtual void ClearViewPort() {}
 
 public:
    TGLBContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
