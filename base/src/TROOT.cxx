@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.214 2007/05/11 15:25:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.215 2007/05/14 10:18:30 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1463,7 +1463,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
    if (fInterpreter) {
       TInterpreter::EErrorCode *code = (TInterpreter::EErrorCode*)error;
-      result = gInterpreter->Calc(line, code);
+      result = gInterpreter->Calc(sline, code);
    }
 
    return result;
