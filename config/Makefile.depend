@@ -34,7 +34,7 @@ PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 PEACLIBDEPM            = $(PROOFLIB) $(CLARENSLIB)
 PEACGUILIBDEPM         = $(GUILIB)
-EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB)
+EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB) $(FTGLLIB)
 VMCLIBDEPM             = $(EGLIB) $(GEOMLIB)
 PHYSICSLIBDEPM         = $(MATRIXLIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
@@ -43,12 +43,13 @@ TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(GPADLIB) $(TREEPLAYERLIB)
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
-TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                         $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
+TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
+                         $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
 SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB)
 QUADPLIBDEPM           = $(MATRIXLIB)
-GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB)
+GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
+                         $(FTGLLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB)
 GEOMLIBDEPM            = $(IOLIB)
@@ -203,7 +204,8 @@ SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libTree.lib
 PEACLIBEXTRA            = lib/libProof.lib lib/libClarens.lib
 PEACGUILIBEXTRA         = lib/libGui.lib
-EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib
+EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
+                          lib/libFTGL.lib
 VMCLIBEXTRA             = lib/libEG.lib lib/libGeom.lib
 PHYSICSLIBEXTRA         = lib/libMatrix.lib
 PYTHIA6LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
@@ -220,7 +222,7 @@ SPLOTLIBEXTRA           = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libGraf3d.lib lib/libGraf.lib
 QUADPLIBEXTRA           = lib/libMatrix.lib
 GLLIBEXTRA              = lib/libGraf3d.lib lib/libGui.lib lib/libGraf.lib \
-                          lib/libHist.lib lib/libGed.lib
+                          lib/libHist.lib lib/libGed.lib lib/libFTGL.lib
 HBOOKLIBEXTRA           = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libTreePlayer.lib lib/libRIO.lib
 GEOMLIBEXTRA            = lib/libRIO.lib
@@ -289,14 +291,14 @@ SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBEXTRA            = -Llib -lProof -lClarens
 PEACGUILIBEXTRA         = -Llib -lGui
 X3DLIBEXTRA             = -Llib -lGraf3d -lGui
-EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad
+EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad -lFTGL
 VMCLIBEXTRA             = -Llib -lEG -lGeom
 PHYSICSLIBEXTRA         = -Llib -lMatrix
 PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
                           $(FPYTHIA6LIB)
 X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
 TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
-GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
+GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed -lFTGL
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer -lRIO
 GEOMLIBEXTRA            = -Llib -lRIO
 GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad
