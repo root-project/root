@@ -635,7 +635,7 @@ static struct G__Definedtemplateclass *G__resolve_specialization(char *arg
   int match;
   struct G__Definedtemplateclass *bestmatch = deftmpclass;
   int best = 0;
-  std::string buf(0,0);
+  std::string buf;
   buf.reserve(1024);
 
   while(spec->next) {
