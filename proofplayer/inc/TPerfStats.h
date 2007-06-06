@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.4 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.5 2007/03/19 10:46:10 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -86,13 +86,18 @@ private:
    TH2D          *fProcTimeHist; //!histogram of real time spent processing packets
    TH2D          *fCpuTimeHist;  //!histogram of cpu time spent processing packets
    Long64_t       fBytesRead;    //!track bytes read of main file
+   Double_t       fTotCpuTime;   //!total cpu time of all slaves
+   Long64_t       fTotBytesRead; //!total bytes read on all slaves
+   Long64_t       fTotEvents;    //!total number of events processed
 
    Bool_t         fDoHist;       //!Fill histos
    Bool_t         fDoTrace;      //!Trace details in master
    Bool_t         fDoTraceRate;  //!Trace processing rate in master
    Bool_t         fDoSlaveTrace; //!Full tracing in workers
+   Bool_t         fDoQuota;      //!Save stats on SQL server for quota management
 
    TPerfStats(TList *input, TList *output);
+   void WriteQueryLog();
 
 public:
    virtual ~TPerfStats() {}

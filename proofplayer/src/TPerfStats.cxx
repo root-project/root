@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.10 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.11 2007/03/19 10:46:10 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 #include "TProofServ.h"
 #include "TSlave.h"
 #include "TTree.h"
+#include "TSQLServer.h"
+#include "TSQLResult.h"
 
 
 ClassImp(TPerfEvent)
@@ -61,7 +63,6 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
    }
 }
 
-
 //______________________________________________________________________________
 Int_t TPerfEvent::Compare(const TObject *obj) const
 {
@@ -80,7 +81,6 @@ Int_t TPerfEvent::Compare(const TObject *obj) const
       return 1;
    }
 }
-
 
 //______________________________________________________________________________
 void TPerfEvent::Print(Option_t *) const
@@ -107,8 +107,9 @@ void TPerfEvent::Print(Option_t *) const
 //______________________________________________________________________________
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
-      fProcTimeHist(0), fCpuTimeHist(0), fDoHist(0),
-      fDoTrace(0), fDoTraceRate(0), fDoSlaveTrace(0)
+      fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
+      fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fDoHist(kFALSE),
+      fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE)
 {
    // Normal Constructor.
 
@@ -197,8 +198,12 @@ TPerfStats::TPerfStats(TList *input, TList *output)
          }
       }
    }
-}
 
+   if (gProofServ->IsMaster()) {
+      if (gSystem->Getenv("ROOTPROOFQUERYLOGDB"))
+         fDoQuota = kTRUE;
+   }
+}
 
 //______________________________________________________________________________
 void TPerfStats::SimpleEvent(EEventType type)
@@ -209,6 +214,9 @@ void TPerfStats::SimpleEvent(EEventType type)
       fNodeHist->LabelsDeflate("X");
       fNodeHist->LabelsOption("auv","X");
    }
+
+   if (type == kStop && fDoQuota)
+      WriteQueryLog();
 
    if (fTrace == 0) return;
 
@@ -221,11 +229,10 @@ void TPerfStats::SimpleEvent(EEventType type)
    fPerfEvent = 0;
 }
 
-
 //______________________________________________________________________________
 void TPerfStats::PacketEvent(const char *slave, const char* slavename, const char* filename,
-                              Long64_t eventsprocessed, Double_t latency, Double_t proctime,
-                              Double_t cputime, Long64_t bytesRead)
+                             Long64_t eventsprocessed, Double_t latency, Double_t proctime,
+                             Double_t cputime, Long64_t bytesRead)
 {
    // Packet event
 
@@ -255,8 +262,13 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fProcTimeHist->Fill(slave, proctime, 1);
       fCpuTimeHist->Fill(slave, cputime, 1);
    }
-}
 
+   if (fDoQuota) {
+      fTotCpuTime += cputime;
+      fTotBytesRead += bytesRead;
+      fTotEvents += eventsprocessed;
+   }
+}
 
 //______________________________________________________________________________
 void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
@@ -285,7 +297,6 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
    }
 }
 
-
 //______________________________________________________________________________
 void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proctime)
 {
@@ -306,7 +317,6 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
       fPerfEvent = 0;
    }
 }
-
 
 //______________________________________________________________________________
 void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
@@ -359,7 +369,6 @@ void TPerfStats::SetBytesRead(Long64_t num)
    fBytesRead = num;
 }
 
-
 //______________________________________________________________________________
 Long64_t TPerfStats::GetBytesRead() const
 {
@@ -368,6 +377,55 @@ Long64_t TPerfStats::GetBytesRead() const
    return fBytesRead;
 }
 
+//______________________________________________________________________________
+void TPerfStats::WriteQueryLog()
+{
+   // Connect to SQL server and register query log used for quotas.
+   // The proofquerylog table has the format:
+   // CREATE TABLE proofquerylog (
+   //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+   //   user          VARCHAR(128) NOT NULL,
+   //   group         VARCHAR(128),
+   //   begin         DATETIME,
+   //   end           DATETIME,
+   //   walltime      INT,
+   //   cputime       FLOAT,
+   //   bytesread     BIGINT,
+   //   events        BIGINT
+   //)
+
+   TTimeStamp stop;
+   TString sql;
+
+   sql.Form("INSERT INTO proofquerylog VALUES (0, '%s', '%s', "
+            "'%s', '%s', %d, %.2f, %lld, %lld)",
+            gProofServ->GetUser(), gProofServ->GetGroup(),
+            fTzero.AsString("s"), stop.AsString("s"),
+            stop.GetSec()-fTzero.GetSec(), fTotCpuTime,
+            fTotBytesRead, fTotEvents);
+
+   // open connection to SQL server
+   TString sqlserv = gSystem->Getenv("ROOTPROOFQUERYLOGDB");
+   TString sqluser = gSystem->Getenv("ROOTPROOFQUERYLOGUSER");
+   TString sqlpass = gSystem->Getenv("ROOTPROOFQUERYLOGPASS");
+
+   TSQLServer *db =  TSQLServer::Connect(sqlserv, sqluser, sqlpass);
+
+   if (!db || db->IsZombie()) {
+      Error("WriteQueryLog", "failed to connect to SQL server %s as %s %s",
+            sqlserv.Data(), sqluser.Data(), sqlpass.Data());
+      printf("%s\n", sql.Data());
+   } else {
+      TSQLResult *res = db->Query(sql);
+
+      if (!res) {
+         Error("WriteQueryLog", "insert into proofquerylog failed");
+         printf("%s\n", sql.Data());
+      }
+      delete res;
+   }
+   delete db;
+}
 
 //______________________________________________________________________________
 void TPerfStats::Setup(TList *input)
@@ -397,7 +455,6 @@ void TPerfStats::Setup(TList *input)
    }
 }
 
-
 //______________________________________________________________________________
 void TPerfStats::Start(TList *input, TList *output)
 {
@@ -411,7 +468,6 @@ void TPerfStats::Start(TList *input, TList *output)
 
    gPerfStats->SimpleEvent(TVirtualPerfStats::kStart);
 }
-
 
 //______________________________________________________________________________
 void TPerfStats::Stop()
