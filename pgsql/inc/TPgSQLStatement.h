@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name: v5-14-00b $:$Id: TPgSQLStatement.h,v 1.7 2006/10/18 21:56:59 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.1 2007/06/06 10:51:56 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -23,10 +23,6 @@
 #else
 #include <sys/time.h>
 #endif
-
-#endif
-
-
 #include <libpq-fe.h>
 #include <pg_config.h> // to get PG_VERSION_NUM
 
@@ -34,12 +30,17 @@
                         || ((x) == PGRES_COMMAND_OK) \
                         || ((x) == PGRES_TUPLES_OK))
 
+#else
+struct PGconn;
+struct PGresult;
+#endif
+
 
 typedef char pg_bool;
 
 struct PGSQL_STMT {
-  PGconn * conn;
-  PGresult * res;
+   PGconn   *conn;
+   PGresult *res;
 };
 
 
@@ -57,8 +58,6 @@ private:
    Int_t                 fNumResultRows;
    Int_t                 fNumResultCols;
 
-
-
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSetMode() const { return fWorkingMode==2; }
 
@@ -69,7 +68,6 @@ private:
 
    void        FreeBuffers();
    void        SetBuffersNumber(Int_t n);
-
 
 public:
    TPgSQLStatement(PGSQL_STMT* stmt, Bool_t errout = kTRUE);
