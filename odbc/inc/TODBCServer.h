@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.4 2006/10/13 07:33:16 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -40,13 +40,13 @@ private:
    Bool_t ExtractErrors(SQLRETURN retcode, const char* method);
 
    Bool_t EndTransaction(Bool_t commit);
-   
+
    static TList* ListData(Bool_t isdrivers);
 
 public:
    TODBCServer(const char* db, const char *uid, const char *pw);
    virtual ~TODBCServer();
-   
+
    static TList* GetDrivers();
    static void PrintDrivers();
    static TList* GetDataSources();
@@ -56,7 +56,7 @@ public:
    TSQLResult *Query(const char *sql);
    Bool_t      Exec(const char* sql);
    TSQLStatement *Statement(const char *sql, Int_t = 100);
-   Bool_t      IsSupportStatement() const { return kTRUE; }
+   Bool_t      HasStatement() const { return kTRUE; }
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);

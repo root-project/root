@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.4 2006/06/02 14:02:03 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.5 2006/09/29 10:55:57 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    Bool_t      Exec(const char* sql);
    TSQLStatement *Statement(const char *sql, Int_t niter = 100);
    Bool_t      IsConnected() const { return (fConn!=0) && (fEnv!=0); }
-   Bool_t      IsSupportStatement() const { return kTRUE; }
+   Bool_t      HasStatement() const { return kTRUE; }
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);

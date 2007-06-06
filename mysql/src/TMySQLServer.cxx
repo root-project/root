@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.20 2006/10/13 07:33:16 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.21 2006/11/22 10:08:00 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -8,6 +8,38 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TMySQLServer                                                         //
+//                                                                      //
+// MySQL server plugin implementing the TSQLServer interface.           //
+//                                                                      //
+// To open a connection to a server use the static method Connect().    //
+// The db argument of Connect() is of the form:                         //
+//    mysql://<host>[:<port>][/<database>], e.g.                        //
+// mysql://pcroot.cern.ch:3456/test                                     //
+//                                                                      //
+// As an example of connecting to mysql we assume that the server is    //
+// running on the local host and that you have access to a database     //
+// named "test" by connecting using an account that has a username and  //
+// password of "tuser" and "tpass". You can set up this account         //
+// by using the "mysql" program to connect to the server as the MySQL   //
+// root user and issuing the following statement:                       //
+//                                                                      //
+// mysql> GRANT ALL ON test.* TO 'tuser'@'localhost' IDENTIFIED BY 'tpass';
+//                                                                      //
+// If the test database does not exist, create it with this statement:  //
+//                                                                      //
+// mysql> CREATE DATABASE test;                                         //
+//                                                                      //
+// If you want to use a different server host, username, password,      //
+// or database name, just substitute the appropriate values.            //
+// To connect do:                                                       //
+//                                                                      //
+// TSQLServer *db = TSQLServer::Connect("mysql://localhost/test", "tuser", "tpass");
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TMySQLServer.h"
 #include "TMySQLResult.h"
@@ -33,11 +65,15 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    // "mysql://pcroot.cern.ch:3456/test". The uid is the username and pw
    // the password that should be used for the connection.
    //
-   // In addition, several parameters can be specified in url after "?" symbold:
-   //    timeout=N            n is connect timeout is seconds
-   //    socket=socketname   socketname should be name of Unix socket, used for connection
-   //    multi_statements    Tell the server that the client may send multiple statements in a single string (separated by ;);
-   //    multi_results       Tell the server that the client can handle multiple result sets from multiple-statement executions or stored procedures.
+   // In addition, several parameters can be specified in url after "?" symbol:
+   //    timeout=N           n is connect timeout is seconds
+   //    socket=socketname   socketname should be name of Unix socket, used
+   //                        for connection
+   //    multi_statements    tell the server that the client may send multiple
+   //                        statements in a single string (separated by ;);
+   //    multi_results       tell the server that the client can handle multiple
+   //                        result sets from multiple-statement executions or
+   //                        stored procedures
    // If several parameters are specified, they should be separated by "&" symbol
    // Example of connection argument:
    //    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
@@ -49,7 +85,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
 
    if (!url.IsValid()) {
       TString errmsg("malformed db argument ");
-      errmsg+=db;
+      errmsg += db;
       SetError(-1, errmsg.Data(), "TMySQLServer");
       MakeZombie();
       return;
@@ -63,7 +99,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
 
    const char* dbase = url.GetFile();
    if (dbase!=0)
-     if (*dbase=='/') dbase++; //skip leading "/" if appears
+      if (*dbase=='/') dbase++; //skip leading "/" if appears
 
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
@@ -75,16 +111,16 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    TObjArray* optarr = optstr.Tokenize("&");
    if (optarr!=0) {
       TIter next(optarr);
-      TObject* obj = 0;
-      while ((obj=next()) != 0) {
+      TObject *obj = 0;
+      while ((obj = next()) != 0) {
          TString opt = obj->GetName();
          opt.ToLower();
          opt.ReplaceAll(" ","");
          if (opt.Contains("timeout=")) {
             opt.Remove(0, 8);
             Int_t timeout = opt.Atoi();
-            if (timeout>0) {
-               unsigned int mysqltimeout = (unsigned int) timeout;
+            if (timeout > 0) {
+               UInt_t mysqltimeout = (UInt_t) timeout;
                mysql_options(fMySQL, MYSQL_OPT_CONNECT_TIMEOUT, (const char*) &mysqltimeout);
                if (gDebug) Info("TMySQLServer","Set timeout %d",timeout);
             }
@@ -97,12 +133,16 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             #if MYSQL_VERSION_ID >= 40100
                client_flag = client_flag | CLIENT_MULTI_STATEMENTS;
                if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_STATEMENTS");
+            #else
+               Warning("TMySQLServer","CLIENT_MULTI_STATEMENTS not supported by this version of MySql");
             #endif
          } else
          if (opt.Contains("multi_results")) {
             #if MYSQL_VERSION_ID >= 40100
                client_flag = client_flag | CLIENT_MULTI_RESULTS;
                if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_RESULTS");
+            #else
+               Warning("TMySQLServer","CLIENT_MULTI_RESULTS not supported by this version of MySql");
             #endif
          }
       }
@@ -170,7 +210,6 @@ void TMySQLServer::Close(Option_t *)
       return;
 
    mysql_close(fMySQL);
-//   CheckErrNo("Close", kFALSE, );
    fPort = -1;
 }
 
@@ -195,8 +234,8 @@ TSQLResult *TMySQLServer::Query(const char *sql)
 //______________________________________________________________________________
 Bool_t TMySQLServer::Exec(const char* sql)
 {
-   // Execute SQL command which does not produce any result sets
-   // Returns kTRUE is successfull
+   // Execute SQL command which does not produce any result sets.
+   // Returns kTRUE if successful.
 
    CheckConnect("Exec", kFALSE);
 
@@ -260,7 +299,7 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 //______________________________________________________________________________
 TList* TMySQLServer::GetTablesList(const char* wild)
 {
-   // Return list of tables with specified wildcard
+   // Return list of tables with specified wildcard.
 
    CheckConnect("GetTablesList", 0);
 
@@ -294,10 +333,10 @@ TList* TMySQLServer::GetTablesList(const char* wild)
 }
 
 //______________________________________________________________________________
-TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
+TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
 {
-   // Produces SQL table info
-   // Object must be deleted by user
+   // Produces SQL table info.
+   // Object must be deleted by user.
 
    CheckConnect("GetTableInfo", 0);
 
@@ -420,7 +459,8 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
 
 #endif
 
-      if (lst==0) lst = new TList;
+      if (!lst)
+         lst = new TList;
       lst->Add(new TSQLColumnInfo(column_name,
                                   type_name,
                                   nullable,
@@ -483,54 +523,6 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
 
    return info;
 }
-
-
-/*
-//______________________________________________________________________________
-TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
-{
-   // Produces SQL table info
-   // Object must be deleted by user
-
-   CheckConnect("GetTableInfo", 0);
-
-   if ((tablename==0) || (*tablename==0)) return 0;
-
-   TString sql;
-   sql.Form("SHOW COLUMNS FROM `%s`", tablename);
-
-   TSQLStatement* stmt = Statement(sql.Data(), 10);
-   if (stmt==0) return 0;
-
-   if (!stmt->Process()) {
-      delete stmt;
-      return 0;
-   }
-
-   TList* lst = 0;
-
-   stmt->StoreResult();
-
-   while (stmt->NextResultRow()) {
-      const char* columnname = stmt->GetString(0);
-      const char* sqltype = stmt->GetString(1);
-      const char* nstr = stmt->GetString(2);
-
-      Bool_t IsNullable = kFALSE;
-      if (nstr!=0)
-         IsNullable = (strcmp(nstr,"YES")==0) || (strcmp(nstr,"yes")==0);
-
-      if (lst==0) lst = new TList;
-
-      lst->Add(new TSQLColumnInfo(columnname, sqltype, IsNullable));
-   }
-
-   delete stmt;
-
-   return new TSQLTableInfo(tablename, lst);
-}
-
-*/
 
 //______________________________________________________________________________
 TSQLResult *TMySQLServer::GetColumns(const char *dbname, const char *table,
@@ -623,7 +615,7 @@ Int_t TMySQLServer::Shutdown()
 //______________________________________________________________________________
 const char *TMySQLServer::ServerInfo()
 {
-   // Return server info in form "MySQL <vesrion>"
+   // Return server info in form "MySQL <vesrion>".
 
    CheckConnect("ServerInfo", 0);
 
@@ -638,10 +630,10 @@ const char *TMySQLServer::ServerInfo()
 }
 
 //______________________________________________________________________________
-Bool_t TMySQLServer::IsSupportStatement() const
+Bool_t TMySQLServer::HasStatement() const
 {
-   // return kTRUE if TSQLStatement class is supported.
-   // Starts from MySQL 4.1
+   // Return kTRUE if TSQLStatement class is supported.
+   // Starts from MySQL 4.1.
 
 #if MYSQL_VERSION_ID < 40100
    return kFALSE;
@@ -652,9 +644,9 @@ Bool_t TMySQLServer::IsSupportStatement() const
 
 
 //______________________________________________________________________________
-TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
+TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
 {
-   // Produce TMySQLStatement
+   // Produce TMySQLStatement.
 
 #if MYSQL_VERSION_ID < 40100
    ClearError();
