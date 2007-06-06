@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.h,v 1.1 2001/06/14 23:19:15 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.h,v 1.2 2003/02/11 12:30:28 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -33,17 +33,19 @@ public:
    TPgSQLServer(const char *db, const char *uid, const char *pw);
    ~TPgSQLServer();
 
-   void Close(Option_t *opt="");
-   TSQLResult *Query(const char *sql);
-   Int_t       SelectDataBase(const char *dbname);
-   TSQLResult *GetDataBases(const char *wild = 0);
-   TSQLResult *GetTables(const char *dbname, const char *wild = 0);
-   TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0);
-   Int_t       CreateDataBase(const char *dbname);
-   Int_t       DropDataBase(const char *dbname);
-   Int_t       Reload();
-   Int_t       Shutdown();
-   const char *ServerInfo();
+   void           Close(Option_t *opt="");
+   TSQLResult    *Query(const char *sql);
+   TSQLStatement *Statement(const char *sql, Int_t = 100);
+   Bool_t         HasStatement() const;
+   Int_t          SelectDataBase(const char *dbname);
+   TSQLResult    *GetDataBases(const char *wild = 0);
+   TSQLResult    *GetTables(const char *dbname, const char *wild = 0);
+   TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = 0);
+   Int_t          CreateDataBase(const char *dbname);
+   Int_t          DropDataBase(const char *dbname);
+   Int_t          Reload();
+   Int_t          Shutdown();
+   const char    *ServerInfo();
 
    ClassDef(TPgSQLServer,0)  // Connection to PgSQL server
 };

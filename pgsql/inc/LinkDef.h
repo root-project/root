@@ -7,5 +7,6 @@
 #pragma link C++ class TPgSQLServer;
 #pragma link C++ class TPgSQLResult;
 #pragma link C++ class TPgSQLRow;
+#pragma link C++ class TPgSQLStatement;
 
 #endif

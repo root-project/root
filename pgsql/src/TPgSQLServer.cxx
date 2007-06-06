@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:$:$Id: TPgSQLServer.cxx,v 1.6 2006/05/31 14:45:41 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.7 2007/02/05 10:21:17 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TPgSQLServer.h"
 #include "TPgSQLResult.h"
+#include "TPgSQLStatement.h"
 #include "TUrl.h"
 
 
@@ -184,9 +185,9 @@ TSQLResult *TPgSQLServer::GetTables(const char *dbname, const char *wild)
       return 0;
    }
 
-   TString sql = "SELECT relname FROM pg_class";
+   TString sql = "SELECT relname FROM pg_class where relkind='r'";
    if (wild)
-      sql += Form(" WHERE relname LIKE '%s'", wild);
+      sql += Form(" AND relname LIKE '%s'", wild);
 
    return Query(sql);
 }
@@ -310,4 +311,54 @@ const char *TPgSQLServer::ServerInfo()
       svrinfo += "unknown version number";
 
    return svrinfo;
+}
+
+//______________________________________________________________________________
+Bool_t TPgSQLServer::HasStatement() const
+{
+   // PG_VERSION_NUM conveniently only started being #defined at 8.2.3
+   // which is the first version of libpq which explicitly supports prepared
+   // statements
+
+#ifdef PG_VERSION_NUM
+   return kTRUE;
+#else
+   return kFALSE;
+#endif
+}
+
+//______________________________________________________________________________
+TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
+{
+  // Produce TPgSQLStatement.
+
+#ifdef PG_VERSION_NUM
+
+   if (!sql || !*sql) {
+      SetError(-1, "no query string specified","Statement");
+      return 0;
+   }
+
+   PGSQL_STMT *stmt = new PGSQL_STMT;
+   if (!stmt){
+      SetError(-1, "cannot allocate PGSQL_STMT" , "Statement");
+      return 0;
+   }
+   stmt->conn=fPgSQL;
+   stmt->res=PQprepare(fPgSQL,"", sql,0,(const Oid*)0);
+
+   ExecStatusType stat = PQresultStatus(stmt->res);
+   if (pgsql_success(stat)) {
+     fErrorOut=stat;
+     return new TPgSQLStatement(stmt, fErrorOut);
+   } else {
+      SetError(stat, PQresultErrorMessage(stmt->res), "Statement");
+      stmt->conn = 0;
+      delete stmt;
+      return 0;
+   }
+#else
+   Error("Statement", "not implemented for pgsql < 8.2");
+#endif
+   return 0;
 }

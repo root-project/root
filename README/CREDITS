@@ -73,6 +73,10 @@ N: Sebastian Boeser
 E: sboeser@ifh.de
 D: class TGraphPolar
 
+N: Dennis Box
+E: dbox@fnal.gov
+D: TPgSQLStatement implementation
+
 N: Dan Bradley
 E: dan@hep.wisc.edu
 D: Chirp plugin which allows remote file access via the Condor Chirp protocol

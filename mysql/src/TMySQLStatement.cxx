@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.9 2006/09/05 13:37:08 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.10 2006/12/12 11:29:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -36,9 +36,9 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    fBuffer(0),
    fWorkingMode(0)
 {
-   // Normal constructor 
-   // Checks if statement contains parameters tags 
-   
+   // Normal constructor.
+   // Checks if statement contains parameters tags.
+
    unsigned long paramcount = mysql_stmt_param_count(fStmt);
 
    if (paramcount>0) {
@@ -52,15 +52,15 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
 //______________________________________________________________________________
 TMySQLStatement::~TMySQLStatement()
 {
-   // destructor
-    
+   // Destructor.
+
    Close();
 }
 
 //______________________________________________________________________________
 void TMySQLStatement::Close(Option_t *)
 {
-   // Close statement
+   // Close statement.
 
    if (fStmt)
       mysql_stmt_close(fStmt);
@@ -111,9 +111,9 @@ void TMySQLStatement::Close(Option_t *)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::Process()
 {
-   // Process statement 
-    
-   CheckStmt("Process",kFALSE); 
+   // Process statement.
+
+   CheckStmt("Process",kFALSE);
 
    // if parameters was set, processing just means of closing parameters and variables
    if (IsSetParsMode()) {
@@ -125,7 +125,7 @@ Bool_t TMySQLStatement::Process()
       return kTRUE;
    }
 
-   if (mysql_stmt_execute(fStmt)) 
+   if (mysql_stmt_execute(fStmt))
       CheckErrNo("Process",kTRUE, kFALSE);
 
    return kTRUE;
@@ -134,10 +134,10 @@ Bool_t TMySQLStatement::Process()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement is processed 
-    
-   CheckStmt("Process", -1); 
-   
+   // Return number of affected rows after statement is processed.
+
+   CheckStmt("Process", -1);
+
    my_ulonglong res = mysql_stmt_affected_rows(fStmt);
 
    if (res == (my_ulonglong) -1)
@@ -149,30 +149,30 @@ Int_t TMySQLStatement::GetNumAffectedRows()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumParameters()
 {
-   // Return number of statement parameters 
-    
-   CheckStmt("GetNumParameters", -1); 
+   // Return number of statement parameters.
+
+   CheckStmt("GetNumParameters", -1);
 
    Int_t res = mysql_stmt_param_count(fStmt);
-   
+
    CheckErrNo("GetNumParameters", kFALSE, -1);
-   
+
    return res;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::StoreResult()
 {
-   // Store result of statement processing to access them 
+   // Store result of statement processing to access them
    // via GetInt(), GetDouble() and so on methods.
-    
-   CheckStmt("StoreResult", kFALSE); 
+
+   CheckStmt("StoreResult", kFALSE);
    if (fWorkingMode!=0) {
       SetError(-1,"Cannot store result for that statement","StoreResult");
       return kFALSE;
    }
 
-   if (mysql_stmt_store_result(fStmt)) 
+   if (mysql_stmt_store_result(fStmt))
       CheckErrNo("StoreResult",kTRUE, kFALSE);
 
    // allocate memeory for data reading from query
@@ -198,7 +198,7 @@ Bool_t TMySQLStatement::StoreResult()
    if (fBind==0) return kFALSE;
 
    /* Bind the buffers */
-   if (mysql_stmt_bind_result(fStmt, fBind)) 
+   if (mysql_stmt_bind_result(fStmt, fBind))
       CheckErrNo("StoreResult",kTRUE, kFALSE);
 
    fWorkingMode = 2;
@@ -209,16 +209,16 @@ Bool_t TMySQLStatement::StoreResult()
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumFields()
 {
-   // Return number of fields in result set 
-    
+   // Return number of fields in result set.
+
    return IsResultSetMode() ? fNumBuffers : -1;
 }
 
 //______________________________________________________________________________
 const char* TMySQLStatement::GetFieldName(Int_t nfield)
 {
-   // Returns field name in result set 
-    
+   // Returns field name in result set.
+
    if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
 
    return fBuffer[nfield].fFieldName;
@@ -227,8 +227,8 @@ const char* TMySQLStatement::GetFieldName(Int_t nfield)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextResultRow()
 {
-   // Shift cursor to nect row in result set
-    
+   // Shift cursor to nect row in result set.
+
    if ((fStmt==0) || !IsResultSetMode()) return kFALSE;
 
    Bool_t res = !mysql_stmt_fetch(fStmt);
@@ -241,16 +241,15 @@ Bool_t TMySQLStatement::NextResultRow()
    return res;
 }
 
-
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextIteration()
 {
    // Increment iteration counter for statement, where parameter can be set.
-   // Statement with parameters of previous iteration 
-   // automatically will be applied to database
+   // Statement with parameters of previous iteration
+   // automatically will be applied to database.
 
-   ClearError(); 
-    
+   ClearError();
+
    if (!IsSetParsMode() || (fBind==0)) {
       SetError(-1,"Cannot call for that statement","NextIteration");
       return kFALSE;
@@ -261,8 +260,8 @@ Bool_t TMySQLStatement::NextIteration()
    if (fIterationCount==0) return kTRUE;
 
    if (fNeedParBind) {
-      fNeedParBind = kFALSE; 
-      if (mysql_stmt_bind_param(fStmt, fBind)) 
+      fNeedParBind = kFALSE;
+      if (mysql_stmt_bind_param(fStmt, fBind))
          CheckErrNo("NextIteration",kTRUE, kFALSE);
    }
 
@@ -275,8 +274,8 @@ Bool_t TMySQLStatement::NextIteration()
 //______________________________________________________________________________
 void TMySQLStatement::FreeBuffers()
 {
-   // Release all buffers, used by statement 
-    
+   // Release all buffers, used by statement.
+
    if (fBuffer) {
       for (Int_t n=0; n<fNumBuffers;n++) {
          free(fBuffer[n].fMem);
@@ -299,8 +298,8 @@ void TMySQLStatement::FreeBuffers()
 //______________________________________________________________________________
 void TMySQLStatement::SetBuffersNumber(Int_t numpars)
 {
-   // Allocate buffers for statement parameters/ result fields 
-    
+   // Allocate buffers for statement parameters/ result fields.
+
    FreeBuffers();
    if (numpars<=0) return;
 
@@ -316,8 +315,8 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
 //______________________________________________________________________________
 const char* TMySQLStatement::ConvertToString(Int_t npar)
 {
-   // Convert field value to string 
-    
+   // Convert field value to string.
+
    if (fBuffer[npar].fResNull) return 0;
 
    void* addr = fBuffer[npar].fMem;
@@ -386,13 +385,13 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
 //______________________________________________________________________________
 long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 {
-   // Convert field to numeric value
-    
+   // Convert field to numeric value.
+
    if (fBuffer[npar].fResNull) return 0;
 
    void* addr = fBuffer[npar].fMem;
    bool sig = fBuffer[npar].fSign;
-   
+
    if (addr==0) return 0;
 
    switch(fBind[npar].buffer_type) {
@@ -402,7 +401,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          break;
       case MYSQL_TYPE_LONGLONG:
          if (sig) return *((long long*) addr); else
-                  return *((unsigned long long*) addr);
+                  return *((ULong64_t*) addr);
          break;
       case MYSQL_TYPE_SHORT:
          if (sig) return *((short*) addr); else
@@ -419,7 +418,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          return *((double*) addr);
          break;
       case MYSQL_TYPE_STRING:
-      case MYSQL_TYPE_VAR_STRING: 
+      case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_BLOB: {
          char* str = (char*) addr;
          ULong_t len = fBuffer[npar].fResLength;
@@ -435,7 +434,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
       case MYSQL_TYPE_DATETIME:
       case MYSQL_TYPE_TIMESTAMP: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         TDatime rtm(tm->year, tm->month,  tm->day, 
+         TDatime rtm(tm->year, tm->month,  tm->day,
                   tm->hour, tm->minute, tm->second);
          return rtm.Get();
          break;
@@ -444,7 +443,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
          TDatime rtm(tm->year, tm->month,  tm->day, 0, 0, 0);
          return rtm.GetDate();
-         break;            
+         break;
       }
       case MYSQL_TYPE_TIME: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
@@ -452,7 +451,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          return rtm.GetTime();
          break;
       }
-      
+
       default:
          return 0;
    }
@@ -463,18 +462,18 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::IsNull(Int_t npar)
 {
-   // Checks if field value is null 
-    
+   // Checks if field value is null.
+
    CheckGetField("IsNull", kTRUE);
-   
+
    return fBuffer[npar].fResNull;
 }
 
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetInt(Int_t npar)
 {
-   // Return field value as integer 
-    
+   // Return field value as integer.
+
    CheckGetField("GetInt", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && fBuffer[npar].fSign)
@@ -486,7 +485,7 @@ Int_t TMySQLStatement::GetInt(Int_t npar)
 //______________________________________________________________________________
 UInt_t TMySQLStatement::GetUInt(Int_t npar)
 {
-   // Return field value as unsigned integer 
+   // Return field value as unsigned integer.
 
    CheckGetField("GetUInt", 0);
 
@@ -499,7 +498,7 @@ UInt_t TMySQLStatement::GetUInt(Int_t npar)
 //______________________________________________________________________________
 Long_t TMySQLStatement::GetLong(Int_t npar)
 {
-   // Return field value as long integer 
+   // Return field value as long integer.
 
    CheckGetField("GetLong", 0);
 
@@ -512,12 +511,12 @@ Long_t TMySQLStatement::GetLong(Int_t npar)
 //______________________________________________________________________________
 Long64_t TMySQLStatement::GetLong64(Int_t npar)
 {
-   // Return field value as 64-bit integer 
+   // Return field value as 64-bit integer.
 
    CheckGetField("GetLong64", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && fBuffer[npar].fSign)
-     return (Long64_t) *((long long*) fBuffer[npar].fMem);
+     return (Long64_t) *((Long64_t*) fBuffer[npar].fMem);
 
    return (Long64_t) ConvertToNumeric(npar);
 }
@@ -525,12 +524,12 @@ Long64_t TMySQLStatement::GetLong64(Int_t npar)
 //______________________________________________________________________________
 ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 {
-   // Return field value as unsigned 64-bit integer 
+   // Return field value as unsigned 64-bit integer.
 
    CheckGetField("GetULong64", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].fSign)
-     return (ULong64_t) *((unsigned long long*) fBuffer[npar].fMem);
+     return (ULong64_t) *((ULong64_t*) fBuffer[npar].fMem);
 
    return (ULong64_t) ConvertToNumeric(npar);
 }
@@ -538,7 +537,7 @@ ULong64_t TMySQLStatement::GetULong64(Int_t npar)
 //______________________________________________________________________________
 Double_t TMySQLStatement::GetDouble(Int_t npar)
 {
-   // Return field value as double 
+   // Return field value as double.
 
    CheckGetField("GetDouble", 0);
 
@@ -551,12 +550,12 @@ Double_t TMySQLStatement::GetDouble(Int_t npar)
 //______________________________________________________________________________
 const char *TMySQLStatement::GetString(Int_t npar)
 {
-   // Return field value as string 
+   // Return field value as string.
 
    CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
-      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) || 
+      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING)) {
          if (fBuffer[npar].fResNull) return 0;
          char* str = (char*) fBuffer[npar].fMem;
@@ -573,18 +572,18 @@ const char *TMySQLStatement::GetString(Int_t npar)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return field value as binary array 
+   // Return field value as binary array.
 
-   mem = 0;  
+   mem = 0;
    size = 0;
-   
+
    CheckGetField("GetBinary", kFALSE);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
        (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING) ||
-       (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) || 
-       (fBind[npar].buffer_type==MYSQL_TYPE_TINY_BLOB) || 
-       (fBind[npar].buffer_type==MYSQL_TYPE_MEDIUM_BLOB) || 
+       (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) ||
+       (fBind[npar].buffer_type==MYSQL_TYPE_TINY_BLOB) ||
+       (fBind[npar].buffer_type==MYSQL_TYPE_MEDIUM_BLOB) ||
        (fBind[npar].buffer_type==MYSQL_TYPE_LONG_BLOB)) {
          if (fBuffer[npar].fResNull) return kTRUE;
          mem = fBuffer[npar].fMem;
@@ -598,15 +597,15 @@ Bool_t TMySQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // return field value as date
-   
+   // Return field value as date.
+
    CheckGetField("GetDate", kFALSE);
 
    if (fBuffer[npar].fResNull) return kFALSE;
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_DATETIME:
-      case MYSQL_TYPE_TIMESTAMP: 
+      case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_DATE: {
          MYSQL_TIME* tm = (MYSQL_TIME*) fBuffer[npar].fMem;
          if (tm==0) return kFALSE;
@@ -624,15 +623,15 @@ Bool_t TMySQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& da
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as time
-   
+   // Return field value as time.
+
    CheckGetField("GetTime", kFALSE);
 
    if (fBuffer[npar].fResNull) return kFALSE;
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_DATETIME:
-      case MYSQL_TYPE_TIMESTAMP: 
+      case MYSQL_TYPE_TIMESTAMP:
       case MYSQL_TYPE_TIME: {
          MYSQL_TIME* tm = (MYSQL_TIME*) fBuffer[npar].fMem;
          if (tm==0) return kFALSE;
@@ -650,8 +649,8 @@ Bool_t TMySQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // return field value as date & time
-   
+   // Return field value as date & time.
+
    CheckGetField("GetDatime", kFALSE);
 
    if (fBuffer[npar].fResNull) return kFALSE;
@@ -678,7 +677,7 @@ Bool_t TMySQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // return field value as time stamp
+   // Return field value as time stamp.
 
    CheckGetField("GetTimstamp", kFALSE);
 
@@ -707,9 +706,9 @@ Bool_t TMySQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int sqlsize)
 {
-   // Set parameter type to be used as buffer
-   // Used in both setting data to database and retriving data from data base
-   // Initialize proper MYSQL_BIND structure and allocate required buffers
+   // Set parameter type to be used as buffer.
+   // Used in both setting data to database and retriving data from data base.
+   // Initialize proper MYSQL_BIND structure and allocate required buffers.
 
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
@@ -743,7 +742,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
    fBuffer[npar].fSize = allocsize;
    fBuffer[npar].fSqlType = sqltype;
    fBuffer[npar].fSign = sig;
-   
+
    if ((allocsize>0) && fBuffer[npar].fMem && doreset)
       memset(fBuffer[npar].fMem, 0, allocsize);
 
@@ -760,16 +759,16 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 //______________________________________________________________________________
 void *TMySQLStatement::BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig, Int_t size)
 {
-   // Check boundary condition before setting value of parameter
-   // Return address of parameter buffer
+   // Check boundary condition before setting value of parameter.
+   // Return address of parameter buffer.
 
-   ClearError(); 
-    
+   ClearError();
+
    if (!IsSetParsMode()) {
       SetError(-1,"Cannot set parameter for statement", method);
-      return 0;   
+      return 0;
    }
-   
+
    if ((npar<0) || (npar>=fNumBuffers)) {
       SetError(-1,Form("Invalid parameter number %d",npar), method);
       return 0;
@@ -783,7 +782,7 @@ void *TMySQLStatement::BeforeSet(const char* method, Int_t npar, Int_t sqltype, 
 
    if ((fBuffer[npar].fSqlType!=sqltype) ||
       (fBuffer[npar].fSign != sig)) return 0;
-      
+
    fBuffer[npar].fResNull = false;
 
    return fBuffer[npar].fMem;
@@ -792,7 +791,7 @@ void *TMySQLStatement::BeforeSet(const char* method, Int_t npar, Int_t sqltype, 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetNull(Int_t npar)
 {
-   // Set NULL as parameter value
+   // Set NULL as parameter value.
    // If NULL should be set for statement parameter during first iteration,
    // one should call before proper Set... method to identify type of argument for
    // the future. For instance, if one suppose to have double as type of parameter,
@@ -802,10 +801,10 @@ Bool_t TMySQLStatement::SetNull(Int_t npar)
 
    void* addr = BeforeSet("SetNull", npar, MYSQL_TYPE_LONG);
 
-   if (addr!=0) 
+   if (addr!=0)
       *((long*) addr) = 0;
-      
-   if ((npar>=0) && (npar<fNumBuffers)) 
+
+   if ((npar>=0) && (npar<fNumBuffers))
       fBuffer[npar].fResNull = true;
 
    return kTRUE;
@@ -814,8 +813,8 @@ Bool_t TMySQLStatement::SetNull(Int_t npar)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetInt(Int_t npar, Int_t value)
 {
-   // Set parameter value as integer 
-    
+   // Set parameter value as integer.
+
    void* addr = BeforeSet("SetInt", npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
@@ -827,7 +826,7 @@ Bool_t TMySQLStatement::SetInt(Int_t npar, Int_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
-   // Set parameter value as unsigned integer 
+   // Set parameter value as unsigned integer.
 
    void* addr = BeforeSet("SetUInt", npar, MYSQL_TYPE_LONG, kFALSE);
 
@@ -840,7 +839,7 @@ Bool_t TMySQLStatement::SetUInt(Int_t npar, UInt_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong(Int_t npar, Long_t value)
 {
-   // Set parameter value as long integer 
+   // Set parameter value as long integer.
 
    void* addr = BeforeSet("SetLong", npar, MYSQL_TYPE_LONG);
 
@@ -853,12 +852,12 @@ Bool_t TMySQLStatement::SetLong(Int_t npar, Long_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
-   // Set parameter value as 64-bit integer 
+   // Set parameter value as 64-bit integer.
 
    void* addr = BeforeSet("SetLong64", npar, MYSQL_TYPE_LONGLONG);
 
    if (addr!=0)
-      *((long long*) addr) = value;
+      *((Long64_t*) addr) = value;
 
    return (addr!=0);
 }
@@ -866,12 +865,12 @@ Bool_t TMySQLStatement::SetLong64(Int_t npar, Long64_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
-   // Set parameter value as unsigned 64-bit integer 
+   // Set parameter value as unsigned 64-bit integer.
 
    void* addr = BeforeSet("SetULong64", npar, MYSQL_TYPE_LONGLONG, kFALSE);
 
    if (addr!=0)
-      *((unsigned long long*) addr) = value;
+      *((ULong64_t*) addr) = value;
 
    return (addr!=0);
 }
@@ -879,7 +878,7 @@ Bool_t TMySQLStatement::SetULong64(Int_t npar, ULong64_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDouble(Int_t npar, Double_t value)
 {
-   // Set parameter value as double
+   // Set parameter value as double.
 
    void* addr = BeforeSet("SetDouble", npar, MYSQL_TYPE_DOUBLE, kFALSE);
 
@@ -892,7 +891,7 @@ Bool_t TMySQLStatement::SetDouble(Int_t npar, Double_t value)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   // Set parameter value as string
+   // Set parameter value as string.
 
    Int_t len = value ? strlen(value) : 0;
 
@@ -923,10 +922,10 @@ Bool_t TMySQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
-   // set parameter value as binary data
-   
+   // Set parameter value as binary data.
+
    if (size>=maxsize) maxsize = size + 1;
-   
+
    void* addr = BeforeSet("SetBinary", npar, MYSQL_TYPE_BLOB, true, maxsize);
 
    if (addr==0) return kFALSE;
@@ -949,16 +948,12 @@ Bool_t TMySQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
    fBuffer[npar].fResLength = size;
 
    return kTRUE;
-
 }
-
-
-
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // set parameter value as date 
+   // Set parameter value as date.
 
    MYSQL_TIME* addr = (MYSQL_TIME*) BeforeSet("SetDate", npar, MYSQL_TYPE_DATE);
 
@@ -974,7 +969,7 @@ Bool_t TMySQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as time 
+   // Set parameter value as time.
 
    MYSQL_TIME* addr = (MYSQL_TIME*) BeforeSet("SetTime", npar, MYSQL_TYPE_TIME);
 
@@ -990,7 +985,7 @@ Bool_t TMySQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as date & time 
+   // Set parameter value as date & time.
 
    MYSQL_TIME* addr = (MYSQL_TIME*) BeforeSet("SetDatime", npar, MYSQL_TYPE_DATETIME);
 
@@ -1009,7 +1004,7 @@ Bool_t TMySQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t)
 {
-   // set parameter value as timestamp
+   // Set parameter value as timestamp.
 
    MYSQL_TIME* addr = (MYSQL_TIME*) BeforeSet("SetTimestamp", npar, MYSQL_TYPE_TIMESTAMP);
 
@@ -1030,14 +1025,14 @@ Bool_t TMySQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t 
 //______________________________________________________________________________
 TMySQLStatement::TMySQLStatement(MYSQL_STMT*, Bool_t)
 {
-   // Normal constructor 
+   // Normal constructor.
    // For MySQL version < 4.1 no statement is supported
 }
 
 //______________________________________________________________________________
 TMySQLStatement::~TMySQLStatement()
 {
-   // destructor
+   // Destructor.
 }
 
 //______________________________________________________________________________
@@ -1049,57 +1044,57 @@ void TMySQLStatement::Close(Option_t *)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::Process()
 {
-   // Process statement 
-   
+   // Process statement.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumAffectedRows()
 {
-   // Return number of affected rows after statement is processed 
-   
+   // Return number of affected rows after statement is processed.
+
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumParameters()
 {
-   // Return number of statement parameters 
-    
+   // Return number of statement parameters.
+
    return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::StoreResult()
 {
-   // Store result of statement processing to access them 
+   // Store result of statement processing to access them
    // via GetInt(), GetDouble() and so on methods.
-    
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetNumFields()
 {
-   // Return number of fields in result set 
-    
+   // Return number of fields in result set.
+
    return 0;
 }
 
 //______________________________________________________________________________
 const char* TMySQLStatement::GetFieldName(Int_t)
 {
-   // Returns field name in result set 
-    
+   // Returns field name in result set.
+
    return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::NextResultRow()
 {
-   // Shift cursor to nect row in result set
-    
+   // Shift cursor to nect row in result set.
+
    return kFALSE;
 }
 
@@ -1108,8 +1103,8 @@ Bool_t TMySQLStatement::NextResultRow()
 Bool_t TMySQLStatement::NextIteration()
 {
    // Increment iteration counter for statement, where parameter can be set.
-   // Statement with parameters of previous iteration 
-   // automatically will be applied to database
+   // Statement with parameters of previous iteration
+   // automatically will be applied to database.
 
    return kFALSE;
 }
@@ -1117,51 +1112,51 @@ Bool_t TMySQLStatement::NextIteration()
 //______________________________________________________________________________
 void TMySQLStatement::FreeBuffers()
 {
-   // Release all buffers, used by statement 
+   // Release all buffers, used by statement.
 }
 
 //______________________________________________________________________________
 void TMySQLStatement::SetBuffersNumber(Int_t)
 {
-   // Allocate buffers for statement parameters/ result fields 
+   // Allocate buffers for statement parameters/ result fields.
 }
 
 //______________________________________________________________________________
 const char* TMySQLStatement::ConvertToString(Int_t)
 {
-   // Convert field value to string 
-   
+   // Convert field value to string.
+
    return 0;
 }
 
 //______________________________________________________________________________
 long double TMySQLStatement::ConvertToNumeric(Int_t)
 {
-   // Convert field to numeric value
-    
-   return 0; 
+   // Convert field to numeric value.
+
+   return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::IsNull(Int_t)
 {
-   // Checks if field value is null 
-   
+   // Checks if field value is null.
+
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Int_t TMySQLStatement::GetInt(Int_t)
 {
-   // Return field value as integer 
+   // Return field value as integer.
 
-   return 0;    
+   return 0;
 }
 
 //______________________________________________________________________________
 UInt_t TMySQLStatement::GetUInt(Int_t)
 {
-   // Return field value as unsigned integer 
+   // Return field value as unsigned integer.
 
    return 0;
 }
@@ -1169,15 +1164,15 @@ UInt_t TMySQLStatement::GetUInt(Int_t)
 //______________________________________________________________________________
 Long_t TMySQLStatement::GetLong(Int_t)
 {
-   // Return field value as long integer 
-   
+   // Return field value as long integer.
+
    return 0;
 }
 
 //______________________________________________________________________________
 Long64_t TMySQLStatement::GetLong64(Int_t)
 {
-   // Return field value as 64-bit integer 
+   // Return field value as 64-bit integer.
 
    return 0;
 }
@@ -1185,7 +1180,7 @@ Long64_t TMySQLStatement::GetLong64(Int_t)
 //______________________________________________________________________________
 ULong64_t TMySQLStatement::GetULong64(Int_t)
 {
-   // Return field value as unsigned 64-bit integer 
+   // Return field value as unsigned 64-bit integer.
 
    return 0;
 }
@@ -1193,15 +1188,15 @@ ULong64_t TMySQLStatement::GetULong64(Int_t)
 //______________________________________________________________________________
 Double_t TMySQLStatement::GetDouble(Int_t)
 {
-   // Return field value as double 
-   
+   // Return field value as double.
+
    return 0.;
 }
 
 //______________________________________________________________________________
 const char *TMySQLStatement::GetString(Int_t)
 {
-   // Return field value as string 
+   // Return field value as string.
 
    return 0;
 }
@@ -1209,8 +1204,8 @@ const char *TMySQLStatement::GetString(Int_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetBinary(Int_t, void* &, Long_t&)
 {
-   // Return field value as binary array 
-   
+   // Return field value as binary array.
+
    return kFALSE;
 }
 
@@ -1218,58 +1213,58 @@ Bool_t TMySQLStatement::GetBinary(Int_t, void* &, Long_t&)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetDate(Int_t, Int_t&, Int_t&, Int_t&)
 {
-   // return field value as date
-   
+   // Return field value as date.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetTime(Int_t, Int_t&, Int_t&, Int_t&)
 {
-   // return field value as time
-   
+   // Return field value as time.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetDatime(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
 {
-   // return field value as date & time
-   
+   // Return field value as date & time.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
 {
-   // return field value as time stamp
-   
+   // Return field value as time stamp.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetSQLParamType(Int_t, int, bool, int)
 {
-   // Set parameter type to be used as buffer
-   // Used in both setting data to database and retriving data from data base
-   // Initialize proper MYSQL_BIND structure and allocate required buffers
-   
+   // Set parameter type to be used as buffer.
+   // Used in both setting data to database and retriving data from data base.
+   // Initialize proper MYSQL_BIND structure and allocate required buffers.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 void *TMySQLStatement::BeforeSet(const char*, Int_t, Int_t, Bool_t, Int_t)
 {
-   // Check boundary condition before setting value of parameter
-   // Return address of parameter buffer
-   
+   // Check boundary condition before setting value of parameter.
+   // Return address of parameter buffer.
+
    return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetNull(Int_t)
 {
-   // Set NULL as parameter value
+   // Set NULL as parameter value.
    // If NULL should be set for statement parameter during first iteration,
    // one should call before proper Set... method to identify type of argument for
    // the future. For instance, if one suppose to have double as type of parameter,
@@ -1283,23 +1278,23 @@ Bool_t TMySQLStatement::SetNull(Int_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetInt(Int_t, Int_t)
 {
-   // Set parameter value as integer 
+   // Set parameter value as integer.
 
-   return kFALSE;    
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetUInt(Int_t, UInt_t)
 {
-   // Set parameter value as unsigned integer 
-   
+   // Set parameter value as unsigned integer.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong(Int_t, Long_t)
 {
-   // Set parameter value as long integer 
+   // Set parameter value as long integer.
 
    return kFALSE;
 }
@@ -1307,7 +1302,7 @@ Bool_t TMySQLStatement::SetLong(Int_t, Long_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetLong64(Int_t, Long64_t)
 {
-   // Set parameter value as 64-bit integer 
+   // Set parameter value as 64-bit integer.
 
    return kFALSE;
 }
@@ -1315,7 +1310,7 @@ Bool_t TMySQLStatement::SetLong64(Int_t, Long64_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetULong64(Int_t, ULong64_t)
 {
-   // Set parameter value as unsigned 64-bit integer 
+   // Set parameter value as unsigned 64-bit integer.
 
    return kFALSE;
 }
@@ -1323,7 +1318,7 @@ Bool_t TMySQLStatement::SetULong64(Int_t, ULong64_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDouble(Int_t, Double_t)
 {
-   // Set parameter value as double
+   // Set parameter value as double.
 
    return kFALSE;
 }
@@ -1331,7 +1326,7 @@ Bool_t TMySQLStatement::SetDouble(Int_t, Double_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetString(Int_t, const char*, Int_t)
 {
-   // Set parameter value as string
+   // Set parameter value as string.
 
    return kFALSE;
 }
@@ -1339,40 +1334,40 @@ Bool_t TMySQLStatement::SetString(Int_t, const char*, Int_t)
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetBinary(Int_t, void*, Long_t, Long_t)
 {
-   // set parameter value as binary data
-   
-   return kFALSE;  
-}   
+   // Set parameter value as binary data.
+
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDate(Int_t, Int_t, Int_t, Int_t)
 {
-   // set parameter value as date 
-   
+   // Set parameter value as date.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetTime(Int_t, Int_t, Int_t, Int_t)
 {
-   // set parameter value as time 
-   
+   // Set parameter value as time.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetDatime(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
 {
-   // set parameter value as date & time 
-   
+   // Set parameter value as date & time.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLStatement::SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
 {
-   // set parameter value as timestamp 
-   
+   // Set parameter value as timestamp.
+
    return kFALSE;
 }
 
