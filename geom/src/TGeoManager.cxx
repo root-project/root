@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.180 2007/05/25 12:28:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.181 2007/06/05 06:34:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -4432,7 +4432,7 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a cone shape with given medium.
    return TGeoBuilder::Instance(this)->MakeCone(name, medium, dz, rmin1, rmax1, rmin2, rmax2);
- }
+}
  
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::MakeCons(const char *name, const TGeoMedium *medium,
