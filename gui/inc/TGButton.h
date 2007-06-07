@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.43 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.44 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -179,7 +179,7 @@ public:
    const TGHotString *GetText() const { return fLabel; }
    virtual const char *GetTitle() const { return fLabel->Data(); }
    TString            GetString() const { return TString(fLabel->GetString()); }
-   void               SetTextJustify(Int_t tmode)  { fTMode = tmode; fClient->NeedRedraw(this); }
+   virtual void       SetTextJustify(Int_t tmode);
    Int_t GetTextJustify() const { return fTMode; }
    virtual void       SetText(TGHotString *new_label);
    virtual void       SetText(const TString &new_label);

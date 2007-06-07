@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.74 2006/11/22 13:50:40 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.75 2007/01/23 14:22:45 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -421,6 +421,12 @@ void TGTextButton::Init()
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
       }
    }
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 5; // center
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
    SetWindowName();
 }
 
@@ -500,6 +506,59 @@ void TGTextButton::SetText(const TString &new_label)
    // Set new button text.
 
    SetText(new TGHotString(new_label));
+}
+//______________________________________________________________________________
+void TGTextButton::SetTextJustify(Int_t mode)
+{
+   // Set text justification. Mode is an OR of the bits:
+   // kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
+   // kTextCenterY.
+
+   fTMode = mode;
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fWinGravity = 1;
+
+   switch (mode) {
+      case kTextTop | kTextLeft:
+         wattr.fBitGravity = 1; //NorthWestGravity
+         break;
+      case kTextTop | kTextCenterX:
+      case kTextTop:
+         wattr.fBitGravity = 2; //NorthGravity
+         break;
+      case kTextTop | kTextRight:
+         wattr.fBitGravity = 3; //NorthEastGravity
+         break;
+      case kTextLeft | kTextCenterY:
+      case kTextLeft:
+         wattr.fBitGravity = 4; //WestGravity
+         break;
+      case kTextCenterY | kTextCenterX:
+         wattr.fBitGravity = 5; //CenterGravity
+         break;
+      case kTextRight | kTextCenterY:
+      case kTextRight:
+         wattr.fBitGravity = 6; //EastGravity
+         break;
+      case kTextBottom | kTextLeft:
+         wattr.fBitGravity = 7; //SouthWestGravity
+         break;
+      case kTextBottom | kTextCenterX:
+      case kTextBottom:
+         wattr.fBitGravity = 8; //SouthGravity
+         break;
+      case kTextBottom | kTextRight:
+         wattr.fBitGravity = 9; //SouthEastGravity
+         break;
+      default:
+         wattr.fBitGravity = 5; //CenterGravity
+         break;
+   }
+
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
