@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.16 2006/11/10 10:47:10 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -151,6 +151,7 @@ public:
    virtual TGDimension GetDefaultSize() const = 0;
    virtual void SetDefaultWidth(UInt_t /* w */) {}
    virtual void SetDefaultHeight(UInt_t /* h */) {}
+   virtual Bool_t IsModified() const { return kTRUE; }
 
    ClassDef(TGLayoutManager,0)  // Layout manager abstract base class
 };
@@ -282,12 +283,14 @@ protected:
    Int_t             fSep;    // separation between tiles
    TGCompositeFrame *fMain;   // container frame
    TList            *fList;   // list of frames to arrange
+   Bool_t            fModified;// layout changed
 
 public:
    TGTileLayout(TGCompositeFrame *main, Int_t sep = 0);
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
+   virtual Bool_t IsModified() const { return fModified; }
    virtual void SavePrimitive(ostream &out, Option_t * = "");
 
    ClassDef(TGTileLayout,0)  // Tile layout manager

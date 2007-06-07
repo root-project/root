@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.24 2006/11/10 10:47:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.25 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -724,6 +724,7 @@ TGTileLayout::TGTileLayout(TGCompositeFrame *main, Int_t sep)
    fMain = main;
    fSep  = sep;
    fList = fMain->GetList();
+   fModified = kTRUE; 
 }
 
 //______________________________________________________________________________
@@ -736,6 +737,7 @@ void TGTileLayout::Layout()
    UInt_t  max_width;
    ULong_t hints;
    TGDimension csize, max_osize(0,0), msize = fMain->GetSize();
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
@@ -766,6 +768,8 @@ void TGTileLayout::Layout()
       else // defaults to kLHintsTop
          yw = y;
 
+      fModified = fModified || (ptr->fFrame->GetX() != xw) || 
+                 (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
       x += (Int_t)max_osize.fWidth + fSep;
 
@@ -820,6 +824,7 @@ void TGListLayout::Layout()
    UInt_t  max_height;
    ULong_t hints;
    TGDimension csize, max_osize(0,0), msize = fMain->GetSize();
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
@@ -852,6 +857,8 @@ void TGListLayout::Layout()
       else // defaults to kLHintsTop
          yw = y;
 
+      fModified = fModified || (ptr->fFrame->GetX() != xw) || 
+                 (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
       y += (Int_t)max_osize.fHeight + fSep + (fSep >> 1);
 
@@ -904,6 +911,7 @@ void TGListDetailsLayout::Layout()
    TGFrameElement *ptr;
    TGDimension     csize, msize = fMain->GetSize();
    Int_t max_oh = 0, x = fSep, y = fSep << 1;
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
@@ -912,9 +920,14 @@ void TGListDetailsLayout::Layout()
    }
 
    next.Reset();
+
    while ((ptr = (TGFrameElement *) next())) {
       if (ptr->fState & kIsVisible) {
          csize = ptr->fFrame->GetDefaultSize();
+
+         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                     (ptr->fFrame->GetY() != y);
+
          ptr->fFrame->MoveResize(x, y, msize.fWidth, csize.fHeight);
          ptr->fFrame->Layout();
          y += max_oh + fSep + (fSep >> 1);
