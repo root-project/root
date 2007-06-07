@@ -1,5 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.1 2007/05/31 09:01:41 brun Exp $
-// Author: Frank Fielthaut, Rene Brun   30/05/2007
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.2 2007/06/07 07:09:31 brun Exp $
+// Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -11,10 +11,12 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TBinomialEfficiencyFitter                                            //      
+// TBinomialEfficiencyFitter                                            //
 //                                                                      //
 // Binomial Fitter for the division of two histograms.                  //
-//                                                                      //
+// Use when you need to calculate a selection's efficiency from two     //
+// histograms, one containing all entries, and one containing the subset//
+// of these entries that pass the selection                             //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBinomialEfficiencyFitter.h"
