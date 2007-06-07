@@ -4744,7 +4744,9 @@ fi
 result "To build ROOT type:"
 result ""
 result "   $gnumake"
+if test ! "x$haveconfig" = "x" ; then
 result "   $gnumake install"
+fi
 result ""
 
 exit 0
