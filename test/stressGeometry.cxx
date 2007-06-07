@@ -49,6 +49,7 @@
 #include "TError.h"
 #include "TApplication.h"
 #include "TMath.h"
+#include "TSystem.h"
 
 #ifndef __CINT__
 void stressGeometry(const char*);
