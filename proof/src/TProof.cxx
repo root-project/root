@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.201 2007/05/25 13:53:59 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.202 2007/05/25 19:04:02 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2699,7 +2699,16 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
                          Option_t *option, Long64_t nentries,
                          Long64_t first, TEventList *evl)
 {
-   // Process a dataset which is stored on the master with name 'dsetname'
+   // Process a dataset which is stored on the master with name 'dsetname'.
+   // The syntax for dsetname is name[:[dir/]objname], e.g.
+   //   "mydset"       analysis of the first tree in the top dir of the dataset
+   //                  named "mydset"
+   //   "mydset:T"     analysis tree "T" in the top dir of the dataset
+   //                  named "mydset"
+   //   "mydset:adir/T" analysis tree "T" in the dir "adir" of the dataset
+   //                  named "mydset"
+   //   "mydset:adir/" analysis of the first tree in the dir "adir" of the
+   //                  dataset named "mydset"
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -2708,7 +2717,26 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
       return -1;
    }
 
-   TDSet *dset = new TDSet(dsetname);
+   TString name(dsetname);
+   TString obj;
+   TString dir = "/";
+   Int_t idxc = name.Index(":");
+   Int_t idxs = name.Index("/");
+   if (idxs != kNPOS && idxc != kNPOS) {
+      obj = name(idxs+1, name.Length());
+      dir = name(idxc+1, name.Length());
+      dir.Remove(dir.Index("/") + 1);
+      name.Remove(idxc);
+   } else if (idxc != kNPOS && idxs == kNPOS) {
+      obj = name(idxc+1, name.Length());
+      name.Remove(idxc);
+   } else if (idxs != kNPOS && idxc == kNPOS) {
+      Error("Process", "bad name syntax (%s): specification of additional"
+                       " attributes needs a ':' after the dataset name", dsetname);
+      return -1;
+   }
+
+   TDSet *dset = new TDSet(name, obj, dir);
    Long64_t retval = Process(dset, selector, option, nentries, first, evl);
    delete dset;
    return retval;
