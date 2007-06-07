@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.h,v 1.88 2007/03/02 15:37:18 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.1 2007/05/31 09:01:41 brun Exp $
 // Author: Frank Fielthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -148,8 +148,8 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
       // assign an ARBITRARY starting error to ensure the parameter won't be fixed!
       if (f1->GetParError(i) <= 0) f1->SetParError(i, 0.01);
       fgFitter->SetParameter(i, f1->GetParName(i),
-			        f1->GetParameter(i),
-			        f1->GetParError(i), al,bl);
+                                f1->GetParameter(i),
+                                f1->GetParError(i), al,bl);
    }
    if(nfixed > 0)fgFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
@@ -180,7 +180,7 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
 //______________________________________________________________________________
 void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
-					  Double_t& f, Double_t* par, Int_t /*flag*/) {
+                                           Double_t& f, Double_t* par, Int_t /*flag*/) {
    // Compute the likelihood.
 
    int lowbin  = fDenominator->GetXaxis()->GetFirst();
@@ -204,9 +204,9 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
       // compute the bin edge
       double xlow = fDenominator->GetBinLowEdge(bin);
       double xup  = fDenominator->GetBinLowEdge(bin+1);
-      double N    = fDenominator->GetBinContent(bin);
-      double n    = fNumerator->GetBinContent(bin);
-      if (N <= 0.) continue;
+      double nDen = fDenominator->GetBinContent(bin);
+      double nNum = fNumerator->GetBinContent(bin);
+      if (nDen <= 0.) continue;
       npoints++;
       
       // mu is the average of the function over the bin OR
@@ -218,16 +218,16 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
         fFunction->Eval(fDenominator->GetBinCenter(bin));
 
       // binomial formula (forgetting about the factorials)
-      if (n != 0.)
+      if (nNum != 0.)
          if (mu > 0.) 
-            f -= n * TMath::Log(mu);
+            f -= nNum * TMath::Log(mu);
          else
-            f -= n * -1E30; // crossing our fingers
-      if (N - n != 0.)
+            f -= nNum * -1E30; // crossing our fingers
+      if (nDen - nNum != 0.)
          if (1. - mu > 0.)
-            f -= (N - n) * TMath::Log(1. - mu);
+            f -= (nDen - nNum) * TMath::Log(1. - mu);
          else 
-            f -= (N - n) * -1E30; // crossing our fingers
+            f -= (nDen - nNum) * -1E30; // crossing our fingers
    }
    fFunction->SetNumberFitPoints(npoints);
    fFunction->SetChisquare(f); //store likelihood instead of chisquare!
