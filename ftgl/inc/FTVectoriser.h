@@ -126,7 +126,7 @@ class FTGL_EXPORT FTMesh
         /**
          * Get a tesselation by index
          */
-        const FTTesselation* const Tesselation( unsigned int index) const;
+        const FTTesselation* Tesselation( unsigned int index) const;
         
         /**
          * Return the temporary point list. For testing only.
@@ -201,7 +201,7 @@ class FTGL_EXPORT FTVectoriser
         /**
          * Get the current mesh.
          */
-        const FTMesh* const GetMesh() const { return mesh;}
+        const FTMesh* GetMesh() const { return mesh;}
         
         /**
          * Get the total count of points in this outline
@@ -222,7 +222,7 @@ class FTGL_EXPORT FTVectoriser
          *
          * @return the number of contours
          */
-         const FTContour* const Contour( unsigned int index) const;
+         const FTContour* Contour( unsigned int index) const;
 
         /**
          * Get the number of points in a specific contour in this outline

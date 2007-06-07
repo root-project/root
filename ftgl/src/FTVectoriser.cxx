@@ -5,9 +5,9 @@
 #define CALLBACK
 #endif
 
-#ifdef __APPLE_CC__    
+#if defined(__APPLE_CC__) && !defined(__INTEL_COMPILER)
     typedef GLvoid (*GLUTesselatorFunction)(...);
-#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__)
+#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
     typedef GLvoid (*GLUTesselatorFunction)();
 #elif defined ( WIN32)
     typedef GLvoid (CALLBACK *GLUTesselatorFunction)( );
@@ -92,7 +92,7 @@ void FTMesh::End()
 }
 
 
-const FTTesselation* const FTMesh::Tesselation( unsigned int index) const
+const FTTesselation* FTMesh::Tesselation( unsigned int index) const
 {
     return ( index < tesselationList.size()) ? tesselationList[index] : NULL;
 }
@@ -166,7 +166,7 @@ size_t FTVectoriser::PointCount()
 }
 
 
-const FTContour* const FTVectoriser::Contour( unsigned int index) const
+const FTContour* FTVectoriser::Contour( unsigned int index) const
 {
     return ( index < ContourCount()) ? contourList[index] : NULL;
 }
