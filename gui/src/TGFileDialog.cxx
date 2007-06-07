@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.37 2006/08/28 09:30:47 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.38 2007/01/15 09:05:17 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -421,7 +421,11 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case kIDF_CANCEL:
                      fFileInfo->fFilename = 0;
-                     DeleteWindow();
+                     if (fFc->GetDisplayStat()) {
+                        fFc->SetDisplayStat(kFALSE);
+                        TTimer::SingleShot(50, "TGFileDialog", this, "DeleteWindow()");
+                     } else
+                        DeleteWindow();
                      break;
 
                   case kIDF_CDUP:

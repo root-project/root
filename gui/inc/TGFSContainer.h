@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.21 2007/04/19 21:07:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.22 2007/05/22 11:44:25 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -151,7 +151,9 @@ protected:
    const TGPicture  *fDoc_s;          // big document icon
    const TGPicture  *fSlink_t;        // small symbolic link icon
    const TGPicture  *fSlink_s;        // big symbolic link icon
-   Bool_t fCachePictures;             // kTRUE use caching
+   Bool_t            fCachePictures;  // kTRUE use caching
+   Bool_t            fDisplayStat;    // kFALSE to interrupt display directory 
+                                      // contents in case of many files inside
 
    void CreateFileList();
 
@@ -174,6 +176,8 @@ public:
    virtual void SetFilter(const char *filter);
    virtual void ChangeDirectory(const char *path);
    virtual void DisplayDirectory();
+   virtual void SetDisplayStat(Bool_t stat = kTRUE) { fDisplayStat = stat; }
+   Bool_t       GetDisplayStat() { return fDisplayStat; }
 
    const char *GetDirectory() const { return fDirectory.Data(); }
 
