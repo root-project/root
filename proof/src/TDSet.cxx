@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.13 2007/05/24 07:19:39 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.14 2007/05/25 13:36:46 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -1367,9 +1367,8 @@ void TDSet::Streamer(TBuffer &R__b)
          R__b << fObjName;
          TList elems;
          if (fElements) {
+            elems.SetOwner(kFALSE);
             if (fElements->GetSize() > 0) {
-               elems.SetOwner(kTRUE);
-               fElements->SetOwner(kFALSE);
                TDSetElement *e = 0;
                TIter nxe(fElements);
                while ((e = (TDSetElement *)nxe()))
@@ -1382,4 +1381,24 @@ void TDSet::Streamer(TBuffer &R__b)
          R__b.WriteClassBuffer(TDSet::Class(),this);
       }
    }
+}
+
+//______________________________________________________________________________
+void TDSet::SetWriteV3(Bool_t on)
+{
+   // Set/Reset the 'OldStreamer' bit in this instance and its elements.
+   // Needed for backward compatibility in talking to old client / masters.
+
+   if (on)
+      SetBit(TDSet::kWriteV3);
+   else
+      ResetBit(TDSet::kWriteV3);
+   // Loop over dataset elements
+   TIter nxe(GetListOfElements());
+   TObject *o = 0;
+   while ((o = nxe()))
+      if (on)
+         o->SetBit(TDSetElement::kWriteV3);
+      else
+         o->ResetBit(TDSetElement::kWriteV3);
 }

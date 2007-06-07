@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.108 2007/05/21 00:22:51 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.109 2007/06/05 05:47:25 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1143,6 +1143,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       elist = set->GetEventList();
    }
 
+   // Old servers need a dedicated streamer
+   if (fProof->fProtocol < 13)
+      dset->SetWriteV3(kTRUE);
+
    if (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) {
       // Slaves will get the entry ranges from the packetizer
       mesg << set << fn << fInput << opt << (Long64_t)-1 << (Long64_t)0 << elist << sync;
@@ -1152,6 +1156,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
+
+   // Reset streamer choice
+   if (fProof->fProtocol < 13)
+      dset->SetWriteV3(kFALSE);
 
    // Redirect logs from master to special log frame
    if (IsClient())

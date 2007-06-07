@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.9 2007/05/23 09:08:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.10 2007/05/25 13:36:46 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -216,6 +216,8 @@ public:
 
    void                  Lookup();
    void                  SetLookedUp();
+
+   void                  SetWriteV3(Bool_t on = kTRUE);
 
    ClassDef(TDSet,5)  // Data set for remote processing (PROOF)
 };

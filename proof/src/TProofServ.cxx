@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.175 2007/05/23 09:10:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.176 2007/05/25 13:53:59 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -89,27 +89,6 @@ static volatile Int_t gProofServDebug = 1;
 
 // Max number of queries kept (-1 to disable)
 Int_t TProofServ::fgMaxQueries = -1;
-
-//______________________________________________________________________________
-static void SetTDSetWriteV3(TDSet *d, Bool_t on = kTRUE)
-{
-   // Set/Reset the 'OldStreamer' bit in TDSet and its elements.
-   // Needed for backward compatibility in talking to old client / masters.
-
-   if (d) {
-      TIter nxe(d->GetListOfElements());
-      if (on)
-         d->SetBit(TDSet::kWriteV3);
-      else
-         d->ResetBit(TDSet::kWriteV3);
-      TObject *o = 0;
-      while ((o = nxe()))
-         if (on)
-            o->SetBit(TDSetElement::kWriteV3);
-         else
-            o->ResetBit(TDSetElement::kWriteV3);
-   }
-}
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -2308,7 +2287,7 @@ R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
    // Locally we always use the current streamer
    Bool_t olds = (dset->TestBit(TDSet::kWriteV3)) ? kTRUE : kFALSE;
    if (olds)
-      SetTDSetWriteV3(dset, kFALSE);
+      dset->SetWriteV3(kFALSE);
 
    // Create the instance and add it to the list
    TProofQueryResult *pqr =
@@ -2319,7 +2298,7 @@ R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
 
    // Restore old streamer info
    if (olds)
-      SetTDSetWriteV3(dset, kTRUE);
+      dset->SetWriteV3(kTRUE);
 
    return pqr;
 }
@@ -3460,7 +3439,7 @@ void TProofServ::HandleRetrieve(TMessage *mess)
                while ((o = nxi()))
                   if ((d = dynamic_cast<TDSet *>(o)))
                      break;
-               SetTDSetWriteV3(d, kTRUE);
+               d->SetWriteV3(kTRUE);
             }
             if (pqr) {
 
