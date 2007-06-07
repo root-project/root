@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.32 2007/05/06 08:04:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.33 2007/05/22 11:45:27 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -73,6 +73,13 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
                                         fWrapLength, kTextLeft, fTFlags,
                                         &fTWidth, &fTHeight);
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 5; // center
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
    Resize();
    SetWindowName();
 }
@@ -107,6 +114,13 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
                                        fWrapLength, kTextLeft, fTFlags,
                                        &fTWidth, &fTHeight);
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 5; // center
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
    Resize();
    SetWindowName();
 }
@@ -365,6 +379,49 @@ void TGLabel::SetTextJustify(Int_t mode)
 
    fTextChanged = kTRUE;
    fTMode = mode;
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fWinGravity = 1;
+
+   switch (mode) {
+      case kTextTop | kTextLeft:
+         wattr.fBitGravity = 1; //NorthWestGravity
+         break;
+      case kTextTop | kTextCenterX:
+      case kTextTop:
+         wattr.fBitGravity = 2; //NorthGravity
+         break;
+      case kTextTop | kTextRight:
+         wattr.fBitGravity = 3; //NorthEastGravity
+         break;
+      case kTextLeft | kTextCenterY:
+      case kTextLeft:
+         wattr.fBitGravity = 4; //WestGravity
+         break;
+      case kTextCenterY | kTextCenterX:
+         wattr.fBitGravity = 5; //CenterGravity
+         break;
+      case kTextRight | kTextCenterY:
+      case kTextRight:
+         wattr.fBitGravity = 6; //EastGravity
+         break;
+      case kTextBottom | kTextLeft:
+         wattr.fBitGravity = 7; //SouthWestGravity
+         break;
+      case kTextBottom | kTextCenterX:
+      case kTextBottom:
+         wattr.fBitGravity = 8; //SouthGravity
+         break;
+      case kTextBottom | kTextRight:
+         wattr.fBitGravity = 9; //SouthEastGravity
+         break;
+      default:
+         wattr.fBitGravity = 5; //CenterGravity
+         break;
+   }
+
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
    Layout();
 }

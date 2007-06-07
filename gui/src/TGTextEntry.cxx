@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.50 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.51 2007/05/22 08:13:06 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -540,6 +540,20 @@ void TGTextEntry::SetAlignment(ETextJustification mode)
    if ((mode == kTextRight ||
         mode == kTextCenterX ||
         mode == kTextLeft)) {
+
+      SetWindowAttributes_t wattr;
+      wattr.fMask = kWAWinGravity | kWABitGravity;
+      wattr.fWinGravity = 1;
+
+      if (mode == kTextLeft) {
+         wattr.fBitGravity = 1;
+      } else if (mode == kTextRight) {
+         wattr.fBitGravity = 3;
+      } else {
+         wattr.fBitGravity = 5;
+      }
+
+      gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
       fAlignment = mode;
       UpdateOffset();
