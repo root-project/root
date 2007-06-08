@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.180 2007/02/05 10:38:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.181 2007/02/05 16:07:00 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "TObjArray.h"
+#include <map>
 
 //#define G__OLDEXPAND
 
@@ -1699,6 +1700,13 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
    // Returns all user info in the UserGroup_t structure. The returned
    // structure must be deleted by the user. In case of error 0 is returned.
 
+   typedef std::map<Int_t /*uid*/, UserGroup_t> UserInfoCache_t;
+   static UserInfoCache_t gUserInfo;
+
+   UserInfoCache_t::const_iterator iUserInfo = gUserInfo.find(uid);
+   if (iUserInfo != gUserInfo.end())
+      return new UserGroup_t(iUserInfo->second);
+
    struct passwd *pwd = getpwuid(uid);
    if (pwd) {
       UserGroup_t *ug = new UserGroup_t;
@@ -1711,6 +1719,8 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
       UserGroup_t *gr = GetGroupInfo(pwd->pw_gid);
       if (gr) ug->fGroup = gr->fGroup;
       delete gr;
+
+      gUserInfo[uid] = *ug;
       return ug;
    }
    return 0;
