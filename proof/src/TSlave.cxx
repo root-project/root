@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.57 2006/12/03 23:34:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.58 2007/05/21 00:45:07 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -383,11 +383,7 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 
    if (!oldAuthSetupHook) {
       // Load libraries needed for (server) authentication ...
-#ifdef ROOTLIBDIR
-      TString authlib = TString(ROOTLIBDIR) + "/libRootAuth";
-#else
-      TString authlib = TString(gRootDir) + "/lib/libRootAuth";
-#endif
+      TString authlib = "libRootAuth";
       char *p = 0;
       // The generic one
       if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
@@ -446,11 +442,7 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
    if (!fgTXSlaveHook) {
 
       // Load the library containing TXSlave ...
-#ifdef ROOTLIBDIR
-      TString proofxlib = TString(ROOTLIBDIR) + "/libProofx";
-#else
-      TString proofxlib = TString(gRootDir) + "/lib/libProofx";
-#endif
+      TString proofxlib = "libProofx";
       char *p = 0;
       if ((p = gSystem->DynamicPathName(proofxlib, kTRUE))) {
          delete[] p;

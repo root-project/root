@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.18 2006/12/01 15:19:29 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.20 2007/03/08 11:41:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -385,13 +385,6 @@ Bool_t TAuthenticate::Authenticate()
    TString user, passwd;
    Bool_t pwhash;
 
-   // This is for dynamic loads ...
-#ifdef ROOTLIBDIR
-   static TString rootDir = TString(ROOTLIBDIR);
-#else
-   static TString rootDir = TString(gRootDir) + "/lib";
-#endif
-
    if (gDebug > 2)
       Info("Authenticate", "enter: fUser: %s", fUser.Data());
 
@@ -487,7 +480,7 @@ negotia:
       if (!fgSecAuthHook) {
 
          char *p;
-         TString lib = rootDir + "/libSRPAuth";
+         TString lib = "libSRPAuth";
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
             delete [] p;
             gSystem->Load(lib);
@@ -518,7 +511,7 @@ negotia:
          // Kerberos 5 Authentication
          if (!fgKrb5AuthHook) {
             char *p;
-            TString lib = rootDir + "/libKrb5Auth";
+            TString lib = "libKrb5Auth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
                delete [] p;
                gSystem->Load(lib);
@@ -547,7 +540,7 @@ negotia:
          // Globus Authentication
          if (!fgGlobusAuthHook) {
             char *p;
-            TString lib = rootDir + "/libGlobusAuth";
+            TString lib = "libGlobusAuth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
                delete [] p;
                gSystem->Load(lib);
@@ -3420,11 +3413,7 @@ Int_t TAuthenticate::GenRSAKeys()
    }
 
    // This is for dynamic loads ...
-#ifdef ROOTLIBDIR
-   TString lib = TString(ROOTLIBDIR) + "/libRsa";
-#else
-   TString lib = TString(gRootDir) + "/lib/libRsa";
-#endif
+   TString lib = "libRsa";
 
    // This is the local RSA implementation
    if (!TRSA_fun::RSA_genprim()) {

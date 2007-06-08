@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.12 2005/09/02 19:34:49 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.13 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -279,11 +279,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       R__LOCKGUARD2(gSrvAuthenticateMutex);
 
       // Load libraries needed for (server) authentication ...
-#ifdef ROOTLIBDIR
-      TString srvlib = TString(ROOTLIBDIR) + "/libSrvAuth";
-#else
-      TString srvlib = TString(gRootDir) + "/lib/libSrvAuth";
-#endif
+      TString srvlib = "libSrvAuth";
       char *p = 0;
       // The generic one
       if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {

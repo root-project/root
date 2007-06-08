@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.202 2007/05/25 19:04:02 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.203 2007/06/07 10:35:43 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -556,11 +556,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                           parallelStartup ? "kTRUE" : "kFALSE");
       if (parallelStartup) {
          // Load thread lib, if not done already
-#ifdef ROOTLIBDIR
-         TString threadLib = TString(ROOTLIBDIR) + "/libThread";
-#else
-         TString threadLib = TString(gRootDir) + "/lib/libThread";
-#endif
+         TString threadLib = "libThread";
          char *p;
          if ((p = gSystem->DynamicPathName(threadLib, kTRUE))) {
             delete[]p;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.176 2007/05/25 13:53:59 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.177 2007/06/07 09:23:21 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2233,11 +2233,7 @@ R__HIDDEN Int_t TProofServ::OldAuthSetup(TString &conf)
 
    if (!oldAuthSetupHook) {
       // Load libraries needed for (server) authentication ...
-#ifdef ROOTLIBDIR
-      TString authlib = TString(ROOTLIBDIR) + "/libRootAuth";
-#else
-      TString authlib = TString(gRootDir) + "/lib/libRootAuth";
-#endif
+      TString authlib = "libRootAuth";
       char *p = 0;
       // The generic one
       if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {

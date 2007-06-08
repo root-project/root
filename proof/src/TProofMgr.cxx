@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.10 2006/12/03 23:34:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.11 2007/03/19 15:14:09 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -412,16 +412,7 @@ TProofMgr_t TProofMgr::GetXProofMgrHook()
 
    if (!fgTXProofMgrHook) {
       // Load the appropriate library ...
-#ifdef ROOTLIBDIR
-      TString prooflib = TString(ROOTLIBDIR);
-#else
-#ifndef WIN32
-      TString prooflib = TString(gRootDir) + "/lib";
-#else
-      TString prooflib = TString(gRootDir) + "/bin";
-#endif
-#endif
-      prooflib += "/libProofx";
+      TString prooflib = "libProofx";
       char *p = 0;
       if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
          delete[] p;

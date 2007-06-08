@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.12 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.13 2007/01/23 11:31:33 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -98,12 +98,8 @@ static Int_t InitAFS(const char *fileafs, const char *loc)
    // Init AFS token using credentials at fileafs
 
    TString getter("GetTAFS");
-#ifdef ROOTLIBDIR
-   TString afsflib = TString(ROOTLIBDIR) + "/libAFSAuth";
-#else
-   TString afslib = TString(gRootDir) + "/lib/libAFSAuth";
-#endif
    char *p = 0;
+   TString afslib = "libAFSAuth";
    if ((p = gSystem->DynamicPathName(afslib, kTRUE))) {
       delete[] p;
       if (gSystem->Load(afslib) == -1) {
@@ -192,15 +188,11 @@ int main(int argc, char **argv)
    gInterpreter->EnableAutoLoading();
 
    TString getter("GetTProofServ");
-#ifdef ROOTLIBDIR
-   TString prooflib = TString(ROOTLIBDIR) + "/libProof";
-#else
-   TString prooflib = TString(gRootDir) + "/lib/libProof";
-#endif
+   TString prooflib = "libProof";
    if (argc > 2) {
       // XPD: additionally load the appropriate library
-      prooflib.ReplaceAll("/libProof", "/libProofx");
-      getter.ReplaceAll("GetTProofServ", "GetTXProofServ");
+      prooflib = "libProofx";
+      getter = "GetTXProofServ";
    }
    char *p = 0;
    if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
