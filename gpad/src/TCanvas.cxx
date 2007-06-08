@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.126 2007/04/27 13:06:39 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.127 2007/06/01 08:32:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1739,10 +1739,10 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
 
    // depending of the buffer mode set the drawing window to either
    // the canvas pixmap or to the canvas on-screen window
-   if (fDoubleBuffer)
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-      gVirtualX->SelectWindow(fCanvasID);
+   if (fDoubleBuffer) {
+      if (fPixmapID != -1) gVirtualX->SelectWindow(fPixmapID);
+   } else
+      if (fCanvasID != -1) gVirtualX->SelectWindow(fCanvasID);
 }
 
 
