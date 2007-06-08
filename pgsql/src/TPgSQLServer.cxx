@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.7 2007/02/05 10:21:17 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.8 2007/06/06 10:51:56 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -349,8 +349,8 @@ TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
 
    ExecStatusType stat = PQresultStatus(stmt->res);
    if (pgsql_success(stat)) {
-     fErrorOut=stat;
-     return new TPgSQLStatement(stmt, fErrorOut);
+      fErrorOut=stat;
+      return new TPgSQLStatement(stmt, fErrorOut);
    } else {
       SetError(stat, PQresultErrorMessage(stmt->res), "Statement");
       stmt->conn = 0;

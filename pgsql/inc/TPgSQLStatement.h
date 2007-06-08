@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.1 2007/06/06 10:51:56 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.2 2007/06/06 11:12:28 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -39,8 +39,8 @@ struct PGresult;
 typedef char pg_bool;
 
 struct PGSQL_STMT {
-   PGconn   *conn;
-   PGresult *res;
+   PGconn   *fConn;
+   PGresult *fRes;
 };
 
 

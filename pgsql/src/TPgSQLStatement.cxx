@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name: v5-14-00b $:$Id: TPgSQLStatement.cxx,v 1.10 2006/12/12 11:29:45 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLStatement.cxx,v 1.1 2007/06/06 10:51:56 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -45,9 +45,9 @@ TPgSQLStatement::TPgSQLStatement(PGSQL_STMT* stmt, Bool_t errout):
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
-   fStmt->res = PQdescribePrepared(fStmt->conn,"");
-   unsigned long paramcount = PQnparams(fStmt->res);
-   fNumResultCols = PQnfields(fStmt->res);
+   fStmt->fRes = PQdescribePrepared(fStmt->fConn,"");
+   unsigned long paramcount = PQnparams(fStmt->fRes);
+   fNumResultCols = PQnfields(fStmt->fRes);
    fIterationCount = -1;
 
    if (paramcount>0) {
@@ -72,14 +72,14 @@ void TPgSQLStatement::Close(Option_t *)
 {
    // Close statement.
 
-   if (fStmt->res)
-      PQclear(fStmt->res);
+   if (fStmt->fRes)
+      PQclear(fStmt->fRes);
 
-   fStmt->res = 0;
+   fStmt->fRes = 0;
 
    FreeBuffers();
    //TPgSQLServers responsibility to free connection
-   fStmt->conn=0;
+   fStmt->fConn=0;
    delete fStmt;
 }
 
@@ -96,9 +96,9 @@ void TPgSQLStatement::Close(Option_t *)
 
 #define CheckErrNo(method, force, wtf)                  \
    {                                                    \
-      int stmterrno = PQresultStatus(fStmt->res);     \
+      int stmterrno = PQresultStatus(fStmt->fRes);      \
       if ((stmterrno!=0) || force) {                        \
-         const char* stmterrmsg = PQresultErrorMessage(fStmt->res);  \
+         const char* stmterrmsg = PQresultErrorMessage(fStmt->fRes);  \
          if (stmterrno==0) { stmterrno = -1; stmterrmsg = "PgSQL statement error"; } \
          SetError(stmterrno, stmterrmsg, method);               \
          return wtf;                                    \
@@ -127,15 +127,15 @@ Bool_t TPgSQLStatement::Process()
    CheckStmt("Process",kFALSE);
 
    if (IsSetParsMode()) {
-     fStmt->res= PQexecPrepared(fStmt->conn,"",fNumBuffers,
-                                (const char* const*)fBind,
-                                0,0,0);
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"",fNumBuffers,
+                                 (const char* const*)fBind,
+                                 0,0,0);
 
    } else { //result set mode
 
-     fStmt->res= PQexecPrepared(fStmt->conn,"",0,(const char* const*) 0,0,0,0);
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"",0,(const char* const*) 0,0,0,0);
    }
-   ExecStatusType stat = PQresultStatus(fStmt->res);
+   ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat))
       CheckErrNo("Process",kTRUE, kFALSE);
    return kTRUE;
@@ -148,7 +148,7 @@ Int_t TPgSQLStatement::GetNumAffectedRows()
 
    CheckStmt("GetNumAffectedRows", -1);
 
-   return (Int_t) atoi(PQcmdTuples(fStmt->res));
+   return (Int_t) atoi(PQcmdTuples(fStmt->fRes));
 }
 
 //______________________________________________________________________________
@@ -158,7 +158,7 @@ Int_t TPgSQLStatement::GetNumParameters()
 
    CheckStmt("GetNumParameters", -1);
 
-   Int_t res = PQnparams(fStmt->res);
+   Int_t res = PQnparams(fStmt->fRes);
 
    CheckErrNo("GetNumParameters", kFALSE, -1);
 
@@ -173,13 +173,13 @@ Bool_t TPgSQLStatement::StoreResult()
 
    int i;
    for (i=0;i<fNumResultCols;i++){
-      fFieldName[i] = PQfname(fStmt->res,i);
-      fParamFormats[i]=PQftype(fStmt->res,i);
-      fParamLengths[i]=PQfsize(fStmt->res,i);
+      fFieldName[i] = PQfname(fStmt->fRes,i);
+      fParamFormats[i]=PQftype(fStmt->fRes,i);
+      fParamLengths[i]=PQfsize(fStmt->fRes,i);
 
    }
-   fNumResultRows=PQntuples(fStmt->res);
-   ExecStatusType stat = PQresultStatus(fStmt->res);
+   fNumResultRows=PQntuples(fStmt->fRes);
+   ExecStatusType stat = PQresultStatus(fStmt->fRes);
    fWorkingMode = 2;
    if (!pgsql_success(stat))
       CheckErrNo("StoreResult",kTRUE, kFALSE);
@@ -241,12 +241,12 @@ Bool_t TPgSQLStatement::NextIteration()
 
    if (fIterationCount==0) return kTRUE;
 
-   fStmt->res= PQexecPrepared(fStmt->conn,"",fNumBuffers,
-                              (const char* const*)fBind,
-                              0,//fParamLengths,
-                              0,//fParamFormats,
-                              0);
-   ExecStatusType stat = PQresultStatus(fStmt->res);
+   fStmt->fRes= PQexecPrepared(fStmt->fConn,"",fNumBuffers,
+                               (const char* const*)fBind,
+                               0,//fParamLengths,
+                               0,//fParamFormats,
+                               0);
+   ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat) ){
       CheckErrNo("NextIteration", kTRUE, kFALSE) ;
       return kFALSE;
@@ -259,7 +259,7 @@ void TPgSQLStatement::FreeBuffers()
 {
    // Release all buffers, used by statement.
 
-  //individual field names free()'ed by PQClear of fStmt->res
+  //individual field names free()'ed by PQClear of fStmt->fRes
    if (fFieldName)
       delete[] fFieldName;
 
@@ -310,7 +310,7 @@ const char* TPgSQLStatement::ConvertToString(Int_t npar)
 {
    // Convert field value to string.
 
-   const char *buf = PQgetvalue(fStmt->res, fIterationCount, npar);
+   const char *buf = PQgetvalue(fStmt->fRes, fIterationCount, npar);
    return buf;
 }
 
@@ -319,10 +319,10 @@ long double TPgSQLStatement::ConvertToNumeric(Int_t npar)
 {
    // Convert field to numeric.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (long double)0;
 
-   return (long double) atof(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (long double) atof(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
 //______________________________________________________________________________
@@ -332,7 +332,7 @@ Bool_t TPgSQLStatement::IsNull(Int_t npar)
 
    CheckGetField("IsNull", kTRUE);
 
-   return PQgetisnull(fStmt->res,fIterationCount,npar);
+   return PQgetisnull(fStmt->fRes,fIterationCount,npar);
 }
 
 //______________________________________________________________________________
@@ -340,10 +340,10 @@ Int_t TPgSQLStatement::GetInt(Int_t npar)
 {
    // Get integer.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Int_t)0;
 
-   return (Int_t) atoi(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (Int_t) atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
 //______________________________________________________________________________
@@ -351,10 +351,10 @@ UInt_t TPgSQLStatement::GetUInt(Int_t npar)
 {
    // Get unsigned integer.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (UInt_t)0;
 
-   return (UInt_t) atoi(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (UInt_t) atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
 //______________________________________________________________________________
@@ -362,10 +362,10 @@ Long_t TPgSQLStatement::GetLong(Int_t npar)
 {
    // Get long.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Long_t)0;
 
-   return (Long_t) atol(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (Long_t) atol(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
 //______________________________________________________________________________
@@ -373,13 +373,13 @@ Long64_t TPgSQLStatement::GetLong64(Int_t npar)
 {
    // Get long64.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Long64_t)0;
 
 #ifndef R__WIN32
-   return (Long64_t) atoll(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (Long64_t) atoll(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 #else
-   return (Long64_t) _atoi64(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (Long64_t) _atoi64(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 #endif
 }
 
@@ -388,13 +388,13 @@ ULong64_t TPgSQLStatement::GetULong64(Int_t npar)
 {
    // Return field value as unsigned 64-bit integer
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (ULong64_t)0;
 
 #ifndef R__WIN32
-   return (ULong64_t) atoll(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (ULong64_t) atoll(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 #else
-   return (ULong64_t) _atoi64(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (ULong64_t) _atoi64(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 #endif
 }
 
@@ -403,9 +403,9 @@ Double_t TPgSQLStatement::GetDouble(Int_t npar)
 {
    // Return field value as double.
 
-   if (PQgetisnull(fStmt->res,fIterationCount,npar))
+   if (PQgetisnull(fStmt->fRes,fIterationCount,npar))
       return (Double_t)0;
-   return (Double_t) atof(PQgetvalue(fStmt->res,fIterationCount,npar));
+   return (Double_t) atof(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 }
 
 //______________________________________________________________________________
@@ -413,7 +413,7 @@ const char *TPgSQLStatement::GetString(Int_t npar)
 {
    // Return field value as string.
 
-   return PQgetvalue(fStmt->res,fIterationCount,npar);
+   return PQgetvalue(fStmt->fRes,fIterationCount,npar);
 }
 
 //______________________________________________________________________________
@@ -423,7 +423,7 @@ Bool_t TPgSQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    // Note PQgetvalue mallocs/frees and ROOT classes expect new/delete.
 
    size_t sz;
-   char *cptr = PQgetvalue(fStmt->res,fIterationCount,npar);
+   char *cptr = PQgetvalue(fStmt->fRes,fIterationCount,npar);
    unsigned char * mptr = PQunescapeBytea((const unsigned char*)cptr,&sz);
    if ((Long_t)sz>size) {
       delete [] (unsigned char*) mem;
@@ -440,7 +440,7 @@ Bool_t TPgSQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& da
 {
    // Return field value as date.
 
-   TString val=PQgetvalue(fStmt->res,fIterationCount,npar);
+   TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
    month = d.GetMonth();
@@ -453,7 +453,7 @@ Bool_t TPgSQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // Return field as time.
 
-   TString val=PQgetvalue(fStmt->res,fIterationCount,npar);
+   TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    hour = d.GetHour();
    min = d.GetMinute();
@@ -466,7 +466,7 @@ Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& 
 {
    // Return field value as date & time.
 
-   TString val=PQgetvalue(fStmt->res,fIterationCount,npar);
+   TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
    month = d.GetMonth();
@@ -482,7 +482,7 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 {
    // Return field as timestamp.
 
-   TString val=PQgetvalue(fStmt->res,fIterationCount,npar);
+   TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    Ssiz_t p = val.Last('.');
    TSubString s_frac = val(p,val.Length()-p+1);
    TDatime d = TDatime(val.Data());
