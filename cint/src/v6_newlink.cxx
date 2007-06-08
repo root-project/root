@@ -7033,7 +7033,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
         for (int idx=0; (idx < cbases->basen)&&(!basefuncp); ++idx){
 
            // Current tagnum
-           int basetagnum=cbases->herit[idx]->basetagnum;
+           int basetagnum = cbases->herit[idx]->basetagnum;
 
            // Warning: Global G__p_ifunc is modified in G__incsetup_memfunc
            // We save and later we restore the G__p_ifunc's value
