@@ -4060,8 +4060,6 @@ int G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
    // tagnum's Base Classes structure
    G__inheritance* cbases = G__struct.baseclass[ifunc->tagnum];
 
-   int base=-1;
-
    // If there are still base classes
    if (cbases){
 
@@ -4075,14 +4073,16 @@ int G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
         G__ifunc_table_internal * ifunct = G__struct.memfunc[basetagnum];
 
         // Continue if there are still ifuncs and the method 'ifn' is not found yet
-        while(ifunct&&(base==-1)){
+        if (ifunct){
+
+           int base=-1;
 
            // Does the Method 'ifn' (in ifunc) exist in the current ifunct?
-           G__ifunc_exist(ifunc, ifn, ifunct, &base, 0xffff);
+           ifunct = G__ifunc_exist(ifunc, ifn, ifunct, &base, 0xffff);
 
 	   //If the number of default parameters numbers is different between the base and the derived
 	   //class we generete the stub
-	   if (base!=-1){
+	   if (base!=-1 && ifunct){
 	     int derived_def_n = -1;
 	     
 	     // Counting derived class default parameters
@@ -4095,14 +4095,14 @@ int G__method_inbase(int ifn, G__ifunc_table_internal *ifunc)
 	     if (derived_def_n != -1
                  && !ifunct->param[base][derived_def_n]->def)
 	       return 0;
-	   }	
-           // Next ifunct
-           ifunct=ifunct->next;
+
+             return 1;
+	   }
         }
      }
    }
 
-   return (base!=-1);
+   return 0;
 }
 
 /**************************************************************************
@@ -7024,10 +7024,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
      if (cbases){
 
         // Ifunc Method's index in the base class
-        int base = 0;
-
-        // if Method 'ifn' exists in any Base Class -> base not null
-        G__ifunc_table_internal* found = 0;
+        int base = -1;
 
         // Stub function pointer
         void * basefuncp = 0;
@@ -7052,10 +7049,10 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
            G__ifunc_table_internal* ifunct = G__struct.memfunc[basetagnum];
 
            // Look for the method in the base class
-           found = G__ifunc_exist(G__p_ifunc, G__func_now, ifunct, &base, 0xffff); 
+           G__ifunc_table_internal* found = G__ifunc_exist(G__p_ifunc, G__func_now, ifunct, &base, 0xffff); 
 
            // Method found
-           if(found){
+           if((base!=-1)&&found){
 
               // Method's stub pointer
               basefuncp = found->entry[base].p;
