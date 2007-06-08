@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.42 2006/10/12 15:20:26 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.43 2007/02/15 15:04:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -218,6 +218,7 @@ public:
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);
    static  void      SetFolder(Bool_t isfolder=kTRUE);
+   void              SetPadSave(TPad *pad) {fPadSave = pad;}
    void              SetRetained(Bool_t retained=kTRUE) { fRetained=retained;}
    void              SetTitle(const char *title="");
    virtual void      ToggleEventStatus();
