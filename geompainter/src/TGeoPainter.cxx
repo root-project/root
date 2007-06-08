@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.99 2007/03/14 11:31:36 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.100 2007/05/02 06:51:30 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -823,7 +823,7 @@ void TGeoPainter::DrawCurrentPoint(Int_t color)
    if (!gPad->GetView()) return;
    TPolyMarker3D *pm = new TPolyMarker3D();
    pm->SetMarkerColor(color);
-   Double_t *point = fGeoManager->GetCurrentPoint();
+   const Double_t *point = fGeoManager->GetCurrentPoint();
    pm->SetNextPoint(point[0], point[1], point[2]);
    pm->SetMarkerStyle(8);
    pm->SetMarkerSize(0.5);
@@ -1469,7 +1469,9 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    TGeoNode *next, *nextnode;
    Double_t step,steptot;
    Double_t *norm;
-   Double_t *point = fGeoManager->GetCurrentPoint();
+   const Double_t *point = fGeoManager->GetCurrentPoint();
+   Double_t ppoint[3];
+   memcpy(ppoint, point, 3*sizeof(Double_t));
    Double_t tosource[3];
    Double_t calf;
    Double_t phi = 0*krad;
@@ -1530,7 +1532,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                      if (nextvol->TestAttBit(TGeoAtt::kVisOnScreen)) {
                         done = kTRUE;
                         base_color = nextvol->GetLineColor();
-                        fClippingShape->ComputeNormal(point, dir, normal);
+                        fClippingShape->ComputeNormal(ppoint, dir, normal);
                         norm = normal;
                         break;
                      }
@@ -1538,13 +1540,13 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                      next = fGeoManager->GetMother(up);
                   }
                   if (done) break;
-                  inclip = fClippingShape->Contains(point);
+                  inclip = fClippingShape->Contains(ppoint);
                   fGeoManager->SetStep(1E-3);
                   while (inclip) {
                      fGeoManager->Step();
-                     inclip = fClippingShape->Contains(point);
+                     inclip = fClippingShape->Contains(ppoint);
                   }   
-                  stemax = fClippingShape->DistFromOutside(point,dir,3);
+                  stemax = fClippingShape->DistFromOutside(ppoint,dir,3);
                }
             }              
             nextnode = fGeoManager->FindNextBoundaryAndStep();
@@ -1556,14 +1558,14 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
             if (fClippingShape) {
                if (steptot>stemax) {
                   steptot = 0;
-                  inclip = fClippingShape->Contains(point);
+                  inclip = fClippingShape->Contains(ppoint);
                   if (inclip) {
-                     stemin = fClippingShape->DistFromInside(point,dir,3);
+                     stemin = fClippingShape->DistFromInside(ppoint,dir,3);
                      stemax = TGeoShape::Big();
                      continue;
                   } else {
                      stemin = 0;
-                     stemax = fClippingShape->DistFromOutside(point,dir,3);  
+                     stemax = fClippingShape->DistFromOutside(ppoint,dir,3);  
                   }
                }
             }      

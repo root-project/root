@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.47 2007/01/15 16:10:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.48 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -1034,7 +1034,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Double_t start[3];
    Double_t dir[3];
    Int_t istep= 0;
-   Double_t *point = fGeoManager->GetCurrentPoint();
+   const Double_t *point = fGeoManager->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
    TGeoNode *startnode, *endnode;
@@ -1151,7 +1151,7 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    // initialize size of random box to epsil
    Double_t eps[3];
    eps[0] = epsil; eps[1]=epsil; eps[2]=epsil;
-   Double_t *pointg = fGeoManager->GetCurrentPoint();
+   const Double_t *pointg = fGeoManager->GetCurrentPoint();
    if (hasg3) {
       TString spath = geopath;
       TString name = "";
@@ -1211,9 +1211,9 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    memcpy(&point[0], pointg, 3*sizeof(Double_t));
    for (Int_t i=0; i<npoints; i++) {
       // generate a random point in MARS
-      pointg[0] = point[0] - eps[0] + 2*eps[0]*gRandom->Rndm();
-      pointg[1] = point[1] - eps[1] + 2*eps[1]*gRandom->Rndm();
-      pointg[2] = point[2] - eps[2] + 2*eps[2]*gRandom->Rndm();
+      fGeoManager->SetCurrentPoint(point[0] - eps[0] + 2*eps[0]*gRandom->Rndm(),
+                                   point[1] - eps[1] + 2*eps[1]*gRandom->Rndm(),
+                                   point[2] - eps[2] + 2*eps[2]*gRandom->Rndm());
       // check if new node is different from the old one
       if (node1!=node) {
          dist1 = TMath::Sqrt((point[0]-pointg[0])*(point[0]-pointg[0])+
@@ -1230,8 +1230,7 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
       }
    }
    // restore the original point and path
-   memcpy(pointg, &point[0], 3*sizeof(Double_t));
-   fGeoManager->FindNode();  // really needed ?
+   fGeoManager->FindNode(point[0], point[1], point[2]);  // really needed ?
    if (!node_close) dist=-1;
    return node_close;
 }
@@ -1249,7 +1248,7 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
       return;
    }   
 //   fGeoManager->CdTop();
-   Double_t *point = fGeoManager->GetCurrentPoint();
+   const Double_t *point = fGeoManager->GetCurrentPoint();
    TGeoNode *endnode;
    Bool_t is_entering;
    Double_t step, forward;
