@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooGExpModel.cxx,v 1.25 2007/05/14 14:38:04 wouter Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooGExpModel.cxx,v 1.26 2007/05/14 19:39:16 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -187,7 +187,7 @@ Double_t RooGExpModel::evaluate() const
     Double_t result(0) ;
     if (basisSign!=Minus) result += calcDecayConv(+1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
     if (basisSign!=Plus)  result += calcDecayConv(-1,tau,sig,rtau,fsign) ;  // modified FMV,08/13/03
-    cout << "3rd form " << "x= " << x << " result= " << result << endl;
+    //cout << "3rd form " << "x= " << x << " result= " << result << endl;
     return result ;
   }
   
