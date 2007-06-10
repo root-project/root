@@ -26,10 +26,13 @@ void importdir(const char *dirname) {
    while ((direntry=(char*)gSystem->GetDirEntry(dirp))) {
       TString afile = Form("%s/%s",dirname,direntry);
       gSystem->GetPathInfo(afile,&id,&size,&flags,&modtime);
-      if (strstr(direntry,"G__")) continue;
+      if (direntry[0] == '.')             continue; //forget the "." and ".." special cases
+      if (!strcmp(direntry,"CVS"))        continue; //forget some special directories
+      if (!strcmp(direntry,"htmldoc"))    continue;
+      if (strstr(dirname,"root/include")) continue;
+      if (strstr(direntry,"G__"))         continue;
       if (strstr(direntry,".c")    ||
           strstr(direntry,".h")    ||
-          strstr(direntry,".m")    ||
           strstr(direntry,".dat")  ||
           strstr(direntry,".py")   ||
           strstr(direntry,".C")) {
@@ -38,10 +41,6 @@ void importdir(const char *dirname) {
          delete m;
       } else {
          if (flags != 3)                     continue; //must be a directory
-         if (direntry[0] == '.')             continue; //forget the "." amd ".." special cases
-         if (!strcmp(direntry,"CVS"))        continue; //forget some special directories
-         if (!strcmp(direntry,"htmldoc"))    continue;
-         if (strstr(dirname,"root/include")) continue;
          //we have found a valid sub-directory. Process it
          importdir(afile);
      }
@@ -51,6 +50,6 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   importdir("../../root"); //change the directory as you like
+   importdir("../../../root"); //change the directory as you like
    delete f;
 }
