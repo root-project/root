@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.10 2007/01/17 11:55:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.11 2007/01/17 17:20:42 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -313,6 +313,7 @@ Int_t TMacro::ReadFile(const char *filename)
    Int_t nlines = 0;
    while (1) {
       in.getline(line,10000);
+      if (!in.good()) break;
       if (in.eof()) break;
       fLines->Add(new TObjString(line));
       nlines++;
