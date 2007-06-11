@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.11 2007/05/29 11:04:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.12 2007/06/11 14:09:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1238,7 +1238,8 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    Ssiz_t posParam = name.First('(');
    if (posParam == kNPOS || 
       // no strange return types, please
-      ret.Contains("{") || ret.Contains("}") || ret.Contains("(") || ret.Contains(")")) {
+      ret.Contains("{") || ret.Contains("}") || ret.Contains("(") || ret.Contains(")")
+      || ret.Contains("=")) {
       ret.Remove(0);
       name.Remove(0);
       params.Remove(0);
