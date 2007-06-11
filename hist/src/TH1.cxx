@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.345 2007/05/24 13:30:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.346 2007/06/05 10:45:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2092,10 +2092,17 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 //   if not already set.
 //   The resulting errors are calculated assuming uncorrelated histograms.
 //   However, if option ="B" is specified, Binomial errors are computed.
+//   In this case c1 and c2 do not make real sense and they are ignored.   
 //
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Divide
+// 
+//  Please note also that in the binomial case errors are calculated using standard 
+//  binomial statistics, which means when b1 = b2, the error is zero.
+//  If you prefer to have efficiency errors not going to zero when the efficiency is 1, you must 
+//  use the function TGraphAsymmErrors::BayesDivide, which will return an asymmetric and non-zero lower 
+//  error for the case b1=b2.     
 
    TString opt = option;
    opt.ToLower();
@@ -2176,27 +2183,15 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                if (binomial) {
                   if (b1 != b2) {
                      // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
+                     w = b1/b2;    // c1 and c2 are ignored
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
                      // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 ) 
                      fSumw2.fArray[bin] = TMath::Abs( ( (1.-2.*w)*e1*e1 + w*w*e2*e2 )/(b2*b2) );
                   } else {
-                     //in case b1=b2 use a simplification of the special algorithm
-                     //from TGraphAsymmErrors::BayesDivide calling Efficiency, etc
-                     Double_t too_low  = 0;
-                     Double_t too_high = 1;
-                     Double_t integral;
-                     Double_t a = b1+1;
-                     Double_t x;
-                     for (Int_t loop=0; loop<20; loop++) {
-                        x = 0.5*(too_high + too_low);
-                        Double_t bt = TMath::Exp(TMath::LnGamma(a+1)-TMath::LnGamma(a)+a*log(x)+log(1-x));
-                        if (x < (a+1.0)/(a+3.0)) integral = 1 - bt*TMath::BetaCf(x,a,1)/a;
-                        else                     integral = bt*TMath::BetaCf(1-x,1,a);
-                        if (integral > 0.683)  too_low  = x;
-                        else                   too_high = x;
-                     }
-                     fSumw2.fArray[bin] = (1-x)*(1-x)/4;
+                     //in case b1=b2 error is zero 
+                     //use  TGraphAsymmErrors::BayesDivide for getting the asymmetric error not equal to zero
+                     fSumw2.fArray[bin] = 0;
                   }
                } else {
                   fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
