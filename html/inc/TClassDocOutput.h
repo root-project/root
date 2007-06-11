@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.h,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -47,7 +47,8 @@ protected:
    virtual void   WriteMethod(std::ostream & out, TString& ret, 
                               TString& name, TString& params,
                               const char* file, TString& anchor,
-                              TString& comment, TString& codeOneLiner);
+                              TString& comment, TString& codeOneLiner,
+                              TMethod* guessedMethod);
    virtual void   WriteClassDescription(std::ostream& out, const TString& description);
 
 public:

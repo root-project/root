@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.7 2007/03/19 10:59:41 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.8 2007/05/29 11:04:45 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -243,6 +243,7 @@ void TDocOutput::AddLink(TSubString& str, TString& link, const char* comment)
       link += " title=\"";
       TString description(comment);
       ReplaceSpecialChars(description);
+      description.ReplaceAll("\"", "&quot;");
       link += description;
       link += "\"";
    }

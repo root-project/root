@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.6 2007/04/24 18:37:39 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.7 2007/05/02 10:14:43 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 
 #include "TBaseClass.h"
 #include "TDataMember.h"
+#include "TMethodArg.h"
 #include "TDocInfo.h"
 #include "TDocParser.h"
 #include "TEnv.h"
@@ -1494,9 +1495,10 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 
 //______________________________________________________________________________
 void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret, 
-                        TString& name, TString& params,
-                        const char* filename, TString& anchor,
-                        TString& comment, TString& codeOneLiner)
+                                  TString& name, TString& params,
+                                  const char* filename, TString& anchor,
+                                  TString& comment, TString& codeOneLiner,
+                                  TMethod* guessedMethod)
 {
    // Write method name with return type ret and parameters param to out.
    // Build a link using file and anchor. Cooment it with comment, and
@@ -1505,7 +1507,6 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
    // count of method names.
 
    fParser->DecorateKeywords(ret);
-   fParser->DecorateKeywords(params);
    out << "<div class=\"funcdoc\"><span class=\"funcname\">"
       << ret << " <a class=\"funcname\" name=\"";
    TString mangled(fCurrentClass->GetName());
@@ -1518,7 +1519,33 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
       out << "#" << anchor;
    out << "\">";
    ReplaceSpecialChars(out, name);
-   out << "</a>" << params << "</span><br />" << std::endl;
+   out << "</a>";
+   if (guessedMethod) {
+      out << "(";
+      TMethodArg* arg;
+      TIter iParam(guessedMethod->GetListOfMethodArgs());
+      Bool_t first = kTRUE;
+      while ((arg = (TMethodArg*) iParam())) {
+         if (!first) out << ", ";
+         else first = kFALSE;
+         TString paramGuessed(arg->GetFullTypeName());
+         paramGuessed += " ";
+         paramGuessed += arg->GetName();
+         if (arg->GetDefault() && strlen(arg->GetDefault())) {
+            paramGuessed += " = ";
+            paramGuessed += arg->GetDefault();
+         }
+         fParser->DecorateKeywords(paramGuessed);
+         out << paramGuessed;
+      }
+      out << ")";
+      if (guessedMethod->Property() & kIsMethConst)
+         out << " const";
+   } else {
+      fParser->DecorateKeywords(params);
+      out << params;
+   }
+   out << "</span><br />" << std::endl;
 
    if (comment.Length())
       out << "<div class=\"funccomm\"><pre>" << comment << "</pre></div>" << std::endl;

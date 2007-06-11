@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.10 2007/05/09 17:01:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.11 2007/05/29 11:04:45 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1822,8 +1822,24 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       fFoundClassDescription = kTRUE;
    }
 
+   TMethod* guessedMethod = 0;
+   int nparams = params.CountChar(',');
+   if (params.Length()) ++nparams;
+
+   TMethod* method = 0;
+   TIter nextMethod(fCurrentClass->GetListOfMethods());
+   while ((method = (TMethod *) nextMethod()))
+      if (name == method->GetName()
+          && method->GetListOfMethodArgs()->GetSize() == nparams)
+         if (guessedMethod) {
+            // not unique, don't try to solve overload
+            guessedMethod = 0;
+            break;
+         } else
+            guessedMethod = method;
+
    dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
-                           fComment, codeOneLiner);
+                                                           fComment, codeOneLiner, guessedMethod);
 
    DecrementMethodCount(name);
    ret.Remove(0);
