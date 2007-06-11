@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Math.h,v 1.1 2007/05/22 13:35:16 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Math.h,v 1.2 2007/05/25 10:46:28 moneta Exp $
 // Author: L. Moneta Tue Nov 14 15:44:38 2006
 
 /**********************************************************************
@@ -16,7 +16,13 @@
 #ifdef _WIN32
 #define _USE_MATH_DEFINES 
 #endif
+
 #include <cmath>
+
+#if defined(__sun)
+//solaris definition of cmath does not include math.h which has the definitions of numerical constants
+#include <math.h>
+#endif
 
 
 #ifndef M_PI

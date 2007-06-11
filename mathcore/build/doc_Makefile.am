@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: doc_Makefile.am,v 1.1 2005/09/20 13:52:26 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: doc_Makefile.am,v 1.2 2006/06/08 15:42:01 moneta Exp $
 # Author: L. Moneta    2005  
 # 
 #
@@ -10,7 +10,7 @@ AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST =					\
 	main.html vector.html LorentzVector.html Point3D.html Transformation.html \
-        Vector3D.html externalUsage.html doxyconfig.in
+        Vector3D.html externalUsage.html VectorPoint2D.html doxyconfig.in
 
 docs:
 	if test -d html; then \

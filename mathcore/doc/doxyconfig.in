@@ -746,7 +746,8 @@ SKIP_FUNCTION_MACROS   = YES
 
 # The TAGFILES tag can be used to specify one or more tagfiles.
 
-TAGFILES               = ../mathmore/doc/MathMore.tag=../../MathMore/html
+TAGFILES               = 
+#TAGFILES               = ../../mathmore/doc/MathMore.tag = ../../MathMore/html
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create 
 # a tag file that is based on the input files it reads.

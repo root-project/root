@@ -2,13 +2,13 @@
 
 /**
 
-  \page Vector  Generic Vector for 3 and 4 Dimensions
+  \page Vector  Generic Vector for 2, 3 and 4 Dimensions
 
   
 @b GenVector, is a new package intended to prepresent vectors and their operations and transformations, 
-such as rotations and Lorentz transformations, in 3 and 4 dimensions. The 3D space is used to describe the geometry vectors and points, while the 4D space-time is used for physics vectors representing relativistic particles. 
+such as rotations and Lorentz transformations, in 2, 3 and 4 dimensions. The 2D and 3D space are used to describe the geometry vectors and points, while the 4D space-time is used for physics vectors representing relativistic particles. 
 <br>
-These 3D and 4D vectors are different from vectors of the Linear Algebra package which describe generic N-dimensional vectors.  Similar functionality is currently provided by the CLHEP <A HREF="http://proj-clhep.web.cern.ch/proj-clhep/manual/UserGuide/VectorDefs/index.html">Vector</A> and 
+These 2D,3D and 4D vectors are different from vectors of the Linear Algebra package which describe generic N-dimensional vectors.  Similar functionality is currently provided by the CLHEP <A HREF="http://proj-clhep.web.cern.ch/proj-clhep/manual/UserGuide/VectorDefs/index.html">Vector</A> and 
 <A HREF="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/namespaceHepGeom.html">Geometry</A> packages and  the %ROOT <A HREF="http://root.cern.ch/root/html/PHYSICS_Index.html">Physics Vector</A> classes (Tvector2, TVector3 and TLorentzVector). It is also re-uses concepts and ideas from the CMS <A HREF="http://lcgapp.cern.ch/doxygen/SEAL/snapshot/html/dir_000007.html">Common Vector package</A>.
 <p>
 In contrast to CLHEP or the %ROOT physics libraries, GenVector provides class templates for modelling the vectors. There is a user-controlled freedom on how the vector is internally represented. This is expressed by a choice of coordinate system which is supplied as a template prameter when the vector is constructed. Furthermore each coordinate system is itself a template, so that the user can specify the underlying scalar type.
@@ -18,16 +18,21 @@ In more detail, the main characteristics of GenVector are:
 <li><h4>Optimal runtime performances</h4>
 We try to minimize any overhead in the run-time performances. We have deliberatly avoided to have any virtual function and even virtual destructors in the classes and have inlined as much as possible all the functions. For this reason,  we have chosen to use template classes to implement the GenVector concepts instead of abstract or base classes and virtual functions.
 <li><h4>Points and Vector concept</h4>
-Mathematically vectors and points are two distinct concepts. They have different transformations, like vectors only rotate while points rotate and translate.  You can add two vectors but not two points and the difference between two points is a vector. We then distinguish for the 3 dimensional case, between points and vectors, modeling them with different classes: 
+Mathematically vectors and points are two distinct concepts. They have different transformations, like vectors only rotate while points rotate and translate.  You can add two vectors but not two points and the difference between two points is a vector. We then distinguish for the 2 and 3 dimensional case, between points and vectors, modeling them with different classes: 
 <ul>
-<li>ROOT::Math::DisplacementVector3D template class describing 3 component direction and magnitude vectors, not rooted at any particular point;</li>
-<li>ROOT::Math::PositionVector3D template class modeling the points in 3 dimensions</li>. 
+<li>ROOT::Math::DisplacementVector3D and ROOT::Math::DisplacementVector2D template classes describing 3 and 2 component direction and magnitude vectors, not rooted at any particular point;</li>
+<li>ROOT::Math::PositionVector3D template and ROOT::Math::PositionVector3D class modeling the points in 3 and 2 dimensions</li>. 
 </ul>
 For the 4D space-time vectors, we use the same class to model them, ROOT::Math::LorentzVector, since we have recognized a limited needs for modeling the functionality of a 4D point.  
 </li> 
 <li><h4>Generic Coordinate System </h4>
 The vector classes are based on a generic type of coordinate system, expressed as a template parameter of the class. Various classes exist to describe the various coordinates systems: 
 <ul>
+<li> <strong>2D coordinate system</strong> classes: 
+<ul>
+<li>ROOT::Math::Cartesian2D, based on <em>(x,y)</em>;</li>
+<li>ROOT::Math::Polar2D, based on <em>(r, phi)</em>; </li>
+</ul></li>
 <li> <strong>3D coordinate system</strong> classes: 
 <ul>
 <li>ROOT::Math::Cartesian3D, based on <em>(x,y,z)</em>;</li>
@@ -50,11 +55,11 @@ Users can define the Vectors according to the coordinate type which is most effi
 <br>
 For maximum flexibility and minimize in some use case memory allocation, the coordinate system classes are templated on the scalar type. To avoid exposing templated parameter to the users, typedefs are defined for all types of  vectors based an double's. 
 <br>
-See the \ref Vector3DPage "3D Vector", \ref Point3DPage "3D Point" and \ref LorentzVectorPage "LorentzVector" classes for all the possible types of vector classes which can be constructed by the user with the available coordinate system types.  
+See the \ref Vector3DPage "3D Vector", \ref Point3DPage "3D Point", \ref Vector2DPage "2D Vector and Point", and \ref LorentzVectorPage "LorentzVector" classes for all the possible types of vector classes which can be constructed by the user with the available coordinate system types.  
 </li>
 
 <li><h4>Coordinate System Tag</h4>
-The 3D points and vector classes can be associated to a tag defining the coordinate system. This can be used to distinguish between vectors of different coordinate systems like global or local vectors. The coordinate system tag is a template parameter of the ROOT::Math::DisplacementVector3D and ROOT::Math::PositionVector3D classes. A default tag,  ROOT::Math::DefaultCoordinateSystemTag, exists for users who don't need this funcitonality. 
+The 2D and 3D points and vector classes can be associated to a tag defining the coordinate system. This can be used to distinguish between vectors of different coordinate systems like global or local vectors. The coordinate system tag is a template parameter of the ROOT::Math::DisplacementVector3D (and ROOT::Math::DisplacementVector2D) and ROOT::Math::PositionVector3D (and ROOT::Math::PositionVector2D) classes. A default tag,  ROOT::Math::DefaultCoordinateSystemTag, exists for users who don't need this funcitonality. 
 
 <li><h3>Transformations</h3>
 <p>
@@ -64,7 +69,8 @@ Transformation classes can operate on all type of vectors using the <em>operator
 <li><h4>3D Rotations classes</h4> 
 <ul>
   <li>Rotation described by a 3x3 matrix (ROOT::Math::Rotation3D)
-  <li>Rotation described by Euler angles (ROOT::Math::EulerAngles)
+  <li>Rotation described by Euler angles, Goldstein representation, (ROOT::Math::EulerAngles)
+  <li>Rotation described by 3-2-1 Euler angles  (ROOT::Math::RotationZYX)
   <li>Rotation described by a direction axis and an angle  (ROOT::Math::AxisAngle)
 <li>Rotation described by a quaternion (ROOT::Math::Quaternion)
 <li>Optimized rotation around the x (ROOT::Math::RotationX), y (ROOT::Math::RotationY) and z (ROOT::Math::RotationZ) axis and described by just one angle.
