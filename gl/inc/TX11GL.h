@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.14 2006/08/31 13:42:14 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -33,33 +33,15 @@ struct XVisualInfo;
 #endif
 
 
-class TX11GL : public TVirtualGLImp {
-
-private:
-   Display     *fDpy;
-   XVisualInfo *fVisInfo;
-
-public:
-   TX11GL();
-
-   Window_t CreateGLWindow(Window_t wind);
-   ULong_t  CreateContext(Window_t wind);
-   void     DeleteContext(ULong_t ctx);
-   void     MakeCurrent(Window_t wind, ULong_t ctx);
-   void     SwapBuffers(Window_t wind);
-
-   ClassDef(TX11GL, 0); //X11 implementation
-};
-
 class TX11GLManager : public TGLManager {
 private:
    class TX11GLImpl;
    TX11GLImpl *fPimpl;
-   
+
 public:
    TX11GLManager();
    ~TX11GLManager();
-   
+
    //All public functions are TGLManager's final-overriders
 
    //index returned can be used as a result of gVirtualX->InitWindow
@@ -68,7 +50,7 @@ public:
    Int_t    CreateGLContext(Int_t winInd);
 
    //[            Off-screen rendering part
-   //create pixmap to read GL buffer into it, 
+   //create pixmap to read GL buffer into it,
    //ctxInd is the index, returned by CreateGLContext
    Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
    Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -82,7 +64,7 @@ public:
    void     ExtractViewport(Int_t devInd, Int_t *vp);
    //Read GL buffer into pixmap
    void     ReadGLBuffer(Int_t devInd);
-   //]            
+   //]
 
    //Make the gl context current
    Bool_t   MakeCurrent(Int_t devInd);
@@ -92,9 +74,6 @@ public:
    void     DeleteGLContext(Int_t devInd);
 
    //used by viewer
-   void     DrawViewer(TVirtualViewer3D *vv);
-   //
-   Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
    //
    Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
@@ -107,10 +86,10 @@ public:
    Bool_t   HighColorFormat(Int_t /*ctxInd*/){return kFALSE;}
 
    struct TGLContext_t;
-   
+
 private:
    Bool_t CreateGLPixmap(TGLContext_t &);
-   
+
    //implicit copy-ctor/assignment generation
    // was already disabled by base class, but to be explicit ...
    TX11GLManager(const TX11GLManager &);

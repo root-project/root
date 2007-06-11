@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSphere.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLSphere.cxx,v 1.2 2007/05/10 11:17:47 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -11,14 +11,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TGLSphere.h"
-#include "TGLDrawFlags.h"
+#include "TGLRnrCtx.h"
+#include "TGLQuadric.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
 // For debug tracing
-#include "TClass.h" 
+#include "TClass.h"
 #include "TError.h"
 
 ClassImp(TGLSphere)
@@ -40,17 +41,54 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer) :
 }
 
 //______________________________________________________________________________
-void TGLSphere::DirectDraw(const TGLDrawFlags & flags) const
+UInt_t TGLSphere::DLOffset(Short_t lod) const
+{
+   // Return display-list offset for given LOD.
+   // Calculation based on what is done in virtual QuantizeShapeLOD below.
+
+   UInt_t  off = 0;
+   if      (lod >= 100) off = 0;
+   else if (lod <  10)  off = lod / 2;
+   else                 off = lod / 10 + 4;
+   return off;
+}
+
+//______________________________________________________________________________
+Short_t TGLSphere::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
+{
+   // Factor in scene/viewer LOD and quantize.
+
+   Int_t lod = ((Int_t)shapeLOD * (Int_t)combiLOD) / 100;
+
+   if (lod >= 100)
+   {
+      lod = 100;
+   }
+   else if (lod > 10)
+   {  // Round LOD above 10 to nearest 10
+      Double_t quant = 0.1 * ((static_cast<Double_t>(lod)) + 0.5);
+      lod            = 10  *   static_cast<Int_t>(quant);
+   }
+   else
+   {  // Round LOD below 10 to nearest 2
+      Double_t quant = 0.5 * ((static_cast<Double_t>(lod)) + 0.5);
+      lod            = 2   *   static_cast<Int_t>(quant);
+   }
+   return static_cast<Short_t>(lod);
+}
+
+//______________________________________________________________________________
+void TGLSphere::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
+      Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    // 4 stack/slice min for gluSphere to work
-   UInt_t divisions = flags.LOD();
+   UInt_t divisions = rnrCtx.ShapeLOD();
    if (divisions < 4) {
       divisions = 4;
    }
-   gluSphere(fgQuad.Get(),fRadius, divisions, divisions);
+   gluSphere(rnrCtx.GetGluQuadric(), fRadius, divisions, divisions);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLTransManip.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLTransManip.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -107,16 +107,19 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLTransManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
+Bool_t TGLTransManip::HandleMotion(const Event_t        & event,
+                                   const TGLCamera      & camera)
 {
-   // Handle mouse motion over manipulator - if active (selected widget) translate
-   // physical along selected widget (axis) of the manipulator, so it tracks mouse
-   // action. Returns kTRUE if redraw required kFALSE otherwise.
+   // Handle mouse motion over manipulator - if active (selected
+   // widget) translate physical along selected widget (axis) of the
+   // manipulator, so it tracks mouse action. Returns kTRUE if redraw
+   // required kFALSE otherwise.
    if (fActive) {
       // Find mouse delta projected into world at attached object center
-      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(),
-                                                     event.fX - fLastMouse.GetX(),
-                                                     -event.fY + fLastMouse.GetY()); // Y inverted
+      TGLVector3 shift =
+         camera.ViewportDeltaToWorld( fShape->BoundingBox().Center(),
+                                      event.fX - fLastMouse.GetX(),
+                                     -event.fY + fLastMouse.GetY() ); // Y inverted
 
       // Now project this delta onto the current widget (axis) to give
       // a constrained shift along this
@@ -129,8 +132,7 @@ Bool_t TGLTransManip::HandleMotion(const Event_t & event, const TGLCamera & came
       fLastMouse.SetY(event.fY);
 
       return kTRUE;
-   } else {
-      return TGLManip::HandleMotion(event, camera, sceneBox);
    }
+   return kFALSE;
 }
 

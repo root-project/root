@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.7 2006/04/10 09:23:31 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -38,7 +38,7 @@ Bool_t TGLOutput::Capture(TGLViewer & viewer, EFormat format, const char * fileP
    //             See TGLOutput::CapturePostscript() for meanings
    // 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
    // depending on format requested
-   // 
+   //
    // Note : Output files can be large and take considerable time (up to mins)
    // to generate
    switch(format) {
@@ -136,7 +136,7 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
 void TGLOutput::StartEmbeddedPS()
 {
    //this function used by gl-in-pad
-   Info("TGLOutput::StartEmbeddedPS", "PS output started ...");   
+   Info("TGLOutput::StartEmbeddedPS", "PS output started ...");
 
    gVirtualPS->PrintStr("@");
    gVirtualPS->PrintStr("% Start gl2ps EPS@");
@@ -172,7 +172,7 @@ void TGLOutput::StartEmbeddedPS()
    gVirtualPS->PrintStr("countdictstack@");
    gVirtualPS->PrintStr("mark@");
    gVirtualPS->PrintStr("/showpage {} def@");
-   
+
    // Close the gVirtualPS output stream
    ofstream *fs = (ofstream*)gVirtualPS->GetStream();
    fs->close();

@@ -1,6 +1,6 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.14 2007/04/10 13:23:07 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.15 2007/06/06 15:33:00 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
-                                                                                
+
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -29,7 +29,7 @@
 ClassImp(TGLPlotPainter)
 
 //______________________________________________________________________________
-TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, 
+TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                                Int_t context, Bool_t xoy, Bool_t xoz, Bool_t yoz)
                   : fGLContext(context),
                     fPadColor(0),
@@ -152,7 +152,7 @@ void TGLPlotPainter::PrintPlot()const
       DrawPlot();
       state = gl2psEndPage();
    }
-   
+
    fclose(output);
    TGLOutput::CloseEmbeddedPS();
    glFlush();
@@ -296,9 +296,9 @@ void TGLPlotPainter::MoveSection(Int_t px, Int_t py)
    if (fSelectedPart == 6)
       gluProject(0., 0., fXOYSectionPos, mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
    else
-      gluProject(fSelectedPart == 5 ? fYOZSectionPos : 0., 
-                 fSelectedPart == 4 ? fXOZSectionPos : 0., 
-                 0., mv, pr, vp, 
+      gluProject(fSelectedPart == 5 ? fYOZSectionPos : 0.,
+                 fSelectedPart == 4 ? fXOZSectionPos : 0.,
+                 0., mv, pr, vp,
                  &winVertex[0], &winVertex[1], &winVertex[2]);
    winVertex[0] += px - fMousePosition.fX;
    winVertex[1] += py - fMousePosition.fY;
@@ -319,7 +319,7 @@ void TGLPlotPainter::DrawSections()const
 {
    //Draw sections (if any).
    const TGLVertex3 *frame = fBackBox.Get3DBox();
-   
+
    if (fXOZSectionPos > frame[0].Y()) {
       if (fXOZSectionPos > frame[2].Y())
          fXOZSectionPos = frame[2].Y();
@@ -332,7 +332,7 @@ void TGLPlotPainter::DrawSections()const
          Rgl::ObjectIDToColor(4, fHighColor);
       else if (fSelectedPart == 4)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
-  
+
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.f, 1.f);
       Rgl::DrawQuadFilled(v1, v2, v3, v4, TGLVector3(0., 1., 0.));
@@ -370,12 +370,12 @@ void TGLPlotPainter::DrawSections()const
       TGLVertex3 v2(fYOZSectionPos, frame[3].Y(), frame[3].Z());
       TGLVertex3 v3(fYOZSectionPos, frame[7].Y(), frame[7].Z());
       TGLVertex3 v4(fYOZSectionPos, frame[4].Y(), frame[4].Z());
-      
+
       if (fSelectionPass) {
          Rgl::ObjectIDToColor(5, fHighColor);
       } else if (fSelectedPart == 5)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
-      
+
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.f, 1.f);
       Rgl::DrawQuadFilled(v1, v2, v3, v4, TGLVector3(1., 0., 0.));
@@ -412,12 +412,12 @@ void TGLPlotPainter::DrawSections()const
       TGLVertex3 v2(frame[1].X(), frame[1].Y(), fXOYSectionPos);
       TGLVertex3 v3(frame[2].X(), frame[2].Y(), fXOYSectionPos);
       TGLVertex3 v4(frame[3].X(), frame[3].Y(), fXOYSectionPos);
-      
+
       if (fSelectionPass) {
          Rgl::ObjectIDToColor(6, fHighColor);
       } else if (fSelectedPart == 6)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
-      
+
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.f, 1.f);
       //if (fSelectionPass || fSelectedPart == 6)
@@ -493,7 +493,7 @@ EGLCoordType TGLPlotCoordinates::GetCoordType()const
 //______________________________________________________________________________
 void TGLPlotCoordinates::SetXLog(Bool_t xLog)
 {
-   //If log changed, sections must be reset, 
+   //If log changed, sections must be reset,
    //set fModified.
    if (fXLog != xLog) {
       fXLog = xLog;
@@ -512,7 +512,7 @@ Bool_t TGLPlotCoordinates::GetXLog()const
 //______________________________________________________________________________
 void TGLPlotCoordinates::SetYLog(Bool_t yLog)
 {
-   //If log changed, sections must be reset, 
+   //If log changed, sections must be reset,
    //set fModified.
    if (fYLog != yLog) {
       fYLog = yLog;
@@ -531,7 +531,7 @@ Bool_t TGLPlotCoordinates::GetYLog()const
 //______________________________________________________________________________
 void TGLPlotCoordinates::SetZLog(Bool_t zLog)
 {
-   //If log changed, sections must be reset, 
+   //If log changed, sections must be reset,
    //set fModified.
    if (fZLog != zLog) {
       fZLog = zLog;
@@ -698,8 +698,8 @@ Double_t TGLPlotCoordinates::GetFactor()const
 namespace {
 
    Bool_t FindAxisRange(const TAxis *axis, Bool_t log, Rgl::BinRange_t &bins, Rgl::Range_t &range);
-   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins, 
-                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange, 
+   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
+                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
                         Double_t &factor, Bool_t errors);
 
 }
@@ -734,7 +734,7 @@ Bool_t TGLPlotCoordinates::SetRangesCartesian(const TH1 *hist, Bool_t errors, Bo
          return kFALSE;
       }
    } else if (!FindAxisRange(hist, fZLog, xBins, yBins, zRange, factor, errors)) {
-      Error("TGLPlotCoordinates::SetRangesCartesian", 
+      Error("TGLPlotCoordinates::SetRangesCartesian",
             "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
       return kFALSE;
    }
@@ -791,7 +791,7 @@ Bool_t TGLPlotCoordinates::SetRangesPolar(const TH1 *hist)
    Double_t factor = 1.;
    if (!FindAxisRange(hist, fZLog, xBins, yBins, zRange, factor, kFALSE))
    {
-      Error("TGLPlotCoordinates::SetRangesPolar", 
+      Error("TGLPlotCoordinates::SetRangesPolar",
             "Log scale is requested for Z, but maximum less or equal 0. (%f)", zRange.second);
       return kFALSE;
    }
@@ -854,9 +854,9 @@ Bool_t TGLPlotCoordinates::SetRangesCylindrical(const TH1 *hist)
       return kFALSE;
    }
 
-   if (angleRange != fXRange  || heightRange != fYRange || 
-       radiusRange != fZRange || xBins != fXBins || 
-       yBins != fYBins || fFactor != factor) 
+   if (angleRange != fXRange  || heightRange != fYRange ||
+       radiusRange != fZRange || xBins != fXBins ||
+       yBins != fYBins || fFactor != factor)
    {
       fModified = kTRUE;
       fXRange = angleRange,  fXBins = xBins;
@@ -901,15 +901,15 @@ Bool_t TGLPlotCoordinates::SetRangesSpherical(const TH1 *hist)
    Double_t factor = 1.;
    FindAxisRange(hist, kFALSE, xBins, yBins, radiusRange, factor, kFALSE);
 
-   if (xBins != fXBins || yBins != fYBins || 
-       phiRange != fXRange || thetaRange != fYRange || 
+   if (xBins != fXBins || yBins != fYBins ||
+       phiRange != fXRange || thetaRange != fYRange ||
        radiusRange != fZRange || fFactor != factor)
    {
       fModified = kTRUE;
       fXBins    = xBins;
       fYBins    = yBins;
       fXRange   = phiRange;
-      fYRange   = thetaRange, 
+      fYRange   = thetaRange,
       fZRange   = radiusRange;
       fFactor   = factor;
    }
@@ -972,7 +972,7 @@ namespace {
             //Overflow or something stupid.
             if (bin > bins.second)
                return kFALSE;
-            
+
             if (axis->GetBinLowEdge(bin) <= 0.) {
                ++bin;
                if (bin > bins.second)//Again, something stupid.
@@ -990,8 +990,8 @@ namespace {
    }
 
    //______________________________________________________________________________
-   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins, 
-                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange, 
+   Bool_t FindAxisRange(const TH1 *hist, Bool_t logZ, const Rgl::BinRange_t &xBins,
+                        const Rgl::BinRange_t &yBins, Rgl::Range_t &zRange,
                         Double_t &factor, Bool_t errors)
    {
       //First, look through hist to find minimum and maximum values.
@@ -1013,14 +1013,14 @@ namespace {
          }
       }
 
-      if (hist->GetMaximumStored() != -1111) 
+      if (hist->GetMaximumStored() != -1111)
          zRange.second = hist->GetMaximumStored();
-      if (hist->GetMinimumStored() != -1111) 
+      if (hist->GetMinimumStored() != -1111)
          zRange.first = hist->GetMinimumStored();
 
       if (logZ && zRange.second <= 0.)
          return kFALSE;//cannot setup logarithmic scale
-      
+
       if (zRange.first >= zRange.second)
          zRange.first = 0.001 * zRange.second;
 
@@ -1028,7 +1028,7 @@ namespace {
       if (summ) factor /= summ;
       if (!factor) factor = 1.;
       if (factor < 0.)
-         Warning("TGLPlotPainter::ExtractAxisZInfo", 
+         Warning("TGLPlotPainter::ExtractAxisZInfo",
                "Negative factor, negative ranges - possible incorrect behavior");
 
       zRange.second *= factor;
@@ -1038,7 +1038,7 @@ namespace {
          if (zRange.first <= 0.)
             zRange.first = TMath::Min(1., 0.001 * zRange.second);
          zRange.first = TMath::Log10(zRange.first);
-         if (!minimum) 
+         if (!minimum)
             zRange.first += TMath::Log10(0.5);
          zRange.second = TMath::Log10(zRange.second);
          if (!maximum)
@@ -1051,7 +1051,7 @@ namespace {
       if (!minimum) {
          if (gStyle->GetHistMinimumZero())
             zRange.first >= 0 ? zRange.first = 0. : zRange.first -= margin * (zRange.second - zRange.first);
-         else 
+         else
             zRange.first >= 0 && zRange.first - margin * (zRange.second - zRange.first) <= 0 ?
                zRange.first = 0 : zRange.first -= margin * (zRange.second - zRange.first);
       }
@@ -1149,19 +1149,19 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
 
       glLineWidth(1.f);
       glEnable(GL_LIGHTING);
-      
+
       GLboolean oldBlendState = kFALSE;
       glGetBooleanv(GL_BLEND, &oldBlendState);
-   
+
       if (!oldBlendState)
          glEnable(GL_BLEND);
-      
+
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
       const Float_t diffuseColor[] = {0.f, 0.f, 1.f, 0.2f};
       glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseColor);
-   
+
       Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,
                         fZRange.first, fZRange.second, fPlotBox->GetFrontPoint());
 
@@ -1253,10 +1253,10 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py, Int_t axisID)
       fCenter.Z() = newPoint[2];
       break;
    }
-   
+
    fMousePos.fX = px;
    fMousePos.fY = py;
-   
+
    AdjustBox();
 }
 
@@ -1265,7 +1265,7 @@ void TGLBoxCut::AdjustBox()
 {
    //Box cut is limited by plot's sizes.
    const TGLVertex3 *box = fPlotBox->Get3DBox();
-   
+
    fXRange.first  = fCenter.X() - fXLength / 2.;
    fXRange.second = fCenter.X() + fXLength / 2.;
    fYRange.first  = fCenter.Y() - fYLength / 2.;
@@ -1277,7 +1277,7 @@ void TGLBoxCut::AdjustBox()
    fXRange.first  = TMath::Min(fXRange.first,  box[1].X());
    fXRange.second = TMath::Min(fXRange.second, box[1].X());
    fXRange.second = TMath::Max(fXRange.second, box[0].X());
-   
+
    fYRange.first  = TMath::Max(fYRange.first,  box[0].Y());
    fYRange.first  = TMath::Min(fYRange.first,  box[2].Y());
    fYRange.second = TMath::Min(fYRange.second, box[2].Y());
@@ -1315,12 +1315,12 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoor
                  fHist(hist),
                  fF3(0)
 {
-   //Ctor.
+   // Constructor.
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
 }
 
 //______________________________________________________________________________
-TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, const TGLPlotCoordinates *coord, 
+TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, const TGLPlotCoordinates *coord,
                          const TGLPlotBox *box, ESliceAxis axis)
                : TNamed(name, name),
                  fAxisType(axis),
@@ -1331,7 +1331,7 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, c
                  fHist(hist),
                  fF3(fun)
 {
-   //Ctor.
+   // Constructor.
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
 }
 
@@ -1342,7 +1342,7 @@ void TGLTH3Slice::SetSliceWidth(Int_t width)
 
    if (width <= 0)
       return;
-   
+
    if (fAxis->GetLast() - fAxis->GetFirst() + 1 <= width)
       fSliceWidth = fAxis->GetLast() - fAxis->GetFirst() + 1;
    else
@@ -1370,7 +1370,7 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
          low = fAxis->GetFirst();
          up  = bin + (fSliceWidth - (bin - fAxis->GetFirst() + 1)) + 1;
       }
-      
+
       if (!fF3)
          FindMinMax(low, up);
 
@@ -1380,13 +1380,13 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
       PrepareTexCoords(pos, low, up);
 
       if (fPalette.EnableTexture(GL_REPLACE)) {
-         const TGLDisableGuard lightGuard(GL_LIGHTING);   
+         const TGLDisableGuard lightGuard(GL_LIGHTING);
          DrawSliceTextured(pos);
          fPalette.DisableTexture();
          //highlight bins in a slice.
          //DrawSliceFrame(low, up);
       }
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -1394,7 +1394,7 @@ void TGLTH3Slice::FindMinMax(Int_t low, Int_t up)const
 {
    // Find minimum and maximum for slice.
    fMinMax.first = 0.;
-      
+
    switch (fAxisType) {
    case kXOZ:
       for (Int_t level = low; level < up; ++ level)
@@ -1461,7 +1461,7 @@ void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
       fTexCoords.resize(fCoord->GetNXBins() * fCoord->GetNZBins());
       fTexCoords.SetRowLen(fCoord->GetNXBins());
       if (!fF3) {
-      
+
          for (Int_t j = fCoord->GetFirstZBin(), jt = 0, ej = fCoord->GetLastZBin(); j <= ej; ++j, ++jt) {
             for (Int_t i = fCoord->GetFirstXBin(), it = 0, ei = fCoord->GetLastXBin(); i <= ei; ++i, ++it) {
                Double_t val = 0.;
@@ -1531,7 +1531,7 @@ void TGLTH3Slice::PrepareTexCoords(Double_t pos, Int_t low, Int_t up)const
                fTexCoords[it][jt] = fPalette.GetTexCoord(val);
             }
          }
-      
+
       }
       break;
    }
@@ -1618,7 +1618,7 @@ void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 namespace {
 
    //______________________________________________________________________________
-   void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin,
                        Double_t yMax, Double_t zMin, Double_t zMax)
    {
       glBegin(GL_LINE_LOOP);
@@ -1656,16 +1656,16 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 
    glColor3d(1., 0., 0.);
    const TGLVertex3 *box = fBox->Get3DBox();
-   
+
    switch (fAxisType) {
    case kXOZ:
       DrawBoxOutline(box[0].X(), box[1].X(),
-                     fAxis->GetBinLowEdge(low) * fCoord->GetYScale(), 
+                     fAxis->GetBinLowEdge(low) * fCoord->GetYScale(),
                      fAxis->GetBinUpEdge(up - 1) * fCoord->GetYScale(),
                      box[0].Z(), box[4].Z());
       break;
    case kYOZ:
-      DrawBoxOutline(fAxis->GetBinLowEdge(low) * fCoord->GetXScale(), 
+      DrawBoxOutline(fAxis->GetBinLowEdge(low) * fCoord->GetXScale(),
                      fAxis->GetBinUpEdge(up - 1) * fCoord->GetXScale(),
                      box[0].Y(), box[2].Y(),
                      box[0].Z(), box[4].Z());
@@ -1673,7 +1673,7 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
    case kXOY:
       DrawBoxOutline(box[0].X(), box[1].X(),
                      box[0].Y(), box[2].Y(),
-                     fAxis->GetBinLowEdge(low) * fCoord->GetZScale(), 
+                     fAxis->GetBinLowEdge(low) * fCoord->GetZScale(),
                      fAxis->GetBinUpEdge(up - 1) * fCoord->GetZScale());
       break;
    }

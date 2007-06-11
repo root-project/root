@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.18 2006/11/22 12:31:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -12,9 +12,10 @@
 #ifndef ROOT_TGLSAViewer
 #define ROOT_TGLSAViewer
 
-#ifndef ROOT_TGLViewer
+//#ifndef ROOT_TGLViewer
+//#include "TGLViewer.h"
+//#endif
 #include "TGLViewer.h"
-#endif
 
 #ifndef ROOT_TString
 #include "TString.h"
@@ -26,6 +27,7 @@ class TGPopupMenu;
 class TGLSAFrame;
 
 class TGedEditor;
+class TGLPShapeObj;
 class TGLRenderArea; // Remove - replace with TGLManager
 
 //////////////////////////////////////////////////////////////////////////
@@ -36,11 +38,12 @@ class TGLRenderArea; // Remove - replace with TGLManager
 // TGLSAViewer
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: This really needs to be re-examined along with GUI parts in TGLViewer. 
-// It still contiains lots of legacy parts for binding to external GUI (TGLEditors) 
+// TODO: This really needs to be re-examined along with GUI parts in TGLViewer.
+// It still contiains lots of legacy parts for binding to external GUI (TGLEditors)
 // which could be neater.
 
-class TGLSAViewer : public TGLViewer {
+class TGLSAViewer : public TGLViewer
+{
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
       kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
@@ -54,14 +57,17 @@ private:
    TGPopupMenu       *fFileSaveMenu;
    TGPopupMenu       *fCameraMenu;
    TGPopupMenu       *fHelpMenu;
+   TGLRenderArea     *fGLArea;
    // Ged
    TGCompositeFrame  *fLeftVerticalFrame;
    TGedEditor        *fGedEditor;
-   TGLPShapeObj      *fPShapeWrap;   
-   
+   TGLPShapeObj      *fPShapeWrap;
+
    TString            fDirName;
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
+
+   TString            fPictureFileName;
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -79,12 +85,6 @@ private:
    TGLSAViewer(const TGLSAViewer &);
    TGLSAViewer & operator = (const TGLSAViewer &);
 
-
-protected:
-   // Overloadable 
-   virtual void PostSceneBuildSetup(Bool_t resetCameras);
-   virtual void SelectionChanged(); // *SIGNAL*
-
 public:
    TGLSAViewer(TVirtualPad * pad);
    TGLSAViewer(TGFrame * parent, TVirtualPad * pad);
@@ -92,11 +92,13 @@ public:
 
    virtual const char* GetName() const { return "GLViewer"; }
 
+   virtual void SelectionChanged(); // *SIGNAL*
+
    virtual void RefreshPadEditor(TObject* changed=0);
 
    void   Show();
    void   Close();
-   void   SavePicture(const TString &fileName);
+   void   SavePicture();
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
@@ -109,4 +111,4 @@ public:
 };
 
 #endif
- 
+

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.6 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.2 2007/05/10 11:17:46 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -12,9 +12,11 @@
 #ifndef ROOT_TGLClip
 #define ROOT_TGLClip
 
-#ifndef ROOT_TGLPhysicalShape
 #include "TGLPhysicalShape.h"
-#endif
+#include "TGLOverlay.h"
+
+class TGLRnrCtx;
+class TGLManipSet;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -29,17 +31,27 @@
 class TGLClip : public TGLPhysicalShape
 {
 public:
-   enum EMode { kInside, kOutside };
+   enum EMode { kOutside, // Clip away what's outside
+                kInside   // Clip away what's inside
+   };
 private:
-   EMode fMode;
+   EMode  fMode;
+   UInt_t fTimeStamp;
 public:
    TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]);
    virtual ~TGLClip();
 
-   EMode Mode() const         { return fMode; }
-   void  SetMode(EMode mode)  { fMode = mode; }
+   virtual void Modified() { TGLPhysicalShape::Modified(); IncTimeStamp(); }
 
-   virtual void Draw(const TGLDrawFlags & flags) const;
+   virtual void Setup(const TGLBoundingBox & bbox) = 0;
+
+   EMode GetMode() const      { return fMode; }
+   void  SetMode(EMode mode)  { if (mode != fMode) { fMode = mode; ++fTimeStamp; } }
+
+   UInt_t TimeStamp() const { return fTimeStamp; }
+   void   IncTimeStamp()    { ++fTimeStamp; }
+
+   virtual void Draw(TGLRnrCtx & rnrCtx) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
    ClassDef(TGLClip,0); // abstract clipping object
@@ -61,8 +73,10 @@ private:
    static const float fgColor[4];   //! Fixed color of clip plane
 
 public:
-   TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents);
+   TGLClipPlane();
    virtual ~TGLClipPlane();
+
+   virtual void Setup(const TGLBoundingBox & bbox);
 
    void Set(const TGLPlane & plane);
 
@@ -86,12 +100,67 @@ private:
    static const float fgColor[4];   //! Fixed color of clip box
 
 public:
-   TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center);
+   TGLClipBox();
    virtual ~TGLClipBox();
+
+   virtual void Setup(const TGLBoundingBox & bbox);
 
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
 
    ClassDef(TGLClipBox, 0); // clipping box
+};
+
+//////////////////////////////////////////////////////////////////////////
+//
+// TGLClipSet
+//
+// A collection of all available clipping objects, to be used by higher
+// level objects. For the time being by TGLViewer/Scene.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class TGLClipSet : public TGLOverlayElement
+{
+protected:
+   TGLClipPlane         * fClipPlane;
+   TGLClipBox           * fClipBox;
+   TGLClip              * fCurrentClip;  //! the current clipping shape
+
+   Bool_t                 fShowClip;
+   Bool_t                 fShowManip;
+   TGLManipSet          * fManip;
+
+public:
+   TGLClipSet();
+   virtual ~TGLClipSet();
+
+   virtual Bool_t MouseEnter(UInt_t* record);
+   virtual Bool_t MouseStillInside(UInt_t* record);
+   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record);
+   virtual void   MouseLeave();
+
+   virtual void Render(TGLRnrCtx& rnrCtx);
+
+   Bool_t    IsClipping()     const { return fCurrentClip != 0; }
+   TGLClip * GetCurrentClip() const { return fCurrentClip; }
+   void      FillPlaneSet(TGLPlaneSet_t & set) const;
+
+   // Clipping
+   void  SetupClips(const TGLBoundingBox & sceneBBox);
+
+   void  GetClipState(EClipType type, Double_t data[6]) const;
+   void  SetClipState(EClipType type, const Double_t data[6]);
+
+   EClipType GetClipType() const;
+   void      SetClipType(EClipType type);
+
+   // Editor only supports combined flag so far.
+   Bool_t GetShowManip()      const { return fShowManip; }
+   void   SetShowManip(Bool_t show) { fShowManip = show; }
+   Bool_t GetShowClip()       const { return fShowClip; }
+   void   SetShowClip(Bool_t show)  { fShowClip = show; }
+
+   ClassDef(TGLClipSet, 0); // A collection of supported clip-objects
 };
 
 #endif

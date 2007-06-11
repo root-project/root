@@ -97,9 +97,9 @@ void glViewerExercise()
    // Random draw style 
    Int_t style = randGen.Integer(3);
    switch (style) {
-      case 0: v->SetDrawStyle(TGLDrawFlags::kFill); break;
-      case 1: v->SetDrawStyle(TGLDrawFlags::kOutline); break;
-      case 2: v->SetDrawStyle(TGLDrawFlags::kWireFrame); break;
+      case 0: v->SetStyle(TGLRnrCtx::kFill); break;
+      case 1: v->SetStyle(TGLRnrCtx::kOutline); break;
+      case 2: v->SetStyle(TGLRnrCtx::kWireFrame); break;
    }   
 
    // Clipping setup - something like this:
@@ -116,17 +116,18 @@ void glViewerExercise()
    */
 
    // Lights - turn some off randomly
+   TGLLightSet* ls = v->GetLightSet();
    if (randGen.Integer(2) == 0) {
-      v->SetLight(TGLViewer::kLightLeft, kFALSE);
+      ls->SetLight(TGLLightSet::kLightLeft, kFALSE);
    }
    if (randGen.Integer(2) == 0) {
-      v->SetLight(TGLViewer::kLightRight, kFALSE);
+      ls->SetLight(TGLLightSet::kLightRight, kFALSE);
    }
    if (randGen.Integer(2) == 0) {
-      v->SetLight(TGLViewer::kLightTop, kFALSE);
+      ls->SetLight(TGLLightSet::kLightTop, kFALSE);
    }
    if (randGen.Integer(2) == 0) {
-      v->SetLight(TGLViewer::kLightBottom, kFALSE);
+      ls->SetLight(TGLLightSet::kLightBottom, kFALSE);
    }
 
    // Random camera type

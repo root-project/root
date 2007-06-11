@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyLine.cxx,v 1.2 2006/05/31 07:48:56 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyLine.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -11,7 +11,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TGLPolyLine.h"
-#include "TGLDrawFlags.h"
+#include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
@@ -19,7 +19,7 @@
 #include "TAttLine.h"
 
 // For debug tracing
-#include "TClass.h" 
+#include "TClass.h"
 #include "TError.h"
 
 ClassImp(TGLPolyLine)
@@ -37,16 +37,19 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :
 }
 
 //______________________________________________________________________________
-void TGLPolyLine::DirectDraw(const TGLDrawFlags & flags) const
+void TGLPolyLine::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
+      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
+
+   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+      return;
 
    Double_t oldWidth = 1.;
    glGetDoublev(GL_LINE_WIDTH, &oldWidth);
-   
+
    glLineWidth(fLineWidth);
 
    glBegin(GL_LINE_STRIP);

@@ -6,10 +6,10 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
    TGeoManager * geom = new TGeoManager("LODTest", "GL viewer LOD test");
    geom->SetNsegments(4); // Doesn't matter keep low  
    TGeoMaterial *matEmptySpace = new TGeoMaterial("EmptySpace", 0, 0, 0);
-   TGeoMaterial *matSolid     = new TGeoMaterial("Solid"    , .938, 1., 10000.);
+   TGeoMaterial *matSolid      = new TGeoMaterial("Solid"    , .938, 1., 10000.);
 
    TGeoMedium *medEmptySpace = new TGeoMedium("Empty", 1, matEmptySpace);
-   TGeoMedium *medSolid     = new TGeoMedium("Solid", 1, matSolid);
+   TGeoMedium *medSolid      = new TGeoMedium("Solid", 1, matSolid);
 
    Double_t sizeBase = 20.0;
    Double_t worldRadius;
@@ -47,7 +47,7 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
       Double_t phi2 = phi1 + gRandom->Rndm() * 270.0;
 
       // Pick random color (not black)
-      Int_t color = gRandom->Integer(kCyan-1);
+      Int_t color = gRandom->Integer(50);
       if (color == kBlack) color += 1;
 
       switch (type) {

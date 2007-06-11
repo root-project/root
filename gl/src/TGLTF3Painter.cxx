@@ -14,7 +14,7 @@
 ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
-TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, 
+TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
                              TGLPlotCoordinates *coord, Int_t ctx)
                   : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
                     fStyle(kDefault),
@@ -25,7 +25,7 @@ TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
 {
    // Constructor.
 }
-                    
+
 //______________________________________________________________________________
 char *TGLTF3Painter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
@@ -34,7 +34,7 @@ char *TGLTF3Painter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 }
 
 namespace {
-   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY,
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
                      const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh,
                      Rgl::Range_t &minMax);
@@ -74,19 +74,19 @@ Bool_t TGLTF3Painter::InitGeometry()
       for (Int_t j= 0; j < nY; ++j) {
          for (Int_t k = 0; k < nZ; ++k) {
             MarchingCube(xMin + i * xStep, yMin + j * yStep, zMin + k * zStep,
-                         xStep, yStep, zStep, fCoord->GetXScale(), fCoord->GetYScale(), 
+                         xStep, yStep, zStep, fCoord->GetXScale(), fCoord->GetYScale(),
                          fCoord->GetZScale(), fF3, fMesh, minMax);
          }
       }
    }
-   
+
    //Not sure about this part :(
    minMax.second = 0.001 * minMax.first;
 
    fXOZSlice.SetMinMax(minMax);
    fYOZSlice.SetMinMax(minMax);
    fXOYSlice.SetMinMax(minMax);
-   
+
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -245,7 +245,7 @@ void TGLTF3Painter::DrawPlot()const
       }
 
       glEnd();
-      
+
       if (fStyle == kMaple1 && !fSelectionPass) {
          glDisable(GL_POLYGON_OFFSET_FILL);//1]
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
@@ -281,7 +281,7 @@ void TGLTF3Painter::DrawPlot()const
             const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
             const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
             const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
-            
+
             if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
 
@@ -308,7 +308,7 @@ void TGLTF3Painter::DrawPlot()const
             const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
             const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
             const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
-            
+
             if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
             glVertex3dv(tri.fXYZ[0].CArr());
@@ -333,7 +333,7 @@ void TGLTF3Painter::DrawPlot()const
             const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
             const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
             const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
-            
+
             if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
             glVertex3dv(tri.fXYZ[0].CArr());
@@ -343,17 +343,17 @@ void TGLTF3Painter::DrawPlot()const
 
          glEnd();
          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//3]
-      } else if (fStyle == kMaple2) 
+      } else if (fStyle == kMaple2)
          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//2]
 
       if (fStyle > kDefault && !fSelectionPass)
          glEnable(GL_LIGHTING); //0]
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
    }
-   
+
    if (!fSelectionPass && HasSections() && fStyle < kMaple2) {
       glDisable(GL_BLEND);
-      glDepthMask(GL_TRUE);   
+      glDepthMask(GL_TRUE);
    }
 
 
@@ -368,7 +368,7 @@ void TGLTF3Painter::SetSurfaceColor()const
    if (fF3->GetFillColor() != kWhite)
       if (const TColor *c = gROOT->GetColor(fF3->GetFillColor()))
          c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
-   
+
    glMaterialfv(GL_BACK, GL_DIFFUSE, diffColor);
    diffColor[0] /= 2, diffColor[1] /= 2, diffColor[2] /= 2;
    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffColor);
@@ -437,24 +437,24 @@ char *TGLIsoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 
 namespace {
 
-   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY,
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
-                     const Double_t *funValues, std::vector<TGLIsoPainter::TriFace_t> &mesh, 
+                     const Double_t *funValues, std::vector<TGLIsoPainter::TriFace_t> &mesh,
                      Double_t isoValue);
-                     
+
    inline Double_t Abs(Double_t val)
    {
       if(val < 0.) val *= -1.;
       return val;
    }
-   
+
    inline Bool_t Eq(const TGLVertex3 &v1, const TGLVertex3 &v2)
    {
-      return Abs(v1.X() - v2.X()) < 0.0000001 && 
-             Abs(v1.Y() - v2.Y()) < 0.0000001 && 
+      return Abs(v1.X() - v2.X()) < 0.0000001 &&
+             Abs(v1.Y() - v2.Y()) < 0.0000001 &&
              Abs(v1.Z() - v2.Z()) < 0.0000001;
    }
-   
+
 }
 
 //______________________________________________________________________________
@@ -463,15 +463,15 @@ Bool_t TGLIsoPainter::InitGeometry()
    //Initializes meshes for 3d iso contours.
    if (fHist->GetDimension() < 3) {
       Error("TGLIsoPainter::TGLIsoPainter", "Wrong type of histogramm, must have 3 dimensions");
-      return kFALSE;  
+      return kFALSE;
    }
 
    //Create mesh.
-   //Now, I check this to avoid 
+   //Now, I check this to avoid
    //expensive recalculations.
    if (fInit)
       return kTRUE;
-      
+
    //Only in cartesian.
    fCoord->SetCoordType(kGLCartesian);
    if (!fCoord->SetRanges(fHist, kFALSE, kTRUE))
@@ -500,14 +500,14 @@ Bool_t TGLIsoPainter::InitGeometry()
          for (UInt_t i = 0; i < nContours; ++i)
             fColorLevels[i] = fMinMax.first + i * isoStep;
       }
-      
+
       fPalette.GeneratePalette(nContours, fMinMax, kFALSE);
    } else {
       //Only one iso (ROOT's standard).
       fColorLevels.resize(nContours = 1);
       fColorLevels[0] = fHist->GetSumOfWeights() / (fHist->GetNbinsX() * fHist->GetNbinsY() * fHist->GetNbinsZ());
    }
-   
+
    MeshIter_t firstMesh = fCache.begin();
    //Initialize meshes, trying to reuse mesh from
    //mesh cache.
@@ -520,7 +520,7 @@ Bool_t TGLIsoPainter::InitGeometry()
          fIsos.splice(fIsos.begin(), fCache, firstMesh);
          firstMesh = next;
       } else {
-         //No meshes in a cache. 
+         //No meshes in a cache.
          //Create new one and _swap_ data (look at Mesh_t::Swap in a header)
          //between empty mesh in a list and this mesh
          //to avoid real copying.
@@ -539,10 +539,10 @@ Bool_t TGLIsoPainter::InitGeometry()
       fXOYSectionPos = fBackBox.Get3DBox()[0].Z();
       fCoord->ResetModified();
    }
-   
+
    //Avoid rebuilding the mesh.
    fInit = kTRUE;
-   
+
    return kTRUE;
 
 }
@@ -641,7 +641,7 @@ void TGLIsoPainter::DrawPlot()const
       Error("TGLIsoPainter::DrawPlot", "Non-equal number of levels and isos");
       return;
    }
-   
+
    if (!fSelectionPass && HasSections()) {
       //Surface is semi-transparent during dynamic profiling.
       //Having several complex nested surfaces, it's not easy
@@ -651,16 +651,16 @@ void TGLIsoPainter::DrawPlot()const
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       glDepthMask(GL_FALSE);
    }
-   
+
    UInt_t colorInd = 0;
    ConstMeshIter_t iso = fIsos.begin();
-   
+
    for (; iso != fIsos.end(); ++iso, ++colorInd)
       DrawMesh(*iso, colorInd);
 
    if (!fSelectionPass && HasSections()) {
       glDisable(GL_BLEND);
-      glDepthMask(GL_TRUE);   
+      glDepthMask(GL_TRUE);
    }
 
    if (fBoxCut.IsActive())
@@ -718,7 +718,7 @@ void TGLIsoPainter::SetSurfaceColor(Int_t ind)const
       diffColor[1] = color[1] / 255.;
       diffColor[2] = color[2] / 255.;
    }
-   
+
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
@@ -735,9 +735,9 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
    //marching cubes calculates a set of triangles (possible empty)
    //for each of cubes in a lattice. After that, I need to calculate
    //per-vertex smoothed normals - calculating the summ of neighbouring
-   //per-triangle normals and normalizing 
-   //(so, I need to find common vertices for triangles), 
-   //this can be done only after 
+   //per-triangle normals and normalizing
+   //(so, I need to find common vertices for triangles),
+   //this can be done only after
    //each of 26 neighbouring cubes was processed. I remember
    //"mesh range" for each cube, not to check _EVERY_ triangles.
    const Int_t nX = fHist->GetNbinsX();
@@ -753,7 +753,7 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
    const Int_t    sliceSize = (nY + 2) * (nZ + 2);
    std::vector<Range_t> &boxRanges = m.fBoxRanges;
    std::vector<TriFace_t> &mesh = m.fMesh;
-   
+
    boxRanges.assign((nX + 2) * (nY + 2) * (nZ + 2), Range_t());
 
    //First, calculate full mesh and define "box ranges" - which
@@ -776,7 +776,7 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
          }
       }
    }
-   
+
    for (Int_t i = 1; i <= nX; ++i) {
       for (Int_t j = 1; j <= nY; ++j) {
          for (Int_t k = 1; k <= nZ; ++k) {
@@ -789,7 +789,7 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
                   const TGLVertex3 &v0 = face.fXYZ[0];
                   const TGLVertex3 &v1 = face.fXYZ[1];
                   const TGLVertex3 &v2 = face.fXYZ[2];
-                  
+
                   for (Int_t tri1 = box.fFirst; tri1 < box.fLast; ++tri1) {
                      if (tri != tri1) {
                         const TriFace_t &testFace = mesh[tri1];
@@ -813,7 +813,7 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
                            face.fPerVertexNormals[2] += testFace.fNormal;
                      }
                   }
-                  
+
                   const Int_t nZ2 = nZ + 2;
 
                   Range_t &box1  = boxRanges[(i - 1) * sliceSize + (j - 1) * nZ2 + k - 1];
@@ -875,12 +875,12 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
          }
       }
    }
-   
+
    for (UInt_t i = 0, ei = mesh.size(); i < ei; ++i) {
       TriFace_t &face = mesh[i];
       if(face.fPerVertexNormals[0].X() || face.fPerVertexNormals[0].Y() || face.fPerVertexNormals[0].Z())
          face.fPerVertexNormals[0].Normalise();
-      if(face.fPerVertexNormals[1].X() || face.fPerVertexNormals[1].Y() || face.fPerVertexNormals[1].Z())         
+      if(face.fPerVertexNormals[1].X() || face.fPerVertexNormals[1].Y() || face.fPerVertexNormals[1].Z())
          face.fPerVertexNormals[1].Normalise();
       if(face.fPerVertexNormals[2].X() || face.fPerVertexNormals[2].Y() || face.fPerVertexNormals[2].Z())
          face.fPerVertexNormals[2].Normalise();
@@ -908,7 +908,7 @@ void TGLIsoPainter::DrawMesh(const Mesh_t &mesh, Int_t level)const
             glNormal3dv(mesh.fMesh[i].fPerVertexNormals[2].CArr());
             glVertex3dv(mesh.fMesh[i].fXYZ[2].CArr());
          }
-         
+
       } else {
          Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
          for (UInt_t i = 0, e = mesh.fMesh.size(); i < e; ++i) {
@@ -919,7 +919,7 @@ void TGLIsoPainter::DrawMesh(const Mesh_t &mesh, Int_t level)const
       }
 
       glEnd();
-      
+
    } else {
       glBegin(GL_TRIANGLES);
 
@@ -932,13 +932,13 @@ void TGLIsoPainter::DrawMesh(const Mesh_t &mesh, Int_t level)const
             const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
             const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
             const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
-            
+
             if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
 
             glNormal3dv(tri.fPerVertexNormals[0].CArr());
             glVertex3dv(tri.fXYZ[0].CArr());
-            glNormal3dv(tri.fPerVertexNormals[1].CArr());            
+            glNormal3dv(tri.fPerVertexNormals[1].CArr());
             glVertex3dv(tri.fXYZ[1].CArr());
             glNormal3dv(tri.fPerVertexNormals[2].CArr());
             glVertex3dv(tri.fXYZ[2].CArr());
@@ -954,10 +954,10 @@ void TGLIsoPainter::DrawMesh(const Mesh_t &mesh, Int_t level)const
             const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
             const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
             const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
-            
+
             if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
-               
+
             glVertex3dv(tri.fXYZ[0].CArr());
             glVertex3dv(tri.fXYZ[1].CArr());
             glVertex3dv(tri.fXYZ[2].CArr());
@@ -975,11 +975,11 @@ void TGLIsoPainter::CheckBox(const std::vector<TriFace_t> &mesh, TriFace_t &face
    //common vertex with face, if yes - att its flat normal.
    if (box.fFirst == -1)
       return;
-      
+
    const TGLVertex3 &v0 = face.fXYZ[0];
    const TGLVertex3 &v1 = face.fXYZ[1];
    const TGLVertex3 &v2 = face.fXYZ[2];
-                  
+
    for (Int_t tri1 = box.fFirst; tri1 < box.fLast; ++tri1) {
       const TriFace_t &testFace = mesh[tri1];
       if (Eq(v0, testFace.fXYZ[0]))
@@ -1009,7 +1009,7 @@ void TGLIsoPainter::FindMinMax()
    //Find max/min bin contents for TH3.
    fMinMax.first  = fHist->GetBinContent(fXAxis->GetFirst(), fYAxis->GetFirst(), fZAxis->GetFirst());
    fMinMax.second = fMinMax.first;
-   
+
    for (Int_t i = fXAxis->GetFirst(), ei = fXAxis->GetLast(); i <= ei; ++i) {
       for (Int_t j = fYAxis->GetFirst(), ej = fYAxis->GetLast(); j <= ej; ++j) {
          for (Int_t k = fZAxis->GetFirst(), ek = fZAxis->GetLast(); k <= ek; ++k) {
@@ -1031,7 +1031,7 @@ namespace {
    //These tables are used so that everything can be done in little loops that you can look at all at once
    // rather than in pages and pages of unrolled code.
    //gA2VertexOffset lists the positions, relative to vertex0, of each of the 8 vertices of a cube
-   const Double_t gA2VertexOffset[8][3] = 
+   const Double_t gA2VertexOffset[8][3] =
    {
       {0., 0., 0.}, {1., 0., 0.}, {1., 1., 0.},
       {0., 1., 0.}, {0., 0., 1.}, {1., 0., 1.},
@@ -1045,7 +1045,7 @@ namespace {
       {0,4}, {1,5}, {2,6}, {3,7}
    };
    //gA2EdgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
-   const Double_t gA2EdgeDirection[12][3] = 
+   const Double_t gA2EdgeDirection[12][3] =
    {
       {1., 0., 0.}, {0., 1., 0.}, {-1., 0., 0.},
       {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.},
@@ -1094,7 +1094,7 @@ namespace {
    extern Int_t gTriangleConnectionTable[256][16];
 
    //MarchingCube performs the Marching Cubes algorithm on a single cube
-   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY,
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
                      const TF3 *fun, std::vector<TGLTF3Painter::TriFace_t> &mesh,
                      Rgl::Range_t &minMax)
@@ -1116,7 +1116,7 @@ namespace {
       Int_t iFlagIndex = 0;
 
       for (Int_t iVertexTest = 0; iVertexTest < 8; ++iVertexTest) {
-         if(afCubeValue[iVertexTest] <= gTargetValue) 
+         if(afCubeValue[iVertexTest] <= gTargetValue)
             iFlagIndex |= 1<<iVertexTest;
       }
 
@@ -1129,7 +1129,7 @@ namespace {
       for (Int_t iEdge = 0; iEdge < 12; ++iEdge) {
          //if there is an intersection on this edge
          if (iEdgeFlags & (1<<iEdge)) {
-            Double_t offset = GetOffset(afCubeValue[ gA2EdgeConnection[iEdge][0] ], 
+            Double_t offset = GetOffset(afCubeValue[ gA2EdgeConnection[iEdge][0] ],
                                        afCubeValue[ gA2EdgeConnection[iEdge][1] ],
                                        gTargetValue);
 
@@ -1147,7 +1147,7 @@ namespace {
             break;
 
          TGLTF3Painter::TriFace_t newTri;
-         
+
          for (Int_t iCorner = 2; iCorner >= 0; --iCorner) {
             Int_t iVertex = gTriangleConnectionTable[iFlagIndex][3*iTriangle+iCorner];
 
@@ -1163,7 +1163,7 @@ namespace {
    }
 
    //MarchingCube performs the Marching Cubes algorithm on a single cube
-   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY,
                      Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
                      const Double_t *cube, std::vector<TGLIsoPainter::TriFace_t> &mesh, Double_t isoValue)
    {
@@ -1173,14 +1173,14 @@ namespace {
       Int_t iFlagIndex = 0;
 
       for (Int_t iVertexTest = 0; iVertexTest < 8; ++iVertexTest) {
-         if(cube[iVertexTest] <= isoValue) 
+         if(cube[iVertexTest] <= isoValue)
             iFlagIndex |= 1 << iVertexTest;
       }
 
       //Find which edges are intersected by the surface
       Int_t iEdgeFlags = gCubeEdgeFlags[iFlagIndex];
       //If the cube is entirely inside or outside of the surface, then there will be no intersections
-      if (!iEdgeFlags) 
+      if (!iEdgeFlags)
          return;
 
       //Find the point of intersection of the surface with each edge
@@ -1202,7 +1202,7 @@ namespace {
             break;
 
          TGLIsoPainter::TriFace_t newTri;
-         
+
          for (Int_t iCorner = 2; iCorner >= 0; --iCorner) {
             Int_t iVertex = gTriangleConnectionTable[iFlagIndex][3 * iTriangle + iCorner];
 
@@ -1210,13 +1210,13 @@ namespace {
             newTri.fXYZ[iCorner].Y() = asEdgeVertex[iVertex].Y() * scaleY;
             newTri.fXYZ[iCorner].Z() = asEdgeVertex[iVertex].Z() * scaleZ;
          }
-         
+
          GetNormal(newTri);
 
          mesh.push_back(newTri);
       }
    }
-   
+
    // For any edge, if one vertex is inside of the surface and the other is outside of the surface
    //  then the edge intersects the surface
    // For each of the 8 vertices of the cube can be two possible states : either inside or outside of the surface
@@ -1226,33 +1226,33 @@ namespace {
 
    Int_t gCubeEdgeFlags[256]=
    {
-      0x000, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00, 
-      0x190, 0x099, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90, 
-      0x230, 0x339, 0x033, 0x13a, 0x636, 0x73f, 0x435, 0x53c, 0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30, 
-      0x3a0, 0x2a9, 0x1a3, 0x0aa, 0x7a6, 0x6af, 0x5a5, 0x4ac, 0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0, 
-      0x460, 0x569, 0x663, 0x76a, 0x066, 0x16f, 0x265, 0x36c, 0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60, 
-      0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0x0ff, 0x3f5, 0x2fc, 0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0, 
-      0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x055, 0x15c, 0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950, 
-      0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0x0cc, 0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0, 
-      0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc, 0x0cc, 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0, 
-      0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c, 0x15c, 0x055, 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650, 
-      0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc, 0x2fc, 0x3f5, 0x0ff, 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0, 
-      0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c, 0x36c, 0x265, 0x16f, 0x066, 0x76a, 0x663, 0x569, 0x460, 
-      0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac, 0x4ac, 0x5a5, 0x6af, 0x7a6, 0x0aa, 0x1a3, 0x2a9, 0x3a0, 
-      0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c, 0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x033, 0x339, 0x230, 
-      0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c, 0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x099, 0x190, 
+      0x000, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
+      0x190, 0x099, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90,
+      0x230, 0x339, 0x033, 0x13a, 0x636, 0x73f, 0x435, 0x53c, 0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30,
+      0x3a0, 0x2a9, 0x1a3, 0x0aa, 0x7a6, 0x6af, 0x5a5, 0x4ac, 0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0,
+      0x460, 0x569, 0x663, 0x76a, 0x066, 0x16f, 0x265, 0x36c, 0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60,
+      0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0x0ff, 0x3f5, 0x2fc, 0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0,
+      0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x055, 0x15c, 0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950,
+      0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0x0cc, 0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0,
+      0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc, 0x0cc, 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0,
+      0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c, 0x15c, 0x055, 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650,
+      0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc, 0x2fc, 0x3f5, 0x0ff, 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0,
+      0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c, 0x36c, 0x265, 0x16f, 0x066, 0x76a, 0x663, 0x569, 0x460,
+      0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac, 0x4ac, 0x5a5, 0x6af, 0x7a6, 0x0aa, 0x1a3, 0x2a9, 0x3a0,
+      0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c, 0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x033, 0x339, 0x230,
+      0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c, 0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x099, 0x190,
       0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c, 0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x000
    };
 
    //  For each of the possible vertex states listed in gCubeEdgeFlags there is a specific triangulation
    //  of the edge intersection points.  gTriangleConnectionTable lists all of them in the form of
    //  0-5 edge triples with the list terminated by the invalid value -1.
-   //  For example: gTriangleConnectionTable[3] list the 2 triangles formed when corner[0] 
+   //  For example: gTriangleConnectionTable[3] list the 2 triangles formed when corner[0]
    //  and corner[1] are inside of the surface, but the rest of the cube is not.
    //
    //  I found this table in an example program someone wrote long ago.  It was probably generated by hand
 
-   GLint gTriangleConnectionTable[256][16] =  
+   GLint gTriangleConnectionTable[256][16] =
    {
       {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
       {0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -1511,5 +1511,5 @@ namespace {
       {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
       {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
    };
-   
+
 }

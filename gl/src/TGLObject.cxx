@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.3 2006/05/09 19:08:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -31,6 +31,17 @@
 ClassImp(TGLObject)
 
 //______________________________________________________________________________
+void TGLObject::UpdateBoundingBox()
+{
+   // Update bounding box from external source.
+   // We call abstract SetBBox() and propagate the change to all
+   // attached physicals.
+
+   SetBBox();
+   UpdateBoundingBoxesOfPhysicals();
+}
+
+//______________________________________________________________________________
 Bool_t TGLObject::SetModelCheckClass(TObject* obj, TClass* cls)
 {
    // Checks if obj is of proper class and sets the model.
@@ -38,10 +49,9 @@ Bool_t TGLObject::SetModelCheckClass(TObject* obj, TClass* cls)
 
    if(obj->InheritsFrom(cls) == kFALSE) {
       Warning("TGLObject::SetModelCheckClass", "object of wrong class passed.");
-      return false;
+      return kFALSE;
    }
    fExternalObj = obj;
-   fID          = reinterpret_cast<ULong_t>(obj);
 
    return kTRUE;
 }

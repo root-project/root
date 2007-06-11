@@ -16,6 +16,8 @@
 
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
+#include "TGLLightSetEditor.h"
+#include "TGLClip.h" // should become TGLClipSetEditor
 #include "TGLUtil.h"
 
 ClassImp(TGLViewerEditor)
@@ -27,15 +29,8 @@ ClassImp(TGLViewerEditor)
 //______________________________________________________________________________
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
-   fGuidesFrame(0), 
+   fGuidesFrame(0),
    fClipFrame(0),
-   fLightFrame(0),
-   fTopLight(0),
-   fRightLight(0),
-   fBottomLight(0),
-   fLeftLight(0),
-   fFrontLight(0),
-   fSpecularLight(0),
    fClearColor(0),
    fIgnoreSizesOnUpdate(0),
    fResetCamerasOnUpdate(0),
@@ -60,14 +55,16 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fPlaneProp(),
    fBoxPropFrame(0),
    fBoxProp(),
-   fEdit(0),
+   fClipInside(0),
+   fClipEdit(0),
+   fClipShow(0),
    fApplyButton(0),
    fViewer(0),
    fIsInPad(kTRUE)
 {
   //  Constructor.
 
-   CreateLightsTab();
+   CreateStyleTab();
    CreateGuidesTab();
    CreateClippingTab();
 }
@@ -83,15 +80,7 @@ TGLViewerEditor::~TGLViewerEditor()
 //______________________________________________________________________________
 void TGLViewerEditor::ConnectSignals2Slots()
 {
-   // Connect check buttons.
-   
-   fTopLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
-   fRightLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
-   fBottomLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
-   fLeftLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
-   fFrontLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
-
-   fSpecularLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
+   // Connect signals to slots.
 
    fClearColor->Connect("ColorSelected(Pixel_t)", "TGLViewerEditor", this, "DoClearColor(Pixel_t)");
    fIgnoreSizesOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoIgnoreSizesOnUpdate()");
@@ -110,7 +99,9 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
 
    fTypeButtons->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
-   fEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
+   fClipInside->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
+   fClipEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
+   fClipShow->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
 
    for (Int_t i = 0; i < 4; ++i)
       fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "ClipValueChanged()");
@@ -124,12 +115,22 @@ void TGLViewerEditor::ConnectSignals2Slots()
 }
 
 //______________________________________________________________________________
+void TGLViewerEditor::ViewerRedraw()
+{
+   // Initiate redraw of the viewer.
+
+   if (gGLManager && fIsInPad)
+      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
+   fViewer->RequestDraw();
+}
+
+//______________________________________________________________________________
 void TGLViewerEditor::SetModel(TObject* obj)
 {
    // Sets model or disables/hides viewer.
 
    fViewer = 0;
-  
+
    fViewer = static_cast<TGLViewer *>(obj);
    fIsInPad = (fViewer->GetDev() != -1);
 
@@ -139,23 +140,7 @@ void TGLViewerEditor::SetModel(TObject* obj)
    if (fInit)
       ConnectSignals2Slots();
 
-
-   // read lights
-   UInt_t ls =  fViewer->GetLightState();
-   if(ls & TGLViewer::kLightTop)
-      fTopLight->SetState(kButtonDown);
-
-   if(ls & TGLViewer::kLightRight)
-      fRightLight->SetState(kButtonDown);
-
-   if(ls & TGLViewer::kLightBottom)
-      fBottomLight->SetState(kButtonDown);
-
-   if(ls & TGLViewer::kLightLeft)
-      fLeftLight->SetState(kButtonDown);
-
-   if(ls & TGLViewer::kLightFront)
-      fFrontLight->SetState(kButtonDown);
+   fLightSet->SetModel(fViewer->GetLightSet());
 
    fClearColor->SetColor(TColor::Number2Pixel(fViewer->GetClearColor()), kFALSE);
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
@@ -164,20 +149,12 @@ void TGLViewerEditor::SetModel(TObject* obj)
 }
 
 //______________________________________________________________________________
-void TGLViewerEditor::DoButton()
-{
-   // Lights radio button was clicked.
-   
-   fViewer->ToggleLight(TGLViewer::ELight(((TGButton *) gTQSender)->WidgetId()));
-}
-
-//______________________________________________________________________________
 void TGLViewerEditor::DoClearColor(Pixel_t color)
 {
    // Clear-color was changed.
 
    fViewer->SetClearColor(Color_t(TColor::GetColor(color)));
-   fViewer->RequestDraw();
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
@@ -220,7 +197,7 @@ void TGLViewerEditor::DoCameraHome()
    // ResetCameraOnDoubleClick was toggled.
 
    fViewer->ResetCurrentCamera();
-   fViewer->RequestDraw();
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
@@ -231,7 +208,7 @@ void TGLViewerEditor::DoCameraMarkup()
    TGLCameraMarkupStyle* ms = fViewer->GetCameraMarkup();
    if (ms) {
       ms->SetPosition(fCamMode->GetSelected());
-      fViewer->RequestDraw();
+      ViewerRedraw();
       ms->SetShow(fCamMarkupOn->IsDown());
    }
 }
@@ -240,12 +217,12 @@ void TGLViewerEditor::DoCameraMarkup()
 void TGLViewerEditor::UpdateViewerGuides()
 {
    // Update viewer with GUI state.
-   
-   TGLViewer::EAxesType axesType = TGLViewer::kAxesNone;
+
+   Int_t axesType = TGLUtil::kAxesNone;
    for (Int_t i = 1; i < 4; i++) {
       TGButton * button = fAxesContainer->GetButton(i);
       if (button && button->IsDown()) {
-         axesType = TGLViewer::EAxesType(i-1);
+         axesType = i-1;
          break;
       }
    }
@@ -256,37 +233,17 @@ void TGLViewerEditor::UpdateViewerGuides()
 }
 
 //______________________________________________________________________________
-void TGLViewerEditor::CreateLightsTab()
+void TGLViewerEditor::CreateStyleTab()
 {
-   //Creates "Lights" tab.
+   // Creates "Style" tab.
 
-   fLightFrame = new TGGroupFrame(this, "Light sources:", kLHintsTop | kLHintsCenterX);
-
-   fLightFrame->SetTitlePos(TGGroupFrame::kLeft);
-   AddFrame(fLightFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));//-
-
-   TGMatrixLayout *ml = new TGMatrixLayout(fLightFrame, 0, 1, 10);
-   fLightFrame->SetLayoutManager(ml);
-
-   fTopLight = new TGCheckButton(fLightFrame, "Top", TGLViewer::kLightTop);
-   fRightLight = new TGCheckButton(fLightFrame, "Right", TGLViewer::kLightRight);
-   fBottomLight = new TGCheckButton(fLightFrame, "Bottom", TGLViewer::kLightBottom);
-   fLeftLight = new TGCheckButton(fLightFrame, "Left", TGLViewer::kLightLeft);
-   fFrontLight = new TGCheckButton(fLightFrame, "Front", TGLViewer::kLightFront);
-
-   fLightFrame->AddFrame(fTopLight);
-   fLightFrame->AddFrame(fRightLight);
-   fLightFrame->AddFrame(fBottomLight);
-   fLightFrame->AddFrame(fLeftLight);
-   fLightFrame->AddFrame(fFrontLight);
+   // LightSet
+   fLightSet = new TGLLightSetSubEditor(this);
+   fLightSet->Connect("Changed", "TGLViewerEditor", this, "ViewerRedraw()");
+   AddFrame(fLightSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 
    {
       TGHorizontalFrame* hf = new TGHorizontalFrame(this);
-      fSpecularLight = new TGCheckButton(hf, "Specular light", TGLViewer::kLightSpecular);
-      fSpecularLight->SetState(kButtonDown);
-      hf->AddFrame(fSpecularLight, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 1, 1, 1));
-      AddFrame(hf, new TGLayoutHints(kLHintsLeft, 2, 1, 1, 1));
-      hf = new TGHorizontalFrame(this);
       TGLabel* lab = new TGLabel(hf, "Clear color");
       hf->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 12, 1, 3));
       fClearColor = new TGColorSelect(hf, 0, -1);
@@ -316,7 +273,7 @@ void TGLViewerEditor::CreateGuidesTab()
    // Create "Guides" tab.
    fGuidesFrame = CreateEditorTabSubFrame("Guides");
 
-   // axes  
+   // axes
    fAxesContainer = new TGButtonGroup(fGuidesFrame, "Axes");
    fAxesNone = new TGRadioButton(fAxesContainer, "None");
    fAxesEdge = new TGRadioButton(fAxesContainer, "Edge");
@@ -342,7 +299,7 @@ void TGLViewerEditor::CreateGuidesTab()
    fRefContainer->AddFrame(fReferencePosY, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
    label = new TGLabel(fRefContainer, "Z");
-   fRefContainer->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 3, 3));  
+   fRefContainer->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 3, 3));
    fReferencePosZ = new TGNumberEntry(fRefContainer, 0.0, 8);
    fRefContainer->AddFrame(fReferencePosZ, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
@@ -365,18 +322,10 @@ void TGLViewerEditor::CreateGuidesTab()
    fCamMode->AddEntry("Right Down", 3);
    fCamMode->AddEntry("Center", 4);
    TGListBox* lb = fCamMode->GetListBox();
-   lb->Resize(lb->GetWidth(), 5*16);
+   lb->Resize(lb->GetWidth(), 5*18);
    fCamMode->Resize(90, 20);
    chf->AddFrame(fCamMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
    fCamContainer->AddFrame(chf);
-}
-
-namespace
-{
-   enum EClippingControlIds {
-      kEditId,
-      kApplyId
-   };
 }
 
 //______________________________________________________________________________
@@ -391,9 +340,13 @@ void TGLViewerEditor::CreateClippingTab()
    new TGRadioButton(fTypeButtons, "Box");
 
    fClipFrame->AddFrame(fTypeButtons, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   // Viewer Edit
-   fEdit = new TGCheckButton(fClipFrame, "Show / Edit In Viewer", kEditId);
-   fClipFrame->AddFrame(fEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   // Clip inside / edit
+   fClipInside = new TGCheckButton(fClipFrame, "Clip away inside");
+   fClipFrame->AddFrame(fClipInside, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   fClipEdit   = new TGCheckButton(fClipFrame, "Edit In Viewer");
+   fClipFrame->AddFrame(fClipEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   fClipShow   = new TGCheckButton(fClipFrame, "Show In Viewer");
+   fClipFrame->AddFrame(fClipShow, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
    // Plane properties
    fPlanePropFrame = new TGCompositeFrame(fClipFrame);
@@ -421,9 +374,9 @@ void TGLViewerEditor::CreateClippingTab()
       fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
       fBoxPropFrame->AddFrame(fBoxProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
    }
-	
+
    // Apply button
-   fApplyButton = new TGTextButton(fClipFrame, "Apply", kApplyId);
+   fApplyButton = new TGTextButton(fClipFrame, "Apply");
    fClipFrame->AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
 }
@@ -433,7 +386,7 @@ void TGLViewerEditor::UpdateReferencePos()
 {
    // Enable/disable reference position (x/y/z) number edits based on
    // reference check box.
-   
+
    fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
    fReferencePosZ->SetState(fReferenceOn->IsDown());
@@ -443,7 +396,7 @@ void TGLViewerEditor::UpdateReferencePos()
 void TGLViewerEditor::ClipValueChanged()
 {
    // One of number edtries was changed.
-   
+
    fApplyButton->SetState(kButtonUp);
 }
 
@@ -452,22 +405,22 @@ void TGLViewerEditor::ClipTypeChanged(Int_t id)
 {
    // Clip type radio button changed - update viewer.
 
+   TGLClipSet * clipset = fViewer->GetClipSet();
    if (id == 1) {
       fCurrentClip = kClipNone;
-      fViewer->SetCurrentClip(kClipNone, kFALSE);
+      clipset->SetClipType(fCurrentClip);
       SetCurrentClip();
-      fEdit->SetState(kButtonDisabled);
+      fClipInside->SetState(kButtonDisabled);
+      fClipEdit->SetState(kButtonDisabled);
+      fClipShow->SetState(kButtonDisabled);
    } else {
-      fEdit->SetState(kButtonUp);
       fCurrentClip = id == 2 ? kClipPlane : kClipBox;
-      fViewer->SetCurrentClip(fCurrentClip, fEdit->IsDown());
+      clipset->SetClipType(fCurrentClip);
       SetCurrentClip();
    }
 
    // Internal GUI change - need to update the viewer
-   if (gGLManager && fIsInPad)
-      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
-   fViewer->RequestDraw();
+   ViewerRedraw();
 
    fGedEditor->Layout();
 }
@@ -487,25 +440,34 @@ void TGLViewerEditor::UpdateViewerClip()
          data[i] = fBoxProp[i]->GetNumber();
 
    fApplyButton->SetState(kButtonDisabled);
-   fViewer->SetClipState(fCurrentClip, data);
-   fViewer->SetCurrentClip(fCurrentClip, fEdit->IsDown());
-   if (fIsInPad && gGLManager)
-      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
-   fViewer->RequestDraw();
+   TGLClipSet * clipset = fViewer->GetClipSet();
+   clipset->SetClipState(fCurrentClip, data);
+   clipset->SetShowManip(fClipEdit->IsDown());
+   clipset->SetShowClip (fClipShow->IsDown());
+   if (fCurrentClip != kClipNone)
+      clipset->GetCurrentClip()->SetMode(fClipInside->IsDown() ? TGLClip::kInside : TGLClip::kOutside);
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
 void TGLViewerEditor::SetCurrentClip()
 {
-   // Set current (active) GUI clip type from 'type'.
-   Bool_t edit = kFALSE;
-   fViewer->GetCurrentClip(fCurrentClip, edit);
-   fEdit->SetDown(edit);
+   // Set current (active) GUI clip type from viewer' state.
+
+   Double_t     clip[6] = {0.};
+   TGLClipSet * clipset = fViewer->GetClipSet();
+
+   clipset->GetClipState(fCurrentClip, clip);
+
+   fClipEdit->SetDown(clipset->GetShowManip());
+   fClipShow->SetDown(clipset->GetShowClip());
+   if (fCurrentClip != kClipNone)
+      fClipInside->SetDown(clipset->GetCurrentClip()->GetMode() == TGLClip::kInside);
+
    fApplyButton->SetState(kButtonDisabled);
 
-
    // Button ids run from 1
-   if (TGButton *btn = fTypeButtons->GetButton(fCurrentClip+1)){
+   if (TGButton *btn = fTypeButtons->GetButton(fCurrentClip+1)) {
       btn->SetDown();
    }
    switch(fCurrentClip) {
@@ -527,9 +489,6 @@ void TGLViewerEditor::SetCurrentClip()
    default:;
    }
 
-   Double_t clip[6] = {0.};
-   fViewer->GetClipState(fCurrentClip, clip);
-
    if (fCurrentClip == kClipPlane)
       for (Int_t i = 0; i < 4; ++i)
          fPlaneProp[i]->SetNumber(clip[i]);
@@ -537,17 +496,15 @@ void TGLViewerEditor::SetCurrentClip()
       for (Int_t i = 0; i < 6; ++i)
          fBoxProp[i]->SetNumber(clip[i]);
 
-   if (fIsInPad && gGLManager)
-      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
-   fViewer->RequestDraw();
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
 void TGLViewerEditor::SetGuides()
 {
    // Set cintriks in "Guides" tab.
-   
-   TGLViewer::EAxesType axesType = TGLViewer::kAxesNone;
+
+   Int_t axesType = TGLUtil::kAxesNone;
    Bool_t referenceOn = kFALSE;
    Double_t referencePos[3] = {0.};
    fViewer->GetGuideState(axesType, referenceOn, referencePos);

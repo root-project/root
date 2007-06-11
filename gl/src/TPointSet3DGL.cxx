@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.6 2006/05/09 19:08:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -16,8 +16,9 @@
 #include "TPointSet3DGL.h"
 #include "TPointSet3D.h"
 
-#include <TGLDrawFlags.h>
-#include <GL/gl.h>
+#include <TGLRnrCtx.h>
+#include <TGLSelectBuffer.h>
+#include <TGLIncludes.h>
 
 //______________________________________________________________________
 // TPointSet3DGL
@@ -43,23 +44,34 @@ void TPointSet3DGL::SetBBox()
 }
 
 //______________________________________________________________________________
-Bool_t TPointSet3DGL::ShouldCache(const TGLDrawFlags & flags) const
+Bool_t TPointSet3DGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
 {
    // Override from TGLDrawable.
    // To account for large point-sizes we modify the projection matrix
    // during selection and thus we need a direct draw.
 
-   if (flags.Selection()) return kFALSE;
-   return fCached;
+   if (rnrCtx.Selection()) return kFALSE;
+   return fDLCache;
 }
 
 //______________________________________________________________________________
-void TPointSet3DGL::DirectDraw(const TGLDrawFlags & flags) const
+void TPointSet3DGL::Draw(TGLRnrCtx & rnrCtx) const
+{
+   // Draw function for TPointSet3D. Skips line-pass of outline mode.
+
+   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+      return;
+
+   TGLObject::Draw(rnrCtx);
+}
+
+//______________________________________________________________________________
+void TPointSet3DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Direct GL rendering for TPointSet3D.
 
-   //printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
-   //printf("  sel=%d, secsel=%d\n", flags.Selection(), flags.SecSelection());
+   //printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
+   //printf("  sel=%d, secsel=%d\n", rnrCtx.Selection(), rnrCtx.SecSelection());
 
    TPointSet3D& q = * (TPointSet3D*) fExternalObj;
 
@@ -71,16 +83,16 @@ void TPointSet3DGL::DirectDraw(const TGLDrawFlags & flags) const
 
    Int_t ms = q.GetMarkerStyle();
    if (ms != 2 && ms != 3 && ms != 5 && ms != 28)
-      RenderPoints(flags);
+      RenderPoints(rnrCtx);
    else
-      RenderCrosses(flags);
+      RenderCrosses(rnrCtx);
 
 
    glPopAttrib();
 }
 
 //______________________________________________________________________________
-void TPointSet3DGL::RenderPoints(const TGLDrawFlags & flags) const
+void TPointSet3DGL::RenderPoints(TGLRnrCtx & rnrCtx) const
 {
    // Render markers as circular or square points.
 
@@ -103,7 +115,7 @@ void TPointSet3DGL::RenderPoints(const TGLDrawFlags & flags) const
    // During selection extend picking region for large point-sizes.
    static const Int_t sPickRadius = 3; // Hardcoded also in TGLViewer::RequestSelect()
    Bool_t changePM = kFALSE;
-   if (flags.Selection() && size > sPickRadius) {
+   if (rnrCtx.Selection() && size > sPickRadius) {
       changePM = kTRUE;
       glMatrixMode(GL_PROJECTION);
       glPushMatrix();
@@ -116,7 +128,7 @@ void TPointSet3DGL::RenderPoints(const TGLDrawFlags & flags) const
       glLoadMatrixf(pm);
    }
 
-   if (flags.SecSelection()) {
+   if (rnrCtx.SecSelection()) {
 
       const Float_t* p = q.GetP();
       const Int_t    n = q.Size();
@@ -158,7 +170,7 @@ void TPointSet3DGL::RenderPoints(const TGLDrawFlags & flags) const
 }
 
 //______________________________________________________________________________
-void TPointSet3DGL::RenderCrosses(const TGLDrawFlags & flags) const
+void TPointSet3DGL::RenderCrosses(TGLRnrCtx & rnrCtx) const
 {
    // Render markers as crosses.
 
@@ -176,7 +188,7 @@ void TPointSet3DGL::RenderCrosses(const TGLDrawFlags & flags) const
       glDisable(GL_LINE_SMOOTH);
    }
 
-   if (flags.SecSelection()) {
+   if (rnrCtx.SecSelection()) {
 
       glPushName(0);
       for (Int_t i=0; i<n; ++i, p+=3) {
@@ -203,13 +215,13 @@ void TPointSet3DGL::RenderCrosses(const TGLDrawFlags & flags) const
 }
 
 //______________________________________________________________________________
-void TPointSet3DGL::ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*)
+void TPointSet3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
    // Processes secondary selection from TGLViewer.
    // Calls TPointSet3D::PointSelected(Int_t) with index of selected
    // point as an argument.
 
-   if (ptr[0] < 2) return;
+   if (rec.GetN() < 2) return;
    TPointSet3D& q = * (TPointSet3D*) fExternalObj;
-   q.PointSelected(ptr[4]);
+   q.PointSelected(rec.GetItem(1));
 }

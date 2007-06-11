@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.37 2007/01/26 14:06:54 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.2 2007/05/10 11:17:57 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,6 +18,10 @@
 #ifndef ROOT_TError
 #include "TError.h"
 #endif
+
+class TString;
+class TGLBoundingBox;
+class TGLCamera;
 
 #include <cmath>
 #include <vector>
@@ -39,11 +43,11 @@ enum EOverlap
    kOutside
 };
 
-enum EClipType  
-{ 
-   kClipNone = 0, 
-   kClipPlane, 
-   kClipBox 
+enum EClipType
+{
+   kClipNone = 0,
+   kClipPlane,
+   kClipBox
 };
 
 enum EManipType
@@ -116,6 +120,9 @@ public:
    void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
    void Negate();
 
+   void Minimum(const TGLVertex3 & other);
+   void Maximum(const TGLVertex3 & other);
+
    // Accessors
          Double_t & operator [] (Int_t index);
    const Double_t & operator [] (Int_t index) const;
@@ -149,66 +156,67 @@ inline Bool_t TGLVertex3::operator == (const TGLVertex3 & rhs) const
 }
 
 //______________________________________________________________________________
-inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs) 
-{ 
+inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs)
+{
    // Check for self-assignment
    if (this != &rhs) {
-      Set(rhs); 
+      Set(rhs);
    }
-   return *this; 
+   return *this;
 }
 
 // operator -= & operator += inline needs to be defered until full TGLVector3 definition
 
 //______________________________________________________________________________
 inline TGLVertex3 TGLVertex3::operator - () const
-{ 
+{
    return TGLVertex3(-fVals[0], -fVals[1], -fVals[2]);
 }
 
 //______________________________________________________________________________
 inline Double_t & TGLVertex3::operator [] (Int_t index)
-{ 
-   /*if (!ValidIndex(index)) { 
-      assert(kFALSE); 
-      return fVals[0]; 
+{
+   /*if (!ValidIndex(index)) {
+      assert(kFALSE);
+      return fVals[0];
    } else {*/
-      return fVals[index]; 
-   //} 
+      return fVals[index];
+   //}
 }
 
 //______________________________________________________________________________
 inline const Double_t& TGLVertex3::operator [] (Int_t index) const
-{ 
-   /*if (!ValidIndex(index)) { 
-      assert(kFALSE); 
-      return fVals[0]; 
+{
+   /*if (!ValidIndex(index)) {
+      assert(kFALSE);
+      return fVals[0];
    } else {*/
-      return fVals[index]; 
-   //} 
+      return fVals[index];
+   //}
 }
 
 //______________________________________________________________________________
 inline void TGLVertex3::Fill(Double_t val)
-{ 
-   Set(val,val,val); 
+{
+   Set(val,val,val);
 }
 
 //______________________________________________________________________________
-inline void TGLVertex3::Set(Double_t x, Double_t y, Double_t z) 
-{ 
-   fVals[0]=x; 
-   fVals[1]=y; 
-   fVals[2]=z; 
+inline void TGLVertex3::Set(Double_t x, Double_t y, Double_t z)
+{
+   fVals[0]=x;
+   fVals[1]=y;
+   fVals[2]=z;
 }
 
 //______________________________________________________________________________
 inline void TGLVertex3::Set(const TGLVertex3 & other)
-{ 
-   fVals[0]=other.fVals[0]; 
-   fVals[1]=other.fVals[1]; 
-   fVals[2]=other.fVals[2]; 
+{
+   fVals[0]=other.fVals[0];
+   fVals[1]=other.fVals[1];
+   fVals[2]=other.fVals[2];
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -245,40 +253,40 @@ public:
 // Inline for TGLVertex3 requiring full TGLVector definition
 //______________________________________________________________________________
 inline const TGLVertex3 & TGLVertex3::operator -= (const TGLVector3 & vec)
-{ 
-   fVals[0] -= vec[0]; fVals[1] -= vec[1]; fVals[2] -= vec[2]; 
-   return *this; 
+{
+   fVals[0] -= vec[0]; fVals[1] -= vec[1]; fVals[2] -= vec[2];
+   return *this;
 }
 
 // Inline for TGLVertex3 requiring full TGLVector definition
 //______________________________________________________________________________
 inline const TGLVertex3 & TGLVertex3::operator += (const TGLVector3 & vec)
-{ 
-   fVals[0] += vec[0]; fVals[1] += vec[1]; fVals[2] += vec[2]; 
-   return *this; 
+{
+   fVals[0] += vec[0]; fVals[1] += vec[1]; fVals[2] += vec[2];
+   return *this;
 }
 
 //______________________________________________________________________________
 inline const TGLVector3 & TGLVector3::operator /= (Double_t val)
-{ 
-   fVals[0] /= val; 
-   fVals[1] /= val; 
-   fVals[2] /= val; 
-   return *this; 
+{
+   fVals[0] /= val;
+   fVals[1] /= val;
+   fVals[2] /= val;
+   return *this;
 }
 
 //______________________________________________________________________________
 inline const TGLVector3 & TGLVector3::operator *= (Double_t val)
-{ 
-   fVals[0] *= val; 
-   fVals[1] *= val; 
-   fVals[2] *= val; 
-   return *this; 
+{
+   fVals[0] *= val;
+   fVals[1] *= val;
+   fVals[2] *= val;
+   return *this;
 }
 
 //______________________________________________________________________________
 inline TGLVector3 TGLVector3::operator - () const
-{ 
+{
    return TGLVector3(-fVals[0], -fVals[1], -fVals[2]);
 }
 
@@ -404,30 +412,34 @@ class TGLRect
 private:
    // Fields
    Int_t    fX, fY;           //! Corner
-   UInt_t   fWidth, fHeight;  //! Positive width/height
+   Int_t    fWidth, fHeight;  //! Positive width/height
 
 public:
    TGLRect();
+   TGLRect(Int_t x, Int_t y, Int_t width, Int_t height);
    TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height);
-   virtual ~TGLRect(); // ClassDef introduces virtual fns
+   virtual ~TGLRect();
 
    // Bitwise copy const & =op are ok at present
 
    // Manipulators
-   void Set(Int_t x, Int_t y, UInt_t width, UInt_t height);
+   void Set(Int_t x, Int_t y, Int_t width, Int_t height);
    void SetCorner(Int_t x, Int_t y);
    void Offset(Int_t dX, Int_t dY);
    void Expand(Int_t x, Int_t y);
 
    // Accessors
+   const Int_t* CArr() const { return &fX; }
+         Int_t* CArr()       { return &fX; }
+
    Int_t    X()       const { return fX; }
    Int_t &  X()             { return fX; }
    Int_t    Y()       const { return fY; }
    Int_t &  Y()             { return fY; }
-   UInt_t   Width()   const { return fWidth; }
-   UInt_t & Width()         { return fWidth; }
-   UInt_t   Height()  const { return fHeight; }
-   UInt_t & Height()        { return fHeight; }
+   Int_t    Width()   const { return fWidth; }
+   Int_t &  Width()         { return fWidth; }
+   Int_t    Height()  const { return fHeight; }
+   Int_t &  Height()        { return fHeight; }
    Int_t    CenterX() const { return fX + fWidth/2; }
    Int_t    CenterY() const { return fY + fHeight/2; }
    Int_t    Left()    const { return fX; }
@@ -435,8 +447,8 @@ public:
    Int_t    Top()     const { return fY; }
    Int_t    Bottom()  const { return fY + fHeight; }
 
-   UInt_t Diagonal() const;
-   UInt_t Longest() const;
+   Int_t Diagonal() const;
+   Int_t Longest() const;
 
    Double_t Aspect() const;
    EOverlap Overlap(const TGLRect & other) const;
@@ -445,7 +457,7 @@ public:
 };
 
 //______________________________________________________________________________
-inline void TGLRect::Set(Int_t x, Int_t y, UInt_t width, UInt_t height)
+inline void TGLRect::Set(Int_t x, Int_t y, Int_t width, Int_t height)
 {
    fX = x;
    fY = y;
@@ -492,15 +504,15 @@ inline void TGLRect::Expand(Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-inline UInt_t TGLRect::Diagonal() const 
-{ 
-   return static_cast<UInt_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight))); 
+inline Int_t TGLRect::Diagonal() const
+{
+   return static_cast<Int_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight)));
 }
 
 //______________________________________________________________________________
-inline UInt_t TGLRect::Longest() const 
-{ 
-   return fWidth > fHeight ? fWidth:fHeight; 
+inline Int_t TGLRect::Longest() const
+{
+   return fWidth > fHeight ? fWidth:fHeight;
 }
 
 //______________________________________________________________________________
@@ -550,7 +562,7 @@ public:
    void Set(const TGLPlane & other);
    void Set(Double_t a, Double_t b, Double_t c, Double_t d);
    void Set(Double_t eq[4]);
-   void Set(const TGLVector3 & norm, const TGLVertex3 & point); 
+   void Set(const TGLVector3 & norm, const TGLVertex3 & point);
    void Set(const TGLVertex3 & p1, const TGLVertex3 & p2, const TGLVertex3 & p3);
    void Negate();
 
@@ -573,7 +585,9 @@ public:
    ClassDef(TGLPlane,0) // GL plane helper/wrapper class
 };
 
-typedef std::vector<TGLPlane> TGLPlaneSet_t;
+typedef std::vector<TGLPlane>                 TGLPlaneSet_t;
+typedef std::vector<TGLPlane>::iterator       TGLPlaneSet_i;
+typedef std::vector<TGLPlane>::const_iterator TGLPlaneSet_ci;
 
 //______________________________________________________________________________
 inline void TGLPlane::Set(const TGLPlane & other)
@@ -603,7 +617,7 @@ inline void TGLPlane::Set(Double_t eq[4])
    fVals[3] = eq[3];
    Normalise();
 }
-   
+
 //______________________________________________________________________________
 inline void TGLPlane::Set(const TGLVector3 & norm, const TGLVertex3 & point)
 {
@@ -662,9 +676,9 @@ inline TGLVertex3 TGLPlane::NearestOn(const TGLVertex3 & point) const
 }
 
 // Some free functions for planes
-std::pair<Bool_t, TGLLine3>   Intersection(const TGLPlane & p1, const TGLPlane & p2); 
+std::pair<Bool_t, TGLLine3>   Intersection(const TGLPlane & p1, const TGLPlane & p2);
 std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane & p2, const TGLPlane & p3);
-std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend); 
+std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -705,6 +719,10 @@ public:
    Double_t & operator [] (Int_t index);
    Double_t operator [] (Int_t index) const;
 
+   void MultRight(const TGLMatrix & rhs);
+   void MultLeft (const TGLMatrix & lhs);
+   TGLMatrix & operator*=(const TGLMatrix & rhs) { MultRight(rhs); return *this; }
+
    // Manipulators
    void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis = 0);
    void Set(const Double_t vals[16]);
@@ -733,35 +751,35 @@ public:
 };
 
 //______________________________________________________________________________
-inline TGLMatrix & TGLMatrix::operator =(const TGLMatrix & rhs) 
+inline TGLMatrix & TGLMatrix::operator =(const TGLMatrix & rhs)
 {
    // Check for self-assignment
    if (this != &rhs) {
-      Set(rhs.fVals); 
+      Set(rhs.fVals);
    }
-   return *this; 
+   return *this;
 }
 
 //______________________________________________________________________________
 inline Double_t & TGLMatrix::operator [] (Int_t index)
-{ 
-   /*if (!ValidIndex(index)) { 
-      assert(kFALSE); 
-      return fVals[0]; 
+{
+   /*if (!ValidIndex(index)) {
+      assert(kFALSE);
+      return fVals[0];
    } else {*/
-      return fVals[index]; 
-   //} 
+      return fVals[index];
+   //}
 }
 
 //______________________________________________________________________________
 inline Double_t TGLMatrix::operator [] (Int_t index) const
-{ 
-   /*if (!ValidIndex(index)) { 
-      assert(kFALSE); 
-      return fVals[0]; 
+{
+   /*if (!ValidIndex(index)) {
+      assert(kFALSE);
+      return fVals[0];
    } else {*/
-      return fVals[index]; 
-   //} 
+      return fVals[index];
+   //}
 }
 
 //______________________________________________________________________________
@@ -788,7 +806,7 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
    res[13] = rhs[12] * lhs[ 1] + rhs[13] * lhs[ 5] + rhs[14] * lhs[ 9] + rhs[15] * lhs[13];
    res[14] = rhs[12] * lhs[ 2] + rhs[13] * lhs[ 6] + rhs[14] * lhs[10] + rhs[15] * lhs[14];
    res[15] = rhs[12] * lhs[ 3] + rhs[13] * lhs[ 7] + rhs[14] * lhs[11] + rhs[15] * lhs[15];
-      
+
    return res;
 }
 
@@ -818,18 +836,50 @@ public:
    static void   CheckError(const char * loc);
 
    // Some simple shape drawing utils
-   enum        ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
+   enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
+   enum EAxesType      { kAxesNone, kAxesEdge, kAxesOrigin };
+
 
    // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);
    static void DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
    static void DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, const Float_t rgba[4]);
-   static void DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, ELineHeadShape head, 
+   static void DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, ELineHeadShape head,
                         Double_t size, const Float_t rgba[4]);
-   static void DrawRing(const TGLVertex3 & center, const TGLVector3 & normal, 
-                        Double_t radius, const Float_t rgba[4]);
+   static void DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
+                        Double_t radius, const Float_t* rgba);
+
+   static void DrawReferenceMarker(const TGLCamera  & camera,
+                                   const TGLVertex3 & pos,
+                                         Float_t      radius = 3,
+                                   const Float_t    * rgba   = 0);
+   static void DrawSimpleAxes(const TGLCamera      & camera,
+                              const TGLBoundingBox & bbox,
+                                    Int_t            axesType);
+   static void DrawNumber(const TString    & num,
+                          const TGLVertex3 & pos,
+                                Bool_t       center = kFALSE);
 
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
+};
+
+/**************************************************************************/
+
+class TGLCapabilitySwitch
+{
+private:
+   TGLCapabilitySwitch(const TGLCapabilitySwitch &);
+   TGLCapabilitySwitch &operator = (const TGLCapabilitySwitch &);
+
+   Int_t    fWhat;
+   Bool_t   fState;
+   Bool_t   fFlip;
+
+   void SetState(Bool_t s);
+
+public:
+   TGLCapabilitySwitch(Int_t what, Bool_t state);
+   ~TGLCapabilitySwitch();
 };
 
 class TGLEnableGuard {
@@ -924,19 +974,19 @@ namespace Rgl {
 
    void ObjectIDToColor(Int_t objectID, Bool_t highColor);
    Int_t ColorToObjectID(const UChar_t *color, Bool_t highColor);
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
                         const TGLVertex3 &v3, const TGLVertex3 &v4);
-   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, 
-                       const TGLVertex3 &v2, const TGLVertex3 &v3, 
+   void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1,
+                       const TGLVertex3 &v2, const TGLVertex3 &v3,
                        const TGLVector3 &normal);
-   void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2, 
-                       const TGLVertex3 &v3, const TGLVector3 &norm1, 
+   void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2,
+                       const TGLVertex3 &v3, const TGLVector3 &norm1,
                        const TGLVector3 &norm2, const TGLVector3 &norm3);
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, 
+   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                      Double_t zMin, Double_t zMax, Int_t fp);
 
-   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin, 
-                             Double_t yMax, Double_t zMin, Double_t zMax, 
+   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
+                             Double_t yMax, Double_t zMin, Double_t zMax,
                              Double_t tMin, Double_t tMax, Int_t front);
 
 #ifndef __CINT__
@@ -947,11 +997,11 @@ namespace Rgl {
                                Double_t tMin, Double_t tMax);
 #endif
 
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                      Double_t yMax, Double_t zMin, Double_t zMax);
-   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                    Double_t yMax, Double_t zMin, Double_t zMax);
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax);
 
 #ifndef __CINT__
@@ -959,16 +1009,16 @@ namespace Rgl {
    void DrawTrapezoid(const Double_t ver[][3]);
 #endif
 
-   void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D, 
-                 const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis, 
+   void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D,
+                 const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis,
                  TAxis *zAxis);
-   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax, 
+   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
                    Double_t zScale, std::vector<Double_t> &zLevels);
 
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
-                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1, 
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
                          const TGLVector3 &norm2, const TGLVector3 &norm3);
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                          Double_t t1, Double_t t2, Double_t t3, Double_t z, const TGLVector3 &planeNormal);
    void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba);
 }

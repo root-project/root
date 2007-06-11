@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.31 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.2 2007/05/10 11:17:45 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 // expanded interest box, and for extracting eye position and direction.//
 //                                                                      //
 // It also defines the pure virtual manipulation interface methods the  //
-// concrete ortho and prespective classes must implement.               //    
+// concrete ortho and prespective classes must implement.               //
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLCamera)
@@ -40,7 +40,8 @@ const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
 
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
-   fCacheDirty(kTRUE), 
+   fCacheDirty(kTRUE),
+   fTimeStamp (1),
    fProjM(), fModVM(), fClipM(),
    fViewport(0,0,100,100),
    fLargestSeen(0.0)
@@ -54,15 +55,16 @@ TGLCamera::TGLCamera() :
 //______________________________________________________________________________
 TGLCamera::~TGLCamera()
 {
-   // Base camera destructor
+   // Base camera destructor.
 }
 
 //______________________________________________________________________________
 void TGLCamera::SetViewport(const TGLRect & viewport)
 {
-   // Set viewport extents from passed 'viewport' rect
+   // Set viewport extents from passed 'viewport' rect.
+
    fViewport = viewport;
-   fCacheDirty = true;
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
@@ -76,25 +78,8 @@ void TGLCamera::UpdateCache() const
 
    // Multiply projection by modelview to get the clip matrix
    // TODO: Move this into TGLMatrix or shift all over to ROOT ones
-   fClipM[ 0] = fModVM[ 0] * fProjM[ 0] + fModVM[ 1] * fProjM[ 4] + fModVM[ 2] * fProjM[ 8] + fModVM[ 3] * fProjM[12];
-   fClipM[ 1] = fModVM[ 0] * fProjM[ 1] + fModVM[ 1] * fProjM[ 5] + fModVM[ 2] * fProjM[ 9] + fModVM[ 3] * fProjM[13];
-   fClipM[ 2] = fModVM[ 0] * fProjM[ 2] + fModVM[ 1] * fProjM[ 6] + fModVM[ 2] * fProjM[10] + fModVM[ 3] * fProjM[14];
-   fClipM[ 3] = fModVM[ 0] * fProjM[ 3] + fModVM[ 1] * fProjM[ 7] + fModVM[ 2] * fProjM[11] + fModVM[ 3] * fProjM[15];
-
-   fClipM[ 4] = fModVM[ 4] * fProjM[ 0] + fModVM[ 5] * fProjM[ 4] + fModVM[ 6] * fProjM[ 8] + fModVM[ 7] * fProjM[12];
-   fClipM[ 5] = fModVM[ 4] * fProjM[ 1] + fModVM[ 5] * fProjM[ 5] + fModVM[ 6] * fProjM[ 9] + fModVM[ 7] * fProjM[13];
-   fClipM[ 6] = fModVM[ 4] * fProjM[ 2] + fModVM[ 5] * fProjM[ 6] + fModVM[ 6] * fProjM[10] + fModVM[ 7] * fProjM[14];
-   fClipM[ 7] = fModVM[ 4] * fProjM[ 3] + fModVM[ 5] * fProjM[ 7] + fModVM[ 6] * fProjM[11] + fModVM[ 7] * fProjM[15];
-
-   fClipM[ 8] = fModVM[ 8] * fProjM[ 0] + fModVM[ 9] * fProjM[ 4] + fModVM[10] * fProjM[ 8] + fModVM[11] * fProjM[12];
-   fClipM[ 9] = fModVM[ 8] * fProjM[ 1] + fModVM[ 9] * fProjM[ 5] + fModVM[10] * fProjM[ 9] + fModVM[11] * fProjM[13];
-   fClipM[10] = fModVM[ 8] * fProjM[ 2] + fModVM[ 9] * fProjM[ 6] + fModVM[10] * fProjM[10] + fModVM[11] * fProjM[14];
-   fClipM[11] = fModVM[ 8] * fProjM[ 3] + fModVM[ 9] * fProjM[ 7] + fModVM[10] * fProjM[11] + fModVM[11] * fProjM[15];
-
-   fClipM[12] = fModVM[12] * fProjM[ 0] + fModVM[13] * fProjM[ 4] + fModVM[14] * fProjM[ 8] + fModVM[15] * fProjM[12];
-   fClipM[13] = fModVM[12] * fProjM[ 1] + fModVM[13] * fProjM[ 5] + fModVM[14] * fProjM[ 9] + fModVM[15] * fProjM[13];
-   fClipM[14] = fModVM[12] * fProjM[ 2] + fModVM[13] * fProjM[ 6] + fModVM[14] * fProjM[10] + fModVM[15] * fProjM[14];
-   fClipM[15] = fModVM[12] * fProjM[ 3] + fModVM[13] * fProjM[ 7] + fModVM[14] * fProjM[11] + fModVM[15] * fProjM[15];
+   fClipM  = fProjM;
+   fClipM *= fModVM;
 
    // RIGHT clipping plane
    fFrustumPlanes[kRight].Set(fClipM[ 3] - fClipM[ 0],
@@ -142,7 +127,7 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    // Return the the current camera frustum. If asBox == kFALSE return
    // a true frustum (truncated square based pyramid). If asBox == kTRUE
    // return a true box, using the far clipping plane intersection projected
-   // back to the near plane. 
+   // back to the near plane.
    //
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
    //
@@ -200,7 +185,7 @@ TGLVertex3 TGLCamera::EyePoint() const
       Error("TGLPerspectiveCamera::FrustumBox()", "cache dirty - must call Apply()");
    }
 
-   // Use intersection of right/left/top frustum planes - can be done in 
+   // Use intersection of right/left/top frustum planes - can be done in
    // other ways from camera values but this is easiest.
    // Note for an ortho camera this will result in an infinite z distance
    // which is theorectically correct although of limited use
@@ -229,11 +214,11 @@ TGLVertex3 TGLCamera::FrustumCenter() const
    if (fCacheDirty) {
       Error("TGLCamera::FrustumCenter()", "cache dirty - must call Apply()");
    }
-   std::pair<Bool_t, TGLVertex3> nearBottomLeft = Intersection(fFrustumPlanes[kNear], 
-                                                               fFrustumPlanes[kBottom], 
+   std::pair<Bool_t, TGLVertex3> nearBottomLeft = Intersection(fFrustumPlanes[kNear],
+                                                               fFrustumPlanes[kBottom],
                                                                fFrustumPlanes[kLeft]);
-   std::pair<Bool_t, TGLVertex3> farTopRight    = Intersection(fFrustumPlanes[kFar], 
-                                                               fFrustumPlanes[kTop], 
+   std::pair<Bool_t, TGLVertex3> farTopRight    = Intersection(fFrustumPlanes[kFar],
+                                                               fFrustumPlanes[kTop],
                                                                fFrustumPlanes[kRight]);
    // Planes should intersect
    if (!nearBottomLeft.first || !farTopRight.first) {
@@ -263,9 +248,9 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
    for (Int_t planeIndex = 0; planeIndex < kPlanesPerFrustum; ++planeIndex) {
       EOverlap planeOverlap = box.Overlap(fFrustumPlanes[planeIndex]);
 
-	  // Special case - any object which comes through the near clipping
-     // plane is completely removed - disabled at present
-     // TODO: In future may want to fade object (opacity) as they approach
+      // Special case - any object which comes through the near clipping
+      // plane is completely removed - disabled at present
+      // TODO: In future may want to fade object (opacity) as they approach
       // near clip - how will this be returned? template pair?
       /*if (planeIndex == kNear && planeOverlap == kPartial) {
          return kOutside;
@@ -289,52 +274,52 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
 EOverlap TGLCamera::ViewportOverlap(const TGLBoundingBox & box) const
 {
    // Calculate overlap (kInside, kOutside, kPartial) of box projection onto viewport
-   // (as rect) against the viewport rect
-   // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+   // (as rect) against the viewport rect.
+   // Camera must have valid frustum cache - call Apply() after last modifcation, before using.
+
    return ViewportRect(box).Overlap(fViewport);
 }
 
 //______________________________________________________________________________
-TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box, 
+TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
                                 const TGLBoundingBox::EFace face) const
 {
    // Calculate viewport rectangle which just contains projection of single 'face'
-   // of world frame bounding box 'box' onto the viewport. Note use other version 
+   // of world frame bounding box 'box' onto the viewport. Note use other version
    // of ViewportRect() if you want whole 'box' contained
    return ViewportRect(box, &face);
 }
 
 //______________________________________________________________________________
-TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box, 
+TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
                                 const TGLBoundingBox::EFace * face) const
 {
-   // Calculate viewport rectangle which just contains projection of world frame
-   // bounding box 'box' onto the viewport. If face is null the rect contains
-   // the whole bounding box (8 vertices/6 faces). If face is non-null it indicates
-   // a box face, and the rect contains the single face (4 vertices). Note use
-   // other version of ViewportRect() if you wish to just pass a static EFace enum 
-   // member (e.g. kFaceLowX)
+   // Calculate viewport rectangle which just contains projection of
+   // world frame bounding box 'box' onto the viewport. If face is
+   // null the rect contains the whole bounding box (8 vertices/6
+   // faces). If face is non-null it indicates a box face, and the
+   // rect contains the single face (4 vertices). Note use other
+   // version of ViewportRect() if you wish to just pass a static
+   // EFace enum member (e.g. kFaceLowX)
    //
    // Note:
-   //       i)   Rectangle is NOT clipped by viewport limits - so can result
-   //            in rect with corners outside viewport - negative etc
-   //       ii)  TGLRect provides int (pixel based) values - not subpxiel accurate
-   //       iii) Camera must have valid frustum cache - call Apply() after last 
-   //            modifcation, before calling
+   //    i)   Rectangle is NOT clipped by viewport limits - so can result
+   //         in rect with corners outside viewport - negative etc
+   //    ii)  TGLRect provides int (pixel based) values - not subpxiel accurate
+   //    iii) Camera must have valid frustum cache - call Apply() after last
+   //         modifcation, before calling
+
    if (fCacheDirty) {
       Error("TGLCamera::ViewportSize()", "cache dirty - must call Apply()");
    }
 
    // TODO: Maybe TGLRect should be converted to Double_t so subpixel accurate
    // Would give better LOD calculations at small sizes
-   
+
    // May often result in a rect bigger then the viewport
    // as gluProject does not clip.
    Double_t winX, winY, winZ;
    TGLRect  screenRect;
-
-   //TODO: Convert TGLRect so this not required
-   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
 
    // TGLBoundingBox::Vertices() & TGLBoundingBox::FaceVertices() return
    // const & vectors so this *should* all be effficient...
@@ -348,14 +333,15 @@ TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
    for (UInt_t i = 0; i < vertexCount; i++)
    {
       const TGLVertex3 & vertex = face ? box.Vertices().at(box.FaceVertices(*face).at(i)) :
-                                         box.Vertices().at(i);        
+                                      box.Vertices().at(i);
 
-      gluProject(vertex.X(), vertex.Y(), vertex.Z(), fModVM.CArr(), fProjM.CArr(), viewport, &winX, &winY, &winZ);
+      gluProject(vertex.X(), vertex.Y(), vertex.Z(),
+                 fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),
+                 &winX, &winY, &winZ);
 
       if (i == 0) {
          screenRect.SetCorner(static_cast<Int_t>(winX),static_cast<Int_t>(winY));
-      }
-      else {
+      } else {
          screenRect.Expand(static_cast<Int_t>(winX), static_cast<Int_t>(winY));
       }
    }
@@ -366,32 +352,32 @@ TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
 //______________________________________________________________________________
 TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex) const
 {
-   // Convert a 3D world vertex to '3D' viewport (screen) one. The X()/Y() 
-   // components of the viewport vertex are the horizontal/vertical pixel 
-   // positions. The Z() component is the viewport depth value - for a 
-   // default depth range this is 0.0 (at near clip plane) to 1.0 (at far 
+   // Convert a 3D world vertex to '3D' viewport (screen) one. The X()/Y()
+   // components of the viewport vertex are the horizontal/vertical pixel
+   // positions. The Z() component is the viewport depth value - for a
+   // default depth range this is 0.0 (at near clip plane) to 1.0 (at far
    // clip plane). See OpenGL gluProject & glDepth documentation
    //
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+
    if (fCacheDirty) {
       Error("TGLCamera::WorldToViewport()", "cache dirty - must call Apply()");
    }
-   //TODO: Convert TGLRect so this not required
-   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
    TGLVertex3 viewportVertex;
-   gluProject(worldVertex[0], worldVertex[1], worldVertex[2], fModVM.CArr(), fProjM.CArr(), 
-              viewport, &viewportVertex[0], &viewportVertex[1], &viewportVertex[2]);
+   gluProject(worldVertex[0], worldVertex[1], worldVertex[2],
+              fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),
+              &viewportVertex[0], &viewportVertex[1], &viewportVertex[2]);
    return viewportVertex;
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::WorldDeltaToViewport(const TGLVertex3 & worldRef, 
+TGLVector3 TGLCamera::WorldDeltaToViewport(const TGLVertex3 & worldRef,
                                            const TGLVector3 & worldDelta) const
 {
-   // Convert a 3D vector worldDelta (shift) about vertex worldRef to a viewport 
-   // (screen) '3D' vector. The X()/Y() components of the vector are the horizontal / 
-   // vertical pixel deltas. The Z() component is the viewport depth delta - for a 
-   // default depth range between 0.0 (at near clip plane) to 1.0 (at far clip plane)  
+   // Convert a 3D vector worldDelta (shift) about vertex worldRef to a viewport
+   // (screen) '3D' vector. The X()/Y() components of the vector are the horizontal /
+   // vertical pixel deltas. The Z() component is the viewport depth delta - for a
+   // default depth range between 0.0 (at near clip plane) to 1.0 (at far clip plane)
    // See OpenGL gluProject & glDepth documentation
    //
    // Camera must have valid frustum cache - call Apply()
@@ -408,32 +394,32 @@ TGLVector3 TGLCamera::WorldDeltaToViewport(const TGLVertex3 & worldRef,
 TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
 {
    // Convert a '3D' viewport vertex to 3D world one. The X()/Y() components
-   // of viewportVertex are the horizontal/vertical pixel position.  
+   // of viewportVertex are the horizontal/vertical pixel position.
    // The Z() component is the viewport depth value - for a default depth range this
    // is 0.0 (at near clip plane) to 1.0 (at far clip plane). Without Z() the viewport
-   // position corresponds to a line in 3D world space - see 
+   // position corresponds to a line in 3D world space - see
    //    TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
    //
    // See also OpenGL gluUnProject & glDepth documentation
    //
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+
    if (fCacheDirty) {
       Error("TGLCamera::ViewportToWorld()", "cache dirty - must call Apply()");
    }
-   //TODO: Convert TGLRect so this not required
-   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
    TGLVertex3 worldVertex;
-   gluUnProject(viewportVertex[0], viewportVertex[1], viewportVertex[2], fModVM.CArr(), fProjM.CArr(), 
-                viewport, &worldVertex[0], &worldVertex[1], &worldVertex[2]);
+   gluUnProject(viewportVertex[0], viewportVertex[1], viewportVertex[2],
+                fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),
+                &worldVertex[0], &worldVertex[1], &worldVertex[2]);
    return worldVertex;
 }
 
 //______________________________________________________________________________
 TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
 {
-   // Convert a 2D viewport position to 3D world line - the projection of the 
+   // Convert a 2D viewport position to 3D world line - the projection of the
    // viewport point into 3D space. Line runs from near to far camera clip planes
-   // (the minimum and maximum visible depth). See also  
+   // (the minimum and maximum visible depth). See also
    //    TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
    // for 3D viewport -> 3D world vertex conversions.
    // See also OpenGL gluUnProject & glDepth documentation
@@ -451,9 +437,9 @@ TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) cons
 //______________________________________________________________________________
 TGLLine3 TGLCamera::ViewportToWorld(const TPoint & viewport) const
 {
-   // Convert a 2D viewport position to 3D world line - the projection of the 
+   // Convert a 2D viewport position to 3D world line - the projection of the
    // viewport point into 3D space. Line runs from near to far camera clip planes
-   // (the minimum and maximum visible depth). See also  
+   // (the minimum and maximum visible depth). See also
    //    TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
    // for 3D viewport -> 3D world vertex conversions.
    // See also OpenGL gluUnProject & glDepth documentation
@@ -463,14 +449,14 @@ TGLLine3 TGLCamera::ViewportToWorld(const TPoint & viewport) const
 }
 
 //______________________________________________________________________________
-std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY, 
+std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY,
                                                                    const TGLPlane & worldPlane) const
 {
    // Find the intersection of projection of supplied viewport point (a 3D world
    // line - see ViewportToWorld) with supplied world plane. Returns std::pair
-   // of Bool_t and TGLVertex3. If line intersects std::pair.first (Bool_t) is 
-   // kTRUE, and std::pair.second (TGLVertex) contains the intersection vertex. 
-   // If line does not intersect (line and plane parallel) std::pair.first 
+   // of Bool_t and TGLVertex3. If line intersects std::pair.first (Bool_t) is
+   // kTRUE, and std::pair.second (TGLVertex) contains the intersection vertex.
+   // If line does not intersect (line and plane parallel) std::pair.first
    // (Bool_t) if kFALSE, and std::pair.second (TGLVertex) is invalid.
    //
    // NOTE: The projection lines is extended for the plane intersection test
@@ -485,23 +471,23 @@ std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Double_t view
 }
 
 //______________________________________________________________________________
-std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(const TPoint & viewport, 
+std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(const TPoint & viewport,
                                                                    const TGLPlane & worldPlane) const
 {
    // Find the intersection of projection of supplied viewport TPoint (a 3D world
    // line - see ViewportToWorld) with supplied world plane. Returns std::pair
-   // of bool and vertex. If line intersects 
+   // of bool and vertex. If line intersects
    //
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
    return ViewportPlaneIntersection(viewport.GetX(), viewport.GetY(), worldPlane);
 }
 
 //______________________________________________________________________________
-TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, 
+TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta,
                                            Double_t viewportYDelta) const
 {
-   // Apply a 2D viewport delta (shift) to the projection of worldRef onto viewport, 
-   // returning the resultant world vector which equates to it. Useful for making 
+   // Apply a 2D viewport delta (shift) to the projection of worldRef onto viewport,
+   // returning the resultant world vector which equates to it. Useful for making
    // 3D world objects track mouse moves.
    //
    // Camera must have valid frustum cache - call Apply()
@@ -518,34 +504,34 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) cons
 {
    // Calculate if the an object defined by world frame bounding box
    // is 'of interest' to the camera. This is defined as box:
-   // 
-   // i) intersecting completely or partially (kInside/kPartial) with 
+   //
+   // i) intersecting completely or partially (kInside/kPartial) with
    // cameras interest box (fInterestBox)
    // ii) having significant length OR volume ratio compared to this
    // interest box
    //
-   // If a box is 'of interest' returns kTRUE, kFALSE otherwise. 
+   // If a box is 'of interest' returns kTRUE, kFALSE otherwise.
    // See TGLCamera::UpdateInterest() for more details of camera interest box.
    //
    // Note: Length/volume ratios NOT dependent on the projected size of box
    // at current camera configuration as we do not want continual changes.
    // This is used when (re) populating the scene with objects from external
    // client.
-   //   
+   //
    // TODO: Might be more logical to move this test out to client - and
    // have accessor for fInterestBox instead?
    Bool_t interest = kFALSE;
 
    // *************** IMPORTANT - Bootstrapping the camera with empty scene
    //
-   // Initially the camera can't be Setup() (limits etc) until the scene 
+   // Initially the camera can't be Setup() (limits etc) until the scene
    // is populated and it has a valid bounding box to pass to the camera.
-   // However the scene can't be populated without knowing if objects sent are 
+   // However the scene can't be populated without knowing if objects sent are
    // 'of interest' - which needs a camera interest box, made from a properly
    // setup camera frustum - catch 22.
    //
    // To overcome this we track the largest box volume seen so far and regard
-   // anything over 1% of this as 'of interest'. This enables us to get a roughly 
+   // anything over 1% of this as 'of interest'. This enables us to get a roughly
    // populated scene with largest objects, setup the camera, and do first draw.
    // We then do a TGLCamera::UpdateInterest() - which always return kTRUE , and thus
    // fires an internal rebuild to fill scene properly and finally setup camera properly.....
@@ -564,7 +550,7 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) cons
       // Objects are of interest if the have sufficient length or volume ratio c.f.
       // the current interest box, and they at least partially overlap it
       Double_t lengthRatio = box.Extents().Mag() / fInterestBox.Extents().Mag();
-      
+
       // Some objects have zero volume BBs - e.g. single points - skip the volume ratio
       // test for these - no way to threshold on 0
       Double_t volumeRatio = 1.0;
@@ -592,10 +578,10 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
    // into viewer scene) for a camera - see TGLCamera::OfInterest()
    //
    // The interest box is updated if the frustum is no longer contained
-   // in the existing one, or a new one calculated on the current frustum 
-   // differs significantly in volume (camera has been zoomed/dollyed 
+   // in the existing one, or a new one calculated on the current frustum
+   // differs significantly in volume (camera has been zoomed/dollyed
    // sizable amount).
-   // 
+   //
    // If the interest box is updated we return kTRUE - kFALSE otherwise.
    //
    Bool_t exposedUpdate = kFALSE;
@@ -613,7 +599,7 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
 
    // Calculate volume ratio of new to old
    Double_t volRatio = 0.0;
-   
+
    // If the interest box is empty the interest is ALWAYS updated
    // See TGLCamera::OfInterest() comment on bootstrapping
    if (!fInterestBox.IsEmpty()) {
@@ -624,7 +610,7 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
    // i) Volume ratio old/new interest has changed significantly
    // ii) The current frustum is not inside existing interest
    // iii) Force case (debugging)
-   if (volRatio > 8.0 || volRatio < 0.125 || fInterestBox.IsEmpty() || 
+   if (volRatio > 8.0 || volRatio < 0.125 || fInterestBox.IsEmpty() ||
        fInterestBox.Overlap(frustumBox) != kInside || force) {
       fPreviousInterestBox = fInterestBox;
       fInterestBox = newInterestBox;
@@ -633,13 +619,13 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
       if (fInterestBox.Overlap(frustumBox) != kInside) {
          Error("TGLCamera::UpdateInterest", "update interest box does not contain frustum");
       }
-      
+
       exposedUpdate = kTRUE;
 
       // Keep the real frustum (true and box versions) as debuging aid
       fInterestFrustum = Frustum(kFALSE);
       fInterestFrustumAsBox = frustumBox;
-      
+
       if (gDebug>2 || force) {
          Info("TGLCamera::UpdateInterest", "changed - volume ratio %f", volRatio );
       }
@@ -653,23 +639,23 @@ void TGLCamera::ResetInterest()
 {
    // Clear out the existing interest box
    fInterestBox.SetEmpty();
-   
+
    // We also reset the bootstrapping variable - see TGLCamera::OfInterest comments
    fLargestSeen = 0.0;
 }
 
 //______________________________________________________________________________
 Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
-                                    Int_t screenShift, Int_t screenShiftRange, 
+                                    Int_t screenShift, Int_t screenShiftRange,
                                     Bool_t mod1, Bool_t mod2) const
-{  
+{
    // Adjust a passed REFERENCE value 'val', based on screenShift delta.
    // Two modifier flags ('mod1' / 'mod2' ) for sensitivity:
    //
    // mod1 = kFALSE, mod2 = kFALSE : normal sensitivity (screenShift/screenShiftRange)
-   // mod1 = kTRUE, mod2 = kFALSE : 0.1x sensitivity
-   // mod1 = kTRUE, mod2 = kTRUE : 0.01x sensitivity
-   // mod1 = kFALSE, mod2 = kTRUE : 10.0x sensitivity
+   // mod1 = kTRUE,  mod2 = kFALSE : 0.1x sensitivity
+   // mod1 = kTRUE,  mod2 = kTRUE  : 0.01x sensitivity
+   // mod1 = kFALSE, mod2 = kTRUE  : 10.0x sensitivity
    //
    // 'val' is modified and clamped to 'min' / 'max' range.
    // Return bool kTRUE if val actually changed.
@@ -681,7 +667,7 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
 
    // Calculate a sensitivity based on passed modifiers
    Double_t sens = 1.0;
-   
+
    if (mod1) {
       sens *= 0.1;
       if (mod2) {
@@ -721,7 +707,7 @@ void TGLCamera::DrawDebugAids() const
    //
    // i) The frustum used to create the current interest box (RED)
    // ii) The same frustum as a squared off box (ORANGE)
-   // iii) The axis aligned version of the frustum used as interest box basis (YELLOW) 
+   // iii) The axis aligned version of the frustum used as interest box basis (YELLOW)
    // iv) The current interest box (BLUE)
 
    // Interest box frustum base (RED)

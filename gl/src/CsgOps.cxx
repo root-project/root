@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.12 2006/05/14 08:25:48 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.9 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 // TArcBall.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLPerspectiveCamera : public TGLCamera 
+class TGLPerspectiveCamera : public TGLCamera
 {
    private:
    // Fields
@@ -62,10 +62,11 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
+
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) const;
 
    // External scripting control
-   void Configure(Double_t fov, Double_t dolly, Double_t center[3], 
+   void Configure(Double_t fov, Double_t dolly, Double_t center[3],
                   Double_t hRotate, Double_t vRotate);
 
    ClassDef(TGLPerspectiveCamera,0) // a perspective view camera

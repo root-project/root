@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.12 2006/08/31 13:42:14 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.13 2006/10/24 14:20:41 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -28,21 +28,6 @@
 #include "TVirtualViewer3D.h"
 #endif
 
-
-class TGWin32GL : public TVirtualGLImp {
-
-public:
-   TGWin32GL();
-   ~TGWin32GL();
-
-   Window_t CreateGLWindow(Window_t wind);
-   ULong_t  CreateContext(Window_t wind);
-   void     DeleteContext(ULong_t ctx);
-   void     MakeCurrent(Window_t wind, ULong_t ctx);
-   void     SwapBuffers(Window_t wind);
-
-   ClassDef(TGWin32GL,0);
-};
 
 class TGWin32GLManager : public TGLManager {
 private:
@@ -86,8 +71,6 @@ public:
 
    //functions to switch between threads in win32
    //used by viewer
-   void     DrawViewer(TVirtualViewer3D *glv);
-   Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
 
    Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);

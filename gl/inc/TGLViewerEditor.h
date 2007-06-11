@@ -22,20 +22,16 @@ class TGButton;
 class TGLViewer;
 class TGTab;
 
-class TGLViewerEditor : public TGedFrame {
+class TGLLightSetSubEditor;
+
+class TGLViewerEditor : public TGedFrame
+{
 private:
    //Pointers to manipulate with tabs
    TGCompositeFrame *fGuidesFrame;
    TGCompositeFrame *fClipFrame;
-   //"Lights" tab's controls 
-   TGGroupFrame     *fLightFrame;
-   TGButton         *fTopLight;
-   TGButton         *fRightLight;
-   TGButton         *fBottomLight;
-   TGButton         *fLeftLight;
-   TGButton         *fFrontLight;
 
-   TGButton         *fSpecularLight;
+   TGLLightSetSubEditor *fLightSet;
 
    TGColorSelect    *fClearColor;
    TGCheckButton    *fIgnoreSizesOnUpdate;
@@ -60,7 +56,7 @@ private:
    TGComboBox*       fCamMode;
    TGCheckButton*    fCamMarkupOn;
 
-   //"Cplipping" tab's controls
+   //"Clipping" tab's controls
    EClipType         fCurrentClip;
    TGButtonGroup    *fTypeButtons;
 
@@ -69,34 +65,35 @@ private:
 
    TGCompositeFrame *fBoxPropFrame;
    TGNumberEntry    *fBoxProp[6];
-   TGCheckButton    *fEdit;
+   TGCheckButton    *fClipInside;
+   TGCheckButton    *fClipEdit;
+   TGCheckButton    *fClipShow;
    TGButton         *fApplyButton;
+
    //Model
    TGLViewer        *fViewer;
    Bool_t	     fIsInPad;
 
    void ConnectSignals2Slots();
-   
+
    TGLViewerEditor(const TGLViewerEditor &);
    TGLViewerEditor &operator = (const TGLViewerEditor &);
 
-   void CreateLightsTab();
+   void CreateStyleTab();
    void CreateGuidesTab();
    void CreateClippingTab();
-   
+
 public:
-   TGLViewerEditor(const TGWindow *p = 0,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
-                   
+   TGLViewerEditor(const TGWindow *p=0, Int_t width=140, Int_t height=30,
+                   UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TGLViewerEditor();
 
+   virtual void ViewerRedraw();
+
    virtual void SetModel(TObject* obj);
+
    void SetGuides();
    void SetCurrentClip();
-   //Lights manipulation
-   void DoButton();
    void DoClearColor(Pixel_t color);
    void DoIgnoreSizesOnUpdate();
    void DoResetCamerasOnUpdate();
@@ -111,10 +108,10 @@ public:
    void ClipValueChanged();
    void ClipTypeChanged(Int_t);
    void UpdateViewerClip();
-   
+
    void DetachFromPad(){fIsInPad = kFALSE;}
    void HideClippingGUI();
-   
+
    ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 
+// @(#)root/gl:$Name:  $:$Id: LinkDef.h,v 1.1.1.1
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,49 +23,62 @@
 #pragma link C++ class TGLUtil;
 #pragma link C++ class TGLQuadric;
 
+#pragma link C++ class TGLStopwatch;
+#pragma link C++ class TGLLockable;
 #pragma link C++ class TGLBoundingBox;
-#pragma link C++ class TGLDrawable;
-#pragma link C++ class TGLDrawFlags;
+#pragma link C++ class TGLRnrCtx+;
+#pragma link C++ class TGLSelectRecord+;
+#pragma link C++ class TGLSelectBuffer+;
+
 #pragma link C++ class TGLLogicalShape;
 #pragma link C++ class TGLPhysicalShape;
+
 #pragma link C++ class TGLClip;
 #pragma link C++ class TGLClipPlane;
 #pragma link C++ class TGLClipBox;
+#pragma link C++ class TGLClipSet;
 #pragma link C++ class TGLManip;
 #pragma link C++ class TGLScaleManip;
 #pragma link C++ class TGLTransManip;
 #pragma link C++ class TGLRotateManip;
+#pragma link C++ class TGLManipSet;
 
 #pragma link C++ class TGLCamera;
 #pragma link C++ class TGLOrthoCamera;
 #pragma link C++ class TGLPerspectiveCamera;
-
 #pragma link C++ class TGLCameraMarkupStyle;
 
-#pragma link C++ class TGLScene;
-#pragma link C++ class TGLDisplayListCache;
+#pragma link C++ class TGLSceneBase+;
+#pragma link C++ class TGLScene+;
+#pragma link C++ class TGLSceneInfo+;
+#pragma link C++ class TGLScene::TSceneInfo+;
+#pragma link C++ class TGLOverlayElement+;
+#pragma link C++ class TGLOverlayList+;
 
-#pragma link C++ class TGLStopwatch;
-#pragma link C++ class TGLViewer;
+#pragma link C++ class TGLViewerBase+;
+#pragma link C++ class TGLViewer+;
+#pragma link C++ class TGLViewerEditor+;
 #pragma link C++ class TGLSAViewer;
 #pragma link C++ class TGLSAFrame;
 
-#pragma  link C++  class TGLPShapeObj;
+#pragma link C++ class TGLPShapeRef+;
+#pragma link C++ class TGLPShapeObj+;
+#pragma link C++ class TGLPShapeObjEditor+;
+
+#pragma link C++ class TGLLightSet+;
+#pragma link C++ class TGLLightSetEditor+;
+#pragma link C++ class TGLLightSetSubEditor+;
 
 
 #pragma link C++ class TGLOutput;
 
 #pragma link C++ class TArcBall;
 
-#pragma link C++ class TGLRenderArea;
-#pragma link C++ class TGLWindow;
 #pragma link C++ class TGLFaceSet;
 #pragma link C++ class TGLPolyLine;
 #pragma link C++ class TGLPolyMarker;
 #pragma link C++ class TGLCylinder;
 #pragma link C++ class TGLSphere;
-#pragma link C++ class TGLViewerEditor;
-#pragma link C++ class TGLPShapeObjEditor;
 
 #pragma link C++ class TGLSelectionBuffer;
 #pragma link C++ class TGLPlotCoordinates;
@@ -81,9 +94,12 @@
 #pragma link C++ class TGLBoxCut;
 #pragma link C++ class TGLParametricEquation;
 #pragma link C++ class TGLParametricPlot;
+#pragma link C++ class TGLWidgetContainer;
+#pragma link C++ class TGLWidget;
+#pragma link C++ class TGLContext;
+#pragma link C++ class TGLFormat;
 
 #ifndef _WIN32
-#pragma link C++ class TX11GL;
 #pragma link C++ class TX11GLManager;
 #endif
 
@@ -91,4 +107,5 @@
 #pragma link C++ class TPointSet3DGL+;
 
 #pragma link C++ namespace Rgl;
+
 #endif

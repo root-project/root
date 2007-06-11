@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.4 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -55,7 +55,7 @@ Bool_t TGLSAFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 void TGLSAFrame::CloseWindow()
 {
    // Close the GUI frame
-   
+
    // Ask our owning viewer to close
    // Has to be defered so that our GUI event thread can process this event
    // and emit signals - otherwise deleted object is called to emit events

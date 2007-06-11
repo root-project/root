@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.11 2006/05/15 07:43:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.2 2007/05/10 11:17:48 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -31,7 +31,6 @@ class TGLVector3;
 class TGLCamera;
 class TGLRect;
 class TGLBoundingBox;
-class TGLViewer;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -47,7 +46,8 @@ class TGLViewer;
 // some common mouse action handling/tracking.                          //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLManip : public TVirtualGLManip {
+class TGLManip : public TVirtualGLManip
+{
 protected:
    TGLPhysicalShape * fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;    //! active width (axis) component
@@ -75,13 +75,21 @@ public:
    TGLManip(TGLPhysicalShape * shape);
    virtual ~TGLManip();
 
+   UInt_t GetSelectedWidget()   const { return fSelectedWidget; }
+   void   SetSelectedWidget(UInt_t s) { fSelectedWidget = s; }
+
+   Bool_t GetActive()   const { return fActive; }
+   void   SetActive(Bool_t a) { fActive = a; }
+
    void               Attach(TGLPhysicalShape * shape) { fShape = shape; }
    TGLPhysicalShape * GetAttached() const { return fShape; }
 
    virtual void   Draw(const TGLCamera & camera) const = 0;
-   virtual Bool_t Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox);
+   // CRAPPY TVirtualGLManip TTTT, just override it here
+   virtual Bool_t Select(const TGLCamera &, const TGLRect &, const TGLBoundingBox &) { return kFALSE; }
+
    virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
 
    ClassDef(TGLManip,0) // abstract base GL manipulator widget
 };

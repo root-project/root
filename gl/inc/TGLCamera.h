@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.22 2006/08/28 18:28:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.2 2007/05/10 11:17:45 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -42,29 +42,29 @@ public:
 protected:
    Bool_t       fShow;    // is visible
 
-   Int_t        fPos;     // location of markup 
+   Int_t        fPos;     // location of markup
 
-   Double_t     fOffX;    // X offset of horizontal bar 
+   Double_t     fOffX;    // X offset of horizontal bar
    Double_t     fOffY;    // Y offset of horizontal bar
 
    Double_t     fTxtOffX; // X offset relative to horizontal bar
-   Double_t     fTxtOffY; // Y offset relative to horizontal bar 
+   Double_t     fTxtOffY; // Y offset relative to horizontal bar
 
    Double_t     fBarsize; // horizontal bar marker size in screen units
- 
+
 public:
    Bool_t   Show()  const { return fShow; }
    void     SetShow(Bool_t v) { fShow = v; }
-  
+
    Int_t    Position() const { return fPos; }
    void     SetPosition(Int_t p) { fPos = p; }
-   
+
    Double_t Barsize() const { return fBarsize; }
    void     SetBarsize(Double_t b) { fBarsize = b; }
- 
+
    void Offsets(Double_t& oX, Double_t& oY, Double_t& txtX, Double_t& txtY) const
    { oX = fOffX; oY = fOffY; txtX = fTxtOffX ; txtY = fTxtOffY; }
-   void SetOffsets(Double_t oX, Double_t oY, Double_t txtX, Double_t txtY) 
+   void SetOffsets(Double_t oX, Double_t oY, Double_t txtX, Double_t txtY)
    { fOffX = oX; fOffY = oY; fTxtOffX = txtX; fTxtOffY = txtY; }
 
 public:
@@ -131,6 +131,7 @@ protected:
 
    // Internal cached matrices and frustum planes
    mutable Bool_t    fCacheDirty;                      //! cached items dirty?
+   mutable UInt_t    fTimeStamp;                       //! timestamp
    mutable TGLMatrix fProjM;                           //! projection matrix        (cached)
    mutable TGLMatrix fModVM;                           //! modelView matrix         (cached)
    mutable TGLMatrix fClipM;                           //! object space clip matrix (cached)
@@ -154,7 +155,12 @@ public:
    TGLCamera();
    virtual ~TGLCamera();
 
+   Bool_t IsCacheDirty() const { return fCacheDirty; }
+   void   IncTimeStamp()       { fCacheDirty = kTRUE; ++fTimeStamp; }
+   UInt_t TimeStamp()    const { return fTimeStamp; }
+
    void SetViewport(const TGLRect & viewport);
+   TGLRect& RefViewport() { return fViewport; }
 
    // Camera manipulation interface (GL coord - origin bottom left)
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) = 0;
@@ -165,8 +171,9 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
+
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
-   virtual void   Markup( TGLCameraMarkupStyle* /* ms */) const {}
+   virtual void   Markup(TGLCameraMarkupStyle* /* ms */) const {}
 
    // Current orientation and frustum
          TGLVertex3 EyePoint() const;

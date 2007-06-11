@@ -22,7 +22,7 @@ private:
    const Bool_t           fXOYSelectable;
    const Bool_t           fXOZSelectable;
    const Bool_t           fYOZSelectable;
-   
+
    Bool_t                 fSelectablePairs[4][2];
 
    TGLVertex3             f3DBox[8];
@@ -36,12 +36,12 @@ public:
    //so, to supress g++ warnings virtual destructor declared.
    virtual ~TGLPlotBox();
 
-   void DrawBox(Int_t selectedPart, Bool_t selectionPass, 
-                const std::vector<Double_t> &zLevels, 
+   void DrawBox(Int_t selectedPart, Bool_t selectionPass,
+                const std::vector<Double_t> &zLevels,
                 Bool_t highColor)const;
 
-   void SetPlotBox(const Rgl::Range_t &xRange, 
-                   const Rgl::Range_t &yRange, 
+   void SetPlotBox(const Rgl::Range_t &xRange,
+                   const Rgl::Range_t &yRange,
                    const Rgl::Range_t &zRange);
    void SetFrameColor(const TColor *color);
 

@@ -42,7 +42,7 @@ private:
 public:
    TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                  Int_t glContext = -1);
-   
+
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
    void    StartPan(Int_t px, Int_t py);
@@ -109,11 +109,11 @@ private:
    TGLTH3Slice fXOYSlice;
 
    Mesh_t                                    fDummyMesh;
-   
+
    typedef std::list<Mesh_t>                 MeshList_t;
    typedef std::list<Mesh_t>::iterator       MeshIter_t;
    typedef std::list<Mesh_t>::const_iterator ConstMeshIter_t;
-   
+
    //List of meshes.
    MeshList_t                                fIsos;
    //Cheched meshes (will be used if geometry must be rebuilt
@@ -129,21 +129,21 @@ private:
    //Now meshes are initialized only once.
    //To be changed in future.
    Bool_t                                    fInit;
-   
+
 public:
    TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                  Int_t glContext = -1);
 
-   //TGLPlotPainter final-overriders.                 
+   //TGLPlotPainter final-overriders.
    char    *GetPlotInfo(Int_t px, Int_t py);
    Bool_t   InitGeometry();
    void     StartPan(Int_t px, Int_t py);
    void     Pan(Int_t px, Int_t py);
    void     AddOption(const TString &option);
    void     ProcessEvent(Int_t event, Int_t px, Int_t py);
-   
+
 private:
-   //TGLPlotPainter final-overriders.                 
+   //TGLPlotPainter final-overriders.
    void     InitGL()const;
    void     DrawPlot()const;
    void     DrawSectionXOZ()const;

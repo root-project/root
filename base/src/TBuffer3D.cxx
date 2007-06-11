@@ -266,6 +266,9 @@ void TBuffer3D::Init()
    fPolsCapacity  = 0;  
    // Set fLocalMaster in section kCore to identity
 
+   // Wipe output section.
+   fPhysicalID    = 0;
+
    // Set kRaw tesselation section of buffer with supplied sizes
    ClearSectionsValid();
 }

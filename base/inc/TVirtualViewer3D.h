@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.12 2007/02/18 14:56:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.13 2007/02/19 18:51:48 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -69,9 +69,6 @@ public:
 
    virtual TObject *SelectObject(Int_t, Int_t){return 0;}
    virtual void   DrawViewer(){}
-
-   virtual void DoDraw(){}
-   virtual Bool_t DoSelect(const TGLRect &){return kFALSE;}
 
    virtual void PrintObjects(){}
    virtual void ResetCameras(){}

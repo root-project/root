@@ -49,7 +49,7 @@ private:
 public:
    TGLHistPainter(TH1 *hist);
    TGLHistPainter(TGLParametricEquation *equation);
-   
+
    //TVirtualHistPainter final overriders
    Int_t          DistancetoPrimitive(Int_t px, Int_t py);
    void           DrawPanel();
@@ -73,7 +73,7 @@ private:
    struct PlotOption_t;
 
    PlotOption_t   ParsePaintOption(const TString &option)const;
-   void           CreatePainter(const PlotOption_t &parsed, 
+   void           CreatePainter(const PlotOption_t &parsed,
                                 const TString &option);
 
    TGLHistPainter(const TGLHistPainter &);

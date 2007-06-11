@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx,v 1.9 2007/01/29 15:10:48 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // Abstract 3D shapes viewer. The concrete implementations are:         //
 //                                                                      //
 // TViewerX3D   : X3d viewer                                            //
-// TViewerOpenGL: OpenGL viewer                                         //
+// TGLViewer    : OpenGL viewer                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //BEGIN_HTML <!--

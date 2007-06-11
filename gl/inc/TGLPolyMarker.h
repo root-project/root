@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.h,v 1.2 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -23,7 +23,7 @@
 class TBuffer3D;
 
 ////////////////////////////////////////////////////////////////////////
-class TGLPolyMarker : public TGLLogicalShape 
+class TGLPolyMarker : public TGLLogicalShape
 {
 private:
    std::vector<Double_t> fVertices;
@@ -31,12 +31,11 @@ private:
    Double_t fSize;
 
 protected:
-   void DirectDraw(const TGLDrawFlags & flags) const;  
-   
+   void DirectDraw(TGLRnrCtx & rnrCtx) const;
+
 public:
    TGLPolyMarker(const TBuffer3D & buffer);
 
-   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    virtual Bool_t   IgnoreSizeForOfInterest() const { return kTRUE; }
 
 private:

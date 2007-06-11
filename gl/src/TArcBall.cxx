@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.10 2005/11/29 09:25:51 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 const Double_t Epsilon = 1.0e-5;
 
 ClassImp(TArcBall)
-   
+
 //Arcball sphere constants:
 //Diameter is       2.0f
 //Radius is         1.0f

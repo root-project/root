@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Name:  $:$Id: LinkDef.h,v 1.2 2004/08/09 15:35:52 brun Exp $ */
+/* @(#)root/win32gdk:$Name:  $:$Id: LinkDef.h,v 1.3 2005/08/17 09:10:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,7 +15,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class TGWin32;
-#pragma link C++ class TGWin32GL;
 #pragma link C++ class TGWin32GLManager;
 
 #endif

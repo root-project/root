@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.20 2007/01/15 11:30:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -84,11 +84,11 @@ void TGLBoundingBox::UpdateCache()
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
 
    // Do axes first so Extents() is correct
@@ -96,10 +96,10 @@ void TGLBoundingBox::UpdateCache()
    fAxes[1].Set(fVertex[3] - fVertex[0]);
    fAxes[2].Set(fVertex[4] - fVertex[0]);
 
-   // Sometimes have zero volume BB due to single zero magnitude 
+   // Sometimes have zero volume BB due to single zero magnitude
    // axis record and try to fix below
    Bool_t fixZeroMagAxis = kFALSE;
-   Int_t zeroMagAxisInd = -1; 
+   Int_t zeroMagAxisInd = -1;
    for (UInt_t i = 0; i<3; i++) {
       fAxesNorm[i] = fAxes[i];
       Double_t mag = fAxesNorm[i].Mag();
@@ -115,15 +115,16 @@ void TGLBoundingBox::UpdateCache()
       }
    }
 
-   // Try to cope with a zero volume bounding box where one 
+   // Try to cope with a zero volume bounding box where one
    // axis is zero by using cross product of other two
    if (fixZeroMagAxis) {
-      fAxesNorm[zeroMagAxisInd] = Cross(fAxesNorm[(zeroMagAxisInd+1)%3], 
+      fAxesNorm[zeroMagAxisInd] = Cross(fAxesNorm[(zeroMagAxisInd+1)%3],
                                         fAxesNorm[(zeroMagAxisInd+2)%3]);
    }
 
    TGLVector3 extents = Extents();
-   fVolume = TMath::Abs(extents.X() * extents.Y() * extents.Z());
+   fVolume   = TMath::Abs(extents.X() * extents.Y() * extents.Z());
+   fDiagonal = extents.Mag();
 }
 
 //______________________________________________________________________________
@@ -175,7 +176,7 @@ void TGLBoundingBox::SetEmpty()
 //______________________________________________________________________________
 void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
 {
-   // Set ALIGNED box from two low/high vertices. Box axes are aligned with 
+   // Set ALIGNED box from two low/high vertices. Box axes are aligned with
    // global frame axes that vertices are specified in.
 
    // lowVertex = vertex[0]
@@ -186,11 +187,11 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
 
    TGLVector3 diff = highVertex - lowVertex;
@@ -198,9 +199,9 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
       Error("TGLBoundingBox::SetAligned", "low/high vertex range error");
    }
    fVertex[0] = lowVertex;
-   fVertex[1] = lowVertex; fVertex[1].X() += diff.X();
-   fVertex[2] = lowVertex; fVertex[2].X() += diff.X(); fVertex[2].Y() += diff.Y();
-   fVertex[3] = lowVertex; fVertex[3].Y() += diff.Y();
+   fVertex[1] = lowVertex;  fVertex[1].X() += diff.X();
+   fVertex[2] = lowVertex;  fVertex[2].X() += diff.X(); fVertex[2].Y() += diff.Y();
+   fVertex[3] = lowVertex;  fVertex[3].Y() += diff.Y();
    fVertex[4] = highVertex; fVertex[4].X() -= diff.X(); fVertex[4].Y() -= diff.Y();
    fVertex[5] = highVertex; fVertex[5].Y() -= diff.Y();
    fVertex[6] = highVertex;
@@ -212,7 +213,7 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
 //______________________________________________________________________________
 void TGLBoundingBox::SetAligned(UInt_t nbPnts, const Double_t * pnts)
 {
-   // Set ALIGNED box from one or more points. Box axes are aligned with 
+   // Set ALIGNED box from one or more points. Box axes are aligned with
    // global frame axes that points are specified in.
    if (nbPnts < 1 || !pnts) {
       assert(false);
@@ -235,6 +236,28 @@ void TGLBoundingBox::SetAligned(UInt_t nbPnts, const Double_t * pnts)
    }
 
    SetAligned(low, high);
+}
+
+//______________________________________________________________________________
+void TGLBoundingBox::MergeAligned(const TGLBoundingBox & other)
+{
+   // Expand current bbox so that it includes other's bbox.
+   // This make the bbox axis-aligned.
+
+   if (other.IsEmpty()) return;
+   if (IsEmpty())
+   {
+      Set(other);
+   }
+   else
+   {
+      TGLVertex3 low (other.MinAAVertex());
+      TGLVertex3 high(other.MaxAAVertex());
+
+      low .Minimum(MinAAVertex());
+      high.Maximum(MaxAAVertex());
+      SetAligned(low, high);
+   }
 }
 
 //______________________________________________________________________________
@@ -262,21 +285,21 @@ void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
-   fVertex[0] += -xOffset - yOffset - zOffset; 
-   fVertex[1] +=  xOffset - yOffset - zOffset; 
-   fVertex[2] +=  xOffset + yOffset - zOffset; 
-   fVertex[3] += -xOffset + yOffset - zOffset; 
+   fVertex[0] += -xOffset - yOffset - zOffset;
+   fVertex[1] +=  xOffset - yOffset - zOffset;
+   fVertex[2] +=  xOffset + yOffset - zOffset;
+   fVertex[3] += -xOffset + yOffset - zOffset;
 
-   fVertex[4] += -xOffset - yOffset + zOffset; 
-   fVertex[5] +=  xOffset - yOffset + zOffset; 
-   fVertex[6] +=  xOffset + yOffset + zOffset; 
-   fVertex[7] += -xOffset + yOffset + zOffset; 
+   fVertex[4] += -xOffset - yOffset + zOffset;
+   fVertex[5] +=  xOffset - yOffset + zOffset;
+   fVertex[6] +=  xOffset + yOffset + zOffset;
+   fVertex[7] += -xOffset + yOffset + zOffset;
 
    // Could change cached volume/axes
    UpdateCache();
@@ -296,7 +319,8 @@ void TGLBoundingBox::Translate(const TGLVector3 & offset)
 //______________________________________________________________________________
 void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 {
-   // Transform all vertices with matrix
+   // Transform all vertices with matrix.
+
    for (UInt_t v = 0; v < 8; v++) {
       matrix.TransformVertex(fVertex[v]);
    }
@@ -314,45 +338,45 @@ const std::vector<UInt_t> & TGLBoundingBox::FaceVertices(EFace face) const
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
    static Bool_t init = kFALSE;
    static std::vector<UInt_t> faceIndexes[kFaceCount];
    if (!init) {
       // Low X - 7403
-      faceIndexes[kFaceLowX].push_back(7); 
-      faceIndexes[kFaceLowX].push_back(4); 
-      faceIndexes[kFaceLowX].push_back(0); 
+      faceIndexes[kFaceLowX].push_back(7);
+      faceIndexes[kFaceLowX].push_back(4);
+      faceIndexes[kFaceLowX].push_back(0);
       faceIndexes[kFaceLowX].push_back(3);
       // High X - 2156
-      faceIndexes[kFaceHighX].push_back(2); 
-      faceIndexes[kFaceHighX].push_back(1); 
-      faceIndexes[kFaceHighX].push_back(5); 
-      faceIndexes[kFaceHighX].push_back(6); 
+      faceIndexes[kFaceHighX].push_back(2);
+      faceIndexes[kFaceHighX].push_back(1);
+      faceIndexes[kFaceHighX].push_back(5);
+      faceIndexes[kFaceHighX].push_back(6);
       // Low Y - 5104
-      faceIndexes[kFaceLowY].push_back(5); 
-      faceIndexes[kFaceLowY].push_back(1); 
-      faceIndexes[kFaceLowY].push_back(0); 
-      faceIndexes[kFaceLowY].push_back(4); 
+      faceIndexes[kFaceLowY].push_back(5);
+      faceIndexes[kFaceLowY].push_back(1);
+      faceIndexes[kFaceLowY].push_back(0);
+      faceIndexes[kFaceLowY].push_back(4);
       // High Y - 2673
-      faceIndexes[kFaceHighY].push_back(2); 
-      faceIndexes[kFaceHighY].push_back(6); 
-      faceIndexes[kFaceHighY].push_back(7); 
-      faceIndexes[kFaceHighY].push_back(3); 
+      faceIndexes[kFaceHighY].push_back(2);
+      faceIndexes[kFaceHighY].push_back(6);
+      faceIndexes[kFaceHighY].push_back(7);
+      faceIndexes[kFaceHighY].push_back(3);
       // Low Z - 3012
-      faceIndexes[kFaceLowZ].push_back(3); 
-      faceIndexes[kFaceLowZ].push_back(0); 
-      faceIndexes[kFaceLowZ].push_back(1); 
-      faceIndexes[kFaceLowZ].push_back(2); 
+      faceIndexes[kFaceLowZ].push_back(3);
+      faceIndexes[kFaceLowZ].push_back(0);
+      faceIndexes[kFaceLowZ].push_back(1);
+      faceIndexes[kFaceLowZ].push_back(2);
       // High Z - 6547
-      faceIndexes[kFaceHighZ].push_back(6); 
-      faceIndexes[kFaceHighZ].push_back(5); 
-      faceIndexes[kFaceHighZ].push_back(4); 
-      faceIndexes[kFaceHighZ].push_back(7); 
+      faceIndexes[kFaceHighZ].push_back(6);
+      faceIndexes[kFaceHighZ].push_back(5);
+      faceIndexes[kFaceHighZ].push_back(4);
+      faceIndexes[kFaceHighZ].push_back(7);
       init= kTRUE;
    }
    return faceIndexes[face];
@@ -370,27 +394,35 @@ void TGLBoundingBox::PlaneSet(TGLPlaneSet_t & planeSet) const
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
    // Construct plane set using axis + vertices
-   planeSet.push_back(TGLPlane(fAxesNorm[2], fVertex[4]));  // Near
+   planeSet.push_back(TGLPlane( fAxesNorm[2], fVertex[4])); // Near
    planeSet.push_back(TGLPlane(-fAxesNorm[2], fVertex[0])); // Far
    planeSet.push_back(TGLPlane(-fAxesNorm[0], fVertex[0])); // Left
-   planeSet.push_back(TGLPlane(fAxesNorm[0], fVertex[1]));  // Right
+   planeSet.push_back(TGLPlane( fAxesNorm[0], fVertex[1])); // Right
    planeSet.push_back(TGLPlane(-fAxesNorm[1], fVertex[0])); // Bottom
-   planeSet.push_back(TGLPlane(fAxesNorm[1], fVertex[3]));  // Top
+   planeSet.push_back(TGLPlane( fAxesNorm[1], fVertex[3])); // Top
+}
+
+//______________________________________________________________________________
+TGLPlane TGLBoundingBox::GetNearPlane() const
+{
+   // Return the near-plane.
+
+   return TGLPlane(fAxesNorm[2], fVertex[4]);
 }
 
 //______________________________________________________________________________
 EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 {
-   // Find overlap (Inside, Outside, Partial) of plane c.f. bounding box
+   // Find overlap (Inside, Outside, Partial) of plane c.f. bounding box.
 
-   // First : cheap square approxiamtion test. If distance of our 
+   // First : cheap square approxiamtion test. If distance of our
    // center to plane > our half extent length we are outside plane
    if (plane.DistanceTo(Center()) + (Extents().Mag()/2.0) < 0.0) {
       return kOutside;
@@ -416,7 +448,7 @@ EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 //______________________________________________________________________________
 EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
 {
-   // Find overlap (Inside, Outside, Partial) of other bounding box c.f. us
+   // Find overlap (Inside, Outside, Partial) of other bounding box c.f. us.
 
    // Simplify code with refs
    const TGLBoundingBox & a = *this;
@@ -448,7 +480,7 @@ EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
    if (bSphereRadius + parentT.Mag() < aSphereRadius) {
       return kInside;
    }
-   
+
    // Second: Perform more expensive 15 seperating axes test
 
    // Find translation in A's frame
@@ -468,7 +500,7 @@ EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
       }
       // Normalise columns to avoid rounding errors
       Double_t norm = sqrt(roaT[i][0]*roaT[i][0] + roaT[i][1]*roaT[i][1] + roaT[i][2]*roaT[i][2]);
-      roaT[i][0] /= norm; roaT[i][1] /= norm; roaT[i][2] /= norm; 
+      roaT[i][0] /= norm; roaT[i][1] /= norm; roaT[i][2] /= norm;
    }
 
    // Perform separating axis test for all 15 potential
@@ -587,8 +619,10 @@ EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
 //______________________________________________________________________________
 void TGLBoundingBox::Draw(Bool_t solid) const
 {
-   // Draw the bounding box as either wireframe (default) of solid using current GL color
-   if (!solid){
+   // Draw the bounding box as either wireframe (default) of solid
+   // using current GL color.
+
+   if (!solid) {
       glBegin(GL_LINE_LOOP);
       glVertex3dv(fVertex[0].CArr());
       glVertex3dv(fVertex[1].CArr());
@@ -615,53 +649,50 @@ void TGLBoundingBox::Draw(Bool_t solid) const
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
       // Clockwise winding
+      glBegin(GL_QUADS);
       // Near
-      glBegin(GL_POLYGON);
+      glNormal3d ( fAxesNorm[2].X(),  fAxesNorm[2].Y(),  fAxesNorm[2].Z());
       glVertex3dv(fVertex[4].CArr());
       glVertex3dv(fVertex[7].CArr());
       glVertex3dv(fVertex[6].CArr());
       glVertex3dv(fVertex[5].CArr());
-      glEnd();
       // Far
-      glBegin(GL_POLYGON);
+      glNormal3d (-fAxesNorm[2].X(), -fAxesNorm[2].Y(), -fAxesNorm[2].Z());
       glVertex3dv(fVertex[0].CArr());
       glVertex3dv(fVertex[1].CArr());
       glVertex3dv(fVertex[2].CArr());
       glVertex3dv(fVertex[3].CArr());
-      glEnd();
       // Left
-      glBegin(GL_POLYGON);
+      glNormal3d (-fAxesNorm[0].X(), -fAxesNorm[0].Y(), -fAxesNorm[0].Z());
       glVertex3dv(fVertex[0].CArr());
       glVertex3dv(fVertex[3].CArr());
       glVertex3dv(fVertex[7].CArr());
       glVertex3dv(fVertex[4].CArr());
-      glEnd();
       // Right
-      glBegin(GL_POLYGON);
+      glNormal3d ( fAxesNorm[0].X(),  fAxesNorm[0].Y(),  fAxesNorm[0].Z());
       glVertex3dv(fVertex[6].CArr());
       glVertex3dv(fVertex[2].CArr());
       glVertex3dv(fVertex[1].CArr());
       glVertex3dv(fVertex[5].CArr());
-      glEnd();
       // Top
-      glBegin(GL_POLYGON);
+      glNormal3d ( fAxesNorm[1].X(),  fAxesNorm[1].Y(),  fAxesNorm[1].Z());
       glVertex3dv(fVertex[3].CArr());
       glVertex3dv(fVertex[2].CArr());
       glVertex3dv(fVertex[6].CArr());
       glVertex3dv(fVertex[7].CArr());
-      glEnd();
-      // Far
-      glBegin(GL_POLYGON);
+      // Bottom
+      glNormal3d (-fAxesNorm[1].X(), -fAxesNorm[1].Y(), -fAxesNorm[1].Z());
       glVertex3dv(fVertex[4].CArr());
       glVertex3dv(fVertex[5].CArr());
       glVertex3dv(fVertex[1].CArr());
       glVertex3dv(fVertex[0].CArr());
+
       glEnd();
    }
 
@@ -691,6 +722,20 @@ Double_t TGLBoundingBox::Max(UInt_t index) const
       }
    }
    return max;
+}
+
+TGLVertex3 TGLBoundingBox::MinAAVertex() const
+{
+   // Find minimum vertex values.
+
+   return TGLVertex3(Min(0), Min(1), Min(2));
+}
+
+TGLVertex3 TGLBoundingBox::MaxAAVertex() const
+{
+   // Find maximum vertex values.
+
+   return TGLVertex3(Max(0), Max(1), Max(2));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.38 2007/01/29 15:10:48 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TClass.h"
 
 #include "TGLBoundingBox.h"
+#include "TGLCamera.h"
 #include "TGLPlotPainter.h"
 #include "TGLIncludes.h"
 #include "TGLQuadric.h"
@@ -91,6 +92,22 @@ void TGLVertex3::Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta)
    fVals[0] += xDelta;
    fVals[1] += yDelta;
    fVals[2] += zDelta;
+}
+
+//______________________________________________________________________________
+void TGLVertex3::Minimum(const TGLVertex3 & other)
+{
+   fVals[0] = TMath::Min(fVals[0], other.fVals[0]);
+   fVals[1] = TMath::Min(fVals[1], other.fVals[1]);
+   fVals[2] = TMath::Min(fVals[2], other.fVals[2]);
+}
+
+//______________________________________________________________________________
+void TGLVertex3::Maximum(const TGLVertex3 & other)
+{
+   fVals[0] = TMath::Max(fVals[0], other.fVals[0]);
+   fVals[1] = TMath::Max(fVals[1], other.fVals[1]);
+   fVals[2] = TMath::Max(fVals[2], other.fVals[2]);
 }
 
 //______________________________________________________________________________
@@ -224,11 +241,19 @@ TGLRect::TGLRect() :
 }
 
 //______________________________________________________________________________
+TGLRect::TGLRect(Int_t x, Int_t y, Int_t width, Int_t height) :
+      fX(x), fY(y), fWidth(width), fHeight(height)
+{
+   // Construct rect object, corner (x,y), dimensions 'width', 'height'
+}
+
+//______________________________________________________________________________
 TGLRect::TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height) :
       fX(x), fY(y), fWidth(width), fHeight(height)
 {
    // Construct rect object, corner (x,y), dimensions 'width', 'height'
 }
+
 
 //______________________________________________________________________________
 TGLRect::~TGLRect()
@@ -302,7 +327,7 @@ TGLPlane::TGLPlane(Double_t eq[4])
 }
 
 //______________________________________________________________________________
-TGLPlane::TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2, 
+TGLPlane::TGLPlane(const TGLVertex3 & p1, const TGLVertex3 & p2,
                    const TGLVertex3 & p3)
 {
    // Construct plane passing through 3 supplied points
@@ -345,10 +370,10 @@ std::pair<Bool_t, TGLLine3> Intersection(const TGLPlane & p1, const TGLPlane & p
    TGLVector3 lineDir = Cross(p1.Norm(), p2.Norm());
 
    if (lineDir.Mag() == 0.0) {
-      return std::make_pair(kFALSE, TGLLine3(TGLVertex3(0.0, 0.0, 0.0), 
+      return std::make_pair(kFALSE, TGLLine3(TGLVertex3(0.0, 0.0, 0.0),
                                              TGLVector3(0.0, 0.0, 0.0)));
    }
-   TGLVertex3 linePoint = Cross((p1.Norm()*p2.D() - p2.Norm()*p1.D()), lineDir) / 
+   TGLVertex3 linePoint = Cross((p1.Norm()*p2.D() - p2.Norm()*p1.D()), lineDir) /
                            Dot(lineDir, lineDir);
    return std::make_pair(kTRUE, TGLLine3(linePoint, lineDir));
 }
@@ -360,8 +385,8 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane &
    if (denom == 0.0) {
       return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
    }
-   TGLVector3 vect = ((Cross(p2.Norm(),p3.Norm())* -p1.D()) - 
-                      (Cross(p3.Norm(),p1.Norm())*p2.D()) - 
+   TGLVector3 vect = ((Cross(p2.Norm(),p3.Norm())* -p1.D()) -
+                      (Cross(p3.Norm(),p1.Norm())*p2.D()) -
                       (Cross(p1.Norm(),p2.Norm())*p3.D())) / denom;
    TGLVertex3 interVert(vect.X(), vect.Y(), vect.Z());
    return std::make_pair(kTRUE, interVert);
@@ -372,7 +397,7 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine
 {
    // Find intersection of 3D space 'line' with this plane. If 'extend' is kTRUE
    // then line extents can be extended (infinite length) to find intersection.
-   // If 'extend' is kFALSE the fixed extents of line is respected. 
+   // If 'extend' is kFALSE the fixed extents of line is respected.
    //
    // The return a std::pair
    //
@@ -381,17 +406,17 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine
    // kFALSE - no line/plane intersect undefined
    //
    // If intersection is not found (first == kFALSE) & 'extend' was kTRUE (infinite line)
-   // this implies line and plane are parallel. If 'extend' was kFALSE, then 
+   // this implies line and plane are parallel. If 'extend' was kFALSE, then
    // either line parallel or insuffient length.
-   Double_t denom = -(plane.A()*line.Vector().X() + 
-                      plane.B()*line.Vector().Y() + 
+   Double_t denom = -(plane.A()*line.Vector().X() +
+                      plane.B()*line.Vector().Y() +
                       plane.C()*line.Vector().Z());
 
    if (denom == 0.0) {
       return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
    }
 
-   Double_t num = plane.A()*line.Start().X() + plane.B()*line.Start().Y() + 
+   Double_t num = plane.A()*line.Start().X() + plane.B()*line.Start().Y() +
                   plane.C()*line.Start().Z() + plane.D();
    Double_t factor = num/denom;
 
@@ -463,7 +488,7 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
 {
-   // Construct matrix which when applied puts local origin at 
+   // Construct matrix which when applied puts local origin at
    // 'origin' and the local Z axis in direction 'z'. Both
    // 'origin' and 'zAxisVec' are expressed in the parent frame
    SetIdentity();
@@ -473,8 +498,8 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const 
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(const Double_t vals[16])
 {
-   // Construct matrix using the 16 Double_t 'vals' passed, 
-   // ordering is maintained - i.e. should be column major 
+   // Construct matrix using the 16 Double_t 'vals' passed,
+   // ordering is maintained - i.e. should be column major
    // as we are
    Set(vals);
 }
@@ -493,9 +518,41 @@ TGLMatrix::~TGLMatrix()
 }
 
 //______________________________________________________________________________
+void TGLMatrix::MultRight(const TGLMatrix & rhs)
+{
+   // Multiply with matrix rhs on right.
+
+  Double_t  B[4];
+  Double_t* C = fVals;
+  for(int r=0; r<4; ++r, ++C)
+  {
+    const Double_t* T = rhs.fVals;
+    for(int c=0; c<4; ++c, T+=4)
+      B[c] = C[0]*T[0] + C[4]*T[1] + C[8]*T[2] + C[12]*T[3];
+    C[0] = B[0]; C[4] = B[1]; C[8] = B[2]; C[12] = B[3];
+  }
+}
+
+//______________________________________________________________________________
+void TGLMatrix::MultLeft (const TGLMatrix & lhs)
+{
+   // Multiply with matrix lhs on left.
+
+   Double_t  B[4];
+   Double_t* C = fVals;
+   for (int c=0; c<4; ++c, C+=4)
+   {
+      const Double_t* T = lhs.fVals;
+      for(int r=0; r<4; ++r, ++T)
+         B[r] = T[0]*C[0] + T[4]*C[1] + T[8]*C[2] + T[12]*C[3];
+      C[0] = B[0]; C[1] = B[1]; C[2] = B[2]; C[3] = B[3];
+   }
+}
+
+//______________________________________________________________________________
 void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
 {
-   // Set matrix which when applied puts local origin at 
+   // Set matrix which when applied puts local origin at
    // 'origin' and the local Z axis in direction 'z'. Both
    // 'origin' and 'z' are expressed in the parent frame
    TGLVector3 zAxisInt(zAxis);
@@ -507,10 +564,10 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const T
    } else {
       TGLVector3 arbAxis;
       if (TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Y()) && TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Z())) {
-         arbAxis.Set(1.0, 0.0, 0.0); 
+         arbAxis.Set(1.0, 0.0, 0.0);
       } else if (TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.X()) && TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.Z())) {
-         arbAxis.Set(0.0, 1.0, 0.0); 
-      } else { 
+         arbAxis.Set(0.0, 1.0, 0.0);
+      } else {
          arbAxis.Set(0.0, 0.0, 1.0);
       }
       xAxisInt = Cross(zAxisInt, arbAxis);
@@ -528,8 +585,8 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const T
 //______________________________________________________________________________
 void TGLMatrix::Set(const Double_t vals[16])
 {
-   // Set matrix using the 16 Double_t 'vals' passed, 
-   // ordering is maintained - i.e. should be column major 
+   // Set matrix using the 16 Double_t 'vals' passed,
+   // ordering is maintained - i.e. should be column major
    // as we are
    for (UInt_t i=0; i < 16; i++) {
       fVals[i] = vals[i];
@@ -559,7 +616,7 @@ void TGLMatrix::SetTranslation(Double_t x, Double_t y, Double_t z)
    // . . . x
    // . . . y
    // . . . z
-   // . . . . 
+   // . . . .
    //
    // The other components are NOT modified
    SetTranslation(TGLVertex3(x,y,z));
@@ -573,7 +630,7 @@ void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
    // . . . translation.X()
    // . . . translation.Y()
    // . . . translation.Z()
-   // . . . . 
+   // . . . .
    //
    // . = Exisiting component value - NOT modified
    fVals[12] = translation[0];
@@ -589,8 +646,8 @@ TGLVertex3 TGLMatrix::GetTranslation() const
    // . . . X()
    // . . . Y()
    // . . . Z()
-   // . . . . 
-      
+   // . . . .
+
    return TGLVertex3(fVals[12], fVals[13], fVals[14]);
 }
 
@@ -602,7 +659,7 @@ void TGLMatrix::Translate(const TGLVector3 & vect)
    // . . . . + vect.X()
    // . . . . + vect.Y()
    // . . . . + vect.Z()
-   // . . . . 
+   // . . . .
    //
    // . = Exisiting component value - NOT modified
    fVals[12] += vect[0];
@@ -617,7 +674,7 @@ void TGLMatrix::Scale(const TGLVector3 & scale)
    // the overall (total) scaling for each axis - it does NOT
    // apply compounded scale on top of existing one
    TGLVector3 currentScale = GetScale();
-   
+
    // x
    if (currentScale[0] != 0.0) {
       fVals[0] *= scale[0]/currentScale[0];
@@ -667,7 +724,7 @@ void TGLMatrix::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double
    rotMat[ 3] = 0.0;             rotMat[ 7] = 0.0;             rotMat[11] = 0.0;             rotMat[15] = 1.0;
    TGLMatrix localToWorld(-pivot);
 
-   // TODO: Ugly - should use quaternions to avoid compound rounding errors and 
+   // TODO: Ugly - should use quaternions to avoid compound rounding errors and
    // triple multiplication
    *this = rotMat * localToWorld * (*this);
 }
@@ -689,7 +746,7 @@ void TGLMatrix::Transpose3x3()
    // Transpose the top left 3x3 matrix component along major diagonal
    // Supported as currently incompatability between TGeo and GL matrix
    // layouts for this 3x3 only. To be resolved.
-   
+
    // TODO: Move this fix to the TBuffer3D filling side and remove
    //
    // 0  4  8 12
@@ -777,7 +834,7 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
    //
    // Sets basic (unlit) color - glColor
    // and also GL materials (see OpenGL docs) thus:
-   //  
+   //
    // diffuse  : rgba
    // ambient  : 0.0 0.0 0.0 1.0
    // specular : 0.6 0.6 0.6 1.0
@@ -786,8 +843,8 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
    //
    // emission is set so objects with no lights (but lighting still enabled)
    // are partially visible
-   
-   
+
+
    // Util function to setup GL color for both unlit and lit material
    static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
    static Float_t specular[4] = {0.6, 0.6, 0.6, 1.0};
@@ -802,7 +859,7 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
 }
 
 //______________________________________________________________________________
-void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius, 
+void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius,
                          const Float_t rgba[4])
 {
    // Draw sphere, centered on vertex 'position', with radius 'radius',
@@ -816,20 +873,20 @@ void TGLUtil::DrawSphere(const TGLVertex3 & position, Double_t radius,
 }
 
 //______________________________________________________________________________
-void TGLUtil::DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, 
+void TGLUtil::DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size,
                        const Float_t rgba[4])
 {
-   // Draw thick line (tube) defined by 'line', with head at end shape 
+   // Draw thick line (tube) defined by 'line', with head at end shape
    // 'head' - box/arrow/none, (head) size 'size', color 'rgba'
    DrawLine(line.Start(), line.Vector(), head, size, rgba);
 }
 
 //______________________________________________________________________________
-void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, 
+void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
                        ELineHeadShape head, Double_t size, const Float_t rgba[4])
-{   
-   // Draw thick line (tube) running from 'start', length 'vector', 
-   // with head at end of shape 'head' - box/arrow/none, 
+{
+   // Draw thick line (tube) running from 'start', length 'vector',
+   // with head at end of shape 'head' - box/arrow/none,
    // (head) size 'size', color 'rgba'
    static TGLQuadric quad;
 
@@ -851,28 +908,28 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
    // Line (tube) component
    gluCylinder(quad.Get(), size/4.0, size/4.0, vector.Mag() - headHeight, fgDrawQuality, fgDrawQuality);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality); 
+   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality);
 
    glTranslated(0.0, 0.0, vector.Mag() - headHeight); // Shift down local Z to end of line
 
-   if (head == kLineHeadNone) { 
+   if (head == kLineHeadNone) {
       // Cap end of line
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-      gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality); 
+      gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality);
    }
    else if (head == kLineHeadArrow) {
       // Arrow base / end line cap
-      gluDisk(quad.Get(), 0.0, size, fgDrawQuality, fgDrawQuality); 
+      gluDisk(quad.Get(), 0.0, size, fgDrawQuality, fgDrawQuality);
       // Arrow cone
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
       gluCylinder(quad.Get(), size, 0.0, headHeight, fgDrawQuality, fgDrawQuality);
    } else if (head == kLineHeadBox) {
       // Box
-      // TODO: Drawing box should be simplier - maybe make 
+      // TODO: Drawing box should be simplier - maybe make
       // a static helper which BB + others use.
-      // Single face tesselation - ugly lighting 
+      // Single face tesselation - ugly lighting
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-      TGLBoundingBox box(TGLVertex3(-size*.7, -size*.7, 0.0), 
+      TGLBoundingBox box(TGLVertex3(-size*.7, -size*.7, 0.0),
                          TGLVertex3(size*.7, size*.7, headHeight));
       box.Draw(kTRUE);
    }
@@ -880,14 +937,14 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
 }
 
 //______________________________________________________________________________
-void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal, 
+void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
                        Double_t radius, const Float_t rgba[4])
-{    
+{
    // Draw ring, centered on 'center', lying on plane defined by 'center' & 'normal'
    // of outer radius 'radius', color 'rgba'
    static TGLQuadric quad;
 
-   // Draw a ring, round vertex 'center', lying on plane defined by 'normal' vector 
+   // Draw a ring, round vertex 'center', lying on plane defined by 'normal' vector
    // Radius defines the outer radius
    TGLUtil::SetDrawColors(rgba);
 
@@ -900,22 +957,260 @@ void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
    TGLMatrix local(center, normal);
    glMultMatrixd(local.CArr());
 
-   // Shift half width so rings centered over center vertex 
+   // Shift half width so rings centered over center vertex
    glTranslated(0.0, 0.0, -width/2.0);
 
    // Inner and outer faces
    gluCylinder(quad.Get(), inner, inner, width, fgDrawQuality, fgDrawQuality);
    gluCylinder(quad.Get(), outer, outer, width, fgDrawQuality, fgDrawQuality);
-   
+
    // Top/bottom
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality);
    glTranslated(0.0, 0.0, width);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
-   
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality);
+
    glPopMatrix();
 }
+
+/**************************************************************************/
+
+//______________________________________________________________________________
+void TGLUtil::DrawReferenceMarker(const TGLCamera  & camera,
+                                  const TGLVertex3 & pos,
+                                        Float_t      radius,
+                                  const Float_t    * rgba)
+{
+   // Draw a sphere- marker on world-coordinate 'pos' with pixel
+   // radius 'radius'. Color argument is optional.
+
+   static const Float_t defColor[4] = { 0.98, 0.45, 0.0, 1.0 }; // Orange
+
+   radius = camera.ViewportDeltaToWorld(pos, radius, radius).Mag();
+   DrawSphere(pos, radius, rgba ? rgba : defColor);
+
+}
+
+//______________________________________________________________________________
+void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
+                             const TGLBoundingBox & bbox,
+                                   Int_t            axesType)
+{
+   // Draw simple xyz-axes for given bounding-box.
+
+   if (axesType == kAxesNone)
+      return;
+
+   static const Float_t axesColors[][4] = {
+      {0.5, 0.0, 0.0, 1.0},  // -ive X axis light red
+      {1.0, 0.0, 0.0, 1.0},  // +ive X axis deep red
+      {0.0, 0.5, 0.0, 1.0},  // -ive Y axis light green
+      {0.0, 1.0, 0.0, 1.0},  // +ive Y axis deep green
+      {0.0, 0.0, 0.5, 1.0},  // -ive Z axis light blue
+      {0.0, 0.0, 1.0, 1.0}   // +ive Z axis deep blue
+   };
+
+   static const UChar_t xyz[][8] = {
+      {0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
+      {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
+      {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}
+   };
+
+   // Axes draw at fixed screen size - back project to world
+   TGLVector3 pixelVector = camera.ViewportDeltaToWorld(bbox.Center(), 1, 1);
+   Double_t   pixelSize   = pixelVector.Mag();
+
+   // Find x/y/z min/max values
+   Double_t min[3] = { bbox.XMin(), bbox.YMin(), bbox.ZMin() };
+   Double_t max[3] = { bbox.XMax(), bbox.YMax(), bbox.ZMax() };
+
+   for (UInt_t i = 0; i < 3; i++) {
+      TGLVertex3 start;
+      TGLVector3 vector;
+
+      if (axesType == kAxesOrigin) {
+         // Through origin axes
+         start[(i+1)%3] = 0.0;
+         start[(i+2)%3] = 0.0;
+      } else {
+         // Side axes
+         start[(i+1)%3] = min[(i+1)%3];
+         start[(i+2)%3] = min[(i+2)%3];
+      }
+      vector[(i+1)%3] = 0.0;
+      vector[(i+2)%3] = 0.0;
+
+      // -ive axis?
+      if (min[i] < 0.0) {
+         // Runs from origin?
+         if (max[i] > 0.0) {
+            start[i] = 0.0;
+            vector[i] = min[i];
+         } else {
+            start[i] = max[i];
+            vector[i] = min[i] - max[i];
+         }
+         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2]);
+      }
+      // +ive axis?
+      if (max[i] > 0.0) {
+         // Runs from origin?
+         if (min[i] < 0.0) {
+            start[i] = 0.0;
+            vector[i] = max[i];
+         } else {
+            start[i] = min[i];
+            vector[i] = max[i] - min[i];
+         }
+         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2 + 1]);
+      }
+   }
+
+   // Draw origin sphere(s)
+   if (axesType == kAxesOrigin) {
+      // Single white origin sphere at 0, 0, 0
+      Float_t white[4] = { 1.0, 1.0, 1.0, 1.0 };
+      DrawSphere(TGLVertex3(0.0, 0.0, 0.0), pixelSize*2.0, white);
+   } else {
+      for (UInt_t j = 0; j < 3; j++) {
+         if (min[j] <= 0.0 && max[j] >= 0.0) {
+            TGLVertex3 zero;
+            zero[j] = 0.0;
+            zero[(j+1)%3] = min[(j+1)%3];
+            zero[(j+2)%3] = min[(j+2)%3];
+            DrawSphere(zero, pixelSize*2.0, axesColors[j*2 + 1]);
+         }
+      }
+   }
+
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+   // Labels
+   Double_t padPixels = 25.0;
+
+   glDisable(GL_LIGHTING);
+   for (UInt_t k = 0; k < 3; k++) {
+      SetDrawColors(axesColors[k*2+1]);
+      TGLVertex3 minPos, maxPos;
+      if (axesType == kAxesOrigin) {
+         minPos[(k+1)%3] = 0.0;
+         minPos[(k+2)%3] = 0.0;
+      } else {
+         minPos[(k+1)%3] = min[(k+1)%3];
+         minPos[(k+2)%3] = min[(k+2)%3];
+      }
+      maxPos = minPos;
+      minPos[k] = min[k];
+      maxPos[k] = max[k];
+
+      TGLVector3 axis = maxPos - minPos;
+      TGLVector3 axisViewport = camera.WorldDeltaToViewport(minPos, axis);
+
+      // Skip drawning if viewport projection of axis very small - labels will overlap
+      // Occurs with orthographic cameras
+      if (axisViewport.Mag() < 1) {
+         continue;
+      }
+
+      minPos -= camera.ViewportDeltaToWorld(minPos, padPixels*axisViewport.X()/axisViewport.Mag(),
+                                                    padPixels*axisViewport.Y()/axisViewport.Mag());
+      axisViewport = camera.WorldDeltaToViewport(maxPos, -axis);
+      maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
+                                                    padPixels*axisViewport.Y()/axisViewport.Mag());
+
+      DrawNumber(Form("%.0f", min[k]), minPos, kTRUE); // Min value
+      DrawNumber(Form("%.0f", max[k]), maxPos, kTRUE); // Max value
+
+      // Axis name beside max value
+      TGLVertex3 namePos = maxPos -
+         camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
+                                     padPixels*axisViewport.Y()/axisViewport.Mag());
+      glRasterPos3dv(namePos.CArr());
+      glBitmap(8, 8, 0.0, 4.0, 0.0, 0.0, xyz[k]); // Axis Name
+   }
+}
+
+//______________________________________________________________________________
+void TGLUtil::DrawNumber(const TString    & num,
+                         const TGLVertex3 & pos,
+                               Bool_t       center)
+{
+   // Draw number in string 'num' via internal 8x8-pixel bitmap on
+   // vertex 'pos'. If 'center' is true, the number is centered on 'pos'.
+   // Only numbers, '.', '-' and ' ' are supported.
+
+   static const UChar_t digits[][8] = {
+      {0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
+      {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
+      {0x7c, 0x44, 0x20, 0x18, 0x04, 0x04, 0x44, 0x38},//2
+      {0x38, 0x44, 0x04, 0x04, 0x18, 0x04, 0x44, 0x38},//3
+      {0x04, 0x04, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x44},//4
+      {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x40, 0x40, 0x7c},//5
+      {0x7c, 0x44, 0x44, 0x44, 0x7c, 0x40, 0x40, 0x7c},//6
+      {0x20, 0x20, 0x20, 0x10, 0x08, 0x04, 0x44, 0x7c},//7
+      {0x38, 0x44, 0x44, 0x44, 0x38, 0x44, 0x44, 0x38},//8
+      {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x7c},//9
+      {0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},//.
+      {0x00, 0x00, 0x00, 0x00, 0x7c, 0x00, 0x00, 0x00},//-
+      {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} //space
+   };
+
+   Double_t xOffset = 0, yOffset = 0;
+   if (center)
+   {
+      xOffset = 3.5 * num.Length();
+      yOffset = 4.0;
+   }
+
+   glRasterPos3dv(pos.CArr());
+   for (Ssiz_t i = 0, e = num.Length(); i < e; ++i) {
+      if (num[i] == '.') {
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[10]);
+      } else if (num[i] == '-') {
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[11]);
+      } else if (num[i] == ' ') {
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[12]);
+      } else if (num[i] >= '0' && num[i] <= '9') {
+         glBitmap(8, 8, xOffset, yOffset, 7.0, 0.0, digits[num[i] - '0']);
+      }
+   }
+}
+
+
+/**************************************************************************/
+/**************************************************************************/
+
+//______________________________________________________________________________
+TGLCapabilitySwitch::TGLCapabilitySwitch(Int_t what, Bool_t state) :
+   fWhat(what)
+{
+   // Constructor - change state only if necessary.
+
+   fState = glIsEnabled(fWhat);
+   fFlip  = (fState != state);
+   if (fFlip)
+      SetState(state);
+}
+
+//______________________________________________________________________________
+TGLCapabilitySwitch::~TGLCapabilitySwitch()
+{
+   // Destructor - reset state if changed.
+
+   if (fFlip)
+      SetState(fState);
+}
+
+//______________________________________________________________________________
+void TGLCapabilitySwitch::SetState(Bool_t s)
+{
+   if (s)
+      glEnable (fWhat);
+   else
+      glDisable(fWhat);
+}
+
 
 //______________________________________________________________________________
 TGLEnableGuard::TGLEnableGuard(Int_t cap)
@@ -977,8 +1272,8 @@ void TGLSelectionBuffer::ReadColorBuffer(Int_t w, Int_t h)
 const UChar_t *TGLSelectionBuffer::GetPixelColor(Int_t px, Int_t py)const
 {
    // Get pixel color.
-   if (px < 0) 
-      px = 0; 
+   if (px < 0)
+      px = 0;
    if (py < 0)
       py = 0;
 
@@ -1003,12 +1298,12 @@ namespace Rgl {
          Int_t fRGB[3];
       };
 
-      RGB_t gColorTriplets[] = {{{255, 0, 0}}, 
-                                {{0, 255, 0}}, 
-                                {{0, 0, 255}}, 
-                                {{255, 255, 0}}, 
-                                {{255, 0, 255}}, 
-                                {{0, 255, 255}}, 
+      RGB_t gColorTriplets[] = {{{255, 0, 0}},
+                                {{0, 255, 0}},
+                                {{0, 0, 255}},
+                                {{255, 255, 0}},
+                                {{255, 0, 255}},
+                                {{0, 255, 255}},
                                 {{255, 255, 255}}};
 
       Bool_t operator < (const RGB_t &lhs, const RGB_t &rhs)
@@ -1084,7 +1379,7 @@ namespace Rgl {
 
 
    //______________________________________________________________________________
-   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+   void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
                         const TGLVertex3 &v3, const TGLVertex3 &v4)
    {
       //Draw quad outline.
@@ -1130,11 +1425,11 @@ namespace Rgl {
    const Int_t    gBoxFrontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};
 
    //______________________________________________________________________________
-   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax, 
+   void DrawBoxFront(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                      Double_t zMin, Double_t zMax, Int_t fp)
    {
       //Draws lego's bar as a 3d box
-      if (zMax < zMin) 
+      if (zMax < zMin)
          std::swap(zMax, zMin);
 
       //Bottom is always drawn.
@@ -1157,7 +1452,7 @@ namespace Rgl {
       glVertex3dv(box[verts[2]]);
       glVertex3dv(box[verts[3]]);
       glEnd();
-      
+
       verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
 
       glBegin(GL_POLYGON);
@@ -1167,7 +1462,7 @@ namespace Rgl {
       glVertex3dv(box[verts[2]]);
       glVertex3dv(box[verts[3]]);
       glEnd();
-      
+
       //Top is always drawn.
       glBegin(GL_POLYGON);
       glNormal3d(0., 0., 1.);
@@ -1179,7 +1474,7 @@ namespace Rgl {
    }
 
    //______________________________________________________________________________
-   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
                              Double_t yMax, Double_t zMin, Double_t zMax,
                              Double_t texMin, Double_t texMax, Int_t fp)
    {
@@ -1189,7 +1484,7 @@ namespace Rgl {
          std::swap(zMax, zMin);
          std::swap(texMax, texMin);
       }
-      
+
       //Top and bottom are always drawn.
       glBegin(GL_POLYGON);
       glNormal3d(0., 0., 1.);
@@ -1211,7 +1506,7 @@ namespace Rgl {
       //Draw two visible front planes.
       const Double_t box[][3] = {{xMin, yMin, zMax}, {xMin, yMax, zMax}, {xMin, yMax, zMin}, {xMin, yMin, zMin},
                                  {xMax, yMin, zMax}, {xMax, yMin, zMin}, {xMax, yMax, zMin}, {xMax, yMax, zMax}};
-      
+
       const Double_t tex[] = {texMax, texMax, texMin, texMin, texMax, texMin, texMin, texMax};
       const Int_t *verts = gBoxFrontQuads[gBoxFrontPlanes[fp][0]];
 
@@ -1226,7 +1521,7 @@ namespace Rgl {
       glTexCoord1d(tex[verts[3]]);
       glVertex3dv(box[verts[3]]);
       glEnd();
-      
+
       verts = gBoxFrontQuads[gBoxFrontPlanes[fp][1]];
 
       glBegin(GL_POLYGON);
@@ -1244,7 +1539,7 @@ namespace Rgl {
 
 
    //______________________________________________________________________________
-   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                      Double_t yMax, Double_t zMin, Double_t zMax)
    {
       //Cylinder for lego3.
@@ -1274,7 +1569,7 @@ namespace Rgl {
    }
 
    //______________________________________________________________________________
-   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                      Double_t yMax, Double_t zMin, Double_t zMax)
    {
       //Cylinder for lego3.
@@ -1285,7 +1580,7 @@ namespace Rgl {
          const Double_t yCenter = yMin + (yMax - yMin) / 2;
          const Double_t zCenter = zMin + (zMax - zMin) / 2;
 
-         const Double_t radius = TMath::Min((zMax - zMin) / 2, 
+         const Double_t radius = TMath::Min((zMax - zMin) / 2,
                                              TMath::Min((xMax - xMin) / 2, (yMax - yMin) / 2));
 
          glPushMatrix();
@@ -1294,10 +1589,10 @@ namespace Rgl {
          glPopMatrix();
       }
    }
- 
+
 
   //______________________________________________________________________________
-   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
+   void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax)
    {
       const Double_t xWid = xMax - xMin;
@@ -1414,7 +1709,7 @@ namespace Rgl {
    }
 
    //______________________________________________________________________________
-   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax, 
+   void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                               Double_t texMin, Double_t texMax)
    {
       //In polar coordinates, box became trapezoid.
@@ -1491,7 +1786,7 @@ namespace Rgl {
    }
 
    //______________________________________________________________________________
-   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax, 
+   void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                                Double_t texMin, Double_t texMax)
    {
       //In polar coordinates, box became trapezoid.
@@ -1702,24 +1997,24 @@ namespace Rgl {
       //Axes are drawn with help of TGaxis class
       std::string option;
       option.reserve(20);
-      
+
       if (xMin > xMax || z) option += "SDH=+";
       else option += "SDH=-";
-      
+
       if (log) option += 'G';
-      
+
       Int_t nDiv = axis->GetNdivisions();
-      
+
       if (nDiv < 0) {
          option += 'N';
          nDiv = -nDiv;
       }
-      
+
       TGaxis axisPainter;
       axisPainter.SetLineWidth(1);
-      
+
       static const Double_t zero = 0.001;
-      
+
       if (TMath::Abs(xMax - xMin) >= zero || TMath::Abs(yMax - yMin) >= zero) {
          axisPainter.ImportAxisAttributes(axis);
          axisPainter.SetLabelOffset(axis->GetLabelOffset() + axis->GetTickLength());
@@ -1742,7 +2037,7 @@ namespace Rgl {
          axisPainter.PaintAxis(xMin, yMin, xMax, yMax, min, max, nDiv, option.c_str());
       }
    }
-      
+
    const Int_t gFramePoints[][2] = {{3, 1}, {0, 2}, {1, 3}, {2, 0}};
    //Each point has two "neighbouring axes" (left and right). Axes types are 1 (ordinata) and 0 (abscissa)
    const Int_t gAxisType[][2]    = {{1, 0}, {0, 1}, {1, 0}, {0, 1}};
@@ -1757,24 +2052,24 @@ namespace Rgl {
 
       const Int_t left  = gFramePoints[fp][0];
       const Int_t right = gFramePoints[fp][1];
-      const Double_t xLeft = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() 
+      const Double_t xLeft = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
                                                + box[left].X()));
-      const Double_t yLeft = gPad->AbsPixeltoY(Int_t(vp[3] - box[left].Y() 
-                                               + (1 - gPad->GetHNDC() - gPad->GetYlowNDC()) 
+      const Double_t yLeft = gPad->AbsPixeltoY(Int_t(vp[3] - box[left].Y()
+                                               + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
                                                * gPad->GetWh() + vp[1]));
-      const Double_t xMid = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() 
+      const Double_t xMid = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
                                               + box[fp].X()));
-      const Double_t yMid = gPad->AbsPixeltoY(Int_t(vp[3] - box[fp].Y() 
-                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC()) 
+      const Double_t yMid = gPad->AbsPixeltoY(Int_t(vp[3] - box[fp].Y()
+                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
                                               * gPad->GetWh() + vp[1]));
-      const Double_t xRight = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() 
+      const Double_t xRight = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC()
                                                 * gPad->GetWw() + box[right].X()));
-      const Double_t yRight = gPad->AbsPixeltoY(Int_t(vp[3] - box[right].Y() 
-                                                + (1 - gPad->GetHNDC() - gPad->GetYlowNDC()) 
+      const Double_t yRight = gPad->AbsPixeltoY(Int_t(vp[3] - box[right].Y()
+                                                + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
                                                 * gPad->GetWh() + vp[1]));
-      const Double_t points[][2] = {{coord->GetXRange().first,  coord->GetYRange().first }, 
-                                    {coord->GetXRange().second, coord->GetYRange().first }, 
-                                    {coord->GetXRange().second, coord->GetYRange().second}, 
+      const Double_t points[][2] = {{coord->GetXRange().first,  coord->GetYRange().first },
+                                    {coord->GetXRange().second, coord->GetYRange().first },
+                                    {coord->GetXRange().second, coord->GetYRange().second},
                                     {coord->GetXRange().first,  coord->GetYRange().second}};
       const Int_t    leftType      = gAxisType[fp][0];
       const Int_t    rightType     = gAxisType[fp][1];
@@ -1786,10 +2081,10 @@ namespace Rgl {
       if (xLeft - xMid || yLeft - yMid) {//To supress error messages from TGaxis
          TAxis *axis = leftType ? yAxis : xAxis;
          if (leftLabel < leftMidLabel)
-            Draw2DAxis(axis, xLeft, yLeft, xMid, yMid, leftLabel, leftMidLabel, 
+            Draw2DAxis(axis, xLeft, yLeft, xMid, yMid, leftLabel, leftMidLabel,
                        leftType ? coord->GetYLog() : coord->GetXLog());
          else
-            Draw2DAxis(axis, xMid, yMid, xLeft, yLeft, leftMidLabel, leftLabel, 
+            Draw2DAxis(axis, xMid, yMid, xLeft, yLeft, leftMidLabel, leftLabel,
                        leftType ? coord->GetYLog() : coord->GetXLog());
       }
 
@@ -1797,25 +2092,25 @@ namespace Rgl {
          TAxis *axis = rightType ? yAxis : xAxis;
 
          if (rightMidLabel < rightLabel)
-            Draw2DAxis(axis, xMid, yMid, xRight, yRight, rightMidLabel, rightLabel, 
+            Draw2DAxis(axis, xMid, yMid, xRight, yRight, rightMidLabel, rightLabel,
                        rightType ? coord->GetYLog() : coord->GetXLog());
          else
-            Draw2DAxis(axis, xRight, yRight, xMid, yMid, rightLabel, rightMidLabel, 
+            Draw2DAxis(axis, xRight, yRight, xMid, yMid, rightLabel, rightMidLabel,
                        rightType ? coord->GetYLog() : coord->GetXLog());
       }
-       
-      const Double_t xUp = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() 
+
+      const Double_t xUp = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw()
                                              + box[left + 4].X()));
-      const Double_t yUp = gPad->AbsPixeltoY(Int_t(vp[3] - box[left + 4].Y() 
-                                             + (1 - gPad->GetHNDC() - gPad->GetYlowNDC()) 
+      const Double_t yUp = gPad->AbsPixeltoY(Int_t(vp[3] - box[left + 4].Y()
+                                             + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
                                              * gPad->GetWh() + vp[1]));
-      Draw2DAxis(zAxis, xLeft, yLeft, xUp, yUp, coord->GetZRange().first, 
+      Draw2DAxis(zAxis, xLeft, yLeft, xUp, yUp, coord->GetZRange().first,
                  coord->GetZRange().second, coord->GetZLog(), kTRUE);
 
       gVirtualX->SelectWindow(gPad->GetPixmapID());
    }
 
-   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax, 
+   void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
                    Double_t zScale, std::vector<Double_t> &zLevels)
    {
       Int_t nDiv = zAxis->GetNdivisions() % 100;
@@ -1823,14 +2118,14 @@ namespace Rgl {
       Double_t binLow = 0., binHigh = 0., binWidth = 0.;
       THLimitsFinder::Optimize(zMin, zMax, nDiv, binLow, binHigh, nBins, binWidth, " ");
       zLevels.resize(nBins + 1);
-   
+
       for (Int_t i = 0; i < nBins + 1; ++i)
          zLevels[i] = (binLow + i * binWidth) * zScale;
    }
 
    //______________________________________________________________________________
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
-                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1, 
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
+                         Double_t t1, Double_t t2, Double_t t3, const TGLVector3 &norm1,
                          const TGLVector3 &norm2, const TGLVector3 &norm3)
    {
       //Draw textured triangle
@@ -1845,11 +2140,11 @@ namespace Rgl {
       glNormal3dv(norm3.CArr());
       glTexCoord1d(t3);
       glVertex3dv(v3.CArr());
-      glEnd();   
+      glEnd();
    }
 
    //______________________________________________________________________________
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3, 
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                          Double_t t1, Double_t t2, Double_t t3, Double_t z,
                          const TGLVector3 &normal)
    {
@@ -1862,7 +2157,7 @@ namespace Rgl {
       glVertex3d(v2.X(), v2.Y(), z);
       glTexCoord1d(t3);
       glVertex3d(v3.X(), v3.Y(), z);
-      glEnd();   
+      glEnd();
    }
 
    //______________________________________________________________________________
@@ -2143,7 +2438,7 @@ namespace Rgl {
 //______________________________________________________________________________
 TGLLevelPalette::TGLLevelPalette()
                   : fContours(0),
-                    fPaletteSize(0), 
+                    fPaletteSize(0),
                     fTexture(0),
                     fMaxPaletteSize(0)
 {
@@ -2156,12 +2451,12 @@ Bool_t TGLLevelPalette::GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &
    //Try to find colors for palette.
    if (!fMaxPaletteSize && check)
       glGetIntegerv(GL_MAX_TEXTURE_SIZE, &fMaxPaletteSize);
-   
+
    if (!(zRange.second - zRange.first))
       return kFALSE;
 
    if (check && paletteSize > UInt_t(fMaxPaletteSize)) {
-      Error("TGLLevelPalette::GeneratePalette", 
+      Error("TGLLevelPalette::GeneratePalette",
             "Number of contours %d is too big for GL 1D texture, try to reduce it to %d",
             paletteSize, fMaxPaletteSize);
       return kFALSE;
@@ -2176,12 +2471,12 @@ Bool_t TGLLevelPalette::GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &
 
    //Generate texels.
    const Int_t nColors = gStyle->GetNumberOfColors();
-   
+
    //Map color index into index in real palette.
 
    for (UInt_t i = 0; i < paletteSize; ++i) {
       Int_t paletteInd = Int_t(nColors / Double_t(paletteSize) * i);
-      if (paletteInd > nColors - 1) 
+      if (paletteInd > nColors - 1)
          paletteInd = nColors - 1;
       Int_t colorInd = gStyle->GetColorPalette(paletteInd);
 
@@ -2212,7 +2507,7 @@ Bool_t TGLLevelPalette::EnableTexture(Int_t mode)const
 {
    //Enable 1D texture
    glEnable(GL_TEXTURE_1D);
-   
+
    glGenTextures(1, &fTexture);
 
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

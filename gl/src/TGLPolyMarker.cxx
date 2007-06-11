@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.4 2006/12/09 23:02:27 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -10,8 +10,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TGLPolyMarker.h"
-#include "TGLDrawFlags.h"
+#include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
@@ -21,7 +22,7 @@
 #include "TAttMarker.h"
 
 // For debug tracing
-#include "TClass.h" 
+#include "TClass.h"
 #include "TError.h"
 
 ClassImp(TGLPolyMarker)
@@ -41,12 +42,15 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
+void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
+      Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
+
+   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+      return;
 
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
@@ -61,7 +65,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
-         gluSphere(fgQuad.Get(), fSize, slices, stacks);
+         gluSphere(rnrCtx.GetGluQuadric(), fSize, slices, stacks);
          glPopMatrix();
       }
       break;
@@ -71,7 +75,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
-         gluCylinder(fgQuad.Get(), fSize, topRadius, fSize, 4, 1);
+         gluCylinder(rnrCtx.GetGluQuadric(), fSize, topRadius, fSize, 4, 1);
          glPopMatrix();
       }
       break;
@@ -80,7 +84,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
          glPushMatrix();
          glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
          glRotated(180, 1., 0., 0.);
-         gluCylinder(fgQuad.Get(), fSize, 0., fSize, 4, 1);
+         gluCylinder(rnrCtx.GetGluQuadric(), fSize, 0., fSize, 4, 1);
          glPopMatrix();
       }
       break;

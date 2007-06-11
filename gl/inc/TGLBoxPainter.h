@@ -32,7 +32,7 @@ private:
    mutable EBoxType        fType;
 
    TString                 fPlotInfo;
-   Rgl::Range_t            fMinMaxVal;   
+   Rgl::Range_t            fMinMaxVal;
 
    mutable TGLQuadric      fQuadric;
 
@@ -41,7 +41,7 @@ private:
 
 public:
    TGLBoxPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx = -1);
-   
+
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
    void    StartPan(Int_t px, Int_t py);

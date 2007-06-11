@@ -91,7 +91,7 @@ public:
    UInt_t NbPnts() const { return fNbPnts; }   
    UInt_t NbSegs() const { return fNbSegs; }      
    UInt_t NbPols() const { return fNbPols; }  
-   
+
    // SECTION: kCore
    Int_t  Type() const { return fType; }
 
@@ -101,7 +101,7 @@ public:
    Bool_t      fLocalFrame;      // True = Local, False = Master reference frame
    Bool_t      fReflection;      // Matrix is reflection - TODO: REMOVE when OGL viewer rewokred to local frame
    Double_t    fLocalMaster[16]; // Local->Master Matrix - identity if master frame
-   
+
    // SECTION: kBoundingBox
    //
    // Local frame (fLocalFrame true) axis aligned
@@ -116,13 +116,18 @@ public:
    // 0-------1 
    //
    Double_t    fBBVertex[8][3];  // 8 verticies defining bounding box. 
-   
+
    // SECTION: kShapeSpecific - none for base class
-      
+
    // SECTION: kRaw
    Double_t *fPnts;              // x0, y0, z0, x1, y1, z1, ..... ..... ....
    Int_t    *fSegs;              // c0, p0, q0, c1, p1, q1, ..... ..... ....  
    Int_t    *fPols;              // c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn
+
+
+   // OUTPUT SECTION, filled by viewer as response
+   mutable UInt_t fPhysicalID;   // Unique replica ID.
+
 
    ClassDef(TBuffer3D,0)     // 3D primitives description
 };

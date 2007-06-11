@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCylinder.h $
+// @(#)root/gl:$Name:  $:$Id: TGLCylinder.h,v 1.2 2007/05/10 11:17:47 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -20,7 +20,7 @@
 
 class TBuffer3DTube;
 
-class TGLCylinder : public TGLLogicalShape 
+class TGLCylinder : public TGLLogicalShape
 {
 private:
    Double_t fR1, fR2, fR3, fR4;
@@ -31,15 +31,19 @@ private:
    Bool_t fSegMesh;
 
 protected:
-   void DirectDraw(const TGLDrawFlags & flags) const;  
+   void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
 public:
    TGLCylinder(const TBuffer3DTube & buffer);
    ~TGLCylinder();
 
+   virtual Int_t  DLCacheSize()         const { return 14; }
+   virtual UInt_t DLOffset(Short_t lod) const;
+
    // Cylinders support LOD (tesselation quality) adjustment along
    // X/Y axes (round the cylinder radius), but not along length (Z)
    virtual ELODAxes SupportedLODAxes() const { return ELODAxes(kLODAxesX | kLODAxesY); }
+   virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
 
 private:
    ClassDef(TGLCylinder,0) // a cylinderical logical shape

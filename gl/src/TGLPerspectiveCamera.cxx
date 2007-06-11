@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.16 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -45,8 +45,8 @@ UInt_t   TGLPerspectiveCamera::fgFOVDeltaSens = 500;
 TGLPerspectiveCamera::TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
    fHAxis(hAxis), fVAxis(vAxis),
    fDollyMin(1.0), fDollyDefault(10.0), fDollyMax(100.0),
-   fFOV(fgFOVDefault), fDolly(fDollyDefault), 
-   fVRotate(-90.0), fHRotate(90.0), 
+   fFOV(fgFOVDefault), fDolly(fDollyDefault),
+   fVRotate(-90.0), fHRotate(90.0),
    fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0)
 {
    // Construct perspective camera
@@ -97,7 +97,7 @@ void TGLPerspectiveCamera::Reset()
    fVRotate = 0.0;
    fTruck.Set(-fCenter.X(), -fCenter.Y(), -fCenter.Z());
    fDolly = fDollyDefault;
-   fCacheDirty = kTRUE;
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
@@ -111,7 +111,7 @@ Bool_t TGLPerspectiveCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
    if (AdjustAndClampVal(fDolly, fDollyMin, fDollyMax, delta, fgDollyDeltaSens, mod1, mod2)) {
-      fCacheDirty = kTRUE;
+      IncTimeStamp();
       return kTRUE;
    } else {
       return kFALSE;
@@ -128,11 +128,11 @@ Bool_t TGLPerspectiveCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
    // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-   
+
    // TODO: Bring all mouse handling into camera classes - would simplify interface and
    // remove these non-generic cases.
    if (AdjustAndClampVal(fFOV, fgFOVMin, fgFOVMax, delta, fgFOVDeltaSens, mod1, mod2)) {
-      fCacheDirty = kTRUE;
+      IncTimeStamp();
       return kTRUE;
    } else {
       return kFALSE;
@@ -142,26 +142,26 @@ Bool_t TGLPerspectiveCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 //______________________________________________________________________________
 Bool_t TGLPerspectiveCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 {
-   // Truck the camera - 'move camera parallel to film plane'. The film 
-   // plane is defined by the EyePoint() / EyeDirection() pair. Define motion 
-   // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion. 
-   // For an orthographic projection this means all objects (regardless of 
-   // camera distance) track the mouse motion. 
+   // Truck the camera - 'move camera parallel to film plane'. The film
+   // plane is defined by the EyePoint() / EyeDirection() pair. Define motion
+   // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion.
+   // For an orthographic projection this means all objects (regardless of
+   // camera distance) track the mouse motion.
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
    //
-   // Note: Trucking is often mistakenly refered to as 'pan' or 'panning'. 
+   // Note: Trucking is often mistakenly refered to as 'pan' or 'panning'.
    // Panning is swivelling the camera on it's own axis - the eye point.
-   
-   //TODO: Convert TGLRect so this not required
-   GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+
    TGLVertex3 start, end;
 
-   gluUnProject(x, y, 1.0, fModVM.CArr(), fProjM.CArr(), viewport, &start.X(), &start.Y(), &start.Z());
-   gluUnProject(x + xDelta, y + yDelta, 1.0, fModVM.CArr(), fProjM.CArr(), viewport, &end.X(), &end.Y(), &end.Z());
+   gluUnProject(x, y, 1.0, fModVM.CArr(), fProjM.CArr(),
+                fViewport.CArr(), &start.X(), &start.Y(), &start.Z());
+   gluUnProject(x + xDelta, y + yDelta, 1.0, fModVM.CArr(), fProjM.CArr(),
+                fViewport.CArr(), &end.X(), &end.Y(), &end.Z());
    TGLVector3 truckDelta = end - start;
    fTruck = fTruck + truckDelta/2.0;
-   fCacheDirty = kTRUE;
+   IncTimeStamp();
    return kTRUE;
 }
 
@@ -176,7 +176,10 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xDelta, Int_t yDelta)
    //
    // Deltas are divided by equivalent viewport dimension and scaled
    // by full rotation - i.e. translates fraction of viewport to
-   // fractional rotation.   
+   // fractional rotation.
+   //
+   // TODO: Rotation center should be changeable from outside.
+
    fHRotate += static_cast<float>(xDelta)/fViewport.Width() * 360.0;
    fVRotate -= static_cast<float>(yDelta)/fViewport.Height() * 180.0;
    if ( fVRotate > 90.0 ) {
@@ -186,24 +189,32 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xDelta, Int_t yDelta)
       fVRotate = -90.0;
    }
 
-   fCacheDirty = kTRUE;
+   IncTimeStamp();
    return kTRUE;
 }
 
 //______________________________________________________________________________
-void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect) const
+void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
+                                 const TGLRect        * pickRect) const
 {
    // Apply the camera to the current GL context, setting the viewport, projection
    // and modelview matricies. After this verticies etc can be directly entered
    // in the world frame. This also updates the cached frustum values, enabling
    // all the projection, overlap tests etc defined in TGLCamera to be used.
-   // 
+   //
    // Arguments are:
    // 'box' - view volume box - used to adjust near/far clipping
    // 'pickRect' - optional picking rect. If non-null, restrict drawing to this
    // viewport rect.
-   
+
    // TODO: If we retained the box from Setup first argument could be dropped?
+
+   // MT This whole thing is convoluted. We can calculate camera postion
+   // and look-at direction without calling unproject and seeking clipping
+   // plane intersection.
+   // Besides, this would give as a proper control over camera transforamtion
+   // matrix.
+
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    glMatrixMode(GL_PROJECTION);
@@ -278,12 +289,12 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
    glLoadIdentity();
 
    // Load up any picking rect
-   if (pickRect) {
-      //TODO: Convert TGLRect so this not required
-      GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
-      gluPickMatrix(pickRect->X(), pickRect->Y(),
-                    pickRect->Width(), pickRect->Height(),
-                    viewport);
+   if (pickRect)
+   {
+      TGLRect rect(*pickRect);
+      WindowToViewport(rect);
+      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
+                    (Int_t*) fViewport.CArr());
    }
    // vi) reset the perspective using the correct near/far clips distances
    // and restore modelview mode
@@ -303,10 +314,11 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
 }
 
 //______________________________________________________________________________
-void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3], 
+void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3],
                                      Double_t hRotate, Double_t vRotate)
 {
    // Configure the camera state
+
    fFOV = fov;
    fDolly = dolly;
    fCenter.Set(center[0], center[1], center[2]);
@@ -314,7 +326,7 @@ void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t cent
    fVRotate = vRotate;
 
    // Don't generally constrain external configuration
-   // However exceeding the vRotate limits or silly FOV values will 
+   // However exceeding the vRotate limits or silly FOV values will
    // cause very weird behaviour or projections so fix these
    if (fVRotate > 90.0) {
       fVRotate = 90.0;
@@ -327,5 +339,5 @@ void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t cent
    } else if (fFOV < 0.1) {
       fFOV = 0.1;
    }
-   fCacheDirty = kTRUE;
+   IncTimeStamp();
 }

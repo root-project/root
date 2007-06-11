@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.cxx,v 1.2 2006/05/31 07:48:56 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -11,14 +11,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TGLFaceSet.h"
-#include "TGLDrawFlags.h"
+#include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
 #include "TMath.h"
 
 // For debug tracing
-#include "TClass.h" 
+#include "TClass.h"
 #include "TError.h"
 
 static GLUtriangulatorObj *GetTesselator()
@@ -131,7 +131,7 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 {
    // Should only be done on an empty faceset object
    assert(fNbPols == 0);
-   
+
    UInt_t nv = mesh->NumberOfVertices();
    fVertices.reserve(3 * nv);
    fNormals.resize(mesh->NumberOfPolys() * 3);
@@ -162,11 +162,11 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::DirectDraw(const TGLDrawFlags & flags) const
+void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
+      Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    GLUtriangulatorObj *tessObj = GetTesselator();

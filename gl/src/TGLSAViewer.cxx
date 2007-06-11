@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.29 2007/05/23 13:37:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TGLOutput.h"
 
 #include "TGLPhysicalShape.h"
+#include "TGLPShapeObj.h"
 #include "TGLClip.h"
 #include "TROOT.h"
 
@@ -43,11 +44,11 @@
 #endif
 
 #include "TGLPhysicalShape.h"
-#include "TGLRenderArea.h"
+//#include "TGLRenderArea.h"
+#include "TGLWidget.h"
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
 #include "TGLOutput.h"
-#include "TGLKernel.h"
 
 const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\
@@ -148,11 +149,12 @@ const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
 //______________________________________________________________________________
 TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
-   fFrame(0), 
+   fFrame(0),
    fFileMenu(0),
    fFileSaveMenu(0),
-   fCameraMenu(0), 
-   fHelpMenu(0), 
+   fCameraMenu(0),
+   fHelpMenu(0),
+   fGLArea(0),
    fLeftVerticalFrame(0),
    fGedEditor(0),
    fPShapeWrap(0),
@@ -161,17 +163,6 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fOverwrite(kFALSE)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
-   // First create gVirtualGL/kernel - to be replaced with TGLManager.
-
-   if (!gVirtualGL) {
-      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp")) {
-         if (h->LoadPlugin() == -1)
-            return;// bad, must be exception
-         TVirtualGLImp * imp = (TVirtualGLImp *) h->ExecPlugin(0);
-         new TGLKernel(imp);
-      }
-   }
-
    fFrame = new TGLSAFrame(*this);
 
    CreateMenus();
@@ -181,13 +172,13 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFrame->SetClassHints("GLViewer", "GLViewer");
    fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    fFrame->MapSubwindows();
-   
+
    fFrame->Resize(fFrame->GetDefaultSize());
    fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    fFrame->SetWMPosition(fgInitX, fgInitY);
 
    fPShapeWrap = new TGLPShapeObj(0, this);
-   
+
    // set recursive cleanup, but exclude fGedEditor
    // destructor of fGedEditor has own way of handling child nodes
    TObject* fe = fLeftVerticalFrame->GetList()->First();
@@ -196,15 +187,16 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fLeftVerticalFrame->GetList()->AddFirst(fe);
 
    Show();
-}  
+}
 
 //______________________________________________________________________________
 TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
-   fFrame(0), 
-   fFileMenu(0), 
-   fCameraMenu(0), 
-   fHelpMenu(0), 
+   fFrame(0),
+   fFileMenu(0),
+   fCameraMenu(0),
+   fHelpMenu(0),
+   fGLArea(0),
    fLeftVerticalFrame(0),
    fGedEditor(0),
    fPShapeWrap(0)
@@ -213,19 +205,8 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    //
    // Modified version of the previous constructor for embedding the
    // viewer into another frame (parent).
-   
-   // First create gVirtualGL/kernel - to be replaced with TGLManager.
 
-   if (!gVirtualGL) {
-      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp")) {
-         if (h->LoadPlugin() == -1)
-            return;// bad, must be exception
-         TVirtualGLImp * imp = (TVirtualGLImp *) h->ExecPlugin(0);
-         new TGLKernel(imp);
-      }
-   }
-
-   fFrame = new TGLSAFrame(parent, *this); 
+   fFrame = new TGLSAFrame(parent, *this);
 
    CreateMenus();
    CreateFrames();
@@ -235,7 +216,7 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    fFrame->Resize(fgInitW, fgInitH);
 
    fPShapeWrap = new TGLPShapeObj(0, this);
-   
+
    // set recursive cleanup, but exclude fGedEditor
    // destructor of fGedEditor has own way of handling child nodes
    TObject* fe = fLeftVerticalFrame->GetList()->First();
@@ -250,9 +231,10 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
 TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object.
-   MakeCurrent();
+
    fGedEditor->DisconnectFromCanvas();
 
+//   delete fGLArea;
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;
@@ -264,7 +246,7 @@ TGLSAViewer::~TGLSAViewer()
 void TGLSAViewer::RefreshPadEditor(TObject* changed)
 {
    // Refresh pad editor.
-   
+
    if (changed == 0 || fGedEditor->GetModel() == changed) {
       fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
    }
@@ -311,7 +293,7 @@ void TGLSAViewer::CreateMenus()
    menuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    menuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
    fFrame->AddFrame(menuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1));
-   
+
 }
 
 //______________________________________________________________________________
@@ -330,9 +312,9 @@ void TGLSAViewer::CreateFrames()
 
    fGedEditor = new TGedEditor();
    fGedEditor->GetTGCanvas()->ChangeOptions(0);
-   fLeftVerticalFrame->RemoveFrame(fGedEditor); 
+   fLeftVerticalFrame->RemoveFrame(fGedEditor);
    fLeftVerticalFrame->AddFrame(fGedEditor, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 0, 2, 2));
-   fLeftVerticalFrame->GetClient()->SetRoot((TGWindow*)cw); 
+   fLeftVerticalFrame->GetClient()->SetRoot((TGWindow*)cw);
    fLeftVerticalFrame->MapSubwindows();
 
    TGVSplitter *splitter = new TGVSplitter(compositeFrame);
@@ -342,13 +324,11 @@ void TGLSAViewer::CreateFrames()
    TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
    compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
 
-   TGCanvas *canvasWindow = new TGCanvas(rightVerticalFrame, 10, 10, kSunkenFrame | kDoubleBorder);
-   fGLArea = new TGLRenderArea(canvasWindow->GetViewPort()->GetId(), canvasWindow->GetViewPort());
-   fGLWindow = fGLArea->GetGLWindow();
-
+   fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, kSunkenFrame | kDoubleBorder);
    // Direct events from the TGWindow directly to the base viewer
    Bool_t ok = kTRUE;
-   ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
+   //Execute event commented now
+//   ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
    ok = ok && fGLWindow->Connect("HandleButton(Event_t*)", "TGLViewer", this, "HandleButton(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleDoubleClick(Event_t*)", "TGLViewer", this, "HandleDoubleClick(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleKey(Event_t*)", "TGLViewer", this, "HandleKey(Event_t*)");
@@ -356,8 +336,8 @@ void TGLSAViewer::CreateFrames()
    ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
 
-   canvasWindow->SetContainer(fGLWindow);
-   rightVerticalFrame->AddFrame(canvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+//   canvasWindow->SetContainer(fGLWindow);
+   rightVerticalFrame->AddFrame(fGLWindow, /*canvasWindow,*/ new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }
 
 
@@ -374,7 +354,7 @@ void TGLSAViewer::Show()
 void TGLSAViewer::Close()
 {
    // Close the viewer - destructed.
-   
+
    // Commit suicide when contained GUI is closed.
    delete this;
 }
@@ -422,10 +402,18 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             break;
          }
          case kGLSaveEPS:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, "viewer.eps");
+            fPictureFileName = "viewer.eps";
+            if (!gVirtualX->IsCmdThread())
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+            else
+               SavePicture();
             break;
          case kGLSavePDF:
-            gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP, "viewer.pdf");
+            fPictureFileName = "viewer.pdf";
+            if (!gVirtualX->IsCmdThread())
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+            else
+               SavePicture();
             break;
          case kGLXOY:
             SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -446,12 +434,24 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             SetCurrentCamera(TGLViewer::kCameraPerspXOY);
             break;
          case kGLSaveGIF:
-            SavePicture("viewer.gif");
+            fPictureFileName = "viewer.gif";
+            if (!gVirtualX->IsCmdThread())
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+            else
+               SavePicture();
             break;
          case kGLSaveJPG:
-            SavePicture("viewer.jpg");
+            fPictureFileName = "viewer.jpg";
+            if (!gVirtualX->IsCmdThread())
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+            else
+               SavePicture();
          case kGLSavePNG:
-            SavePicture("viewer.png");
+            fPictureFileName = "viewer.png";
+            if (!gVirtualX->IsCmdThread())
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+            else
+               SavePicture();
             break;
          case kGLSaveAS:
             {
@@ -462,30 +462,33 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
                fi.fOverwrite   = fOverwrite;
                new TGFileDialog(gClient->GetDefaultRoot(), fFrame, kFDSave, &fi);
                if (!fi.fFilename) return kTRUE;
-               TString fileName(fi.fFilename);
+               fPictureFileName = fi.fFilename;
                TString ft(fi.fFileTypes[fi.fFileTypeIdx+1]);
                fDirName   = fi.fIniDir;
                fTypeIdx   = fi.fFileTypeIdx;
                fOverwrite = fi.fOverwrite;
 
-               if (!fileName.EndsWith(".eps")  && !fileName.EndsWith(".pdf")  && 
-                   !fileName.EndsWith(".jpg")  && !fileName.EndsWith(".gif")  && 
-                   !fileName.EndsWith(".png"))
+               if (!fPictureFileName.EndsWith(".eps")  && !fPictureFileName.EndsWith(".pdf")  &&
+                   !fPictureFileName.EndsWith(".jpg")  && !fPictureFileName.EndsWith(".gif")  &&
+                   !fPictureFileName.EndsWith(".png"))
                   if (ft.Index(".") != kNPOS)
-                     fileName += ft(ft.Index("."), ft.Length());
+                     fPictureFileName += ft(ft.Index("."), ft.Length());
                   else {
                      Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
                      return kTRUE;
                   }
 
-               SavePicture(fileName);      
+               if (!gVirtualX->IsCmdThread())
+                  gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               else
+                  SavePicture();
             }
 
             break;
          case kGLCloseViewer:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI
             // will all be changed in future anyway
-            
+
             TTimer::SingleShot(50, "TGLSAFrame", fFrame, "SendCloseMessage()");
             break;
          case kGLQuitROOT:
@@ -511,10 +514,21 @@ void TGLSAViewer::SelectionChanged()
 {
    // Update GUI components for embedded viewer selection change.
 
-   if (GetSelected() && fPShapeWrap->fPShape)
-      return;
+   // !!! MT this whole selection-signal-stuff is verrrry strange.
+   // At least, shouldn't we emit a signal here?
+   //
+   // I misuse this function after overlay-mouse-drag as well.
+   // Need something like refresh-viewer-gui which also does ged update.
+
 
    TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
+
+   if ( selected  &&  selected == fPShapeWrap->fPShape &&
+        fGedEditor->GetModel() == fPShapeWrap )
+   {
+      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
+      return;
+   }
 
    if (selected) {
       fPShapeWrap->fPShape = selected;
@@ -526,30 +540,19 @@ void TGLSAViewer::SelectionChanged()
 }
 
 //______________________________________________________________________________
-void TGLSAViewer::PostSceneBuildSetup(Bool_t resetCameras)
-{
-   // Do setup work required after a scene build has completed.
-   // Synconise the viewer GUI with new clips, guides etc.
-   
-   // Do base work first
-   TGLViewer::PostSceneBuildSetup(resetCameras);
-
-   // Now synconise the GUI-removed
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::SavePicture(const TString &fileName)
+void TGLSAViewer::SavePicture()
 {
    // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
 
-   if (fileName.EndsWith(".eps"))
-      gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, fileName.Data());
-   else if (fileName.EndsWith(".pdf"))
-      gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP, fileName.Data());
-   else if (fileName.EndsWith(".gif") || fileName.Contains("gif+") ||
-            fileName.EndsWith(".jpg") || fileName.EndsWith(".png")) {
+   // TTTT
+   if (fPictureFileName.EndsWith(".eps"))
+      TGLOutput::Capture(*this, TGLOutput::kEPS_BSP, fPictureFileName.Data());
+   else if (fPictureFileName.EndsWith(".pdf"))
+      TGLOutput::Capture(*this, TGLOutput::kPDF_BSP, fPictureFileName.Data());
+   else if (fPictureFileName.EndsWith(".gif") || fPictureFileName.Contains("gif+") ||
+            fPictureFileName.EndsWith(".jpg") || fPictureFileName.EndsWith(".png")) {
       std::auto_ptr<TImage>gif(TImage::Create());
-      gif->FromWindow(fGLArea->GetGLWindow()->GetId());
-      gif->WriteImage(fileName.Data());
+      gif->FromWindow(fGLWindow->GetId());
+      gif->WriteImage(fPictureFileName.Data());
    }
 }

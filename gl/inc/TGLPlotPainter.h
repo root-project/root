@@ -1,6 +1,6 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.13 2007/03/29 12:08:32 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.14 2007/06/06 15:33:00 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
-                                                                                
+
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -62,7 +62,7 @@ private:
 
 public:
    TGLBoxCut(const TGLPlotBox *plotBox);
-   //Class has ClassDef macro == virtual functions, so we need 
+   //Class has ClassDef macro == virtual functions, so we need
    //explicitly declared/defined dtor to supress warnings from g++
    virtual ~TGLBoxCut();
 
@@ -71,10 +71,10 @@ public:
    void   SetFactor(Double_t f){fFactor = f;}
 
    void   DrawBox(Bool_t selectionPass, Int_t selected)const;
-   
+
    void   StartMovement(Int_t px, Int_t py);
    void   MoveBox(Int_t px, Int_t py, Int_t axisID);
-   
+
    Bool_t IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                   Double_t zMin, Double_t zMax)const;
 private:
@@ -90,7 +90,7 @@ private:
 class TGLTH3Slice : public TNamed {
 public:
    enum ESliceAxis {kXOZ, kYOZ, kXOY};
-   
+
 private:
    ESliceAxis                fAxisType;
    TAxis                    *fAxis;
@@ -104,30 +104,30 @@ private:
    const TF3                *fF3;
 
    mutable TGL2DArray<Double_t> fTexCoords;
-   
+
    mutable Rgl::Range_t         fMinMax;
 
 public:
-   TGLTH3Slice(const TString &sliceName, 
-               const TH3 *hist, 
-               const TGLPlotCoordinates *coord, 
+   TGLTH3Slice(const TString &sliceName,
+               const TH3 *hist,
+               const TGLPlotCoordinates *coord,
                const TGLPlotBox * box,
                ESliceAxis axis);
-   TGLTH3Slice(const TString &sliceName, 
+   TGLTH3Slice(const TString &sliceName,
                const TH3 *hist, const TF3 *fun,
-               const TGLPlotCoordinates *coord, 
+               const TGLPlotCoordinates *coord,
                const TGLPlotBox * box,
                ESliceAxis axis);
 
    void   DrawSlice(Double_t pos)const;
    //SetSliceWidth must have "menu" comment.
    void   SetSliceWidth(Int_t width = 1); // *MENU*
-   
+
    void   SetMinMax(const Rgl::Range_t &newRange)
    {
       fMinMax = newRange;
    }
-   
+
 
 private:
    void   PrepareTexCoords(Double_t pos, Int_t sliceBegin, Int_t sliceEnd)const;
@@ -170,12 +170,12 @@ protected:
 
    std::vector<Double_t> fZLevels;
    Bool_t                fHighColor;
-   
+
    enum ESelectionBase{
       kHighColorSelectionBase = 7,
       kTrueColorSelectionBase = 10
    };
-   
+
    ESelectionBase        fSelectionBase;
 
 public:

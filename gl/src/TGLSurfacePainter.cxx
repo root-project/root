@@ -277,7 +277,7 @@ void TGLSurfacePainter::DrawPlot()const
          glEnable(GL_BLEND);
          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
-      
+
    }
 
    if (Textured() && !fSelectionPass) {
@@ -350,7 +350,7 @@ void TGLSurfacePainter::DrawPlot()const
    //Draw outlines here
    if (!fSelectionPass) {
       const TGLEnableGuard  blendGuard(GL_BLEND);
-      
+
       if (fType == kSurf || fType == kSurf1 || fType == kSurf3) {
          const TGLDisableGuard lightGuard(GL_LIGHTING);
          const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);

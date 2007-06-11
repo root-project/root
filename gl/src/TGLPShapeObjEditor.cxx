@@ -1,9 +1,10 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.2 2006/09/26 13:44:56 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include <cstring>
 
 #include "TGLPShapeObjEditor.h"
+#include "TGLPShapeObj.h"
 #include "TGedEditor.h"
 
 #include "TG3DLine.h"
@@ -17,50 +18,17 @@
 #include "TGSlider.h"
 #include "TGNumberEntry.h"
 #include "TGButtonGroup.h"
+#include "TROOT.h"
 
 #include "TVirtualGL.h"
 #include "TVirtualX.h"
 #include "TGLViewer.h"
 #include "TGLUtil.h"
 #include "TGLPhysicalShape.h"
+#include "TGLWidget.h"
+#include "TGLIncludes.h"
 
-
-class TGLMatView : public TGCompositeFrame {
-// Helper class to handle GL window with colored sphere.
-private:
-   TGLPShapeObjEditor *fOwner;
-public:
-   TGLMatView(const TGWindow *parent, Window_t wid, TGLPShapeObjEditor *owner);
-   Bool_t HandleConfigureNotify(Event_t *event);
-   Bool_t HandleExpose(Event_t *event);
-
-private:
-   TGLMatView(const TGLMatView &);
-   TGLMatView & operator = (const TGLMatView &);
-};
-
-//______________________________________________________________________________
-TGLMatView::TGLMatView(const TGWindow *parent, Window_t wid, TGLPShapeObjEditor *owner)
-               :TGCompositeFrame(gClient, wid, parent), fOwner(owner)
-{
-   // Constructor.
-   AddInput(kExposureMask | kStructureNotifyMask);
-}
-
-//______________________________________________________________________________
-Bool_t TGLMatView::HandleConfigureNotify(Event_t *event)
-{
-   // Pass to fOwner.
-   return fOwner->HandleContainerNotify(event);
-}
-
-
-//______________________________________________________________________________
-Bool_t TGLMatView::HandleExpose(Event_t *event)
-{
-   // Pass to fOwner.
-   return fOwner->HandleContainerExpose(event);
-}
+#include "Buttons.h"
 
 //______________________________________________________________________________
 ClassImp(TGLPShapeObjEditor)
@@ -75,7 +43,6 @@ enum EGeometry {
       kTot
 };
 
-
 enum EApplyButtonIds {
       kTBcp,
       kTBcpm,
@@ -87,12 +54,11 @@ enum EApplyButtonIds {
       kTBBottom,
       kTBLeft,
       kTBFront,
-      kTBa1,
-      kTBGuide
+      kTBEndOfList,
 };
 
 enum EGLEditorIdent {
-      kCPa = kTBa1 + 1,
+      kCPa = kTBEndOfList + 1,
       kCPd, kCPs, kCPe,
       kHSr, kHSg, kHSb,
       kHSa, kHSs, kHSe,
@@ -102,9 +68,6 @@ enum EGLEditorIdent {
       kNEat
 };
 
-
-//A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
-//ROOT has system to cleanup - I'll try  to use it
 //______________________________________________________________________________
 TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p,  width, height, options | kVerticalFrame, back),
@@ -112,12 +75,11 @@ TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t he
      fLe(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 3, 3), //entries
      fLl(kLHintsLeft, 0, 8, 6, 0), // labels
      fLs(kLHintsTop | kLHintsCenterX, 2, 2, 0, 0),  ///sliders
-     fIsActive(kTRUE), fGeoFrame(0),fGeoApplyButton(0),
+     fGeoFrame(0),fGeoApplyButton(0),
      fColorFrame(0),
      fRedSlider(0), fGreenSlider(0), fBlueSlider(0), fAlphaSlider(0), fShineSlider(0),
      fColorApplyButton(0), fColorApplyFamily(0),
      fIsLight(kFALSE), fRGBA(),
-     fGLWin(0),
      fPShapeObj(0)
 {
    // Constructor of TGLPhysicalShape editor GUI.
@@ -133,8 +95,30 @@ TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t he
 TGLPShapeObjEditor::~TGLPShapeObjEditor()
 {
    // Destroy color editor GUI component.
-   delete fMatView;
-   gVirtualGL->DeleteContext(fCtx);
+   // Done automatically.
+}
+
+//______________________________________________________________________________
+void TGLPShapeObjEditor::SetPShape(TGLPhysicalShape * shape)
+{
+   // Shape has changed.
+   // Check if set to zero and make sure we're no longer in editor.
+
+   TGLPShapeRef::SetPShape(shape);
+   if (shape == 0 && fGedEditor->GetModel() == fPShapeObj)
+      fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj->fViewer, kButton1Down);
+}
+
+//______________________________________________________________________________
+void TGLPShapeObjEditor::PShapeModified()
+{
+   // Shape has been modified.
+   // Update editor if we're still shown. Otherwise unref.
+
+   if (fGedEditor->GetModel() == fPShapeObj)
+      fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj, kButton1Down);
+   else
+      SetPShape(0);
 }
 
 //______________________________________________________________________________
@@ -145,10 +129,12 @@ void TGLPShapeObjEditor::SetModel(TObject* obj)
    fPShapeObj = 0;
 
    fPShapeObj = static_cast<TGLPShapeObj *>(obj);
+   SetPShape(fPShapeObj->fPShape);
 
    SetRGBA(fPShapeObj->fPShape->Color());
    SetCenter(fPShapeObj->fPShape->GetTranslation().CArr());
    SetScale(fPShapeObj->fPShape->GetScale().CArr());
+   fGeoApplyButton->SetState(kButtonDisabled);
 }
 
 //______________________________________________________________________________
@@ -156,7 +142,6 @@ void TGLPShapeObjEditor::SetCenter(const Double_t *c)
 {
    // Set internal center data from 3 component 'c'.
 
-   fGeoApplyButton->SetState(kButtonDisabled);
    fGeomData[kCenterX]->SetNumber(c[0]);
    fGeomData[kCenterY]->SetNumber(c[1]);
    fGeomData[kCenterZ]->SetNumber(c[2]);
@@ -173,31 +158,19 @@ void TGLPShapeObjEditor::SetScale(const Double_t *s)
 }
 
 //______________________________________________________________________________
-void TGLPShapeObjEditor::GeoDisable()
-{
-   // Disable "Apply" button.
-
-   fIsActive = kFALSE;
-   fGeoApplyButton->SetState(kButtonDisabled);
-}
-
-//______________________________________________________________________________
 void TGLPShapeObjEditor::DoGeoButton()
 {
    // Process 'Apply' - update the viewer object from GUI.
 
-   if (TGButton *btn = (TGButton *)gTQSender) {
-      Int_t wid = btn->WidgetId();
-      //      fViewer->ProcessGUIEvent(wid);
-
-      TGLVertex3 trans;
-      TGLVector3 scale;
-      GetObjectData(trans.Arr(), scale.Arr());
-      fPShapeObj->fViewer->SetSelectedGeom(trans,scale);
-      if (wid == kTBa1) {
-         fGeoApplyButton->SetState(kButtonDisabled);
-      }
+   TGLVertex3 trans;
+   TGLVector3 scale;
+   GetObjectData(trans.Arr(), scale.Arr());
+   if (fPShape) {
+      fPShape->SetTranslation(trans);
+      fPShape->Scale(scale);
    }
+   fPShapeObj->fViewer->RequestDraw();
+   fGeoApplyButton->SetState(kButtonDisabled);
 }
 
 //______________________________________________________________________________
@@ -219,19 +192,20 @@ void TGLPShapeObjEditor::GeoValueSet(Long_t)
 {
    // Process setting of value in edit box - activate 'Apply' button.
 
-   if (!fIsActive)return;
-   fGeoApplyButton->SetState(kButtonUp);
+   if (fGeoApplyButton->GetState() != kButtonUp)
+       fGeoApplyButton->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
 void TGLPShapeObjEditor::CreateGeoControls()
 {
-   // Create GUI for setting scale and position. 
+   // Create GUI for setting scale and position.
 
    fGeoFrame = CreateEditorTabSubFrame("Geometry");
 
    TGLabel *label=0;
-   // postion containers
+
+   // Postion container
    TGGroupFrame* container = new TGGroupFrame(fGeoFrame, "Object position:");
    container->SetTitlePos(TGGroupFrame::kLeft);
    fGeoFrame->AddFrame(container, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 8, 8, 3, 3));//-
@@ -265,7 +239,7 @@ void TGLPShapeObjEditor::CreateGeoControls()
                                 this, "GeoValueSet(Long_t)");
    container->AddFrame(hf, new TGLayoutHints(lh));
 
-   // Create object scale GUI
+   // Scale container
    TGGroupFrame* osf = new TGGroupFrame(fGeoFrame, "Object scale:", kLHintsTop | kLHintsCenterX);
    osf->SetTitlePos(TGGroupFrame::kLeft);
    fGeoFrame->AddFrame(osf, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 8, 8, 3, 3));
@@ -300,9 +274,8 @@ void TGLPShapeObjEditor::CreateGeoControls()
    fGeomData[kScaleZ]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
    osf->AddFrame(hf, new TGLayoutHints(lh));
 
-   //create button
-
-   fGeoApplyButton = new TGTextButton(fGeoFrame, "Modify object", kTBa1);
+   // Modify button
+   fGeoApplyButton = new TGTextButton(fGeoFrame, "Modify object");
    fGeoFrame->AddFrame(fGeoApplyButton, new TGLayoutHints(fLb));
    fGeoApplyButton->SetState(kButtonDisabled);
    fGeoApplyButton->Connect("Pressed()", "TGLPShapeObjEditor", this, "DoGeoButton()");
@@ -315,8 +288,6 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
 
    fColorApplyButton->SetState(kButtonDisabled);
    fColorApplyFamily->SetState(kButtonDisabled);
-
-   fIsActive = kTRUE;
 
    for (Int_t i = 0; i < 17; ++i) fRGBA[i] = rgba[i];
 
@@ -339,7 +310,11 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
    fGreenSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 1] * 100));
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
 
-   DrawSphere();
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+   } else {
+      DrawSphere();
+   }
 }
 
 //______________________________________________________________________________
@@ -371,11 +346,14 @@ void TGLPShapeObjEditor::DoColorSlider(Int_t val)
       }
 
       if (!fIsLight || (wid != kHSa && wid != kHSs)) {
-         if (fIsActive) {
             fColorApplyButton->SetState(kButtonUp);
             if (!fIsLight) fColorApplyFamily->SetState(kButtonUp);
+
+         if (!gVirtualX->IsCmdThread()) {
+            gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+         } else {
+            DrawSphere();
          }
-         DrawSphere();
       }
    }
 }
@@ -412,15 +390,26 @@ void TGLPShapeObjEditor::DoColorButton()
    case kTBa:
       fColorApplyButton->SetState(kButtonDisabled);
       fColorApplyFamily->SetState(kButtonDisabled);
-      fPShapeObj->fViewer->SetSelectedColor(GetRGBA());
+      if (fPShape) {
+         fPShape->SetColor(GetRGBA());
+      }
+      fPShapeObj->fViewer->RequestDraw();
       break;
    case kTBaf:
       fColorApplyButton->SetState(kButtonDisabled);
       fColorApplyFamily->SetState(kButtonDisabled);
-      fPShapeObj->fViewer->SetColorOnSelectedFamily(GetRGBA());
+      if (fPShape) {
+         fPShape->SetColorOnFamily(GetRGBA());
+      }
+      fPShapeObj->fViewer->RequestDraw();
       break;
    }
-   DrawSphere();
+
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+   } else {
+      DrawSphere();
+   }
 }
 
 //______________________________________________________________________________
@@ -428,14 +417,12 @@ void TGLPShapeObjEditor::CreateMaterialView()
 {
    // Small gl-window with sphere.
 
-   TGCanvas *viewCanvas = new TGCanvas(fColorFrame, 120, 120, kSunkenFrame | kDoubleBorder);
-   Window_t wid = viewCanvas->GetViewPort()->GetId();
-   fGLWin = gVirtualGL->CreateGLWindow(wid);
-
-   fMatView = new TGLMatView(viewCanvas->GetViewPort(), fGLWin, this);
-   fCtx = gVirtualGL->CreateContext(fGLWin);
-   viewCanvas->SetContainer(fMatView);
-   fColorFrame->AddFrame(viewCanvas, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
+   fMatView = new TGLWidget(*fColorFrame, kFALSE, 120, 120, kSunkenFrame | kDoubleBorder);
+   fMatView->AddInput(kExposureMask | kStructureNotifyMask);
+   //gVirtualX->SelectInput(fMatView->GetContId(), kExposureMask | kStructureNotifyMask);
+   fMatView->Connect("HandleExpose(Event_t*)", "TGLPShapeObjEditor", this, "HandleContainerExpose(Event_t*)");
+   fMatView->Connect("HandleConfigureNotify(Event_t*)", "TGLPShapeObjEditor", this, "HandleContainerNotify(Event_t*)");
+   fColorFrame->AddFrame(fMatView, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 }
 
 //______________________________________________________________________________
@@ -547,22 +534,92 @@ Bool_t TGLPShapeObjEditor::HandleContainerExpose(Event_t * /*event*/)
 }
 
 //______________________________________________________________________________
+namespace {
+
+   GLUquadric *GetQuadric()
+   {
+      // GLU quadric.
+
+      static struct Init {
+         Init()
+         {
+            fQuad = gluNewQuadric();
+            if (!fQuad) {
+               Error("GetQuadric::Init", "could not create quadric object");
+            } else {
+               gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
+               gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
+               gluQuadricNormals(fQuad,     (GLenum)GLU_FLAT);
+            }
+         }
+         ~Init()
+         {
+            if(fQuad)
+               gluDeleteQuadric(fQuad);
+         }
+         GLUquadric *fQuad;
+      }singleton;
+
+      return singleton.fQuad;
+   }
+
+}
+
+//______________________________________________________________________________
 void TGLPShapeObjEditor::DrawSphere()const
 {
    // Draw local sphere reflecting current color options.
+   fMatView->MakeCurrent();
+   glViewport(0, 0, fMatView->GetWidth(), fMatView->GetHeight());
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   gVirtualGL->MakeCurrent(fGLWin, fCtx);
-   gVirtualGL->ClearGL(0);
-   if (fIsActive) {
-      gVirtualGL->ViewportGL(0, 0, fMatView->GetWidth(), fMatView->GetHeight());
-      gVirtualGL->NewMVGL();
-      Float_t ligPos[] = {0.f, 0.f, 0.f, 1.f};
-      gVirtualGL->GLLight(kLIGHT0, kPOSITION, ligPos);
-      gVirtualGL->TranslateGL(0., 0., -3.);
-      gVirtualGL->DrawSphere(fRGBA);
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glFrustum(-0.5, 0.5, -0.5, 0.5, 1., 10.);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   Float_t ligPos[] = {0.f, 0.f, 0.f, 1.f};
+   glLightfv(GL_LIGHT0, GL_POSITION, ligPos);
+   glTranslated(0., 0., -3.);
+
+   const Float_t whiteColor[] = {1.f, 1.f, 1.f, 1.f};
+   const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
+
+   if (fRGBA[16] < 0.f) {
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, fRGBA);
+      glLightfv(GL_LIGHT0, GL_AMBIENT, fRGBA + 4);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, fRGBA + 8);
+      glMaterialfv(GL_FRONT, GL_DIFFUSE, whiteColor);
+      glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
+      glMaterialfv(GL_FRONT, GL_SPECULAR, whiteColor);
+      glMaterialfv(GL_FRONT, GL_EMISSION, nullColor);
+      glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
+   } else {
+      glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteColor);
+      glLightfv(GL_LIGHT0, GL_AMBIENT, nullColor);
+      glLightfv(GL_LIGHT0, GL_SPECULAR, whiteColor);
+      glMaterialfv(GL_FRONT, GL_DIFFUSE, fRGBA);
+      glMaterialfv(GL_FRONT, GL_AMBIENT, fRGBA + 4);
+      glMaterialfv(GL_FRONT, GL_SPECULAR, fRGBA + 8);
+      glMaterialfv(GL_FRONT, GL_EMISSION, fRGBA + 12);
+      glMaterialf(GL_FRONT, GL_SHININESS, fRGBA[16]);
    }
 
-   gVirtualGL->SwapBuffers(fGLWin);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   GLUquadric * quad = GetQuadric();
+   if (quad) {
+      glRotated(-90., 1., 0., 0.);
+      gluSphere(quad, 1., 100, 100);
+   }
+   glDisable(GL_BLEND);
+
+   fMatView->SwapBuffers();
 }
 
 //______________________________________________________________________________
@@ -590,16 +647,10 @@ void TGLPShapeObjEditor::CreateColorControls()
    fColorApplyFamily->SetState(kButtonDisabled);
    fColorApplyFamily->Connect("Pressed()", "TGLPShapeObjEditor", this, "DoColorButton()");
 
-   //Init GL
-   gVirtualGL->MakeCurrent(fGLWin, fCtx);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+   } else {
+      DrawSphere();
+   }
 
-   gVirtualGL->NewPRGL();
-   gVirtualGL->FrustumGL(-0.5, 0.5, -0.5, 0.5, 1., 10.);
-   gVirtualGL->EnableGL(kLIGHTING);
-   gVirtualGL->EnableGL(kLIGHT0);
-   gVirtualGL->EnableGL(kDEPTH_TEST);
-   gVirtualGL->EnableGL(kCULL_FACE);
-   gVirtualGL->CullFaceGL(kBACK);
-
-   DrawSphere();
 }

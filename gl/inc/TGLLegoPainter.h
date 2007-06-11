@@ -1,6 +1,6 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.6 2006/11/22 16:19:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Timur Pocheptsov  14/06/2006
-                                                                                
+
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

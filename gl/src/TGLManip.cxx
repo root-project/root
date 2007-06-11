@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.11 2006/05/23 04:47:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.2 2007/05/10 11:17:48 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -12,12 +12,11 @@
 #include "TGLManip.h"
 #include "TGLUtil.h"
 #include "TGLCamera.h"
-#include "TGLViewer.h"
 #include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
+#include "TROOT.h"
 
-// Remove - replace with TGLManager
-#include "TVirtualGL.h"
+#include "TVirtualX.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -35,12 +34,12 @@
 
 ClassImp(TGLManip)
 
-Float_t TGLManip::fgRed[4]    = {0.8, 0.0, 0.0, 1.0 };
-Float_t TGLManip::fgGreen[4]  = {0.0, 0.8, 0.0, 1.0 };
-Float_t TGLManip::fgBlue[4]   = {0.0, 0.0, 0.8, 1.0 };
-Float_t TGLManip::fgYellow[4] = {0.8, 0.8, 0.0, 1.0 };
-Float_t TGLManip::fgWhite[4]  = {1.0, 1.0, 1.0, 1.0 };
-Float_t TGLManip::fgGrey[4]   = {0.5, 0.5, 0.5, 0.4 };
+Float_t TGLManip::fgRed[4]    = { 0.8, 0.0, 0.0, 1.0 };
+Float_t TGLManip::fgGreen[4]  = { 0.0, 0.8, 0.0, 1.0 };
+Float_t TGLManip::fgBlue[4]   = { 0.0, 0.0, 0.8, 1.0 };
+Float_t TGLManip::fgYellow[4] = { 0.8, 0.8, 0.0, 1.0 };
+Float_t TGLManip::fgWhite[4]  = { 1.0, 1.0, 1.0, 1.0 };
+Float_t TGLManip::fgGrey[4]   = { 0.5, 0.5, 0.5, 0.4 };
 
 //______________________________________________________________________________
 TGLManip::TGLManip() :
@@ -49,7 +48,8 @@ TGLManip::TGLManip() :
    fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
-   // Construct a manipulator object, bound to supplied viewer, and no physical shape
+   // Construct a manipulator object, bound to supplied viewer, and no
+   // physical shape.
 }
 
 //______________________________________________________________________________
@@ -59,11 +59,7 @@ TGLManip::TGLManip(TGLPhysicalShape * shape) :
    fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
-   // Construct a manipulator object, bound to supplied viewer, and physical shape
-
-   // TODO: The requirement to attach to viewer is needed for cross thread selection
-   // callback under Windows - when the design of TGLKernel / TGLManager is finally
-   // resolved this can probably be removed.
+   // Construct a manipulator object, bound to supplied physical shape.
 }
 
 //______________________________________________________________________________
@@ -75,21 +71,14 @@ TGLManip::TGLManip(const TGLManip& gm) :
   fFirstMouse(gm.fFirstMouse),
   fLastMouse(gm.fLastMouse)
 {
-   //copy constructor
-   for(Int_t i=0; i<4; i++) {
-      fgRed[i]=gm.fgRed[i];
-      fgGreen[i]=gm.fgGreen[i];
-      fgBlue[i]=gm.fgBlue[i];
-      fgYellow[i]=gm.fgYellow[i];
-      fgWhite[i]=gm.fgWhite[i];
-      fgGrey[i]=gm.fgGrey[i];
-   }
+   // Copy constructor.
 }
 
 //______________________________________________________________________________
 TGLManip& TGLManip::operator=(const TGLManip& gm)
 {
-   //assignement operator
+   // Assignement operator.
+
    if(this!=&gm) {
       TVirtualGLManip::operator=(gm);
       fShape=gm.fShape;
@@ -105,57 +94,14 @@ TGLManip& TGLManip::operator=(const TGLManip& gm)
          fgWhite[i]=gm.fgWhite[i];
          fgGrey[i]=gm.fgGrey[i];
       }
-   } 
+   }
    return *this;
 }
 
 //______________________________________________________________________________
 TGLManip::~TGLManip()
 {
-   // Destroy manipulator object
-}
-
-//______________________________________________________________________________
-Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox)
-{
-   // Select active widget (axis component) of the widget
-   UInt_t oldSelection = fSelectedWidget;
-
-   TGLRect viewportRect = rect;
-   camera.WindowToViewport(viewportRect);
-   camera.Apply(sceneBox, &viewportRect);
-
-   // Perform selection (hit testing) to find selected widget (component)
-   // of the manipulator - stored in fSelectedWidget
-   static UInt_t selectBuffer[4*4];
-   glSelectBuffer(4*4, &selectBuffer[0]);
-   glRenderMode(GL_SELECT);
-   glInitNames();
-   Draw(camera);
-   Int_t hits = glRenderMode(GL_RENDER);
-   TGLUtil::CheckError("TGLManip::Select");
-   if (hits < 0) {
-      Error("TGLManip::Select", "selection buffer overflow");
-      return kFALSE;
-   }
-
-   if (hits > 0) {
-      fSelectedWidget = 0;
-      UInt_t minDepth = kMaxUInt;
-      for (Int_t i = 0; i < hits; i++) {
-         // Skip selection on unnamed hits
-         if (selectBuffer[i * 4] == 0) {
-            continue;
-         }
-         if (selectBuffer[i * 4 + 1] < minDepth) {
-            fSelectedWidget = selectBuffer[i * 4 + 3];
-            minDepth = selectBuffer[i * 4 + 1];
-         }
-      }
-   } else {
-      fSelectedWidget = 0;
-   }
-   return (fSelectedWidget != oldSelection);
+   // Destroy manipulator object.
 }
 
 //______________________________________________________________________________
@@ -185,27 +131,24 @@ Bool_t TGLManip::HandleButton(const Event_t & event, const TGLCamera & /*camera*
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
+Bool_t TGLManip::HandleMotion(const Event_t        & /*event*/,
+                              const TGLCamera      & /*camera*/)
 {
    // Handle a mouse button event - return kTRUE if widget selection change
    // kFALSE otherwise
 
-   TGLRect selectRect(event.fX, event.fY, 3, 3);
-
-   // TODO: Again very ugly cross thread gVirtual GL call requires passing viewer
-   //
-   if (gGLManager)
-      return gGLManager->SelectManip(this, &camera, &selectRect, &sceneBox);
-      
-   return gVirtualGL->SelectManip(this, &camera, &selectRect, &sceneBox);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,
-                             Double_t & base, TGLVector3 axis[3]) const
+void TGLManip::CalcDrawScale(const TGLBoundingBox & box,
+                             const TGLCamera      & camera,
+                             Double_t             & base,
+                             TGLVector3           axis[3]) const
 {
-   // Calculates base and axis scale factor (in world units) for drawing manipulators with
-   // reasonable size range in current camera.
+   // Calculates base and axis scale factor (in world units) for
+   // drawing manipulators with reasonable size range in current
+   // camera.
 
    // Calculate a base scale
    base = box.Extents().Mag() / 100.0;

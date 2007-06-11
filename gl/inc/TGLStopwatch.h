@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -23,6 +23,12 @@
 // Stopwatch object for timing GL work. We do not use the TStopwatch as //
 // we need to perform GL flushing to get accurate times + we record     //
 // timing overheads here.                                               //
+//
+// MT: Bypassed all of the overhead stuff. It does not seem reasonable
+// anyway. Besides it was being initialized outside of a valid GL
+// context and coused random crashes (especially on 64-bit machines with
+// nvidia cards).
+//
 //////////////////////////////////////////////////////////////////////////
 
 class TGLStopwatch

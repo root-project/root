@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.h $
+// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -22,7 +22,7 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////
-class TGLFaceSet : public TGLLogicalShape 
+class TGLFaceSet : public TGLLogicalShape
 {
 private:
    std::vector<Double_t> fVertices;
@@ -31,14 +31,12 @@ private:
    UInt_t                fNbPols;
 
 protected:
-   void DirectDraw(const TGLDrawFlags & flags) const;  
-   
+   void DirectDraw(TGLRnrCtx & rnrCtx) const;
+
 public:
    TGLFaceSet(const TBuffer3D & buffer);
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
-
-   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
 private:
    void GLDrawPolys()const;

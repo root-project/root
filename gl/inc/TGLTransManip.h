@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLTransManip.h $
+// @(#)root/gl:$Name:  $:$Id: TGLTransManip.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
    virtual ~TGLTransManip();
 
    virtual void   Draw(const TGLCamera & camera) const;
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
 
    ClassDef(TGLTransManip,0) // GL translation manipulator widget
 };

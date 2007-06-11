@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.h,v 1.5 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TGLRotateManip : public TGLManip
 private:
    // Active ring interaction - set on mouse down
    // Shallow ring interaction
-   // Where the ring plane forms a shallow angle to the eye direction - 
+   // Where the ring plane forms a shallow angle to the eye direction -
    // a different interaction is required in these cases - see HandleMotion()
    Bool_t     fShallowRing;         //! does active ring form shallow angle to eye?
    Bool_t     fShallowFront;        //! front or back of the active shallow ring?
@@ -59,7 +59,7 @@ public:
 
    virtual void   Draw(const TGLCamera & camera) const;
    virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
 
    ClassDef(TGLRotateManip,0) // GL rotation manipulator widget
 };

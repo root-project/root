@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *

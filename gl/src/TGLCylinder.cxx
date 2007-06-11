@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.4 2007/04/24 18:51:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.5 2007/04/24 18:55:40 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -11,7 +11,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TGLCylinder.h"
-#include "TGLDrawFlags.h"
+#include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
@@ -19,7 +19,7 @@
 #include "TMath.h"
 
 // For debug tracing
-#include "TClass.h" 
+#include "TClass.h"
 #include "TError.h"
 
 TGLVector3 gLowNormalDefault(0., 0., -1.);
@@ -28,7 +28,7 @@ TGLVector3 gHighNormalDefault(0., 0., 1.);
 class TGLMesh {
 protected:
    // active LOD (level of detail) - quality
-   UInt_t     fLOD;    
+   UInt_t     fLOD;
 
    Double_t fRmin1, fRmax1, fRmin2, fRmax2;
    Double_t fDz;
@@ -53,12 +53,12 @@ public:
 class TubeSegMesh : public TGLMesh {
 private:
    // Allocate space for highest quality (LOD) meshes
-   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 8 + 8];
-   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 8 + 8];
+   TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 8 + 8];
+   TGLVector3 fNorm[(TGLRnrCtx::kLODHigh + 1) * 8 + 8];
 
 public:
    TubeSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
-               Double_t phi1, Double_t phi2, const TGLVector3 &l = gLowNormalDefault, 
+               Double_t phi1, Double_t phi2, const TGLVector3 &l = gLowNormalDefault,
                const TGLVector3 &h = gHighNormalDefault);
 
    void Draw() const;
@@ -69,8 +69,8 @@ public:
 class TubeMesh : public TGLMesh {
 private:
    // Allocate space for highest quality (LOD) meshes
-   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 8];
-   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 8];
+   TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 8];
+   TGLVector3 fNorm[(TGLRnrCtx::kLODHigh + 1) * 8];
 
 public:
    TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
@@ -83,8 +83,8 @@ public:
 class TCylinderMesh : public TGLMesh {
 private:
    // Allocate space for highest quality (LOD) meshes
-   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 4 + 2];
-   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 4 + 2];
+   TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 4 + 2];
+   TGLVector3 fNorm[(TGLRnrCtx::kLODHigh + 1) * 4 + 2];
 
 public:
    TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
@@ -97,8 +97,8 @@ public:
 class TCylinderSegMesh : public TGLMesh {
 private:
    // Allocate space for highest quality (LOD) meshes
-   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 4 + 10];
-   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 4 + 10];
+   TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 4 + 10];
+   TGLVector3 fNorm[(TGLRnrCtx::kLODHigh + 1) * 4 + 10];
 
 public:
    TCylinderSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz, Double_t phi1, Double_t phi2,
@@ -109,7 +109,7 @@ public:
 
 //______________________________________________________________________________
 TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
-                 const TGLVector3 &l, const TGLVector3 &h) : 
+                 const TGLVector3 &l, const TGLVector3 &h) :
    fLOD(LOD),
    fRmin1(r1), fRmax1(r2), fRmin2(r3), fRmax2(r4),
    fDz(dz), fNlow(l), fNhigh(h)
@@ -507,15 +507,15 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
    fR4 = buffer.fRadiusOuter;
    fDz = buffer.fHalfLength;
 
-   fLowPlaneNorm = gLowNormalDefault; 
-   fHighPlaneNorm = gHighNormalDefault; 
+   fLowPlaneNorm = gLowNormalDefault;
+   fHighPlaneNorm = gHighNormalDefault;
 
    switch (buffer.Type()) {
       case TBuffer3DTypes::kTube:
          fSegMesh = kFALSE;
          break;
-   case TBuffer3DTypes::kTubeSeg:
-   case TBuffer3DTypes::kCutTube:
+      case TBuffer3DTypes::kTubeSeg:
+      case TBuffer3DTypes::kCutTube:
          fSegMesh = kTRUE;
 
          const TBuffer3DTubeSeg * segBuffer = dynamic_cast<const TBuffer3DTubeSeg *>(&buffer);
@@ -552,26 +552,66 @@ TGLCylinder::~TGLCylinder()
 }
 
 //______________________________________________________________________________
-void TGLCylinder::DirectDraw(const TGLDrawFlags & flags) const
+UInt_t TGLCylinder::DLOffset(Short_t lod) const
+{
+   // Return display-list offset for given LOD.
+   // Calculation based on what is done in virtual QuantizeShapeLOD below.
+
+   UInt_t  off = 0;
+   if      (lod >= 100) off = 0;
+   else if (lod <  10)  off = lod / 2;
+   else                 off = lod / 10 + 4;
+   return off;
+}
+
+//______________________________________________________________________________
+Short_t TGLCylinder::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
+{
+   // Factor in scene/viewer LOD and quantize.
+
+   Int_t lod = ((Int_t)shapeLOD * (Int_t)combiLOD) / 100;
+
+   if (lod >= 100)
+   {
+      lod = 100;
+   }
+   else if (lod > 10)
+   {  // Round LOD above 10 to nearest 10
+      Double_t quant = 0.1 * ((static_cast<Double_t>(lod)) + 0.5);
+      lod            = 10  *   static_cast<Int_t>(quant);
+   }
+   else
+   {  // Round LOD below 10 to nearest 2
+      Double_t quant = 0.5 * ((static_cast<Double_t>(lod)) + 0.5);
+      lod            = 2   *   static_cast<Int_t>(quant);
+   }
+   return static_cast<Short_t>(lod);
+}
+
+//______________________________________________________________________________
+void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
+      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d",
+           this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    // As we are now support display list caching we can create, draw and
-   // delete mesh parts of suitible LOD (quality) here - it will be cached 
-   // into a display list by TGLDisplayListCache/TGLDrawable base,
+   // delete mesh parts of suitible LOD (quality) here - it will be cached
+   // into a display list by base-class TGLLogicalShape::Draw(),
    // against our id and the LOD value. So this will only occur once
    // for a certain cylinder/LOD combination
    std::vector<TGLMesh *> meshParts;
 
    // Create mesh parts
    if (!fSegMesh) {
-      meshParts.push_back(new TubeMesh(flags.LOD(), fR1, fR2, fR3, fR4, fDz, fLowPlaneNorm, fHighPlaneNorm));
+      meshParts.push_back(new TubeMesh   (rnrCtx.ShapeLOD(), fR1, fR2, fR3, fR4,
+                                          fDz, fLowPlaneNorm, fHighPlaneNorm));
    } else {
-      meshParts.push_back(new TubeSegMesh(flags.LOD(), fR1, fR2, fR3, fR4, fDz, fPhi1,
-                                          fPhi2, fLowPlaneNorm, fHighPlaneNorm));
+      meshParts.push_back(new TubeSegMesh(rnrCtx.ShapeLOD(), fR1, fR2, fR3, fR4,
+                                          fDz, fPhi1, fPhi2,
+                                          fLowPlaneNorm, fHighPlaneNorm));
    }
 
    // Draw mesh parts

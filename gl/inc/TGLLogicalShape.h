@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.14 2006/05/23 04:47:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.2 2007/05/10 11:17:47 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -12,97 +12,100 @@
 #ifndef ROOT_TGLLogicalShape
 #define ROOT_TGLLogicalShape
 
-#ifndef ROOT_TGLDrawable
-#include "TGLDrawable.h"
+#ifndef ROOT_TGLBoundingBox
+#include "TGLBoundingBox.h"
 #endif
 
 class TBuffer3D;
 class TObject;
 class TContextMenu;
 
+class TGLPhysicalShape;
+class TGLRnrCtx;
+class TGLSelectRecord;
 class TGLViewer;
+class TGLSceneBase;
 class TGLScene;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLLogicalShape                                                      //
-//                                                                      //
-// Abstract logical shape - a GL 'drawable' - base for all shapes -     //
-// faceset sphere etc. Logical shapes are a unique piece of geometry,   //
-// described in it's local frame - e.g if we have three spheres in :    //
-// Sphere A - Radius r1, center v1                                      //
-// Sphere B - Radius r2, center v2                                      //
-// Sphere C - Radius r1, center v3                                      //
-//                                                                      //
-// Spheres A and C can share a common logical sphere of radius r1 - and //
-// place them with two physicals with translations of v1 & v2.  Sphere B//
-// requires a different logical (radius r2), placed with physical with  //
-// translation v2.                                                      //
-//                                                                      //
-// Physical shapes know about and can share logicals. Logicals do not   //
-// about (aside from reference counting) physicals or share them.       //
-//                                                                      //
-// This sharing of logical shapes greatly reduces memory consumption and//
-// scene (re)build times in typical detector geometries which have many //
-// repeated objects placements.                                         //
-//                                                                      //
-// TGLLogicalShapes have reference counting, performed by the client    //
-// physical shapes which are using it.                                  //
-//                                                                      //
-// See base/src/TVirtualViewer3D for description of common external 3D  //
-// viewer architecture and how external viewer clients use it.          //
-//////////////////////////////////////////////////////////////////////////
 
-class TGLLogicalShape : public TGLDrawable
+class TGLLogicalShape
 {
-private:
-   // Fields
-   mutable UInt_t  fRef;         //! physical instance ref counting
+   friend class TGLScene;
+
+public:
+   enum ELODAxes  { kLODAxesNone = 0,  // LOD will be set to high or pixel.
+                    kLODAxesX    = 1 << 0,
+                    kLODAxesY    = 1 << 1,
+                    kLODAxesZ    = 1 << 2,
+                    kLODAxesAll  = kLODAxesX | kLODAxesY | kLODAxesZ
+                  };
 
 protected:
-   mutable Bool_t  fRefStrong;   //! Strong ref (delete on 0 ref)
-   TObject        *fExternalObj;
+   mutable UInt_t             fRef;           //! physical instance ref counting
+   mutable TGLPhysicalShape * fFirstPhysical; //! first replica
+
+   TObject           *fExternalObj; //! Also plays the role of ID.
+   TGLBoundingBox     fBoundingBox; //! Shape's bounding box.
+   mutable TGLRnrCtx *fRnrCtx;      //! rnr-context where display-lists were created - use GL-ctx available via fScene (when done)
+   mutable TGLScene  *fScene;       //! scene where object is stored (can be zero!)
+   mutable UInt_t     fDLBase;      //! display-list id base
+   mutable UShort_t   fDLValid;     //! display-list validity bit-field
+   mutable Bool_t     fDLCache;     //! use display list caching
+   mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref)
 
    TGLLogicalShape(const TGLLogicalShape&);
    TGLLogicalShape& operator=(const TGLLogicalShape&);
 
-   // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
 
 public:
-   TGLLogicalShape(ULong_t ID);
+   TGLLogicalShape();
+   TGLLogicalShape(TObject* obj);
    TGLLogicalShape(const TBuffer3D & buffer);
    virtual ~TGLLogicalShape();
 
-   void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
-
-   // Physical shape ref counting
-   void   AddRef() const                 { ++fRef; }
-   Bool_t SubRef() const;
-   UInt_t Ref()    const                 { return fRef; }
+   // Physical shape reference-counting, replica management
+   UInt_t Ref() const { return fRef; }
+   void   AddRef(TGLPhysicalShape* phys) const;
+   void   SubRef(TGLPhysicalShape* phys) const;
    void   StrongRef(Bool_t strong) const { fRefStrong = strong; }
-   TObject *GetExternal()const{return fExternalObj;}
+   void   DestroyPhysicals();
+   UInt_t UnrefFirstPhysical();
+
+   const TGLPhysicalShape * GetFirstPhysical() const { return fFirstPhysical; }
+
+   TObject  * ID()          const { return fExternalObj; }
+   TObject  * GetExternal() const { return fExternalObj; }
+   TGLScene * GetScene()    const { return fScene; }
+
+   const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
+   virtual void           UpdateBoundingBox() {}
+   void                   UpdateBoundingBoxesOfPhysicals();
+
+   // Display List Caching
+           Bool_t SetDLCache(Bool_t cached);
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
+   virtual Int_t  DLCacheSize()             const { return 1; }
+   virtual UInt_t DLOffset(Short_t /*lod*/) const { return 0; }
+   virtual void   DLCacheClear();
+   virtual void   DLCachePurge();
+
+   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
+   virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
+   virtual void     Draw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
 
    // Override in sub-classes that do direct object rendering (e.g. TGLObject).
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
-   // Override in sub-classes that support secondary selection (e.g. TPointSet3DGL). 
+   // Override in sub-classes that support secondary selection (e.g. TPointSet3DGL).
    virtual Bool_t SupportsSecondarySelect() const { return kFALSE; }
-   virtual void   ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
+   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+
+   void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    ClassDef(TGLLogicalShape,0) // a logical (non-placed, local frame) drawable object
 };
 
-//______________________________________________________________________________
-inline Bool_t TGLLogicalShape::SubRef() const
-{
-   if (--fRef == 0) {
-      if (fRefStrong) {
-         delete this;
-      }
-      return kTRUE;
-   }
-   return kFALSE;
-}
 
 #endif // ROOT_TGLLogicalShape

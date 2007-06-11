@@ -33,7 +33,7 @@ private:
    TGL2DArray<TGLVector3>                         fAverageNormals;
 
    mutable TString                 fObjectInfo;
-   
+
    struct Projection_t {
       UChar_t fRGBA[4];
       std::vector<TGLVertex3> fVertices;
@@ -48,7 +48,7 @@ private:
 
    mutable TGLLevelPalette         fPalette;
    mutable std::vector<Double_t>   fColorLevels;
-   Rgl::Range_t                    fMinMaxVal;   
+   Rgl::Range_t                    fMinMaxVal;
 
    Bool_t                          fSectionPass;
    mutable Bool_t                  fUpdateTexMap;

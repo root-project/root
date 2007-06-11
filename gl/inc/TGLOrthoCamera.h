@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.13 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -68,7 +68,7 @@ private:
 
 public:
 
-   // TODO: Convert this so define by pair of vectors as per perspective 
+   // TODO: Convert this so define by pair of vectors as per perspective
    // camera
    TGLOrthoCamera();
    TGLOrthoCamera(EType type);
@@ -80,6 +80,7 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
+
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
    virtual void   Markup (TGLCameraMarkupStyle* ms) const;
 

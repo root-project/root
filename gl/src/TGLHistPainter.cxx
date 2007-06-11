@@ -53,7 +53,7 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
 //______________________________________________________________________________
 Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //Selects plot or axis. 
+   //Selects plot or axis.
    //9999 is the magic number, ROOT's classes use in DistancetoPrimitive.
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->DistancetoPrimitive(px, py) : 9999;
@@ -83,8 +83,8 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGLHistPainter::DrawPanel()
 {
-   //Default implementation is OK 
-   //This function is called from a context menu 
+   //Default implementation is OK
+   //This function is called from a context menu
    //after right click on a plot's area. Opens window
    //("panel") with several controls.
    if (fDefaultPainter.get())
@@ -95,7 +95,7 @@ void TGLHistPainter::DrawPanel()
 void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    //Execute event.
-   //Events are: mouse events in a plot's area, 
+   //Events are: mouse events in a plot's area,
    //key presses (while mouse cursor is in plot's area).
    //"Event execution" means one of the following actions:
    //1. Rotation.
@@ -112,7 +112,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       const Int_t glContext = gPad->GetGLDevice();
 
       if (glContext == -1) {
-         Error("ExecuteEvent", 
+         Error("ExecuteEvent",
                "Attempt to use TGLHistPainter, while the current pad (gPad) does not support gl");
          return;
       } else
@@ -142,7 +142,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
          break;
       case kButton1Motion:
-         //Rotation invalidates "selection buffer" 
+         //Rotation invalidates "selection buffer"
          // - (color-to-object map, previously read from gl-buffer).
          fGLPainter->InvalidateSelection();
          if (fGLPainter->CutAxisSelected())
@@ -192,7 +192,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          } else if (py == kKey_p || py == kKey_P || py == kKey_S || py == kKey_s
                     || py == kKey_c || py == kKey_C || py == kKey_x || py == kKey_X
                     || py == kKey_y || py == kKey_Y || py == kKey_z || py == kKey_Z
-                    || py == kKey_w || py == kKey_W || py == kKey_l || py == kKey_L) 
+                    || py == kKey_w || py == kKey_W || py == kKey_l || py == kKey_L)
          {
             fGLPainter->ProcessEvent(event, px, py);
             gGLManager->PaintSingleObject(fGLPainter.get());
@@ -207,7 +207,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TGLHistPainter::FitPanel()
 {
    //Default implementation is OK.
-   //This function is called from a context menu 
+   //This function is called from a context menu
    //after right click on a plot's area. Opens window
    //("panel") with several controls.
    if (fDefaultPainter.get())
@@ -234,7 +234,7 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
    //For box info is: bin numbers (i, j, k), bin content.
    static char *errMsg = "TGLHistPainter::GetObjectInfo: Error in a hist painter\n";
    if (fPlotType == kGLDefaultPlot)
-      return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py) 
+      return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
                                    : errMsg;
    else
       return gGLManager->GetPlotInfo(fGLPainter.get(), px, py);
@@ -254,7 +254,7 @@ Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
    //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
-   
+
    return kFALSE;
 }
 
@@ -265,7 +265,7 @@ Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
    //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
-   
+
    return kFALSE;
 }
 
@@ -274,7 +274,7 @@ void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
    //Paint statistics.
    //This does not work on windows.
-   if (fDefaultPainter.get()) 
+   if (fDefaultPainter.get())
       fDefaultPainter->PaintStat(dostat, fit);
 }
 
@@ -284,7 +284,7 @@ void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
    // Process message.
    if (!std::strcmp(m, "SetF3"))
       fF3 = (TF3 *)o;
-   
+
    if (fDefaultPainter.get())
       fDefaultPainter->ProcessMessage(m, o);
 }
@@ -350,7 +350,7 @@ void TGLHistPainter::Paint(Option_t *o)
       CreatePainter(ParsePaintOption(option), option);
 
    if (fPlotType == kGLDefaultPlot) {
-      //In case of default plot pad 
+      //In case of default plot pad
       //should not copy gl-buffer (it will be simply black)
       gPad->SetCopyGLDevice(kFALSE);
 
@@ -365,7 +365,7 @@ void TGLHistPainter::Paint(Option_t *o)
          gPad->SetCopyGLDevice(kTRUE);
          fGLPainter->SetGLContext(glContext);
          if (gPad->GetFrameFillColor() != kWhite)
-            fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));  
+            fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));
          fGLPainter->SetPadColor(gROOT->GetColor(gPad->GetFillColor()));
          if (fGLPainter->InitGeometry())
             gGLManager->PaintSingleObject(fGLPainter.get());
@@ -374,12 +374,12 @@ void TGLHistPainter::Paint(Option_t *o)
 }
 
 //______________________________________________________________________________
-TGLHistPainter::PlotOption_t 
+TGLHistPainter::PlotOption_t
 TGLHistPainter::ParsePaintOption(const TString &option)const
 {
    //In principle, we can have several conflicting options: "lego surf pol sph",
    //but only one will be selected, which one - depends on parsing order in this function.
-   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian, kFALSE, kFALSE, gPad->GetLogx(), 
+   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian, kFALSE, kFALSE, gPad->GetLogx(),
                                 gPad->GetLogy(), gPad->GetLogz()};
    //Check coordinate system type.
    if (option.Index("pol") != kNPOS)

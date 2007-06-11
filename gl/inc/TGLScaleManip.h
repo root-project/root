@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.h,v 1.5 2006/01/26 16:57:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 //                                                                      //
 // Scale manipulator - attaches to physical shape and draws local axes  //
 // widgets with box heads. User can mouse over (turns yellow) and L     //
-// click/drag to scale along this axis.                                 // 
+// click/drag to scale along this axis.                                 //
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
 //////////////////////////////////////////////////////////////////////////
 
@@ -40,10 +40,10 @@ public:
    TGLScaleManip();
    TGLScaleManip(TGLPhysicalShape * shape);
    virtual ~TGLScaleManip();
-   
-   virtual void   Draw(const TGLCamera & camera) const; 
+
+   virtual void   Draw(const TGLCamera & camera) const;
    virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
 
    ClassDef(TGLScaleManip,0) // GL scaling manipulator widget
 };

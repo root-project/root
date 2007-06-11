@@ -1,4 +1,4 @@
-/* $Id: gl2ps.c,v 1.213 2005/06/23 07:04:59 geuzaine Exp $ */
+/* $Id: gl2ps.c,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $ */
 /*
  * GL2PS, an OpenGL to PostScript Printing Library
  * Copyright (C) 1999-2005 Christophe Geuzaine <geuz@geuz.org>

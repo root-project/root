@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -33,7 +33,7 @@ private:
 
 protected:
    TGLQuadric(const TGLQuadric& glq) : fQuad(glq.fQuad) { }
-   TGLQuadric& operator=(const TGLQuadric& glq) 
+   TGLQuadric& operator=(const TGLQuadric& glq)
      { if(this!=&glq) fQuad=glq.fQuad; return *this; }
 
 public:

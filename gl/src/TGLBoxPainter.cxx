@@ -140,7 +140,7 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
 void TGLBoxPainter::AddOption(const TString &option)
 {
    // Box1 == spheres.
-   
+
    const Ssiz_t boxPos = option.Index("box");//"box" _already_ _exists_ in a string.
    if (boxPos + 3 < option.Length() && isdigit(option[boxPos + 3]))
       option[boxPos + 3] - '0' == 1 ? fType = kBox1 : fType = kBox;
@@ -218,7 +218,7 @@ void TGLBoxPainter::DrawPlot()const
 
    const Int_t addI = frontPoint == 2 || frontPoint == 1 ? 1 : (iInit = nX - 1, irInit = fCoord->GetLastXBin(), -1);
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fCoord->GetLastYBin(), -1);
-   const Int_t addK = fBackBox.Get2DBox()[frontPoint + 4].Y() < fBackBox.Get2DBox()[frontPoint].Y() ? 1 
+   const Int_t addK = fBackBox.Get2DBox()[frontPoint + 4].Y() < fBackBox.Get2DBox()[frontPoint].Y() ? 1
                      : (kInit = nZ - 1, krInit = fCoord->GetLastZBin(),-1);
    const Double_t xScale = fCoord->GetXScale();
    const Double_t yScale = fCoord->GetYScale();
@@ -299,7 +299,7 @@ void TGLBoxPainter::DrawPlot()const
                Rgl::DrawBoxFront(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
             }
          }
-      }  
+      }
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
@@ -315,7 +315,7 @@ void TGLBoxPainter::SetPlotColor()const
    if (fHist->GetFillColor() != kWhite)
       if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
          c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
-   
+
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
@@ -356,7 +356,7 @@ void TGLBoxPainter::DrawSectionXOY()const
 Bool_t TGLBoxPainter::HasSections()const
 {
    // Check, if any section exists.
-   
+
    return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos> fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }

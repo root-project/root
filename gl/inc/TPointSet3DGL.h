@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.4 2006/05/09 19:08:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -17,13 +17,14 @@
 #include "TGLObject.h"
 #endif
 
+class TGLRnrCtx;
 
 class TPointSet3DGL : public TGLObject
 {
 protected:
-   virtual void DirectDraw(const TGLDrawFlags & flags) const;
-   void RenderPoints(const TGLDrawFlags & flags) const;
-   void RenderCrosses(const TGLDrawFlags & flags) const;
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void RenderPoints (TGLRnrCtx & rnrCtx) const;
+   void RenderCrosses(TGLRnrCtx & rnrCtx) const;
 
 public:
    TPointSet3DGL() : TGLObject() {}
@@ -33,9 +34,12 @@ public:
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
-   virtual Bool_t ShouldCache(const TGLDrawFlags & flags) const;
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
+
+   virtual void   Draw(TGLRnrCtx & rnrCtx) const;
+
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void   ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
+   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
    ClassDef(TPointSet3DGL,1)  // GL renderer for TPointSet3D
 };

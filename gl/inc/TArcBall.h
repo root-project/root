@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.9 2005/11/29 09:25:51 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    {
       return fTransform;
    }
-   
+
    ClassDef(TArcBall,0) //ArcBall manipulator
 };
 

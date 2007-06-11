@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TProof.h,v 1.88 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #ifndef ROOT_TGLPShapeObjEditor
@@ -14,6 +14,8 @@
 #include "TGLUtil.h"
 #endif
 
+#include "TGLPShapeRef.h"
+
 class TGLPShapeObj;
 class TGLayoutHints;
 class TGCheckButton;
@@ -26,21 +28,21 @@ class TGTabElement;
 class TGButton;
 class TGLViewer;
 class TGTab;
-class TGLMatView;
 
+class TGLWidget;
 
-class TGLPShapeObjEditor : public TGedFrame {
+class TGLPShapeObjEditor : public TGedFrame,
+                           public TGLPShapeRef
+{
 
 private:
-   enum ELightMode{kDiffuse, kAmbient, kSpecular, kEmission, kLTot};
-   ELightMode     fLMode;
+   enum ELightMode   { kDiffuse, kAmbient, kSpecular, kEmission, kLTot };
+   ELightMode        fLMode;
 
    TGLayoutHints     fLb;  //button layout
    TGLayoutHints     fLe;  //num entry layout
    TGLayoutHints     fLl;  //label layout
    TGLayoutHints     fLs;  //slider layout
-
-   Bool_t            fIsActive;          //editor active
 
    TGCompositeFrame *fGeoFrame;          //orientation, clipping
 
@@ -50,7 +52,7 @@ private:
 
    // "Color" tab's controls
    TGCompositeFrame *fColorFrame;        //top frame for color componet control
-   TGLMatView       *fMatView;           //inner structure to handle sphere GL window
+   TGLWidget        *fMatView;           //inner structure to handle sphere GL window
 
    TGButton         *fLightTypes[4];     //light type
 
@@ -80,12 +82,15 @@ public:
                       Pixel_t back = GetDefaultFrameBackground());
    ~TGLPShapeObjEditor();
 
+   // Virtuals from TGLPShapeRef
+   virtual void SetPShape(TGLPhysicalShape * shape);
+   virtual void PShapeModified();
+
    virtual void SetModel(TObject* obj);
 
    // geometry
    void SetCenter(const Double_t *center);
    void SetScale(const Double_t *scale);
-   void GeoDisable();
    void DoGeoButton();
    void GetObjectData(Double_t *shift, Double_t *scale);
    void GeoValueSet(Long_t unusedVal);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.3 2006/05/09 19:08:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TGLObject
 #define ROOT_TGLObject
@@ -20,8 +19,8 @@
 class TGLObject : public TGLLogicalShape
 {
 protected:
-   // Abstract method from TGLDrawable:
-   // virtual void DirectDraw(const TGLDrawFlags & flags) const;
+   // Abstract method from TGLLogicalShape:
+   // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;
 
    Bool_t SetModelCheckClass(TObject* obj, TClass* cls);
 
@@ -34,10 +33,14 @@ public:
    TGLObject() : TGLLogicalShape(0) {}
    virtual ~TGLObject() {}
 
-   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
+   // Kept from TGLLogicalShape
+   // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
+   // Changed from TGLLogicalShape
    virtual Bool_t KeepDuringSmartRefresh() const { return kTRUE; }
+   virtual void   UpdateBoundingBox();
 
+   // TGLObject virtuals
    virtual Bool_t SetModel(TObject* obj) = 0;
    virtual void   SetBBox() = 0;
 

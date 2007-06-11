@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.6 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.2 2007/05/10 11:17:46 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -11,94 +11,69 @@
 
 #include "TGLClip.h"
 #include "TGLIncludes.h"
+#include "TGLRnrCtx.h"
+#include "TGLManipSet.h"
 
 #include "TGLFaceSet.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
+namespace
 {
-   // Helper function to construct a TGLLogicalShape box based on
-   // supplied half lengths
 
-   //    y
-   //    |
-   //    |
-   //    |________x
-   //   /  3-------2
-   //  /  /|      /|
-   // z  7-------6 |
-   //    | 0-----|-1
-   //    |/      |/
-   //    4-------5
-   //
-   // Construct box of points / segments / polys
+class TGLClipPlaneLogical : public TGLLogicalShape
+{
+protected:
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const
+   {
+      glBegin(rnrCtx.IsDrawPassFilled() ? GL_QUADS : GL_LINE_LOOP);
+      glNormal3d (0.0, 0.0, 1.0);
+      glVertex3dv(fBoundingBox[4].CArr());
+      glVertex3dv(fBoundingBox[7].CArr());
+      glVertex3dv(fBoundingBox[6].CArr());
+      glVertex3dv(fBoundingBox[5].CArr());
+      glEnd();
+   }
 
-   TBuffer3D buff(TBuffer3DTypes::kGeneric, 8, 3*8, 12, 3*12, 6, 6*6);
+public:
+   TGLClipPlaneLogical() : TGLLogicalShape() {}
+   virtual ~TGLClipPlaneLogical() {}
 
-   buff.fPnts[ 0] = -halfLengths.X(); buff.fPnts[ 1] = -halfLengths.Y(); buff.fPnts[ 2] = -halfLengths.Z(); // 0
-   buff.fPnts[ 3] =  halfLengths.X(); buff.fPnts[ 4] = -halfLengths.Y(); buff.fPnts[ 5] = -halfLengths.Z(); // 1
-   buff.fPnts[ 6] =  halfLengths.X(); buff.fPnts[ 7] =  halfLengths.Y(); buff.fPnts[ 8] = -halfLengths.Z(); // 2
-   buff.fPnts[ 9] = -halfLengths.X(); buff.fPnts[10] =  halfLengths.Y(); buff.fPnts[11] = -halfLengths.Z(); // 3
+   void Resize(Double_t ext)
+   {
+      fBoundingBox.SetAligned(TGLVertex3(-ext, -ext, 0),
+                              TGLVertex3( ext,  ext, 0));
+      DLCacheClear();
+      UpdateBoundingBoxesOfPhysicals();
+   }
 
-   buff.fPnts[12] = -halfLengths.X(); buff.fPnts[13] = -halfLengths.Y(); buff.fPnts[14] =  halfLengths.Z(); // 4
-   buff.fPnts[15] =  halfLengths.X(); buff.fPnts[16] = -halfLengths.Y(); buff.fPnts[17] =  halfLengths.Z(); // 5
-   buff.fPnts[18] =  halfLengths.X(); buff.fPnts[19] =  halfLengths.Y(); buff.fPnts[20] =  halfLengths.Z(); // 6
-   buff.fPnts[21] = -halfLengths.X(); buff.fPnts[22] =  halfLengths.Y(); buff.fPnts[23] =  halfLengths.Z(); // 7
+};
 
-   buff.fSegs[ 0] = 1   ; buff.fSegs[ 1] = 0   ; buff.fSegs[ 2] = 1   ; // 0
-   buff.fSegs[ 3] = 1   ; buff.fSegs[ 4] = 1   ; buff.fSegs[ 5] = 2   ; // 1
-   buff.fSegs[ 6] = 1   ; buff.fSegs[ 7] = 2   ; buff.fSegs[ 8] = 3   ; // 2
-   buff.fSegs[ 9] = 1   ; buff.fSegs[10] = 3   ; buff.fSegs[11] = 0   ; // 3
-   buff.fSegs[12] = 1   ; buff.fSegs[13] = 4   ; buff.fSegs[14] = 5   ; // 4
-   buff.fSegs[15] = 1   ; buff.fSegs[16] = 5   ; buff.fSegs[17] = 6   ; // 5
-   buff.fSegs[18] = 1   ; buff.fSegs[19] = 6   ; buff.fSegs[20] = 7   ; // 6
-   buff.fSegs[21] = 1   ; buff.fSegs[22] = 7   ; buff.fSegs[23] = 4   ; // 7
-   buff.fSegs[24] = 1   ; buff.fSegs[25] = 0   ; buff.fSegs[26] = 4   ; // 8
-   buff.fSegs[27] = 1   ; buff.fSegs[28] = 1   ; buff.fSegs[29] = 5   ; // 9
-   buff.fSegs[30] = 1   ; buff.fSegs[31] = 2   ; buff.fSegs[32] = 6   ; // 10
-   buff.fSegs[33] = 1   ; buff.fSegs[34] = 3   ; buff.fSegs[35] = 7   ; // 11
 
-   buff.fPols[ 0] = 1   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ; // 0
-   buff.fPols[ 3] = 9   ; buff.fPols[ 4] = 4   ;  buff.fPols[ 5] = 8  ;
-   buff.fPols[ 6] = 1   ; buff.fPols[ 7] = 4   ;  buff.fPols[ 8] = 1  ; // 1
-   buff.fPols[ 9] = 10  ; buff.fPols[10] = 5   ;  buff.fPols[11] = 9  ;
-   buff.fPols[12] = 1   ; buff.fPols[13] = 4   ;  buff.fPols[14] = 2  ; // 2
-   buff.fPols[15] = 11  ; buff.fPols[16] = 6   ;  buff.fPols[17] = 10 ;
-   buff.fPols[18] = 1   ; buff.fPols[19] = 4   ;  buff.fPols[20] = 3  ; // 3
-   buff.fPols[21] = 8   ; buff.fPols[22] = 7   ;  buff.fPols[23] = 11 ;
-   buff.fPols[24] = 1   ; buff.fPols[25] = 4   ;  buff.fPols[26] = 0  ; // 4
-   buff.fPols[27] = 3   ; buff.fPols[28] = 2   ;  buff.fPols[29] = 1  ;
-   buff.fPols[30] = 1   ; buff.fPols[31] = 4   ;  buff.fPols[32] = 4  ; // 5
-   buff.fPols[33] = 5   ; buff.fPols[34] = 6   ;  buff.fPols[35] = 7  ;
+class TGLClipBoxLogical : public TGLLogicalShape
+{
+protected:
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const
+   {
+      glEnable(GL_NORMALIZE);
+      fBoundingBox.Draw(rnrCtx.IsDrawPassFilled());
+      glDisable(GL_NORMALIZE);
+   }
 
-   buff.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
-   return new TGLFaceSet(buff);
+public:
+   TGLClipBoxLogical() : TGLLogicalShape() {}
+   virtual ~TGLClipBoxLogical() {}
+
+   void Resize(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
+   {
+      fBoundingBox.SetAligned(lowVertex, highVertex);
+      DLCacheClear();
+      UpdateBoundingBoxesOfPhysicals();
+   }
+};
+
 }
 
-TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
-{
-   // Helper function to construct a TGLLogicalShape face (retangle)
-   // based on supplied width/depth
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric, 4, 3*4, 4, 3*4, 1, 6);
-
-   buff.fPnts[ 0] = -width; buff.fPnts[ 1] = -depth; buff.fPnts[ 2] = 0.0; // 0
-   buff.fPnts[ 3] =  width; buff.fPnts[ 4] = -depth; buff.fPnts[ 5] = 0.0; // 1
-   buff.fPnts[ 6] =  width; buff.fPnts[ 7] =  depth; buff.fPnts[ 8] = 0.0; // 2
-   buff.fPnts[ 9] = -width; buff.fPnts[10] =  depth; buff.fPnts[11] = 0.0; // 3
-
-   buff.fSegs[ 0] = 1   ; buff.fSegs[ 1] = 0   ; buff.fSegs[ 2] = 1   ; // 0
-   buff.fSegs[ 3] = 1   ; buff.fSegs[ 4] = 1   ; buff.fSegs[ 5] = 2   ; // 1
-   buff.fSegs[ 6] = 1   ; buff.fSegs[ 7] = 2   ; buff.fSegs[ 8] = 3   ; // 2
-   buff.fSegs[ 9] = 1   ; buff.fSegs[10] = 3   ; buff.fSegs[11] = 0   ; // 3
-
-   buff.fPols[ 0] = 1   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ; // 0
-   buff.fPols[ 3] = 1   ; buff.fPols[ 4] = 2   ;  buff.fPols[ 5] = 3  ;
-
-   buff.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
-   return new TGLFaceSet(buff);
-}
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -115,35 +90,34 @@ ClassImp(TGLClip)
 //______________________________________________________________________________
 TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) :
    TGLPhysicalShape(0, logical, transform, kTRUE, color),
-   fMode(kInside)
+   fMode      (kInside),
+   fTimeStamp (1)
 {
-   // Construct a physical clipping object, taking the 'logical' shape, a
-   // 'transform' matrix for placing this, and 'color'.
-   //
-   // Takes 'ownership' of logical and it will be destroyed when this is.
+   // Construct a stand-alone physical clipping object.
 
-   // Take strong reference - destroy logical when ref released in
-   // TGLPhysical::~TGLPhysical()
    logical.StrongRef(kTRUE);
 }
 
 //______________________________________________________________________________
 TGLClip::~TGLClip()
 {
-   // Destroy clip object
+   // Destroy clip object.
 }
 
 //______________________________________________________________________________
-void TGLClip::Draw(const TGLDrawFlags & flags) const
+void TGLClip::Draw(TGLRnrCtx & rnrCtx) const
 {
    // Draw out clipping object with blending and back + front filling.
    // Some clip objects are single face which we want to see both sides of.
+
    glDepthMask(GL_FALSE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDisable(GL_CULL_FACE);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   TGLPhysicalShape::Draw(flags);
+
+   TGLPhysicalShape::Draw(rnrCtx);
+
    glPolygonMode(GL_FRONT, GL_FILL);
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);
@@ -165,22 +139,25 @@ ClassImp(TGLClipPlane)
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
 //______________________________________________________________________________
-TGLClipPlane::TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents) :
-   TGLClip(*CreateLogicalFace(extents, extents), TGLMatrix(center), fgColor)
+TGLClipPlane::TGLClipPlane() :
+   TGLClip(* new TGLClipPlaneLogical, TGLMatrix(), fgColor)
 {
-   // Construct a clip plane object, based on supplied 'plane', with initial manipulation
-   // pivot at 'center', with drawn extents (in local x/y axes) of 'extents'
+   // Construct a clip plane object, based on supplied 'plane', with
+   // initial manipulation pivot at 'center', with drawn extents (in
+   // local x/y axes) of 'extents'
    //
-   // Plane can have center pivot translated in all directions, and rotated round
-   // center in X/Y axes , the in-plane axes. It cannot be scaled
+   // Plane can have center pivot translated in all directions, and
+   // rotated round center in X/Y axes , the in-plane axes. It cannot
+   // be scaled
    //
-   // Note theorectically a plane is of course infinite - however we want to draw
-   // the object in viewer - so we fake it with a single GL face (polygon) - extents
-   // defines the width/depth of this - should be several times scene extents.
-   //
+   // Note theorectically a plane is of course infinite - however we
+   // want to draw the object in viewer - so we fake it with a single
+   // GL face (polygon) - extents defines the width/depth of this -
+   // should be several times scene extents - see Setup().
+
    SetManip(EManip(kTranslateAll | kRotateX | kRotateY));
 
-   TGLPlane plane(norm, center);
+   TGLPlane plane(0.0, -1.0, 0.0, 0.0);
    Set(plane);
 }
 
@@ -191,32 +168,45 @@ TGLClipPlane::~TGLClipPlane()
 }
 
 //______________________________________________________________________________
+void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
+{
+   // Setup the clip object for scene encompassed by bbox.
+
+   Double_t extents = bbox.Extents().Mag();
+   TGLClipPlaneLogical* cpl = (TGLClipPlaneLogical*) GetLogical();
+   cpl->Resize(extents);
+   IncTimeStamp();
+}
+
+//______________________________________________________________________________
 void TGLClipPlane::Set(const TGLPlane & plane)
 {
    // Update clip plane object to follow passed 'plane' equation. Center pivot
    // is shifted to nearest point on new plane.
+
    TGLVertex3 oldCenter = BoundingBox().Center();
    TGLVertex3 newCenter = plane.NearestOn(oldCenter);
    SetTransform(TGLMatrix(newCenter, plane.Norm()));
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
 void TGLClipPlane::PlaneSet(TGLPlaneSet_t & set) const
 {
-   // Return set of planes (actually a single) describing this clip plane
+   // Return set of planes (actually a single) describing this clip plane.
 
-   // Get complete set from bounding box and discard all except first (top)
-   BoundingBox().PlaneSet(set);
    set.resize(1);
+   set[0] = BoundingBox().GetNearPlane();
+   set[0].Negate();
 }
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLClipBox                                                           //
-//                                                                      //
-// Concrete clip box object. Can be translated, rotated and scaled in   //
-// all (xyz) axes.                                                      //
-//                                                                      //
+//
+// TGLClipBox
+//
+// Concrete clip box object. Can be translated, rotated and scaled in
+// all (xyz) axes. By default inside of the box is clipped away.
+//
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLClipBox)
@@ -224,22 +214,278 @@ ClassImp(TGLClipBox)
 const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 
 //______________________________________________________________________________
-TGLClipBox::TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center) :
-   TGLClip(*CreateLogicalBox(halfLengths), TGLMatrix(center), fgColor)
+TGLClipBox::TGLClipBox() :
+   TGLClip(* new TGLClipBoxLogical, TGLMatrix(), fgColor)
 {
-   // Construct an (initially) axis aligned clip pbox object, extents 'halfLengths',
-   // centered on 'center' vertex.
+   // Construct an (initially) axis aligned clip pbox object, extents
+   // 'halfLengths', centered on 'center' vertex.
    // Box can be translated, rotated and scaled in all (xyz) local axes.
 }
+
 //______________________________________________________________________________
 TGLClipBox::~TGLClipBox()
 {
-   // Destroy clip box object
+   // Destroy clip box object.
+}
+
+//______________________________________________________________________________
+void TGLClipBox::Setup(const TGLBoundingBox & bbox)
+{
+   // Setup the clip object for scene encompassed by bbox.
+
+   TGLVector3 halfLengths = bbox.Extents() * 0.2501;
+   TGLVertex3 center      = bbox.Center() + halfLengths;
+
+   TGLClipBoxLogical* cbl = (TGLClipBoxLogical*) GetLogical();
+   cbl->Resize(center - halfLengths, center + halfLengths);
+
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
 void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const
 {
-   // Return set of 6 planes describing faces of the box
+   // Return set of 6 planes describing faces of the box but invert them
+   // so that they point inside of box.
+
    BoundingBox().PlaneSet(set);
+   TGLPlaneSet_i i = set.begin();
+   while (i != set.end()) {
+      i->Negate();
+      ++i;
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// TGLClipSet
+//
+// A collection of concrete TGLClip objects to be selected from.
+//
+//////////////////////////////////////////////////////////////////////////
+
+
+ClassImp(TGLClipSet)
+
+//______________________________________________________________________________
+TGLClipSet::TGLClipSet() :
+   fClipPlane   (new TGLClipPlane),
+   fClipBox     (new TGLClipBox),
+   fCurrentClip (0),
+   fShowClip    (kFALSE),
+   fShowManip   (kFALSE),
+   fManip       (new TGLManipSet)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TGLClipSet::~TGLClipSet()
+{
+   // Destructor.
+
+   delete fClipPlane;
+   delete fClipBox;
+   delete fManip;
+}
+//______________________________________________________________________
+Bool_t TGLClipSet::MouseEnter(UInt_t* record)
+{
+   // Mouse has enetered this element.
+   // Forward to ManipSet.
+
+   return fManip->MouseEnter(record);
+}
+
+Bool_t TGLClipSet::MouseStillInside(UInt_t* record)
+{
+   // A new overlay hit is about to be processed.
+   // Forward to ManipSet.
+
+   return fManip->MouseStillInside(record);
+}
+
+//______________________________________________________________________
+Bool_t TGLClipSet::Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record)
+{
+   // Handle overlay event.
+   // Forward to ManipSet.
+
+   return fManip->Handle(rnrCtx, event, record);
+}
+
+//______________________________________________________________________
+void TGLClipSet::MouseLeave()
+{
+   // Mouse has left the element.
+   // Forward to ManipSet.
+
+   return fManip->MouseLeave();
+}
+
+//______________________________________________________________________________
+void TGLClipSet::Render(TGLRnrCtx& rnrCtx)
+{
+   // Render clip-shape and manipulator.
+
+   if (fCurrentClip == 0) return;
+
+   rnrCtx.SetShapeLOD(TGLRnrCtx::kLODHigh);
+   rnrCtx.SetDrawPass(TGLRnrCtx::kPassFill);
+   if (fShowClip && ! rnrCtx.Selection())
+   {
+      fCurrentClip->Draw(rnrCtx);
+   }
+   if (fShowManip)
+   {
+      fManip->Render(rnrCtx);
+   }
+}
+
+//______________________________________________________________________________
+void TGLClipSet::FillPlaneSet(TGLPlaneSet_t & set) const
+{
+   // Forward request to fill the plane-set to the current clip.
+
+   if (fCurrentClip != 0)
+      fCurrentClip->PlaneSet(set);
+}
+
+//______________________________________________________________________________
+void TGLClipSet::SetupClips(const TGLBoundingBox & sceneBBox)
+{
+   // Setup clipping objects for current scene bounding box.
+
+   fClipPlane->Setup(sceneBBox);
+   fClipBox  ->Setup(sceneBBox);
+}
+
+//______________________________________________________________________________
+void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
+{
+   // Get state of clip object 'type' into data vector:
+   //
+   // 'type' requested - 'data' contents returned
+   // kClipPlane   4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane    6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+
+   switch (type)
+   {
+      case kClipNone:
+         break;
+
+      case kClipPlane:
+      {
+         TGLPlaneSet_t planes;
+         fClipPlane->PlaneSet(planes);
+         data[0] = planes[0].A();
+         data[1] = planes[0].B();
+         data[2] = planes[0].C();
+         data[3] = planes[0].D();
+         break;
+      }
+      case kClipBox:
+      {
+         const TGLBoundingBox & box = fClipBox->BoundingBox();
+         TGLVector3 ext = box.Extents();
+         data[0] = box.Center().X();
+         data[1] = box.Center().Y();
+         data[2] = box.Center().Z();
+         data[3] = box.Extents().X();
+         data[4] = box.Extents().Y();
+         data[5] = box.Extents().Z();
+         break;
+      }
+      default:
+         Error("TGLClipSet::GetClipState", "invalid clip type '%d'.", type);
+         break;
+   }
+}
+
+//______________________________________________________________________________
+void TGLClipSet::SetClipState(EClipType type, const Double_t data[6])
+{
+   // Set state of clip object 'type' into data vector:
+   //
+   // 'type' specified        'data' contents interpretation
+   // kClipNone               ignored
+   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+
+   switch (type) {
+      case kClipNone: {
+         break;
+      }
+      case kClipPlane: {
+         TGLPlane newPlane(-data[0], -data[1], -data[2], data[3]);
+         fClipPlane->Set(newPlane);
+         break;
+      }
+      case kClipBox: {
+         //TODO: Pull these inside TGLPhysicalShape
+         // Update clip box center
+         const TGLBoundingBox & currentBox = fClipBox->BoundingBox();
+         TGLVector3 shift(data[0] - currentBox.Center().X(),
+                          data[1] - currentBox.Center().Y(),
+                          data[2] - currentBox.Center().Z());
+         fClipBox->Translate(shift);
+         // Update clip box extents
+
+         TGLVector3 currentScale = fClipBox->GetScale();
+         TGLVector3 newScale(data[3] / currentBox.Extents().X() * currentScale.X(),
+                             data[4] / currentBox.Extents().Y() * currentScale.Y(),
+                             data[5] / currentBox.Extents().Z() * currentScale.Z());
+
+         fClipBox->Scale(newScale);
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+EClipType TGLClipSet::GetClipType() const
+{
+   // Get current type active in viewer - returns one of kClipNone
+   // kClipPlane or kClipBox.
+
+   EClipType type;
+   if (fCurrentClip == 0) {
+      type = kClipNone;
+   } else if (fCurrentClip == fClipPlane) {
+      type = kClipPlane;
+   } else if (fCurrentClip == fClipBox) {
+      type = kClipBox;
+   } else {
+      Error("TGLClipSet::GetClipType" , "Unknown clip type");
+      type = kClipNone;
+   }
+   return type;
+}
+
+//______________________________________________________________________________
+void TGLClipSet::SetClipType(EClipType type)
+{
+   // Set current clip active in viewer - 'type' is one of kClipNone
+   // kClipPlane or kClipBox.
+
+   switch (type) {
+      case kClipNone: {
+         fCurrentClip = 0;
+         break;
+      }
+      case kClipPlane: {
+         fCurrentClip = fClipPlane;
+         break;
+      }
+      case kClipBox: {
+         fCurrentClip = fClipBox;
+         break;
+      }
+      default: {
+         Error("TGLClipSet::SetClipType" , "Unknown clip type");
+         break;
+      }
+   }
+   fManip->SetPShape(fCurrentClip);
 }

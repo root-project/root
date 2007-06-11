@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.7 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -166,7 +166,8 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & camera)
+Bool_t TGLRotateManip::HandleButton(const Event_t   & event,
+                                    const TGLCamera & camera)
 {
    // Handle mouse button event over manipulator - returns kTRUE if redraw required
    // kFALSE otherwise.
@@ -211,7 +212,8 @@ Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & cam
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
+Bool_t TGLRotateManip::HandleMotion(const Event_t   & event,
+                                    const TGLCamera & camera)
 {
    // Handle mouse motion over manipulator - if active (selected widget) rotate
    // physical around selected ring widget plane normal. Returns kTRUE if redraw
@@ -224,9 +226,8 @@ Bool_t TGLRotateManip::HandleMotion(const Event_t & event, const TGLCamera & cam
       fShape->Rotate(fActiveRingCenter, fActiveRingPlane.Norm(), angle);
       fLastMouse = newMouse;
       return kTRUE;
-   } else {
-      return TGLManip::HandleMotion(event, camera, sceneBox);
    }
+   return kFALSE;
 }
 
 //______________________________________________________________________________

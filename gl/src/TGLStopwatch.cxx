@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.7 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -35,11 +35,10 @@ Double_t TGLStopwatch::fgOverhead = 0.0;
 //______________________________________________________________________________
 TGLStopwatch::TGLStopwatch()
 {
-   // Construct stopwatch object, initialising timing overheads if not done
-   if (!fgInitOverhead)
-   {
-      InitOverhead();
-   }
+   // Construct stopwatch object, initialising timing overheads if not done.
+
+   // MT: bypass
+   // if (!fgInitOverhead) InitOverhead();
 }
 
 //______________________________________________________________________________
@@ -51,7 +50,8 @@ TGLStopwatch::~TGLStopwatch()
 //______________________________________________________________________________
 void TGLStopwatch::Start()
 {
-   // Start timing
+   // Start timing.
+
    FinishDrawing();
    fStart = WaitForTick();
 }
@@ -60,7 +60,8 @@ void TGLStopwatch::Start()
 //______________________________________________________________________________
 Double_t TGLStopwatch::Lap() const
 {
-   // Return lap time since Start(), in milliseconds
+   // Return lap time since Start(), in milliseconds.
+
    FinishDrawing();
    Double_t elapsed = GetClock() - fStart - fgOverhead;
    return elapsed > 0.0 ? elapsed : 0.0;
@@ -70,7 +71,8 @@ Double_t TGLStopwatch::Lap() const
 //______________________________________________________________________________
 Double_t TGLStopwatch::End()
 {
-   // End timing, return total time since Start(), in milliseconds
+   // End timing, return total time since Start(), in milliseconds.
+
    return Lap();
 }
 
@@ -78,7 +80,8 @@ Double_t TGLStopwatch::End()
 //______________________________________________________________________________
 Double_t TGLStopwatch::GetClock(void) const
 {
-   // Get internal clock time, in milliseconds
+   // Get internal clock time, in milliseconds.
+
 #ifdef R__WIN32
    // Use performance counter (system dependent support) if possible
    static LARGE_INTEGER perfFreq;
@@ -87,7 +90,7 @@ Double_t TGLStopwatch::GetClock(void) const
    if (usePerformanceCounter) {
       LARGE_INTEGER counter;
       QueryPerformanceCounter(&counter);
-      Double_t time = static_cast<Double_t>(counter.QuadPart)*1000.0 / 
+      Double_t time = static_cast<Double_t>(counter.QuadPart)*1000.0 /
                       static_cast<Double_t>(perfFreq.QuadPart);
       return time;
    }
@@ -112,14 +115,20 @@ Double_t TGLStopwatch::GetClock(void) const
 //______________________________________________________________________________
 void TGLStopwatch::FinishDrawing(void) const
 {
-   // Force completion of GL drawing
-//   glFinish();
+   // Force completion of GL drawing.
+
+   // MT bypass:
+   // glFinish();
 }
 
 //______________________________________________________________________________
 Double_t TGLStopwatch::WaitForTick(void)  const
 {
    // Wait for next clock increment - return it in milliseconds
+
+   // MT bypass:
+   return GetClock();
+
    Double_t start;
    Double_t current;
 
@@ -134,7 +143,12 @@ Double_t TGLStopwatch::WaitForTick(void)  const
 //______________________________________________________________________________
 void TGLStopwatch::InitOverhead(void) const
 {
-   // Calcualte timing overhead
+   // Calcualte timing overhead.
+
+   // MT bypass (now not even called):
+   fgInitOverhead = kTRUE;
+   fgOverhead     = 0.0;
+
    Double_t runTime;
    Long_t   reps;
    Double_t start;

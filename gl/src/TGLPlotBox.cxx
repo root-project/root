@@ -7,27 +7,27 @@
 
 ClassImp(TGLPlotBox)
 
-const Int_t TGLPlotBox::fgFramePlanes[][4] = 
+const Int_t TGLPlotBox::fgFramePlanes[][4] =
    {
-    {0, 4, 5, 1}, 
-    {1, 5, 6, 2}, 
-    {2, 6, 7, 3}, 
-    {0, 3, 7, 4}, 
+    {0, 4, 5, 1},
+    {1, 5, 6, 2},
+    {2, 6, 7, 3},
+    {0, 3, 7, 4},
     {0, 1, 2, 3}
    };
-const Double_t TGLPlotBox::fgNormals[][3] = 
+const Double_t TGLPlotBox::fgNormals[][3] =
    {
-    { 0., 1., 0.}, 
-    {-1., 0., 0.}, 
-    { 0.,-1., 0.}, 
-    { 1., 0., 0.}, 
+    { 0., 1., 0.},
+    {-1., 0., 0.},
+    { 0.,-1., 0.},
+    { 1., 0., 0.},
     { 0., 0., 1.}
    };
-const Int_t TGLPlotBox::fgBackPairs[][2] = 
+const Int_t TGLPlotBox::fgBackPairs[][2] =
    {
-    {2, 1}, 
-    {3, 2}, 
-    {0, 3}, 
+    {2, 1},
+    {3, 2},
+    {0, 3},
     {1, 0}
    };
 
@@ -88,7 +88,7 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
    if (!selectionPass) {
       glMaterialfv(GL_FRONT, GL_DIFFUSE, backColor);
       if (selected == 1) {
-         fXOYSelectable ? 
+         fXOYSelectable ?
                          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
                         :
                          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
@@ -119,7 +119,7 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
            :glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
    } else
       ObjectIDToColor(3, highColor); //Right plane, encoded as 3 in a selection buffer.
-   
+
    DrawBackPlane(fgBackPairs[fFrontPoint][1], selectionPass, zLevels);
 
    glDepthMask(GL_TRUE);//1]
@@ -221,26 +221,26 @@ const TGLVertex3 *TGLPlotBox::Get2DBox()const
 
 
 //______________________________________________________________________________
-void TGLPlotBox::DrawBackPlane(Int_t plane, Bool_t selectionPass, 
+void TGLPlotBox::DrawBackPlane(Int_t plane, Bool_t selectionPass,
                                const std::vector<Double_t> &zLevels)const
 {
    //Draw back plane with number 'plane'
    using namespace Rgl;
    const Int_t *vertInd = fgFramePlanes[plane];
-   DrawQuadFilled(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], 
+   DrawQuadFilled(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]],
                   f3DBox[vertInd[3]], fgNormals[plane]);
    //Antialias back plane outline.
    if (!selectionPass) {
       const TGLDisableGuard lightGuard(GL_LIGHTING);
       glColor3d(0., 0., 0.);
-      DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], 
+      DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]],
                       f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
       //draw grid.
       const TGLEnableGuard stippleGuard(GL_LINE_STIPPLE);//[1-1]
       const UShort_t stipple = 0x5555;
       glLineStipple(1, stipple);
 
-      Double_t lineCaps[][4] = 
+      Double_t lineCaps[][4] =
       {
          {f3DBox[1].X(), f3DBox[0].Y(), f3DBox[0].X(), f3DBox[0].Y()},
          {f3DBox[1].X(), f3DBox[0].Y(), f3DBox[1].X(), f3DBox[2].Y()},

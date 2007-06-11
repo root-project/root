@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.11 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -40,25 +40,26 @@ private:
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
    // 0123 'far' face
    // 4567 'near' face
    //
-   // This could be more compact: 
+   // This could be more compact:
    // For orientated box 3 vertices which form plane cutting box
    // diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix in space.
    // For axis aligned 2 verticies would suffice.
    // Rest could be calculated on demand - however speed more important
    // than memory considerations
-   std::vector<TGLVertex3> fVertex;           //! the 8 bounding box vertices
-   Double_t                      fVolume;     //! box volume - cached for speed
-   TGLVector3                    fAxes[3];    //! box axes in global frame - cached for speed
-   TGLVector3                    fAxesNorm[3];//! normalised box axes in global frame - cached for speed
+   std::vector<TGLVertex3> fVertex;     //! the 8 bounding box vertices
+   Double_t                fVolume;     //! box volume - cached for speed
+   Double_t                fDiagonal;   //! max box diagonal - cached for speed
+   TGLVector3              fAxes[3];    //! box axes in global frame - cached for speed
+   TGLVector3              fAxesNorm[3];//! normalised box axes in global frame - cached for speed
 
    // Methods
    void     UpdateCache();
@@ -84,6 +85,7 @@ public:
    // Set axis aligned box
    void SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex); // axis aligned
    void SetAligned(UInt_t nbPnts, const Double_t * pnts); // axis aligned
+   void MergeAligned(const TGLBoundingBox & other);
 
    // Manipulation
    void Transform(const TGLMatrix & matrix);
@@ -100,6 +102,8 @@ public:
    Double_t YMax() const { return Max(1); }
    Double_t ZMin() const { return Min(2); }
    Double_t ZMax() const { return Max(2); }
+   TGLVertex3 MinAAVertex() const;
+   TGLVertex3 MaxAAVertex() const;
 
    // Multiple vertices accessors
    const std::vector<TGLVertex3> & Vertices() const;           // All 8 box vertices
@@ -113,6 +117,7 @@ public:
    Bool_t       IsEmpty() const;
    Double_t     Volume() const { return fVolume; }
    void         PlaneSet(TGLPlaneSet_t & planeSet) const;
+   TGLPlane     GetNearPlane() const;
 
    // Overlap testing
    EOverlap Overlap(const TGLPlane & plane) const;
@@ -173,18 +178,18 @@ inline TGLVertex3 TGLBoundingBox::Center() const
 //______________________________________________________________________________
 inline const TGLVector3 & TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) const
 {
-   // Return a vector representing axis of index i (0:X, 1:Y, 2:Z). 
+   // Return a vector representing axis of index i (0:X, 1:Y, 2:Z).
    // Vector can be as-is (edge, magnitude == extent) or normalised (default)
    //    y
    //    |
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
 
    if (normalised) {
