@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.182 2007/06/07 07:02:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.183 2007/06/08 15:46:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2982,13 +2982,11 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
 //   fMasterVolume->FindMatrixOfDaughterVolume(vol);
 //   fCurrentMatrix->Print();
    fTopNode = new TGeoNodeMatrix(vol, gGeoIdentity);
-   char *name = new char[strlen(vol->GetName())+3];
-   sprintf(name, "%s_1", vol->GetName());
-   fTopNode->SetName(name);
-   delete [] name;
+   fTopNode->SetName(Form("%s_1",vol->GetName()));
    fTopNode->SetNumber(1);
    fTopNode->SetTitle("Top logical node");
    fNodes->AddAt(fTopNode, 0);
+   if (!fCurrentNavigator) AddNavigator(new TGeoNavigator(this));
    Int_t nnavigators = fNavigators->GetEntriesFast();
    for (Int_t i=0; i<nnavigators; i++) {
       TGeoNavigator *nav = (TGeoNavigator*)fNavigators->At(i);
