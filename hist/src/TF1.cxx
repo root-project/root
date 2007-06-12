@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.137 2007/05/21 08:38:48 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.138 2007/05/28 14:35:35 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TColor.h"
 #include "TClass.h"
 #include "TMethodCall.h"
+#include "TF1Helper.h"
 
 //#include <iostream>
 
@@ -2278,6 +2279,69 @@ TAxis *TF1::GetZaxis() const
 }
 
 
+
+//______________________________________________________________________________
+Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
+{
+   // Compute the gradient (derivative) wrt a parameter ipar
+   // Parameters:
+   // ipar - index of parameter for which the derivative is computed
+   // x - point, where the derivative is computed
+   // eps - if the errors of parameters have been computed, the step used in
+   // numerical differentiation is eps*parameter_error.
+   // if the errors have not been computed, step=eps is used
+   // default value of eps = 0.01
+   // Method is the same as in Derivative() function
+   //
+   // If a paramter is fixed, the gradient on this parameter = 0
+
+   if(eps< 1e-10 || eps > 1) {
+      Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
+      eps = 0.01;
+   }
+   Double_t h;
+   TF1 *func = (TF1*)this;
+   //save original parameters
+   Double_t par0 = fParams[ipar];
+
+
+   func->InitArgs(x, fParams);
+
+   Double_t al, bl;
+   Double_t f1, f2, g1, g2, h2, d0, d2;
+
+   ((TF1*)this)->GetParLimits(ipar,al,bl);
+   if (al*bl != 0 && al >= bl) {
+      //this parameter is fixed
+      return 0; 
+   }
+
+   // check if error has been computer (is not zero) 
+   if (func->GetParError(ipar)!=0)
+      h = eps*func->GetParError(ipar);
+   else 
+      h=eps;
+
+
+
+   fParams[ipar] = par0 + h;     f1 = func->EvalPar(x,fParams);
+   fParams[ipar] = par0 - h;     f2 = func->EvalPar(x,fParams);
+   fParams[ipar] = par0 + h/2;   g1 = func->EvalPar(x,fParams);
+   fParams[ipar] = par0 - h/2;   g2 = func->EvalPar(x,fParams);
+   
+   //compute the central differences
+   h2    = 1/(2.*h);
+   d0    = f1 - f2;
+   d2    = 2*(g1 - g2);
+      
+   Double_t  grad = h2*(4*d2 - d0)/3.;
+
+   // restore original value
+   fParams[ipar] = par0;  
+
+   return grad; 
+}
+
 //______________________________________________________________________________
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
@@ -2297,59 +2361,11 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
       Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
       eps = 0.01;
    }
-   Double_t h;
-   TF1 *func = (TF1*)this;
-   //save original parameters
-   Double_t *params=0;
-   Double_t par_local[20];
-   Bool_t isAllocated=kFALSE;
-   if (fNpar > 20){
-      params = new Double_t[fNpar];
-      isAllocated = kTRUE;
-   } else
-      params = par_local;
 
-   Bool_t errorsComputed=kFALSE;
    for (Int_t ipar=0; ipar<fNpar; ipar++){
-      params[ipar]=fParams[ipar];
-      if (func->GetParError(ipar)!=0)
-         errorsComputed=kTRUE;
+      grad[ipar] = GradientPar(ipar,x,eps);
    }
-
-   Double_t al, bl;
-   Double_t f1, f2, g1, g2, h2, d0, d2;
-   for (Int_t ipar=0; ipar<fNpar; ipar++){
-
-      func->InitArgs(x, params);
-
-      ((TF1*)this)->GetParLimits(ipar,al,bl);
-      if (al*bl != 0 && al >= bl) {
-         //this parameter is fixed
-         grad[ipar]=0;
-         continue;
-      }
-
-      if (errorsComputed)
-         h = eps*func->GetParError(ipar);
-      else 
-         h=eps;
-      params[ipar] = fParams[ipar]+h;     f1 = func->EvalPar(x,params);
-      params[ipar] = fParams[ipar]-h;     f2 = func->EvalPar(x,params);
-      params[ipar] = fParams[ipar]+h/2;   g1 = func->EvalPar(x,params);
-      params[ipar] = fParams[ipar]-h/2;   g2 = func->EvalPar(x,params);
-
-      //compute the central differences
-      h2    = 1/(2.*h);
-      d0    = f1 - f2;
-      d2    = 2*(g1 - g2);
-      
-      grad[ipar] = h2*(4*d2 - d0)/3.;
-      params[ipar]=fParams[ipar];  
-   }
-   if (isAllocated)
-      delete [] params;
 }
-
 
 //______________________________________________________________________________
 void TF1::InitArgs(const Double_t *x, const Double_t *params)
@@ -2592,6 +2608,17 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
    return 0;
 }
 
+//______________________________________________________________________________
+Double_t TF1::IntegralError(Double_t a, Double_t b, Double_t epsilon)
+{
+   // Return Error on Integral of a parameteric function between a and b due to the parameters uncertainties 
+   // It is assumed the parameters are estimated from a fit and the covariance matrix resulting from the fit is used in 
+   // estimating this error.  
+   // IMPORTANT NOTE: The calculation is valid assuming the parameters are resulting from the latest fit. If in the meantime 
+   // a fit is done using another function, the routine will signal  an error and return zero.   
+   
+   return ROOT::TF1Helper::IntegralError(this,a,b,epsilon);
+}
 
 #ifdef INTHEFUTURE
 //______________________________________________________________________________

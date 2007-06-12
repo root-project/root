@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.54 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.55 2007/04/23 10:50:36 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1563,6 +1563,7 @@ void TProfile2D::Reset(Option_t *option)
    fTsumwz = fTsumwz2 = 0;
 }
 
+
 //______________________________________________________________________________
 void TProfile2D::RebinAxis(Double_t x, const char* ax)
 {
@@ -1622,6 +1623,14 @@ void TProfile2D::RebinAxis(Double_t x, const char* ax)
    fTsumwz = hold->fTsumwz;
    fTsumwz2 = hold->fTsumwz2;
    delete hold;
+}
+
+//______________________________________________________________________________
+TProfile2D * TProfile2D::Rebin2D(Int_t , Int_t, const char * ) {
+   // Rebin2D is not implemented for TProfile2D
+   // dummy function to flag an error and to avoid to call TH2D::Rebin2D
+   Error("TProfile2D","Rebin2D is not implemented for TProfile2D");
+   return this;
 }
 
 //______________________________________________________________________________
