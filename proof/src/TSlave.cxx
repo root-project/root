@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.58 2007/05/21 00:45:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.59 2007/06/08 09:17:26 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -349,7 +349,11 @@ void TSlave::Print(Option_t *) const
    Printf("    ROOT version:            %s", GetROOTVersion());
    Printf("    Architecture-Compiler:   %s", GetArchCompiler());
    if (fSocket) {
-      Printf("    User:                    %s", GetUser());
+      if (strlen(GetGroup()) > 0) {
+         Printf("    User/Group:              %s/%s", GetUser(), GetGroup());
+      } else {
+         Printf("    User:                    %s", GetUser());
+      }
       if (fSocket->GetSecContext())
          Printf("    Security context:        %s", fSocket->GetSecContext()->AsString(sc));
       Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());

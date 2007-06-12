@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.203 2007/06/07 10:35:43 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.204 2007/06/08 09:17:26 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -725,6 +725,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
          else {
             // create slave server
             TUrl u(Form("%s:%d",worker->GetNodeName().Data(), sport));
+            // Add group info in the password firdl, if any
+            if (strlen(gProofServ->GetGroup()) > 0) {
+               // Set also the user, otherwise the password is not exported
+               if (strlen(u.GetUser()) <= 0)
+                  u.SetUser(gProofServ->GetUser());
+               u.SetPasswd(gProofServ->GetGroup());
+            }
             TSlave *slave = CreateSlave(u.GetUrl(), fullord, perfidx,
                                         image, workdir);
 
@@ -2602,7 +2609,11 @@ void TProof::Print(Option_t *option) const
 
       Printf("Master host name:           %s", gSystem->HostName());
       Printf("Port number:                %d", GetPort());
-      Printf("User:                       %s", GetUser());
+      if (strlen(gProofServ->GetGroup()) > 0) {
+         Printf("User/Group:                 %s/%s", GetUser(), gProofServ->GetGroup());
+      } else {
+         Printf("User:                       %s", GetUser());
+      }
       if (gSystem->Getenv("ROOTVERSIONTAG"))
          Printf("ROOT version:               %s-%s", gROOT->GetVersion(),
                                                      gSystem->Getenv("ROOTVERSIONTAG"));

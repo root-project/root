@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.25 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.26 2007/05/21 00:45:07 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -80,6 +80,7 @@ protected:
    TString       fProofWorkDir; //base proofserv working directory (info obtained from slave)
    TString       fWorkDir;   //slave's working directory (info obtained from slave)
    TString       fUser;      //slave's user id
+   TString       fGroup;     //slave's group id
    Int_t         fPort;      //slave's port number
    TString       fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
@@ -121,6 +122,7 @@ public:
    const char    *GetProofWorkDir() const { return fProofWorkDir; }
    const char    *GetWorkDir() const { return fWorkDir; }
    const char    *GetUser() const { return fUser; }
+   const char    *GetGroup() const { return fGroup; }
    Int_t          GetPort() const { return fPort; }
    const char    *GetOrdinal() const { return fOrdinal; }
    Int_t          GetPerfIdx() const { return fPerfIdx; }
