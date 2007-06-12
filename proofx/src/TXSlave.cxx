@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.21 2007/03/30 16:46:06 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.22 2007/06/05 05:40:11 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -158,7 +158,8 @@ void TXSlave::Init(const char *host, Int_t stype)
    // Fill members
    fName = url.GetHost();
    fPort = url.GetPort(); // We get the right default if the port is not specified
-
+   // Group specification , if any, uses the password field, i.e. user[:group]
+   fGroup = url.GetPasswd();
 
    // The field 'psid' is interpreted as session ID when we are attaching
    // to an existing session (ID passed in the options field of the url) or

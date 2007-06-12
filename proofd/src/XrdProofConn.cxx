@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.19 2007/03/29 13:54:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.20 2007/04/19 09:27:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -886,15 +886,22 @@ bool XrdProofConn::Login()
 
    reqhdr.login.pid = getpid();
 
+   // User[:group] info (url's password field used for the group)
+   XrdOucString ug = fUser;
+   if (fUrl.Passwd.length() > 0) {
+      ug += ":";
+      ug += fUrl.Passwd;
+   }
+
    // Fill login username
-   if (fUser.length() > 8) {
+   if (ug.length() > 8) {
       // The name must go in the attached buffer because the login structure
       // can accomodate at most 8 chars
       strcpy( (char *)reqhdr.login.username, "?>buf" );
       fLoginBuffer += "|usr:";
-      fLoginBuffer += fUser;
-   } else if (fUser.length() >= 0) {
-      strcpy( (char *)reqhdr.login.username, (char *)(fUser.c_str()) );
+      fLoginBuffer += ug;
+   } else if (ug.length() >= 0) {
+      strcpy( (char *)reqhdr.login.username, (char *)(ug.c_str()) );
    } else {
       strcpy( (char *)reqhdr.login.username, "????" );
    }
