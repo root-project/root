@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.34 2007/05/21 00:46:19 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.35 2007/05/23 09:11:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -175,7 +175,6 @@ TXProofServ::TXProofServ(Int_t *argc, char **argv, FILE *flog)
    fInterruptHandler = 0;
    fInputHandler = 0;
    fTerminated = kFALSE;
-   fEnvList = 0;
    fShutdownTimerMtx = new TMutex(kTRUE);
 }
 
@@ -186,18 +185,10 @@ Int_t TXProofServ::CreateServer()
    // the worker or submaster nodes.
    // Return 0 on success, -1 on error
 
-   TNamed *env = 0;
    Bool_t xtest = (Argc() > 3 && !strcmp(Argv(3), "test")) ? kTRUE : kFALSE;
 
    if (gProofDebugLevel > 0)
       Info("CreateServer", "starting%s server creation", (xtest ? " test" : ""));
-
-   // Read environment
-   if (!xtest && ReadEnvFile(gProofDebugLevel) != 0) {
-      Error("CreateServer", "reading environment file");
-      return -1;
-   }
-
 
    // Get file descriptor for log file
    if (fLogFile) {
@@ -231,21 +222,19 @@ Int_t TXProofServ::CreateServer()
       }
       exit(0);
    } else {
-      env = (TNamed *) fEnvList->FindObject("ROOTOPENSOCK");
-      if (!env) {
+      fSockPath = gEnv->GetValue("ProofServ.OpenSock", "");
+      if (fSockPath.Length() <= 0) {
          Error("CreateServer", "Socket setup by xpd undefined");
          return -1;
       }
-      fSockPath = env->GetTitle();
    }
 
    // Get the sessions ID
-   env = (TNamed *) fEnvList->FindObject("ROOTSESSIONID");
-   if (!env) {
+   Int_t psid = gEnv->GetValue("ProofServ.SessionID", -1);
+   if (psid < 0) {
      Error("CreateServer", "Session ID undefined");
      return -1;
    }
-   Int_t psid = (Int_t) strtol(env->GetTitle(), 0, 10);
 
    // Call back the server
    fSocket = new TXUnixSocket(fSockPath, psid, -1, this);
@@ -268,13 +257,12 @@ Int_t TXProofServ::CreateServer()
    gSystem->AddFileHandler(fInputHandler);
 
    // Get the client ID
-   env = (TNamed *) fEnvList->FindObject("ROOTCLIENTID");
-   if (!env) {
+   Int_t cid = gEnv->GetValue("ProofServ.ClientID", -1);
+   if (cid < 0) {
      Error("CreateServer", "Client ID undefined");
      SendLogFile();
      return -1;
    }
-   Int_t cid = (Int_t) strtol(env->GetTitle(), 0, 10);
    ((TXSocket *)fSocket)->SetClientID(cid);
 
    // debug hooks
@@ -363,10 +351,10 @@ Int_t TXProofServ::CreateServer()
       TString master = "proof://__master__";
 
       // Add port, if defined
-      TNamed *env = (TNamed *) fEnvList->FindObject("ROOTXPDPORT");
-      if (env) {
+      Int_t port = gEnv->GetValue("ProofServ.XpdPort", -1);
+      if (port > -1) {
          master += ":";
-         master += env->GetTitle();
+         master += port;
       }
 
       // Make sure that parallel startup via threads is not active
@@ -434,10 +422,6 @@ TXProofServ::~TXProofServ()
    // live anyway.
 
    delete fSocket;
-   if (fEnvList) {
-      fEnvList->SetOwner();
-      SafeDelete(fEnvList);
-   }
 }
 
 //______________________________________________________________________________
@@ -598,12 +582,10 @@ Int_t TXProofServ::Setup()
    }
 
    // Get client protocol
-   TNamed *env = (TNamed *) fEnvList->FindObject("ROOTPROOFCLNTVERS");
-   if (!env) {
+   if ((fProtocol = gEnv->GetValue("ProofServ.ClientVersion", -1)) < 0) {
       Error("Setup", "remote proof protocol missing");
       return -1;
    }
-   fProtocol = atoi(env->GetTitle());
 
    // The local user
    UserGroup_t *pw = gSystem->GetUserInfo();
@@ -613,15 +595,12 @@ Int_t TXProofServ::Setup()
    }
 
    // Work dir and ...
-   if (IsMaster())
-      env = (TNamed *) fEnvList->FindObject("ROOTPROOFCFGFILE");
-      if (env)
-         fConfFile = env->GetTitle();
-   env = (TNamed *) fEnvList->FindObject("ROOTPROOFWORKDIR");
-   if (env)
-      fWorkDir = env->GetTitle();
-   else
-      fWorkDir = kPROOF_WorkDir;
+   if (IsMaster()) {
+      TString cf = gEnv->GetValue("ProofServ.ProofConfFile", "");
+      if (cf.Length() > 0)
+         fConfFile = cf;
+   }
+   fWorkDir = gEnv->GetValue("ProofServ.Sandbox", kPROOF_WorkDir);
 
    // goto to the main PROOF working directory
    char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
@@ -697,32 +676,29 @@ Int_t TXProofServ::Setup()
       new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,fUser.Data()));
 
    // Get Session tag
-   env = (TNamed *) fEnvList->FindObject("ROOTPROOFSESSIONTAG");
-   if (!env) {
+   if ((fSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1") {
       Error("Setup", "Session tag missing");
       return -1;
    }
-   fSessionTag = env->GetTitle();
    if (gProofDebugLevel > 0)
       Info("Setup", "session tag is %s", fSessionTag.Data());
 
    // Get Session dir (sandbox)
-   if (!gSystem->Getenv("ROOTPROOFSESSDIR")) {
+   if ((fSessionDir = gEnv->GetValue("ProofServ.SessionDir", "-1")) == "-1") {
       Error("Setup", "Session dir missing");
       return -1;
    }
-   fSessionDir = gSystem->Getenv("ROOTPROOFSESSDIR");
 
-   if (gSystem->AccessPathName(fSessionDir)) {
-      gSystem->MakeDirectory(fSessionDir);
+   if (fSessionDir != gSystem->WorkingDirectory()) {
+      if (gSystem->AccessPathName(fSessionDir))
+         gSystem->MakeDirectory(fSessionDir);
       if (!gSystem->ChangeDirectory(fSessionDir)) {
          Error("Setup", "can not change to working directory %s",
-               fSessionDir.Data());
+                        fSessionDir.Data());
          return -1;
-      } else {
-         gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
    }
+   gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "session dir is %s", fSessionDir.Data());
 
@@ -747,13 +723,15 @@ Int_t TXProofServ::Setup()
       fQueryLock->Lock();
 
       // 'datasets'
-      fDataSetDir = fWorkDir;
-      fDataSetDir += TString("/") + kPROOF_DataSetDir;
-      if (gSystem->AccessPathName(fDataSetDir))
-         gSystem->MakeDirectory(fDataSetDir);
+      if ((fDataSetDir = gEnv->GetValue("ProofServ.DataSetDir", "-1")) == "-1") {
+         // Use default path in the sandbox
+         fDataSetDir = fWorkDir;
+         fDataSetDir += TString("/") + kPROOF_DataSetDir;
+         if (gSystem->AccessPathName(fDataSetDir))
+            gSystem->MakeDirectory(fDataSetDir);
+      }
       if (gProofDebugLevel > 0)
          Info("Setup", "dataset dir is %s", fDataSetDir.Data());
-
       fDataSetLock =
          new TProofLockPath(Form("%s%s", kPROOF_DataSetLockFile,fUser.Data()));
 
@@ -763,11 +741,15 @@ Int_t TXProofServ::Setup()
       fSocket->Send(m);
    }
 
+   // Set group
+   fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
+
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {
       TString vac = gROOT->GetVersion();
-      if (gSystem->Getenv("ROOTVERSIONTAG"))
-         vac += Form("-%s", gSystem->Getenv("ROOTVERSIONTAG"));
+      TString rtag = gEnv->GetValue("ProofServ.RootVersionTag", "");
+      if (rtag.Length() > 0)
+         vac += Form("-%s", rtag.Data());
       vac += Form("|%s-%s",gSystem->GetBuildArch(), gSystem->GetBuildCompilerVersion());
       TMessage m(kPROOF_VERSARCHCOMP);
       m << vac;
@@ -895,7 +877,7 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
    }
 
    // If user config files are enabled, check them first
-   if (fEnvList->FindObject("ROOTUSEUSERCFG")) {
+   if (gEnv->GetValue("ProofServ.UseUserCfg", 0) != 0) {
       Int_t pc = 1;
       TProofServ::EQueryAction rc = TProofServ::GetWorkers(workers, pc);
       if (rc == kQueryOK)
@@ -1213,57 +1195,5 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
 
    // To avoid having the client notified about this at reconnection
    FlushLogFile();
-}
-
-//______________________________________________________________________________
-Int_t TXProofServ::ReadEnvFile(Int_t dbglevel)
-{
-   // Read file with environment settings and fill the appropriate list
-   // Return 0 on success, -1 otherwise
-
-   // Get env file path
-   char *envfile = 0;
-   const char *sessdir = getenv("ROOTPROOFSESSDIR");
-   if (sessdir) {
-      envfile = new char[strlen(sessdir) + 5];
-      sprintf(envfile, "%s.env", sessdir);
-   } else {
-      Info("ReadEnvFile", "cannot build path: session dir missing");
-      return -1;
-   }
-
-   // Open input file
-   fstream infile(envfile, std::ios::in);
-   if (infile.is_open()) {
-      // Reset env list, if needed
-      if (fEnvList) {
-         fEnvList->SetOwner();
-         SafeDelete(fEnvList);
-      }
-      fEnvList = new TList;
-      TString line;
-      while (!infile.eof()) {
-         line.ReadLine(infile, kFALSE);
-         if (dbglevel > 2)
-            Info("ReadEnvFile", "read line: %s", line.Data());
-         // Parse line
-         Int_t keq = line.Index("=");
-         if (keq != kNPOS) {
-            TString name = line;
-            name.Remove(keq);
-            TString val = line;
-            val.Remove(0, keq+1);
-            fEnvList->Add(new TNamed(name, val));
-            if (dbglevel > 0)
-               Info("ReadEnvFile", "found name: %s, val: %s", name.Data(), val.Data());
-         }
-      }
-   } else {
-      Info("ReadEnvFile"," file %s cannot be open", envfile);
-      return -1;
-   }
-
-   // Done
-   return 0;
 }
 

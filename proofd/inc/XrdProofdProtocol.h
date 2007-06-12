@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.22 2007/03/30 16:46:05 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.23 2007/04/19 09:27:55 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "XProofProtocol.h"
 #include "XrdProofdResponse.h"
 #include "XrdProofServProxy.h"
+#include "XrdProofdAux.h"
 
 #include <list>
 #include <vector>
@@ -53,58 +54,13 @@
 enum EResourceType { kRTStatic, kRTPlb };
 enum EStaticSelOpt { kSSORoundRobin, kSSORandom };
 
-// User Info class
-class XrdProofUI {
-public:
-   XrdOucString fUser;
-   XrdOucString fHomeDir;
-   XrdOucString fWorkDir;
-   int          fUid;
-   int          fGid;
-
-   XrdProofUI() { fUid = -1; fGid = -1; }
-   ~XrdProofUI() { }
-
-   void Reset() { fUser = ""; fHomeDir = ""; fWorkDir = ""; fUid = -1; fGid = -1; }
-};
-
-// Class describing a ROOT version
-class XrdROOT {
-private:
-   int          fStatus;
-   XrdOucString fDir;
-   XrdOucString fTag;
-   XrdOucString fExport;
-   XrdOucString fPrgmSrv;
-   kXR_int16    fSrvProtVers;
-
-   int          GetROOTVersion(const char *dir, XrdOucString &version);
-   int          ValidatePrgmSrv();
-
-public:
-   XrdROOT(const char *dir, const char *tag);
-   ~XrdROOT() { }
-
-   const char *Dir() const { return fDir.c_str(); }
-   const char *Export() const { return fExport.c_str(); }
-   bool        IsValid() const { return ((fStatus == 1) ? 1: 0); }
-   bool        IsInvalid() const { return ((fStatus == -1) ? 1: 0); }
-   bool        Match(const char *dir, const char *tag)
-                          { return ((fTag == tag && fDir == dir) ? 1 : 0); }
-   bool        MatchTag(const char *tag) { return ((fTag == tag) ? 1 : 0); }
-   const char *PrgmSrv() const { return fPrgmSrv.c_str(); }
-   void        SetValid() { fStatus = 1; }
-   kXR_int16   SrvProtVers() const { return fSrvProtVers; }
-   const char *Tag() const { return fTag.c_str(); }
-   bool        Validate();
-};
-
+class XrdROOT;
 class XrdBuffer;
 class XrdClientMessage;
 class XrdLink;
 class XrdOucError;
 class XrdOucTrace;
-class XrdProofClient;
+class XrdProofdClient;
 class XrdProofdPInfo;
 class XrdProofdPriority;
 class XrdProofWorker;
@@ -113,7 +69,7 @@ class XrdSrvBuffer;
 
 class XrdProofdProtocol : XrdProtocol {
 
-friend class XrdProofClient;
+friend class XrdProofdClient;
 friend class XrdROOT;
 
 public:
@@ -165,6 +121,7 @@ public:
    int           KillProofServ(XrdProofServProxy *xps, bool forcekill = 0, bool add = 1);
    XrdClientMessage *SendCoordinator(const char *url, int type, const char *msg, int srvtype);
    int           SetProofServEnv(int psid = -1, int loglevel = -1, const char *cfg = 0);
+   int           SetProofServEnvOld(int psid = -1, int loglevel = -1, const char *cfg = 0);
    int           SetShutdownTimer(XrdProofServProxy *xps, bool on = 1);
    int           TerminateProofServ(XrdProofServProxy *xps, bool add = 1);
    int           VerifyProofServ(XrdProofServProxy *xps);
@@ -176,14 +133,15 @@ public:
    XrdLink                      *fLink;
    XrdBuffer                    *fArgp;
    char                          fStatus;
-   char                         *fClientID;
+   char                         *fClientID;    // login username
+   char                         *fGroupID;     // login group name
    XrdProofUI                    fUI;           // user info
    unsigned char                 fCapVer;
    kXR_int32                     fSrvType;      // Master or Worker
    bool                          fTopClient;    // External client (not ProofServ)
    bool                          fSuperUser;    // TRUE for privileged clients (admins)
    //
-   XrdProofClient               *fPClient;    // Our reference XrdProofClient
+   XrdProofdClient              *fPClient;    // Our reference XrdProofdClient
    kXR_int32                     fCID;        // Reference ID of this client
    //
    XrdSecEntity                 *fClient;
@@ -219,14 +177,14 @@ public:
    //
    // Static area: protocol configuration section
    //
-   static char                  *fgCfgFile;    // Main config file 
-   static time_t                 fgCfgLastMod; // Time of last modification of the config file 
+   static XrdProofdFile          fgCfgFile;    // Main config file
    static bool                   fgConfigDone; // Whether configure has been run
    static kXR_int32              fgSrvType;    // Master, Submaster, Worker or any
    static std::list<XrdROOT *>   fgROOT;     // ROOT versions; the first is the default
    static char                  *fgTMPdir;   // directory for temporary files
    static char                  *fgImage;    // image name for these servers
    static char                  *fgWorkDir;  // working dir for these servers
+   static char                  *fgDataSetDir;  // dataset dir for this master server
    static int                    fgPort;
    static char                  *fgSecLib;
    // 
@@ -247,7 +205,7 @@ public:
    static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
    static char                  *fgSuperUsers;  // ':' separated list of privileged users
    //
-   static char                  *fgPROOFcfg; // PROOF static configuration
+   static XrdProofdFile          fgPROOFcfg; // PROOF static configuration
    static bool                   fgWorkerUsrCfg; // user cfg files enabled / disabled
    //
    static int                    fgReadWait;
@@ -263,129 +221,43 @@ public:
    static XrdOucString           fgAllowedUsers; // Users allowed in controlled mode
    //
    static XrdOucString           fgProofServEnvs; // Additional envs to be exported before proofserv
+   static XrdOucString           fgProofServRCs; // Additional rcs to be passed to proofserv
    //
    static int                    fgNumLocalWrks; // Number of local workers [== n cpus]
+   //
+   static int                    fgNumGroups; // Number of groups
 
    //
    // Static area: client section
    //
-   static std::list<XrdProofClient *> fgProofClients;  // keeps track of all users
+   static std::list<XrdProofdClient *> fgProofdClients;  // keeps track of all users
    static std::list<XrdProofdPInfo *> fgTerminatedProcess; // List of pids of processes terminating
 
    //
    // Static area: methods
    //
-   static int    AddNewSession(XrdProofClient *client, const char *tag);
+   static int    AddNewSession(XrdProofdClient *client, const char *tag);
    static int    ChangeProcessPriority(int pid, int deltap);
    static int    CheckIf(XrdOucStream *s);
    static bool   CheckMaster(const char *m);
    static int    CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
    static int    Config(const char *fn);
    static int    CreateDefaultPROOFcfg();
-   static char  *Expand(char *p);
    static char  *FilterSecConfig(const char *cfn, int &nd);
    static int    GetNumCPUs();
-   static int    GetSessionDirs(XrdProofClient *pcl, int opt,
+   static int    GetSessionDirs(XrdProofdClient *pcl, int opt,
                                 std::list<XrdOucString *> *sdirs,
                                 XrdOucString *tag = 0);
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
-   static int    GuessTag(XrdProofClient *pcl, XrdOucString &tag, int ridx = 1);
+   static int    GuessTag(XrdProofdClient *pcl, XrdOucString &tag, int ridx = 1);
    static XrdSecService *LoadSecurity(char *seclib, char *cfn);
-   static int    MvOldSession(XrdProofClient *client,
+   static int    MvOldSession(XrdProofdClient *client,
                               const char *tag, int maxold = 10);
    static int    ReadPROOFcfg();
-   static int    ResolveKeywords(XrdOucString &s, XrdProofClient *pcl);
+   static int    ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
    static int    SetProofServEnv(XrdROOT *r);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
    static int    VerifyProcessByID(int pid, const char *pname = 0);
-};
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// XrdProofClient                                                       //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
-//                                                                      //
-// Small class to map a client in static area.                          //
-// When a new client gets in a matching XrdProofClient is searched for. //
-// If it is found, the client attachs to it, mapping its content.       //
-// If no matching XrdProofClient is found, a new one is created.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class XrdProofClient {
-
- public:
-   XrdProofClient(const char *cid,
-                  short int clientvers = -1, const char *wrk = 0);
-
-   virtual ~XrdProofClient();
-
-   inline int              WorkerProofServ() const { return fWorkerProofServ; }
-   void                    CountWorker(int n = 1) { fWorkerProofServ += n; }
-   inline int              MasterProofServ() const { return fMasterProofServ; }
-   void                    CountMaster(int n = 1) { fMasterProofServ += n; }
-   inline const char      *ID() const
-                              { return (const char *)fClientID; }
-   inline bool             IsValid() const { return fIsValid; }
-   bool                    Match(const char *id)
-                              { return (id ? !strcmp(id, fClientID) : 0); }
-   inline XrdOucRecMutex  *Mutex() const { return (XrdOucRecMutex *)&fMutex; }
-   inline unsigned short   RefSid() const { return fRefSid; }
-   inline XrdROOT         *ROOT() const { return fROOT; }
-   inline short            Version() const { return fClientVers; }
-   inline const char      *Workdir() const
-                              { return (const char *)fWorkdir; }
-   inline std::vector<XrdProofServProxy *> *ProofServs()
-                           { return (std::vector<XrdProofServProxy *> *)&fProofServs; }
-   inline std::vector<XrdProofdProtocol *> *Clients()
-                           { return (std::vector<XrdProofdProtocol *> *)&fClients; }
-   void                    ResetClient(int i) { fClients[i] = 0; }
-
-   void                    EraseServer(int psid);
-   int                     GetClientID(XrdProofdProtocol *p);
-   int                     GetFreeServID();
-
-   void                    SetClientVers(short int cv) { fClientVers = cv; }
-
-   void                    SetROOT(XrdROOT *r) { fROOT = r; }
-
-   void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
-   void                    SetValid(bool valid = 1) { fIsValid = valid; }
-   void                    SetWorkdir(const char *wrk)
-                              { if (fWorkdir) free(fWorkdir);
-                                fWorkdir = (wrk) ? strdup(wrk) : 0; }
-
-   int                     CreateUNIXSock(XrdOucError *edest, char *tmpdir);
-   XrdNet                 *UNIXSock() const { return fUNIXSock; }
-   char                   *UNIXSockPath() const { return fUNIXSockPath; }
-   void                    SaveUNIXPath(); // Save path in the sandbox
-   void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
-
- private:
-
-   XrdOucRecMutex          fMutex; // Local mutex
-
-   bool                    fIsValid; // TRUE if the instance is complete
-
-   char                   *fClientID;   // String identifying this client
-   short int               fClientVers; // PROOF version run by client
-
-   unsigned short          fRefSid;     // Reference stream ID for this client
-   char                   *fWorkdir;    // Client working area (sandbox) 
-
-   XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
-   char                   *fUNIXSockPath; // UNIX server socket path
-   bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
-
-   XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
-
-   std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
-   std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
-
-   int                     fWorkerProofServ; // Number of active (non idle) ProofServ worker sessions
-   int                     fMasterProofServ; // Number of active (non idle) ProofServ master sessions
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -429,40 +301,6 @@ class XrdProofWorker {
    XrdOucString            fWorkDir;     // work directory
    XrdOucString            fMsd;         // mass storage domain
    XrdOucString            fId;          // ID string
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// XrdProofdPriority                                                    //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2006                                        //
-//                                                                      //
-// Small class to describe priority changes.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class XrdProofdPriority {
-public:
-   XrdOucString            fUser;          // User to who this applies (wild cards accepted)
-   int                     fDeltaPriority; // Priority change
-   XrdProofdPriority(const char *usr, int dp) : fUser(usr), fDeltaPriority(dp) { }
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// XrdProofdPInfo                                                       //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2006                                        //
-//                                                                      //
-// Small class to describe a process.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class XrdProofdPInfo {
-public:
-   int pid;
-   XrdOucString pname;
-   XrdProofdPInfo(int i, const char *n) : pid(i) { pname = n; }
 };
 
 #endif

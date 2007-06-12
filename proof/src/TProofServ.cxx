@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.177 2007/06/07 09:23:21 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.178 2007/06/08 09:17:26 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -327,6 +327,10 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // Actual server creation work is done in CreateServer() to allow
    // overloading.
 
+   // Read session specific rootrc file
+   if (!gSystem->AccessPathName("session.rootrc", kReadPermission))
+      gEnv->ReadFile("session.rootrc", kEnvGlobal);
+
    // Wait (loop) to allow debugger to connect
    Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
    if ((gEnv->GetValue("Proof.GdbHook",0) == 3 && !test) ||
@@ -353,9 +357,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fNcmd            = 0;
    fInterrupt       = kFALSE;
    fProtocol        = 0;
-   fOrdinal         = "-1";
-   if (gSystem->Getenv("ROOTPROOFORDINAL"))
-      fOrdinal      = gSystem->Getenv("ROOTPROOFORDINAL");
+   fOrdinal         = gEnv->GetValue("ProofServ.Ordinal", "-1");
    fGroupId         = -1;
    fGroupSize       = 0;
    fRealTime        = 0.0;
@@ -391,10 +393,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fShutdownTimer   = 0;
    fShutdownTimerMtx = 0;
 
-   if (gSystem->Getenv("ROOTPROOFLOGLEVEL"))
-      gProofDebugLevel = atoi(gSystem->Getenv("ROOTPROOFLOGLEVEL"));
-   else
-      gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
+   gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
    fLogLevel = gProofDebugLevel;
 
    gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
@@ -421,12 +420,11 @@ Int_t TProofServ::CreateServer()
    // the worker or submaster nodes.
    // Return 0 on success, -1 on error
 
-   // get socket to be used (setup in proofd)
-   if (!(gSystem->Getenv("ROOTOPENSOCK"))) {
-      Fatal("CreateServer", "Socket setup by proofd undefined");
-      return -1;
-   }
-   Int_t sock = strtol(gSystem->Getenv("ROOTOPENSOCK"), (char **)0, 10);
+   // Get socket to be used (setup in proofd)
+   TString opensock = gSystem->Getenv("ROOTOPENSOCK");
+   if (opensock.Length() <= 0)
+      opensock = gEnv->GetValue("ProofServ.OpenSock", "-1");
+   Int_t sock = opensock.Atoi();
    if (sock <= 0) {
       Fatal("CreateServer", "Invalid socket descriptor number (%d)", sock);
       return -1;
@@ -1942,18 +1940,16 @@ Int_t TProofServ::Setup()
       }
       if (IsMaster()) {
          (*mess) >> fUser >> fOrdinal >> fConfFile;
-         if (gSystem->Getenv("ROOTPROOFWORKDIR"))
-            fWorkDir = gSystem->Getenv("ROOTPROOFWORKDIR");
-         else
-            fWorkDir = kPROOF_WorkDir;
+         fWorkDir = gEnv->GetValue("ProofServ.Sandbox", kPROOF_WorkDir);
       } else {
          (*mess) >> fUser >> fOrdinal >> fWorkDir;
          if (fWorkDir.IsNull())
-            if (gSystem->Getenv("ROOTPROOFWORKDIR"))
-               fWorkDir = gSystem->Getenv("ROOTPROOFWORKDIR");
-            else
-               fWorkDir = kPROOF_WorkDir;
+            fWorkDir = gEnv->GetValue("ProofServ.Sandbox", kPROOF_WorkDir);
       }
+      // Set the correct prefix
+      if (fOrdinal != "-1")
+         fPrefix += fOrdinal;
+      TProofServLogHandler::SetDefaultPrefix(fPrefix);
       delete mess;
    }
 
@@ -2104,13 +2100,17 @@ Int_t TProofServ::Setup()
       fQueryLock->Lock();
 
       // 'datasets'
-      fDataSetDir = fWorkDir;
-      fDataSetDir += TString("/") + kPROOF_DataSetDir;
-      if (gSystem->AccessPathName(fDataSetDir))
-         gSystem->MakeDirectory(fDataSetDir);
-
+      if ((fDataSetDir = gEnv->GetValue("ProofServ.DataSetDir", "-1")) == "-1") {
+         // Use default path in the sandbox
+         fDataSetDir = fWorkDir;
+         fDataSetDir += TString("/") + kPROOF_DataSetDir;
+         if (gSystem->AccessPathName(fDataSetDir))
+            gSystem->MakeDirectory(fDataSetDir);
+      }
+      if (gProofDebugLevel > 0)
+         Info("Setup", "dataset dir is %s", fDataSetDir.Data());
       fDataSetLock =
-         new TProofLockPath(Form("%s%s", kPROOF_DataSetLockFile, fUser.Data()));
+         new TProofLockPath(Form("%s%s", kPROOF_DataSetLockFile,fUser.Data()));
 
       // Send session tag, if a recent client
       if (fProtocol > 6) {
@@ -2120,11 +2120,15 @@ Int_t TProofServ::Setup()
       }
    }
 
+   // Set group
+   fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
+
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {
       TString vac = gROOT->GetVersion();
-      if (gSystem->Getenv("ROOTVERSIONTAG"))
-         vac += Form("-%s", gSystem->Getenv("ROOTVERSIONTAG"));
+      TString rtag = gEnv->GetValue("ProofServ.RootVersionTag", "");
+      if (rtag.Length() > 0)
+         vac += Form("-%s", rtag.Data());
       vac += Form("|%s-%s",gSystem->GetBuildArch(), gSystem->GetBuildCompilerVersion());
       TMessage m(kPROOF_VERSARCHCOMP);
       m << vac;
