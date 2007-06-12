@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.9 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.10 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -87,8 +87,8 @@ protected:
    TGPictureButton   *fNewf;     // top toolbar button
    TGPictureButton   *fList;     // top toolbar button
    TGPictureButton   *fDetails;  // top toolbar button
-   TGCheckButton     *fOverWR;   // set on/off file overwriting
-   TGCheckButton     *fMultiSel; // set on/off multiple file selection
+   TGCheckButton     *fCheckB;   // set on/off file overwriting for Open dialog
+                                 // OR set on/off multiple file selection for SaveAs dialog
    const TGPicture   *fPcdup;    // picture for fCdup
    const TGPicture   *fPnewf;    // picture for fNewf
    const TGPicture   *fPlist;    // picture for fList
