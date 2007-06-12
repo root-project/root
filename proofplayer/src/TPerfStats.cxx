@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.11 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.12 2007/06/06 10:03:48 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -405,9 +405,9 @@ void TPerfStats::WriteQueryLog()
             fTotBytesRead, fTotEvents);
 
    // open connection to SQL server
-   TString sqlserv = gSystem->Getenv("ROOTPROOFQUERYLOGDB");
-   TString sqluser = gSystem->Getenv("ROOTPROOFQUERYLOGUSER");
-   TString sqlpass = gSystem->Getenv("ROOTPROOFQUERYLOGPASS");
+   TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
+   TString sqluser = gEnv->GetValue("ProofServ.QueryLogUser","");
+   TString sqlpass = gEnv->GetValue("ProofServ.QueryLogPasswd","");
 
    TSQLServer *db =  TSQLServer::Connect(sqlserv, sqluser, sqlpass);
 
