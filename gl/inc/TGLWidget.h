@@ -148,7 +148,7 @@ private:
 
    std::pair<void *, void *> GetInnerData()const;
 
-   ClassDef(TGLWidget, 0)
+   ClassDef(TGLWidget, 0)//Window (widget) version of TGLPaintDevice
 };
 
 #endif

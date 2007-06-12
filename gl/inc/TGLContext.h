@@ -42,7 +42,7 @@ private:
    TGLContext(const TGLContext &);
    TGLContext &operator = (const TGLContext &);
 
-   ClassDef(TGLContext, 0)
+   ClassDef(TGLContext, 0)//This class controls internal gl-context resources.
 };
 
 #endif
