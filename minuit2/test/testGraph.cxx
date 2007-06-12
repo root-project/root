@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.4 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.5 2007/03/19 11:06:05 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -81,7 +81,7 @@ void doFit(int n,const char * fitter)
    timer.Start();
    for (int i = 0; i < npass; ++i) { 
      f->SetParameters(initPar);
-     f->FixParameter(1,2.);
+     //f->FixParameter(1,2.);
      gre3->Fit(f,"q");
    }
    timer.Stop();

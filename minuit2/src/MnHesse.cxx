@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.5 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.6 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -176,9 +176,9 @@ L30:
       }
       vhmat(i,i) = g2(i);
       if(mfcn.NumOfCalls()  > maxcalls) {
-         //std::cout<<"maxcalls " << maxcalls << " " << mfcn.NumOfCalls() << "  " <<   st.NFcn() << std::endl;
          
 #ifdef WARNINGMSG
+         //std::cout<<"maxcalls " << maxcalls << " " << mfcn.NumOfCalls() << "  " <<   st.NFcn() << std::endl;
          MN_INFO_MSG("MnHesse: maximum number of allowed function calls exhausted.");  
          MN_INFO_MSG("MnHesse fails and will return diagonal matrix ");
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.10 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.11 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -113,7 +113,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          std::cout<<"dcov is =  "<<  min.Error().Dcovar() << std::endl;
 #endif
          
-         MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo());
+         MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
          result.push_back( st );
          
          // check edm 

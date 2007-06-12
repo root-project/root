@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.7 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.8 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -124,7 +124,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 //       FunctionGradient ng = ngc( min.State().Parameters() );
 //       MinimumState tmp( min.State().Parameters(), min.State().Error(), ng, min.State().Edm(), min.State().NFcn() ); 
          
-      MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo());
+      MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
       result.push_back( st );
          
 

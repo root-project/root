@@ -497,15 +497,19 @@ Double_t* TFitterMinuit::GetCovarianceMatrix() const {
    // Since Minuit2 stores only the independent element need to copy in a 
    // cached vector
    unsigned int npar =  State().Covariance().Nrow();
-   assert (int(npar) == GetNumberFreeParameters() );
-   if (fCovar.size() !=  npar ) {
-      fCovar.resize(npar);
-      for (unsigned int i = 0; i < npar; ++i) { 
-         for (unsigned int j = 0; j < npar; ++j) {
-            fCovar[j + npar*i] = State().Covariance()(i,j);
-         }
+   if ( int(npar) != GetNumberFreeParameters() ) { 
+      // can happen if fit failes that npar is zero
+      std::cout << "TFitterMinuit::GetCovarianceMatrix  Error - return null pointer" << std::endl;
+      return 0; 
+   }
+   if (fCovar.size() !=  npar ) 
+      fCovar.resize(npar*npar);
+   
+   for (unsigned int i = 0; i < npar; ++i) { 
+      for (unsigned int j = 0; j < npar; ++j) {
+         fCovar[j + npar*i] = State().Covariance()(i,j);
       }
-   } 
+   }
    return &(fCovar.front());
 }
 
