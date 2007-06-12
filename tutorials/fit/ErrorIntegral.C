@@ -12,8 +12,11 @@
 #include "TMath.h"
 #include <assert.h>
 #include <iostream>
+#include <cmath>
 
-TF1 * fitFunc;  // fit function pointer (need to be global since it is used by the gradient functions )
+//#define HAVE_OLD_ROOT_VERSION
+
+TF1 * fitFunc;  // fit function pointer 
 
 const int NPAR = 2; // number of function parameters;
 
@@ -23,6 +26,9 @@ double f(double * x, double * p) {
    return p[1]*TMath::Sin( p[0] * x[0] ); 
 }
 
+// when TF1::IntegralError was not available 
+
+#ifdef HAVE_OLD_ROOT_VERSION
 //____________________________________________________________________
 double df_dPar(double * x, double * p) { 
    // derivative of the function w.r..t parameters
@@ -59,6 +65,7 @@ double IntegralError(int npar, double * c, double * errPar, double * covMatrix =
 
    return TMath::Sqrt(err2);
 }
+#endif
 
 //____________________________________________________________________
 void ErrorIntegral() { 
@@ -77,6 +84,12 @@ void ErrorIntegral() {
    // calculate the integral 
    double integral = fitFunc->Integral(0,1);
 
+   TVirtualFitter * fitter = TVirtualFitter::GetFitter();
+   assert(fitter != 0);
+   double * covMatrix = fitter->GetCovarianceMatrix(); 
+
+#ifdef HAVE_OLD_ROOT_VERSION
+
    // calculate now the error (needs the derivatives of the function w..r.t the parameters)
    TF1 * deriv_par0 = new TF1("dfdp0",df_dPar,0,1,1);
    deriv_par0->SetParameter(0,0);
@@ -91,23 +104,32 @@ void ErrorIntegral() {
 
    double * epar = fitFunc->GetParErrors();
 
-   double sigma_integral = IntegralError(2,c,epar);
+   // without correlations
+   double sigma_integral_0 = IntegralError(2,c,epar);
+
+
+
+   // with correlations
+   double sigma_integral = IntegralError(2,c,epar,covMatrix);
+
+#else 
+   
+   // using new function in TF1 (from 12/6/2007) 
+   double sigma_integral = fitFunc->IntegralError(0,1);
+
+#endif
 
    std::cout << "Integral = " << integral << " +/- " << sigma_integral << std::endl;
 
-   TVirtualFitter * fitter = TVirtualFitter::GetFitter();
-   assert(fitter != 0);
-   double * covMatrix = fitter->GetCovarianceMatrix(); 
+   // estimated integral  and error analytically
 
-   double sigma_integral_2 = IntegralError(2,c,epar,covMatrix);
-   std::cout << "Error taking into account correlations:\t" << sigma_integral_2 << std::endl;
- 
    double * p = fitFunc->GetParameters();
    double ic  = p[1]* (1-std::cos(p[0]) )/p[0];
    double c0c = p[1] * (std::cos(p[0]) + p[0]*std::sin(p[0]) -1.)/p[0]/p[0];
    double c1c = (1-std::cos(p[0]) )/p[0];
 
-   double sic = std::sqrt( c0c*c0c * epar[0]*epar[0] + c1c*c1c * epar[1]*epar[1] ); 
+   // estimated error with correlations
+   double sic = std::sqrt( c0c*c0c * covMatrix[0] + c1c*c1c * covMatrix[3] + 2.* c0c*c1c * covMatrix[1]); 
 
    if ( std::fabs(sigma_integral-sic) > 1.E-6*sic ) 
       std::cout << " ERROR: test failed : different analytical  integral : " << ic << " +/- " << sic << std::endl;
