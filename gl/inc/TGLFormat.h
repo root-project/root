@@ -12,9 +12,8 @@
    This class is in a very preliminary state, different
    options have not been tested yet, only defaults.
 
-   Operations are exception-safe, only ctors can throw std::bad_alloc.
    Surface can be:
-   -RGBA/color-index
+   -RGBA
    -with/without depth buffer
    -with/without stencil buffer
    -with/without accum buffer
@@ -24,40 +23,28 @@
 class TGLFormat {
 public:
    enum EFormatOptions {
-      kRGBA = 1,
-      kColorIndex = 2,
-      kDoubleBuffer = 4,
-      kDepth = 16,
-      kAccum = 32,
-      kStencil = 64
+      kDoubleBuffer = 1,
+      kDepth = 2,
+      kAccum = 4,
+      kStencil = 8
    };
 
 private:
    Bool_t fDoubleBuffered;
-
-   class TGLFormatPrivate;
-   TGLFormatPrivate *fPimpl;
+   UInt_t fDepthSize;
+   UInt_t fAccumSize;
+   UInt_t fStencilSize;
 
 public:
+   TGLFormat();
+   TGLFormat(EFormatOptions options);
 
-   TGLFormat();//can throw std::bad_alloc
-   TGLFormat(EFormatOptions options);//can throw std::bad_alloc
-   TGLFormat(const TGLFormat &rhs);//can throw std::bad_alloc
-
+   //Virtual dtor only to supress warnings from g++ -
+   //ClassDef adds virtual functions, so g++ wants virtual dtor.
    virtual ~TGLFormat();
-
-   TGLFormat &operator = (const TGLFormat &rhs);
 
    Bool_t operator == (const TGLFormat &rhs)const;
    Bool_t operator != (const TGLFormat &rhs)const;
-
-   void   SetRGBASize(UInt_t rgba);
-   UInt_t GetRGBASize()const;
-   Bool_t IsRGBA()const;
-
-   UInt_t GetColorIndexSize()const;
-   void   SetColorIndexSize(UInt_t colorIndex);
-   Bool_t IsColorIndex()const;
 
    UInt_t GetDepthSize()const;
    void   SetDepthSize(UInt_t depth);
@@ -74,7 +61,7 @@ public:
    Bool_t IsDoubleBuffered()const;
    void   SetDoubleBuffered(Bool_t db);
 
-   ClassDef(TGLFormat, 0) // Encapsulates OpenGL buffer selection.
+   ClassDef(TGLFormat, 0)//Describes gl buffer format
 };
 
 #endif

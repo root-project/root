@@ -3,9 +3,13 @@
 
 #include <utility>
 #include <memory>
+#include <set>
 
 #ifndef ROOT_TGLContext
 #include "TGLContext.h"
+#endif
+#ifndef ROOT_TVirtualGL
+#include "TVirtualGL.h"
 #endif
 #ifndef ROOT_TGLFormat
 #include "TGLFormat.h"
@@ -62,7 +66,7 @@ private:
 
    Resources (and invariants):
    -fContainer (TGLWidgetContainer) - controlled by std::auto_ptr
-   -fWindowIndex - controlled manually (see CreateGLContainer and dtor)
+   -fWindowIndex - controlled manually (see CreateWidget and dtor)
    -fGLContext - controlled by std::auto_ptr
    -visual info for X11 version, controlled manually (see CreateGLContainer and dtor)
 
@@ -80,7 +84,7 @@ private:
    Non-copyable.
 */
 
-class TGLWidget : public TGCanvas {
+class TGLWidget : public TGCanvas, public TGLPaintDevice {
    friend class TGLContext;
 private:
    //Widget container.
@@ -91,12 +95,19 @@ private:
    //fInnerData is for X11 - <dpy, visualInfo> pair.
    std::pair<void *, void *>         fInnerData;
 
+   TGLFormat                         fGLFormat;
+   //fFromCtor checks that SetFormat was called only from ctor.
+   Bool_t                            fFromCtor;
+
+   std::set<TGLContext *>            fValidContexts;
+
 public:
    TGLWidget(const TGWindow &parent, Bool_t selectInput, UInt_t width, UInt_t height,
-             UInt_t options = kSunkenFrame | kDoubleBorder,
+             const TGLPaintDevice *shareDevice = 0, UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetDefaultFrameBackground());
-   TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput, UInt_t width,
-             UInt_t height, UInt_t options = kSunkenFrame | kDoubleBorder,
+   TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput,
+             UInt_t width, UInt_t height, const TGLPaintDevice *shareDevice = 0,
+             UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetDefaultFrameBackground());
 
    ~TGLWidget();
@@ -117,18 +128,27 @@ public:
    Bool_t            HandleExpose(Event_t *event);         //*SIGNAL*
 
    Int_t             GetWindowIndex()const;
-   const  TGLFormat &GetPixelFormat()const;
+   const  TGLFormat *GetPixelFormat()const;
    Int_t             GetContId()const;
+
+   //This function is public _ONLY_ for calls
+   //via gInterpreter. Do not call it directly.
+   void              SetFormat();
+   //To repaint gl-widget without GUI events.
+   void              Repaint();
 
 private:
    TGLWidget(const TGLWidget &);
    TGLWidget &operator = (const TGLWidget &);
 
-   void CreateGLContainer(const TGLFormat &format);
+   void CreateWidget(const TGLPaintDevice *shareDevice);
+
+   void AddContext(TGLContext *ctx);
+   void RemoveContext(TGLContext *ctx);
 
    std::pair<void *, void *> GetInnerData()const;
 
-   ClassDef(TGLWidget, 0) // A canvas with OpenGL rendering.
+   ClassDef(TGLWidget, 0)
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.2 2007/05/10 11:17:57 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.39 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1021,6 +1021,82 @@ namespace Rgl {
    void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                          Double_t t1, Double_t t2, Double_t t3, Double_t z, const TGLVector3 &planeNormal);
    void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba);
+
+   class TGuardBase {
+   private:
+      mutable Bool_t fActive;
+
+      TGuardBase &operator = (const TGuardBase &rhs);
+   protected:
+      TGuardBase()
+         : fActive(kTRUE)
+      {
+      }
+      TGuardBase(const TGuardBase &rhs)
+         : fActive(kTRUE)
+      {
+         rhs.fActive = kFALSE;
+      }
+
+      Bool_t IsActive()const
+      {
+         return fActive;
+      }
+
+   public:
+      void Stop()const
+      {
+         fActive = kFALSE;
+      }
+   };
+
+   template<class Func, class Arg>
+   class TOneArgGuard : public TGuardBase {
+   private:
+      Func fFunc;
+      Arg  fArg;
+   public:
+      TOneArgGuard(Func f, Arg a)
+         : fFunc(f), fArg(a)
+      {
+      }
+      ~TOneArgGuard()
+      {
+         if (IsActive())
+            fFunc(fArg);
+      }
+   };
+
+   template<class Func, class Arg1, class Arg2>
+   class TTwoArgsGuard : public TGuardBase {
+   private:
+      Func fFunc;
+      Arg1 fArg1;
+      Arg2 fArg2;
+
+   public:
+      TTwoArgsGuard(Func f, Arg1 a1, Arg2 a2)
+         : fFunc(f), fArg1(a1), fArg2(a2)
+      {
+      }
+      ~TTwoArgsGuard()
+      {
+         if (IsActive())
+            fFunc(fArg1, fArg2);
+      }
+   };
+
+   template<class Func, class Arg>
+   TOneArgGuard<Func, Arg> make_guard(Func f, Arg a)
+   {
+      return TOneArgGuard<Func, Arg>(f, a);
+   }
+
+   template<class Func, class Arg1, class Arg2>
+   TTwoArgsGuard<Func, Arg1, Arg2> make_guard(Func f, Arg1 a1, Arg2 a2)
+   {
+      return TTwoArgsGuard<Func, Arg1, Arg2>(f, a1, a2);
+   }
 }
 
 class TGLLevelPalette {

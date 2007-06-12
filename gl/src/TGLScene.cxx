@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.50 2007/06/11 19:56:34 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -867,8 +867,8 @@ void TGLScene::DestroyPhysicalInternal(PhysicalShapeMapIt_t pit)
    // special checks to perform.
    // Caller should also invalidate the draw-list.
 
-   fPhysicalShapes.erase(pit);
    delete pit->second;
+   fPhysicalShapes.erase(pit);
 }
 
 //______________________________________________________________________________
@@ -1210,7 +1210,7 @@ void TGLScene::SortDrawList()
 
    // Sort by volume of shape bounding box
    // !!! MT: diagonal better!
-   sort(fDrawList.begin(), fDrawList.end(), TGLScene::ComparePhysicalVolumes);
+   std::sort(fDrawList.begin(), fDrawList.end(), TGLScene::ComparePhysicalVolumes);
 
    if (gDebug>2) {
       Info("TGLScene::SortDrawList", "sorting took %f msec", stopwatch.End());

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.4 2007/06/11 19:56:33 brun Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include <cstring>
@@ -417,7 +417,7 @@ void TGLPShapeObjEditor::CreateMaterialView()
 {
    // Small gl-window with sphere.
 
-   fMatView = new TGLWidget(*fColorFrame, kFALSE, 120, 120, kSunkenFrame | kDoubleBorder);
+   fMatView = new TGLWidget(*fColorFrame, kFALSE, 120, 120, 0, kSunkenFrame | kDoubleBorder);
    fMatView->AddInput(kExposureMask | kStructureNotifyMask);
    //gVirtualX->SelectInput(fMatView->GetContId(), kExposureMask | kStructureNotifyMask);
    fMatView->Connect("HandleExpose(Event_t*)", "TGLPShapeObjEditor", this, "HandleContainerExpose(Event_t*)");

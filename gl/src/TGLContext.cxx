@@ -11,82 +11,54 @@
 #include "TError.h"
 #include "TROOT.h"
 
+//#include "TGLPBufferPrivate.h"
+#include "TGLContextPrivate.h"
 #include "TGLIncludes.h"
+//#include "TGLPBuffer.h"
 #include "TGLContext.h"
 #include "TGLWidget.h"
 #include "TGLFormat.h"
+#include "TGLUtil.h"
 
 ClassImp(TGLContext)
 
-#ifdef WIN32
-
-class TGLContext::TGLContextPrivate {
-public:
-   HWND  fHWND;
-   HDC   fHDC;
-   HGLRC fGLContext;
-   TGLContextPrivate()
-      : fHWND(0),
-        fHDC(0),
-        fGLContext(0)
-   {
-   }
-
-private:
-   TGLContextPrivate(const TGLContextPrivate &);
-   TGLContextPrivate &operator = (const TGLContextPrivate &);
-};
-
-#else
-
-class TGLContext::TGLContextPrivate {
-public:
-   Display     *fDpy;
-   XVisualInfo *fVisualInfo;
-   GLXContext   fGLContext;
-   Int_t        fWindowIndex;
-
-   TGLContextPrivate()
-      : fDpy(0),
-        fVisualInfo(0),
-        fGLContext(0),
-        fWindowIndex(-1)
-   {
-   }
-
-private:
-   TGLContextPrivate(const TGLContextPrivate &);
-   TGLContextPrivate &operator = (const TGLContextPrivate &);
-};
-
-#endif
-
 //______________________________________________________________________________
-TGLContext::TGLContext(const TGLWidget *wid, const TGLFormat &request)
-               : fGLFormat(request),
-                 fPimpl(new TGLContextPrivate)
+TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
+               : fDevice(wid),
+                 fPimpl(0),
+                 fFromCtor(kTRUE),
+                 fValid(kFALSE)
 {
-   // Constructor.
-
+   //TGLContext ctor "from" TGLWidget.
+   //Makes thread switching.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x)", this, wid));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x, (TGLContext *)0x%x)",
+                                  this, wid, shareList));
    } else
-      SetContext(wid);
+      SetContext(wid, shareList);
+
+   fFromCtor = kFALSE;
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
-TGLContext::~TGLContext()
+/*
+TGLContext::TGLContext(TGLPBuffer *pbuff, const TGLContext *shareList)
+               : fDevice(pbuff),
+                 fPimpl(0),
+                 fFromCtor(kTRUE),
+                 fValid(kFALSE)
 {
-   // Destructor.
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContextPB((TGLPBuffer *)0x%x, (TGLContext *)0x%x)",
+                                  this, pbuff, shareList));
+   } else
+      SetContextPB(pbuff, shareList);
 
-#ifdef WIN32
-   ReleaseDC(fPimpl->fHWND, fPimpl->fHDC);
-   wglDeleteContext(fPimpl->fGLContext);
-#else
-   glXDestroyContext(fPimpl->fDpy, fPimpl->fGLContext);
-#endif
-   delete fPimpl;
+   fFromCtor = kFALSE;
+   fValid = kTRUE;
 }
+*/
 
 #ifdef WIN32
 
@@ -104,78 +76,20 @@ namespace {
       unsigned       fDummy7:2;
    };
 
-   class WDCGuard_t {
-   private:
-      HWND fHWND;
-      HDC  fHDC;
-
-      WDCGuard_t(const WDCGuard_t &);
-      WDCGuard_t &operator = (const WDCGuard_t &);
-
-   public:
-      WDCGuard_t(HWND hWND, HDC hDC)
-         : fHWND(hWND),
-           fHDC(hDC)
-      {
-      }
-      ~WDCGuard_t()
-      {
-         if (fHDC)
-            ReleaseDC(fHWND, fHDC);
-      }
-      void Stop()
-      {
-         fHDC = 0;
-      }
-   };
-
-   void fill_pfd(PIXELFORMATDESCRIPTOR *pfd, const TGLFormat &request)
-   {
-      pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
-      pfd->nVersion = 1;
-      pfd->dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-      if (request.IsDoubleBuffered())
-         pfd->dwFlags |= PFD_DOUBLEBUFFER;
-      pfd->iPixelType = request.IsRGBA() ? PFD_TYPE_RGBA : PFD_TYPE_COLORINDEX;
-      pfd->cColorBits = request.IsRGBA() ? request.GetRGBASize() : request.GetColorIndexSize();
-      if (UInt_t acc = request.GetAccumSize())
-         pfd->cAccumBits = acc;
-      if (UInt_t depth = request.GetDepthSize())
-         pfd->cDepthBits = depth;
-      if (UInt_t stencil = request.GetStencilSize())
-         pfd->cStencilBits = stencil;
-   }
-
-   void check_pixel_format(Int_t pixIndex, HDC hDC, TGLFormat &request)
-   {
-      PIXELFORMATDESCRIPTOR pfd = {};
-
-      if (!DescribePixelFormat(hDC, pixIndex, sizeof pfd, &pfd)) {
-         Warning("TGLContext::SetContext", "DescribePixelFormat failed");
-         return;
-      }
-
-      if (pfd.iPixelType == PFD_TYPE_RGBA)
-         request.SetRGBASize(pfd.cColorBits);
-      else
-         request.SetColorIndexSize(pfd.cColorBits);
-
-      if (pfd.cAccumBits)
-         request.SetAccumSize(pfd.cAccumBits);
-
-      if (pfd.cDepthBits)
-         request.SetDepthSize(pfd.cDepthBits);
-
-      if (pfd.cStencilBits)
-         request.SetStencilSize(pfd.cStencilBits);
-   }
-
 }
 
 //______________________________________________________________________________
-void TGLContext::SetContext(const TGLWidget *widget)
+void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl);
+   //WIN32 gl-context creation. Defined as a member-function (this code removed from ctor)
+   //to make WIN32/X11 separation cleaner.
+   //This function is public only for calls via gROOT and called from ctor.
+   if (!fFromCtor) {
+      Error("TGLContext::SetContext", "SetContext must be called only from ctor");
+      return;
+   }
+
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
    LayoutCompatible_t *trick =
       reinterpret_cast<LayoutCompatible_t *>(gVirtualX->GetWindowID(widget->GetWindowIndex()));
    HWND hWND = *trick->fPHwnd;
@@ -186,39 +100,57 @@ void TGLContext::SetContext(const TGLWidget *widget)
       throw std::runtime_error("GetWindowDC failed");
    }
 
-   WDCGuard_t dcGuard(hWND, hDC);
-   PIXELFORMATDESCRIPTOR pfd = {};
-   fill_pfd(&pfd, fGLFormat);
-
-   if (const Int_t pixIndex = ChoosePixelFormat(hDC, &pfd)) {
-      check_pixel_format(pixIndex, hDC, fGLFormat);
-
-      if (!SetPixelFormat(hDC, pixIndex, &pfd)) {
-         Error("TGLContext::SetContext", "SetPixelFormat failed");
-         throw std::runtime_error("SetPixelFormat failed");
-      }
-
-      if (HGLRC glContext = wglCreateContext(hDC)) {
-         fPimpl->fHWND = hWND;
-         fPimpl->fHDC = hDC;
-         fPimpl->fGLContext = glContext;
-      } else {
-         Error("TGLContext::SetContext", "wglCreateContext failed");
-         throw std::runtime_error("wglCreateContext failed");
-      }
-
+   const Rgl::TGuardBase &dcGuard = Rgl::make_guard(ReleaseDC, hWND, hDC);
+   if (HGLRC glContext = wglCreateContext(hDC)) {
+      fPimpl->fHWND = hWND;
+      fPimpl->fHDC = hDC;
+      fPimpl->fGLContext = glContext;
+      if (shareList && !wglShareLists(shareList->fPimpl->fGLContext, glContext))
+         Error("TGLContext::SetContext", "Cannot share lists");
    } else {
-      Error("TGLContext::SetContext", "ChoosePixelFormat failed");
-      throw std::runtime_error("ChoosePixelFormat failed");
+      Error("TGLContext::SetContext", "wglCreateContext failed");
+      throw std::runtime_error("wglCreateContext failed");
    }
+
+   //Register context for "parent" gl-device.
+   fDevice->AddContext(this);
 
    dcGuard.Stop();
    safe_ptr.release();
 }
 
+/*
+//______________________________________________________________________________
+void TGLContext::SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList)
+{
+   if (!fFromCtor) {
+      Error("TGLContext::SetContextPB", "SetContextPB must be called only from ctor");
+      return;
+   }
+
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+   fPimpl->fHDC = pbuff->fPimpl->fHDC;
+   fPimpl->fGLContext = pbuff->fPimpl->fGLRC;
+
+   if (shareList && !wglShareLists(shareList->fPimpl->fGLContext, fPimpl->fGLContext))
+      Error("TGLContext::SetContextPV", "Cannot share lists");
+
+   fDevice->AddContext(this);
+
+   safe_ptr.release();
+}
+*/
+
 //______________________________________________________________________________
 Bool_t TGLContext::MakeCurrent()
 {
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //make it current.
+   if (!fValid) {
+      Error("TGLContext::MakeCurrent", "This context is invalid.");
+      return kFALSE;
+   }
+
    Bool_t rez = kFALSE;
 
    if (!gVirtualX->IsCmdThread())
@@ -232,27 +164,59 @@ Bool_t TGLContext::MakeCurrent()
 //______________________________________________________________________________
 void TGLContext::SwapBuffers()
 {
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //swap buffers (in case of P-buffer call glFinish()).
+   if (!fValid) {
+      Error("TGLContext::SwapBuffers", "This context is invalid.");
+      return;
+   }
+
    if (!gVirtualX->IsCmdThread())
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SwapBuffers()", this));
-   else
-      wglSwapLayerBuffers(fPimpl->fHDC, WGL_SWAP_MAIN_PLANE);
+   else {
+      if (fPimpl->fHWND)
+         wglSwapLayerBuffers(fPimpl->fHDC, WGL_SWAP_MAIN_PLANE);
+      else
+         glFinish();
+   }
 }
 
-//______________________________________________________________________________
-const TGLFormat &TGLContext::GetPixelFormat()const
+void TGLContext::Release()
 {
-   return fGLFormat;
+   //Make the context invalid and (do thread switch, if needed)
+   //free resources.
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->Release()", this));
+      return;
+   }
+
+   if (fPimpl->fHWND)
+      ReleaseDC(fPimpl->fHWND, fPimpl->fHDC);
+
+   wglDeleteContext(fPimpl->fGLContext);
+   fValid = kFALSE;
 }
 
 #else
 
 //______________________________________________________________________________
-void TGLContext::SetContext(const TGLWidget *widget)
+void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl);
+   //X11 gl-context creation. Defined as a member-function (this code removed from ctor)
+   //to make WIN32/X11 separation cleaner.
+   //This function is public only for calls via gROOT and called from ctor.
+
+   if (!fFromCtor) {
+      Error("TGLContext::SetContext", "SetContext must be called only from ctor");
+      return;
+   }
+
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
    Display *dpy = static_cast<Display *>(widget->GetInnerData().first);
    XVisualInfo *visInfo = static_cast<XVisualInfo *>(widget->GetInnerData().second);
-   GLXContext glCtx = glXCreateContext(dpy, visInfo, None, True);//
+
+   GLXContext glCtx = shareList ? glXCreateContext(dpy, visInfo, shareList->fPimpl->fGLContext, True)
+                                : glXCreateContext(dpy, visInfo, None, True);
 
    if (!glCtx) {
       Error("TGLContext::SetContext", "glXCreateContext failed!");
@@ -264,25 +228,78 @@ void TGLContext::SetContext(const TGLWidget *widget)
    fPimpl->fGLContext = glCtx;
    fPimpl->fWindowIndex = widget->GetWindowIndex();
 
+   fDevice->AddContext(this);
    safe_ptr.release();
 }
+
+/*
+//______________________________________________________________________________
+void TGLContext::SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList)
+{
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+   fPimpl->fDpy = pbuff->fPimpl->fDpy;
+   fPimpl->fGLContext = pbuff->fPimpl->fPBRC;
+   fPimpl->fPBDC = pbuff->fPimpl->fPBDC;
+
+   fDevice->AddContext(this);
+   safe_ptr.release();
+}
+*/
 
 //______________________________________________________________________________
 Bool_t TGLContext::MakeCurrent()
 {
-   return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex), fPimpl->fGLContext);
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //make it current.
+
+   if (!fValid) {
+      Error("TGLContext::MakeCurrent", "This context is invalid.");
+      return kFALSE;
+   }
+
+   if (fPimpl->fWindowIndex != -1)
+      return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex), fPimpl->fGLContext);
+
+   return glXMakeCurrent(fPimpl->fDpy, fPimpl->fPBDC, fPimpl->fGLContext);
 }
 
 //______________________________________________________________________________
 void TGLContext::SwapBuffers()
 {
-   glXSwapBuffers(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex));
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //swap buffers (in case of P-buffer call glFinish()).
+
+   if (!fValid) {
+      Error("TGLContext::SwapCurrent", "This context is invalid.");
+      return;
+   }
+
+   if (fPimpl->fWindowIndex != -1)
+      glXSwapBuffers(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex));
+   else
+      glFinish();
 }
 
 //______________________________________________________________________________
-const TGLFormat &TGLContext::GetPixelFormat()const
+void TGLContext::Release()
 {
-   return fGLFormat;
+   //Make the context invalid and (do thread switch, if needed)
+   //free resources.
+   glXDestroyContext(fPimpl->fDpy, fPimpl->fGLContext);
+   fValid = kFALSE;
 }
 
 #endif
+
+//______________________________________________________________________________
+TGLContext::~TGLContext()
+{
+   //TGLContext dtor. If it's called before TGLPaintDevice's dtor (context is valid)
+   //resource will be freed and context un-registered.
+   if (fValid) {
+      Release();
+      fDevice->RemoveContext(this);
+   }
+
+   delete fPimpl;
+}

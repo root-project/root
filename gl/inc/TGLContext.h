@@ -8,32 +8,41 @@
 #include "Rtypes.h"
 #endif
 
+class TGLPaintDevice;
+//class TGLPBuffer;
 class TGLWidget;
 
 class TGLContext {
+   friend class TGLWidget;
+//   friend class TGLPBuffer;
 private:
-   TGLFormat  fGLFormat;
-
+   TGLPaintDevice *fDevice;
    class TGLContextPrivate;
    TGLContextPrivate *fPimpl;
 
+   Bool_t fFromCtor;//To prohibit user's calls of SetContext.
+   Bool_t fValid;
+
 public:
-   TGLContext(const TGLWidget *glWidget, const TGLFormat &request);//2
+   TGLContext(TGLWidget *glWidget, const TGLContext *shareList = 0);//2
+//   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);//2
 
    virtual ~TGLContext();
 
    Bool_t           MakeCurrent();
    void             SwapBuffers();
 
-   const TGLFormat &GetPixelFormat()const;
-
-   void             SetContext(const TGLWidget *);
+   //This functions are public _ONLY_ for calls via
+   //gROOT under win32. Please, DO NOT CALL IT DIRECTLY.
+   void             SetContext(TGLWidget *widget, const TGLContext *shareList);
+//   void             SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList);
+   void             Release();
 
 private:
    TGLContext(const TGLContext &);
    TGLContext &operator = (const TGLContext &);
 
-   ClassDef(TGLContext, 0) // ROOT wrapper for OpenGL context.
+   ClassDef(TGLContext, 0)
 };
 
 #endif

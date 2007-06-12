@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.28 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -98,8 +98,8 @@ public:
       void ResetDrawStats();
       void UpdateDrawStats(const TGLPhysicalShape & shape, Short_t lod);
       void DumpDrawStats(); // Debug
-
    };
+   friend class TSceneInfo; // for solaris cc
 
 protected:
 
