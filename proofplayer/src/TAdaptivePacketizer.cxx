@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.10 2007/06/05 05:47:25 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.11 2007/06/06 10:21:01 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "Riostream.h"
 #include "TDSet.h"
 #include "TError.h"
+#include "TEnv.h"
 #include "TEventList.h"
 #include "TMap.h"
 #include "TMessage.h"
@@ -390,8 +391,8 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TDynPacketizer",
-                           "Enter (first %lld, num %lld)", first, num);
+   PDB(kPacketizer,1) Info("TAdaptivePacketizer",
+                           "enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
    fSlaveStats = 0;
@@ -424,12 +425,10 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt)))
       fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
 
-   Long_t networkFasterThanHD = 0;
-   if (!(TProof::GetParameter(input, "PROOF_NetworkFasterThanHD",
-                              networkFasterThanHD))) {
-      Printf("Setting fgNetworkFasterThanHD to %d", networkFasterThanHD);
-      fgNetworkFasterThanHD = (Int_t) networkFasterThanHD;
-   }
+   fgNetworkFasterThanHD = gEnv->GetValue("ProofServ.NetworkFasterThanHD", 1);
+   if (fgNetworkFasterThanHD != 1)
+      Info("TAdaptivePacketizer","fgNetworkFasterThanHD set to %d",
+                                 fgNetworkFasterThanHD);
 
    Double_t baseLocalPreference = 1.2;
    TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
@@ -504,7 +503,9 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
-   PDB(kPacketizer,2) Info("","Processing Range: First %lld, Num %lld", first, num);
+   PDB(kPacketizer,2)
+      Info("TAdaptivePacketizer",
+           "processing Range: First %lld, Num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -512,20 +513,26 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
-      PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
+      PDB(kPacketizer,2)
+         Info("TAdaptivePacketizer",
+              "processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEventList()) {
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
-            PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
+            PDB(kPacketizer,2)
+               Info("TAdaptivePacketizer",
+                    "processing element: skip element cur %lld", cur);
             continue;
          }
 
          // this element is after the end of the global range, skip it
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
-            PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
+            PDB(kPacketizer,2)
+               Info("TAdaptivePacketizer",
+                    "processing element: drop element cur %lld", cur);
             continue; // break ??
          }
 
@@ -533,7 +540,9 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          // adjust its number of entries
          if (num != -1 && (first+num < cur+eNum)) {
             e->SetNum( first + num - cur );
-            PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
+            PDB(kPacketizer,2)
+               Info("TAdaptivePacketizer",
+                    "processing element: Adjust end %lld", first + num - cur);
          }
 
          // If this element contains the start of the global range
@@ -541,8 +550,10 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          if (cur < first) {
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
-            PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld",
-                eFirst + (first - cur), first + num - cur);
+            PDB(kPacketizer,2)
+               Info("TAdaptivePacketizer",
+                    "processing element: Adjust start %lld and end %lld",
+                    eFirst + (first - cur), first + num - cur);
          }
 
          cur += eNum;
@@ -550,7 +561,9 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          if (e->GetEventList()->GetN() == 0)
             continue;
       }
-      PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
+      PDB(kPacketizer,2)
+         Info("TAdaptivePacketizer",
+              "processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
@@ -579,8 +592,9 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    if (dset->GetEventList())
       fTotalEntries = dset->GetEventList()->GetN();
 
-   PDB(kGlobal,1) Info("TDynPacketizer","Processing %lld entries in %d files on %d hosts",
-                       fTotalEntries, files, fFileNodes->GetSize());
+   PDB(kGlobal,1)
+      Info("TAdaptivePacketizer", "processing %lld entries in %d files on %d hosts",
+                                  fTotalEntries, files, fFileNodes->GetSize());
    Reset();
 
    // calculating how many files from TDSet are not cached on
@@ -604,7 +618,8 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    }
 
    fFractionOfRemoteFiles = noRemoteFiles / totalNumberOfFiles;
-   Printf("fraction of remote files %f", fFractionOfRemoteFiles);
+   Info("TAdaptivePacketizer",
+        "fraction of remote files %f", fFractionOfRemoteFiles);
 
    if (fValid) {
       Long_t period = 500;
@@ -614,7 +629,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       fProgress->Start(period, kFALSE);
    }
 
-   PDB(kPacketizer,1) Info("TAdaptivePacketizer", "Return");
+   PDB(kPacketizer,1) Info("TAdaptivePacketizer", "return");
 }
 
 //______________________________________________________________________________
@@ -717,14 +732,15 @@ TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextActiveNode()
 
    fActive->Sort();
    PDB(kPacketizer,2) {
-      cout << "TAdaptivePacketizer::NextActiveNode()" << endl;
+      Info("NextActiveNode", "enter");
       fActive->Print();
    }
 
    TFileNode *fn = (TFileNode*) fActive->First();
    // look at only ext slaves
    if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
-      PDB(kPacketizer,1) Info("NextActiveNode","Reached Slaves per Node Limit (%d)", fgMaxSlaveCnt);
+      PDB(kPacketizer,1)
+         Info("NextActiveNode","reached Workers-per-Node limit (%d)", fgMaxSlaveCnt);
       fn = 0;
    }
 
@@ -856,9 +872,12 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TDynPacketizer","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
-                elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
+            PDB(kPacketizer,2)
+                Info("ValidateFiles",
+                     "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                     dset->IsTree() ? "tree" : "objects",
+                     elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          }
       }
 
@@ -1137,7 +1156,7 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if ( file == 0) {
       // needs a new file
       Bool_t openLocal;
-      // aiming for localPrefernece == 1 when #local == #remote events left
+      // aiming for localPreference == 1 when #local == #remote events left
       Float_t localPreference = fBaseLocalPreference - (fNEventsOnRemLoc /
                                 (0.4 *(fTotalEntries - fProcessed)));
       if ( slstat->GetFileNode() != 0 ) {
