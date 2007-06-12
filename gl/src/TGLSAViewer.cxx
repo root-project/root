@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.31 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.32 2007/06/12 10:22:49 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -543,8 +543,6 @@ void TGLSAViewer::SelectionChanged()
 void TGLSAViewer::SavePicture()
 {
    // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
-
-   // TTTT
    if (fPictureFileName.EndsWith(".eps"))
       TGLOutput::Capture(*this, TGLOutput::kEPS_BSP, fPictureFileName.Data());
    else if (fPictureFileName.EndsWith(".pdf"))
@@ -555,4 +553,15 @@ void TGLSAViewer::SavePicture()
       gif->FromWindow(fGLWindow->GetId());
       gif->WriteImage(fPictureFileName.Data());
    }
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::SavePicture(const TString &fileName)
+{
+   // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
+   fPictureFileName = fileName;
+   if (!gVirtualX->IsCmdThread())
+      gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+   else
+      SavePicture();
 }
