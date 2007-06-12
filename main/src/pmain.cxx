@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.13 2007/01/23 11:31:33 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.14 2007/06/08 09:17:25 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -143,20 +143,17 @@ int main(int argc, char **argv)
    while (debug)
       ;
 #endif
-   int loglevel = -1;
-   if (getenv("ROOTPROOFLOGLEVEL"))
+   int loglevel = (argc >= 6) ? strtol(argv[5], 0, 10) : -1;
+   if (loglevel < 0 && getenv("ROOTPROOFLOGLEVEL"))
       loglevel = atoi(getenv("ROOTPROOFLOGLEVEL"));
    if (loglevel > 0)
       fprintf(stderr,"%s: starting %s\n", argv[1], argv[0]);
 
    // Redirect the output
    FILE *fLog = 0;
-   char *logfile = 0;
    char *loc = 0;
-   const char *sessdir = getenv("ROOTPROOFSESSDIR");
-   if (sessdir && !getenv("ROOTPROOFDONOTREDIR")) {
-      logfile = new char[strlen(sessdir) + 5];
-      sprintf(logfile, "%s.log", sessdir);
+   char *logfile = (char *)getenv("ROOTPROOFLOGFILE");
+   if (logfile && !getenv("ROOTPROOFDONOTREDIR")) {
       loc = (loglevel > 0) ? argv[1] : 0;
       if (loglevel > 0)
          fprintf(stderr,"%s: redirecting output to %s\n", argv[1], logfile);
