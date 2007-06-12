@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.40 2007/05/29 12:41:45 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.41 2007/06/07 13:25:34 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -681,12 +681,15 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       gid     = sbuf.fGid;
       modtime = sbuf.fMtime;
    } else {
-      char msg[256];
-
-      sprintf(msg, "Can't read file attributes of \"%s\": %s.",
-              name, gSystem->GetError());
-      new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
-                   "Error", msg, kMBIconStop, kMBOk);
+      if (sbuf.fIsLink) {
+         Info("AddFile", "Broken symlink of %s.", name);
+      } else {
+         char msg[256];
+         sprintf(msg, "Can't read file attributes of \"%s\": %s.",
+                 name, gSystem->GetError());
+         new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
+                      "Error", msg, kMBIconStop, kMBOk);
+      }
       return item;
    }
 
