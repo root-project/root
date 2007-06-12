@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.2 2007/05/10 11:17:55 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.62 2007/06/11 19:56:34 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -317,7 +317,7 @@ void TGLViewer::EndScene()
          fScene.EndSmartRefresh();
       }
    }
-
+   fScene.IncTimeStamp();
    fScene.ReleaseLock(kModifyLock);
 
    if (fPostSceneBuildSetup) {
@@ -757,6 +757,9 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
    // Create and return a new TGLLogicalShape from the supplied buffer
    TGLLogicalShape * newLogical = 0;
 
+   if (buffer.fColor == 1) // black -> light-brown; std behaviour for geom
+      const_cast<TBuffer3D&>(buffer).fColor = 42;
+
    switch (buffer.Type()) {
    case TBuffer3DTypes::kLine:
       newLogical = new TGLPolyLine(buffer);
@@ -823,12 +826,11 @@ TGLViewer::CreateNewPhysical(      UInt_t            ID,
    // Extract indexed color from buffer
    // TODO: Still required? Better use proper color triplet in buffer?
    Int_t colorIndex = buffer.fColor;
-   if (colorIndex < 0) colorIndex = 42; //temporary
+   if (colorIndex < 0) colorIndex = 42;
    Float_t rgba[4];
    TGLScene::RGBAFromColorIdx(rgba, colorIndex, buffer.fTransparency);
-   TGLPhysicalShape * newPhysical = new TGLPhysicalShape(ID, logical, buffer.fLocalMaster,
-                                                         buffer.fReflection, rgba);
-   return newPhysical;
+   return new TGLPhysicalShape(ID, logical, buffer.fLocalMaster,
+                               buffer.fReflection, rgba);
 }
 
 //______________________________________________________________________________

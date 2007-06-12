@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.39 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.40 2007/06/12 10:22:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -839,6 +839,8 @@ public:
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
    enum EAxesType      { kAxesNone, kAxesEdge, kAxesOrigin };
 
+   static void SetDrawQuality(UInt_t dq) { fgDrawQuality = dq; }
+   static void ResetDrawQuality()        { fgDrawQuality = 60; }
 
    // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLManipSet.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -152,7 +152,14 @@ void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
    if (fPShape == 0)
       return;
 
-   fManip[fType]->Draw(rnrCtx.RefCamera());
+   if (rnrCtx.Selection())
+   {
+      TGLUtil::SetDrawQuality(12);
+      fManip[fType]->Draw(rnrCtx.RefCamera());
+      TGLUtil::ResetDrawQuality();
+   } else {
+      fManip[fType]->Draw(rnrCtx.RefCamera());
+   }
 
    if (fDrawBBox && ! rnrCtx.Selection())
    {
