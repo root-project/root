@@ -30,6 +30,9 @@ INCLUDEFILES += $(FTGLDEP)
 ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib
 endif
+ifeq ($(MACOSX_MINOR),3)
+FTGLLIBEXTRA += -lz
+endif
 
 ##### local rules #####
 include/%.h:    $(FTGLDIRI)/%.h
