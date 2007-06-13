@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.122 2007/02/09 10:15:39 rdm Exp $
+// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.123 2007/02/26 15:32:04 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -4473,12 +4473,12 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
       q=2*(lower_tail? p : (1-p));
    }
 
-   if ((ndf-2)<1e-8) {
-      quantile = TMath::Sqrt(2./(q*(2-q))-2);
+   if ((ndf-1)<1e-8) {
+      temp=TMath::PiOver2()*q;
+      quantile = TMath::Cos(temp)/TMath::Sin(temp);
    } else {
-      if ((ndf-1)<1e-8) {
-         temp=TMath::PiOver2()*q;
-         quantile = TMath::Cos(temp)/TMath::Sin(temp);
+      if ((ndf-2)<1e-8) {
+         quantile = TMath::Sqrt(2./(q*(2-q))-2);
       } else {
          Double_t a=1./(ndf-0.5);
          Double_t b=48./(a*a);
