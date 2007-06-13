@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.2 2007/06/07 07:09:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.3 2007/06/07 08:05:00 brun Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TVirtualFitter.h"
+#include "TEnv.h"
+
+#include <limits>
 
 TVirtualFitter *TBinomialEfficiencyFitter::fgFitter = 0;
 
@@ -127,7 +130,10 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    Int_t maxpar = npar;
    if (!fgFitter) {
       TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter","Minuit"))) {
+      TString fitterName = TVirtualFitter::GetDefaultFitter(); 
+      if (fitterName == "") 
+         fitterName = gEnv->GetValue("Root.Fitter","Minuit");
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter", fitterName ))) {
          if (h->LoadPlugin() == -1)
             return 0;
          fgFitter = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
@@ -187,10 +193,12 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
 
    int lowbin  = fDenominator->GetXaxis()->GetFirst();
    int highbin = fDenominator->GetXaxis()->GetLast();
+
+   fFunction->SetParameters(par);
+
    if (fRange) {
       double xmin, xmax;
       fFunction->GetRange(xmin, xmax);
-      fFunction->SetParameters(par);
 
       // Note: this way to ensure that a minimum range chosen exactly at a
       //       bin boundary is far from elegant, but is hopefully adequate.
@@ -201,6 +209,7 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
    f = 0.;
 
    Int_t npoints = 0;
+   Double_t nmax = 0;
    for (int bin = lowbin; bin <= highbin; ++bin) {
 
       // compute the bin edge
@@ -208,6 +217,10 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
       double xup  = fDenominator->GetBinLowEdge(bin+1);
       double nDen = fDenominator->GetBinContent(bin);
       double nNum = fNumerator->GetBinContent(bin);
+
+      // count maximum value to use in the likelihood for inf
+      // i.e. a number much larger than the other terms  
+      if (nDen> nmax) nmax = nDen; 
       if (nDen <= 0.) continue;
       npoints++;
       
@@ -224,12 +237,13 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
          if (mu > 0.) 
             f -= nNum * TMath::Log(mu);
          else
-            f -= nNum * -1E30; // crossing our fingers
+            f -= nmax * -1E30; 
       if (nDen - nNum != 0.)
          if (1. - mu > 0.)
             f -= (nDen - nNum) * TMath::Log(1. - mu);
          else 
-            f -= (nDen - nNum) * -1E30; // crossing our fingers
+            f -= nmax * -1E30; // crossing our fingers
+
    }
    fFunction->SetNumberFitPoints(npoints);
    fFunction->SetChisquare(f); //store likelihood instead of chisquare!
