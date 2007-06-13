@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.4 2007/01/15 16:10:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.5 2007/01/23 10:35:23 brun Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************
@@ -14,6 +14,12 @@
 
 #include "TGraphErrors.h"
 #include "Riostream.h"
+#ifndef ROOT_TAttText
+#include "TAttText.h"
+#endif
+#ifndef ROOT_TAttLine
+#include "TAttLine.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -52,14 +58,19 @@ private:
    Int_t    fCutRadial;    // if fCutRadial = 0, circles are cut by radial axis
                            // if fCutRadial = 1, circles are not cut
    Int_t    fNdivRad;      // Number of radial divisions
-   Int_t    fNdivPol;      // Number of radial divisions
+   Int_t    fNdivPol;      // Number of polar divisions
+   
+   TString* fPolarLabels;  // Specified polar labels
    
    
    
    void Paint(Option_t* options="");
-   void PaintRadialDivisions();
+   void PaintRadialDivisions(Bool_t drawaxis);
    void PaintPolarDivisions();
    void ReduceFraction(Int_t Num, Int_t Denom, Int_t &rnum, Int_t &rden);
+   void Init();                                                                              /**/
+   Int_t FindAlign(Double_t angle);
+   Double_t FindTextAngle(Double_t theta);
 
 public:
    // TGraphPolarGram status bits
@@ -68,6 +79,7 @@ public:
 
    TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
                                      Double_t tmin, Double_t tmax);
+   TGraphPolargram(const char* name);
    ~TGraphPolargram();
    
    
@@ -101,6 +113,7 @@ public:
    void     SetAxisAngle(Double_t angle = 0); //*MENU*
    void     SetNdivPolar(Int_t Ndiv = 508); //*MENU*
    void     SetNdivRadial(Int_t Ndiv = 508); //*MENU*
+   void     SetPolarLabel(Int_t div, const TString & label);
    void     SetPolarLabelSize(Double_t angularsize = 0.04); //*MENU*
    void     SetPolarLabelColor(Color_t tcolorangular = 1); //*MENU*
    void     SetPolarLabelFont(Font_t tfontangular = 62); //*MENU*

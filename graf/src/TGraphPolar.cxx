@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.11 2007/02/21 21:54:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.12 2007/02/28 09:54:38 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -158,7 +158,7 @@ void TGraphPolar::Paint(Option_t* options)
    //    - "P" Polymarker are paint at each point position.
    //    - "E" Paint error bars.
    //    - "F" Paint fill area (closed polygon).
-   //    - "A" Force axis redrawing even if a polagram already exists.
+   //    - "A" Force axis redrawing even if a polargram already exists.
 
    Int_t ipt, i;
    Double_t rwrmin, rwrmax, rwtmin, rwtmax;
@@ -229,7 +229,7 @@ void TGraphPolar::Paint(Option_t* options)
       fPolargram = new TGraphPolargram("Polargram",rwrmin,rwrmax,rwtmin,rwtmax);
       if (opt.Contains("O")) fPolargram->SetBit(TGraphPolargram::kLabelOrtho);
       else fPolargram->ResetBit(TGraphPolargram::kLabelOrtho);
-      fPolargram->Draw(opt);
+      fPolargram->Draw("");
       fOptionAxis = kFALSE;   //Prevent redrawing
    }
 
@@ -478,6 +478,10 @@ void TGraphPolar::SetMinRadial(Double_t minimum)
 
 ClassImp(TGraphPolargram);
 
+//______________________________________________________________________________
+
+
+
 
 //______________________________________________________________________________
 TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
@@ -485,28 +489,29 @@ TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
                                  TNamed(name,"Polargram")
 {
    // TGraphPolargram Constructor.
-
-   fAxisAngle        = 0;
-   fCutRadial        = 0;
-   fDegree           = kFALSE;
-   fGrad             = kFALSE;
-   fLineStyle        = 3;
+   Init();
    fNdivRad          = 508;
    fNdivPol          = 508;
-   fPolarLabelColor  = 1;
-   fPolarLabelFont   = 62;
-   fPolarOffset      = 0.04;
-   fPolarTextSize    = 0.04;
-   fRadialOffset     = 0.025;
-   fRadian           = kTRUE;
-   fRadialLabelColor = 1;
-   fRadialLabelFont  = 62;
-   fRadialTextSize   = 0.035;
+   fPolarLabels      = NULL;
    fRwrmax           = rmax;
    fRwrmin           = rmin;
    fRwtmin           = tmin;
    fRwtmax           = tmax;
-   fTickpolarSize    = 0.02;
+}
+
+
+//______________________________________________________________________________
+TGraphPolargram::TGraphPolargram(const char* name):
+                                 TNamed(name,"Polargram")
+{
+   // Short constructor used in the case of a spider plot.
+
+   Init();
+   fNdivRad          = 0;
+   fNdivPol          = 0;
+   fPolarLabels      = NULL;
+   fRwrmax           = 1;
+   fRwrmin           = 0;
 }
 
 
@@ -514,6 +519,8 @@ TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
 TGraphPolargram::~TGraphPolargram()
 {
    // TGraphPolargram destructor.
+   if (fPolarLabels != NULL)
+       delete [] fPolarLabels;
 }
 
 
@@ -698,12 +705,99 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGraphPolargram::Paint(Option_t * /*chopt*/)
+Int_t TGraphPolargram::FindAlign(Double_t angle)
 {
-   // Paint TGraphPolargram
+   // Find the alignement rule to apply for TText::SetTextAlign(Short_t).
 
-   PaintRadialDivisions();
-   PaintPolarDivisions();
+   Double_t pi = TMath::Pi();
+
+   while(angle < 0 || angle > 2*pi){
+      if(angle < 0) angle+=2*pi;
+      if(angle > 2*pi) angle-=2*pi;
+   }
+   if(!TestBit(TGraphPolargram::kLabelOrtho)){
+      if(angle > 0 && angle < pi/2) return 11;
+      else if(angle > pi/2 && angle < pi) return 31;
+      else if(angle > pi && angle < 3*pi/2) return 33;
+      else if(angle > 3*pi/2 && angle < 2*pi) return 13;
+      else if(angle == 0 || angle == 2*pi) return 12;
+      else if(angle == pi/2) return 21;
+      else if(angle == pi) return 32;
+      else if(angle == 3*pi/2) return 23;
+      else return 0;
+   }
+   else{
+      if(angle >= 0 && angle <= pi/2) return 12;
+      else if((angle > pi/2 && angle <= pi) || (angle > pi && angle <= 3*pi/2)) return 32;
+      else if(angle > 3*pi/2 && angle <= 2*pi) return 12;
+      else return 0;
+   }
+}
+
+
+//______________________________________________________________________________
+Double_t TGraphPolargram::FindTextAngle(Double_t angle)
+{
+   // Determine the orientation of the polar labels according to their angle.
+
+   Double_t pi = TMath::Pi();
+   Double_t convraddeg = 180.0/pi;
+
+   while(angle < 0 || angle > 2*pi){
+      if(angle < 0) angle+=2*pi;
+      if(angle > 2*pi) angle-=2*pi;
+   }
+
+   if(angle >= 0 && angle <= pi/2) return angle*convraddeg;
+   else if(angle > pi/2 && angle <= pi) return (angle + pi)*convraddeg;
+   else if(angle > pi && angle <= 3*pi/2) return (angle - pi)*convraddeg;
+   else if(angle > 3*pi/2 && angle <= 2*pi) return angle*convraddeg;
+   else return 0;
+}
+
+
+//______________________________________________________________________________
+void TGraphPolargram::Init()
+{
+   // Initiallize some of the fields of TGraphPolargram.
+
+   fAxisAngle        = 0;
+   fCutRadial        = 0;
+   fDegree           = kFALSE;
+   fGrad             = kFALSE;
+   fLineStyle        = 3;
+   fPolarLabelColor  = 1;
+   fPolarLabelFont   = 62;
+   fPolarOffset      = 0.04;
+   fPolarTextSize    = 0.04;
+   fRadialOffset     = 0.025;
+   fRadian           = kTRUE;
+   fRadialLabelColor = 1;
+   fRadialLabelFont  = 62;
+   fRadialTextSize   = 0.035;
+   fTickpolarSize    = 0.02;
+}
+
+
+//______________________________________________________________________________
+void TGraphPolargram::Paint(Option_t * chopt)
+{
+   // Paint TGraphPolargram.
+
+   Int_t optionpoldiv, optionraddiv;
+
+   TString opt = chopt;
+   opt.ToUpper();
+
+   if(opt.Contains('P')) optionpoldiv=1; else optionpoldiv=0; //probleme de conflit!
+   if(opt.Contains('R')) optionraddiv=1; else optionraddiv=0;
+   if(opt.Contains('O')) SetBit(TGraphPolargram::kLabelOrtho);
+   else ResetBit(TGraphPolargram::kLabelOrtho);
+   if(!opt.Contains('P') && !opt.Contains('R')) optionpoldiv=optionraddiv=1;
+
+   if(optionraddiv) PaintRadialDivisions(kTRUE);
+   else PaintRadialDivisions(kFALSE);
+   if(optionpoldiv) PaintPolarDivisions();
 }
 
 
@@ -747,7 +841,7 @@ void TGraphPolargram::PaintPolarDivisions()
    // Draw Polar divisions.
    // Check for editable pad or create default.
 
-   Int_t i, j, rnum, rden, x=0, first, last;
+   Int_t i, j, rnum, rden, first, last;
    if (!gPad) return ;
    if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
 
@@ -765,8 +859,7 @@ void TGraphPolargram::PaintPolarDivisions()
          Double_t tantheta  = TMath::Tan(theta);
          Double_t costhetas = (1+fPolarOffset)*costheta;
          Double_t sinthetas = (1+fPolarOffset)*sintheta;
-         Double_t angle     = 0;
-         Double_t offset    = 0;
+         Double_t corr = 0.01;
 
          TLatex *textangular = new TLatex();
          textangular->SetTextColor(GetPolarColorLabel());
@@ -774,110 +867,70 @@ void TGraphPolargram::PaintPolarDivisions()
 
          char* form = " ";
          TGaxis axis;
-
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
             // Polar numbers are aligned with their axis.
-            if (theta <= TMath::PiOver2()) angle = theta*180/TMath::Pi();
-            if (theta > TMath::PiOver2() && theta < 3*TMath::PiOver2())
-               angle = -180+theta*180/TMath::Pi();
-            if (theta >= 3*TMath::PiOver2() && theta < 2*TMath::Pi())
-               angle = -360+theta*180/TMath::Pi();
-            if (fRadian) {
-               // Radian case.
-               ReduceFraction(2*i, ndivMajor, rnum, rden); // Reduces the fraction.
-               if (theta <= TMath::PiOver2()) x=12;
-               if (theta > TMath::PiOver2() && theta < 3*TMath::PiOver2()) x = 32;
-               if (theta >= 3*TMath::PiOver2() && theta < 2*TMath::Pi())   x = 2;
-               if (rnum == 0)                       form = Form("%d",rnum);
-               if (rnum == 1 && rden == 1)          form = Form("#pi");
-               if (rnum == 1 && rden != 1)          form = Form("#frac{#pi}{%d}",rden);
-               if (rnum != 1 && rden == 1 && i !=0) form= Form("%d#pi",rnum);
-               if (rnum != 1 && rden != 1)          form = Form("#frac{%d#pi}{%d}",rnum,rden);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(costhetas,
-                                       sinthetas, angle, GetPolarLabelSize(), form);
+            if(fPolarLabels == NULL){;
+               if (fRadian) {
+                  // Radian case.
+                  ReduceFraction(2*i, ndivMajor, rnum, rden); // Reduces the fraction.
+                  if (rnum == 0)                       form = Form("%d",rnum);
+                  if (rnum == 1 && rden == 1)          form = Form("#pi");
+                  if (rnum == 1 && rden != 1)          form = Form("#frac{#pi}{%d}",rden);
+                  if (rnum != 1 && rden == 1 && i !=0) form= Form("%d#pi",rnum);
+                  if (rnum != 1 && rden != 1)          form = Form("#frac{%d#pi}{%d}",rnum,rden);
+                  textangular->SetTextAlign(FindAlign(theta));
+                  textangular->PaintLatex(costhetas,
+                                          sinthetas, FindTextAngle(theta),
+                                          GetPolarLabelSize(), form);
+               } else {
+                  // Any other cases: numbers are aligned with their axis.
+                  form = Form("%5.3g",txtval);
+                  axis.LabelsLimits(form,first,last);
+                  TString s = Form("%s",form);
+                  if (first != 0) s.Remove(0, first);
+                  textangular->SetTextAlign(FindAlign(theta));
+                  textangular->PaintLatex(costhetas,
+                                          sinthetas, FindTextAngle(theta),
+                                          GetPolarLabelSize(), s);
+               }
             } else {
-               // Any other cases: numbers are aligned with their axis.
-               if ((theta <= TMath::PiOver2()) || (theta >= 3*TMath::PiOver2()
-                                            && theta < 2*TMath::Pi())) x = 12;
-               if (theta > TMath::PiOver2() && theta < 3*TMath::PiOver2()) x = 32;
-               offset = 1.005;
-               form = Form("%5.3g",txtval);
-               axis.LabelsLimits(form,first,last);
-               TString s = Form("%s",form);
-               if (first != 0) s.Remove(0, first);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(offset*costhetas,
-                                     offset*sinthetas, angle, GetPolarLabelSize(), s);
+               // print the specified polar labels
+               TLatex *textangular = new TLatex();
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintLatex(costhetas,sinthetas,FindTextAngle(theta),
+                                       GetPolarLabelSize(), fPolarLabels[i]);
             }
          } else {
-       // Polar numbers are shown horizontaly.
-            if (fRadian) {
-          // Radian case
-               ReduceFraction(2*i, ndivMajor, rnum, rden);
-               if (theta == 0) x=02;
-               if (theta > 0 && theta < TMath::PiOver4()) {
-                  x         = 3;
-                  costhetas = costhetas+0.005;
-                  sinthetas = sinthetas+0.08;
+            // Polar numbers are shown horizontaly.
+            if(fPolarLabels == NULL){
+               if (fRadian) {
+               // Radian case
+                  ReduceFraction(2*i, ndivMajor, rnum, rden);
+                  if (rnum == 0) form = Form("%d",rnum);
+                  if (rnum == 1 && rden == 1)          form = Form("#pi");
+                  if (rnum == 1 && rden != 1)          form = Form("#frac{#pi}{%d}",rden);
+                  if (rnum != 1 && rden == 1 && i !=0) form = Form("%d#pi",rnum);
+                  if (rnum != 1 && rden != 1)          form = Form("#frac{%d#pi}{%d}",rnum,rden);
+                  if(theta >= 3*TMath::Pi()/12.0 && theta < 2*TMath::Pi()/3.0) corr=0.04;
+                  textangular->SetTextAlign(FindAlign(theta));
+                  textangular->PaintLatex(costhetas,corr+sinthetas,0,
+                                          GetPolarLabelSize(),form);
+               } else {
+               // Any other cases where numbers are shown horizontaly.
+                  form = Form("%5.3g",txtval);
+                  axis.LabelsLimits(form,first,last);
+                  TString s = Form("%s",form);
+                  if (first != 0) s.Remove(0, first);
+                  if(theta >= 3*TMath::Pi()/12.0 && theta < 2*TMath::Pi()/3.0) corr=0.04;
+                  textangular->SetTextAlign(FindAlign(theta));
+                  textangular->PaintLatex(costhetas, //j'ai efface des offset la
+                                          corr+sinthetas,0,GetPolarLabelSize(),s);
                }
-               if (theta >= TMath::PiOver4() && theta <= 3*TMath::PiOver4()) x=20;
-               if (theta > 3*TMath::PiOver4() && theta < 5*TMath::PiOver4()) {
-                  x         = 32;
-                  costhetas = costhetas-0.005;
-               }
-               if (theta >= 5*TMath::Pi()/ 4 && theta <3*TMath::PiOver2()) {
-                  x         = 32;
-                  costhetas = costhetas+0.03;
-                  sinthetas = sinthetas-0.07;
-               }
-               if (theta == 3*TMath::PiOver2() ) x=23;
-               if (theta > 3*TMath::PiOver2() && theta <= 7*TMath::PiOver4()) {
-                  x         = 23;
-                  costhetas = costhetas+0.01;
-                  sinthetas = sinthetas-0.01;
-               }
-               if (theta > 7*TMath::PiOver4()  && theta < 2*TMath::Pi()) {
-                  x         = 2;
-                  costhetas = costhetas+0.005;
-                  sinthetas = sinthetas-0.01;
-               }
-               if (rnum == 0) form = Form("%d",rnum);
-               if (rnum == 1 && rden == 1)          form = Form("#pi");
-               if (rnum == 1 && rden != 1)          form = Form("#frac{#pi}{%d}",rden);
-               if (rnum != 1 && rden == 1 && i !=0) form = Form("%d#pi",rnum);
-               if (rnum != 1 && rden != 1)          form = Form("#frac{%d#pi}{%d}",rnum,rden);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(costhetas,sinthetas,angle,GetPolarLabelSize(),form);
             } else {
-          // Any other cases where numbers are shown horizontaly.
-               x = 2;
-               if (theta < TMath::PiOver4()) offset=1;
-               if (theta >= TMath::PiOver4() && theta<TMath::PiOver2()) offset=1.02;
-               if (theta == TMath::PiOver2()) {
-                  x = 22;
-                  offset = 1.03;
-               }
-               if (theta > TMath::PiOver2() && theta<3*TMath::PiOver4()) {
-                  x = 32;
-                  offset = 1.02;
-               }
-               if (theta >= 3*TMath::PiOver4() && theta < 3*TMath::PiOver2()) {
-                  x = 32;
-                  offset = 1;
-               }
-               if (theta == 3*TMath::PiOver2()) {
-                  x = 23;
-                  offset = 1;
-               }
-               if (theta > 3*TMath::PiOver2() && theta < 2*TMath::Pi()) offset = 1;
-               form = Form("%5.3g",txtval);
-               axis.LabelsLimits(form,first,last);
-               TString s = Form("%s",form);
-               if (first != 0) s.Remove(0, first);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(offset*costhetas,
-                                       offset*sinthetas,angle,GetPolarLabelSize(),s);
+               // print the specified polar labels
+               TLatex *textangular = new TLatex();
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
             }
          }
          TAttLine::Modify();
@@ -894,6 +947,8 @@ void TGraphPolargram::PaintPolarDivisions()
                gPad->PaintLine(-1+GetTickpolarSize(),0,-1-GetTickpolarSize(),0);
             }
          }
+         TAttLine::SetLineStyle(1);
+         TAttLine::Modify();
          gPad->PaintLine(0.,0.,costheta,sintheta);
          delete textangular;
        // Add minor lines w/o text.
@@ -904,7 +959,8 @@ void TGraphPolargram::PaintPolarDivisions()
             Double_t thetamin = theta+j*2*TMath::Pi()/(ndivMajor*ndivMinor);
             gPad->PaintLine(0.,0.,TMath::Cos(thetamin),TMath::Sin(thetamin));
          }
-         SetLineStyle(oldLineStyle);
+         TAttLine::SetLineStyle(oldLineStyle);
+         TAttLine::Modify();
       }
    } else {
          Int_t big = (Int_t)fRwtmax;
@@ -921,8 +977,7 @@ void TGraphPolargram::PaintPolarDivisions()
          Double_t tantheta  = TMath::Tan(theta);
          Double_t costhetas = (1+fPolarOffset)*costheta;
          Double_t sinthetas = (1+fPolarOffset)*sintheta;
-         Double_t angle     = 0;
-         Double_t offset    = 0;
+         Double_t corr      = 0.01;
 
          TLatex *textangular = new TLatex();
          textangular->SetTextColor(GetPolarColorLabel());
@@ -932,49 +987,42 @@ void TGraphPolargram::PaintPolarDivisions()
          TGaxis axis;
 
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
+            if(fPolarLabels==NULL){
             // Polar numbers are aligned with their axis.
-               if ((theta <= TMath::PiOver2()) || (theta >= 3*TMath::PiOver2()
-                                            && theta < 2*TMath::Pi())) x = 12;
-               if (theta > TMath::PiOver2() && theta < 3*TMath::PiOver2()) x = 32;
-               offset = 1.005;
                form = Form("%5.3g",txtval);
                axis.LabelsLimits(form,first,last);
                TString s = Form("%s",form);
                if (first != 0) s.Remove(0, first);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(offset*costhetas,
-                                     offset*sinthetas, angle, GetPolarLabelSize(), s);
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintLatex(costhetas,
+                                       sinthetas, FindTextAngle(theta), GetPolarLabelSize(), s);
+            }
+            else{
+               // print the specified polar labels
+               TLatex *textangular = new TLatex();
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
+            }
 
          } else {
+            if(fPolarLabels==NULL){
             // Polar numbers are shown horizontaly.
-               x = 2;
-               if (theta < TMath::PiOver4()) offset=1;
-               if (theta >= TMath::PiOver4() && theta<TMath::PiOver2()) offset=1.02;
-               if (theta == TMath::PiOver2()) {
-                  x = 22;
-                  offset = 1.03;
-               }
-               if (theta > TMath::PiOver2() && theta<3*TMath::PiOver4()) {
-                  x = 32;
-                  offset = 1.02;
-               }
-               if (theta >= 3*TMath::PiOver4() && theta < 3*TMath::PiOver2()) {
-                  x = 32;
-                  offset = 1;
-               }
-               if (theta == 3*TMath::PiOver2()) {
-                  x = 23;
-                  offset = 1;
-               }
-               if (theta > 3*TMath::PiOver2() && theta < 2*TMath::Pi()) offset = 1;
+               cout<<"ici"<<endl;
                form = Form("%5.3g",txtval);
                axis.LabelsLimits(form,first,last);
                TString s = Form("%s",form);
                if (first != 0) s.Remove(0, first);
-               textangular->SetTextAlign(x);
-               textangular->PaintLatex(offset*costhetas,
-                                       offset*sinthetas,angle,GetPolarLabelSize(),s);
+               if(theta >= 3*TMath::Pi()/12.0 && theta < 2*TMath::Pi()/3.0) corr=0.04;
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintLatex(costhetas,
+                                       corr+sinthetas,0,GetPolarLabelSize(),s);
+            } else {
+               // print the specified polar labels
+               TLatex *textangular = new TLatex();
+               textangular->SetTextAlign(FindAlign(theta));
+               textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
             }
+         }
 
          TAttLine::Modify();
          //Check if SetTickpolar is actived, and draw Tickmarcks
@@ -989,6 +1037,8 @@ void TGraphPolargram::PaintPolarDivisions()
                gPad->PaintLine(-1+GetTickpolarSize(),0,-1-GetTickpolarSize(),0);
             }
          }
+         TAttLine::SetLineStyle(1);
+         TAttLine::Modify();
          gPad->PaintLine(0.,0.,costheta,sintheta);
          delete textangular;
          // Add minor lines w/o text.
@@ -1004,14 +1054,15 @@ void TGraphPolargram::PaintPolarDivisions()
             c=a/b*6.28+d*(i-1);
             gPad->PaintLine(0.,0.,TMath::Cos(c),TMath::Sin(c));
          }
-         SetLineStyle(oldLineStyle);
+         TAttLine::SetLineStyle(oldLineStyle);
+         TAttLine::Modify();
       }
    }
 }
 
 
 //______________________________________________________________________________
-void TGraphPolargram::PaintRadialDivisions()
+void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
 {
    // Paint radial divisions.
    // Check for editable pad or create default.
@@ -1042,24 +1093,25 @@ void TGraphPolargram::PaintRadialDivisions()
       chopt[0] = 0;
       strcat(chopt, "SDH");
       if (fNdivRad < 0) strcat(chopt, "N");
+      if(drawaxis){
       // Paint axis.
-      TGaxis axis;
-      axis.SetLabelSize(GetRadialLabelSize());
-      axis.SetLabelColor(GetRadialColorLabel());
-      axis.SetLabelFont(GetRadialLabelFont());
-      axis.SetLabelOffset(GetRadialOffset());
-      axis.PaintAxis(0, 0, TMath::Cos(GetAngle()), TMath::Sin(GetAngle()),
-                                     umin, umax,  ndiv, chopt, 0., kFALSE);
+         TGaxis axis;
+         axis.SetLabelSize(GetRadialLabelSize());
+         axis.SetLabelColor(GetRadialColorLabel());
+         axis.SetLabelFont(GetRadialLabelFont());
+         axis.SetLabelOffset(GetRadialOffset());
+         axis.PaintAxis(0, 0, TMath::Cos(GetAngle()), TMath::Sin(GetAngle()),
+                                        umin, umax,  ndiv, chopt, 0., kFALSE);
+      }
 
       // Paint Circles.
       // First paint main circle.
       PaintCircle(0.,0.,1,0.,360,0);
-
       // Optimised case.
       if (fNdivRad>0 ) {
          Double_t frwrmini, frwrmaxi, binWidth2 =0;
          THLimitsFinder::Optimize(frwrmin,frwrmin+binWidth,ndivMinor,frwrmini,
-                                  frwrmaxi, ndivminor,binWidth2,"");
+                                    frwrmaxi, ndivminor,binWidth2,"");
          Double_t dist2 = dist/(ndivminor);
          // Paint major circles.
          for (i=1; i<=ndivmajor+2; i++) {
@@ -1169,7 +1221,8 @@ void TGraphPolargram::SetNdivPolar(Int_t ndiv)
    // i sets the major Polar divisions.
    // j sets the minor Polar divisions.
 
-   if (ndiv > 0) fNdivPol = ndiv;
+   if (ndiv > 0)
+      fNdivPol = ndiv;
    if (gPad) gPad->Modified();
 }
 
@@ -1187,7 +1240,18 @@ void TGraphPolargram::SetNdivRadial(Int_t ndiv)
 }
 
 
-//______________________________________________________________________________
+//_____________________________________________________________________________
+void TGraphPolargram::SetPolarLabel(Int_t div, const TString & label)
+{
+   // Set some specified polar labels, used in the case of a spider plot.
+   if(fPolarLabels == NULL)
+      fPolarLabels = new TString[fNdivPol];
+   fPolarLabels[div]=label;
+   if (gPad) gPad->Modified();
+}
+
+
+//_____________________________________________________________________________
 void TGraphPolargram::SetPolarLabelColor(Color_t tcolorangular )
 {
    // Set Polar labels color.
@@ -1199,6 +1263,7 @@ void TGraphPolargram::SetPolarLabelColor(Color_t tcolorangular )
 //______________________________________________________________________________
 void TGraphPolargram::SetPolarLabelFont(Font_t tfontangular)
 {
+
    // Set Polar label font.
 
    fPolarLabelFont = tfontangular;
