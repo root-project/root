@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.123 2007/02/26 15:32:04 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.124 2007/06/13 19:33:07 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -4488,7 +4488,7 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
          Double_t y=TMath::Power(x, (2./ndf));
          if (y>0.05+a){
             //asymptotic inverse expansion about normal
-            x=NormQuantile(q*0.5);
+            x=TMath::NormQuantile(q*0.5);
             y=x*x;
             if (ndf<5) c+=0.3*(ndf-4.5)*(x+0.6);
             c+=(((0.05*d*x-5.)*x-7.)*x-2.)*x +b;
