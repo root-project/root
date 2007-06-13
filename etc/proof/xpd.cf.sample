@@ -112,7 +112,15 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 # xpd.image <image>
 ###
 ### Working directory for sessions [<User_Home>/proof]
+### If this directive is given, the user working directories will be in the
+### form <work_dir>/<user_name>
 # xpd.workdir <work_dir>
+###
+### Dataset root directory [<User_WorkDir>/dataset]
+### If this directive is given, the user dataset directories will be in the
+### form <dataset_dir>/<group>/<User>, with <group>="default" if <User>
+### does not belongs to any of the defined groups.
+# xpd.datasetdir <dataset_dir>
 ###
 ### Max number of old PROOF sessions for which the working directory
 ### is kept with all the relevant files in (logs, env, ...); non-positive
@@ -202,6 +210,12 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### of users allowed to connect to the cluster.
 # xpd.allowedusers usr1,usr2,usr3
 
+###
+### Group information file
+### Defines the file containing the information about the composition
+### of the group and their properties. See example in xpd.groups.sample .
+# xpd.groupfile $ROOTSYS/etc/proof/xpd.groups
+
 ### xproofd specific security directives, allowing for independent
 ### rules from the ones applying to data serving.
 ### NB: 'if <pattern>' not supported for these directives (protbind can
@@ -228,3 +242,15 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### for user 'minni' and to "/tmp/proof/pippo/.creds" for user 'pippo'.
 ### There can be as 'putenv' directives as needed.
 # xpd.putenv  XrdSecPWDSRVPUK=<workdir>/<user>/.creds/pwdsrvpuk
+
+###
+### This directive may be used to set additional rootrc-like variables
+### for 'proofserv'. This allows to control everything from this configuration
+### file. At start-up, 'proofserv' will read the additional directives
+### from the file "session.rootrc" created in the session working dir
+### by XProofd; "session.rootrc" is actually a symlink to the real file
+### whose name is in the form
+###     <node_type>-<ordinal>-<session_unique_tag>.rootrc
+### Example:
+###
+### xpd.putrc  AName.AVar: AValue
