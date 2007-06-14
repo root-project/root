@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.9 2006/05/29 07:59:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.10 2007/06/14 06:51:11 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -45,7 +45,6 @@ private:
    Int_t  GetLine(TSocket *s, char *line, Int_t size);
    Int_t  GetFromWeb(char *buf, Int_t len, const TString &msg);
    Int_t  GetFromWeb10(char *buf, Int_t len, const TString &msg);
-   Int_t  GetFromWebMulti10(char *buf, Int_t len, const TString &msg);
    Bool_t ReadBuffer10(char *buf, Int_t len);
    Bool_t ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 

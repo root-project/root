@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.20 2006/06/27 14:36:27 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.21 2007/06/14 06:51:12 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -284,7 +284,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
       n   += len[i];
       if (msg.Length() > 8000) {
          msg += "\r\n\r\n";
-         if (GetFromWebMulti10(&buf[k], n, msg) == -1)
+         if (GetFromWeb10(&buf[k], n, msg) == -1)
             return kTRUE;
          msg = msgh;
          k += n;
@@ -294,7 +294,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 
    msg += "\r\n\r\n";
 
-   if (GetFromWebMulti10(&buf[k], n, msg) == -1)
+   if (GetFromWeb10(&buf[k], n, msg) == -1)
       return kTRUE;
 
    return kFALSE;
@@ -333,7 +333,8 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 //______________________________________________________________________________
 Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 {
-   // Read request from web server. Uses HTTP 1.0 daemon wihtout mod-root.
+   // Read multiple byte range request from web server.
+   // Uses HTTP 1.0 daemon wihtout mod-root.
    // Returns -1 in case of error, 0 in case of success.
 
    if (!len) return 0;
@@ -350,19 +351,47 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    }
 
    char line[1024];
-   Int_t n, ret = 0;
+   Int_t n, ret = 0, nranges = 0, ltot = 0;
+   TString boundary, boundaryEnd;
+   Long64_t first = -1, last, tot;
 
    while ((n = GetLine(&s, line, 1024)) >= 0) {
       if (n == 0) {
-         if (gDebug > 0)
-            Info("GetFromWeb10", "got all headers");
          if (ret < 0)
             return ret;
-         break;
+
+         if (first >= 0) {
+            Int_t ll = Int_t(last - first) + 1;
+            if (s.RecvRaw(&buf[ltot], ll) == -1) {
+               Error("GetFromWeb10", "error receiving data from remote host %s", fUrl.GetHost());
+               return -1;
+            }
+            ltot += ll;
+            fBytesRead += ll;
+            SetFileBytesRead(GetFileBytesRead() + ll);
+
+            first = -1;
+
+            if (boundary == "")
+               break;  // not a multipart response
+         }
+
+         continue;
       }
 
       if (gDebug > 0)
          Info("GetFromWeb10", "header: %s", line);
+
+      if (boundaryEnd == line) {
+         if (gDebug > 0)
+            Info("GetFromWeb10", "got all headers");
+         break;
+      }
+      if (boundary == line) {
+         nranges++;
+         if (gDebug > 0)
+            Info("GetFromWeb10", "get new multipart byte range (%d)", nranges);
+      }
 
       TString res = line;
       if (res.BeginsWith("HTTP/1.")) {
@@ -374,78 +403,6 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
             Error("GetFromWeb10", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
          }
       }
-      if (res.BeginsWith("Content-Range:")) {
-
-      }
-   }
-
-   // receive actual data
-   if (s.RecvRaw(buf, len) == -1) {
-      Error("GetFromWeb10", "error receiving data from remote host %s", fUrl.GetHost());
-      return -1;
-   }
-
-   fBytesRead += len;
-   SetFileBytesRead(GetFileBytesRead() + len);
-
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TWebFile::GetFromWebMulti10(char *buf, Int_t len, const TString &msg)
-{
-   // Read multiple byte range request from web server.
-   // Uses HTTP 1.0 daemon wihtout mod-root.
-   // Returns -1 in case of error, 0 in case of success.
-
-   if (!len) return 0;
-
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid()) {
-      Error("GetFromWebMulti10", "cannot connect to remote host %s", fUrl.GetHost());
-      return -1;
-   }
-
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1) {
-      Error("GetFromWebMulti10", "error sending command to remote host %s", fUrl.GetHost());
-      return -1;
-   }
-
-   char line[1024];
-   Int_t n, ret = 0, nranges = 0, ltot = 0;
-   TString boundary, boundaryEnd;
-   Long64_t first = -1, last, tot;
-
-   while ((n = GetLine(&s, line, 1024)) >= 0) {
-      if (n == 0) {
-         if (ret < 0)
-            return ret;
-         continue;
-      }
-      if (boundaryEnd == line) {
-         if (gDebug > 0)
-            Info("GetFromWebMulti10", "got all headers");
-         break;
-      }
-      if (boundary == line) {
-         nranges++;
-         if (gDebug > 0)
-            Info("GetFromWebMulti10", "get new multipart byte range (%d)", nranges);
-      }
-
-      if (gDebug > 0)
-         Info("GetFromWebMulti10", "header: %s", line);
-
-      TString res = line;
-      if (res.BeginsWith("HTTP/1.")) {
-         TString scode = res(9, 3);
-         Int_t code = scode.Atoi();
-         if (code != 206) {
-            ret = -1;
-            TString mess = res(13, 1000);
-            Error("GetFromWebMulti10", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
-         }
-      }
       if (res.BeginsWith("Content-Type: multipart")) {
          boundary = "--" + res(res.Index("boundary=")+9, 1000);
          boundaryEnd = boundary + "--";
@@ -453,26 +410,13 @@ Int_t TWebFile::GetFromWebMulti10(char *buf, Int_t len, const TString &msg)
       if (res.BeginsWith("Content-range:")) {
          sscanf(res.Data(), "Content-range: bytes %lld-%lld/%lld", &first, &last, &tot);
       }
-      if (first >= 0) {
-         if (GetLine(&s, line, 1024) != 0) {
-            Error("GetFromWebMulti10", "expected empty line from remote host %s", fUrl.GetHost());
-            return -1;
-         }
-         Int_t ll = Int_t(last - first) + 1;
-         if (s.RecvRaw(&buf[ltot], ll) == -1) {
-            Error("GetFromWebMulti10", "error receiving data from remote host %s", fUrl.GetHost());
-            return -1;
-         }
-         ltot += ll;
-         fBytesRead += ll;
-         SetFileBytesRead(GetFileBytesRead() + ll);
-
-         first = -1;
+      if (res.BeginsWith("Content-Range:")) {
+         sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
       }
    }
 
    if (ltot != len) {
-      Error("GetFromWebMulti10", "error receiving expected amount of data (got %d, expected %d) from remote host %s",
+      Error("GetFromWeb10", "error receiving expected amount of data (got %d, expected %d) from remote host %s",
             ltot, len, fUrl.GetHost());
       return -1;
    }
