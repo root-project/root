@@ -52,7 +52,7 @@ struct LessPreciseType<T1, T2, false> {
 
 template <typename Scalar1, typename Scalar2>
 int
-closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
+closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) {
   int ret = 0;
   int pr = std::cout.precision(18);
   Scalar1 eps1 = std::numeric_limits<Scalar1>::epsilon();
@@ -95,7 +95,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
 }
 
 template <class V1, class V2>
-int compare3D (const V1 & v1, const V2 & v2, int ticks) {
+int compare3D (const V1 & v1, const V2 & v2, double ticks) {
   int ret =0;
   typedef typename V1::CoordinateType CoordType1;
   typedef typename V2::CoordinateType CoordType2;
@@ -131,7 +131,7 @@ int compare3D (const V1 & v1, const V2 & v2, int ticks) {
 }
 
 template <class C>
-int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
+int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 #ifdef DEBUG
   std::cout <<"\n>>>>> Testing 3D from " << v << " ticks = " << ticks << std::endl;
@@ -141,10 +141,13 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   DisplacementVector3D< Cartesian3D<double> > vxyz_d (v.x(), v.y(), v.z());
 
   double r = std::sqrt (v.x()*v.x() + v.y()*v.y() + v.z()*v.z());
-  double theta = r>0 ? std::acos ( v.z()/r ) : 0;
   double rho = std::sqrt (v.x()*v.x() + v.y()*v.y());
-  double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
   double z   = v.z();
+//   double theta = r>0 ? std::acos ( z/r ) : 0;
+//   if (std::abs( std::abs(z) - r) < 10*r* std::numeric_limits<double>::epsilon() ) 
+   double  theta = std::atan2( rho, z );  // better when theta is small or close to pi
+  
+  double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
   DisplacementVector3D< Polar3D<double> > vrtp_d ( r, theta, phi );
 
   double eta;
@@ -277,8 +280,17 @@ int main () {
   ret |= test3D (XYZVector ( 0.0, 0.0, 35.0 )    ,30 );
   ret |= test3D (XYZVector ( 0.0, 0.0, -35.0 )   ,30 );
 // When z is big compared to rho, it is very hard to get precision in polar/eta:
-  ret |= test3D (XYZVector ( 0.01, 0.02, 16.0 )  ,400000 );
-  ret |= test3D (XYZVector ( 0.01, 0.02, -16.0 ) ,400000 );
+  ret |= test3D (XYZVector ( 0.01, 0.02, 16.0 )  ,10 );
+  ret |= test3D (XYZVector ( 0.01, 0.02, -16.0 ) ,40000 );
+// test case when eta is large 
+  ret |= test3D (XYZVector ( 1.E-8, 1.E-8, 10.0 )  , 20 );
+// when z is neg error is larger in eta when calculated from polar 
+// since we have a larger error in theta which is closer to pi 
+  ret |= test3D (XYZVector ( 1.E-8, 1.E-8, -10.0 ) ,2.E9 );   
+
+  // small value of z
+  ret |= test3D (XYZVector ( 10., 10., 1.E-8 ) ,1.0E6 );   
+  ret |= test3D (XYZVector ( 10., 10., -1.E-8 ) ,1.0E6 );   
 
 
   return ret;
