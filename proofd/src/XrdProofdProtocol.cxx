@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.49 2007/06/05 06:00:05 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.50 2007/06/12 13:51:04 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -4002,12 +4002,12 @@ int XrdProofdProtocol::SetProofServEnv(XrdROOT *r)
       char *rootsys = (char *) r->Dir();
 #ifndef ROOTLIBDIR
       char *ldpath = 0;
-      if (getenv(gLIBPATH)) {
-         ldpath = new char[32+strlen(rootsys)+strlen(getenv(gLIBPATH))];
-         sprintf(ldpath, "%s=%s/lib:%s", gLIBPATH, rootsys, getenv(gLIBPATH));
+      if (getenv(XPD_LIBPATH)) {
+         ldpath = new char[32+strlen(rootsys)+strlen(getenv(XPD_LIBPATH))];
+         sprintf(ldpath, "%s=%s/lib:%s", XPD_LIBPATH, rootsys, getenv(XPD_LIBPATH));
       } else {
          ldpath = new char[32+strlen(rootsys)];
-         sprintf(ldpath, "%s=%s/lib", gLIBPATH, rootsys);
+         sprintf(ldpath, "%s=%s/lib", XPD_LIBPATH, rootsys);
       }
       putenv(ldpath);
 #endif
@@ -4314,7 +4314,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    }
 
    // Library path
-   fprintf(fenv, "%s=%s\n", gLIBPATH, getenv(gLIBPATH));
+   fprintf(fenv, "%s=%s\n", XPD_LIBPATH, getenv(XPD_LIBPATH));
 
    // ROOTSYS
    fprintf(fenv, "ROOTSYS=%s\n", xps->ROOT()->Dir());

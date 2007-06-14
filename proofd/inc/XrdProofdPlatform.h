@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdPlatform.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -92,13 +92,13 @@
 
 // Name of the env variable used to define the library path
 #if defined(__hpux) || defined(_HIUX_SOURCE)
-static const char *gLIBPATH = "SHLIB_PATH";
+#define XPD_LIBPATH "SHLIB_PATH"
 #elif defined(_AIX)
-static const char *gLIBPATH = "LIBPATH";
+#define XPD_LIBPATH "LIBPATH"
 #elif defined(__APPLE__)
-static const char *gLIBPATH = "DYLD_LIBRARY_PATH";
+#define XPD_LIBPATH "DYLD_LIBRARY_PATH"
 #else
-static const char *gLIBPATH = "LD_LIBRARY_PATH";
+#define XPD_LIBPATH "LD_LIBRARY_PATH"
 #endif
 
 #endif
