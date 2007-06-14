@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.8 2006/05/22 11:13:33 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.9 2006/05/29 07:59:27 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -30,13 +30,24 @@
 #include "TUrl.h"
 #endif
 
+class TSocket;
+
 
 class TWebFile : public TFile {
 
 private:
+   mutable Long64_t  fSize;         // file size
+   Bool_t            fHasModRoot;   // true if server has mod_root installed
+
    TWebFile() { }
-   void Init(Bool_t);
-   Int_t GetFromWeb(char *buf, Int_t len, const TString &msg);
+   void   Init(Bool_t);
+   Int_t  GetHead();
+   Int_t  GetLine(TSocket *s, char *line, Int_t size);
+   Int_t  GetFromWeb(char *buf, Int_t len, const TString &msg);
+   Int_t  GetFromWeb10(char *buf, Int_t len, const TString &msg);
+   Int_t  GetFromWebMulti10(char *buf, Int_t len, const TString &msg);
+   Bool_t ReadBuffer10(char *buf, Int_t len);
+   Bool_t ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
 public:
    TWebFile(const char *url);
