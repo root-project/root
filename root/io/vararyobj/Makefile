@@ -2,12 +2,12 @@ ifeq (,$(strip $(ROOTTEST_HOME)))
    export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
-TEST_TARGETS += vararyobj vararynoclassdefobj
+TEST_TARGETS += vararyobj vararynoclassdefobj vararypolypobj
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.root
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-.PHONY: vararyobj vararyruns vararynoclassdefobj vararynoclassdefruns
+.PHONY: vararyobj vararyruns vararynoclassdefobj vararynoclassdefruns vararypolypobj vararypolypruns
 
 vararyobj: vararyruns
 	$(CMDECHO) rm -f tmp1.log tmp2.log ; \
@@ -19,7 +19,7 @@ vararyobj: vararyruns
 	  exit 255 ; \
 	fi ; \
 	: rm -f *.log *.clog *.d *.so *.root; \
-        rm tmp1.log tmp2.log ; \
+	rm tmp1.log tmp2.log ; \
 	:
 
 
@@ -38,7 +38,7 @@ vararynoclassdefobj: vararynoclassdefruns
 	  exit 255 ; \
 	fi ; \
 	: rm -f *.log *.clog *.d *.so *.root; \
-        rm tmp3.log tmp4.log ; \
+	rm tmp3.log tmp4.log ; \
 	:
 
 
@@ -46,4 +46,19 @@ vararynoclassdefobj: vararynoclassdefruns
 # does not run until the Write test has finished.
 vararynoclassdefruns: varyingArrayNoClassDefWrite.clog
 	$(CMDECHO) $(MAKE) --no-print-directory varyingArrayNoClassDefRead.clog
+
+vararypolypobj: vararypolypruns
+	$(CMDECHO)diff -u writevararypolyp.good writevararypolyp.clog; \
+	status=$$?; \
+	if test $$status -ne 0; \
+	then \
+	  exit $$status; \
+	fi; \
+	diff -u readvararypolyp.good readvararypolyp.clog
+
+
+# We do it this way so that if make -j is used the Read test
+# does not run until the Write test has finished.
+vararypolypruns: writevararypolyp.clog
+	$(CMDECHO) $(MAKE) --no-print-directory readvararypolyp.clog
 
