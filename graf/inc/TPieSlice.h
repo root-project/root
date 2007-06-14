@@ -31,8 +31,6 @@ class TPieSlice : public TNamed, public TAttFill, public TAttLine {
 
 private:
    Bool_t   fIsActive;        //! True if is the slice under the mouse pointer
-   Int_t    fX[6];            //! The x coordinates, in pixel value, of this slice
-   Int_t    fY[6];            //! The y coordinates, in pixel value, of this slice
 
 protected:
    TPie *fPie;             // The TPie object that contain this slice

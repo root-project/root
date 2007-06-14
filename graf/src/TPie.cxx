@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.15 2007/03/16 14:58:17 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.16 2007/03/16 15:59:16 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -177,7 +177,8 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 
    Int_t dist = 9999;
 
-   if ( (gCurrent_slice = DistancetoSlice(px,py))>=0 ) {
+   gCurrent_slice = DistancetoSlice(px,py);
+   if ( gCurrent_slice>=0 ) {
       if (gCurrent_rad<=fRadius) {
          dist = 0;
       }
@@ -208,13 +209,15 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
    if (fIs3D==kTRUE) {
-      radY  = .5*radX;
-      radXY = .5;
+      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
+      radY  = radXY*radX;
    }
 
    Double_t phimin;
    Double_t cphi;
    Double_t phimax;
+
+   Float_t dPxl = (gPad->PixeltoY(0)-gPad->PixeltoY(1))/radY;
    for (Int_t i=0;i<fNvals;++i) {
       fPieSlices[i]->SetIsActive(kFALSE);
 
@@ -230,14 +233,16 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
       Double_t dx  = (xx-fX-radOffset*TMath::Cos(cphi))/radX;
       Double_t dy  = (yy-fY-radOffset*TMath::Sin(cphi)*radXY)/radY;
 
+      if (TMath::Abs(dy)<dPxl) dy = dPxl;
+
       Double_t ang = TMath::ATan2(dy,dx);
       if (ang<0) ang += TMath::TwoPi();
 
       Double_t dist = TMath::Sqrt(dx*dx+dy*dy);
 
       if ( ((ang>=phimin && ang <= phimax) || (phimax>TMath::TwoPi() &&
-             ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
-             dist<=1.) { // if true the pointer is in the slice region
+            ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
+            dist<=1.) { // if true the pointer is in the slice region
 
          gCurrent_x    = dx;
          gCurrent_y    = dy;
@@ -267,7 +272,6 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
          break;
       }
    }
-
    return result;
 }
 
@@ -310,8 +314,8 @@ void TPie::DrawGhost()
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
    if (fIs3D) {
-      radY  = .5*radX;
-      radXY = .5;
+      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
+      radY  = radXY*radX;
    }
 
    for (Int_t i=0;i<fNvals&&fIs3D==kTRUE;++i) {
@@ -406,6 +410,11 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad) return;
    if (!gPad->IsEditable() && event != kMouseEnter) return;
 
+   if (gCurrent_slice<=-10) {
+      gPad->SetCursor(kCross);
+      return;
+   }
+
    MakeSlices();
 
    static bool isMovingPie(kFALSE);
@@ -436,8 +445,8 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
    if (fIs3D==kTRUE) {
-      radY  = .5*radX;
-      radXY = .5;
+      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
+      radY  = radXY*radX;
    }
 
    Int_t dx, dy;
@@ -749,6 +758,7 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fSlices        = 0;
    fLegend        = 0;
    fHeight        = 0.08;
+   fAngle3D       = 30;
 
    fLabelsOffset = gStyle->GetLabelOffset();
 
@@ -885,7 +895,7 @@ void TPie::Paint(Option_t *option)
    Double_t radXY = 1.;
 
    if (fIs3D) {
-      radXY = .5;
+      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
       radY = fRadius*radXY;
    }
 
@@ -957,28 +967,6 @@ void TPie::Paint(Option_t *option)
       arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
                                             fSlices[2*i+2], 0.);
 
-      // eval the 6 points to delimit the slice
-      Int_t x[3], y[3];
-      x[0] = gPad->XtoAbsPixel(ax);
-      y[0] = gPad->XtoAbsPixel(ay);
-      x[1] = gPad->XtoAbsPixel(ax+radX*TMath::Cos(fSlices[2*i]/180.*TMath::Pi()));
-      y[1] = gPad->XtoAbsPixel(ay+radX*TMath::Sin(fSlices[2*i]/180.*TMath::Pi()));
-      x[2] = gPad->XtoAbsPixel(ax+radX*TMath::Cos(fSlices[2*i+2]/180.*TMath::Pi()));
-      y[2] = gPad->XtoAbsPixel(ay+radX*TMath::Sin(fSlices[2*i+2]/180.*TMath::Pi()));
-
-      fPieSlices[i]->fX[0] = (x[0]+x[1])/2;
-      fPieSlices[i]->fY[0] = (y[0]+y[1])/2;
-      fPieSlices[i]->fX[1] = x[1];
-      fPieSlices[i]->fY[1] = y[1];
-      fPieSlices[i]->fY[2] = (x[1]+x[2])/2;
-      fPieSlices[i]->fY[2] = (y[1]+y[2])/2;
-      fPieSlices[i]->fX[3] = (x[0]+x[2])/2;
-      fPieSlices[i]->fY[3] = (y[0]+y[2])/2;
-      fPieSlices[i]->fX[5] = x[2];
-      fPieSlices[i]->fY[5] = y[2];
-      fPieSlices[i]->fY[4] = (x[1]+x[2])/2;
-      fPieSlices[i]->fY[4] = (y[1]+y[2])/2;
-
    } // end loop to draw the slices
 
    // Loop to place the labels.
@@ -1040,9 +1028,14 @@ void TPie::Paint(Option_t *option)
             lblang -= TMath::Pi();
          }
       } else { // horizontal labels (default direction)
-         if (aphi>TMath::Pi()/2. && aphi<=TMath::Pi()*3./2.) lx -= w;
-         if (aphi>=TMath::Pi() && aphi<TMath::TwoPi())       ly -= h;
+         aphi = TMath::ATan2(TMath::Sin(aphi)*radXY,TMath::Cos(aphi));
+         if (aphi>TMath::PiOver2() || aphi<=-TMath::PiOver2()) lx -= w;
+         if (aphi<0)                                           ly -= h;
       }
+
+      Float_t rphi = TMath::ATan2((ly-fY)*radXY,lx-fX);
+      if (rphi < 0 && fIs3D && label_off>=0.)
+         ly -= fHeight;
 
       textlabel->PaintLatex(lx,ly,
                             lblang*180/TMath::Pi()+GetTextAngle(),
@@ -1176,6 +1169,22 @@ void TPie::SavePrimitive(ostream &out, Option_t *option)
    }
 
    out << "   " << GetName() << "->Draw(\"" << option << "\");" << endl;
+}
+
+
+
+//______________________________________________________________________________
+void TPie::SetAngle3D(Float_t val) {
+   // Set the value of for the pseudo 3D view angle, in degree.
+   // The range of the permitted values is: [0,90]
+
+   // check if val is in the permitted range
+   while (val>360.) val -= 360.;
+   while (val<0)    val += 360.;
+   if      (val>=90 && val<180)   val = 180-val;
+   else if (val>=180 && val<=360) val = 360-val;
+
+   fAngle3D = val;
 }
 
 

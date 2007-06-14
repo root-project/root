@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.5 2006/12/11 11:00:27 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.6 2007/01/24 17:06:21 couet Exp $
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
@@ -51,6 +51,7 @@ protected:
    TPieSlice **fPieSlices;      //[fNvals] Slice array of this pie-chart
    Bool_t      fIs3D;           //! true if the pseudo-3d is enabled
    Double_t    fHeight;         // Pheight height of the slice in pixel
+   Float_t     fAngle3D;        // The angle of the pseudo-3d view
 
 public:
    TPie();
@@ -65,6 +66,7 @@ public:
    Int_t          DistancetoSlice(Int_t,Int_t);
    virtual void   Draw(Option_t *option="l"); // *MENU*
    virtual void   ExecuteEvent(Int_t,Int_t,Int_t);
+   Float_t        GetAngle3D() { return fAngle3D; }
    Double_t       GetAngularOffset() { return fAngularOffset; }
    Int_t          GetEntryFillColor(Int_t);
    Int_t          GetEntryFillStyle(Int_t);
@@ -89,6 +91,7 @@ public:
    void           MakeSlices(Bool_t force=kFALSE);
    virtual void   Paint(Option_t *);
    void           SavePrimitive(ostream &out, Option_t *opts="");
+   void           SetAngle3D(Float_t val = 30.); // *MENU*
    void           SetAngularOffset(Double_t);
    void           SetCircle(Double_t x=.5, Double_t y=.5, Double_t rad=.4);
    void           SetEntryLabel(Int_t, const char *text="Slice");
