@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.13 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.14 2007/03/09 06:06:56 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -11,6 +11,14 @@
 
 //- data ---------------------------------------------------------------------
 namespace {
+
+// top of buffer (rest of buffer object has changed across python versions)
+   struct PyBufferTop {
+      PyObject_HEAD
+      PyObject*  b_base;
+      void*      b_ptr;
+      Py_ssize_t b_size;
+   };
 
 // size callback label
    char* sizeCallback = const_cast< char* >( "_size" );
@@ -34,25 +42,31 @@ namespace {
    PYROOT_PREPARE_PYBUFFER_TYPE( Double )
 
 // implement get, str, and length functions (use explicit funcs: vc++ can't handle templates)
-   Py_ssize_t buffer_length( PyObject* self, const int tsize )
+   Py_ssize_t buffer_length( PyObject* self )
    {
+      Py_ssize_t nlen = (*(PyBuffer_Type.tp_as_sequence->sq_length))(self);
+      if ( nlen != INT_MAX )  // INT_MAX is the default, i.e. unknown actual length
+         return nlen;
+
       std::map< PyObject*, PyObject* >::iterator iscbp = gSizeCallbacks.find( self );
       if ( iscbp != gSizeCallbacks.end() ) {
          PyObject* pylen = PyObject_CallObject( iscbp->second, NULL );
-         int nlen = PyInt_AsLong( pylen );
+         Py_ssize_t nlen2 = PyInt_AsSsize_t( pylen );
          Py_DECREF( pylen );
 
-         return nlen;
+         if ( nlen2 == (Py_ssize_t)-1 && PyErr_Occurred() )
+            PyErr_Clear();
+         else
+            return nlen2;
       }
 
-      PyErr_Clear();
-      return (*(PyBuffer_Type.tp_as_sequence->sq_length))(self) / tsize;
+      return nlen;            // return nlen after all, since have nothing better
    }
 
 //____________________________________________________________________________
-   const char* buffer_get( PyObject* self, int idx, const int tsize )
+   const char* buffer_get( PyObject* self, int idx )
    {
-      if ( idx < 0 || idx >= buffer_length( self, tsize ) ) {
+      if ( idx < 0 || idx >= buffer_length( self ) ) {
          PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
          return 0;
       }
@@ -64,6 +78,9 @@ namespace {
 #endif
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
 
+      if ( ! buf )
+         PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );
+
       return buf;
    }
 
@@ -71,31 +88,21 @@ namespace {
 #define PYROOT_IMPLEMENT_PYBUFFER_METHODS( name, type, stype, F1, F2 )       \
    PyObject* name##_buffer_str( PyObject* self )                             \
    {                                                                         \
-      Py_ssize_t l = buffer_length( self, sizeof( type ) );                  \
+      Py_ssize_t l = buffer_length( self );                                  \
       return PyString_FromFormat( "<"#type" buffer, size "PY_SSIZE_T_FORMAT">", l );\
    }                                                                         \
                                                                              \
-   Py_ssize_t name##_buffer_length( PyObject* self )                         \
-   {                                                                         \
-      return buffer_length( self, sizeof( type ) );                          \
-   }                                                                         \
-                                                                             \
    PyObject* name##_buffer_item( PyObject* self, Py_ssize_t idx ) {          \
-      const char* buf = buffer_get( self, idx, sizeof( type ) );             \
-      if ( ! buf ) {                                                         \
-         PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );\
-         return 0;                                                           \
-      }                                                                      \
-                                                                             \
-      return F1( (stype)*((type*)buf + idx) );                               \
+      const char* buf = buffer_get( self, idx );                             \
+      if ( buf )                                                             \
+         return F1( (stype)*((type*)buf + idx) );                            \
+      return 0;                                                              \
    }                                                                         \
                                                                              \
    int name##_buffer_ass_item( PyObject* self, Py_ssize_t idx, PyObject* val ) {\
-      const char* buf = buffer_get( self, idx, sizeof( type ) );             \
-      if ( ! buf ) {                                                         \
-         PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );\
+      const char* buf = buffer_get( self, idx );                             \
+      if ( ! buf )                                                           \
          return -1;                                                          \
-      }                                                                      \
                                                                              \
       type value = F2( val );                                                \
       if ( value == (type)-1 && PyErr_Occurred() )                           \
@@ -104,7 +111,6 @@ namespace {
       *((type*)buf+idx) = (type)value;                                       \
        return 0;                                                             \
    }
-      
 
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong, PyInt_AsLong )
@@ -114,6 +120,30 @@ namespace {
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+
+//____________________________________________________________________________
+   PyObject* buffer_setsize( PyBufferTop* self, PyObject* args, PyObject* /* kw */ )
+   {
+      if ( PyTuple_GET_SIZE( args ) != 1 ) {
+         PyErr_SetString( PyExc_TypeError, "buffer.SetSize takes exactly 1 argument" );
+         return 0;
+      }
+
+      Py_ssize_t nlen = PyInt_AsSsize_t( PyTuple_GET_ITEM( args, 0 ) );
+      if ( nlen == -1 && PyErr_Occurred() )
+         return 0;
+
+      self->b_size = nlen;
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
+   PyMethodDef buffer_methods[] = {
+      { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_VARARGS, NULL },
+      { (char*)NULL, NULL, 0, NULL }
+   };
 
 } // unnamed namespace
 
@@ -131,9 +161,10 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
    Py##name##Buffer_SeqMethods.sq_item      = name##_buffer_item;               \
    Py##name##Buffer_SeqMethods.sq_ass_item  = name##_buffer_ass_item;           \
-   Py##name##Buffer_SeqMethods.sq_length    = &name##_buffer_length;            \
+   Py##name##Buffer_SeqMethods.sq_length    = buffer_length;                    \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
-   Py##name##Buffer_Type.tp_str             = name##_buffer_str;
+   Py##name##Buffer_Type.tp_str             = name##_buffer_str;                \
+   Py##name##Buffer_Type.tp_methods         = buffer_methods;
 
 PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
@@ -158,7 +189,7 @@ PyROOT::TPyBufferFactory::~TPyBufferFactory()
 #define PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( name, type )                     \
 PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, Py_ssize_t size )\
 {                                                                               \
-   size = size < 0 ? int(INT_MAX/double(sizeof(type)))*sizeof(type) : size*sizeof(type);\
+   size = size < 0 ? int(INT_MAX/double(sizeof(type))) : size;                  \
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );        \
    Py_INCREF( &Py##name##Buffer_Type );                                         \
    buf->ob_type = &Py##name##Buffer_Type;                                       \

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.55 2007/01/17 07:32:39 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.56 2007/02/07 06:08:13 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -194,9 +194,10 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
    G__ClassInfo* gcl = ((TClass*)fClass.Id())->GetClassInfo();
    if ( ! gcl )
       gcl = GetGlobalNamespaceInfo();
-   
+
    fMethodCall->SetFunc( gcl->GetMethod(
-      fMethod ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(), &fOffset ) );
+      fMethod ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
+      &fOffset, G__ClassInfo::ExactMatch ) );
 
    return kTRUE;
 }

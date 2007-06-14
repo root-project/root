@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.41 2007/03/09 06:06:56 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.42 2007/03/10 08:36:55 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -92,7 +92,8 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para,
       if ( para.fl == -1 && PyErr_Occurred() ) {                              \
          return kFALSE;                                                       \
       } else if ( ! ( low <= para.fl && para.fl <= high ) ) {                 \
-         PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
+         PyErr_Format( PyExc_ValueError,                                      \
+            "integer to character: value %ld not in range [%d,%d]", para.fl, low, high );\
          return kFALSE;                                                       \
       } else if ( func )                                                      \
          func->SetArg( para.fl );                                             \
@@ -122,7 +123,8 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
       if ( l == -1 && PyErr_Occurred() )                                      \
          return kFALSE;                                                       \
       if ( ! ( low <= l && l <= high ) ) {                                    \
-         PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
+         PyErr_Format( PyExc_ValueError, \
+            "integer to character: value %ld not in range [%d,%d]", l, low, high );\
          return kFALSE;                                                       \
       }                                                                       \
       *((type*)address) = (type)l;                                            \
@@ -157,11 +159,34 @@ Bool_t PyROOT::TLongRefConverter::SetArg( PyObject* pyobject, TParameter& para, 
 
    para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
    if ( func )
-      func->SetArgRef( ((PyIntObject*)pyobject)->ob_ival );
+      func->SetArgRef( (Long_t&)((PyIntObject*)pyobject)->ob_ival );
    return kTRUE;
 }
 
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
+
+//____________________________________________________________________________
+Bool_t PyROOT::TIntRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
+{
+// convert <pyobject> to C++ (pseudo)int&, set arg for call
+   if ( ! TCustomInt_CheckExact( pyobject ) ) {
+      if ( PyInt_Check( pyobject ) )
+         PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of ints" );
+      return kFALSE;
+   }
+
+   para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
+   if ( func ) {
+      G__value v;
+      v.ref = (long)&((PyIntObject*)pyobject)->ob_ival;
+      v.type = 'i'; v.obj.i = para.fl; v.tagnum = -1; v.typenum = -1;
+      func->SetArg( v );
+   }
+
+   return kTRUE;
+}
+
+PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( IntRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TBoolConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
@@ -202,7 +227,7 @@ namespace {
          if ( 0 <= i ) {
             ul = (ULong_t)i;
          } else {
-            PyErr_SetString( PyExc_OverflowError,
+            PyErr_SetString( PyExc_ValueError,
                "can\'t convert negative value to unsigned long" );
          }
       }
@@ -392,7 +417,7 @@ namespace {
          if ( 0 <= i ) {
             ull = (ULong64_t)i;
          } else {
-            PyErr_SetString( PyExc_OverflowError,
+            PyErr_SetString( PyExc_ValueError,
                "can\'t convert negative value to unsigned long long" );
          }
       }
@@ -1016,6 +1041,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Short )
    PYROOT_BASIC_CONVERTER_FACTORY( UShort )
    PYROOT_BASIC_CONVERTER_FACTORY( Int )
+   PYROOT_BASIC_CONVERTER_FACTORY( IntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UInt )
    PYROOT_BASIC_CONVERTER_FACTORY( Long )
    PYROOT_BASIC_CONVERTER_FACTORY( LongRef )
@@ -1056,7 +1082,7 @@ namespace {
       NFp_t( "short",              &CreateShortConverter              ),
       NFp_t( "unsigned short",     &CreateUShortConverter             ),
       NFp_t( "int",                &CreateIntConverter                ),
-      NFp_t( "int&",               &CreateLongRefConverter            ),
+      NFp_t( "int&",               &CreateIntRefConverter             ),
       NFp_t( "const int&",         &CreateIntConverter                ),
       NFp_t( "unsigned int",       &CreateUIntConverter               ),
       NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),

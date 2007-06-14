@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.51 2007/03/09 06:06:56 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.52 2007/03/14 10:23:30 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -128,7 +128,7 @@ namespace {
    PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
    // TODO: verify and perhaps fix this to use PyInt_AsSsize_t
-      Py_ssize_t idx = (Py_ssize_t)PyInt_AsLong( index );
+      Py_ssize_t idx = PyInt_AsSsize_t( index );
       if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
          return 0;
 
@@ -693,7 +693,7 @@ namespace {
    {
    // TClonesArray sets objects by constructing them in-place; which is impossible
    // to support as the python object given as value must exist a priori. It can,
-   // however, by memcpy'd and stolen, caveat emptor.
+   // however, be memcpy'd and stolen, caveat emptor.
       ObjectProxy* self = 0, *pyobj = 0; PyObject* idx = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO!:__setitem__" ),
                 &ObjectProxy_Type, &self, &idx, &ObjectProxy_Type, &pyobj ) )

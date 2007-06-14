@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.51 2007/01/30 10:09:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.52 2007/04/05 21:00:18 pcanal Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -40,7 +40,6 @@
 #endif
 
 // Standard
-#include <assert.h>
 #include <map>
 #include <set>
 #include <string>
@@ -67,12 +66,26 @@ namespace {
          PyTuple_SET_ITEM( pybases, 0, (PyObject*)&PyROOT::ObjectProxy_Type );
       }
 
-      PyObject* pytrue = PyString_FromString( const_cast< char* >( name.c_str() ) );
-      PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pytrue, pybases );
-      PyObject* pyclass = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
+      PyObject* pymetabases = PyTuple_New( PyTuple_GET_SIZE( pybases ) );
+      for ( int i = 0; i < PyTuple_GET_SIZE( pybases ); ++i ) {
+         PyObject* btype = (PyObject*)PyTuple_GetItem( pybases, i )->ob_type;
+         Py_INCREF( btype );
+         PyTuple_SET_ITEM( pymetabases, i, btype );
+      }
 
+      PyObject* args = Py_BuildValue( (char*)"sO{}", (name+"_meta").c_str(), pymetabases );
+      Py_DECREF( pymetabases );
+
+      PyObject* pymeta = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
+      if ( ! pymeta )
+         PyErr_Print();
       Py_DECREF( args );
-      Py_DECREF( pytrue );
+
+      args = Py_BuildValue( (char*)"sO{}", name.c_str(), pybases );
+      PyObject* pyclass = PyType_Type.tp_new( (PyTypeObject*)pymeta, args, NULL );
+      Py_DECREF( args );
+      Py_DECREF( pymeta );
+
       Py_DECREF( pybases );
 
       return pyclass;
@@ -332,13 +345,21 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          PyObject* val = PyInt_FromLong( *((Long_t*)GetDataMemberAddress( klass, mb ) ) );
          PyObject_SetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()), val );
          Py_DECREF( val );
-      }
 
-   // properties
-      else {
+   // properties (aka public data members)
+      } else {
          PropertyProxy* property = PropertyProxy_New( mb );
-         PyObject_SetAttrString(
-            pyclass, const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+
+      // allow access at the instance level
+         PyObject_SetAttrString( pyclass,
+            const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+
+         if ( mb.IsStatic() ) {
+         // allow access at the class level (always add after setting instance level)
+            PyObject_SetAttrString( (PyObject*)pyclass->ob_type,
+               const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+         }
+
          Py_DECREF( property );
       }
    }
