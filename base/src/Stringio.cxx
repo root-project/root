@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.8 2003/09/04 23:19:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.9 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -177,8 +177,7 @@ ostream& operator<<(ostream& os, const TString& s)
 Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {
    // Read one line from the stream, including the \n, or until EOF.
-   // Returns kTRUE if data was read.
-   // Remove the trailing \n if chop is true
+   // Remove the trailing \n if chop is true. Returns kTRUE if data was read.
 
    char buf[256];
    Bool_t r = kFALSE;
