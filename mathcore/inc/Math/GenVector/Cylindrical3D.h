@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.3 2006/03/06 14:40:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.4 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -130,27 +130,10 @@ public:
    Scalar Perp2() const { return fRho*fRho;           }
    Scalar Theta() const { return (fRho==0 && fZ==0 ) ? 0.0 : atan2(fRho,fZ); }
 
-   // pseudorapidity - same implementation as in Cartesian3D
-   Scalar Eta() const 
-   { Scalar rho = Rho();
-   /* static */ const Scalar big_z_scaled = 
-                   std::pow(std::numeric_limits<Scalar>::epsilon(),static_cast<Scalar>(-.6)); 
-   if (rho > 0) {
-      Scalar z_scaled(fZ/rho);
-      if (std::fabs(z_scaled) < big_z_scaled) {
-         return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); 
-      } else {
-         return  fZ>0 ? std::log(2.0*z_scaled) : -std::log(-2.0*z_scaled);
-      }
-   } else if (fZ==0) {
-      return 0;
-   } else if (fZ>0) {
-      return fZ + etaMax<Scalar>();
-   }  else {
-      return fZ - etaMax<Scalar>();
-   }
-   }
-
+   // pseudorapidity - use same implementation as in Cartesian3D
+   Scalar Eta() const {
+      return Impl::Eta_FromRhoZ( fRho, fZ);
+   } 
  
    // setters (only for data members) 
 

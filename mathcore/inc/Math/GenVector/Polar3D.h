@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.6 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar3D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id: Polar3D.h,v 1.6 2007/05/22 13:35:16 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Polar3D 
 #define ROOT_Math_GenVector_Polar3D  1
@@ -23,12 +23,10 @@
 #include "Math/Math.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_etaMax
-#include "Math/GenVector/etaMax.h"
+#ifndef ROOT_Math_GenVector_eta
+#include "Math/GenVector/eta.h"
 #endif
 
-
-#include <limits>
  
 namespace ROOT { 
 
@@ -122,16 +120,8 @@ public :
 
    // pseudorapidity
    Scalar Eta() const 
-   { Scalar tanThetaOver2 = std::tan( fTheta/2.);
-   if (tanThetaOver2 == 0) {
-      return fR + etaMax<Scalar>();
-   } else if (tanThetaOver2 > std::numeric_limits<Scalar>::max()) {
-      return -fR - etaMax<Scalar>();
-   } else {
-      return -std::log(tanThetaOver2);
-      // given that we already have theta, this method 
-      // should be faster than the one used from cartesian coordinates
-   }
+   { 
+      return Impl::Eta_FromTheta(fTheta, fR);
    }
 
    // setters (only for data members) 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.5 2006/03/06 14:40:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.6 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -30,8 +30,8 @@
 #include <limits>
 
 
-#ifndef ROOT_Math_GenVector_etaMax
-#include "Math/GenVector/etaMax.h"
+#ifndef ROOT_Math_GenVector_eta
+#include "Math/GenVector/eta.h"
 #endif
 
 
@@ -123,25 +123,8 @@ public :
    Scalar Phi()   const { return (fX==0 && fY==0) ? 0.0 : atan2(fY,fX);}
  
    // pseudorapidity
-   // T Eta() const { return -log( tan( theta()/2.));} 
-   Scalar Eta() const 
-   { Scalar rho = Rho();
-   /* static */ const Scalar big_z_scaled = 
-                   std::pow(std::numeric_limits<Scalar>::epsilon(),static_cast<Scalar>(-.6)); 
-   if (rho > 0) {
-      Scalar z_scaled(fZ/rho);
-      if (std::fabs(z_scaled) < big_z_scaled) {
-         return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); 
-      } else {
-         return  fZ>0 ? std::log(2.0*z_scaled) : -std::log(-2.0*z_scaled);
-      }
-   } else if (fZ==0) {
-      return 0;
-   } else if (fZ>0) {
-      return fZ + etaMax<Scalar>();
-   }  else {
-      return fZ - etaMax<Scalar>();
-   }
+   Scalar Eta() const { 
+      return Impl::Eta_FromRhoZ ( Rho(),fZ);
    }
 
    /** 

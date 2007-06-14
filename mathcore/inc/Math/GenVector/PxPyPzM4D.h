@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.4 2007/02/07 16:00:56 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.5 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,13 +13,13 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzM4D by moneta)
 // 
-// Last update: $Id: PxPyPzM4D.h,v 1.4 2007/02/07 16:00:56 moneta Exp $
+// Last update: $Id: PxPyPzM4D.h,v 1.5 2007/05/22 13:35:16 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzM4D 
 #define ROOT_Math_GenVector_PxPyPzM4D  1
 
-#ifndef ROOT_Math_GenVector_etaMax
-#include "Math/GenVector/etaMax.h"
+#ifndef ROOT_Math_GenVector_eta
+#include "Math/GenVector/eta.h"
 #endif
 
 #ifndef ROOT_Math_GenVector_GenVector_exception 
@@ -246,18 +246,8 @@ public :
    /** 
        pseudorapidity
    */
-   Scalar Eta() const { 
-      Scalar rho = Pt();
-      if (rho > 0) {
-         Scalar z_scaled(fZ/rho);
-         return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); // faster 
-      } else if (fZ==0) {
-         return 0;
-      } else if (fZ>0) {
-         return fZ + etaMax<Scalar>( );
-      }  else {
-         return fZ - etaMax<Scalar>( );
-      }
+   Scalar Eta() const {
+      return Impl::Eta_FromRhoZ ( Pt(), fZ); 
    }
 
    // --------- Set Coordinates of this system  ---------------
