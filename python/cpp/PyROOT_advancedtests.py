@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 01/02/07
+# Last: 04/20/07
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -10,7 +10,8 @@ from ROOT import *
 
 __all__ = [
    'Cpp1VirtualInheritenceTestCase',
-   'Cpp2TemplateLookupTestCase'
+   'Cpp2TemplateLookupTestCase',
+   'Cpp3PassByNonConstRefTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -142,6 +143,37 @@ class Cpp2TemplateLookupTestCase( unittest.TestCase ):
       t2.m_t2.m_t1 = 32
       self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
+
+
+### C++ by-non-const-ref arguments tests =====================================
+class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
+   def test1TestPlaceHolders( self ):
+      """Test usage of Long/Double place holders"""
+
+      l = Long( 42L )
+      self.assertEqual( l, 42L )
+      self.assertEqual( l/7L, 6L )
+      self.assertEqual( l*1L, l )
+
+      import math
+      d = Double( math.pi )
+      self.assertEqual( d, math.pi )
+      self.assertEqual( d*math.pi, math.pi*math.pi )
+
+   def test2PassBuiltinsByNonConstRef( self ):
+      """Test parameter passing of builtins through non-const reference"""
+
+      l = Long( 42L )
+      SetLongThroughRef( l, 41 )
+      self.assertEqual( l, 41 )
+
+      d = Double( 3.14 )
+      SetDoubleThroughRef( d, 3.1415 )
+      self.assertEqual( d, 3.1415 )
+
+      i = Long( 42L )
+      SetIntThroughRef( i, 13 )
+      self.assertEqual( i, 13 )
 
 
 ## actual test run

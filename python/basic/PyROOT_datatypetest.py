@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 04/13/06
+# Last: 04/20/07
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -10,7 +10,9 @@ from array import array
 from ROOT import *
 
 __all__ = [
-   'DataTypes1InstanceDataTestCase'
+   'DataTypes1InstanceDataTestCase',
+   'DataTypes2ClassDataTestCase',
+   'DataTypes3BufferDataTestCase'
 ]
 
 gROOT.LoadMacro( "DataTypes.C+" )
@@ -147,8 +149,8 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       c = ClassWithData()
       self.failUnless( isinstance( c, ClassWithData ) )
 
-      self.assertRaises( OverflowError, call, c, 'fUInt',  -1  )
-      self.assertRaises( OverflowError, call, c, 'fULong', -1  )
+      self.assertRaises( ValueError, call, c, 'fUInt',  -1  )
+      self.assertRaises( ValueError, call, c, 'fULong', -1  )
 
    def test4TypeConversions( self ):
       """Test conversions between builtin types"""
@@ -168,19 +170,103 @@ class DataTypes2ClassDataTestCase( unittest.TestCase ):
    def test1ReadAccess( self ):
       """Test read access to class public data and verify values"""
 
+      c = ClassWithData()
+
       self.assertEqual( ClassWithData.sChar,    's' )
+      self.assertEqual( c.sChar,                's' )
+      self.assertEqual( c.sUChar,               'u' )
       self.assertEqual( ClassWithData.sUChar,   'u' )
       self.assertEqual( ClassWithData.sShort,  -101 )
+      self.assertEqual( c.sShort,              -101 )
+      self.assertEqual( c.sUShort,              255 )
       self.assertEqual( ClassWithData.sUShort,  255 )
       self.assertEqual( ClassWithData.sInt,    -202 )
+      self.assertEqual( c.sInt,                -202 )
+      self.assertEqual( c.sUInt,                202 )
       self.assertEqual( ClassWithData.sUInt,    202 )
       self.assertEqual( ClassWithData.sLong,   -303L )
+      self.assertEqual( c.sLong,               -303L )
+      self.assertEqual( c.sULong,               303L )
       self.assertEqual( ClassWithData.sULong,   303L )
       self.assertEqual( round( ClassWithData.sFloat  + 404., 5 ), 0 )
+      self.assertEqual( round( c.sFloat              + 404., 5 ), 0 )
       self.assertEqual( round( ClassWithData.sDouble + 505., 8 ), 0 )
+      self.assertEqual( round( c.sDouble             + 505., 8 ), 0 )
+
+   def test2WriteAccess( self ):
+      """Test write access to class public data and verify values"""
+
+      c = ClassWithData()
+
+      ClassWithData.sChar                    =  'a'
+      self.assertEqual( c.sChar,                'a' )
+      c.sChar                                =  'b'
+      self.assertEqual( ClassWithData.sChar,    'b' )
+      ClassWithData.sUChar                   =  'c'
+      self.assertEqual( c.sUChar,               'c' )
+      c.sUChar                               =  'd'
+      self.assertEqual( ClassWithData.sUChar,   'd' )
+      self.assertRaises( ValueError, setattr, ClassWithData, 'sUChar', -1 )
+      self.assertRaises( ValueError, setattr, c,             'sUChar', -1 )
+      c.sShort                               = -102
+      self.assertEqual( ClassWithData.sShort,  -102 )
+      ClassWithData.sShort                   = -203
+      self.assertEqual( c.sShort,              -203 )
+      c.sUShort                              =  127
+      self.assertEqual( ClassWithData.sUShort,  127 )
+      ClassWithData.sUShort                  =  227
+      self.assertEqual( c.sUShort,              227 )
+      ClassWithData.sInt                     = -234
+      self.assertEqual( c.sInt,                -234 )
+      c.sInt                                 = -321
+      self.assertEqual( ClassWithData.sInt,    -321 )
+      ClassWithData.sUInt                    = 1234
+      self.assertEqual( c.sUInt,               1234 )
+      c.sUInt                                = 4321
+      self.assertEqual( ClassWithData.sUInt,   4321 )
+      self.assertRaises( ValueError, setattr, c,             'sUInt', -1 )
+      self.assertRaises( ValueError, setattr, ClassWithData, 'sUInt', -1 )
+      ClassWithData.sLong                    = -87L
+      self.assertEqual( c.sLong,               -87L )
+      c.sLong                                =  876L
+      self.assertEqual( ClassWithData.sLong,    876L )
+      ClassWithData.sULong                   =  876L
+      self.assertEqual( c.sULong,               876L )
+      c.sULong                               =  678L
+      self.assertEqual( ClassWithData.sULong,   678L )
+      self.assertRaises( ValueError, setattr, ClassWithData, 'sULong', -1 )
+      self.assertRaises( ValueError, setattr, c,             'sULong', -1 )
+      ClassWithData.sFloat                   = -3.1415
+      self.assertEqual( round( c.sFloat, 5 ),  -3.1415 )
+      c.sFloat                               =  3.1415
+      self.assertEqual( round( ClassWithData.sFloat, 5 ), 3.1415 )
+      import math
+      c.sDouble                              = -math.pi
+      self.assertEqual( ClassWithData.sDouble, -math.pi )
+      ClassWithData.sDouble                  =  math.pi
+      self.assertEqual( c.sDouble,              math.pi )
 
 
-### access to global data members ============================================
+### access to data through buffer interface ==================================
+class DataTypes3BufferDataTestCase( unittest.TestCase ):
+   def test1SetBufferSize( self ):
+      """Test usage of buffer sizing"""
+
+      c = ClassWithData()
+
+      for func in [ 'GetShortArray',  'GetShortArray2',
+                    'GetUShortArray', 'GetUShortArray2',
+                    'GetIntArray',    'GetIntArray2',
+                    'GetUIntArray',   'GetUIntArray2',
+                    'GetLongArray',   'GetLongArray2',
+                    'GetULongArray',  'GetULongArray2' ]:
+         arr = getattr( c, func )()
+         arr.SetSize( N )
+         self.assertEqual( len(arr), N )
+
+         l = list( arr )
+         for i in range(N):
+            self.assertEqual( arr[i], l[i] )
 
 
 ## actual test run

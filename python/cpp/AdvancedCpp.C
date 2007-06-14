@@ -64,3 +64,8 @@ namespace {
    T1< int > tt1;
    T2< T1< int > > tt2;
 }
+
+// helpers for checking pass-by-ref
+void SetIntThroughRef( Int_t& i, Int_t val ) { i = val; }
+void SetLongThroughRef( Long_t& l, Long_t val ) { l = val; }
+void SetDoubleThroughRef( Double_t& d, Double_t val ) { d = val; }

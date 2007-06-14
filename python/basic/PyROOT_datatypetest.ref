@@ -3,6 +3,8 @@ Test write access to instance public data and verify values ... ok
 Test the ranges of integer types ... ok
 Test conversions between builtin types ... ok
 Test read access to class public data and verify values ... ok
+Test write access to class public data and verify values ... ok
+Test usage of buffer sizing ... ok
 
 ----------------------------------------------------------------------
 

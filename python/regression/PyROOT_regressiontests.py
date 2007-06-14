@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 02/27/07
+# Last: 06/13/07
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -15,7 +15,8 @@ __all__ = [
    'Regression3UserDefinedNewOperatorTestCase',
    'Regression4ThreadingTestCase',
    'Regression5LoKiNamespaceTestCase',
-   'Regression6Int64ConversionTestCase'
+   'Regression6Int64ConversionTestCase',
+   'Regression7MatchConstWithProperReturn'
 ]
 
 
@@ -170,6 +171,17 @@ class Regression6Int64ConversionTestCase( unittest.TestCase ):
       self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1L ) )
       self.assertEqual( sys.maxint + 2, ULong64Func( sys.maxint + 2 ) )
+
+
+### Proper match-up of return type and overloaded function ===================
+class Regression7MatchConstWithProperReturn( unittest.TestCase ):
+   def test1OverloadOrderWithProperReturn( self ):
+      """Test return type against proper overload w/ const and covariance"""
+
+      gROOT.LoadMacro( "Scott2.C+" )
+
+      self.assertEqual( MyOverloadOneWay().gime(), 1 )
+      self.assertEqual( MyOverloadTheOtherWay().gime(), "aap" )
 
 
 ## actual test run
