@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.57 2007/02/15 15:04:41 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.58 2007/02/22 16:45:48 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1059,7 +1059,6 @@ void TTreeViewer::BuildInterface()
 //   EmptyAll();
    // map the tree if it was supplied in the constructor
 
-   SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    if (!fTree) {
       fSlider->SetRange(0,1000000);
       fSlider->SetPosition(0,1000000);
