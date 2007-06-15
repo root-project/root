@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.17 2007/02/06 00:09:29 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.18 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -110,7 +110,9 @@ Int_t TXProofMgr::Init(Int_t)
                                 kXPROOF_Protocol, 0, -1, this)) ||
        !(fSocket->IsValid())) {
       if (!fSocket || !(fSocket->IsServProofd()))
-         Error("Init", "while opening the connection to %s - exit", u.Data());
+         if (gDebug > 0)
+            Error("Init", "while opening the connection to %s - exit (error: %d)",
+                          u.Data(), (fSocket ? fSocket->GetOpenError() : -1));
       if (fSocket && fSocket->IsServProofd())
          fServType = TProofMgr::kProofd;
       return -1;

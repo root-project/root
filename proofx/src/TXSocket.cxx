@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.25 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.26 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -183,8 +183,9 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
       fConn = new XrdProofConn(url, md, psid, capver, this, fBuffer.Data());
       if (!fConn || !(fConn->IsValid())) {
          if (fConn->GetServType() != XrdProofConn::kSTProofd)
-             Error("TXSocket", "severe error occurred while opening a connection"
-                   " to server [%s]: %s", url, fConn->GetLastErr());
+            if (gDebug > 0)
+               Error("TXSocket", "fatal error occurred while opening a connection"
+                                 " to server [%s]: %s", url, fConn->GetLastErr());
          return;
       }
 
