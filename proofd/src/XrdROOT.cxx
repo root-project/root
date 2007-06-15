@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdROOT.cxx,v 1.1 2007/06/12 13:51:04 ganis Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -245,8 +245,9 @@ int XrdROOT::ValidatePrgmSrv()
    fds_r.fd = fp[0];
    fds_r.events = POLLIN;
    int pollRet = 0;
-   int intwait = XrdProofdProtocol::fgInternalWait;
-   int ntry = (intwait < 2) ? 1 : (int) (intwait / 2 + 1);
+   // We wait for 60 secs max (30 x 2000 millisecs): this is enough to
+   // cover possible delays due to heavy load
+   int ntry = 30;
    while (pollRet == 0 && ntry--) {
       while ((pollRet = poll(&fds_r, 1, 2000)) < 0 &&
              (errno == EINTR)) { }
