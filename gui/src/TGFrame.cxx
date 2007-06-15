@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.154 2007/05/09 15:03:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.155 2007/06/04 09:23:11 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1368,9 +1368,9 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    fBindList = new TList;
 
-   fMWMValue    = 0;
-   fMWMFuncs    = 0;
-   fMWMInput    = 0;
+   fMWMValue    = kMWMDecorAll;
+   fMWMFuncs    = kMWMFuncAll;
+   fMWMInput    = kMWMInputModeless;
    fWMX         = -1;
    fWMY         = -1;
    fWMWidth     = (UInt_t) -1;
@@ -1385,7 +1385,8 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
                       kKeyControlMask, kTRUE);
-
+   gVirtualX->SetMWMHints(fId, fMWMValue, fMWMFuncs, fMWMInput);
+   
    // if parent is editting/embeddable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
