@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.120 2007/04/29 07:06:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.121 2007/05/09 15:04:17 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -563,8 +563,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetIconName(name);
    fIconPic = SetIconPixmap("macro_s.xpm");
    SetClassHints("Canvas", "Canvas");
-
-   SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
    SetEditDisabled(kEditDisable);
    MapSubwindows();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.114 2007/06/04 12:32:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.115 2007/06/07 08:48:22 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1184,7 +1184,6 @@ void TRootBrowser::CreateBrowser(const char *name)
    fIconPic = SetIconPixmap("rootdb_s.xpm");
    SetClassHints("Browser", "Browser");
 
-   SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
    SetIconName("ROOT Browser");
 
