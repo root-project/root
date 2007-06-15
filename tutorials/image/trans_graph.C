@@ -24,7 +24,11 @@ static UInt_t color2rgb(TColor *col)
 
 void trans_graph()
 {
-   gROOT->SetBatch();
+   // remember if  we are in batch mode
+   Bool_t batch = gROOT->IsBatch();
+
+   // switch to batch mode
+   gROOT->SetBatch(kTRUE);
 
    // execute graph.C macro
    gROOT->Macro("$ROOTSYS/tutorials/graphs/graph.C");
@@ -80,4 +84,7 @@ void trans_graph()
    printf("*************** File trans_graph.png created ***************\n");
 
    delete back;
+
+   // switch back to GUI mode
+   if (!batch) gROOT->SetBatch(kFALSE);
 }
