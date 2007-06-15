@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.168 2007/05/10 18:16:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.169 2007/05/21 00:44:27 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TException.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassTable.h"
 #include "TEnv.h"
 #include "TBrowser.h"
 #include "TString.h"
@@ -1499,6 +1500,36 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
           (libs[idx+l.Length()] == ' ' || libs[idx+l.Length()] == 0)) {
          return 1;
       }
+   }
+
+   // check whether classes that are supposed to be in l
+   // are already loaded. Just test the first one we find.
+   const char* clname = 0;
+   int clidx = 0;
+   libs.Remove(0, libs.Length());
+   while (!libs.Length() && (clname = TClassTable::At(clidx++))) {
+      // we don't want to create TClass objects here, so use 
+      // TInterpreter and TClassTable to find the lib the class 
+      // is in
+
+      // is clname's lib loaded?
+      if (!TClassTable::GetDict(clname)) continue;
+
+      const char* cllibs = gInterpreter->GetClassSharedLibs(clname);
+      if (!cllibs) continue;
+
+      libs = cllibs;
+      Ssiz_t posSpace = libs.Index(' ');
+      if (posSpace != kNPOS)
+         libs.Remove(posSpace, libs.Length());
+      if (libs == moduleBasename) {
+         // clname was expected to be in libs.
+         // It's already loaded so we assume that module has already
+         // been loaded, e.g. by explicit linking or because we have
+         // a static build of module's object files.
+         return 1;
+      }
+      libs.Remove(0, libs.Length());
    }
 
    // load any dependent libraries
