@@ -148,9 +148,10 @@ int test4D ( const LorentzVector<C> & v, int ticks ) {
   LorentzVector< PxPyPzE4D<double> > vxyzt_d (v.x(), v.y(), v.z(), v.t());
 
   //double m = std::sqrt ( v.t()*v.t() - v.x()*v.x() - v.y()*v.y() - v.z()*v.z());
-  double r = std::sqrt (v.x()*v.x() + v.y()*v.y() + v.z()*v.z());
-  double theta = r>0 ? std::acos ( v.z()/r ) : 0;
+  //double r = std::sqrt (v.x()*v.x() + v.y()*v.y() + v.z()*v.z());
   double rho = std::sqrt (v.x()*v.x() + v.y()*v.y());
+  double theta = std::atan2( rho, v.z() );  // better tahn using acos
+  //double theta = r>0 ? std::acos ( v.z()/r ) : 0;
   double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
     
   double eta;
@@ -217,6 +218,10 @@ int main () {
   ret |= test4D (XYZTVector ( 0.0, 0.0, 0.0, 0.0 )     , 1 );
   ret |= test4D (XYZTVector ( 1.0, 2.0, 3.0, 4.0 )     ,10 );
   ret |= test4D (XYZTVector ( -1.0, -2.0, 3.0, 4.0 )   ,10 );
+  // test for large eta values (which was giving inf before  Jun 07)
+  ret |= test4D (XYZTVector ( 1.E-8, 1.E-8, 10.0, 100.0 )   ,10 );
+  // for z < 0 precision in eta is worse since theta is close to Pi 
+  ret |= test4D (XYZTVector ( 1.E-8, 1.E-8, -10.0, 100.0 )   ,1000000000 );
 
 
   return ret;

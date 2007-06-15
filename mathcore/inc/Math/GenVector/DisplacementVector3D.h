@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.8 2006/04/13 10:38:30 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.10 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,18 +14,31 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.8 2006/04/13 10:38:30 moneta Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.10 2007/05/22 13:35:16 moneta Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
 #define ROOT_Math_GenVector_DisplacementVector3D  1
 
+#ifndef ROOT_Math_GenVector_Cartesian3D 
 #include "Math/GenVector/Cartesian3D.h"
+#endif
 
+#ifndef ROOT_Math_GenVector_PositionVector3Dfwd
 #include "Math/GenVector/PositionVector3Dfwd.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_BitReproducible 
 #include "Math/GenVector/BitReproducible.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
 #include "Math/GenVector/CoordinateSystemTags.h"
+#endif
 
 #include <cassert>
 
@@ -246,7 +259,7 @@ namespace ROOT {
          then (x, y, z) are converted to that form)
        */
       void SetXYZ (Scalar x, Scalar y, Scalar z) {
-            fCoordinates =  Cartesian3D<Scalar> (x,y,z);
+            fCoordinates.SetXYZ(x,y,z);
       }
 
       // ------------------- Equality -----------------
@@ -490,16 +503,16 @@ namespace ROOT {
 
       // Limited backward name compatibility with CLHEP
 
-      Scalar x()     const { return X();     }
-      Scalar y()     const { return Y();     }
-      Scalar z()     const { return Z();     }
-      Scalar r()     const { return R();     }
-      Scalar theta() const { return Theta(); }
-      Scalar phi()   const { return Phi();   }
-      Scalar eta()   const { return Eta();   }
-      Scalar rho()   const { return Rho();   }
-      Scalar mag2()  const { return Mag2();  }
-      Scalar perp2() const { return Perp2(); }
+      Scalar x()     const { return fCoordinates.X();     }
+      Scalar y()     const { return fCoordinates.Y();     }
+      Scalar z()     const { return fCoordinates.Z();     }
+      Scalar r()     const { return fCoordinates.R();     }
+      Scalar theta() const { return fCoordinates.Theta(); }
+      Scalar phi()   const { return fCoordinates.Phi();   }
+      Scalar eta()   const { return fCoordinates.Eta();   }
+      Scalar rho()   const { return fCoordinates.Rho();   }
+      Scalar mag2()  const { return fCoordinates.Mag2();  }
+      Scalar perp2() const { return fCoordinates.Perp2(); }
       DisplacementVector3D unit() const {return Unit();}
 
 

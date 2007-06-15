@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.7 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.9 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,14 +12,27 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.7 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id: PositionVector3D.h,v 1.9 2007/05/22 13:35:16 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
 
-#include "Math/GenVector/DisplacementVector3D.h"
+#ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd 
+#include "Math/GenVector/DisplacementVector3Dfwd.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_BitReproducible 
+#include "Math/GenVector/BitReproducible.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
 #include "Math/GenVector/CoordinateSystemTags.h"
+#endif
+
 
 #include <cassert>
 
@@ -223,7 +236,7 @@ namespace ROOT {
          then (x, y, z) are converted to that form)
        */
       void SetXYZ (Scalar x, Scalar y, Scalar z) {
-            fCoordinates =  Cartesian3D<Scalar> (x,y,z);
+            fCoordinates.SetXYZ(x,y,z);
       }
 
       // ------------------- Equality -----------------
@@ -373,13 +386,8 @@ namespace ROOT {
       /**
           Self Addition with a displacement vector.
       */
-      //#ifndef __CINT__
       template <class OtherCoords>
       PositionVector3D & operator+= (const  DisplacementVector3D<OtherCoords,Tag> & v)
-// #else
-//       template <class V>
-//       PositionVector3D & operator+= (const  V & v)
-// #endif
       {
         SetXYZ( X() + v.X(), Y() + v.Y(), Z() + v.Z() );
         return *this;
@@ -388,13 +396,8 @@ namespace ROOT {
       /**
           Self Difference with a displacement vector.
       */
-      //#ifndef __CINT__
       template <class OtherCoords>
       PositionVector3D & operator-= (const  DisplacementVector3D<OtherCoords,Tag> & v)
-// #else
-//       template <class V>
-//       PositionVector3D & operator-= (const  V & v)
-// #endif
       {
         SetXYZ(  X() - v.X(), Y() - v.Y(), Z() - v.Z() );
         return *this;
@@ -438,16 +441,16 @@ namespace ROOT {
 
       // Limited backward name compatibility with CLHEP
 
-      Scalar x()     const { return X();     }
-      Scalar y()     const { return Y();     }
-      Scalar z()     const { return Z();     }
-      Scalar r()     const { return R();     }
-      Scalar theta() const { return Theta(); }
-      Scalar phi()   const { return Phi();   }
-      Scalar eta()   const { return Eta();   }
-      Scalar rho()   const { return Rho();   }
-      Scalar mag2()  const { return Mag2();  }
-      Scalar perp2() const { return Perp2(); }
+      Scalar x()     const { return fCoordinates.X();     }
+      Scalar y()     const { return fCoordinates.Y();     }
+      Scalar z()     const { return fCoordinates.Z();     }
+      Scalar r()     const { return fCoordinates.R();     }
+      Scalar theta() const { return fCoordinates.Theta(); }
+      Scalar phi()   const { return fCoordinates.Phi();   }
+      Scalar eta()   const { return fCoordinates.Eta();   }
+      Scalar rho()   const { return fCoordinates.Rho();   }
+      Scalar mag2()  const { return fCoordinates.Mag2();  }
+      Scalar perp2() const { return fCoordinates.Perp2(); }
 
     private:
 
