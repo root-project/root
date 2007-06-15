@@ -2,12 +2,13 @@ ifeq (,$(strip $(ROOTTEST_HOME)))
    export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 
-TEST_TARGETS += vararyobj vararynoclassdefobj vararypolypobj
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.root
+TEST_TARGETS += vararyobj varary51508 vararynoclassdefobj vararypolypobj
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog vararypolyp.root varyingArray.root varyingArrayNoClassDef.root
+
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-.PHONY: vararyobj vararyruns vararynoclassdefobj vararynoclassdefruns vararypolypobj vararypolypruns
+.PHONY: vararyobj vararyruns varary51508 vararynoclassdefobj vararynoclassdefruns vararypolypobj vararypolypruns
 
 vararyobj: vararyruns
 	$(CMDECHO) rm -f tmp1.log tmp2.log ; \
@@ -27,6 +28,9 @@ vararyobj: vararyruns
 # does not run until the Write test has finished.
 vararyruns: varyingArrayWrite.clog
 	$(CMDECHO) $(MAKE) --no-print-directory varyingArrayRead.clog
+
+varary51508: varyingArrayRead_51508.clog
+	$(CMDECHO) diff -u varyingArrayRead_51508.good varyingArrayRead_51508.clog
 
 vararynoclassdefobj: vararynoclassdefruns
 	$(CMDECHO) rm -rf tmp3.log tmp4.log ; \
