@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.39 2007/01/16 07:44:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.40 2007/01/29 15:53:35 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -211,6 +211,22 @@ void TClassTable::Print(Option_t *option) const
 }
 
 //---- static members --------------------------------------------------------
+
+//______________________________________________________________________________
+char *TClassTable::At(int index)
+{
+    // Returns class at index from sorted class table. Don't use this iterator
+    // while modifying the class table. The class table can be modified
+    // when making calls like TClass::GetClass(), etc.
+    // Returns 0 if index points beyond last class name.
+
+   SortTable();
+   if (index >= 0 && index < fgTally) {
+      TClassRec *r = fgSortedTable[index];
+      if (r) return r->fName;
+   }
+   return 0;
+}
 
 //______________________________________________________________________________
 int   TClassTable::Classes() { return fgTally; }

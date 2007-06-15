@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.10 2005/09/18 13:07:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.11 2005/11/16 20:04:47 pcanal Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    static void          Add(const char *cname, Version_t id,
                             const type_info &info, VoidFuncPtr_t dict,
                             Int_t pragmabits);
+   static char         *At(int index);
    int                  Classes();
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
