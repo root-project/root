@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualStreamerInfo.cxx,v 1.17 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualStreamerInfo.cxx,v 1.1 2007/02/05 18:06:25 brun Exp $
 // Author: Rene Brun   05/02/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -160,6 +160,13 @@ void TVirtualStreamerInfo::SetCanDelete(Bool_t opt)
    //  call this static function TStreamerInfo::SetCanDelete(kFALSE);
 
    fgCanDelete = opt;
+}
+
+//______________________________________________________________________________
+void TVirtualStreamerInfo::SetFactory(TVirtualStreamerInfo *factory)
+{
+   //static function: Set the StreamerInfo factory
+   fgInfoFactory = factory;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.4 2007/02/18 14:56:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.5 2007/02/27 19:00:17 pcanal Exp $
 // Author: Rene Brun   05/02/2007
 
 /*************************************************************************
@@ -137,6 +137,7 @@ public:
    static void         Optimize(Bool_t opt=kTRUE);
    static Bool_t       CanDelete();
    static void         SetCanDelete(Bool_t opt=kTRUE);
+   static void         SetFactory(TVirtualStreamerInfo *factory);
    
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name) = 0;
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
