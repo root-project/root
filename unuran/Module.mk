@@ -15,6 +15,7 @@ UNRVERS      := unuran-1.0.1-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
+UNRALLDIRS   := $(MODDIRS)/unuran-*-root
 UNURANETAG   := $(UNURANDIRS)/headers.d
 UNRCFG       := $(UNURANDIRS)/$(UNRVERS)/config.h
 
@@ -75,10 +76,11 @@ $(UNURANDEP):   $(UNRCFG)
 
 $(UNURANETAG):	$(UNRSRCS)
 		echo "** untar unuran"
-		@(if [ -d $(UNRDIRS) ]; then \
+		@(if  [ -d $(UNRDIRS) ]; then \
 			rm -rf $(UNRDIRS); \
 		fi; \
 		cd $(UNURANDIRS); \
+		rm -rf unuran*root; \
 		if [ ! -d $(UNRVERS) ]; then \
 			gunzip -c $(UNRVERS).tar.gz | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
