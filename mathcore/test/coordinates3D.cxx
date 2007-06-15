@@ -99,12 +99,20 @@ int compare3D (const V1 & v1, const V2 & v2, double ticks) {
   int ret =0;
   typedef typename V1::CoordinateType CoordType1;
   typedef typename V2::CoordinateType CoordType2;
-
   ret |= closeEnough ( v1.x(),     v2.x(),     "x"     ,ticks);
   ret |= closeEnough ( v1.y(),     v2.y(),     "y"     ,ticks);
   ret |= closeEnough ( v1.z(),     v2.z(),     "z"     ,ticks);
   ret |= closeEnough ( v1.rho(),   v2.rho(),   "rho"   ,ticks);
-  ret |= closeEnough ( v1.phi(),   v2.phi(),   "phi"   ,ticks);
+  // case in phi that difference is close to 2pi
+  typedef typename  V2::Scalar Scalar; 
+  Scalar phi2 = v2.phi();
+  if (std::abs(v1.phi()- phi2 ) > ROOT::Math::Pi() ) { 
+     if (phi2<0) 
+        phi2 += 2.*ROOT::Math::Pi();
+     else 
+        phi2 -= 2*ROOT::Math::Pi();
+  }
+  ret |= closeEnough ( v1.phi(),   phi2,   "phi"   ,ticks);
   ret |= closeEnough ( v1.r(),     v2.r(),     "r"     ,ticks);
   ret |= closeEnough ( v1.theta(), v2.theta(), "theta" ,ticks);
   ret |= closeEnough ( v1.mag2(),  v2.mag2(),  "mag2"  ,ticks);
@@ -259,7 +267,7 @@ int main () {
   ret |= test3D (XYZVector ( 1.0, -2.0, -3.0 )   ,6 );
   ret |= test3D (XYZVector ( -1.0, -2.0, -3.0 )  ,6 );
   ret |= test3D (XYZVector ( 8.0, 0.0, 0.0 )     ,6 );
-  ret |= test3D (XYZVector ( -8.0, 0.0, 0.0 )    ,6 );
+  ret |= test3D (XYZVector ( -8.0, 0.0, 0.0 )    ,12 );
   ret |= test3D (XYZVector ( 0.0, 9.0, 0.0 )     ,6 );
   ret |= test3D (XYZVector ( 0.0, -9.0, 0.0 )    ,6 );
 // rho == 0 tests the beyon-eta-max cases of cylindricalEta
