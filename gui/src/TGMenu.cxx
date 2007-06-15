@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.70 2006/08/18 15:54:05 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.71 2006/08/31 09:08:39 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -24,7 +24,36 @@
 //                                                                      //
 // TGMenuBar, TGPopupMenu, TGMenuTitle and TGMenuEntry                  //
 //                                                                      //
-// This header contains all different menu classes.                     //
+// The TGMenu.h header contains all different menu classes.             //
+//                                                                      //
+// The TGMenuBar class implements a menu bar widget. It is used to      //
+// specify and provide access to common and frequently used application //
+// actions grouped under menu titles (TGMenuTitle class). The menu bar  //
+// takes the highest-level of the menu system and it is a starting      //
+// point for many interactions. It is always visible and allows using   //
+// the keyboard equivalents. The geometry of the menu bar is            //
+// automatically set to the parent widget, i.e. the menu bar            //
+// automatically resizes itself so that it has the same width as its    //
+// parent (typically TGMainFrame). A menu bar contains one or more      //
+// popup menus and usually is placed along the top of the application   //
+// window. Any popup menu is invisible until the user invokes it by     //
+// using the mouse pointer or the keyboard.                             //
+//                                                                      //
+// Popup menus implemented by TGPopupMenu class are unique in that,     //
+// by convention, they are not placed with the other GUI components in  //
+// the user interfaces. Instead, a popup menu usually appears either in //
+// a menu bar or as a context menu on the TOP of the GUI. For that      //
+// reason it needs gClient->GetDefaultRoot() as a parent to get the     //
+// pointer to the root (i.e. desktop) window. This way a popup menu     //
+// will never be embedded.                                              //
+// NOTE: Using gClient->GetRoot() as a parent of TGPopupMenu will not   //
+// avoid the possibility of embedding the corresponding popup menu      //
+// because the current window hierarchy can be changed by using         //
+// gClient->SetRoot() method.                                           //
+//                                                                      //
+// As a context menus TGPopupMenu shows up after pressing the right     //
+// mouse button, over a popup-enabled component. The popup menu then    //
+// appears under the mouse pointer.                                     //
 //                                                                      //
 // Selecting a menu item will generate the event:                       //
 // kC_COMMAND, kCM_MENU, menu id, user data.                            //
