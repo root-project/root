@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.45 2007/02/05 18:11:28 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfoWriteBuffer.cxx,v 1.27 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRefTable.h"
+#include "TFile.h"
 
 //==========CPP macros
 
@@ -558,45 +559,124 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          }
          continue;
 
-
          case TStreamerInfo::kStreamLoop:
-         case TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
+            // -- A pointer to a varying-length array of objects.
+            // MyClass* ary; //[n]
+            // -- Or a pointer to a varying-length array of pointers to objects.
+            // MyClass** ary; //[n]
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
+            // -- An array of pointers to a varying-length array of objects.
+            // MyClass* ary[d]; //[n]
+            // -- Or an array of pointers to a varying-length array of pointers to objects.
+            // MyClass** ary[d]; //[n]
          {
-            TClass *cl = fComp[i].fClass;
+            // Get the class of the data member.
+            TClass* cl = fComp[i].fClass;
+            // Get any private streamer which was set for the data member.
+            TMemberStreamer* pstreamer = fComp[i].fStreamer;
+            // Which are we, an array of objects or an array of pointers to objects?
             Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
-            UInt_t pos = b.WriteVersion(thisVar->IsA(), kTRUE);
-            TMemberStreamer *pstreamer = fComp[i].fStreamer;
             if (pstreamer) {
-               Int_t imethod = fMethod[i]+eoffset;
-               DOLOOP {
-                  Int_t *counter = (Int_t*)(arr[k]+imethod);
-                  (*pstreamer)(b,arr[k]+ioffset,*counter);
+               // -- We have a private streamer.
+               UInt_t pos = b.WriteVersion(thisVar->IsA(), kTRUE); 
+               // Loop over the entries in the clones array or the STL container.
+               for (int k = 0; k < narr; ++k) {
+                  // Get a pointer to the counter for the varying length array.
+                  Int_t* counter = (Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/);
+                  // And call the private streamer, passing it the buffer, the object, and the counter.
+                  (*pstreamer)(b, arr[k] /*entry pointer*/ + ioffset /*object offset*/, *counter);
                }
                b.SetByteCount(pos, kTRUE);
+               // We are done, next streamer element.
                continue;
             }
-            DOLOOP  {
-               Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
-               char **pp = (char**)(arr[k] + ioffset);
-               for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
-                  if (vlen == 0) continue;
-                  if (pp[ndx] == 0) {
-                     Error("WriteBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
-                     continue;
-                  }
-                  for (Int_t v = 0; v < vlen; ++v) {
-                     if (!isPtrPtr) {
-                        cl->Streamer(pp[ndx] + (cl->Size() * v), b);
-                     } else {
-                        char **r = (char**)(pp[ndx]);
-                        cl->Streamer(r[v], b);
-                     }
-                  } // v
-               } // ndx
-            } // k
+            // At this point we do *not* have a private streamer.
+            // Get the version of the file we are writing to.
+            TFile* file = (TFile*) b.GetParent();
+            // By default assume the file version is the newest.
+            Int_t fileVersion = kMaxInt;
+            if (file) {
+               fileVersion = file->GetVersion();
+            }
+            // Write the class version to the buffer.
+            UInt_t pos = b.WriteVersion(thisVar->IsA(), kTRUE);
+            if (fileVersion > 51508) {
+               // -- Newer versions allow polymorphic pointers to objects.
+               // Loop over the entries in the clones array or the STL container.
+               for (int k = 0; k < narr; ++k) {
+                  // Get the counter for the varying length array.
+                  Int_t vlen = *((Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/));
+                  //b << vlen;
+                  if (vlen) {
+                     // Get a pointer to the array of pointers.
+                     char** pp = (char**) (arr[k] /*entry pointer*/ + ioffset /*object offset*/);
+                     // Loop over each element of the array of pointers to varying-length arrays.
+                     for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                        if (!pp[ndx]) {
+                           // -- We do not have a pointer to a varying-length array.
+                           Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
+                           continue;
+                        }
+                        if (!isPtrPtr) {
+                           // -- We are a varying-length array of objects.
+                           // Write the entire array of objects to the buffer.
+                           // Note: Polymorphism is not allowed here.
+                           b.WriteFastArray(pp[ndx], cl, vlen, 0);
+                        }
+                        else {
+                           // -- We are a varying-length array of pointers to objects.
+                           // Write the entire array of object pointers to the buffer.
+                           // Note: The object pointers are allowed to be polymorphic.
+                           b.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                        } // isPtrPtr
+                     } // ndx
+                  } // vlen
+               } // k
+            }
+            else {
+               // -- Older versions do *not* allow polymorphic pointers to objects.
+               // Loop over the entries in the clones array or the STL container.
+               for (int k = 0; k < narr; ++k) {
+                  // Get the counter for the varying length array.
+                  Int_t vlen = *((Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/));
+                  //b << vlen;
+                  if (vlen) {
+                     // Get a pointer to the array of pointers.
+                     char** pp = (char**) (arr[k] /*entry pointer*/ + ioffset /*object offset*/);
+                     // -- Older versions do *not* allow polymorphic pointers to objects.
+                     // Loop over each element of the array of pointers to varying-length arrays.
+                     for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                        if (!pp[ndx]) {
+                           // -- We do not have a pointer to a varying-length array.
+                           Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
+                           continue;
+                        }
+                        if (!isPtrPtr) {
+                           // -- We are a varying-length array of objects.
+                           // Loop over the elements of the varying length array.
+                           for (Int_t v = 0; v < vlen; ++v) {
+                              // Write the object to the buffer.
+                              cl->Streamer(pp[ndx] + (v * cl->Size()), b);
+                           } // v
+                        }
+                        else {
+                           // -- We are a varying-length array of pointers to objects.
+                           // Loop over the elements of the varying length array.
+                           for (Int_t v = 0; v < vlen; ++v) {
+                              // Get a pointer to the object pointer.
+                              char** r = (char**) pp[ndx];
+                              // Write the object to the buffer.
+                              cl->Streamer(r[v], b);
+                           } // v
+                        } // isPtrPtr
+                     } // ndx
+                  } // vlen
+               } // k
+            } // fileVersion
+            // Backpatch the byte count into the buffer.
             b.SetByteCount(pos, kTRUE);
-         } // case
-         continue;
+            continue;
+         }
 
          default:
             Error("WriteBuffer","The element %s::%s type %d (%s) is not supported yet\n",thisVar->GetName(),aElement->GetFullName(),fType[i],aElement->GetTypeName());

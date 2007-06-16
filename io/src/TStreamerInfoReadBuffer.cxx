@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.45 2007/02/05 18:11:28 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.46 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1082,84 +1082,241 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          continue;
 
          case TStreamerInfo::kStreamLoop:
+            // -- A pointer to a varying-length array of objects.
+            // MyClass* ary; //[n]
+            // -- Or a pointer to a varying-length array of pointers to objects.
+            // MyClass** ary; //[n]
          case TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
+            // -- An array of pointers to a varying-length array of objects.
+            // MyClass* ary[d]; //[n]
+            // -- Or an array of pointers to a varying-length array of pointers to objects.
+            // MyClass** ary[d]; //[n]
          {
-            TClass *cl = fComp[i].fClass;
+            // Get the class of the data member.
+            TClass* cl = fComp[i].fClass;
+            // Which are we, an array of objects or an array of pointers to objects?
             Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
-            UInt_t start, count;
-            b.ReadVersion(&start, &count, cl);
+            // Check for a private streamer.
             if (pstreamer) {
-               int imethod = fMethod[i]+eoffset;
-               DOLOOP {
-                  Int_t *counter = (Int_t*)(arr[k]+imethod);
-                  (*pstreamer)(b,arr[k]+ioffset,*counter);
+               // -- We have a private streamer.
+               // Read the class version and byte count from the buffer.
+               UInt_t start = 0;
+               UInt_t count = 0;
+               b.ReadVersion(&start, &count, cl);
+               // Loop over the entries in the clones array or the STL container.
+               for (Int_t k = 0; k < narr; ++k) {
+                  Int_t* counter = (Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/);
+                  // And call the private streamer, passing it the buffer, the object, and the counter.
+                  (*pstreamer)(b, arr[k] /*entry pointer*/ + ioffset /*object offset*/, *counter);
                }
                b.CheckByteCount(start, count, aElement->GetFullName());
+               // We are done, next streamer element.
                continue;
             }
-            DOLOOP {
-               Int_t vlen = *((Int_t*)(arr[k] + fMethod[i] + eoffset));
-               char **pp = (char**)(arr[k] + ioffset);
-               if (pp == 0) continue;
-               for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
-                  if (!isPtrPtr) {
-                     cl->DeleteArray(pp[ndx]);
-                     pp[ndx] = 0;
-                  } else {
-                     // Using vlen is wrong here because it has already
-                     // been overwritten with the value needed to read
-                     // the current record.  Fixing this will require
-                     // remembering the old values of counters as they
-                     // are overwritten so that the old values may be
-                     // used here to do this deletion properly.
-                     //
-                     // For now we will just leak memory, just as we
-                     // have always done in the past.  Fix this.
-                     //
-                     //char **r = (char**)(pp[ndx]);
-                     //if (r != 0) {
-                     //   for (Int_t v = 0; v < vlen; ++v) {
-                     //      cl->Destructor(r[v]);
-                     //      r[v] = 0;
-                     //   }
+            // At this point we do *not* have a private streamer.
+            // Get the version of the file we are reading from.
+            TFile* file = (TFile*) b.GetParent();
+            // By default assume the file version is the newest.
+            Int_t fileVersion = kMaxInt;
+            if (file) {
+               fileVersion = file->GetVersion();
+            }
+            // Read the class version and byte count from the buffer.
+            UInt_t start = 0;
+            UInt_t count = 0;
+            b.ReadVersion(&start, &count, cl);
+            if (fileVersion > 51508) {
+               // -- Newer versions allow polymorpic pointers.
+               // Loop over the entries in the clones array or the STL container.
+               for (Int_t k = 0; k < narr; ++k) {
+                  // Get the counter for the varying length array.
+                  Int_t vlen = *((Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/));
+                  //Int_t realLen;
+                  //b >> realLen;
+                  //if (realLen != vlen) {
+                  //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+                  //}
+                  // Get a pointer to the array of pointers.
+                  char** pp = (char**) (arr[k] /*entry pointer*/ + ioffset /*object offset*/);
+                  if (!pp) {
+                     continue;
+                  }
+                  // Loop over each element of the array of pointers to varying-length arrays.
+                  for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                     //if (!pp[ndx]) {
+                        // -- We do not have a pointer to a varying-length array.
+                        //Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
+                        //continue;
                      //}
-                     delete[] pp[ndx];
-                     pp[ndx] = 0;
-                  }
-                  if (vlen == 0) continue;
-                  if (!isPtrPtr) {
-                     pp[ndx] = (char*)(cl->NewArray(vlen));
-                     if (pp[ndx] == 0) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                  } else {
-                     pp[ndx] = (char*)(new char*[vlen]);
-                     if (pp[ndx] == 0) {
-                        Error("ReadBuffer", "Memory allocation failed!\n");
-                        continue;
-                     }
-                     memset(pp[ndx], 0, sizeof(char*)*vlen);
-                  }
-                  for (Int_t v = 0; v < vlen; ++v) {
+                     // Delete any memory at pp[ndx].
                      if (!isPtrPtr) {
-                        cl->Streamer(pp[ndx] + (cl->Size() * v), b);
+                        cl->DeleteArray(pp[ndx]);
+                        pp[ndx] = 0;
                      } else {
-                        char **r = (char**)(pp[ndx]);
-                        r[v] = (char*)(cl->New());
-                        if (r[v] == 0) {
-                           // Do not print a second error messsage here.
-                           //Error("ReadBuffer", "Memory allocation failed!\n");
+                        // Using vlen is wrong here because it has already
+                        // been overwritten with the value needed to read
+                        // the current record.  Fixing this will require
+                        // doing a pass over the object at the beginning
+                        // of the I/O and releasing all the buffer memory
+                        // for varying length arrays before we overwrite
+                        // the counter values.
+                        //
+                        // For now we will just leak memory, just as we
+                        // have always done in the past.  Fix this.
+                        //
+                        //char** r = (char**) pp[ndx];
+                        //if (r) {
+                        //   for (Int_t v = 0; v < vlen; ++v) {
+                        //      cl->Destructor(r[v]);
+                        //      r[v] = 0;
+                        //   }
+                        //}
+                        delete[] pp[ndx];
+                        pp[ndx] = 0;
+                     }
+                     if (!vlen) {
+                        continue;
+                     }
+                     // Note: We now have pp[ndx] is null.
+                     // Allocate memory to read into.
+                     if (!isPtrPtr) {
+                        // -- We are a varying-length array of objects.
+                        // Note: Polymorphism is not allowed here.
+                        // Allocate a new array of objects to read into.
+                        pp[ndx] = (char*) cl->NewArray(vlen);
+                        if (!pp[ndx]) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
                            continue;
                         }
-                        cl->Streamer(r[v], b);
-                     } // if
-                  } // v
-               } // ndx
-            } // k
+                     } else {
+                        // -- We are a varying-length array of pointers to objects.
+                        // Note: The object pointers are allowed to be polymorphic.
+                        // Allocate a new array of pointers to objects to read into.
+                        pp[ndx] = (char*) new char*[vlen];
+                        if (!pp[ndx]) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                        // And set each pointer to null.
+                        memset(pp[ndx], 0, vlen * sizeof(char*));
+                     }
+                     if (!isPtrPtr) {
+                        // -- We are a varying-length array of objects.
+                        b.ReadFastArray(pp[ndx], cl, vlen, 0);
+                     }
+                     else {
+                        // -- We are a varying-length array of object pointers.
+                        b.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                     } // isPtrPtr
+                  } // ndx
+               } // k
+            }
+            else {
+               // -- Older versions do *not* allow polymorpic pointers.
+               // Loop over the entries in the clones array or the STL container.
+               for (Int_t k = 0; k < narr; ++k) {
+                  // Get the counter for the varying length array.
+                  Int_t vlen = *((Int_t*) (arr[k] /*entry pointer*/ + eoffset /*entry offset*/ + fMethod[i] /*counter offset*/));
+                  //Int_t realLen;
+                  //b >> realLen;
+                  //if (realLen != vlen) {
+                  //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+                  //}
+                  // Get a pointer to the array of pointers.
+                  char** pp = (char**) (arr[k] /*entry pointer*/ + ioffset /*object offset*/);
+                  if (!pp) {
+                     continue;
+                  }
+                  // Loop over each element of the array of pointers to varying-length arrays.
+                  for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
+                     //if (!pp[ndx]) {
+                        // -- We do not have a pointer to a varying-length array.
+                        //Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), fType[i], aElement->GetTypeName());
+                        //continue;
+                     //}
+                     // Delete any memory at pp[ndx].
+                     if (!isPtrPtr) {
+                        cl->DeleteArray(pp[ndx]);
+                        pp[ndx] = 0;
+                     } else {
+                        // Using vlen is wrong here because it has already
+                        // been overwritten with the value needed to read
+                        // the current record.  Fixing this will require
+                        // doing a pass over the object at the beginning
+                        // of the I/O and releasing all the buffer memory
+                        // for varying length arrays before we overwrite
+                        // the counter values.
+                        //
+                        // For now we will just leak memory, just as we
+                        // have always done in the past.  Fix this.
+                        //
+                        //char** r = (char**) pp[ndx];
+                        //if (r) {
+                        //   for (Int_t v = 0; v < vlen; ++v) {
+                        //      cl->Destructor(r[v]);
+                        //      r[v] = 0;
+                        //   }
+                        //}
+                        delete[] pp[ndx];
+                        pp[ndx] = 0;
+                     }
+                     if (!vlen) {
+                        continue;
+                     }
+                     // Note: We now have pp[ndx] is null.
+                     // Allocate memory to read into.
+                     if (!isPtrPtr) {
+                        // -- We are a varying-length array of objects.
+                        // Note: Polymorphism is not allowed here.
+                        // Allocate a new array of objects to read into.
+                        pp[ndx] = (char*) cl->NewArray(vlen);
+                        if (!pp[ndx]) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                     } else {
+                        // -- We are a varying-length array of pointers to objects.
+                        // Note: The object pointers are allowed to be polymorphic.
+                        // Allocate a new array of pointers to objects to read into.
+                        pp[ndx] = (char*) new char*[vlen];
+                        if (!pp[ndx]) {
+                           Error("ReadBuffer", "Memory allocation failed!\n");
+                           continue;
+                        }
+                        // And set each pointer to null.
+                        memset(pp[ndx], 0, vlen * sizeof(char*));
+                     }
+                     if (!isPtrPtr) {
+                        // -- We are a varying-length array of objects.
+                        // Loop over the elements of the varying length array.
+                        for (Int_t v = 0; v < vlen; ++v) {
+                           // Read the object from the buffer.
+                           cl->Streamer(pp[ndx] + (v * cl->Size()), b);
+                        } // v
+                     }
+                     else {
+                        // -- We are a varying-length array of object pointers.
+                        // Get a pointer to the object pointer array.
+                        char** r = (char**) pp[ndx];
+                        // Loop over the elements of the varying length array.
+                        for (Int_t v = 0; v < vlen; ++v) {
+                           // Allocate an object to read into.
+                           r[v] = (char*) cl->New();
+                           if (!r[v]) {
+                              // Do not print a second error messsage here.
+                              //Error("ReadBuffer", "Memory allocation failed!\n");
+                              continue;
+                           }
+                           // Read the object from the buffer.
+                           cl->Streamer(r[v], b);
+                        } // v
+                     } // isPtrPtr
+                  } // ndx
+               } // k
+            } // fileVersion
             b.CheckByteCount(start, count, aElement->GetFullName());
-         } // case
-         continue;
+            continue;
+         }
 
          default: {
             int ans = -1;
