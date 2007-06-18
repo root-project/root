@@ -2,8 +2,6 @@
 Processing runtreeCloneTest2.C...
 Warning in <TClass::TClass>: no dictionary for class TChargedPionEvent is available
 Warning in <TClass::TClass>: no dictionary for class TChargedPion is available
-  Adding ./root/BAC85D5487F19A3B6755584FBC29B3AF_100.root
-  Adding ./root/BAC85D5487F19A3B6755584FBC29B3AF_107.root
 
 
 Done collecting files. begin merging

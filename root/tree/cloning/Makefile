@@ -34,6 +34,9 @@ treeCloneTest.log: hsimple1.root event1.root runEvent.C run.C  $(ROOTCORELIBS)
 treeCloneTest: treeCloneTest.log treeCloneTest.good 
 	$(CMDECHO) diff -ub treeCloneTest.good treeCloneTest.log
 
+treeCloneTest2.log: runtreeCloneTest2.C $(ROOTCORELIBS)
+	$(CMDECHO) root.exe -b -q -l runtreeCloneTest2.C 2>&1 | grep -v Adding > treeCloneTest2.log
+
 treeCloneTest2: treeCloneTest2.log 
 	$(TestDiff)
 
