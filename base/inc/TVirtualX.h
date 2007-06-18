@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.42 2007/02/20 09:44:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.43 2007/04/19 21:07:01 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -170,6 +170,7 @@ public:
    virtual void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    virtual void         IconifyWindow(Window_t id);
+   virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
    virtual void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    virtual void         SetWindowBackground(Window_t id, ULong_t color);
    virtual void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);

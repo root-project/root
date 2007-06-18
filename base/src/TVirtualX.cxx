@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.18 2007/02/20 09:44:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.19 2007/04/19 21:07:01 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -902,6 +902,25 @@ void TVirtualX::ResizeWindow(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 void TVirtualX::IconifyWindow(Window_t /*id*/)
 {
    // Iconifies the window "id".
+}
+//______________________________________________________________________________
+Bool_t TVirtualX::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
+{
+   // Notify the low level GUI layer ROOT requires "tgwindow" to be 
+   // updated
+   //
+   // Returns kTRUE if the notification was desirable and it was sent
+   //
+   // At the moment only Qt4 layer needs that
+   //
+   // One needs explicitly cast the first parameter to TGWindow to make 
+   // it working in the implementation.
+   //
+   // One needs to process the notification to confine
+   // all paint operations within "expose" / "paint" like low level event
+   // or equivalent
+   
+   return kFALSE;
 }
 
 //______________________________________________________________________________
