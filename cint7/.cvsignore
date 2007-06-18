@@ -1,7 +1,0 @@
-MAKEINFO cint cint.exe
-update.bat updatedb.bat
-Makefile.conf
-config.status
-configcint.h
-*.manifest
-
