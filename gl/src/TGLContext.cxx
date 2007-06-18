@@ -1,5 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLightSet.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
-// Author:  Matevz Tadel, Jun 2007
+// @(#)root/gl:$Name:  $:$Id: TGLContext.cxx,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,7 @@
 #include "GuiTypes.h"
 #include "TString.h"
 #include "TError.h"
+
 #include "TROOT.h"
 
 //#include "TGLPBufferPrivate.h"
@@ -38,7 +39,8 @@ TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
                : fDevice(wid),
                  fPimpl(0),
                  fFromCtor(kTRUE),
-                 fValid(kFALSE)
+                 fValid(kFALSE),
+                 fIdentity(0)
 {
    //TGLContext ctor "from" TGLWidget.
    //Makes thread switching.
@@ -49,7 +51,8 @@ TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
       SetContext(wid, shareList);
 
    fFromCtor = kFALSE;
-   fValid = kTRUE;
+//   fValid = kTRUE;
+
 }
 
 //______________________________________________________________________________
@@ -124,7 +127,16 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    }
 
    //Register context for "parent" gl-device.
+   fValid = kTRUE;
    fDevice->AddContext(this);
+   TGLContextPrivate::RegisterContext(this);
+
+   if (shareList) {
+      fIdentity = shareList->GetIdentity();
+      fIdentity->AddRef();
+   } else {
+      fIdentity = new TGLContextIdentity;
+   }
 
    dcGuard.Stop();
    safe_ptr.release();
@@ -162,14 +174,14 @@ Bool_t TGLContext::MakeCurrent()
       return kFALSE;
    }
 
-   Bool_t rez = kFALSE;
-
    if (!gVirtualX->IsCmdThread())
-      rez = Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->MakeCurrent()", this)));
-   else
-      return Bool_t(wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext));
-
-   return rez;
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->MakeCurrent()", this)));
+   else {
+      Bool_t rez = wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext);
+      if (rez)
+         fIdentity->DeleteDisplayLists();
+      return rez;
+   }
 }
 
 //______________________________________________________________________________
@@ -192,6 +204,7 @@ void TGLContext::SwapBuffers()
    }
 }
 
+//______________________________________________________________________________
 void TGLContext::Release()
 {
    //Make the context invalid and (do thread switch, if needed)
@@ -204,6 +217,7 @@ void TGLContext::Release()
    if (fPimpl->fHWND)
       ReleaseDC(fPimpl->fHWND, fPimpl->fHDC);
 
+   TGLContextPrivate::RemoveContext(this);
    wglDeleteContext(fPimpl->fGLContext);
    fValid = kFALSE;
 }
@@ -239,7 +253,17 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fPimpl->fGLContext = glCtx;
    fPimpl->fWindowIndex = widget->GetWindowIndex();
 
+   if (shareList) {
+      fIdentity = shareList->GetIdentity();
+      fIdentity->AddRef();
+   } else {
+      fIdentity = new TGLContextIdentity;
+   }
+
+   fValid = kTRUE;
    fDevice->AddContext(this);
+   TGLContextPrivate::RegisterContext(this);
+
    safe_ptr.release();
 }
 
@@ -268,10 +292,17 @@ Bool_t TGLContext::MakeCurrent()
       return kFALSE;
    }
 
-   if (fPimpl->fWindowIndex != -1)
-      return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex), fPimpl->fGLContext);
+   if (fPimpl->fWindowIndex != -1) {
+      const Bool_t rez = glXMakeCurrent(fPimpl->fDpy,
+                                        gVirtualX->GetWindowID(fPimpl->fWindowIndex),
+                                        fPimpl->fGLContext);
+      if (rez)
+         fIdentity->DeleteDisplayLists();
+      return rez;
+   }
 
-   return glXMakeCurrent(fPimpl->fDpy, fPimpl->fPBDC, fPimpl->fGLContext);
+   return kFALSE;//NO pbuffer part yet.
+   //return glXMakeCurrent(fPimpl->fDpy, fPimpl->fPBDC, fPimpl->fGLContext);
 }
 
 //______________________________________________________________________________
@@ -296,6 +327,7 @@ void TGLContext::Release()
 {
    //Make the context invalid and (do thread switch, if needed)
    //free resources.
+   TGLContextPrivate::RemoveContext(this);
    glXDestroyContext(fPimpl->fDpy, fPimpl->fGLContext);
    fValid = kFALSE;
 }
@@ -312,5 +344,59 @@ TGLContext::~TGLContext()
       fDevice->RemoveContext(this);
    }
 
+   fIdentity->Release();
+
    delete fPimpl;
+}
+
+//______________________________________________________________________________
+TGLContextIdentity *TGLContext::GetIdentity()const
+{
+   //We can have several shared contexts,
+   //and gl-scene wants to know, if some context
+   //(defined by its identity) can be used.
+   return fIdentity;
+}
+
+//______________________________________________________________________________
+TGLContext *TGLContext::GetCurrent()
+{
+   //Ask TGLContextPrivate to lookup context in its internal map.
+   return TGLContextPrivate::GetCurrentContext();
+}
+
+
+//______________________________________________________________________________
+// TGLContextIdentity
+//
+// Identifier of a shared GL-context.
+// Objects shared among GL-contexts include:
+// display-list definitions, texture objects, shader programs.
+
+ClassImp(TGLContextIdentity)
+
+//______________________________________________________________________________
+void TGLContextIdentity::RegisterDLNameRangeToWipe(UInt_t base, Int_t size)
+{
+   //Remember dl range for deletion in next MakeCurrent or dtor execution.
+   fDLTrash.push_back(DLRange_t(base, size));
+}
+
+//______________________________________________________________________________
+void TGLContextIdentity::DeleteDisplayLists()
+{
+   //Delete display-list objects registered for destruction.
+   if (fDLTrash.empty()) return;
+
+   for (DLTrashIt_t it = fDLTrash.begin(), e = fDLTrash.end(); it != e; ++it)
+      glDeleteLists(it->first, it->second);
+   fDLTrash.clear();
+}
+
+//______________________________________________________________________________
+TGLContextIdentity *TGLContextIdentity::GetCurrent()
+{
+   //Find identitfy of current context.
+   TGLContext* ctx = TGLContext::GetCurrent();
+   return ctx ? ctx->GetIdentity() : 0;
 }

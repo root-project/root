@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLOverlay.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -22,7 +22,7 @@ ClassImp(TGLOverlayElement)
 
 
 //______________________________________________________________________
-Bool_t TGLOverlayElement::MouseEnter(UInt_t* /*record*/)
+Bool_t TGLOverlayElement::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 {
    // Mouse has enetered this element.
    // Return TRUE if you want additional events.
@@ -30,7 +30,7 @@ Bool_t TGLOverlayElement::MouseEnter(UInt_t* /*record*/)
    return kFALSE;
 }
 
-Bool_t TGLOverlayElement::MouseStillInside(UInt_t* /*record*/)
+Bool_t TGLOverlayElement::MouseStillInside(TGLOvlSelectRecord& /*selRec*/)
 {
    // A new overlay hit is about to be processed.
    // By returning FALSE one can force mouse-leave (MouseLeave will be
@@ -43,8 +43,9 @@ Bool_t TGLOverlayElement::MouseStillInside(UInt_t* /*record*/)
 }
 
 //______________________________________________________________________
-Bool_t TGLOverlayElement::Handle(TGLRnrCtx& /*rnrCtx*/,
-                                 Event_t*   /*event*/, UInt_t* /*record*/)
+Bool_t TGLOverlayElement::Handle(TGLRnrCtx          & /*rnrCtx*/,
+                                 TGLOvlSelectRecord & /*selRec*/,
+                                 Event_t            * /*event*/)
 {
    // Handle overlay event.
    // Return TRUE if event was handled.

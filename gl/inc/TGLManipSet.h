@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLManipSet.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -40,8 +40,9 @@ public:
 
    virtual void SetPShape(TGLPhysicalShape * shape);
 
-   virtual Bool_t MouseEnter(UInt_t* record);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record);
+   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
+   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event);
    virtual void   MouseLeave();
 
    virtual void Render(TGLRnrCtx& rnrCtx);

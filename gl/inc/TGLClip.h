@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.2 2007/05/10 11:17:46 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.8 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -134,9 +134,10 @@ public:
    TGLClipSet();
    virtual ~TGLClipSet();
 
-   virtual Bool_t MouseEnter(UInt_t* record);
-   virtual Bool_t MouseStillInside(UInt_t* record);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record);
+   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
+   virtual Bool_t MouseStillInside(TGLOvlSelectRecord& selRec);
+   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event);
    virtual void   MouseLeave();
 
    virtual void Render(TGLRnrCtx& rnrCtx);

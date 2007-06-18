@@ -27,8 +27,10 @@
 #pragma link C++ class TGLLockable;
 #pragma link C++ class TGLBoundingBox;
 #pragma link C++ class TGLRnrCtx+;
-#pragma link C++ class TGLSelectRecord+;
 #pragma link C++ class TGLSelectBuffer+;
+#pragma link C++ class TGLSelectRecordBase+;
+#pragma link C++ class TGLSelectRecord+;
+#pragma link C++ class TGLOvlSelectRecord+;
 
 #pragma link C++ class TGLLogicalShape;
 #pragma link C++ class TGLPhysicalShape;
@@ -97,6 +99,7 @@
 #pragma link C++ class TGLWidgetContainer;
 #pragma link C++ class TGLWidget;
 #pragma link C++ class TGLContext;
+#pragma link C++ class TGLContextIdentity;
 #pragma link C++ class TGLFormat;
 
 #ifndef _WIN32

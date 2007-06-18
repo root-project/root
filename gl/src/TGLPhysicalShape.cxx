@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.2 2007/05/10 11:17:49 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.25 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -397,7 +397,7 @@ void TGLPhysicalShape::CalculateShapeLOD(TGLRnrCtx& rnrCtx, Float_t& pixSize, Sh
       // axis only. Not needed at present + unlikely case - but could be done based
       // on longest of projection of 4 edges of BBox along LOD axis. However this would
       // probably be more costly than just using whole BB projection (as for all axes)
-      Error("TGLScene::CalcPhysicalLOD", "LOD calculation for single axis not implemented presently");
+      Error("TGLPhysicalShape::CalcPhysicalLOD", "LOD calculation for single axis not implemented presently");
       shapeLOD = TGLRnrCtx::kLODMed;
       return;
    }

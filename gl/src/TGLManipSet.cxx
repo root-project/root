@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManipSet.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManipSet.cxx,v 1.2 2007/06/12 14:50:57 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TGLPhysicalShape.h"
 #include "TGLRnrCtx.h"
+#include "TGLSelectRecord.h"
 
 #include "TGLIncludes.h"
 
@@ -69,7 +70,7 @@ void TGLManipSet::SetPShape(TGLPhysicalShape * shape)
 /**************************************************************************/
 
 //______________________________________________________________________
-Bool_t TGLManipSet::MouseEnter(UInt_t* /*record*/)
+Bool_t TGLManipSet::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 {
    // Mouse has enetered this element.
    // Always accept.
@@ -81,19 +82,14 @@ Bool_t TGLManipSet::MouseEnter(UInt_t* /*record*/)
 }
 
 //______________________________________________________________________
-Bool_t TGLManipSet::Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record)
+Bool_t TGLManipSet::Handle(TGLRnrCtx          & rnrCtx,
+                           TGLOvlSelectRecord & selRec,
+                           Event_t            * event)
 {
    // Handle overlay event.
    // Return TRUE if event was handled.
 
    TGLManip* manip = GetCurrentManip();
-   UInt_t    wid   = record[0] > 1 ? record[4] : 0;
-   Bool_t    chg   = kFALSE;
-   if (manip->GetSelectedWidget() != wid && ! manip->GetActive())
-   {
-      manip->SetSelectedWidget(wid);
-      chg = kTRUE;
-   }
 
    switch (event->fType)
    {
@@ -108,7 +104,14 @@ Bool_t TGLManipSet::Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record)
       }
       case kMotionNotify:
       {
-         return manip->HandleMotion(*event, rnrCtx.RefCamera()) || chg;
+         if (manip->GetActive())
+            return manip->HandleMotion(*event, rnrCtx.RefCamera());
+         if (selRec.GetCurrItem() != manip->GetSelectedWidget())
+         {
+            manip->SetSelectedWidget(selRec.GetCurrItem());
+            return kTRUE;
+         }
+         return kFALSE;
       }
       case kGKeyPress:
       {

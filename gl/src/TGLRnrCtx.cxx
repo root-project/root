@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLRnrCtx.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -44,8 +44,6 @@
 //
 // Current scene / scene-info part is always initialized by viewer,
 // scenes can assume they're ok.
-//
-// !!! remove DL handling ... should go to gl-context.
 
 
 ClassImp(TGLRnrCtx)
@@ -75,13 +73,16 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fPickRectangle(0),
    fSelectBuffer (0),
 
-   fQuadric (0),
-
-   fDLCaptureOpen (kFALSE)
+   fDLCaptureOpen (kFALSE),
+   fGLCtxIdentity (0),
+   fQuadric       (0)
 {
    // Constructor.
 
    fSelectBuffer = new TGLSelectBuffer;
+   fQuadric = gluNewQuadric();
+   gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
+   gluQuadricNormals    (fQuadric, (GLenum)GLU_SMOOTH);
 }
 
 //______________________________________________________________________
@@ -89,24 +90,9 @@ TGLRnrCtx::~TGLRnrCtx()
 {
    // Destructor.
 
+   gluDeleteQuadric(fQuadric);
    delete fPickRectangle;
    delete fSelectBuffer;
-   // !!! Should 'cd into GL-context' to destroy display-lists and quadric.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLRnrCtx *)0x%x)->DestroyQuadric()", this));
-      gROOT->ProcessLineFast(Form("((TGLRnrCtx *)0x%x)->ProcessDLWipeList()", this));
-   } else {
-      DestroyQuadric();
-      ProcessDLWipeList();
-   }
-}
-
-//______________________________________________________________________
-void TGLRnrCtx::DestroyQuadric()
-{
-   // Destroy the shared quadric.
-
-   if (fQuadric) gluDeleteQuadric(fQuadric);
 }
 
 //______________________________________________________________________
@@ -123,29 +109,6 @@ TGLSceneBase & TGLRnrCtx::RefScene()
    // Return current scene (based on scene-info data).
 
    return *fSceneInfo->GetScene();
-}
-
-//______________________________________________________________________
-void TGLRnrCtx::Reset()
-{
-   // Reset the context. No longer needed, done in Viewer/ViewerBase.
-   //
-   // This also initializes GL interface stuff (display-list cache,
-   // quadric object) and so must be called from within a valid
-   // GL-context.
-   // !!! Will be removed when Timur provides hooks in TGLContext.
-
-   if (!fQuadric)
-   {
-      fQuadric = gluNewQuadric();
-      if (!fQuadric) {
-         Error("TGLRnrCtx::Reset", "create quadric failed.");
-      } else {
-         gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
-         gluQuadricNormals    (fQuadric, (GLenum)GLU_SMOOTH);
-      }
-   }
-   ProcessDLWipeList();
 }
 
 /**************************************************************************/
@@ -217,19 +180,6 @@ Bool_t TGLRnrCtx::IsDrawPassFilled() const
 }
 
 //______________________________________________________________________
-void TGLRnrCtx::ProcessDLWipeList()
-{
-   // Unregister name-ranges that are no longer needed from Gl.
-
-   while (!fDLWipeList.empty())
-   {
-      DLNameRange_t & rng = fDLWipeList.front();
-      glDeleteLists(rng.first, rng.second);
-      fDLWipeList.pop_front();
-   }
-}
-
-//______________________________________________________________________
 void TGLRnrCtx::OpenDLCapture()
 {
    // Start display-list capture.
@@ -245,15 +195,6 @@ void TGLRnrCtx::CloseDLCapture()
 
    assert(fDLCaptureOpen == kTRUE);
    fDLCaptureOpen = kFALSE;
-}
-
-//______________________________________________________________________
-void TGLRnrCtx::RegisterDLNameRangeToWipe(UInt_t base, Int_t size)
-{
-   // Register a rande of display-list names to be wiped
-   // once the context becomes current.
-
-   fDLWipeList.push_back(DLNameRange_t(base, size));
 }
 
 

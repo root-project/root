@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSelectBuffer.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -9,18 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGLSelectBuffer_H
-#define ROOT_TGLSelectBuffer_H
+#ifndef ROOT_TGLSelectBuffer
+#define ROOT_TGLSelectBuffer
 
 #include <Rtypes.h>
 
-class TGLSceneInfo;
-class TGLPhysicalShape;
-class TGLObject;
+class TGLSelectRecordBase;
 
 #include <vector>
-
-class TGLSelectRecord;
 
 /**************************************************************************/
 // TGLSelectBuffer
@@ -56,73 +52,9 @@ public:
 
    UInt_t* RawRecord(Int_t i) { return fSortedRecords[i].second; }
 
-   void SelectRecord(TGLSelectRecord& rec, Int_t i);
+   void SelectRecord(TGLSelectRecordBase& rec, Int_t i);
 
    ClassDef(TGLSelectBuffer, 0) // OpenGL select buffer with depth sorting.
 };
-
-/**************************************************************************/
-// TGLSelectRecord
-/**************************************************************************/
-
-class TGLSelectRecord
-{
-protected:
-   // Primary data - coming from GL.
-   Int_t    fN;
-   UInt_t  *fItems;
-   Float_t  fMinZ;
-   Float_t  fMaxZ;
-
-   // Secondary data (scene dependent) - use
-   // TGLSceneBase::ResolveSelectRecord to fill.
-   Bool_t            fTransparent;
-   TGLSceneInfo     *fSceneInfo; // SceneInfo
-   TGLPhysicalShape *fPhysShape; // PhysicalShape, if applicable
-   TObject          *fObject;    // Master TObject, if applicable
-   void             *fSpecific;  // Scene specific, if applicable
-
-   void CopyItems(UInt_t* items);
-
-public:
-   TGLSelectRecord();
-   TGLSelectRecord(UInt_t* data);
-   TGLSelectRecord(const TGLSelectRecord& rec);
-   virtual ~TGLSelectRecord();
-
-   TGLSelectRecord & operator=(const TGLSelectRecord& rec);
-
-   void Set(const TGLSelectRecord& rec);
-   void Set(UInt_t* data);
-   void SetRawOnly(UInt_t* data);
-   void Reset();
-
-   Int_t   GetN()           const { return fN; }
-   UInt_t* GetItems()       const { return fItems; }
-   UInt_t  GetItem(Int_t i) const { return fItems[i]; }
-   Float_t GetMinZ()        const { return fMinZ; }
-   Float_t GetMaxZ()        const { return fMaxZ; }
-
-   Bool_t             GetTransparent() const { return fTransparent; }
-   TGLSceneInfo     * GetSceneInfo()   const { return fSceneInfo; }
-   TGLPhysicalShape * GetPhysShape()   const { return fPhysShape; }
-   TObject          * GetObject()      const { return fObject; }
-   void             * GetSpecific()    const { return fSpecific; }
-
-   void SetTransparent(Bool_t t)               { fTransparent = t; }
-   void SetSceneInfo  (TGLSceneInfo* si)       { fSceneInfo = si; }
-   void SetPhysShape  (TGLPhysicalShape* pshp) { fPhysShape = pshp; }
-   void SetObject     (TObject* obj)           { fObject = obj; }
-   void SetSpecific   (void* spec)             { fSpecific = spec; }
-
-   void Print();
-
-   static Bool_t AreSameSelectionWise(const TGLSelectRecord& r1,
-                                      const TGLSelectRecord& r2);
-
-   ClassDef(TGLSelectRecord, 0) // One record in OpenGL selection.
-};
-
-
 
 #endif

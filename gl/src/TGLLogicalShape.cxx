@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.2 2007/05/10 11:17:47 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.15 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 
@@ -50,7 +50,9 @@
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLRnrCtx.h"
-#include "TGLSelectBuffer.h"
+#include "TGLScene.h"
+#include "TGLSelectRecord.h"
+#include "TGLContext.h"
 #include "TGLIncludes.h"
 
 #include "TBuffer3D.h"
@@ -65,7 +67,6 @@ TGLLogicalShape::TGLLogicalShape() :
    fRef           (0),
    fFirstPhysical (0),
    fExternalObj   (0),
-   fRnrCtx        (0),
    fScene         (0),
    fDLBase        (0),
    fDLValid       (0),
@@ -78,7 +79,6 @@ TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fRef           (0),
    fFirstPhysical (0),
    fExternalObj   (obj),
-   fRnrCtx        (0),
    fScene         (0),
    fDLBase        (0),
    fDLValid       (0),
@@ -91,7 +91,6 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fRef           (0),
    fFirstPhysical (0),
    fExternalObj   (buffer.fID),
-   fRnrCtx        (0),
    fScene         (0),
    fDLBase        (0),
    fDLValid       (0),
@@ -105,42 +104,6 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    // otherwise use the raw points to generate one
       fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
    }
-}
-
-//______________________________________________________________________________
-TGLLogicalShape::TGLLogicalShape(const TGLLogicalShape& gls) :
-   fRef           (0),
-   fFirstPhysical (0),
-   fExternalObj   (gls.fExternalObj),
-   fBoundingBox   (gls.fBoundingBox),
-   fRnrCtx        (0),
-   fScene         (0),
-   fDLBase        (0),
-   fDLValid       (0),
-   fDLCache       (gls.fDLCache),
-   fRefStrong     (gls.fRefStrong)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGLLogicalShape& TGLLogicalShape::operator=(const TGLLogicalShape& gls)
-{
-   // Assignement operator.
-
-   if (this != &gls) {
-      fRef           = 0;
-      fFirstPhysical = 0;
-      fBoundingBox   = gls.fBoundingBox;
-      fExternalObj   = gls.fExternalObj;
-      fRnrCtx        = 0;
-      fScene         = 0;
-      fDLBase        = 0;
-      fDLValid       = 0;
-      fDLCache       = gls.fDLCache;
-      fRefStrong     = gls.fRefStrong;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -280,16 +243,16 @@ Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
    // Returns kTRUE if draws should be display list cached
    // kFALSE otherwise.
    //
-   // Default is to ignore rnrCtx and use internal bool. In some cases
-   // shapes may want to override and constrain caching to certain
-   // styles/LOD found in rnrCtx.
-   // MT: This is bugged as styles are/should be ignored by the shape
-   // renderers. And DL-cache only considers LOD, not style.
+   // Here we check that:
+   // a) fScene is set (Scene manages link to GL-context);
+   // b) secondary selection is not in progress as different
+   //    render-path is usually taken in this case.
+   // 
+   // Otherwise we return internal bool.
    //
-   // If secondary selection is enabled return false as different
-   // render-path is usually taken by the rendering object.
+   // Override this in sub-class if different behaviour is required.
 
-   if (rnrCtx.SecSelection()) return kFALSE;
+   if (!fScene || rnrCtx.SecSelection()) return kFALSE;
    return fDLCache;
 }
 
@@ -303,17 +266,37 @@ void TGLLogicalShape::DLCacheClear()
 }
 
 //______________________________________________________________________________
+void TGLLogicalShape::DLCacheDrop()
+{
+   // Drop all entries for all LODs for this drawable from the display
+   // list cache, WITHOUT returning the reserved ids to GL context.
+   //
+   // This is called by scene if it realized that the GL context was
+   // destroyed.
+
+   fDLBase  = 0;
+   fDLValid = 0;
+}
+
+//______________________________________________________________________________
 void TGLLogicalShape::DLCachePurge()
 {
    // Purge all entries for all LODs for this drawable from the
    // display list cache, returning the reserved ids to GL context.
 
-   if (fDLBase)
+   if (fDLBase == 0) return;
+
+   if (fScene)
    {
-      fRnrCtx->RegisterDLNameRangeToWipe(fDLBase, DLCacheSize());
-      fDLBase  = 0;
-      fDLValid = 0;
+      fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(fDLBase, DLCacheSize());
    }
+   else
+   {
+      Warning("TGLLogicalShape::DLCachePurge", "Scene unknown, attempting direct deletion.");
+      glDeleteLists(fDLBase, DLCacheSize());
+   }
+   fDLBase  = 0;
+   fDLValid = 0;
 }
 
 //______________________________________________________________________________
@@ -357,7 +340,6 @@ entry_point:
 
    if (fDLBase == 0)
    {
-      fRnrCtx = &rnrCtx;
       fDLBase = glGenLists(DLCacheSize());
       if (fDLBase == 0)
       {

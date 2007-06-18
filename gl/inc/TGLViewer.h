@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.2 2007/05/10 11:17:55 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.37 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 
 #include "TGLViewerBase.h"
 #include "TGLRnrCtx.h"
-#include "TGLSelectBuffer.h"
+#include "TGLSelectRecord.h"
 
 #include "TVirtualViewer3D.h"
 
@@ -90,7 +90,7 @@ protected:
    TGLManipSet        * fSelectedPShapeRef;    //!
    // Overlay
    TGLOverlayElement  * fCurrentOvlElm;        //! current overlay element
-   std::vector<UInt_t>  fCurrentOvlRec;        //! raw-record of the last selected overlay element
+   TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
    // Scene management for fScene
    Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?
@@ -239,7 +239,6 @@ public:
 
    Bool_t RequestOverlaySelect(Int_t x, Int_t y); // Cross thread select request
    Bool_t DoOverlaySelect(Int_t x, Int_t y);      // Window coords origin top left
-   void   CopyOverlayRecord(UInt_t* record);
 
    // Update/camera-reset
    void   UpdateScene();
@@ -277,16 +276,28 @@ class TGLRedrawTimer : public TTimer
 private:
    TGLViewer & fViewer;
    Short_t     fRedrawLOD;
+   Bool_t      fPending;
 public:
    TGLRedrawTimer(TGLViewer & viewer) :
-      fViewer(viewer), fRedrawLOD(TGLRnrCtx::kLODHigh) {};
-   ~TGLRedrawTimer() {};
-   void   RequestDraw(Int_t milliSec, Short_t redrawLOD)
+      fViewer(viewer), fRedrawLOD(TGLRnrCtx::kLODHigh), fPending(kFALSE) {}
+   ~TGLRedrawTimer() {}
+   void RequestDraw(Int_t milliSec, Short_t redrawLOD=TGLRnrCtx::kLODHigh)
    {
-      fRedrawLOD = redrawLOD;
+      if (fPending) TurnOff(); else fPending = kTRUE;
+      if (redrawLOD > fRedrawLOD) fRedrawLOD = redrawLOD;
       TTimer::Start(milliSec, kTRUE);
    }
-   Bool_t Notify() { TurnOff(); fViewer.RequestDraw(fRedrawLOD); return kTRUE; }
+   virtual void Stop()
+   {
+      if (fPending) { TurnOff(); fPending = kFALSE; }
+   }
+   Bool_t Notify()
+   {
+      TurnOff();
+      fPending = kFALSE;
+      fViewer.RequestDraw(fRedrawLOD);
+      return kTRUE;
+   }
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.62 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.63 2007/06/12 14:50:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -330,16 +330,12 @@ void TGLViewer::EndScene()
    }
 
    // Externally triggered scene rebuild (first pass) completed
-   if (!fInternalRebuild) {
-      // Request intial draw - will result in an internal (full) rebuild
-      // afterwards - when we have camera interest bootstrapped properly
-      RequestDraw();
-   } else {
+   if (fInternalRebuild) {
       fInternalRebuild = kFALSE;
-
       // No more setup done after first internal scene rebuild
       fPostSceneBuildSetup = kFALSE;
    }
+   RequestDraw();
 
    if (gDebug>2 || fDebugMode) {
       Info("TGLViewer::EndScene",
@@ -677,10 +673,6 @@ Bool_t TGLViewer::RebuildScene()
       Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
    }
 
-   // Need to invalidate/redraw via timer as under Win32 we are already inside the
-   // GUI(DoRedraw) thread - direct invalidation will be cleared when leaving
-   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODMed);
-
    return kTRUE;
 }
 
@@ -889,7 +881,7 @@ void TGLViewer::ResetCurrentCamera()
 //______________________________________________________________________________
 void TGLViewer::SetupCameras(Bool_t reset)
 {
-   // Setup cameras for current scene bounding box.
+   // Setup cameras for current bounding box.
 
    if (IsLocked()) {
       Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", LockName(CurrentLock()));
@@ -897,7 +889,7 @@ void TGLViewer::SetupCameras(Bool_t reset)
    }
 
    // Setup cameras if scene box is not empty
-   const TGLBoundingBox & box =  fScene.BoundingBox();
+   const TGLBoundingBox & box = fOverallBoundingBox;
    if (!box.IsEmpty()) {
       fPerspectiveCameraYOZ.Setup(box, reset);
       fPerspectiveCameraXOZ.Setup(box, reset);
@@ -913,10 +905,11 @@ void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 {
    // Perform post scene (re)build setup
 
+   fOverallBoundingBox = fScene.BoundingBox();
    SetupCameras(resetCameras);
 
-   // Set default reference to scene center
-   fReferencePos.Set(fScene.BoundingBox().Center());
+   // Set default reference to center
+   fReferencePos.Set(fOverallBoundingBox.Center());
 }
 
 
@@ -961,6 +954,7 @@ void TGLViewer::RequestDraw(Short_t LOD)
    // Ignore request if GL window or context not yet availible - we
    // will get redraw later
    if (!fGLWindow && fGLDevice == -1) {
+      fRedrawTimer->RequestDraw(100, LOD);
       return;
    }
 
@@ -969,7 +963,7 @@ void TGLViewer::RequestDraw(Short_t LOD)
       // If taking drawlock fails the previous draw is still in progress
       // set timer to do this one later
       if (gDebug>3) {
-         Info("TGLViewer::RequestDraw", "scene drawlocked - requesting another draw");
+         Info("TGLViewer::RequestDraw", "viewer locked - requesting another draw.");
       }
       fRedrawTimer->RequestDraw(100, LOD);
       return;
@@ -1008,6 +1002,7 @@ void TGLViewer::DoDraw()
    if (CurrentLock() != kDrawLock) {
       if ( ! TakeLock(kDrawLock)) {
          Error("TGLViewer::DoDraw", "viewer is %s", LockName(CurrentLock()));
+         return;
       }
    }
 
@@ -1408,36 +1403,32 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    fRnrCtx->EndSelection(nHits);
 
    // Process overlay selection.
-
-   TGLSelectBuffer   * selBuf = fRnrCtx->GetSelectBuffer();
    TGLOverlayElement * selElm = 0;
-   UInt_t            * raw    = 0;
-
-   for (Int_t recIdx = 0; recIdx < nHits; ++recIdx)
+   if (nHits > 0)
    {
-      raw = selBuf->RawRecord(recIdx);
-      UInt_t  id  = raw[3];
-
-      assert (id < fOverlay.size());
-
-      TGLOverlayElement* el = fOverlay[id];
-      if (el == fCurrentOvlElm)
+      Int_t idx = 0;
+      while (idx < nHits && FindClosestOverlayRecord(fOvlSelRec, idx))
       {
-         if (el->MouseStillInside(raw))
+         TGLOverlayElement* el = fOvlSelRec.GetOvlElement();
+         if (el == fCurrentOvlElm)
+         {
+            if (el->MouseStillInside(fOvlSelRec))
+            {
+               selElm = el;
+               break;
+            }
+         }
+         else if (el->MouseEnter(fOvlSelRec))
          {
             selElm = el;
             break;
          }
       }
-      else if (el->MouseEnter(raw))
-      {
-         selElm = el;
-         break;
-      }
    }
-
-   if (selElm != 0)
-      CopyOverlayRecord(raw);
+   else
+   {
+      fOvlSelRec.Reset();
+   }
 
    ReleaseLock(kSelectLock);
 
@@ -1451,12 +1442,6 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    {
       return kFALSE;
    }
-}
-
-void TGLViewer::CopyOverlayRecord(UInt_t* record)
-{
-   fCurrentOvlRec.resize(record[0] + 3);
-   memcpy(&fCurrentOvlRec[0], record, (3 + record[0])*sizeof(UInt_t));
 }
 
 /**************************************************************************/
@@ -1483,7 +1468,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    fCurrentCamera->SetViewport(fViewport);
 
    // Request redraw via timer as window resize can result in stream of calls
-   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODMed);
+   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
    if (gDebug>2) {
       Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);
    }
@@ -1880,7 +1865,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
 
       if (fAction == kDragNone && fCurrentOvlElm)
       {
-         if (fCurrentOvlElm->Handle(*fRnrCtx, event, &fCurrentOvlRec[0]))
+         if (fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event))
          {
             handled     = kTRUE;
             grabPointer = kTRUE;
@@ -1951,7 +1936,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
    else if (event->fType == kButtonRelease)
    {
       if (fAction == kDragOverlay) {
-         fCurrentOvlElm->Handle(*fRnrCtx, event, &fCurrentOvlRec[0]);
+         fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
          SelectionChanged();
          // XXX CLIPA ClipChanged();
          if (RequestOverlaySelect(event->fX, event->fY))
@@ -1991,7 +1976,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
 Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
 {
    // Handle mouse double click 'event'
-   if (fScene.IsLocked()) {
+   if (IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleDoubleClick", "ignored - viewer is %s", LockName(CurrentLock()));
       }
@@ -2014,7 +1999,7 @@ Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 {
    // Handle configure notify 'event' - a window resize/movement
    if (IsLocked()) {
-      if (gDebug>3) {
+      if (gDebug > 0) {
          Info("TGLViewer::HandleConfigureNotify", "ignored - viewer is %s", LockName(CurrentLock()));
       }
       return kFALSE;
@@ -2047,7 +2032,7 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
    fRnrCtx->SetEventKeySym(keysym);
 
    Bool_t redraw = kFALSE;
-   if (fCurrentOvlElm && fCurrentOvlElm->Handle(*fRnrCtx, event, &fCurrentOvlRec[0]))
+   if (fCurrentOvlElm && fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event))
    {
       redraw = kTRUE;
    }
@@ -2153,6 +2138,7 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    assert (event); // was if event==0 return
 
    Bool_t processed = kFALSE, changed = kFALSE;
+   Short_t lod = TGLRnrCtx::kLODMed;
 
    // Camera interface requires GL coords - Y inverted
    Int_t xDelta = event->fX - fLastPos.fX;
@@ -2162,8 +2148,8 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    {
       changed = RequestOverlaySelect(event->fX, event->fY);
       if (fCurrentOvlElm)
-         processed = fCurrentOvlElm->Handle(*fRnrCtx, event, &fCurrentOvlRec[0]);
-
+         processed = fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
+      lod = TGLRnrCtx::kLODHigh;
    } else if (fAction == kDragCameraRotate) {
       processed = CurrentCamera().Rotate(xDelta, -yDelta);
    } else if (fAction == kDragCameraTruck) {
@@ -2173,7 +2159,7 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
       processed = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask,
                                         event->fState & kKeyShiftMask);
    } else if (fAction == kDragOverlay) {
-      processed = fCurrentOvlElm->Handle(*fRnrCtx, event, &fCurrentOvlRec[0]);
+      processed = fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
    }
 
    fLastPos.fX = event->fX;
@@ -2185,24 +2171,26 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
          gVirtualX->SetDrawMode(TVirtualX::kCopy);
       }
 
-      RequestDraw();
+      RequestDraw(lod);
    }
 
    return processed;
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::HandleExpose(Event_t *)
+Bool_t TGLViewer::HandleExpose(Event_t * event)
 {
    // Handle window expose 'event' - show
+   if (event->fCount != 0) return kTRUE;
+
    if (IsLocked()) {
-      if (gDebug>3) {
+      if (gDebug > 0) {
          Info("TGLViewer::HandleExpose", "ignored - viewer is %s", LockName(CurrentLock()));
       }
       return kFALSE;
    }
 
-   RequestDraw(TGLRnrCtx::kLODHigh);
+   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
    return kTRUE;
 }
 

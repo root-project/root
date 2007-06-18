@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.50 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.51 2007/06/12 10:22:49 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -13,12 +13,12 @@
 
 #include "TGLScene.h"
 #include "TGLRnrCtx.h"
-#include "TGLSelectBuffer.h"
+#include "TGLSelectRecord.h"
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
 #include "TGLStopwatch.h"
-
+#include "TGLContext.h"
 #include "TGLIncludes.h"
 
 #include <TColor.h>
@@ -156,6 +156,7 @@ TGLScene::TGLScene() :
 
    fDrawList(1000),
    fDrawListValid(kFALSE),
+   fGLCtxIdentity(0),
    fInSmartRefresh(kFALSE)
 {}
 
@@ -164,11 +165,45 @@ TGLScene::~TGLScene()
 {
    // Destroy scene objects
    TakeLock(kModifyLock);
+   ReleaseGLCtxIdentity();
    DestroyPhysicals(kTRUE); // including modified
    DestroyLogicals();
    ReleaseLock(kModifyLock);
 }
 
+/**************************************************************************/
+// GLCtxIdentity
+/**************************************************************************/
+
+//______________________________________________________________________________
+void TGLScene::ReleaseGLCtxIdentity()
+{
+   // Release all GL resources for current context identity.
+   // Requires iteration over all logical shapes.
+
+   if (fGLCtxIdentity == 0) return;
+
+   if (fGLCtxIdentity->IsValid())
+   {
+      // Purge logical's DLs
+      LogicalShapeMapIt_t lit = fLogicalShapes.begin();
+      while (lit != fLogicalShapes.end()) {
+         lit->second->DLCachePurge();
+         ++lit;
+      }
+   }
+   else
+   {
+      // Drop logical's DLs
+      LogicalShapeMapIt_t lit = fLogicalShapes.begin();
+      while (lit != fLogicalShapes.end()) {
+         lit->second->DLCacheDrop();
+         ++lit;
+      }
+   }
+   fGLCtxIdentity->ReleaseClient();
+   fGLCtxIdentity = 0;
+}
 
 /**************************************************************************/
 // SceneInfo management
@@ -342,8 +377,10 @@ void TGLScene::LodifySceneInfo(TGLRnrCtx& ctx)
 //______________________________________________________________________________
 void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
 {
-   // Initialize rendering ... pass to base-class where most work is
-   // done.
+   // Initialize rendering.
+   // Pass to base-class where most work is done.
+   // Check if GL-ctx is shared with the previous one; if not
+   // wipe display-lists of all logicals.
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
@@ -353,6 +390,14 @@ void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
 
    // Setup ctx, check if Update/Lodify needed.
    TGLSceneBase::PreRender(rnrCtx);
+
+   TGLContextIdentity* cid = rnrCtx.GetGLCtxIdentity();
+   if (cid != fGLCtxIdentity)
+   {
+      ReleaseGLCtxIdentity();
+      fGLCtxIdentity = cid;
+      fGLCtxIdentity->AddClientRef();
+   }
 
    // Reset-scene-info counters.
    sinfo->ResetDrawStats();

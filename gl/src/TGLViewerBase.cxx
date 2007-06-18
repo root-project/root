@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -18,8 +18,12 @@
 #include "TGLCamera.h"
 #include <TGLOverlay.h>
 #include <TGLSelectBuffer.h>
+#include <TGLSelectRecord.h>
 #include <TGLUtil.h>
+#include "TGLContext.h"
 #include "TGLIncludes.h"
+
+#include <stdexcept>
 
 //______________________________________________________________________
 // TGLViewerBase
@@ -153,6 +157,21 @@ void TGLViewerBase::PreRender()
    // Initialize render-context, setup camera, GL, render-area.
    // Check and lock scenes, determine their visibility.
 
+   TGLContextIdentity* cid = TGLContextIdentity::GetCurrent();
+   if (cid == 0)
+      throw std::runtime_error("Can not resolve GL context.");
+   if (cid != fRnrCtx->GetGLCtxIdentity())
+   {
+      if (fRnrCtx->GetGLCtxIdentity() != 0) // && gDebug > 0 ?
+         Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
+      fRnrCtx->SetGLCtxIdentity (cid);      
+   }
+
+   fRnrCtx->SetCamera        (fCamera);
+   fRnrCtx->SetViewerLOD     (fLOD);
+   fRnrCtx->SetViewerStyle   (fStyle);
+   fRnrCtx->SetViewerClip    (fClip);
+
    if (fResetSceneInfosOnRender)
    {
       ResetSceneInfos();
@@ -174,12 +193,6 @@ void TGLViewerBase::PreRender()
       fOverallBoundingBox.MergeAligned(sinfo->GetTransformedBBox());
       locked_scenes.push_back(sinfo);
    }
-
-   fRnrCtx->Reset();
-   fRnrCtx->SetCamera      (fCamera);
-   fRnrCtx->SetViewerLOD   (fLOD);
-   fRnrCtx->SetViewerStyle (fStyle);
-   fRnrCtx->SetViewerClip  (fClip);
 
    fCamera->Apply(fOverallBoundingBox, fRnrCtx->GetPickRectangle());
 
@@ -337,6 +350,30 @@ Bool_t TGLViewerBase::FindClosestOpaqueRecord(TGLSelectRecord& rec, Int_t& recId
    {
       if (ResolveSelectRecord(rec, recIdx) && ! rec.GetTransparent())
          return kTRUE;
+      ++recIdx;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________
+Bool_t TGLViewerBase::FindClosestOverlayRecord(TGLOvlSelectRecord& rec,
+                                               Int_t             & recIdx)
+{
+   // Find next overlay-select record that can be resolved, starting from
+   // position 'recIdx'.
+   // 'recIdx' is passed as reference and points to found record in the buffer.
+
+   TGLSelectBuffer* sb = fRnrCtx->GetSelectBuffer();
+
+   while (recIdx < sb->GetNRecords())
+   {
+      sb->SelectRecord(rec, recIdx);
+      if (rec.GetItem(0) < fOverlay.size())
+      {
+         rec.SetOvlElement(fOverlay[rec.GetItem(0)]);
+         rec.NextPos();
+         return kTRUE;
+      }
       ++recIdx;
    }
    return kFALSE;

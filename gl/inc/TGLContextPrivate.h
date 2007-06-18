@@ -1,5 +1,10 @@
+// @(#)root/gl:$Name$:$Id$
+// Author:  Timur Pocheptsov, Matevz Tadel, June 2007
+
 #ifndef ROOT_TGLContextPrivate
 #define ROOT_TGLContextPrivate
+
+#include <map>
 
 #ifndef ROOT_TGLIncludes
 #include "TGLIncludes.h"
@@ -22,10 +27,16 @@ public:
         fGLContext(0)
    {
    }
+   static void RegisterContext(TGLContext *ctx);
+   static void RemoveContext(TGLContext *ctx);
+   static TGLContext *GetCurrentContext();
+
 
 private:
    TGLContextPrivate(const TGLContextPrivate &);
    TGLContextPrivate &operator = (const TGLContextPrivate &);
+
+   static std::map<HGLRC, TGLContext *> fContexts;
 };
 
 
@@ -37,20 +48,26 @@ public:
    XVisualInfo *fVisualInfo;
    GLXContext   fGLContext;
    Int_t        fWindowIndex;
-   GLXPbuffer   fPBDC;
+   //GLXPbuffer   fPBDC;
    
    TGLContextPrivate()
       : fDpy(0),
         fVisualInfo(0),
         fGLContext(0),
-        fWindowIndex(-1),
-        fPBDC(0)
+        fWindowIndex(-1)
    {
    }
+
+   static void RegisterContext(TGLContext *ctx);
+   static void RemoveContext(TGLContext *ctx);
+   static TGLContext *GetCurrentContext();
    
 private:
    TGLContextPrivate(const TGLContextPrivate &);
    TGLContextPrivate &operator = (const TGLContextPrivate &);
+};
+
+   static std::map<GLXContext, TGLContext *> fContexts;
 };
 
 #endif

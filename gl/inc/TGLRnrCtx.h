@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLRnrCtx.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLRnrCtx
 #define ROOT_TGLRnrCtx
 
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
+#include <Rtypes.h>
 
 #include <list>
 #include <vector>
@@ -24,13 +22,14 @@ class TGLCamera;
 class TGLSceneBase;
 class TGLSceneInfo;
 
+class TGLContextIdentity;
+
 class TGLClip;
 class TGLSelectBuffer;
 
 class TGLRect;
 
 class GLUquadric;
-
 
 /**************************************************************************/
 // TGLRnrCtx
@@ -95,24 +94,15 @@ protected:
 
    UInt_t          fEventKeySym;
 
-   // GL/GLU commons
-   GLUquadric     *fQuadric;
+   // GL state
+   Bool_t              fDLCaptureOpen; //! DL-capture currently open
+   TGLContextIdentity *fGLCtxIdentity; //! Current GL context identity
 
-   // Display-list cache
-   typedef std::pair<UInt_t, Int_t>            DLNameRange_t;
-   typedef std::list<DLNameRange_t>           lDLNameRange_t;
-   typedef std::list<DLNameRange_t>::iterator lDLNameRange_i;
-
-   lDLNameRange_t  fDLWipeList;    //! list of DL-name ranges to be deleted
-   Bool_t          fDLCaptureOpen; //! DL-capture currently open
+   GLUquadric         *fQuadric;
 
 public:
    TGLRnrCtx(TGLViewerBase* viewer);
    virtual ~TGLRnrCtx();
-
-   virtual void Reset();
-
-   virtual void ProcessDLWipeList();
 
    // Central objects
    TGLViewerBase * GetViewer() { return  fViewer; }
@@ -166,7 +156,7 @@ public:
    Bool_t  SecSelection() const           { return fSecSelection;   }
    void    SetSecSelection(Bool_t secSel) { fSecSelection = secSel; }
    // Low-level getters
-   TGLRect        *  GetPickRectangle();
+   TGLRect         * GetPickRectangle();
    Int_t             GetPickRadius();
    TGLSelectBuffer * GetSelectBuffer() const { return fSelectBuffer; }
    // Composed operations
@@ -176,15 +166,14 @@ public:
    UInt_t GetEventKeySym()   const { return fEventKeySym; }
    void   SetEventKeySym(UInt_t k) { fEventKeySym = k; }
 
-   // GL/GLU commons
-   GLUquadric * GetGluQuadric() { return  fQuadric; }
-   void DestroyQuadric();
-
    Bool_t IsDLCaptureOpen() const { return fDLCaptureOpen; }
    void   OpenDLCapture();
    void   CloseDLCapture();
 
-   void   RegisterDLNameRangeToWipe(UInt_t base, Int_t size);
+   TGLContextIdentity* GetGLCtxIdentity()   const { return fGLCtxIdentity; }
+   void SetGLCtxIdentity(TGLContextIdentity* cid) { fGLCtxIdentity = cid; }
+
+   GLUquadric * GetGluQuadric() { return  fQuadric; }
 
    ClassDef(TGLRnrCtx, 0) // Collection of objects and data passes along all rendering calls.
 }; // endclass TGLRnrCtx

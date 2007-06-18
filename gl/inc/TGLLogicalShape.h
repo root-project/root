@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.2 2007/05/10 11:17:47 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.16 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -32,6 +32,10 @@ class TGLLogicalShape
 {
    friend class TGLScene;
 
+private:
+   TGLLogicalShape(const TGLLogicalShape&);            // Not implemented.
+   TGLLogicalShape& operator=(const TGLLogicalShape&); // Not implemented.
+
 public:
    enum ELODAxes  { kLODAxesNone = 0,  // LOD will be set to high or pixel.
                     kLODAxesX    = 1 << 0,
@@ -46,15 +50,11 @@ protected:
 
    TObject           *fExternalObj; //! Also plays the role of ID.
    TGLBoundingBox     fBoundingBox; //! Shape's bounding box.
-   mutable TGLRnrCtx *fRnrCtx;      //! rnr-context where display-lists were created - use GL-ctx available via fScene (when done)
    mutable TGLScene  *fScene;       //! scene where object is stored (can be zero!)
    mutable UInt_t     fDLBase;      //! display-list id base
    mutable UShort_t   fDLValid;     //! display-list validity bit-field
    mutable Bool_t     fDLCache;     //! use display list caching
    mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref)
-
-   TGLLogicalShape(const TGLLogicalShape&);
-   TGLLogicalShape& operator=(const TGLLogicalShape&);
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
 
@@ -88,6 +88,7 @@ public:
    virtual Int_t  DLCacheSize()             const { return 1; }
    virtual UInt_t DLOffset(Short_t /*lod*/) const { return 0; }
    virtual void   DLCacheClear();
+   virtual void   DLCacheDrop();
    virtual void   DLCachePurge();
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }

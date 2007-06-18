@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.28 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.29 2007/06/12 10:22:49 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -24,6 +24,7 @@ class TGLCamera;
 class TGLLogicalShape;
 class TGLPhysicalShape;
 
+class TGLContextIdentity;
 
 class TGLScene : public TGLSceneBase
 {
@@ -102,6 +103,9 @@ public:
    friend class TSceneInfo; // for solaris cc
 
 protected:
+   // GLcontext
+   TGLContextIdentity * fGLCtxIdentity;
+   void ReleaseGLCtxIdentity();
 
    // Smart Refresh -- will go in this version
    Bool_t                                          fInSmartRefresh;    //!
@@ -170,6 +174,7 @@ public:
    virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col);
    virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx=-1, UChar_t transp=0);
 
+   TGLContextIdentity * GetGLCtxIdentity() const { return fGLCtxIdentity; }
 
    // ----------------------------------------------------------------
    // SmartRefresh

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.2 2007/05/10 11:17:46 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.8 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -36,14 +36,13 @@ protected:
    }
 
 public:
-   TGLClipPlaneLogical() : TGLLogicalShape() {}
+   TGLClipPlaneLogical() : TGLLogicalShape() { fDLCache = kFALSE; }
    virtual ~TGLClipPlaneLogical() {}
 
    void Resize(Double_t ext)
    {
       fBoundingBox.SetAligned(TGLVertex3(-ext, -ext, 0),
                               TGLVertex3( ext,  ext, 0));
-      DLCacheClear();
       UpdateBoundingBoxesOfPhysicals();
    }
 
@@ -61,13 +60,12 @@ protected:
    }
 
 public:
-   TGLClipBoxLogical() : TGLLogicalShape() {}
+   TGLClipBoxLogical() : TGLLogicalShape() { fDLCache = kFALSE; }
    virtual ~TGLClipBoxLogical() {}
 
    void Resize(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
    {
       fBoundingBox.SetAligned(lowVertex, highVertex);
-      DLCacheClear();
       UpdateBoundingBoxesOfPhysicals();
    }
 };
@@ -290,29 +288,30 @@ TGLClipSet::~TGLClipSet()
    delete fManip;
 }
 //______________________________________________________________________
-Bool_t TGLClipSet::MouseEnter(UInt_t* record)
+Bool_t TGLClipSet::MouseEnter(TGLOvlSelectRecord& selRec)
 {
    // Mouse has enetered this element.
    // Forward to ManipSet.
 
-   return fManip->MouseEnter(record);
+   return fManip->MouseEnter(selRec);
 }
 
-Bool_t TGLClipSet::MouseStillInside(UInt_t* record)
+Bool_t TGLClipSet::MouseStillInside(TGLOvlSelectRecord& selRec)
 {
    // A new overlay hit is about to be processed.
    // Forward to ManipSet.
 
-   return fManip->MouseStillInside(record);
+   return fManip->MouseStillInside(selRec);
 }
 
 //______________________________________________________________________
-Bool_t TGLClipSet::Handle(TGLRnrCtx& rnrCtx, Event_t* event, UInt_t* record)
+Bool_t TGLClipSet::Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                          Event_t* event)
 {
    // Handle overlay event.
    // Forward to ManipSet.
 
-   return fManip->Handle(rnrCtx, event, record);
+   return fManip->Handle(rnrCtx, selRec, event);
 }
 
 //______________________________________________________________________

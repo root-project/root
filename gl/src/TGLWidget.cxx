@@ -1,5 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLightSet.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
-// Author:  Matevz Tadel, Jun 2007
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *

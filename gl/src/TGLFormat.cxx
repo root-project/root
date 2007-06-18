@@ -1,5 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLightSet.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
-// Author:  Matevz Tadel, Jun 2007
+// @(#)root/gl:$Name:  $:$Id: TGLFormat.cxx,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -16,15 +16,15 @@
 ClassImp(TGLFormat)
 
 //______________________________________________________________________________
-TGLFormat::TGLFormat()
-              : fDoubleBuffered(kTRUE),
+TGLFormat::TGLFormat() :
+   fDoubleBuffered(kTRUE),
 #ifdef WIN32
-                fDepthSize(32),
+   fDepthSize(32),
 #else
-                fDepthSize(16),//FIXFIX
+   fDepthSize(16),//FIXFIX
 #endif
-                fAccumSize(0),
-                fStencilSize(8)
+   fAccumSize(0),
+   fStencilSize(8)
 {
    //Default ctor. Default surface is:
    //-double buffered
@@ -33,15 +33,15 @@ TGLFormat::TGLFormat()
 }
 
 //______________________________________________________________________________
-TGLFormat::TGLFormat(EFormatOptions opt)
-              : fDoubleBuffered(opt & kDoubleBuffer),
+TGLFormat::TGLFormat(EFormatOptions opt) :
+   fDoubleBuffered(opt & kDoubleBuffer),
 #ifdef WIN32
-                fDepthSize(opt & kDepth ? 32 : 0),
+   fDepthSize(opt & kDepth ? 32 : 0),
 #else
-                fDepthSize(opt & kDepth ? 16 : 0),//FIXFIX
+   fDepthSize(opt & kDepth ? 16 : 0),//FIXFIX
 #endif
-                fAccumSize(opt & kAccum ? 8 : 0), //I've never tested accumulation buffer size.
-                fStencilSize(opt & kStencil ? 8 : 0) //I've never tested stencil buffer size.
+   fAccumSize(opt & kAccum ? 8 : 0),    //I've never tested accumulation buffer size.
+   fStencilSize(opt & kStencil ? 8 : 0) //I've never tested stencil buffer size.
 {
    //Define surface using options.
 }

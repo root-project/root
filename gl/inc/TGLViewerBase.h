@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGLViewerBase_H
-#define ROOT_TGLViewerBase_H
+#ifndef ROOT_TGLViewerBase
+#define ROOT_TGLViewerBase
 
 #include <TObject.h>
 
@@ -26,6 +26,7 @@ class TGLCamera;
 class TGLClip;
 class TGLRnrCtx;
 class TGLSelectRecord;
+class TGLOvlSelectRecord;
 class TGLOverlayElement;
 
 // Avoid TObject inheritance due to clash with TVirtualViewer3D.
@@ -112,6 +113,9 @@ public:
    // Slightly higher-level search in select-buffer
    Bool_t FindClosestRecord      (TGLSelectRecord& rec, Int_t& recIdx);
    Bool_t FindClosestOpaqueRecord(TGLSelectRecord& rec, Int_t& recIdx);
+
+   // Demangle overlay select buffer
+   Bool_t FindClosestOverlayRecord(TGLOvlSelectRecord& rec, Int_t& recIdx);
 
    ClassDef(TGLViewerBase, 0) // GL Viewer base-class.
 }; // endclass TGLViewerBase

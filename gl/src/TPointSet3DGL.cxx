@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.8 2007/06/11 19:56:34 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 #include "TPointSet3D.h"
 
 #include <TGLRnrCtx.h>
-#include <TGLSelectBuffer.h>
+#include <TGLSelectRecord.h>
 #include <TGLIncludes.h>
 
 //______________________________________________________________________
