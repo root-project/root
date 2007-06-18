@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.4 2007/06/12 20:29:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.5 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 #include <utility>
@@ -29,6 +29,8 @@ class TGLPaintDevice;
 class TGLWidget;
 
 class TGLContext {
+   class TGLContextPrivate;
+   friend class TGLContextPrivate; // for solaris cc
    friend class TGLWidget;
 //   friend class TGLPBuffer;
 private:
