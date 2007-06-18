@@ -100,6 +100,9 @@ if [ "$relocated" = "x" ]; then
    touch $R__LIB
 fi
 
+# once we have the .dll we don't need the .def anymore
+rm -f $libdir/${name}.def
+
 echo "==> $R__LIB done"
 
 exit 0
