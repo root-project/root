@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.63 2007/06/12 14:50:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.64 2007/06/18 07:02:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -2192,6 +2192,20 @@ Bool_t TGLViewer::HandleExpose(Event_t * event)
 
    fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLViewer::Repaint()
+{
+   // Handle window expose 'event' - show
+   if (IsLocked()) {
+      if (gDebug > 0) {
+         Info("TGLViewer::HandleExpose", "ignored - viewer is %s", LockName(CurrentLock()));
+      }
+      return;
+   }
+
+   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
 }
 
 //______________________________________________________________________________

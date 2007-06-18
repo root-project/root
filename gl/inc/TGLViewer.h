@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.37 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.38 2007/06/18 07:02:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -262,6 +262,7 @@ public:
    Bool_t HandleKey(Event_t *ev);
    Bool_t HandleMotion(Event_t *ev);
    Bool_t HandleExpose(Event_t *ev);
+   void   Repaint();
 
    void SetPadEditor(TGLViewerEditor *ed){fPadEditor = ed;}
 

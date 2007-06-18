@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.h,v 1.4 2007/06/12 20:29:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.h,v 1.5 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -51,7 +51,9 @@ public:
    Bool_t HandleConfigureNotify(Event_t *ev);
    Bool_t HandleKey(Event_t *ev);
    Bool_t HandleMotion(Event_t *ev);
-   Bool_t HandleExpose(Event_t *ev);
+   //Bool_t HandleExpose(Event_t *ev);
+   
+   void   DoRedraw();
 
 private:
    TGLWidgetContainer(const TGLWidgetContainer &);
@@ -136,7 +138,8 @@ public:
    Bool_t            HandleConfigureNotify(Event_t *event);//*SIGNAL*
    Bool_t            HandleKey(Event_t *event);            //*SIGNAL*
    Bool_t            HandleMotion(Event_t *event);         //*SIGNAL*
-   Bool_t            HandleExpose(Event_t *event);         //*SIGNAL*
+//   Bool_t            HandleExpose(Event_t *event);         //*SIGNAL*
+   void              Repaint();                           //*SIGNAL*
 
    Int_t             GetWindowIndex()const;
    const  TGLFormat *GetPixelFormat()const;
@@ -146,7 +149,7 @@ public:
    //via gInterpreter. Do not call it directly.
    void              SetFormat();
    //To repaint gl-widget without GUI events.
-   void              Repaint();
+
 
 private:
    TGLWidget(const TGLWidget &);

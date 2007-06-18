@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.4 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -70,12 +70,22 @@ Bool_t TGLWidgetContainer::HandleMotion(Event_t *ev)
    return fOwner->HandleMotion(ev);
 }
 
+/*
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleExpose(Event_t *ev)
 {
    //Delegate call to the owner.
    return fOwner->HandleExpose(ev);
 }
+*/
+
+//______________________________________________________________________________
+void TGLWidgetContainer::DoRedraw()
+{
+   //Delegate call to the owner.
+   return fOwner->Repaint();
+}
+
 
 ClassImp(TGLWidget)
 
@@ -258,6 +268,7 @@ Bool_t TGLWidget::HandleMotion(Event_t *ev)
    return kTRUE;
 }
 
+/*
 //______________________________________________________________________________
 Bool_t TGLWidget::HandleExpose(Event_t *ev)
 {
@@ -277,6 +288,7 @@ Bool_t TGLWidget::HandleExpose(Event_t *ev)
 
    return kTRUE;
 }
+*/
 
 //______________________________________________________________________________
 Int_t TGLWidget::GetWindowIndex()const
@@ -536,6 +548,8 @@ void TGLWidget::Repaint()
    InitGL();
    PaintGL();
    SwapBuffers();
+   
+   Emit("Repaint()");
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.32 2007/06/12 10:22:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.33 2007/06/12 14:53:20 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -333,7 +333,8 @@ void TGLSAViewer::CreateFrames()
    ok = ok && fGLWindow->Connect("HandleDoubleClick(Event_t*)", "TGLViewer", this, "HandleDoubleClick(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleKey(Event_t*)", "TGLViewer", this, "HandleKey(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleMotion(Event_t*)", "TGLViewer", this, "HandleMotion(Event_t*)");
-   ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
+//   ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
+   ok = ok && fGLWindow->Connect("Repaint()", "TGLViewer", this, "Repaint()");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
 
 //   canvasWindow->SetContainer(fGLWindow);
