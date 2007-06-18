@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.50 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.51 2007/05/18 12:57:37 brun Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -187,6 +187,19 @@ void RooPlot::initialize() {
   // Create an iterator over our enclosed objects
   _iterator= _items.MakeIterator();
   assert(0 != _iterator);
+}
+
+void RooPlot::SetName(const char* name) 
+{
+  TNamed::SetName(name) ;
+  _hist->SetName(name) ;
+}
+
+
+void RooPlot::SetTitle(const char* title) 
+{
+  TNamed::SetTitle(title) ;
+  _hist->SetTitle(title) ;
 }
 
 

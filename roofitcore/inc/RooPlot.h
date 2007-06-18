@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.h,v 1.35 2007/05/11 13:11:50 verkerke Exp $
+ *    File: $Id: RooPlot.h,v 1.36 2007/05/17 14:28:57 brun Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -63,6 +63,9 @@ public:
   void SetXTitle(const char *title) ;
   void SetYTitle(const char *title) ;
   void SetZTitle(const char *title) ;
+
+  virtual void SetName(const char* name) ;
+  virtual void SetTitle(const char* title = "") ;
 
   // container management
   const char* nameOf(Int_t idx) const ;
