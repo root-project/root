@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.5 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.6 2007/06/18 09:44:25 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 #include <utility>
@@ -24,18 +24,17 @@ class TGLContextIdentity;
 #include "Rtypes.h"
 #endif
 
+class TGLContextPrivate;
 class TGLPaintDevice;
 //class TGLPBuffer;
 class TGLWidget;
 
 class TGLContext {
-   class TGLContextPrivate;
-   friend class TGLContextPrivate; // for solaris cc
+   friend class TGLContextPrivate;
    friend class TGLWidget;
 //   friend class TGLPBuffer;
 private:
    TGLPaintDevice *fDevice;
-   class TGLContextPrivate;
    TGLContextPrivate *fPimpl;
 
    Bool_t fFromCtor;//To prohibit user's calls of SetContext.

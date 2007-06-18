@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.cxx,v 1.1 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 #ifndef WIN32
@@ -8,7 +8,7 @@
 #include "TGLContextPrivate.h"
 
 //______________________________________________________________________________
-void TGLContext::TGLContextPrivate::RegisterContext(TGLContext *ctx)
+void TGLContextPrivate::RegisterContext(TGLContext *ctx)
 {
    //Register gl-context to find it later as current (GetCurrentContext)
    if (ctx->IsValid())
@@ -16,7 +16,7 @@ void TGLContext::TGLContextPrivate::RegisterContext(TGLContext *ctx)
 }
 
 //______________________________________________________________________________
-void TGLContext::TGLContextPrivate::RemoveContext(TGLContext *ctx)
+void TGLContextPrivate::RemoveContext(TGLContext *ctx)
 {
    //Un-register deleted context.
    if (ctx->IsValid())
@@ -25,10 +25,10 @@ void TGLContext::TGLContextPrivate::RemoveContext(TGLContext *ctx)
 
 #ifdef WIN32
 
-std::map<HGLRC, TGLContext *> TGLContext::TGLContextPrivate::fContexts;
+std::map<HGLRC, TGLContext *> TGLContextPrivate::fContexts;
 
 //______________________________________________________________________________
-TGLContext *TGLContext::TGLContextPrivate::GetCurrentContext()
+TGLContext *TGLContextPrivate::GetCurrentContext()
 {
    //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    HGLRC glContext = wglGetCurrentContext();
@@ -42,10 +42,10 @@ TGLContext *TGLContext::TGLContextPrivate::GetCurrentContext()
 
 #else
 
-std::map<GLXContext, TGLContext *> TGLContext::TGLContextPrivate::fContexts;
+std::map<GLXContext, TGLContext *> TGLContextPrivate::fContexts;
 
 //______________________________________________________________________________
-TGLContext *TGLContext::TGLContextPrivate::GetCurrentContext()
+TGLContext *TGLContextPrivate::GetCurrentContext()
 {
    //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    GLXContext glContext = glXGetCurrentContext();

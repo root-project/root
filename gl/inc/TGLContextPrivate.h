@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.h,v 1.3 2007/06/18 07:06:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.h,v 1.4 2007/06/18 07:11:50 brun Exp $
 // Author:  Timur Pocheptsov, Matevz Tadel, June 2007
 
 #ifndef ROOT_TGLContextPrivate
@@ -15,7 +15,7 @@
 
 #ifdef WIN32
 
-class TGLContext::TGLContextPrivate {
+class TGLContextPrivate {
 public:
    HWND        fHWND;
    HDC         fHDC;
@@ -42,7 +42,7 @@ private:
 
 #else
 
-class TGLContext::TGLContextPrivate {
+class TGLContextPrivate {
 public:
    Display     *fDpy;
    XVisualInfo *fVisualInfo;
