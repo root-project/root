@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.h,v 1.2 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Matevz Tadel, June 2007
 
 #ifndef ROOT_TGLContextPrivate
@@ -65,8 +65,6 @@ public:
 private:
    TGLContextPrivate(const TGLContextPrivate &);
    TGLContextPrivate &operator = (const TGLContextPrivate &);
-};
-
    static std::map<GLXContext, TGLContext *> fContexts;
 };
 
