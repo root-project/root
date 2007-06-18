@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.4 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.5 2007/06/18 07:54:17 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -531,6 +531,13 @@ void TGLWidget::CreateWidget(const TGLPaintDevice *shareDevice)
       XFree(fInnerData.second);
       throw;
    }
+}
+
+//______________________________________________________________________________
+void TGLWidget::SetFormat()
+{
+   //Set pixel format.
+   //Empty version for X11.
 }
 
 #endif
