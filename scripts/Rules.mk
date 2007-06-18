@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.70 2007/04/17 17:19:12 pcanal Exp $
+# $Id: Rules.mk,v 1.71 2007/05/17 20:30:48 pcanal Exp $
 #
 
 all: tests
@@ -36,7 +36,7 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest
+ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest rootmap_*
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
 
@@ -67,7 +67,7 @@ endif
 
 endif
 
-EVENTDIR = $(ROOTTEST_LOC)/root/io/event/
+EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
 
