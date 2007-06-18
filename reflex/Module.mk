@@ -202,7 +202,7 @@ clean-reflex: clean-genreflex clean-check-reflex
 clean::         clean-reflex
 
 distclean-reflex: clean-reflex
-		@rm -f $(REFLEXDEP) $(REFLEXLIB) $(REFLEXDICTMAP)
+		@rm -f $(REFLEXDEP) $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP)
 		@rm -rf include/Reflex lib/python
 
 distclean::     distclean-reflex
