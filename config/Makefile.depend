@@ -87,6 +87,7 @@ UNURANLIBDEPM          = $(HISTLIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
 X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
+MONALISALIBDEPM        = $(NETLIB) $(IOLIB)
 
 
 ifeq ($(EXPLICITLINK),yes)
@@ -164,6 +165,7 @@ UNURANLIBDEP           = $(UNURANLIBDEPM)
 WIN32GDKLIBDEP         = $(WIN32GDKLIBDEPM)
 X11TTFLIBDEP           = $(X11TTFLIBDEPM)
 X3DLIBDEP              = $(X3DLIBDEPM)
+MONALISALIBDEP         = $(MONALISALIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
@@ -263,6 +265,7 @@ MYSQLLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
 GDMLLIBEXTRA            = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                           lib/libRIO.lib
 UNURANLIBEXTRA          = lib/libHist.lib
+MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib
 
 else
 
@@ -341,6 +344,7 @@ PGSQLLIBEXTRA           = -Llib -lNet -lRIO
 MYSQLLIBEXTRA           = -Llib -lNet -lRIO
 GDMLLIBEXTRA            = -Llib -lGeom -lXMLIO -lHist -lRIO
 UNURANLIBEXTRA          = -Llib -lHist
+MONALISALIBEXTRA        = -Llib -lNet -lRIO
 
 endif
 
