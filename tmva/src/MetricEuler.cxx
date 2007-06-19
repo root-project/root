@@ -29,6 +29,7 @@
 //_______________________________________________________________________
 
 #include "TMVA/MetricEuler.h"
+#include <cmath>
 
 ClassImp(TMVA::MetricEuler)
 
@@ -54,7 +55,7 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itA)-(*itB);
-         distance += pow( val, 2 );
+         distance += std::pow( val, 2 );
          itA++;
       }
    }else{
@@ -69,12 +70,12 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itPar)*( (*itA)-(*itB) );
-         distance += pow( val, 2 );
+         distance += std::pow( val, 2 );
          itA++;
          itPar++;
       }
       if( itA != pointA.end() ){
-         distance *= pow( (*itA),2 );
+         distance *= std::pow( (*itA),2 );
       }
    }
    return sqrt( distance );
