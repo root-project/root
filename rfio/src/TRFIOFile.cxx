@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.42 2007/03/05 09:01:08 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.41.2.1 2007/03/09 13:37:37 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -163,35 +163,14 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
       fOption = "READ";
    }
 
-   TString stmp;
-   char *host;
-   char *name;
-   
-   // it is just called the rfio_parse and no extra parsing is added here to that
-   
-   // to be able to use the turl starting with  castor:
-
-   if (!strcmp(fUrl.GetProtocol(),"castor"))
+   // to be able to use the turl starting withcastor:
+   if (!strcmp(fUrl.GetProtocol(), "castor"))
       fUrl.SetProtocol("rfio");
-   
-   stmp=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
-   
+
    // the complete turl in fname
- 
-   TString fname = stmp;
-   
-     
-   if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
-      stmp = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
-   } else {
-      Error("TRFIOFile", "error parsing %s", fUrl.GetUrl());
-      goto zombie;
-   }
-   
- 
-   fname = stmp;
-   
-    
+   TString fname;
+   fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+
    if (recreate) {
       if (::rfio_access(fname.Data(), kFileExists) == 0)
          ::rfio_unlink(fname.Data());
@@ -540,3 +519,4 @@ Int_t TRFIOSystem::Unlink(const char *path)
    else
       return rfio_unlink(url.GetFile());
 }
+
