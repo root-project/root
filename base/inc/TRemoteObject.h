@@ -1,3 +1,5 @@
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.64 2007/05/04 15:14:11 rdm Exp $
+// Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
