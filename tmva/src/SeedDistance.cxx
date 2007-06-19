@@ -1,27 +1,21 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
-// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
+// @(#)root/tmva $\Id$
+// Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::GeneticCuts                                                     *
+ * Class  : SeedDistance                                                         *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -30,31 +24,34 @@
 
 //_______________________________________________________________________
 //                                                                      
-// User-defined class for genetics algorithm;
-// defines interface to the fitness function
+// SeedDistance
+//
 //_______________________________________________________________________
 
-#include "TMVA/GeneticCuts.h"
-#include "TMVA/MethodCuts.h"
+#include "TMVA/SeedDistance.h"
 
-ClassImp(TMVA::GeneticCuts)
+ClassImp(TMVA::SeedDistance)
 
 //_______________________________________________________________________
-TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<Interval*> ranges, 
-                                TMVA::MethodCuts* methodCuts ) 
-   : TMVA::GeneticBase( size, ranges ) 
+TMVA::SeedDistance::SeedDistance( IMetric& metric, std::vector< std::vector<Double_t> >& seeds ) 
+   : fSeeds( seeds ),
+     fMetric( metric )
 {
    // constructor
-   fMethodCuts = methodCuts;
 }            
 
+
+
 //_______________________________________________________________________
-Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t>& parameters )
+std::vector<Double_t>& TMVA::SeedDistance::GetDistances( std::vector<Double_t>& point )
 {
-   // fitness function interface for Genetics Algorithm application of cut 
-   // optimisation method
-   if (fMethodCuts == NULL) 
-      return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters );
-   else
-      return fMethodCuts->ComputeEstimator( parameters );
+   fDistances.clear();
+   Double_t val = 0.0;
+   for( std::vector< std::vector<Double_t> >::iterator itSeed = fSeeds.begin(); itSeed != fSeeds.end(); itSeed++ ){
+      val = fMetric.Distance( (*itSeed), point );
+      fDistances.push_back( val );
+   }
+   return fDistances;
 }
+
+

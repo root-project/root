@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
+// @(#)root/tmva $Id: RuleEnsemble.h,v 1.8 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -17,7 +17,7 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      Iowa State U.                                                             *
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -56,9 +56,9 @@ class TH1F;
 
 namespace TMVA {
 
+   class TBits;
    class MethodRuleFit;
    class RuleFit;
-
    class RuleEnsemble;
 
    ostream& operator<<( ostream& os, const RuleEnsemble& event );
@@ -85,7 +85,7 @@ namespace TMVA {
       virtual ~RuleEnsemble();
 
       // initialize
-      void Initialize( RuleFit* rf );
+      void Initialize( const RuleFit* rf );
 
       // set message type
       void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
@@ -94,7 +94,7 @@ namespace TMVA {
       void MakeModel();
 
       // generates the rules from a given forest of decision trees
-      void MakeRules( const std::vector< const DecisionTree *>& forest );
+      void MakeRules( const std::vector< const TMVA::DecisionTree *>& forest );
 
       // make the linear terms
       void MakeLinearTerms();
@@ -108,6 +108,12 @@ namespace TMVA {
       // select full (linear+rules) model
       void SetModelFull()   { fLearningModel = kFull; }
 
+      // set rule collection (if not created by MakeRules())
+      void SetRules( const std::vector< TMVA::Rule *> & rules );
+
+      // set RuleFit ptr
+      void SetRuleFit( const RuleFit *rf ) { fRuleFit = rf; }
+
       // set coefficients
       void  SetCoefficients( const std::vector< Double_t >& v );
       void  SetCoefficient( UInt_t i, Double_t v )                  { if (i<fRules.size()) fRules[i]->SetCoefficient(v); }
@@ -116,11 +122,16 @@ namespace TMVA {
       void  AddOffset(Double_t v)                                   { fOffset+=v; }
       void  SetLinCoefficients( const std::vector< Double_t >& v )  { fLinCoefficients = v; }
       void  SetLinCoefficient( UInt_t i, Double_t v )               { fLinCoefficients[i] = v; }
+      void  SetLinDM( const std::vector<Double_t>   & xmin ) { fLinDM   = xmin; }
+      void  SetLinDP( const std::vector<Double_t>   & xmax ) { fLinDP   = xmax; }
+      void  SetLinNorm( const std::vector<Double_t> & norm ) { fLinNorm = norm; }
+
+      Double_t CalcLinNorm( Double_t stdev ) { return ( stdev>0 ? fAverageRuleSigma/stdev : 1.0 ); }
 
       // clear coefficients
-      void  ClearCoefficients( Double_t val=0 )    { for (UInt_t i=0; i<fRules.size(); i++) fRules[i]->SetCoefficient(val); }
+      void  ClearCoefficients( Double_t val=0 )    { for (UInt_t i=0; i<fRules.size(); i++)           fRules[i]->SetCoefficient(val); }
       void  ClearLinCoefficients( Double_t val=0 ) { for (UInt_t i=0; i<fLinCoefficients.size(); i++) fLinCoefficients[i]=val; }
-      void  ClearLinNorm( Double_t val=1.0 )       { for (UInt_t i=0; i<fLinNorm.size(); i++) fLinNorm[i]=val; }
+      void  ClearLinNorm( Double_t val=1.0 )       { for (UInt_t i=0; i<fLinNorm.size(); i++)         fLinNorm[i]=val; }
 
       // set maximum allowed distance between equal rules
       void SetRuleMinDist(Double_t d)          { fRuleMinDist = d; }
@@ -130,6 +141,9 @@ namespace TMVA {
 
       // set the quantile for linear terms
       void SetLinQuantile(Double_t q)          { fLinQuantile=q; }
+
+      // set average sigma for rules
+      void SetAverageRuleSigma(Double_t v) { if (v>0.5) v=0.5; fAverageRuleSigma = v; fAverageSupport = 0.5*(1.0+TMath::Sqrt(1.0-4.0*v*v)); }
 
       // Calculate the number of possible rules from a given tree
       Int_t CalcNRules( const TMVA::DecisionTree* dtree );
@@ -142,9 +156,18 @@ namespace TMVA {
       // fill cached values of rule/linear respons
       inline void UpdateEventVal();
 
+      // fill binary rule respons for all events (or selected subset)
+      void MakeRuleMap(const std::vector<TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
+
+      // clear rule map
+      void ClearRuleMap() { fRuleMap.clear(); fRuleMapEvents=0; }
+
       // evaluates the event using the ensemble of rules
+      // the following uses fEventCache, that is per event saved in cache
       inline Double_t EvalEvent() const;
       inline Double_t EvalEvent( const Event & e );
+
+      // same as previous but using other model coefficients
       inline Double_t EvalEvent( Double_t ofs,
                                  const std::vector<Double_t> & coefs,
                                  const std::vector<Double_t> & lincoefs) const;
@@ -153,12 +176,31 @@ namespace TMVA {
                                  const std::vector<Double_t> & coefs,
                                  const std::vector<Double_t> & lincoefs);
 
-      // evaluate the linear term
-      inline Double_t EvalLinEvent( UInt_t vind, Bool_t norm ) const;
+      // same as above but using the event index
+      // these will use fRuleMap - MUST call MakeRuleMap() before - no check...
+      inline Double_t EvalEvent( UInt_t evtidx ) const;
+      inline Double_t EvalEvent( UInt_t evtidx,
+                                 Double_t ofs,
+                                 const std::vector<Double_t> & coefs,
+                                 const std::vector<Double_t> & lincoefs) const;
+
+      // evaluate the linear term using event by reference
+      //      inline Double_t EvalLinEvent( UInt_t vind ) const;
       inline Double_t EvalLinEvent() const;
-      inline Double_t EvalLinEvent( const Event &e );
       inline Double_t EvalLinEvent( const std::vector<Double_t> & coefs ) const;
+      inline Double_t EvalLinEvent( const Event &e );
+      inline Double_t EvalLinEvent( const Event &e, UInt_t vind );
       inline Double_t EvalLinEvent( const Event &e, const std::vector<Double_t> & coefs );
+
+      // idem but using evtidx - must call MakeRuleMap() first
+      inline Double_t EvalLinEvent( UInt_t evtidx ) const;
+      inline Double_t EvalLinEvent( UInt_t evtidx, const std::vector<Double_t> & coefs ) const;
+      inline Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind ) const;
+      inline Double_t EvalLinEvent( UInt_t evtidx, UInt_t vind, Double_t coefs ) const;
+
+      // evaluate linear terms used to fill fEventLinearVal
+      Double_t EvalLinEventRaw( UInt_t vind, const Event &e, Bool_t norm ) const;
+      Double_t EvalLinEventRaw( UInt_t vind, UInt_t evtidx,  Bool_t norm ) const;
 
       // calculate p(y=1|x) for a given event using the linear terms
       Double_t PdfLinear( Double_t & nsig, Double_t & ntot ) const;
@@ -169,6 +211,9 @@ namespace TMVA {
       // calculate F* = 2*p(y=1|x) - 1
       Double_t FStar() const;
       Double_t FStar(const TMVA::Event & e );
+
+      // set reference importance for all model objects
+      void SetImportanceRef(Double_t impref);
 
       // calculates the support for all rules given the set of events
       void CalcRuleSupport();
@@ -197,6 +242,9 @@ namespace TMVA {
       // get rule statistics
       void RuleStatistics();
 
+      // get rule response stats
+      void RuleResponseStats();
+
       // copy operator
       void operator=( const RuleEnsemble& other ) { Copy( other ); }
 
@@ -208,25 +256,25 @@ namespace TMVA {
 
       // accessors
       const MethodRuleFit*                   GetMethodRuleFit()   const;
+      const MethodBase*                      GetMethodBase()      const;
       const RuleFit*                         GetRuleFit()         const { return fRuleFit; }
-      const std::vector<const Event *>*      GetTrainingEvents()  const;
-      const std::vector< Int_t >*            GetSubsampleEvents() const;
-      void                                   GetSubsampleEvents(UInt_t sub, UInt_t& ibeg, UInt_t& iend) const;
       //
-      UInt_t                          GetNSubsamples() const;
+      const std::vector<TMVA::Event *>*     GetTrainingEvents()  const;
       const Event*                    GetTrainingEvent(UInt_t i) const;
-      const Event*                    GetTrainingEvent(UInt_t i, UInt_t isub)  const;
       const Event*                    GetEvent() const { return fEvent; }
       //
       Bool_t                          DoLinear()             const { return (fLearningModel==kFull) || (fLearningModel==kLinear); }
       Bool_t                          DoRules()              const { return (fLearningModel==kFull) || (fLearningModel==kRules); }
+      Bool_t                          DoOnlyRules()          const { return (fLearningModel==kRules); }
+      Bool_t                          DoOnlyLinear()         const { return (fLearningModel==kLinear); }
       Bool_t                          DoFull()               const { return (fLearningModel==kFull); }
       ELearningModel                  GetLearningModel()     const { return fLearningModel; }
       Double_t                        GetImportanceCut()     const { return fImportanceCut; }
+      Double_t                        GetImportanceRef()     const { return fImportanceRef; }
       Double_t                        GetOffset()            const { return fOffset; }
       UInt_t                          GetNRules()            const { return (DoRules() ? fRules.size():0); }
-      const std::vector< Rule* >&     GetRulesConst()        const { return fRules; }
-      std::vector< Rule* >&           GetRules()                   { return fRules; }
+      const std::vector<TMVA::Rule*>& GetRulesConst()        const { return fRules; }
+      std::vector<TMVA::Rule*>&       GetRules()                   { return fRules; }
       const std::vector< Double_t >&  GetLinCoefficients()   const { return fLinCoefficients; }
       const std::vector< Double_t >&  GetLinNorm()           const { return fLinNorm; }
       const std::vector< Double_t >&  GetLinImportance()     const { return fLinImportance; }
@@ -241,6 +289,8 @@ namespace TMVA {
       Double_t       GetRuleMinDist()            const { return fRuleMinDist; }
       Double_t       GetLinCoefficients(int i)   const { return fLinCoefficients[i]; }
       Double_t       GetLinNorm(int i)           const { return fLinNorm[i]; }
+      Double_t       GetLinDM(int i)             const { return fLinDM[i]; }
+      Double_t       GetLinDP(int i)             const { return fLinDP[i]; }
       Double_t       GetLinImportance(int i)     const { return fLinImportance[i]; }
       Double_t       GetVarImportance(int i)     const { return fVarImportance[i]; }
       Double_t       GetRulePTag(int i)          const { return fRulePTag[i]; }
@@ -249,11 +299,20 @@ namespace TMVA {
       Double_t       GetRulePBS(int i)           const { return fRulePBS[i]; }
       Double_t       GetRulePBB(int i)           const { return fRulePBB[i]; }
 
+      Bool_t         IsLinTermOK(int i)          const { return fLinTermOK[i]; }
       //
-      Double_t       GetAverageSupport()         const { return fAverageSupport; }
-      Double_t       GetAverageRuleSigma()       const { return fAverageRuleSigma; }
-      Double_t       GetEventRuleVal(UInt_t i)   const { return fEventRuleVal[i]; }
-      Double_t       GetEventLinearVal(UInt_t i) const { return fEventLinearVal[i]; }
+      Double_t       GetAverageSupport()             const { return fAverageSupport; }
+      Double_t       GetAverageRuleSigma()           const { return fAverageRuleSigma; }
+      Double_t       GetEventRuleVal(UInt_t i)       const { return (fEventRuleVal[i] ? 1.0:0.0); }
+      Double_t       GetEventLinearVal(UInt_t i)     const { return fEventLinearVal[i]; }
+      Double_t       GetEventLinearValNorm(UInt_t i) const { return fEventLinearVal[i]*fLinNorm[i]; }
+      //
+      const std::vector<UInt_t>  & GetEventRuleMap(UInt_t evtidx) const { return fRuleMap[evtidx]; }
+      const TMVA::Event *GetRuleMapEvent(UInt_t evtidx) const { return (*fRuleMapEvents)[evtidx]; }
+      Bool_t         IsRuleMapOK()               const { return fRuleMapOK; }
+
+      // print rule generation info
+      void  PrintRuleGen() const;
 
       // print the ensemble
       void  Print() const;
@@ -284,14 +343,12 @@ namespace TMVA {
       // make a rule
       Rule *MakeTheRule( const Node *node );
 
-      // evaluate linear terms used to fill fEventLinearVal
-      Double_t EvalLinEventRaw( UInt_t vind, const Event &e );
 
       ELearningModel                fLearningModel;     // can be full (rules+linear), rules, linear
       Double_t                      fImportanceCut;     // minimum importance accepted
       Double_t                      fLinQuantile;       // quantile cut to remove outliers
       Double_t                      fOffset;            // offset in discriminator function
-      std::vector< Rule* >          fRules;             // vector of rules
+      std::vector< TMVA::Rule* >    fRules;             // vector of rules
       std::vector< Bool_t >         fLinTermOK;         // flags linear terms with sufficient strong importance
       std::vector< Double_t >       fLinDP;             // delta+ in eq 24, ref 2
       std::vector< Double_t >       fLinDM;             // delta-
@@ -312,13 +369,22 @@ namespace TMVA {
       std::vector< Double_t >       fRulePBB;           // p(tag as B|B)
       std::vector< Double_t >       fRulePTag;          // p(tag)
       Double_t                      fRuleFSig;          // N(sig)/N(sig)+N(bkg)
+      Double_t                      fRuleNCave;         // N(cuts) average
+      Double_t                      fRuleNCsig;         // idem sigma
       //
       Double_t                      fRuleMinDist;       // minimum rule distance
+      UInt_t                        fNRulesGenerated;   // number of rules generated, before cleanup
       //
       const Event*                  fEvent;             // current event.
       Bool_t                        fEventCacheOK;      // true if rule/linear respons are updated
-      std::vector<Double_t>         fEventRuleVal;      // the rule respons of current event
+      std::vector<Bool_t>           fEventRuleVal;      // the rule respons of current event
       std::vector<Double_t>         fEventLinearVal;    // linear respons
+      //
+      Bool_t                        fRuleMapOK;         // true if MakeRuleMap() has been called
+      std::vector< std::vector<UInt_t> > fRuleMap;           // map of rule responses
+      UInt_t                        fRuleMapInd0;       // start index
+      UInt_t                        fRuleMapInd1;       // last index
+      const std::vector<TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
       //
       const RuleFit*                fRuleFit;           // pointer to rule fit object 
 
@@ -336,7 +402,7 @@ inline void TMVA::RuleEnsemble::UpdateEventVal()
    //
    if (DoRules()) {
       UInt_t nrules = fRules.size();
-      fEventRuleVal.resize(nrules,0);
+      fEventRuleVal.resize(nrules,kFALSE);
       for (UInt_t r=0; r<nrules; r++) {
          fEventRuleVal[r] = fRules[r]->EvalEvent(*fEvent);
       }
@@ -345,7 +411,7 @@ inline void TMVA::RuleEnsemble::UpdateEventVal()
       UInt_t nlin = fLinTermOK.size();
       fEventLinearVal.resize(nlin,0);
       for (UInt_t r=0; r<nlin; r++) {
-         fEventLinearVal[r] = EvalLinEventRaw(r,*fEvent); // not normalised!
+         fEventLinearVal[r] = EvalLinEventRaw(r,*fEvent,kFALSE); // not normalised!
       }
    }
    fEventCacheOK = kTRUE;
@@ -365,7 +431,8 @@ inline Double_t TMVA::RuleEnsemble::EvalEvent() const
    //
    if (DoRules()) {
       for ( Int_t i=0; i<nrules; i++ ) {
-         rval += fRules[i]->GetCoefficient() * fEventRuleVal[i]; //TRUE);
+         if (fEventRuleVal[i])
+            rval += fRules[i]->GetCoefficient();
       }
    }
    //
@@ -392,7 +459,8 @@ inline Double_t TMVA::RuleEnsemble::EvalEvent( Double_t ofs,
    //
    if (DoRules()) {
       for ( Int_t i=0; i<nrules; i++ ) {
-         rval += coefs[i] * fEventRuleVal[i];
+         if (fEventRuleVal[i])
+            rval += coefs[i];
       }
    }
    //
@@ -425,23 +493,75 @@ inline Double_t TMVA::RuleEnsemble::EvalEvent(const TMVA::Event & e,
    return EvalEvent(ofs,coefs,lincoefs);
 }
 
+//_____________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalEvent(UInt_t evtidx) const
+{
+   // evaluate event with index evtidx
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   //
+   Double_t rval=fOffset;
+   if (DoRules()) {
+      UInt_t nrules = fRuleMap[evtidx].size();
+      UInt_t rind;
+      for (UInt_t ir = 0; ir<nrules; ir++) {
+         rind = fRuleMap[evtidx][ir];
+         rval += fRules[rind]->GetCoefficient();
+      }
+   }
+   if (DoLinear()) {
+      UInt_t nlin = fLinTermOK.size();
+      for (UInt_t r=0; r<nlin; r++) {
+         if (fLinTermOK[r]) {
+            rval += fLinCoefficients[r] * EvalLinEventRaw(r,*(*fRuleMapEvents)[evtidx],kTRUE);
+         }
+      }
+   }
+   return rval;
+}
+
+//_____________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalEvent(UInt_t evtidx,
+                                              Double_t ofs,
+                                              const std::vector<Double_t> & coefs,
+                                              const std::vector<Double_t> & lincoefs ) const
+{
+   // evaluate event with index evtidx and user given model coefficients
+   //
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   Double_t rval=ofs;
+   if (DoRules()) {
+      UInt_t nrules = fRuleMap[evtidx].size();
+      UInt_t rind;
+      for (UInt_t ir = 0; ir<nrules; ir++) {
+         rind = fRuleMap[evtidx][ir];
+         rval += coefs[rind];
+      }
+   }
+   if (DoLinear()) {
+      rval += EvalLinEvent( evtidx, lincoefs );
+   }
+   return rval;
+}
+
 //_______________________________________________________________________
-inline Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, const TMVA::Event & e)
+inline Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, const TMVA::Event & e, Bool_t norm) const
 {
    // evaluate the event linearly (not normalized)
 
    Double_t val  = e.GetVal(vind);
    Double_t rval = TMath::Min( fLinDP[vind], TMath::Max( fLinDM[vind], val ) );
+   if (norm) rval *= fLinNorm[vind];
    return rval;
 }
 
 //_______________________________________________________________________
-inline Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t vind, Bool_t norm ) const
+inline Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, UInt_t evtidx, Bool_t norm) const
 {
-   // evaluate the event linearly normalized
-   Double_t rval=0;
-   rval = fEventLinearVal[vind];
-   if (norm) rval*=fLinNorm[vind];
+   // evaluate the event linearly (not normalized)
+
+   Double_t val  = (*fRuleMapEvents)[evtidx]->GetVal(vind);
+   Double_t rval = TMath::Min( fLinDP[vind], TMath::Max( fLinDM[vind], val ) );
+   if (norm) rval *= fLinNorm[vind];
    return rval;
 }
 
@@ -482,6 +602,16 @@ inline Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e )
 }
 
 //_______________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e, UInt_t vind )
+{
+   // evaluate linear term vind
+
+   SetEvent(e);
+   UpdateEventVal();
+   return GetEventLinearValNorm(vind);
+}
+
+//_______________________________________________________________________
 inline Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e, const std::vector<Double_t> & coefs )
 {
    // evaluate event linearly using the given coefficients
@@ -491,6 +621,54 @@ inline Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e, const st
    return EvalLinEvent(coefs);
 }
 
+//_______________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t evtidx, const std::vector<Double_t> & coefs ) const
+{
+   // evaluate event linearly using the given coefficients
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   Double_t rval=0;
+   UInt_t nlin = fLinTermOK.size();
+   for (UInt_t r=0; r<nlin; r++) {
+      if (fLinTermOK[r]) {
+         rval += coefs[r] * EvalLinEventRaw(r,*(*fRuleMapEvents)[evtidx],kTRUE);
+      }
+   }
+   return rval;
+}
 
+//_______________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t evtidx ) const
+{
+   // evaluate event linearly using the given coefficients
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   Double_t rval=0;
+   UInt_t nlin = fLinTermOK.size();
+   for (UInt_t r=0; r<nlin; r++) {
+      if (fLinTermOK[r]) {
+         rval += fLinCoefficients[r] * EvalLinEventRaw(r,*(*fRuleMapEvents)[evtidx],kTRUE);
+      }
+   }
+   return rval;
+}
+
+//_______________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t evtidx, UInt_t vind ) const
+{
+   // evaluate event linearly using the given coefficients
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   Double_t rval;
+   rval = fLinCoefficients[vind] * EvalLinEventRaw(vind,*(*fRuleMapEvents)[evtidx],kTRUE);
+   return rval;
+}
+
+//_______________________________________________________________________
+inline Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t evtidx, UInt_t vind, Double_t coefs ) const
+{
+   // evaluate event linearly using the given coefficients
+   if ((evtidx<fRuleMapInd0) || (evtidx>fRuleMapInd1)) return 0;
+   Double_t rval;
+   rval = coefs * EvalLinEventRaw(vind,*(*fRuleMapEvents)[evtidx],kTRUE);
+   return rval;
+}
 
 #endif

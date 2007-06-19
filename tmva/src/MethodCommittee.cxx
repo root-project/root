@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.7 2007/01/30 11:24:16 brun Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.8 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -180,7 +180,7 @@ void TMVA::MethodCommittee::Train( void )
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 
    fLogger << kINFO << "will train "<< fNMembers << " committee members ... patience please" << Endl;
-   TMVA::Timer timer( fNMembers, GetName() ); 
+   Timer timer( fNMembers, GetName() ); 
    for (UInt_t imember=0; imember<fNMembers; imember++){
       timer.DrawProgressBar( imember );
 
@@ -192,6 +192,8 @@ void TMVA::MethodCommittee::Train( void )
          method = new TMVA::MethodCuts           ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
       case TMVA::Types::kFisher:     
          method = new TMVA::MethodFisher         ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
+      case TMVA::Types::kKNN:     
+         method = new TMVA::MethodKNN            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
       case TMVA::Types::kMLP:        
          method = new TMVA::MethodMLP            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
       case TMVA::Types::kTMlpANN:    
@@ -420,6 +422,8 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
          method = new TMVA::MethodCuts           ( Data(), "" ); break;
       case TMVA::Types::kFisher:     
          method = new TMVA::MethodFisher         ( Data(), "" ); break;
+      case TMVA::Types::kKNN:     
+         method = new TMVA::MethodKNN            ( Data(), "" ); break;
       case TMVA::Types::kMLP:        
          method = new TMVA::MethodMLP            ( Data(), "" ); break;
       case TMVA::Types::kTMlpANN:    
@@ -544,4 +548,33 @@ const TMVA::Ranking* TMVA::MethodCommittee::CreateRanking()
    }
 
    return fRanking;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodCommittee::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodCommittee::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
 }

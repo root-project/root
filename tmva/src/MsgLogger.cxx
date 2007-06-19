@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MsgLogger.cxx,v 1.5 2007/04/19 06:53:02 brun Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -14,9 +14,8 @@
  *      Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch> - CERN, Switzerland   *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -108,7 +107,7 @@ TMVA::MsgLogger::~MsgLogger()
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent ) 
 {
    // assingment operator
-   if( &parent != this) {
+   if (&parent != this) {
       fObjSource  = parent.fObjSource;
       fStrSource  = parent.fStrSource;
       fActiveType = parent.fActiveType;
@@ -182,18 +181,15 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type < fMinType) return;
    map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
-   if(Config::Instance().UseColor()) {
+   if (gConfig().UseColor()) {
       // no text for INFO
-      if (type == kINFO) 
-         // no color for info
-         cout << fPrefix << line << endl;
-      else
-         cout << fColorMap.find( type )->second << fPrefix << "<" << stype->second << "> " << line  << "\033[0m" << endl;
-   } else {
-      if (type == kINFO) 
-         cout << fPrefix << line << endl;
-      else
-         cout << fPrefix << "<" << stype->second << "> " << line << endl;
+      if (type == kINFO) cout << fPrefix << line << endl; // no color for info
+      else               cout << fColorMap.find( type )->second << fPrefix << "<" 
+                              << stype->second << "> " << line  << "\033[0m" << endl;
+   } 
+   else {
+      if (type == kINFO) cout << fPrefix << line << endl;
+      else               cout << fPrefix << "<" << stype->second << "> " << line << endl;
    }
 
    // take decision to stop if fatal error

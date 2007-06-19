@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IMethod.h,v 1.9 2007/01/23 10:25:51 brun Exp $   
+// @(#)root/tmva $Id: IMethod.h,v 1.10 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -46,6 +46,8 @@
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
+
+class TMVA::MsgLogger;
 
 namespace TMVA {
    
@@ -76,11 +78,25 @@ namespace TMVA {
       // write method specific monitoring histograms to target file
       virtual void WriteMonitoringHistosToFile( void ) const = 0;
 
+      // make ROOT-independent C++ class for classifier response
+      virtual void MakeClass( const TString& classFileName = "" ) const = 0;
+
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
 
-   public:
+      // print help message
+      virtual void PrintHelpMessage() const = 0;
+
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const = 0;
+
+      // get specific help message from classifer
+      virtual void GetHelpMessage() const = 0;
+
       ClassDef(IMethod,0) // Method Interface
+
    };
 } // namespace TMVA
 

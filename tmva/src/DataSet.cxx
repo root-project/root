@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.10 2007/04/19 10:32:04 brun Exp $
+// @(#)root/tmva $Id: DataSet.cxx,v 1.11 2007/04/21 07:36:16 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,8 +16,8 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland,                                                        *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -36,6 +36,7 @@
 #include "TMatrixF.h"
 #include "TVectorF.h"
 #include "TMath.h"
+#include "TROOT.h"
 
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
@@ -101,7 +102,7 @@ Bool_t TMVA::DataSet::ReadEvent( TTree* tr, Long64_t evidx ) const
    // read event from a tree into memory
    // after the reading the event transformation is called
 
-   if (tr == 0) fLogger << kFATAL << "<ReadEvent> zero Tree Pointer encountered" << Endl;
+   if (tr == 0) fLogger << kFATAL << "<ReadEvent> Zero Tree Pointer encountered" << Endl;
 
    Bool_t needRead = kFALSE;
    if (fEvent == 0) {
@@ -160,7 +161,7 @@ TMVA::VariableTransformBase* TMVA::DataSet::GetTransform( Types::EVariableTransf
       break;
    case Types::kMaxVariableTransform:
    default:
-      fLogger << kFATAL << "<ProcessOptions> variable transformation method '" 
+      fLogger << kFATAL << "<GetTransform> Variable transformation method '" 
               << transform << "' unknown." << Endl;
    }
 
@@ -243,13 +244,13 @@ Int_t TMVA::DataSet::FindVar(const TString& var) const
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) 
       fLogger << kINFO  <<  GetInternalVarName(ivar) << Endl;
    
-   fLogger << kFATAL << "<FindVar> variable \'" << var << "\' not found." << Endl;
+   fLogger << kFATAL << "<FindVar> Variable \'" << var << "\' not found." << Endl;
  
    return -1;
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TString )
+void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 { 
    // The internally used training and testing trees are prepaired in
    // this method 
@@ -262,17 +263,13 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    // Optionally (if specified as option) the decorrelation and PCA
    // preparation is executed
 
-   Configurable splitSpecs(splitOpt);
+   Configurable splitSpecs( splitOpt );
    splitSpecs.SetName("DataSet");
-
-   TString splitMode("Random");
-   Int_t nSigTrainEvents(0); // number of signal training events, 0 - all available
-   Int_t nBkgTrainEvents(0); // number of backgd training events, 0 - all available
-   Int_t nSigTestEvents (0); // number of signal testing events, 0 - all available
-   Int_t nBkgTestEvents (0); // number of backgd testing events, 0 - all available
 
    UInt_t splitSeed(0);
 
+   // the split modes
+   TString splitMode( "Random" );
    splitSpecs.DeclareOptionRef( splitMode, "SplitMode",
                                 "Method of picking training and testing events (default: random)" );
    splitSpecs.AddPreDefVal(TString("Random"));
@@ -282,6 +279,19 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    splitSpecs.DeclareOptionRef( splitSeed=100, "SplitSeed",
                                 "Seed for random event shuffling" );
 
+   // the weight normalisation modes
+   TString normMode( "NumEvents" );
+   splitSpecs.DeclareOptionRef( normMode, "NormMode",
+                                "Type of renormalisation of event-by-event weights" );
+   splitSpecs.AddPreDefVal(TString("None"));
+   splitSpecs.AddPreDefVal(TString("NumEvents"));
+   splitSpecs.AddPreDefVal(TString("EqualNumEvents"));
+
+   // the number of events
+   Int_t nSigTrainEvents(0); // number of signal training events, 0 - all available
+   Int_t nBkgTrainEvents(0); // number of backgd training events, 0 - all available
+   Int_t nSigTestEvents (0); // number of signal testing events, 0 - all available
+   Int_t nBkgTestEvents (0); // number of backgd testing events, 0 - all available
    splitSpecs.DeclareOptionRef( nSigTrainEvents, "NSigTrain",
                                 "Number of signal training events (default: 0 - all)" );
    splitSpecs.DeclareOptionRef( nBkgTrainEvents, "NBkgTrain",
@@ -294,12 +304,15 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbosity (default: true)" );
    splitSpecs.ParseOptions();
 
+   // put all to upper case
+   splitMode.ToUpper(); normMode.ToUpper(); 
+
    fLogger << kINFO << "Prepare training and Test samples:" << Endl;
    fLogger << kINFO << "  Signal tree     - total number of events     : " << SignalTreeInfo(0).GetTree()->GetEntries()     << Endl;
    fLogger << kINFO << "  Background tree - total number of events     : " << BackgroundTreeInfo(0).GetTree()->GetEntries() << Endl;
 
    // loop over signal events first, then over background events
-   const char* kindS[2] = { "signal", "background" };
+   const char* typeName[2] = { "signal", "background" };
 
    // apply cuts to the input trees and create TEventLists
    TEventList*  evList[2]; evList[0]=evList[1]=0;
@@ -323,29 +336,29 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    Float_t weight;
    Float_t boostweight=1; // variable "boostweight" is 1 by default
    const Long_t basketsize = 128000;
-   //BaseRootDir()->cd();
 
+   // the sum of weights should be renormalised to the number of events
+   Double_t sumOfWeights[2] = { 0, 0 };
+   Double_t nTempEvents[2]  = { 0, 0 };
+   Double_t renormFactor[2] = { -1, -1 };
+
+   // create the type, weight and boostweight branches
    TTree* tmpTree[2];
    tmpTree[Types::kSignal] = new TTree("SigTT", "Variables used for MVA training");
    tmpTree[Types::kSignal]->Branch( "type",       &type,        "type/I",        basketsize );
    tmpTree[Types::kSignal]->Branch( "weight",     &weight,      "weight/F",      basketsize );
    tmpTree[Types::kSignal]->Branch( "boostweight",&boostweight, "boostweight/F", basketsize );
 
+   // create the variable branches
    UInt_t nvars = GetNVariables();
    Float_t* vArr = new Float_t[nvars];
-   Int_t*   iArr = new Int_t[nvars];
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) {
-      // add Bbanch to training/test Tree
+      // add Branch to training/test Tree
       const char* myVar = GetInternalVarName(ivar).Data();
-      char vt = VarType(ivar);   // the variable type, 'F' or 'I'
-      if (vt=='F') {
-         tmpTree[Types::kSignal]->Branch( myVar,&vArr[ivar], Form("%s/%c", myVar, vt), basketsize );
-      } else if (vt=='I') {
-         tmpTree[Types::kSignal]->Branch( myVar,&iArr[ivar], Form("%s/%c", myVar, vt), basketsize );
-      } else
-         fLogger << kFATAL << "<PrepareForTrainingAndTesting> unknown variable type '" 
-                 << vt << "' encountered; allowed are: 'F' or 'I'"
-                 << Endl;
+
+      // here, we do not use the true vartype of the variable, but use Float always internally
+      tmpTree[Types::kSignal]->Branch( myVar,&vArr[ivar], Form("%s/F", myVar), basketsize );
+
    } // end of loop over input variables
    
    tmpTree[Types::kBackground] = (TTree*)tmpTree[Types::kSignal]->CloneTree(0);
@@ -358,7 +371,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    // if the chain jumps to a new tree we have to reset the formulas
    for (Int_t sb=0; sb<2; sb++) { // sb=0 - signal, sb=1 - background
 
-      fLogger << kINFO << "Create training and testing trees: looping over " << kindS[sb] 
+      fLogger << kINFO << "Create training and testing trees: looping over " << typeName[sb] 
               << " events ..." << Endl;
 
       TString currentFileName="";
@@ -366,6 +379,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
 
       std::vector<TreeInfo>::const_iterator treeIt = fTreeCollection[sb].begin();
       for (;treeIt!=fTreeCollection[sb].end(); treeIt++) {
+
          TreeInfo currentInfo = *treeIt;
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          type = 1-sb;
@@ -416,25 +430,13 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
                Bool_t containsNaN = kFALSE;
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
                   Int_t ndata = fInputVarFormulas[ivar]->GetNdata();
-                  if (VarType(ivar)=='F') {
-                     vArr[ivar] = (ndata == 1 ? 
-                                   fInputVarFormulas[ivar]->EvalInstance(0) : 
-                                   fInputVarFormulas[ivar]->EvalInstance(idata));
-                     if (TMath::IsNaN(vArr[ivar])) {
-                        containsNaN = kTRUE;
-                        fLogger << kWARNING << "Expression resolves to infinite value (NaN): " 
-                                << fInputVarFormulas[ivar]->GetTitle() << Endl;
-                     }
-                  } 
-                  else if (VarType(ivar)=='I') {
-                     Double_t tmpVal = ndata == 1 ? 
-                        fInputVarFormulas[ivar]->EvalInstance() : fInputVarFormulas[ivar]->EvalInstance(idata);
-                     iArr[ivar] = tmpVal >= 0 ? Int_t(tmpVal+.5) : Int_t(tmpVal-0.5);
-                     if (TMath::IsNaN(iArr[ivar])) {
-                        containsNaN = kTRUE;
-                        fLogger << kWARNING << "Expression resolves to infinite value (NaN): " 
-                                << fInputVarFormulas[ivar]->GetTitle() << Endl;
-                     }
+                  vArr[ivar] = (ndata == 1 ? 
+                                fInputVarFormulas[ivar]->EvalInstance(0) : 
+                                fInputVarFormulas[ivar]->EvalInstance(idata));
+                  if (TMath::IsNaN(vArr[ivar])) {
+                     containsNaN = kTRUE;
+                     fLogger << kWARNING << "Expression resolves to infinite value (NaN): " 
+                             << fInputVarFormulas[ivar]->GetTitle() << Endl;
                   }
                }
 
@@ -458,12 +460,47 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
                   continue;
                }
 
+               // event accepted, fill temporary ntuple
                tmpTree[sb]->Fill();
+
+               // add up weights
+               sumOfWeights[sb] += weight;
+               nTempEvents[sb]  += 1;
             }
          }
       
          currentInfo.GetTree()->ResetBranchAddresses();
       }
+
+      // compute renormalisation factors
+      renormFactor[sb] = nTempEvents[sb]/sumOfWeights[sb];
+   }
+
+   // print rescaling info
+   if (normMode == "NONE") {
+      fLogger << kINFO << "No weight renormalisation applied: use original event weights" << Endl;
+      renormFactor[0] = renormFactor[1] = 1;
+   }
+   else if (normMode == "NUMEVENTS") {
+      fLogger << kINFO << "Weight renormalisation mode: \"NumEvents\": renormalise signal and background" << Endl;
+      fLogger << kINFO << "... weights independently so that Sum[i=1..N_j]{w_i} = N_j, j=signal, background" << Endl;
+      fLogger << kINFO << "... (note that N_j is the sum of training and test events)" << Endl;
+      for (Int_t sb=0; sb<2; sb++) { // sb=0 - signal, sb=1 - background
+         fLogger << kINFO << "Rescale " << typeName[sb] << " event weights by factor: " << renormFactor[sb] << Endl;
+      }
+   }
+   else if (normMode == "EQUALNUMEVENTS") {
+      fLogger << kINFO << "Weight renormalisation mode: \"EqualNumEvents\": renormalise signal and background" << Endl;
+      fLogger << kINFO << "   weights so that Sum[i=1..N_j]{w_i} = N_signal, j=signal, background" << Endl;
+      fLogger << kINFO << "   (note that N_j is the sum of training and test events)" << Endl;
+      // sb=0 - signal, sb=1 - background
+      renormFactor[1] *= nTempEvents[0]/nTempEvents[1];
+      for (Int_t sb=0; sb<2; sb++) { 
+         fLogger << kINFO << "Rescale " << typeName[sb] << " event weights by factor: " << renormFactor[sb] << Endl;
+      }
+   }
+   else {
+      fLogger << kFATAL << "<PrepareForTrainingAndTesting> Unknown NormMode: " << normMode << Endl;
    }
 
    // ============================================================
@@ -479,21 +516,20 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    Long64_t finalNEvents[2][2] = { {nSigTrainEvents, nSigTestEvents},
                                    {nBkgTrainEvents, nBkgTestEvents} };
 
-   fLogger << kINFO << "Number of available training events:" << endl
-           << "  signal    : " << origSize[Types::kSignal] << endl
-           << "  background: " << origSize[Types::kBackground] << Endl;
-
+   fLogger << kVERBOSE << "Number of available training events:" << Endl
+           << "  Signal    : " << origSize[Types::kSignal] << Endl
+           << "  Background: " << origSize[Types::kBackground] << Endl;
 
    for (Int_t sb = 0; sb<2; sb++) { // sb: 0-signal, 1-background
 
       if (finalNEvents[sb][Types::kTraining]>origSize[sb])
-         fLogger << kFATAL << "More training events requested than available for the " << kindS[sb] << Endl;
+         fLogger << kFATAL << "More training events requested than available for the " << typeName[sb] << Endl;
 
       if (finalNEvents[sb][Types::kTesting]>origSize[sb])
-         fLogger << kFATAL << "More testing events requested than available for the " << kindS[sb] << Endl;
+         fLogger << kFATAL << "More testing events requested than available for the " << typeName[sb] << Endl;
 
       if (finalNEvents[sb][Types::kTraining] + finalNEvents[sb][Types::kTesting] > origSize[sb])
-         fLogger << kFATAL << "More testing and training events requested than available for the " << kindS[sb] << Endl;
+         fLogger << kFATAL << "More testing and training events requested than available for the " << typeName[sb] << Endl;
 
       if (finalNEvents[sb][Types::kTraining]==0 || finalNEvents[sb][Types::kTesting]==0) {
          if (finalNEvents[sb][Types::kTraining]==0 && finalNEvents[sb][Types::kTesting]==0) {
@@ -525,9 +561,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
       
       const Long64_t size = origSize[sb];
 
-      if (splitMode == "Random") {
+      if (splitMode == "RANDOM") {
 
-         fLogger << kINFO << "Randomly shuffle events in training and testing trees for " << kindS[sb] << Endl;
+         fLogger << kINFO << "Randomly shuffle events in training and testing trees for " << typeName[sb] << Endl;
 
          // the index array
          Long64_t* idxArray = new Long64_t[size];
@@ -554,9 +590,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
          delete [] idxArray;
          delete [] allPickedIdxArray;
       }
-      else if (splitMode == "Alternate") {
+      else if (splitMode == "ALTERNATE") {
 
-         fLogger << kINFO << "Pick alternating training and test events from input tree for " << kindS[sb] << Endl;
+         fLogger << kINFO << "Pick alternating training and test events from input tree for " << typeName[sb] << Endl;
          
          Int_t ntrain = finalNEvents[sb][Types::kTraining];
          Int_t ntest  = finalNEvents[sb][Types::kTesting];
@@ -567,12 +603,12 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
 
          for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]+finalNEvents[sb][Types::kTesting]; i++) {
             Bool_t isTrainingEvent = (i%modulo)<trainfrac;
-            evtList[sb][isTrainingEvent?Types::kTraining:Types::kTesting]->Enter( i );
+            evtList[sb][isTrainingEvent ? Types::kTraining:Types::kTesting]->Enter( i );
          }
       }
-      else if (splitMode == "Block") {
+      else if (splitMode == "BLOCK") {
 
-         fLogger << kINFO << "Pick block-wise training and test events from input tree for " << kindS[sb] << Endl;
+         fLogger << kINFO << "Pick block-wise training and test events from input tree for " << typeName[sb] << Endl;
          
          for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]; i++)
             evtList[sb][Types::kTraining]->Enter( i );
@@ -583,25 +619,32 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
       else fLogger << kFATAL << "Unknown type: " << splitMode << Endl;
    }
 
-   fLogger << kINFO << "Merge the signal and background trees for training" << Endl;
-
    gROOT->cd();
-
    TList lot;
-   tmpTree[Types::kSignal]    ->SetEventList(evtList[Types::kSignal]    [Types::kTraining]);
-   tmpTree[Types::kBackground]->SetEventList(evtList[Types::kBackground][Types::kTraining]);
-   lot.Add( tmpTree[Types::kSignal]    ->CopyTree("") ); 
-   lot.Add( tmpTree[Types::kBackground]->CopyTree("") );
-   SetTrainingTree(TTree::MergeTrees(&lot));
-   lot.SetOwner(); lot.Clear();
 
-   fLogger << kINFO << "Merge the signal and background trees for testing" << Endl;
-   tmpTree[Types::kSignal]    ->SetEventList(evtList[Types::kSignal]    [Types::kTesting]);
-   tmpTree[Types::kBackground]->SetEventList(evtList[Types::kBackground][Types::kTesting]);
-   lot.Add( tmpTree[Types::kSignal]    ->CopyTree("") ); 
-   lot.Add( tmpTree[Types::kBackground]->CopyTree("") );
-   SetTestTree(TTree::MergeTrees(&lot));
-   lot.SetOwner(); lot.Clear();
+   // merge signal and background trees, and renormalise the event weights in this step   
+   for (Int_t itreeTypeTmp=0; itreeTypeTmp<2; itreeTypeTmp++) {
+
+      Types::ETreeType itreeType = (itreeTypeTmp == 0) ? Types::kTraining : Types::kTesting;
+
+      fLogger << kINFO << "Create " << (itreeType == Types::kTraining ? "training" : "testing") << " tree" << Endl;        
+      TTree* newTree = tmpTree[Types::kSignal]->CloneTree(0); 
+
+      for (Int_t sb=0; sb<2; sb++) {
+
+         // renormalise only if non-trivial renormalisation factor
+         for (Int_t ievt=0; ievt<tmpTree[sb]->GetEntries(); ievt++) {            
+            
+            if (!evtList[sb][itreeType]->Contains(ievt)) continue;
+            
+            tmpTree[sb]->GetEntry( ievt );            
+            weight *= renormFactor[sb];
+            newTree->Fill();
+         }
+      }
+      if (itreeType == Types::kTraining) SetTrainingTree( newTree );
+      else                               SetTestTree    ( newTree );
+   }
 
    delete tmpTree[Types::kSignal];
    delete tmpTree[Types::kBackground];
@@ -615,14 +658,14 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
    GetTestTree()->ResetBranchAddresses();
    
    fLogger << kINFO << "Collected:" << Endl;
-   fLogger << kINFO << "  training signal entries     : " << fDataStats[Types::kTraining][Types::kSignal] << Endl;
-   fLogger << kINFO << "  training background entries : " << fDataStats[Types::kTraining][Types::kBackground] << Endl;
-   fLogger << kINFO << "  testing  signal entries     : " << fDataStats[Types::kTesting][Types::kSignal] << Endl;
-   fLogger << kINFO << "  testing  background entries : " << fDataStats[Types::kTesting][Types::kBackground] << Endl;
+   fLogger << kINFO << "  Training signal entries     : " << fDataStats[Types::kTraining][Types::kSignal]     << Endl;
+   fLogger << kINFO << "  Training background entries : " << fDataStats[Types::kTraining][Types::kBackground] << Endl;
+   fLogger << kINFO << "  Testing  signal entries     : " << fDataStats[Types::kTesting][Types::kSignal]      << Endl;
+   fLogger << kINFO << "  Testing  background entries : " << fDataStats[Types::kTesting][Types::kBackground]  << Endl;
 
    // sanity check
    if (GetNEvtSigTrain() <= 0 || GetNEvtBkgdTrain() <= 0 ||
-       GetNEvtSigTest() <= 0 || GetNEvtBkgdTest() <= 0) {
+       GetNEvtSigTest()  <= 0 || GetNEvtBkgdTest()  <= 0) {
       fLogger << kFATAL << "Zero events encountered for training and/or testing in signal and/or "
               << "background sample" << Endl;
    }
@@ -646,13 +689,12 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt, TStri
 
    // sanity check (should be removed from all methods!)
    if (UInt_t(GetTrainingTree()->GetListOfBranches()->GetEntries() - 3) != GetNVariables()) 
-      fLogger << kFATAL << "<PrepareForTrainingAndTesting> mismatch in number of variables" << Endl;
+      fLogger << kFATAL << "<PrepareForTrainingAndTesting> Mismatch in number of variables" << Endl;
 
    // reset the Event references
    ResetCurrentTree();
 
    delete [] vArr;
-   delete [] iArr;
 }
 
 //_______________________________________________________________________
@@ -693,14 +735,13 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
 
    for (varFIt = fInputVarFormulas.begin(); varFIt!=fInputVarFormulas.end(); varFIt++) {
       TTreeFormula * ttf = *varFIt;
-      for(Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
-         tr->SetBranchStatus(ttf->GetLeaf(bi)->GetName(), 1);
+      for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
+         tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    }
 
-   if(fWeightFormula!=0)
-      for(Int_t bi = 0; bi<fWeightFormula->GetNcodes(); bi++)
-         tr->SetBranchStatus(fWeightFormula->GetLeaf(bi)->GetName(), 1);
-
+   if (fWeightFormula!=0)
+      for (Int_t bi = 0; bi<fWeightFormula->GetNcodes(); bi++)
+         tr->SetBranchStatus( fWeightFormula->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    return;
 }
 
@@ -835,7 +876,7 @@ void TMVA::DataSet::GetCorrelationMatrix( Bool_t isSignal, TMatrixDBase* mat )
             Double_t d = (*mat)(ivar, ivar)*(*mat)(jvar, jvar);
             if (d > 0) (*mat)(ivar, jvar) /= sqrt(d);
             else {
-               fLogger << kWARNING << "<GetCorrelationMatrix> zero variances for variables "
+               fLogger << kWARNING << "<GetCorrelationMatrix> Zero variances for variables "
                        << "(" << ivar << ", " << jvar << ") = " << d                   
                        << Endl;
                (*mat)(ivar, jvar) = 0;
@@ -864,7 +905,7 @@ void TMVA::DataSet::GetCovarianceMatrix( Bool_t isSignal, TMatrixDBase* mat, Boo
    }
 
    // if normalisation required, determine min/max
-   TVectorF xmin(nvar), xmax(nvar);
+   TVectorD xmin(nvar), xmax(nvar);
    if (norm) {
       for (Int_t i=0; i<GetTrainingTree()->GetEntries(); i++) {
          // fill the event
@@ -872,12 +913,12 @@ void TMVA::DataSet::GetCovarianceMatrix( Bool_t isSignal, TMatrixDBase* mat, Boo
 
          for (ivar=0; ivar<nvar; ivar++) {
             if (i == 0) {
-               xmin(ivar) = GetEvent().GetVal(ivar);
-               xmax(ivar) = GetEvent().GetVal(ivar);
+               xmin(ivar) = (Double_t)GetEvent().GetVal(ivar);
+               xmax(ivar) = (Double_t)GetEvent().GetVal(ivar);
             }
             else {
-               xmin(ivar) = TMath::Min( xmin(ivar), GetEvent().GetVal(ivar) );
-               xmax(ivar) = TMath::Max( xmax(ivar), GetEvent().GetVal(ivar) );
+               xmin(ivar) = TMath::Min( xmin(ivar), (Double_t)GetEvent().GetVal(ivar) );
+               xmax(ivar) = TMath::Max( xmax(ivar), (Double_t)GetEvent().GetVal(ivar) );
             }
          }
       }

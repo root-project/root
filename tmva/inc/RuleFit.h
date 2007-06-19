@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
+// @(#)root/tmva $Id: RuleFit.h,v 1.8 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -15,7 +15,7 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
+ *      CERN, Switzerland                                                         *
  *      Iowa State U.                                                             *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
@@ -45,6 +45,8 @@
 
 namespace TMVA {
 
+
+   class MethodBase;
    class MethodRuleFit;
 
    class RuleFit {
@@ -52,30 +54,48 @@ namespace TMVA {
    public:
 
       // main constructor
-      RuleFit( const TMVA::MethodRuleFit *rfbase,
-               const std::vector<TMVA::DecisionTree *> & forest,
-               const std::vector<Event *> & trainingEvents,
-               Double_t samplefrac );
+      RuleFit( const TMVA::MethodBase *rfbase );
 
       // empty constructor
       RuleFit( void );
 
       virtual ~RuleFit( void );
 
-      void Initialise(  const TMVA::MethodRuleFit *rfbase,
-                        const std::vector<TMVA::DecisionTree *> & forest,
-                        const std::vector<Event *> & trainingEvents,
-                        Double_t samplefrac );
+      void InitNEveEff();
+      void InitPtrs( const TMVA::MethodBase *rfbase );
+      void Initialize(  const TMVA::MethodBase *rfbase );
 
       void SetMsgType( EMsgType t );
 
-      void SetTrainingEvents( const std::vector<Event *> & el, Double_t sampfrac );
+      void SetTrainingEvents( const std::vector<TMVA::Event *> & el );
+
+      void ReshuffleEvents() { std::random_shuffle(fTrainingEventsRndm.begin(),fTrainingEventsRndm.end()); }
+
+      void SetMethodBase( const MethodBase *rfbase );
+
+      // make the forest of trees for rule generation
+      void MakeForest();
+
+      // build a tree
+      void BuildTree( TMVA::DecisionTree *dt );
+
+      // save event weights
+      void SaveEventWeights();
+
+      // restore saved event weights
+      void RestoreEventWeights();
+
+      // boost events based on the given tree
+      void Boost( TMVA::DecisionTree *dt );
 
       // calculate and print some statistics on the given forest
       void ForestStatistics();
 
       // calculate the discriminating variable for the given event
       Double_t EvalEvent( const Event& e );
+
+      // calculate sum of 
+      Double_t CalcWeightSum( const std::vector<TMVA::Event *> *events, UInt_t neve=0 );
 
       // do the fitting of the coefficients
       void     FitCoefficients();
@@ -98,21 +118,31 @@ namespace TMVA {
       void     SetGDPathStep( Double_t s=0.01 ) { fRuleFitParams.SetGDPathStep(s); }
       void     SetGDNPathSteps( Int_t n=100 )   { fRuleFitParams.SetGDNPathSteps(n); }
       // make visualization histograms
+      void     SetVisHistsUseImp( Bool_t f ) { fVisHistsUseImp = f; }
+      void     UseImportanceVisHists()       { fVisHistsUseImp = kTRUE; }
+      void     UseCoefficientsVisHists()     { fVisHistsUseImp = kFALSE; }
       void     MakeVisHists();
       void     FillVisHistCut(const Rule * rule, std::vector<TH2F *> & hlist);
       void     FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hlist);
       void     FillCut(TH2F* h2,const TMVA::Rule *rule,Int_t vind);
       void     FillLin(TH2F* h2,Int_t vind);
       void     FillCorr(TH2F* h2,const TMVA::Rule *rule,Int_t v1, Int_t v2);
+      void     NormVisHists(std::vector<TH2F *> & hlist);
+      void     MakeDebugHists();
       Bool_t   GetCorrVars(TString & title, TString & var1, TString & var2);
       // accessors
-      UInt_t        GetNSubsamples() const { return (fSubsampleEvents.size()>1 ? fSubsampleEvents.size()-1:0); }
-      const Event*  GetTrainingEvent(UInt_t i)  const { return fTrainingEvents[i]; }
-      const Event*  GetTrainingEvent(UInt_t i, UInt_t isub)  const { return &(fTrainingEvents[fSubsampleEvents[isub]])[i]; }
+      UInt_t        GetNTreeSample()            const { return fNTreeSample; }
+      Double_t      GetNEveEff()                const { return fNEveEffTrain; } // reweighted number of events = sum(wi)
+      const Event*  GetTrainingEvent(UInt_t i)  const { return static_cast< const Event *>(fTrainingEvents[i]); }
+      Double_t      GetTrainingEventWeight(UInt_t i)  const { return fTrainingEvents[i]->GetWeight(); }
 
-      const std::vector< const TMVA::Event * > & GetTrainingEvents()  const { return fTrainingEvents; }
-      const std::vector< Int_t >               & GetSubsampleEvents() const { return fSubsampleEvents; }
-      void                                       GetSubsampleEvents(Int_t sub, UInt_t & ibeg, UInt_t & iend) const;
+      //      const Event*  GetTrainingEvent(UInt_t i, UInt_t isub)  const { return &(fTrainingEvents[fSubsampleEvents[isub]])[i]; }
+
+      const std::vector< TMVA::Event * > & GetTrainingEvents()  const { return fTrainingEvents; }
+      //      const std::vector< Int_t >               & GetSubsampleEvents() const { return fSubsampleEvents; }
+
+      //      void  GetSubsampleEvents(Int_t sub, UInt_t & ibeg, UInt_t & iend) const;
+      void  GetRndmSampleEvents(std::vector< const TMVA::Event * > & evevec, UInt_t nevents);
       //
       const std::vector< const TMVA::DecisionTree *> & GetForest()     const { return fForest; }
       const RuleEnsemble                       & GetRuleEnsemble()     const { return fRuleEnsemble; }
@@ -120,6 +150,7 @@ namespace TMVA {
       const RuleFitParams                      & GetRuleFitParams()    const { return fRuleFitParams; }
             RuleFitParams                      * GetRuleFitParamsPtr()       { return &fRuleFitParams; }
       const MethodRuleFit                      * GetMethodRuleFit()    const { return fMethodRuleFit; }
+      const MethodBase                         * GetMethodBase()       const { return fMethodBase; }
 
    private:
 
@@ -129,16 +160,22 @@ namespace TMVA {
       // copy method
       void Copy( const RuleFit & other );
 
-      std::vector<const TMVA::Event *>    fTrainingEvents;  // all training events
-      std::vector< Int_t >                fSubsampleEvents; // iterators marking the beginning of each cross validation sample
+      std::vector<TMVA::Event *>          fTrainingEvents;      // all training events
+      std::vector<TMVA::Event *>          fTrainingEventsRndm;  // idem, but randomly shuffled
+      std::vector<Double_t>               fEventWeights;        // original weights of the events - follows fTrainingEvents
+      UInt_t                              fNTreeSample;         // number of events in sub sample = frac*neve
+
+      Double_t                            fNEveEffTrain;    // reweighted number of events = sum(wi)
       std::vector< const TMVA::DecisionTree *>  fForest;    // the input forest of decision trees
       RuleEnsemble                        fRuleEnsemble;    // the ensemble of rules
       RuleFitParams                       fRuleFitParams;   // fit rule parameters
-      const MethodRuleFit                *fMethodRuleFit;   // pointer the method which initialised this RuleFit instance
+      const MethodRuleFit                *fMethodRuleFit;   // pointer the method which initialized this RuleFit instance
+      const MethodBase                   *fMethodBase;      // pointer the method base which initialized this RuleFit instance
+      Bool_t                              fVisHistsUseImp;  // if true, use importance as weight; else coef in vis hists
 
       mutable MsgLogger                   fLogger;          // message logger
 
-      ClassDef(RuleFit,0)  // the actual calculations to Friedman's RuleFit method
+      ClassDef(RuleFit,0)  // Calculations for Friedman's RuleFit method
    };
 }
 

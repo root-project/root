@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.h,v 1.7 2007/01/16 09:37:03 brun Exp $
+// @(#)root/tmva $Id: Ranking.h,v 1.8 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -16,8 +16,8 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -62,18 +62,18 @@ namespace TMVA {
       virtual void AddRank( Rank& rank );
       virtual void Print() const;
 
-      void SetContext  ( const TString context   ) { fContext = context; fLogger.SetSource( context.Data() ); }
+      void SetContext  ( const TString context   ) { fContext = context; fLogger.SetSource( fContext.Data() ); }
       void SetDiscrName( const TString discrName ) { fRankingDiscriminatorName = discrName; }
 
    private:
                   
-      std::vector<Rank>  fRanking;                  // vector of ranks
-      TString            fContext;                  // the ranking context
-      TString            fRankingDiscriminatorName; // the name of the ranking discriminator
+      std::vector<TMVA::Rank> fRanking;                  // vector of ranks
+      TString                 fContext;                  // the ranking context
+      TString                 fRankingDiscriminatorName; // the name of the ranking discriminator
 
-      mutable MsgLogger  fLogger;                   // message logger
+      mutable MsgLogger       fLogger;                   // message logger
 
-      ClassDef(Ranking,0) // method-specific ranking for input variables 
+      ClassDef(Ranking,0) // Method-specific ranking for input variables 
    };
 
    // --------------------------------------------------------------------------

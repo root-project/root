@@ -140,7 +140,7 @@ namespace TMVAGlob {
          c->Print(pngName);
       }
    }
-
+   
    void plot_logo( Float_t v_scale = 1.0 )
    {
       TImage *img = TImage::Open("../macros/tmva_logo.gif");
@@ -184,14 +184,227 @@ namespace TMVAGlob {
       img->Draw();
    } 
 
-   void NormalizeHists( TH1* sig, TH1* bkg ) 
+   void NormalizeHists( TH1* sig, TH1* bkg = 0 ) 
    {
-      if(sig->GetSumw2N()==0) sig->Sumw2();
-      if(bkg->GetSumw2N()==0) bkg->Sumw2();
+      if (sig->GetSumw2N() == 0) sig->Sumw2();
+      if (bkg != 0) if (bkg->GetSumw2N() == 0) bkg->Sumw2();
       
-      sig->Scale( 1.0/sig->GetSumOfWeights() );
-      bkg->Scale( 1.0/bkg->GetSumOfWeights() );      
+      Float_t dx = (sig->GetXaxis()->GetXmax() - sig->GetXaxis()->GetXmin())/sig->GetNbinsX();
+      sig->Scale( 1.0/sig->GetSumOfWeights()/dx );
+      if (bkg != 0) bkg->Scale( 1.0/bkg->GetSumOfWeights()/dx );      
    }      
+
+   // the following are tools to help handling different methods and titles
+
+
+   void GetMethodName( TString & name, TKey * mkey ) {
+      if (mkey==0) return;
+      name = mkey->GetName();
+      name.ReplaceAll("Method_","");
+   }
+
+   void GetMethodTitle( TString & name, TKey * ikey ) {
+      if (ikey==0) return;
+      name = ikey->GetName();
+   }
+
+   void GetMethodName( TString & name, TDirectory * mdir ) {
+      if (mdir==0) return;
+      name = mdir->GetName();
+      name.ReplaceAll("Method_","");
+   }
+
+   void GetMethodTitle( TString & name, TDirectory * idir ) {
+      if (idir==0) return;
+      name = idir->GetName();
+   }
+
+   TKey *NextKey( TIter & keyIter, TString className) {
+      TDirectory *dir=0;
+      TKey *key=(TKey *)keyIter.Next();
+      TKey *rkey=0;
+      Bool_t loop=(key!=0);
+      //
+      while (loop) {
+         TClass *cl = gROOT->GetClass(key->GetClassName());
+         if (cl->InheritsFrom(className.Data())) {
+            loop = kFALSE;
+            rkey = key;
+         } else {
+            key = (TKey *)keyIter.Next();
+            if (key==0) loop = kFALSE;
+         }
+      }
+      return rkey;
+   }
+
+   UInt_t GetListOfKeys( TList & keys, TString inherits, TDirectory *dir=0 )
+   {
+      // get a list of keys with a given inheritance
+      // the list contains TKey objects
+      if (dir==0) dir = gDirectory;
+      TIter mnext(dir->GetListOfKeys());
+      TKey *mkey;
+      keys.Clear();
+      keys.SetOwner(kFALSE);
+      UInt_t ni=0;
+      while ((mkey = (TKey*)mnext())) {
+         // make sure, that we only look at TDirectory with name Method_<xxx>
+         TClass *cl = gROOT->GetClass(mkey->GetClassName());
+         if (cl->InheritsFrom(inherits)) {
+            keys.Add(mkey);
+            ni++;
+         }
+      }
+      return ni;
+   }
+
+   TKey *FindMethod( TString name, TDirectory *dir=0 )
+   {
+      // find the key for a method
+      if (dir==0) dir = gDirectory;
+      TIter mnext(dir->GetListOfKeys());
+      TKey *mkey;
+      TKey *retkey=0;
+      Bool_t loop=kTRUE;
+      while (loop) {
+         mkey = (TKey*)mnext();
+         if (mkey==0) {
+            loop = kFALSE;
+         } else {
+            TString clname = mkey->GetClassName();
+            TClass *cl = gROOT->GetClass(clname);
+            if (cl->InheritsFrom("TDirectory")) {
+               TString mname = mkey->GetName(); // method name
+               TString tname = "Method_"+name;  // target name
+               if (mname==tname) { // target found!
+                  loop = kFALSE;
+                  retkey = mkey;
+               }
+            }
+         }
+      }
+      return retkey;
+   }
+
+   UInt_t GetListOfMethods( TList & methods, TDirectory *dir=0 )
+   {
+      // get a list of methods
+      // the list contains TKey objects
+      if (dir==0) dir = gDirectory;
+      TIter mnext(dir->GetListOfKeys());
+      TKey *mkey;
+      methods.Clear();
+      methods.SetOwner(kFALSE);
+      UInt_t ni=0;
+      while ((mkey = (TKey*)mnext())) {
+         // make sure, that we only look at TDirectory with name Method_<xxx>
+         TString name = mkey->GetClassName();
+         TClass *cl = gROOT->GetClass(name);
+         if (cl->InheritsFrom("TDirectory")) {
+            if (TString(mkey->GetName()).BeginsWith("Method_")) {
+               methods.Add(mkey);
+               ni++;
+            }
+         }
+      }
+      cout << "--- Found " << ni << " methods(s)" << endl;
+      return ni;
+   }
+
+   UInt_t GetListOfTitles( TString & methodName, TList & titles, TDirectory *dir=0 )
+   {
+      // get the list of all titles for a given method
+      // if the input dir is 0, gDirectory is used
+      // returns a list of keys
+      UInt_t ni=0;
+      if (dir==0) dir = gDirectory;
+      TDirectory* rfdir = (TDirectory*)dir->Get( methodName );
+      if (rfdir==0) {
+         cout << "Could not locate directory '" << methodName << endl;
+         return 0;
+      }
+
+      return GetListOfTitles( rfdir, titles );
+
+      TList *keys = rfdir->GetListOfKeys();
+      if (keys==0) {
+         cout << "Directory '" << methodName << "' contains no keys" << endl;
+         return 0;
+      }
+      //
+      TIter rfnext(rfdir->GetListOfKeys());
+      TKey *rfkey;
+      titles.Clear();
+      titles.SetOwner(kFALSE);
+      while ((rfkey = (TKey*)rfnext())) {
+         // make sure, that we only look at histograms
+         TClass *cl = gROOT->GetClass(rfkey->GetClassName());
+         if (cl->InheritsFrom("TDirectory")) {
+            titles.Add(rfkey);
+            ni++;
+         }
+      }
+      cout << "--- Found " << ni << " instance(s) of the method " << methodName << endl;
+      return ni;
+   }
+
+   UInt_t GetListOfTitles( TDirectory *rfdir, TList & titles )
+   {
+      // get a list of titles (i.e TDirectory) given a method dir
+      UInt_t ni=0;
+      if (rfdir==0) return 0;
+      TList *keys = rfdir->GetListOfKeys();
+      if (keys==0) {
+         cout << "Directory '" << rfdir->GetName() << "' contains no keys" << endl;
+         return 0;
+      }
+      //
+      TIter rfnext(rfdir->GetListOfKeys());
+      TKey *rfkey;
+      titles.Clear();
+      titles.SetOwner(kFALSE);
+      while ((rfkey = (TKey*)rfnext())) {
+         // make sure, that we only look at histograms
+         TClass *cl = gROOT->GetClass(rfkey->GetClassName());
+         if (cl->InheritsFrom("TDirectory")) {
+            titles.Add(rfkey);
+            ni++;
+         }
+      }
+      cout << "--- Found " << ni << " instance(s) of the method " << rfdir->GetName() << endl;
+      return ni;
+   }
+
+   TDirectory *GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
+   {
+      // get the CorrelationPlots directory
+      if (dir==0) dir = GetInputVariablesDir( 0, type );
+      if (dir==0) return 0;
+      //
+      TDirectory* corrdir = (TDirectory*)dir->Get( "CorrelationPlots" );
+      if (corrdir==0) {
+         cout << "Could not CorrelationPlots directory '" << corrDirName << endl;
+         return 0;
+      }
+      return corrdir;
+   }
+
+   TDirectory *GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
+   {
+      // get the InputVariables directory
+      const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
+                                                             "InputVariables_DecorrTransform",
+                                                             "InputVariables_PCATransform" };
+      if (dir==0) dir = gDirectory;
+      // get top dir containing all hists of the variables
+      TDirectory* dir = (TDirectory*)gDirectory->Get( directories[type] );
+      if (dir==0) {
+         cout << "Could not locate input variable directory '" << directories[type] << endl;
+         return 0;
+      }
+      return dir;
+   }
 }
 
 #endif

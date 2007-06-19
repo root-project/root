@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.9 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodPDERS.h,v 1.10 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -25,8 +25,8 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -102,8 +102,14 @@ namespace TMVA {
 
    protected:
 
-      Volume* fHelpVolume;
-      Int_t        fFcnCall;
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
+
+      Volume*      fHelpVolume; // auxiliary variable
+      Int_t        fFcnCall;    // number of external function calls (RootFinder)
 
       // accessors
       BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }

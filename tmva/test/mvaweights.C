@@ -54,7 +54,7 @@ void mvaweights( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       cout << "--- Method: " << methodS << endl;
 
       // create new canvas
-      TString cname = Form("MVA output %s",methodS.Data());
+      TString cname = Form("TMVA output %s",methodS.Data());
       c = new TCanvas( Form("canvas%d", countCanvas+1), cname, 
                        countCanvas*50+200, countCanvas*20, width, width*1.0 ); 
       c->Divide( 1, 1 );

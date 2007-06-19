@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: Configurable.h,v 1.9 2007/06/12 12:50:11 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,7 +16,7 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -82,20 +82,26 @@ namespace TMVA {
       // Add a predefined value to the last declared option
       template<class T>
       void AddPreDefVal(const T&);
+      
+      void CheckForUnusedOptions() const;
+
+      const TString & GetOptions() const { return fOptions; }
+      void      SetOptions(const TString & s) { fOptions = s; }
 
    protected:
       
-      const TString & GetOptions() const { return fOptions; }
       Bool_t    LooseOptionCheckingEnabled() const { return fLooseOptionCheckingEnabled; }
       void      EnableLooseOptions( Bool_t b = kTRUE ) { fLooseOptionCheckingEnabled = b; }
 
-      void WriteOptionsToStream(ostream& o) const;
-      void ReadOptionsFromStream(istream& istr);
+      void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
+      void ReadOptionsFromStream( istream& istr );
+
+      void ResetSetFlag();
 
    private:
 
       // splits the option string at ':' and fills the list 'loo' with the primitive strings
-      void SplitOptions(TString& theOpt, TList& loo);
+      void SplitOptions(const TString& theOpt, TList& loo) const;
 
       TString     fOptions;                          // options string
       Bool_t      fLooseOptionCheckingEnabled;       // checker for option string
@@ -161,7 +167,7 @@ void TMVA::Configurable::AssignOpt(const TString& name, T& valAssign) const
    if (opt!=0) valAssign = ((Option<T>*)opt)->Value();
    else 
       fLogger << kFATAL << "Option \"" << name 
-              << "\" not declared, please check the syntax of your option string" << endl;
+              << "\" not declared, please check the syntax of your option string" << Endl;
 }
 
 #endif

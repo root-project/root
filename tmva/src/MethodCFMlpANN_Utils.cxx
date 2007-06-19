@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Reference for the original FORTRAN version "mlpl3.F":                          *
- *      Authors  : J. Proriol and contributions from ALEPH-Clermont-Fd            *
+ *      Authors  : J. Proriol and contributions from ALEPH-Clermont-Ferrand       *
  *                 Team members                                                   *
  *      Copyright: Laboratoire Physique Corpusculaire                             *
  *                 Universite de Blaise Pascal, IN2P3/CNRS                        *
@@ -35,9 +35,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -124,15 +124,15 @@ void TMVA::MethodCFMlpANN_Utils::Train_nn( Double_t *tin2, Double_t *tout2, Int_
    char det[20];
 
    Entree_new(nvar2, det, ntrain, ntest, nlayer, nodes, ncycle, (Int_t)20);
-   if (neur_1.neuron[fParam_1.layerm - 1] == 1) {
+   if (fNeur_1.neuron[fParam_1.layerm - 1] == 1) {
       imax = 2;
       fParam_1.lclass = 2;
    } 
    else {
-      imax = neur_1.neuron[fParam_1.layerm - 1] << 1;
-      fParam_1.lclass = neur_1.neuron[fParam_1.layerm - 1];
+      imax = fNeur_1.neuron[fParam_1.layerm - 1] << 1;
+      fParam_1.lclass = fNeur_1.neuron[fParam_1.layerm - 1];
    }
-   fParam_1.nvar = neur_1.neuron[0];
+   fParam_1.nvar = fNeur_1.neuron[0];
    TestNN();
    Innit(det, tout2, tin2, (Int_t)20);
 
@@ -186,9 +186,9 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    fParam_1.nunisor = 30;
    fParam_1.nunishort = 48;
    fParam_1.nunap = 40;
-   printf("--- CFMlpANN     : total number of events for training: %i\n", fParam_1.nevl);
-   printf("--- CFMlpANN     : total number of events for testing : %i\n", fParam_1.nevt);
-   printf("--- CFMlpANN     : total number of training cycles    : %i\n", fParam_1.nblearn);
+   printf("--- CFMlpANN     : Total number of events for training: %i\n", fParam_1.nevl);
+   printf("--- CFMlpANN     : Total number of events for testing : %i\n", fParam_1.nevt);
+   printf("--- CFMlpANN     : Total number of training cycles    : %i\n", fParam_1.nblearn);
    if (fParam_1.nevl > max_Events_) {
       printf("Error: number of learning events exceeds maximum: %i, %i ==> abort", 
              fParam_1.nevl, max_Events_ );
@@ -208,19 +208,19 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       if (j == fParam_1.layerm && num != 2) {
          num = 2;
       }
-      neur_1.neuron[j - 1] = num;
+      fNeur_1.neuron[j - 1] = num;
    }
    i__1 = fParam_1.layerm;
    for (j = 1; j <= i__1; ++j) {
-      printf("--- CFMlpANN     : number of layers for neuron(%2i): %i\n",j, 
-             neur_1.neuron[j - 1]);
+      printf("--- CFMlpANN     : Number of layers for neuron(%2i): %i\n",j, 
+             fNeur_1.neuron[j - 1]);
    }
-   if (neur_1.neuron[fParam_1.layerm - 1] != 2) {
+   if (fNeur_1.neuron[fParam_1.layerm - 1] != 2) {
       printf("Error: wrong number of classes at ouput layer: %i != 2 ==> abort\n",
-             neur_1.neuron[fParam_1.layerm - 1]);
+             fNeur_1.neuron[fParam_1.layerm - 1]);
       Arret("stop");
    }
-   i__1 = neur_1.neuron[fParam_1.layerm - 1];
+   i__1 = fNeur_1.neuron[fParam_1.layerm - 1];
    for (j = 1; j <= i__1; ++j) {
       fDel_1.coef[j - 1] = 1.;
    }
@@ -236,10 +236,10 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       Arret("new training or continued one !");
    }
    if (fParam_1.ichoi == 0) {
-      printf("--- CFMlpANN     : new training will be performed\n");
+      printf("--- CFMlpANN     : New training will be performed\n");
    } 
    else {
-      printf("--- CFMlpANN     : new training will be continued from a weight file\n");
+      printf("--- CFMlpANN     : New training will be continued from a weight file\n");
    }
    ncoef = 0;
    ntemp = 0;
@@ -253,7 +253,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
          ++ntemp;
       }
    }
-   if (ncoef != neur_1.neuron[fParam_1.layerm - 1]) {
+   if (ncoef != fNeur_1.neuron[fParam_1.layerm - 1]) {
       Arret(" entree error code 1 : need to reported");
    }
    if (ntemp != fParam_1.layerm) {
@@ -261,8 +261,8 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    }
 }
 
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Wini()
 {
@@ -273,9 +273,9 @@ void TMVA::MethodCFMlpANN_Utils::Wini()
 
    i__1 = fParam_1.layerm;
    for (layer = 2; layer <= i__1; ++layer) {
-      i__2 = neur_1.neuron[layer - 2];
+      i__2 = fNeur_1.neuron[layer - 2];
       for (i__ = 1; i__ <= i__2; ++i__) {
-         i__3 = neur_1.neuron[layer - 1];
+         i__3 = fNeur_1.neuron[layer - 1];
          for (j = 1; j <= i__3; ++j) {
             w_ref(layer, j, i__) = (Sen3a() * 2. - 1.) * .2;
             ww_ref(layer, j) = (Sen3a() * 2. - 1.) * .2;
@@ -288,10 +288,10 @@ void TMVA::MethodCFMlpANN_Utils::Wini()
 #undef w_ref
 
 #define xeev_ref(a_1,a_2) fVarn2_1(a_1,a_2)
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define x_ref(a_1,a_2) neur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define x_ref(a_1,a_2) fNeur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::En_avant(Int_t *ievent)
 {
@@ -302,16 +302,16 @@ void TMVA::MethodCFMlpANN_Utils::En_avant(Int_t *ievent)
    Int_t i__, j;
    Int_t layer;
    
-   i__1 = neur_1.neuron[0];
+   i__1 = fNeur_1.neuron[0];
    for (i__ = 1; i__ <= i__1; ++i__) {
       y_ref(1, i__) = xeev_ref(*ievent, i__);
    }
    i__1 = fParam_1.layerm - 1;
    for (layer = 1; layer <= i__1; ++layer) {
-      i__2 = neur_1.neuron[layer];
+      i__2 = fNeur_1.neuron[layer];
       for (j = 1; j <= i__2; ++j) {
          x_ref(layer + 1, j) = 0.;
-         i__3 = neur_1.neuron[layer - 1];
+         i__3 = fNeur_1.neuron[layer - 1];
          for (i__ = 1; i__ <= i__3; ++i__) {
             x_ref(layer + 1, j) = ( x_ref(layer + 1, j) + y_ref(layer, i__) 
                                     * w_ref(layer + 1, j, i__) );
@@ -402,7 +402,8 @@ void TMVA::MethodCFMlpANN_Utils::Leclearn( Int_t *ktest, Double_t *tout2, Double
          if (fVarn_1.xmax[l - 1] == (Float_t)0. && fVarn_1.xmin[l - 1] == (
                                                                            Float_t)0.) {
             xeev_ref(i__, l) = (Float_t)0.;
-         } else {
+         } 
+         else {
             xeev_ref(i__, l) = xeev_ref(i__, l) - (fVarn_1.xmax[l - 1] + 
                                                    fVarn_1.xmin[l - 1]) / 2.;
             xeev_ref(i__, l) = xeev_ref(i__, l) / ((fVarn_1.xmax[l - 1] - 
@@ -415,14 +416,14 @@ void TMVA::MethodCFMlpANN_Utils::Leclearn( Int_t *ktest, Double_t *tout2, Double
 #undef xeev_ref
 
 #define delw_ref(a_1,a_2,a_3) fDel_1.delw[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define x_ref(a_1,a_2) neur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define x_ref(a_1,a_2) fNeur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
 #define delta_ref(a_1,a_2,a_3) fDel_1.delta[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
 #define delww_ref(a_1,a_2) fDel_1.delww[(a_2)*max_nLayers_ + a_1 - 7]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 #define del_ref(a_1,a_2) fDel_1.del[(a_2)*max_nLayers_ + a_1 - 7]
-#define deltaww_ref(a_1,a_2) neur_1.deltaww[(a_2)*max_nLayers_ + a_1 - 7]
+#define deltaww_ref(a_1,a_2) fNeur_1.deltaww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
 {
@@ -433,23 +434,24 @@ void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
    Int_t i__, j, k, l;
    Double_t df, uu;
 
-   i__1 = neur_1.neuron[fParam_1.layerm - 1];
+   i__1 = fNeur_1.neuron[fParam_1.layerm - 1];
    for (i__ = 1; i__ <= i__1; ++i__) {
       if (fVarn_1.nclass[*ievent - 1] == i__) {
-         neur_1.o[i__ - 1] = 1.;
-      } else {
-         neur_1.o[i__ - 1] = -1.;
+         fNeur_1.o[i__ - 1] = 1.;
+      } 
+      else {
+         fNeur_1.o[i__ - 1] = -1.;
       }
    }
    l = fParam_1.layerm;
-   i__1 = neur_1.neuron[l - 1];
+   i__1 = fNeur_1.neuron[l - 1];
    for (i__ = 1; i__ <= i__1; ++i__) {
       f = y_ref(l, i__);
       df = (f + 1.) * (1. - f) / (fDel_1.temp[l - 1] * 2.);
-      del_ref(l, i__) = df * (neur_1.o[i__ - 1] - y_ref(l, i__)) * 
+      del_ref(l, i__) = df * (fNeur_1.o[i__ - 1] - y_ref(l, i__)) * 
          fDel_1.coef[i__ - 1];
       delww_ref(l, i__) = fParam_1.eeps * del_ref(l, i__);
-      i__2 = neur_1.neuron[l - 2];
+      i__2 = fNeur_1.neuron[l - 2];
       for (j = 1; j <= i__2; ++j) {
          delw_ref(l, i__, j) = fParam_1.eeps * del_ref(l, i__) * y_ref(l - 
                                                                        1, j);
@@ -457,10 +459,10 @@ void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
       }
    }
    for (l = fParam_1.layerm - 1; l >= 2; --l) {
-      i__2 = neur_1.neuron[l - 1];
+      i__2 = fNeur_1.neuron[l - 1];
       for (i__ = 1; i__ <= i__2; ++i__) {
          uu = 0.;
-         i__1 = neur_1.neuron[l];
+         i__1 = fNeur_1.neuron[l];
          for (k = 1; k <= i__1; ++k) {
             uu += w_ref(l + 1, k, i__) * del_ref(l + 1, k);
          }
@@ -468,7 +470,7 @@ void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
          df = (f + 1.) * (1. - f) / (fDel_1.temp[l - 1] * 2.);
          del_ref(l, i__) = df * uu;
          delww_ref(l, i__) = fParam_1.eeps * del_ref(l, i__);
-         i__1 = neur_1.neuron[l - 2];
+         i__1 = fNeur_1.neuron[l - 2];
          for (j = 1; j <= i__1; ++j) {
             delw_ref(l, i__, j) = fParam_1.eeps * del_ref(l, i__) * y_ref(
                                                                           l - 1, j);
@@ -477,12 +479,12 @@ void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
    }
    i__1 = fParam_1.layerm;
    for (l = 2; l <= i__1; ++l) {
-      i__2 = neur_1.neuron[l - 1];
+      i__2 = fNeur_1.neuron[l - 1];
       for (i__ = 1; i__ <= i__2; ++i__) {
          deltaww_ref(l, i__) = delww_ref(l, i__) + fParam_1.eta * 
             deltaww_ref(l, i__);
          ww_ref(l, i__) = ww_ref(l, i__) + deltaww_ref(l, i__);
-         i__3 = neur_1.neuron[l - 2];
+         i__3 = fNeur_1.neuron[l - 2];
          for (j = 1; j <= i__3; ++j) {
             delta_ref(l, i__, j) = delw_ref(l, i__, j) + fParam_1.eta * 
                delta_ref(l, i__, j);
@@ -502,18 +504,15 @@ void TMVA::MethodCFMlpANN_Utils::En_arriere( Int_t *ievent )
 #undef w_ref
 #undef delw_ref
 
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Out( Int_t *iii, Int_t *maxcycle )
 {
    // write weights to file
 
    if (*iii == *maxcycle) {
-//       WriteNNWeightsToFile( std::cout, fParam_1.nvar, fParam_1.lclass, 
-//                             fVarn_1.xmax, fVarn_1.xmin,
-//                             fParam_1.layerm, neur_1.neuron, 
-//                             neur_1.w, neur_1.ww, fDel_1.temp );                        
+      // now in MethodCFMlpANN.cxx
    }
 }
 
@@ -521,7 +520,7 @@ void TMVA::MethodCFMlpANN_Utils::Out( Int_t *iii, Int_t *maxcycle )
 #undef w_ref
 
 #define delta_ref(a_1,a_2,a_3) fDel_1.delta[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define deltaww_ref(a_1,a_2) neur_1.deltaww[(a_2)*max_nLayers_ + a_1 - 7]
+#define deltaww_ref(a_1,a_2) fNeur_1.deltaww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *tin2, Int_t )
 {
@@ -542,10 +541,10 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
    }
    i__1 = fParam_1.layerm - 1;
    for (layer = 1; layer <= i__1; ++layer) {
-      i__2 = neur_1.neuron[layer];
+      i__2 = fNeur_1.neuron[layer];
       for (j = 1; j <= i__2; ++j) {
          deltaww_ref(layer + 1, j) = 0.;
-         i__3 = neur_1.neuron[layer - 1];
+         i__3 = fNeur_1.neuron[layer - 1];
          for (i__ = 1; i__ <= i__3; ++i__) {
             delta_ref(layer + 1, j, i__) = 0.;
          }
@@ -559,12 +558,12 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
    }
    kkk = 0;
    i__3 = fParam_1.nblearn;
-   TMVA::Timer timer( i__3, "CFMlpANN" ); 
+   Timer timer( i__3, "CFMlpANN" ); 
    Int_t num = i__3/100;
 
    for (i1 = 1; i1 <= i__3; ++i1) {
 
-      if( num>0 && (i1-1)%num == 0 || i1 == i__3) timer.DrawProgressBar( i1-1 );
+      if ( num>0 && (i1-1)%num == 0 || i1 == i__3) timer.DrawProgressBar( i1-1 );
 
       i__2 = fParam_1.nevl;
       for (i__ = 1; i__ <= i__2; ++i__) {
@@ -590,7 +589,8 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
                if (nrest != 0) {
                   ievent = fParam_1.ndiv + 1 + (fParam_1.lclass - nrest) * 
                      nevod;
-               } else {
+               } 
+               else {
                   ievent = fParam_1.ndiv;
                }
             }
@@ -611,7 +611,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
          break;
       }
    }
-   printf("--- CFMlpANN     : elapsed time: %s\n", (const char*)timer.GetElapsedTime()  );
+   printf("--- CFMlpANN     : Elapsed time: %s\n", (const char*)timer.GetElapsedTime()  );
 
 }
 
@@ -644,10 +644,10 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
              fParam_1.nevt, max_Events_ );
       Arret("modification of mlpl3_param_lim.inc is needed ");
    }
-   if (fParam_1.lclass < neur_1.neuron[fParam_1.layerm - 1]) {
+   if (fParam_1.lclass < fNeur_1.neuron[fParam_1.layerm - 1]) {
       ktest = 1;
       printf("Error: wrong number of classes at ouput layer: %i != %i ==> abort\n",
-             neur_1.neuron[fParam_1.layerm - 1], fParam_1.lclass);
+             fNeur_1.neuron[fParam_1.layerm - 1], fParam_1.lclass);
       Arret("problem needs to reported ");
    }
    if (fParam_1.nvar > max_nVar_) {
@@ -658,7 +658,7 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
    }
    i__1 = fParam_1.layerm;
    for (i__ = 1; i__ <= i__1; ++i__) {
-      if (neur_1.neuron[i__ - 1] > max_nNodes_) {
+      if (fNeur_1.neuron[i__ - 1] > max_nNodes_) {
          ktest = 1;
          printf("Error: number of neurons at layer exceeds maximum: %i, %i ==> abort", 
                 i__, fg_max_nNodes_ );
@@ -670,7 +670,7 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
    }
 }
 
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Cout( Int_t * /*i1*/, Double_t *xxx )
 {
@@ -685,15 +685,16 @@ void TMVA::MethodCFMlpANN_Utils::Cout( Int_t * /*i1*/, Double_t *xxx )
    i__1 = fParam_1.nevl;
    for (i__ = 1; i__ <= i__1; ++i__) {
       En_avant(&i__);
-      i__2 = neur_1.neuron[fParam_1.layerm - 1];
+      i__2 = fNeur_1.neuron[fParam_1.layerm - 1];
       for (j = 1; j <= i__2; ++j) {
          if (fVarn_1.nclass[i__ - 1] == j) {
-            neur_1.o[j - 1] = 1.;
-         } else {
-            neur_1.o[j - 1] = -1.;
+            fNeur_1.o[j - 1] = 1.;
+         } 
+         else {
+            fNeur_1.o[j - 1] = -1.;
          }
          // Computing 2nd power 
-         d__1 = y_ref(fParam_1.layerm, j) - neur_1.o[j - 1];
+         d__1 = y_ref(fParam_1.layerm, j) - fNeur_1.o[j - 1];
          c__ += fDel_1.coef[j - 1] * (d__1 * d__1);
       }
    }
@@ -704,8 +705,8 @@ void TMVA::MethodCFMlpANN_Utils::Cout( Int_t * /*i1*/, Double_t *xxx )
 
 #undef y_ref
 
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Inl()
 {
@@ -718,8 +719,8 @@ void TMVA::MethodCFMlpANN_Utils::Inl()
    i__1 = fParam_1.layerm;
    i__1 = fParam_1.layerm - 1;
    for (layer = 1; layer <= i__1; ++layer) {
-      nq = neur_1.neuron[layer] / 10;
-      nr = neur_1.neuron[layer] - nq * 10;
+      nq = fNeur_1.neuron[layer] / 10;
+      nr = fNeur_1.neuron[layer] - nq * 10;
       if (nr == 0) {
          kk = nq;
       } 
@@ -730,10 +731,10 @@ void TMVA::MethodCFMlpANN_Utils::Inl()
       for (k = 1; k <= i__2; ++k) {
          jmin = k * 10 - 9;
          jmax = k * 10;
-         if (neur_1.neuron[layer] < jmax) {
-            jmax = neur_1.neuron[layer];
+         if (fNeur_1.neuron[layer] < jmax) {
+            jmax = fNeur_1.neuron[layer];
          }
-         i__3 = neur_1.neuron[layer - 1];
+         i__3 = fNeur_1.neuron[layer - 1];
       }
    }
 }
@@ -755,7 +756,7 @@ Double_t TMVA::MethodCFMlpANN_Utils::Fdecroi( Int_t *i__ )
    return ret_val;
 }
 
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/, 
                                           Double_t * /*yyy*/, char * /*det*/, Int_t  /*det_len*/ )
@@ -778,7 +779,7 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
    if (*ilearn == 1) {
       // AH: removed output 
    }
-   i__1 = neur_1.neuron[fParam_1.layerm - 1];
+   i__1 = fNeur_1.neuron[fParam_1.layerm - 1];
    for (i__ = 1; i__ <= i__1; ++i__) {
       nok[i__ - 1] = 0;
       nko[i__ - 1] = 0;
@@ -788,16 +789,17 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
    i__1 = fParam_1.nevl;
    for (i__ = 1; i__ <= i__1; ++i__) {
       En_avant(&i__);
-      i__2 = neur_1.neuron[fParam_1.layerm - 1];
+      i__2 = fNeur_1.neuron[fParam_1.layerm - 1];
       for (j = 1; j <= i__2; ++j) {
          xpaw = (Float_t) y_ref(fParam_1.layerm, j);
          if (fVarn_1.nclass[i__ - 1] == j) {
             ++nok[j - 1];
             xmok[j - 1] += y_ref(fParam_1.layerm, j);
-         } else {
+         } 
+         else {
             ++nko[j - 1];
             xmko[j - 1] += y_ref(fParam_1.layerm, j);
-            jjj = j + neur_1.neuron[fParam_1.layerm - 1];
+            jjj = j + fNeur_1.neuron[fParam_1.layerm - 1];
          }
          if (j <= 9) {
             vbn[j - 1] = xpaw;
@@ -805,13 +807,13 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
       }
       vbn[9] = (Float_t) fVarn_1.nclass[i__ - 1];
    }
-   i__1 = neur_1.neuron[fParam_1.layerm - 1];
+   i__1 = fNeur_1.neuron[fParam_1.layerm - 1];
    for (j = 1; j <= i__1; ++j) {
       xmok[j - 1] /= (Double_t) nok[j - 1];
       xmko[j - 1] /= (Double_t) nko[j - 1];
-      neur_1.cut[j - 1] = (xmok[j - 1] + xmko[j - 1]) / 2.;
+      fNeur_1.cut[j - 1] = (xmok[j - 1] + xmko[j - 1]) / 2.;
    }
-   ix = neur_1.neuron[fParam_1.layerm - 1];
+   ix = fNeur_1.neuron[fParam_1.layerm - 1];
    i__1 = ix;
 }
 
@@ -870,7 +872,7 @@ void TMVA::MethodCFMlpANN_Utils::Foncf( Int_t *i__, Double_t *u, Double_t *f )
 
 #undef w_ref
 
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
 
 void TMVA::MethodCFMlpANN_Utils::Cout2( Int_t * /*i1*/, Double_t *yyy )
 {
@@ -885,15 +887,16 @@ void TMVA::MethodCFMlpANN_Utils::Cout2( Int_t * /*i1*/, Double_t *yyy )
    i__1 = fParam_1.nevt;
    for (i__ = 1; i__ <= i__1; ++i__) {
       En_avant2(&i__);
-      i__2 = neur_1.neuron[fParam_1.layerm - 1];
+      i__2 = fNeur_1.neuron[fParam_1.layerm - 1];
       for (j = 1; j <= i__2; ++j) {
          if (fVarn_1.mclass[i__ - 1] == j) {
-            neur_1.o[j - 1] = 1.;
-         } else {
-            neur_1.o[j - 1] = -1.;
+            fNeur_1.o[j - 1] = 1.;
+         } 
+         else {
+            fNeur_1.o[j - 1] = -1.;
          }
          /* Computing 2nd power */
-         d__1 = y_ref(fParam_1.layerm, j) - neur_1.o[j - 1];
+         d__1 = y_ref(fParam_1.layerm, j) - fNeur_1.o[j - 1];
          c__ += fDel_1.coef[j - 1] * (d__1 * d__1);
       }
    }
@@ -945,7 +948,8 @@ void TMVA::MethodCFMlpANN_Utils::Lecev2( Int_t *ktest, Double_t *tout2, Double_t
          if (fVarn_1.xmax[l - 1] == (Float_t)0. && fVarn_1.xmin[l - 1] == (
                                                                            Float_t)0.) {
             xx_ref(i__, l) = (Float_t)0.;
-         } else {
+         } 
+         else {
             xx_ref(i__, l) = xx_ref(i__, l) - (fVarn_1.xmax[l - 1] + 
                                                fVarn_1.xmin[l - 1]) / 2.;
             xx_ref(i__, l) = xx_ref(i__, l) / ((fVarn_1.xmax[l - 1] - 
@@ -957,10 +961,10 @@ void TMVA::MethodCFMlpANN_Utils::Lecev2( Int_t *ktest, Double_t *tout2, Double_t
 
 #undef xx_ref
 
-#define w_ref(a_1,a_2,a_3) neur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
-#define x_ref(a_1,a_2) neur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
-#define y_ref(a_1,a_2) neur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
-#define ww_ref(a_1,a_2) neur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
+#define w_ref(a_1,a_2,a_3) fNeur_1.w[((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187]
+#define x_ref(a_1,a_2) fNeur_1.x[(a_2)*max_nLayers_ + a_1 - 7]
+#define y_ref(a_1,a_2) fNeur_1.y[(a_2)*max_nLayers_ + a_1 - 7]
+#define ww_ref(a_1,a_2) fNeur_1.ww[(a_2)*max_nLayers_ + a_1 - 7]
 #define xx_ref(a_1,a_2) fVarn3_1(a_1,a_2)
 
 void TMVA::MethodCFMlpANN_Utils::En_avant2( Int_t *ievent )
@@ -972,16 +976,16 @@ void TMVA::MethodCFMlpANN_Utils::En_avant2( Int_t *ievent )
    Int_t i__, j;
    Int_t layer;
 
-   i__1 = neur_1.neuron[0];
+   i__1 = fNeur_1.neuron[0];
    for (i__ = 1; i__ <= i__1; ++i__) {
       y_ref(1, i__) = xx_ref(*ievent, i__);
    }
    i__1 = fParam_1.layerm - 1;
    for (layer = 1; layer <= i__1; ++layer) {
-      i__2 = neur_1.neuron[layer];
+      i__2 = fNeur_1.neuron[layer];
       for (j = 1; j <= i__2; ++j) {
          x_ref(layer + 1, j) = 0.;
-         i__3 = neur_1.neuron[layer - 1];
+         i__3 = fNeur_1.neuron[layer - 1];
          for (i__ = 1; i__ <= i__3; ++i__) {
             x_ref(layer + 1, j) = x_ref(layer + 1, j) + y_ref(layer, i__) 
                * w_ref(layer + 1, j, i__);

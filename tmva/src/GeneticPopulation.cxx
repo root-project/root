@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.12 2007/04/19 06:53:01 brun Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,10 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -52,17 +50,20 @@ ClassImp(TMVA::GeneticPopulation)
    // create a randomGenerator for this population and set a seed
    // create the genePools
    //
-   fRandomGenerator = new TRandom3(0); //please check
-   // gSystem->Sleep(2);
-   // fRandomGenerator->SetSeed( (long)gSystem->Now() );
-   // seed of random-generator to machine clock
-   // --> if called twice within a second, the generated numbers will be the same.
+   fRandomGenerator = new TRandom3( 100 ); //please check
 
    fRandomGenerator->Uniform(0.,1.);
    fGenePool    = new multimap<Double_t, TMVA::GeneticGenes>();
    fNewGenePool = new multimap<Double_t, TMVA::GeneticGenes>();
 
    fCounterFitness = 0;
+}
+
+//_______________________________________________________________________
+void TMVA::GeneticPopulation::SetRandomSeed( UInt_t seed )
+{
+   delete fRandomGenerator;
+   fRandomGenerator = new TRandom3( seed );
 }
 
 //_______________________________________________________________________
@@ -108,6 +109,22 @@ void TMVA::GeneticPopulation::AddPopulation( TMVA::GeneticPopulation *strangers 
 }
 
 //_______________________________________________________________________
+void TMVA::GeneticPopulation::AddPopulation( TMVA::GeneticPopulation& strangers )
+{
+   // allows to connect two populations (using the same number of coefficients
+   // with the same ranges) 
+   // this allows to calculate several populations on the same phase-space
+   // or on different parts of the same phase-space and combine them afterwards
+   // this improves the global outcome.
+   //
+   multimap<Double_t, TMVA::GeneticGenes >::iterator it;
+   for (it = strangers.fGenePool->begin(); it != strangers.fGenePool->end(); it++ ) {
+      GiveHint( it->second.GetFactors(), it->first );
+   }
+}
+
+
+//_______________________________________________________________________
 void TMVA::GeneticPopulation::TrimPopulation( )
 {
    // after adding another population or givingHint, the true size of the population
@@ -121,7 +138,8 @@ void TMVA::GeneticPopulation::TrimPopulation( )
 }
 
 //_______________________________________________________________________
-void TMVA::GeneticPopulation::NextGeneration(){
+void TMVA::GeneticPopulation::NextGeneration()
+{
    // Replace the old gene pool with a new one
    fGenePool->swap( (*fNewGenePool) );
    fNewGenePool->clear();
@@ -145,11 +163,10 @@ void TMVA::GeneticPopulation::MakeChildren()
          it2 = fGenePool->begin();
          for (Int_t i=0; i<pos; i++) it2++;
          fNewGenePool->insert( entry( 0, MakeSex( it->second, it2->second ) ) );
-      } else continue;
+      } 
+      else continue;
       n++;
    }
-   //   fGenePool->swap( (*fNewGenePool) );
-   //   fNewGenePool->clear();
 }
 
 //_______________________________________________________________________
@@ -193,9 +210,10 @@ void TMVA::GeneticPopulation::MakeMutants( Double_t probability, Bool_t near,
    int n=0;
    for (it = fGenePool->begin(); it != fGenePool->end(); it++) {
       if (n< (fPopulationSize/2)) {
-         fNewGenePool->insert( entry(0, GeneticPopulation::Mutate(  it->second, probability, near, spread, mirror ) ) );
-         fNewGenePool->insert( entry(1, GeneticPopulation::Mutate(  it->second, probability, near, spread, mirror ) ) );
-      } else continue;
+         fNewGenePool->insert( entry(0, GeneticPopulation::Mutate( it->second, probability, near, spread, mirror ) ) );
+         fNewGenePool->insert( entry(1, GeneticPopulation::Mutate( it->second, probability, near, spread, mirror ) ) );
+      } 
+      else continue;
       n++;
    }
 }
@@ -214,7 +232,8 @@ void TMVA::GeneticPopulation::MakeCopies( int number )
    for (it = fGenePool->begin(); it != fGenePool->end(); it++) {
       if (n< number) {
          fNewGenePool->insert( entry(0, it->second) );
-      } else continue;
+      } 
+      else continue;
       n++;
    }
 }
@@ -498,5 +517,5 @@ TMVA::GeneticPopulation::~GeneticPopulation()
    if (fNewGenePool != NULL)     delete fNewGenePool;
 
    std::vector<GeneticRange*>::iterator it = fRanges.begin();
-   for(;it!=fRanges.end(); it++) delete *it;
+   for (;it!=fRanges.end(); it++) delete *it;
 }

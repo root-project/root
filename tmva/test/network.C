@@ -13,13 +13,27 @@ void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TDirectory * dir = (TDirectory*)gDirectory->Get("Method_MLP");
-   if (dir==0) {
+   TKey * mkey = TMVAGlob::FindMethod("MLP"); //(TDirectory*)gDirectory->Get("Method_MLP");
+   if (mkey==0) {
       cout << "Could not locate directory MLP in file " << fin << endl;
       return;
    }
+   TDirectory *dir = (TDirectory *)mkey->ReadObj();
    dir->cd();  
-   draw_network(dir);
+   TList titles;
+   UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
+   if (ni==0) {
+      cout << "No titles found for Method_MLP" << endl;
+      return;
+   }
+   TIter nextTitle(&titles);
+   TKey *titkey;
+   TDirectory *titDir;
+   while ((titkey = TMVAGlob::NextKey(nextTitle,"TDirectory"))) {
+      titDir = (TDirectory *)titkey->ReadObj();
+      cout << "Drawing title: " << titDir->GetName() << endl;
+      draw_network(titDir);
+   }
 }
 
 void draw_network(TDirectory* d)
@@ -27,6 +41,9 @@ void draw_network(TDirectory* d)
    Bool_t __PRINT_LOGO__ = kTRUE;
 
    // create canvas
+   TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
+   TMVAStyle->SetCanvasColor(37 + 100);
+
    TCanvas* c = new TCanvas( "c", "Neural Network Layout", 100, 0, 1000, 650 );
 
    TIter next = d->GetListOfKeys();

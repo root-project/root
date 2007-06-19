@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -53,5 +53,6 @@ Double_t TMVA::SimulatedAnnealingCuts::MinimizeFunction( const std::vector<Doubl
 {
    // minimize function interface for Simulated Annealing fitter for cut optimisation
 
-   return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
+   //return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
+   return 0;
 }

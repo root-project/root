@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: RuleCut.cxx,v 1.10 2007/06/01 15:52:00 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -14,7 +14,7 @@
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      Iowa State U.                                                             *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -29,10 +29,9 @@
 #include "TMVA/DecisionTree.h"
 
 //_______________________________________________________________________
-TMVA::RuleCut::RuleCut(  const std::vector< const TMVA::Node * > & nodes )
+TMVA::RuleCut::RuleCut(  const std::vector<const Node*> & nodes )
    : fCutNeve(0),
      fPurity(0),
-     fNcuts(0),
      fLogger("RuleFit")
 {
    // main constructor
@@ -43,14 +42,13 @@ TMVA::RuleCut::RuleCut(  const std::vector< const TMVA::Node * > & nodes )
 TMVA::RuleCut::RuleCut()
    : fCutNeve(0),
      fPurity(0),
-     fNcuts(0),
      fLogger("RuleFit")
 {
    // empty constructor
 }
 
 //_______________________________________________________________________
-void TMVA::RuleCut::MakeCuts( const std::vector< const TMVA::Node * > & nodes )
+void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
 {
    // Construct the cuts from the given array of nodes
 
@@ -62,8 +60,8 @@ void TMVA::RuleCut::MakeCuts( const std::vector< const TMVA::Node * > & nodes )
    }
 
    // Set number of events and S/S+B in last node
-   fCutNeve = dynamic_cast<const TMVA::DecisionTreeNode*>(nodes.back())->GetNEvents();
-   fPurity = dynamic_cast<const TMVA::DecisionTreeNode*>(nodes.back())->GetPurity();
+   fCutNeve = dynamic_cast<const DecisionTreeNode*>(nodes.back())->GetNEvents();
+   fPurity  = dynamic_cast<const DecisionTreeNode*>(nodes.back())->GetPurity();
 
    // some local typedefs
    typedef std::pair<Double_t,Int_t> CutDir_t; // first is cut value, second is direction
@@ -82,11 +80,11 @@ void TMVA::RuleCut::MakeCuts( const std::vector< const TMVA::Node * > & nodes )
    Int_t    sel;
    Double_t val;
    Int_t    dir;
-   const TMVA::Node *nextNode;
+   const Node *nextNode;
    for ( UInt_t i=0; i<nnodes-1; i++) {
       nextNode = nodes[i+1];
-      sel = dynamic_cast<const TMVA::DecisionTreeNode*>(nodes[i])->GetSelector();
-      val = dynamic_cast<const TMVA::DecisionTreeNode*>(nodes[i])->GetCutValue();
+      sel = dynamic_cast<const DecisionTreeNode*>(nodes[i])->GetSelector();
+      val = dynamic_cast<const DecisionTreeNode*>(nodes[i])->GetCutValue();
       if (nodes[i]->GetRight() == nextNode) { // val>cut
          dir = 1;
       } else if (nodes[i]->GetLeft() == nextNode) { // val<cut
@@ -136,9 +134,19 @@ void TMVA::RuleCut::MakeCuts( const std::vector< const TMVA::Node * > & nodes )
       }
       prevSel = sel;
    }
-   fNcuts = fSelector.size();
 }
 
+//_______________________________________________________________________
+UInt_t  TMVA::RuleCut::GetNcuts() const
+{
+   // get number of cuts
+   UInt_t rval=0;
+   for (UInt_t i=0; i<fSelector.size(); i++) {
+      if (fCutDoMin[i]) rval += 1;
+      if (fCutDoMax[i]) rval += 1;
+   }
+   return rval;
+}
 //_______________________________________________________________________
 Bool_t TMVA::RuleCut::GetCutRange(Int_t sel,Double_t &rmin, Double_t &rmax, Bool_t &dormin, Bool_t &dormax) const
 {
@@ -151,7 +159,7 @@ Bool_t TMVA::RuleCut::GetCutRange(Int_t sel,Double_t &rmin, Double_t &rmax, Bool
    while (!done) {
       foundIt = (Int_t(fSelector[ind])==sel);
       ind++;
-      done = (foundIt || (ind==fNcuts));
+      done = (foundIt || (ind==fSelector.size()));
    }
    if (!foundIt) return kFALSE;
    rmin = fCutMin[ind-1];

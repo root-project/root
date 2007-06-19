@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: KDEKernel.cxx,v 1.16 2007/06/15 23:23:04 andreas.hoecker Exp $ 
 // Author: Asen Christov
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Asen Christov   <christov@physik.uni-freiburg.de> - Freiburg U., Germany  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany,                                                * 
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      Freiburg U., Germany                                                      * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -51,7 +51,7 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
      fFineFactor ( FineFactor ),
      fKernel_integ ( 0 ),
      fKDEborder ( kborder ),
-     fLogger( this )
+     fLogger( "KDEKernel" )
 {
    // constructor
    // sanity check
@@ -114,7 +114,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // for nonadaptive KDE this is the only = final thing to do
       // for adaptive KDE this is going to be used in the first (hidden) iteration
       fKernel_integ = new TF1("GaussIntegral",GaussIntegral,fLowerEdge,fUpperEdge,4); 
-      fSigma = ( TMath::Sqrt(2)
+      fSigma = ( TMath::Sqrt(2.0)
                  *TMath::Power(4./3., 0.2)
                  *fHist->GetRMS()
                  *TMath::Power(fHist->Integral(), -0.2) ); 
@@ -137,9 +137,9 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       Float_t histoLowEdge=fHist->GetBinLowEdge(1);
       Float_t histoUpperEdge=fHist->GetBinLowEdge(fHist->GetNbinsX()+1);
 
-      for(Int_t i=1;i<fHist->GetNbinsX();i++) {
+      for (Int_t i=1;i<fHist->GetNbinsX();i++) {
          // loop over the bins of the original histo
-         for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
+         for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
             // loop over the bins of the PDF histo and fill it
             fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
                                     this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
@@ -153,7 +153,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
          // and the last (the higher) 1/5 of the histo to the right.
          // the middle part of the histo, which is not mirrored, has no influence on the border effects anyway ...
             if (i < fHist->GetNbinsX()/5  ) {  // the first (the lowwer) 1/5 of the histo
-               for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
+               for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
                // loop over the bins of the PDF histo and fill it
                fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
                                        this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
@@ -164,7 +164,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
                }
             }
             if (i > 4*fHist->GetNbinsX()/5) { // the last (the higher) 1/5 of the histo
-               for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
+               for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
                // loop over the bins of the PDF histo and fill it
                fFirstIterHist->AddBinContent(j,fHist->GetBinContent(i)*
                                        this->GetBinKernelIntegral(fFirstIterHist->GetBinLowEdge(j),
@@ -181,7 +181,8 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
 
       // do "function like" integration = sum of (bin_width*bin_content):
       Float_t integ=0;
-      for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) integ+=fFirstIterHist->GetBinContent(j)*fFirstIterHist->GetBinWidth(j);
+      for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) 
+         integ+=fFirstIterHist->GetBinContent(j)*fFirstIterHist->GetBinWidth(j);
       fFirstIterHist->Scale(1./integ);
       
       fHiddenIteration=false;
@@ -190,9 +191,9 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       // next: calculate the Sigmas (Widths) for the second (adaptive) iteration 
       // based on the output of the first iteration 
       // these Sigmas will be stored in histo called fSigmaHist
-      for(Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
+      for (Int_t j=1;j<fFirstIterHist->GetNbinsX();j++) {
          // loop over the bins of the PDF histo and fill fSigmaHist
-         if (fSigma*TMath::Sqrt(1./fFirstIterHist->GetBinContent(j)) <= 0 ) {
+         if (fSigma*TMath::Sqrt(1.0/fFirstIterHist->GetBinContent(j)) <= 0 ) {
             fLogger << kFATAL << "<SetKernelType> KDE sigma has invalid value ( <=0 ) !" << Endl;
          }
          
@@ -215,7 +216,7 @@ Float_t TMVA::KDEKernel::GetBinKernelIntegral( Float_t lowr, Float_t highr, Floa
       fKernel_integ->SetParameters(mean,fSigmaHist->GetBinContent(binnum)); // adaptive KDE
 
    if ( fKDEborder == 2 ) {  // renormalization of the kernel function
-      Float_t renormFactor=1./fKernel_integ->Eval(fLowerEdge,fUpperEdge);
+      Float_t renormFactor=1.0/fKernel_integ->Eval(fLowerEdge,fUpperEdge);
       return (renormFactor*fKernel_integ->Eval(lowr,highr));
    }
                                    

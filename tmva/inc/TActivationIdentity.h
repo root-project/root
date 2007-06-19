@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationIdentity.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TActivationIdentity.h,v 1.7 2007/04/19 06:53:01 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -41,34 +41,37 @@
 
 namespace TMVA {
   
-  class TActivationIdentity : public TActivation {
-    
-  public:
+   class TActivationIdentity : public TActivation {
+      
+   public:
 
-    TActivationIdentity() {}
-    ~TActivationIdentity() {}
+      TActivationIdentity() {}
+      ~TActivationIdentity() {}
+     
+      // evaluate the activation function
+      virtual Double_t Eval(Double_t arg) { return arg; } // f(x) = x
 
-    // evaluate the activation function
-    virtual Double_t Eval(Double_t arg) { return arg; } // f(x) = x
+      // evaluate the derivative of the activation function
+      virtual Double_t EvalDerivative(Double_t arg) { 
+         if (arg); 
+         return 1; // f'(x) = 1
+      } 
 
-    // evaluate the derivative of the activation function
-    virtual Double_t EvalDerivative(Double_t arg) { 
-       if (arg); 
-       return 1; // f'(x) = 1
-    } 
+      // minimum of the range of the activation function
+      virtual Double_t GetMin() { return 0; } // these should never be called
 
-    // minimum of the range of the activation function
-    virtual Double_t GetMin() { return 0; } // these should never be called
+      // maximum of the range of the activation function
+      virtual Double_t GetMax() { return 1; } // these should never be called
 
-    // maximum of the range of the activation function
-    virtual Double_t GetMax() { return 1; } // these should never be called
+      // expression for activation function
+      virtual TString GetExpression() { return "x\t1"; }
 
-    // expression for activation function
-    virtual TString GetExpression() { return "x\t1"; }
+      // writer of function code
+      virtual void MakeFunction(std::ostream& fout, const TString& fncName);
 
-  private:
+   private:
 
-    ClassDef(TActivationIdentity,0) // Identity activation function for TNeuron
+      ClassDef(TActivationIdentity,0) // Identity activation function for TNeuron
    };
 
 } // namespace TMVA

@@ -7,7 +7,6 @@
 // methods for the various input variables used in TMVA (e.g. running
 // TMVAnalysis.C).  Signal and Background are plotted separately
 
-
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
@@ -18,28 +17,27 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   // cehck if exists
-   TString dirs[] = { "Method_Likelihood", "Method_LikelihoodD", "Method_LikelihoodPCA", 
-                      "Method_LikelihoodNon", "Method_LikelihoodAda", "Method_LikelihoodKDE" }
-   TDirectory* dir = 0;
-   for (Int_t i=0; i<6; i++) {
-      dir = (TDirectory*)gDirectory->Get( dirs[i] );
-      if (dir) break;
-   }
-
-   if (dir==0) {
-      cout << "Could not locate directory 'Method_LikelihoodXYZ' in file " << fin << endl;
+   // get all titles of the method likelihood
+   TList titles;
+   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_Likelihood",titles);
+   if (ninst==0) {
+      cout << "Could not locate directory 'Method_Likelihood' in file " << fin << endl;
       return;
    }
-
-   dir->cd();  
-   TDirectory *current_sourcedir = gDirectory;
-   Int_t color=1;
-   TIter next(current_sourcedir->GetListOfKeys());
+   // loop over all titles
+   TIter keyIter(&titles);
+   TDirectory *lhdir;
    TKey *key;
+   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      lhdir = (TDirectory *)key->ReadObj();
+      cout << "Plotting title: " << lhdir->GetName() << endl;
+      likelihoodrefs( lhdir );
+   }
+}
 
+void likelihoodrefs( TDirectory *lhdir ) {
    Bool_t newCanvas = kTRUE;
-
+   
    const UInt_t maxCanvas = 200;
    TCanvas** c = new TCanvas*[maxCanvas];
    Int_t width  = 670;
@@ -47,12 +45,12 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
    // avoid duplicated printing
    std::vector<std::string> hasBeenUsed;
-  
+   const TString titName = lhdir->GetName();
    UInt_t ic = -1;   
 
-   while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
+   TIter next(lhdir->GetListOfKeys());
+   TKey *key;
+   while ((key = TMVAGlob::NextKey(next,"TH1"))) { // loop over all TH1
       TH1 *h = (TH1*)key->ReadObj();
       TH1F *b( 0 );
       TString hname( h->GetName() );
@@ -69,21 +67,21 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
             if (newCanvas) {
                char cn[20];
-               sprintf( cn, "canvas%d", ic+1 );
+               sprintf( cn, "cv%d_%s", ic+1, titName.Data() );
                ++ic;
                TString n = hname;	  
-               c[ic] = new TCanvas( cn, Form( "Likelihood reference for variable: %s", 
-                                              (n.ReplaceAll("_sig","")).Data() ), 
+               c[ic] = new TCanvas( cn, Form( "%s reference for variable: %s", 
+                                              titName.Data(),(n.ReplaceAll("_sig","")).Data() ), 
                                     ic*50+50, ic*20, width, height ); 
                c[ic]->Divide(2,1);
                newCanvas = kFALSE;
             }      
 
             // signal
-            color = 4; 
+            Int_t color = 4; 
             TPad * cPad = (TPad*)c[ic]->cd(1);
             TString plotname = hname;
-            h->Sumw2();
+            //            h->Sumw2();
             h->SetMaximum(h->GetMaximum()*1.3);
             h->SetMinimum( 0 );
             h->SetMarkerColor(color);
@@ -94,7 +92,7 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             color++;
             h->Draw("e1");
             Double_t hSscale = 1.0/(h->GetSumOfWeights()*h->GetBinWidth(1));
-            cout << "compare: " << h->GetSumOfWeights() << " " << h->GetEntries() << endl;
+            //            cout << "compare: " << h->GetSumOfWeights() << " " << h->GetEntries() << endl;
             TLegend *legS= new TLegend( cPad->GetLeftMargin(), 
                                         1-cPad->GetTopMargin()-.14, 
                                         cPad->GetLeftMargin()+.77, 
@@ -104,7 +102,7 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
             // background
             TString bname( hname );	
-            b = (TH1F*)gDirectory->Get( bname.ReplaceAll("_sig","_bgd") );
+            b = (TH1F*)lhdir->Get( bname.ReplaceAll("_sig","_bgd") );
             cPad = (TPad*)c[ic]->cd(2);
             color = 2;
             b->SetMaximum(b->GetMaximum()*1.3);
@@ -133,9 +131,9 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             b = 0;
             for (int i=0; i<= 5; i++) {
                TString hspline = hname + Form( "_smooth_smoothed_hist_from_spline%i", i );
-               h = (TH1F*)gDirectory->Get( hspline );
+               h = (TH1F*)lhdir->Get( hspline );
                if (h) {
-                  b = (TH1F*)gDirectory->Get( hspline.ReplaceAll("_sig","_bgd") );
+                  b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
                   break;
                }
             }
@@ -143,10 +141,10 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             // check for KDE
             if (h == 0 && b == 0) {
                TString hspline = hname + Form( "_KDE_smoothed_hist_from_KDE", i );
-               h = (TH1F*)gDirectory->Get( hspline );
+               h = (TH1F*)lhdir->Get( hspline );
                if (h) {
                   cout << "found KDE histogram: " << h->GetTitle() << endl;
-                  b = (TH1F*)gDirectory->Get( hspline.ReplaceAll("_sig","_bgd") );
+                  b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
                }
             }
                
@@ -184,7 +182,7 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             c[ic]->Update();
 
             // write to file
-            TString fname = Form( "plots/likelihoodrefs_c%i", ic+1 );
+            TString fname = Form( "plots/%s_refs_c%i", titName.Data(), ic+1 );
             TMVAGlob::imgconv( c[ic], fname );
             //	c[ic]->Update();
 

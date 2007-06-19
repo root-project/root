@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: GeneticGenes.cxx,v 1.12 2007/04/19 06:53:01 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,10 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

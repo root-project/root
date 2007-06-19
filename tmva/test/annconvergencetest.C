@@ -8,23 +8,39 @@
 
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
-void annconvergencetest( TString fin = "TMVA.root", bool useTMVAStyle=kTRUE )
+void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
-
+  
    // checks if file with name "fin" is already open, and if not opens one
-   TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TDirectory * dir = (TDirectory*)gDirectory->Get("Method_MLP");
-   if (dir==0) {
-      cout << "Could not locate directory MLP in file " << fin << endl;
+   // get all titles of the method likelihood
+   TList titles;
+   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_MLP",titles);
+   if (ninst==0) {
+      cout << "Could not locate directory 'Method_MLP' in file " << fin << endl;
       return;
    }
-   dir->cd();  
+   // loop over all titles
+   TIter keyIter(&titles);
+   TDirectory *lhdir;
+   TKey *key;
+   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      lhdir = (TDirectory *)key->ReadObj();
+      cout << "Plotting title: " << lhdir->GetName() << endl;
+      annconvergencetest( lhdir );
+   }
+}
 
+void annconvergencetest( TDirectory *lhdir )
+{
    TCanvas* c = new TCanvas( "MLPConvergenceTest", "MLP Convergence Test", 150, 0, 600, 580*0.8 ); 
   
+   TH1* estimatorHistTrain = (TH1*)lhdir->Get( "estimatorHistTrain" );
+   TH1* estimatorHistTest  = (TH1*)lhdir->Get( "estimatorHistTest"  );
+
    Double_t m1  = estimatorHistTrain->GetMaximum();
    Double_t m2  = estimatorHistTest ->GetMaximum();
    Double_t max = TMath::Max( m1, m2 );

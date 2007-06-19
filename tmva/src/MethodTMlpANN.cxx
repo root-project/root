@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.12 2007/01/30 11:24:16 brun Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -76,16 +76,15 @@ ClassImp(TMVA::MethodTMlpANN)
 //_______________________________________________________________________
 TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSet& theData, 
                                     TString theOption, TDirectory* theTargetDir)
-   : TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir  )
-   , fMLP(0)
+   : TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir  ),
+     fMLP(0)
 {
    // standard constructor 
    InitTMlpANN();
    
+   // interpretation of configuration option string
    DeclareOptions();
-
    ParseOptions();
-
    ProcessOptions();  
 }
 
@@ -93,8 +92,8 @@ TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSe
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSet& theData, 
                                     TString theWeightFile,  
                                     TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
-   , fMLP(0)
+   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ),
+     fMLP(0)
 {
    // constructor to calculate the TMlpANN-MVA from previously generatad 
    // weigths (weight file)
@@ -116,7 +115,7 @@ void TMVA::MethodTMlpANN::InitTMlpANN( void )
 TMVA::MethodTMlpANN::~MethodTMlpANN( void )
 {
    // destructor
-   if(fMLP!=0) delete fMLP;
+   if (fMLP != 0) delete fMLP;
 }
 
 //_______________________________________________________________________
@@ -126,17 +125,18 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
 
    fHiddenLayer = ":";
 
-   while(layerSpec.Length()>0) {
+   while (layerSpec.Length()>0) {
       TString sToAdd="";
-      if(layerSpec.First(',')<0) {
+      if (layerSpec.First(',')<0) {
          sToAdd = layerSpec;
          layerSpec = "";
-      } else {
+      } 
+      else {
          sToAdd = layerSpec(0,layerSpec.First(','));
          layerSpec = layerSpec(layerSpec.First(',')+1,layerSpec.Length());
       }
       int nNodes = 0;
-      if(sToAdd.BeginsWith("N")) { sToAdd.Remove(0,1); nNodes = GetNvar(); }
+      if (sToAdd.BeginsWith("N")) { sToAdd.Remove(0,1); nNodes = GetNvar(); }
       nNodes += atoi(sToAdd);
       fHiddenLayer = Form( "%s%i:", (const char*)fHiddenLayer, nNodes );
    }
@@ -145,7 +145,7 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
    // set input vars
    vector<TString>::iterator itrVar    = (*fInputVars).begin();
    vector<TString>::iterator itrVarEnd = (*fInputVars).end();
-   fMLPBuildOptions="";
+   fMLPBuildOptions = "";
    for (; itrVar != itrVarEnd; itrVar++) {
       if (EnforceNormalization__) fMLPBuildOptions += "@";
       TString myVar = *itrVar; ;
@@ -175,8 +175,8 @@ void TMVA::MethodTMlpANN::DeclareOptions()
    //   * there is always a single node in the output layer 
    //   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the 
    //   layers 1,2,3,4, repectively 
-   DeclareOptionRef(fNcycles=3000,"NCycles","Number of training cycles");
-   DeclareOptionRef(fLayerSpec="N-1,N-2","HiddenLayers","Specification of the hidden layers");
+   DeclareOptionRef( fNcycles  =3000,      "NCycles",      "Number of training cycles" );
+   DeclareOptionRef( fLayerSpec="N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture" );
 }
 
 //_______________________________________________________________________
@@ -197,7 +197,7 @@ void TMVA::MethodTMlpANN::ProcessOptions()
 
    gROOT->cd();
    TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
-   for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
+   for (UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
       TString vn = Data().GetInternalVarName(ivar);
       dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
    }
@@ -212,8 +212,8 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue()
 {
    // calculate the value of the neural net for the current event 
    static Double_t* d = new Double_t[Data().GetNVariables()];
-   for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
-      d[ivar] = (Double_t)GetEvent().GetVal(ivar);
+   for (UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
+      d[ivar] = (Double_t)GetEventVal(ivar);
    }
    Double_t mvaVal = fMLP->Evaluate(0,d);
    return mvaVal;
@@ -251,7 +251,7 @@ void TMVA::MethodTMlpANN::Train( void )
    testList  += (Int_t)Data().GetNEvtTrain();
 
    // create NN 
-   if(fMLP!=0) delete fMLP;
+   if (fMLP!=0) delete fMLP;
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), 
                                      localTrainingTree,
                                      trainList,
@@ -303,3 +303,31 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream & istr )
    // how?
 }
 
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+}

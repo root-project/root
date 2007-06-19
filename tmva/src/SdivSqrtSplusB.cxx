@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $   
+// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.14 2007/04/23 06:51:15 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      Heidelberg U., Germany,                                                   * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      Heidelberg U., Germany                                                    * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *

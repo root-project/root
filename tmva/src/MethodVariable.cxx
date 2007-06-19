@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodVariable.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodVariable.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -86,7 +86,7 @@ void TMVA::MethodVariable::Train( void )
 Double_t TMVA::MethodVariable::GetMvaValue()
 {
    // "MVA" value is variable value
-   return GetEvent().GetVal(0);
+   return GetEventVal(0);
 }
 
 //_______________________________________________________________________
@@ -101,4 +101,33 @@ void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
 {
    // Read configuration from input stream
    if (istr.eof());
+}
+
+//_______________________________________________________________________
+void TMVA::MethodVariable::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodVariable::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
 }

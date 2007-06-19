@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.11 2006/11/23 17:43:38 rdm Exp $
+// @(#)root/tmva $Id: MethodRuleFit.h,v 1.12 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,8 +17,8 @@
  *      Kai Voss           <Kai.Voss@cern.ch>           - U. of Victoria, Canada  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
@@ -109,47 +109,69 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking();
 
-      // get training event in a std::vector
+      Bool_t                                   UseBoost() const { return fUseBoost; }
+
+      // accessors
+      RuleFit                                 *GetRuleFitPtr() { return &fRuleFit; }
+      const RuleFit                           *GetRuleFitConstPtr() const { return &fRuleFit; }
+      TDirectory*                              GetMethodBaseDir() const     { return BaseDir(); }
       const std::vector<TMVA::Event*>         &GetTrainingEvents() const    { return fEventSample; }
       const std::vector<TMVA::DecisionTree*>  &GetForest() const            { return fForest; }
       Int_t                                    GetNTrees() const            { return fNTrees; }
-      Double_t                                 GetSampleFraction() const    { return fSampleFraction; }
-      Double_t                                 GetSubSampleFraction() const { return fSubSampleFraction; }
-      const SeparationBase                    *GetSeparationBase() const    { return fSepType; }
+      Double_t                                 GetTreeEveFrac() const       { return fTreeEveFrac; }
+      //      Double_t                                 GetSubSampleFraction() const { return fSubSampleFraction; }
+      const SeparationBase                    *GetSeparationBaseConst() const { return fSepType; }
+      SeparationBase                          *GetSeparationBase() const { return fSepType; }
+      TMVA::DecisionTree::EPruneMethod         GetPruneMethod() const       { return fPruneMethod; }
+      Double_t                                 GetPruneStrength() const     { return fPruneStrength; }
+      Double_t                                 GetMinFracNEve() const       { return fMinFracNEve; }
+      Double_t                                 GetMaxFracNEve() const       { return fMaxFracNEve; }
       Int_t                                    GetNCuts() const             { return fNCuts; }
+      //
+      Int_t                                    GetGDNPathSteps() const      { return fGDNPathSteps; }
+      Double_t                                 GetGDPathStep() const        { return fGDPathStep; }
+      Double_t                                 GetGDErrScale() const        { return fGDErrScale; }
+      Double_t                                 GetGDPathEveFrac() const     { return fGDPathEveFrac; }
+      Double_t                                 GetGDValidEveFrac() const    { return fGDValidEveFrac; }
+      //
+      Double_t                                 GetLinQuantile() const       { return fLinQuantile; }
 
-      TDirectory*      GetMethodBaseDir() const { return BaseDir(); }
+      const TString                            GetRFWorkDir() const         { return fRFWorkDir; }
+      Int_t                                    GetRFNrules() const          { return fRFNrules; }
+      Int_t                                    GetRFNendnodes() const       { return fRFNendnodes; }
 
    protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      virtual void MakeClassRuleCuts( std::ostream& ) const;
+
+      virtual void MakeClassLinear( std::ostream& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
+
       // initialize rulefit
       void InitRuleFit( void );
 
       // copy all training events into a stl::vector
       void InitEventSample( void );
 
-      // initialise monitor ntuple
+      // initialize monitor ntuple
       void InitMonitorNtuple();
 
       // build a decision tree
-      void BuildTree( DecisionTree *dt, std::vector< Event *> & el );
+      //      void BuildTree( DecisionTree *dt, std::vector< Event *> & el );
 
       // make a forest of decision trees
-      void MakeForest();
+      //      void MakeForest();
 
-      void MakeForestRnd();
+      //      void MakeForestRnd();
 
+      void TrainTMVARuleFit();
+      void TrainJFRuleFit();
       //
-      std::vector< Event *>        fEventSample;   // the complete training sample
-      std::vector<DecisionTree *>  fForest;        // the forest
-      Int_t                        fNTrees;        // number of trees in forest
-      Double_t                     fSampleFraction;// fraction of events used for traing each tree
-      Double_t                     fSubSampleFraction; // fraction of subsamples used for the fitting
-      SeparationBase              *fSepType;       // the separation used in node splitting
-      Int_t                        fNodeMinEvents; // min number of events in node - NOT USED NOW!
-      Double_t                     fMinFracNEve;   // min fraction of number events
-      Double_t                     fMaxFracNEve;   // ditto max
-      Int_t                        fNCuts;         // grid used in cut applied in node splitting
-      RuleFit                      fRuleFit;       // RuleFit instance
 
    private:
 
@@ -157,6 +179,8 @@ namespace TMVA {
       virtual void DeclareOptions();
       virtual void ProcessOptions();
 
+      RuleFit                      fRuleFit;       // RuleFit instance
+      std::vector< Event *>        fEventSample;   // the complete training sample
       Double_t                     fSignalFraction; // scalefactor for bkg events to modify initial s/b fraction in training data
 
       // ntuple
@@ -165,6 +189,7 @@ namespace TMVA {
       Double_t                     fNTCoefficient;  // ntuple: rule coefficient
       Double_t                     fNTSupport;      // ntuple: rule support
       Int_t                        fNTNcuts;        // ntuple: rule number of cuts
+      Int_t                        fNTNvars;        // ntuple: rule number of vars
       Double_t                     fNTPtag;         // ntuple: rule P(tag)
       Double_t                     fNTPss;          // ntuple: rule P(tag s, true s)
       Double_t                     fNTPsb;          // ntuple: rule P(tag s, true b)
@@ -173,22 +198,37 @@ namespace TMVA {
       Double_t                     fNTSSB;          // ntuple: rule S/(S+B)
       Int_t                        fNTType;         // ntuple: rule type (+1->signal, -1->bkg)
 
-
       // options
-      Double_t                     fGDTau;          // gradient directed path: def threshhold fraction [0..1]
-      Double_t                     fGDTauMin;       // gradient directed path: min threshhold fraction [0..1]
-      Double_t                     fGDTauMax;       // gradient directed path: max threshhold fraction [0..1]
-      UInt_t                       fGDNTau;         // gradient directed path: N(tau)
-      UInt_t                       fGDTauScan;      // gradient directed path: number of points to scan
-      Double_t                     fGDPathStep;     // gradient directed path: step size in path
-      Int_t                        fGDNPathSteps;   // gradient directed path: number of steps
-      Double_t                     fGDErrScale;     // gradient directed path: stop 
-      Double_t                     fMinimp;         // rule/linear: minimum importance
-      //
+      TString                      fRuleFitModuleS;// which rulefit module to use
+      Bool_t                       fUseRuleFitJF;  // if true interface with J.Friedmans RuleFit module
+      TString                      fRFWorkDir;     // working directory from Friedmans module
+      Int_t                        fRFNrules;      // max number of rules (only Friedmans module)
+      Int_t                        fRFNendnodes;   // max number of rules (only Friedmans module)
+      std::vector<DecisionTree *>  fForest;        // the forest
+      Int_t                        fNTrees;        // number of trees in forest
+      Double_t                     fTreeEveFrac;   // fraction of events used for traing each tree
+      SeparationBase              *fSepType;       // the separation used in node splitting
+      Double_t                     fMinFracNEve;   // min fraction of number events
+      Double_t                     fMaxFracNEve;   // ditto max
+      Int_t                        fNCuts;         // grid used in cut applied in node splitting
       TString                      fSepTypeS;        // forest generation: separation type - see DecisionTree
       TString                      fPruneMethodS;    // forest generation: prune method - see DecisionTree
       TMVA::DecisionTree::EPruneMethod fPruneMethod; // forest generation: method used for pruning - see DecisionTree 
       Double_t                     fPruneStrength;   // forest generation: prune strength - see DecisionTree
+      TString                      fForestTypeS;     // forest generation: how the trees are generated
+      Bool_t                       fUseBoost;        // use boosted events for forest generation
+      //
+      Double_t                     fGDPathEveFrac; //  GD path: fraction of subsamples used for the fitting
+      Double_t                     fGDValidEveFrac; // GD path: fraction of subsamples used for the fitting
+      Double_t                     fGDTau;          // GD path: def threshhold fraction [0..1]
+      Double_t                     fGDTauPrec;      // GD path: precision of estimated tau
+      Double_t                     fGDTauMin;       // GD path: min threshhold fraction [0..1]
+      Double_t                     fGDTauMax;       // GD path: max threshhold fraction [0..1]
+      UInt_t                       fGDTauScan;      // GD path: number of points to scan
+      Double_t                     fGDPathStep;     // GD path: step size in path
+      Int_t                        fGDNPathSteps;   // GD path: number of steps
+      Double_t                     fGDErrScale;     // GD path: stop 
+      Double_t                     fMinimp;         // rule/linear: minimum importance
       //
       TString                      fModelTypeS;     // rule ensemble: which model (rule,linear or both)
       Double_t                     fRuleMinDist;    // rule min distance - see RuleEnsemble

@@ -68,6 +68,11 @@ void TMVAGui( const char* fName = "TMVA.root" )
                     "Plots the probability of each classifier for the test data (macro mvas.C(...,1))",
                     buttonType );
 
+   cbar->AddButton( Form( "(%ic) Classifier Rarity Distributions", ic ),
+                    Form( ".x %s/mvas.C(\"%s\",2)", scriptpath, fName ),
+                    "Plots the rarity of each classifier for the test data (macro mvas.C(...,2))",
+                    buttonType );
+
    //    cbar->AddButton( Form( "(%i) Mu-transforms (summary)", ++ic ),
    //                     Form( ".x %s/mutransform.C(\"%s\")", scriptpath, fName ),
    //                     "Plots the mu-transformed signal and background MVAs of each method (macro mutransform.C)",

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Types.cxx,v 1.5 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,10 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,6 +31,7 @@
 
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
 
+//_______________________________________________________________________
 TMVA::Types::Types()
    : fLogger( "Types" )
 {
@@ -42,20 +42,22 @@ TMVA::Types::Types()
    fStr2type["Cuts"]            = Types::kCuts;
    fStr2type["Likelihood"]      = Types::kLikelihood;
    fStr2type["PDERS"]           = Types::kPDERS;
+   fStr2type["KNN"]             = Types::kKNN;
    fStr2type["HMatrix"]         = Types::kHMatrix;
    fStr2type["Fisher"]          = Types::kFisher;
+   fStr2type["MLP"]             = Types::kMLP;
    fStr2type["CFMlpANN"]        = Types::kCFMlpANN;
    fStr2type["TMlpANN"]         = Types::kTMlpANN;
    fStr2type["BDT"]             = Types::kBDT;
    fStr2type["RuleFit"]         = Types::kRuleFit;
-   fStr2type["RuleFitJF"]       = Types::kRuleFitJF;
    fStr2type["SVM"]             = Types::kSVM;
-   fStr2type["MLP"]             = Types::kMLP;
+   fStr2type["FDA"]             = Types::kFDA;
    fStr2type["BayesClassifier"] = Types::kBayesClassifier;
    fStr2type["Committee"]       = Types::kCommittee;
+   fStr2type["SeedDistance"]    = Types::kSeedDistance;
 }
 
-
+//_______________________________________________________________________
 TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const 
 { 
    // returns the method type (enum) for a given method (string)

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.cxx,v 1.11 2007/02/03 06:40:26 brun Exp $   
+// @(#)root/tmva $Id: Tools.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -169,11 +169,11 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
       tIdx=0;
       br2->SetAddress( & theVarD );
    } 
-   else if(leafType=="Float_t") {
+   else if (leafType=="Float_t") {
       tIdx=1;
       br2->SetAddress( & theVarF );
    } 
-   else if(leafType=="Int_t") {
+   else if (leafType=="Int_t") {
       tIdx=2;
       br2->SetAddress( & theVarI );
    } 
@@ -190,12 +190,10 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
       case 1: theVar = theVarF; break;
       case 2: theVar = theVarI; break;
       }
-      if (norm) theVar = __N__( theVar, xmin_, xmax_ );
+      if (norm) theVar = Tools::NormVariable( theVar, xmin_, xmax_ );
 
-      if(theType == 1) // this is signal
-         varVecS[++nEventsS] = theVar;
-      else  // this is background
-         varVecB[++nEventsB] = theVar;
+      if (theType == 1) varVecS[++nEventsS] = theVar; // this is signal
+      else              varVecB[++nEventsB] = theVar; // this is background
 
       if (theVar > xmax) xmax = theVar;
       if (theVar < xmin) xmin = theVar;
@@ -213,20 +211,12 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
    delete [] varVecB;
 }
 
-void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
+TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 {
    // square-root of symmetric matrix
    // of course the resulting sqrtMat is also symmetric, but it's easier to
    // treat it as a general matrix
    Int_t n = symMat->GetNrows();
-
-   // sanity check
-   if (NULL != sqrtMat) {
-      if (sqrtMat->GetNrows() != n || sqrtMat->GetNcols() != n) {
-         Logger() << kFATAL << "<GetSQRootMatrix> mismatch in matrices: "
-                  << n << " " << sqrtMat->GetNrows() << " " << sqrtMat->GetNcols() << Endl;
-      }
-   }
 
    // compute eigenvectors
    TMatrixDSymEigen* eigen = new TMatrixDSymEigen( *symMat );
@@ -258,7 +248,8 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
 
    // compute the square-root C' of covariance matrix: C = C'*C'
    for (i=0; i<n; i++) (*d)(i,i) = TMath::Sqrt((*d)(i,i));
-   if (NULL == sqrtMat) sqrtMat = new TMatrixD( n, n );
+
+   TMatrixD* sqrtMat = new TMatrixD( n, n );
    sqrtMat->Mult( (*s), (*d) );
    (*sqrtMat) *= (*si);
 
@@ -269,6 +260,8 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
    delete s;
    delete si;
    delete d;
+
+   return sqrtMat;
 }
 
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
@@ -329,14 +322,14 @@ Double_t TMVA::Tools::NormHist( TH1* theHist, Double_t norm )
    return w;
 }
 
-TList* TMVA::Tools::ParseFormatLine( TString formatString, const char * sep )
+TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
 {
    // Parse the string and cut into labels separated by ":"
    TList*   labelList = new TList();
-   while(formatString.First(sep)==0) formatString.Remove(0,1); // remove initial separators
+   while (formatString.First(sep)==0) formatString.Remove(0,1); // remove initial separators
 
-   while(formatString.Length()>0) {
-      if(formatString.First(sep)==-1) { // no more separator
+   while (formatString.Length()>0) {
+      if (formatString.First(sep) == -1) { // no more separator
          labelList->Add(new TObjString(formatString.Data()));
          formatString="";
          break;
@@ -357,7 +350,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
 {
    // parse option string for ANN methods
    // default settings (should be defined in theOption string)
-   TList*  list  = TMVA::Tools::ParseFormatLine( theOptions, ":" );
+   TList* list  = TMVA::Tools::ParseFormatLine( theOptions, ":" );
 
    // format and syntax of option string: "3000:N:N+2:N-3:6"
    //
@@ -401,7 +394,7 @@ vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar
    return nodes;
 }
 
-Bool_t TMVA::Tools::CheckSplines( TH1* theHist, TSpline* theSpline )
+Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
 {
    // check quality of splining by comparing splines and histograms in each bin
    const Double_t sanityCrit = 0.01; // relative deviation
@@ -544,21 +537,21 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
    // helper function to search for "!%^&()'<>?= " in a string
 
    Bool_t  regular = kFALSE;
-   for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
-      if (s.Contains( TMVA::Tools::__regexp__[i] )) { regular = kTRUE; break; }
+   for (Int_t i = 0; i < Tools::__regexp__.Length(); i++) 
+      if (s.Contains( Tools::__regexp__[i] )) { regular = kTRUE; break; }
 
    return regular;
 }
 
 // replace regular expressions
-TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, TString r )  
+TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString& r )  
 {
    // helper function to remove all occurences "!%^&()'<>?= " from a string
    // and replace all ::,*,/,+,- with _M_,_T_,_D_,_P_,_M_ respectively
 
    TString snew = s;
-   for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
-      snew.ReplaceAll( TMVA::Tools::__regexp__[i], r );
+   for (Int_t i = 0; i < Tools::__regexp__.Length(); i++) 
+      snew.ReplaceAll( Tools::__regexp__[i], r );
 
    snew.ReplaceAll( "::", r );
    snew.ReplaceAll( "*", "_T_" );
@@ -578,6 +571,7 @@ const TString& TMVA::Tools::Color( const TString & c )
    // human readable color strings
    static TString gClr_none         = "" ;
    static TString gClr_white        = "\033[1;37m";  // white
+   static TString gClr_black        = "\033[30m";    // black
    static TString gClr_blue         = "\033[34m";    // blue
    static TString gClr_red          = "\033[1;31m" ; // red
    static TString gClr_yellow       = "\033[1;33m";  // yellow
@@ -585,7 +579,8 @@ const TString& TMVA::Tools::Color( const TString & c )
    static TString gClr_darkgreen    = "\033[32m";    // dark green
    static TString gClr_darkyellow   = "\033[33m";    // dark yellow
                                     
-   static TString gClr_white_b      = "\033[1m"    ; // bold white
+   static TString gClr_bold         = "\033[1m"    ; // bold 
+   static TString gClr_black_b      = "\033[30m"   ; // bold black
    static TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
    static TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
                                     
@@ -597,25 +592,29 @@ const TString& TMVA::Tools::Color( const TString & c )
 
    static TString gClr_reset  = "\033[0m";     // reset
 
-   if(!TMVA::Config::Instance().UseColor()) return gClr_none;
+   if (!gConfig().UseColor()) return gClr_none;
 
-   if (c=="white")   return gClr_white; 
-   if (c=="blue")    return gClr_blue; 
-   if (c=="yellow")  return gClr_yellow; 
-   if (c=="red")     return gClr_red; 
-   if (c=="dred")    return gClr_darkred; 
-   if (c=="dgreen")  return gClr_darkgreen; 
-   if (c=="dyellow") return gClr_darkyellow; 
+   if (c == "white" )         return gClr_white; 
+   if (c == "blue"  )         return gClr_blue; 
+   if (c == "black"  )        return gClr_black; 
+   if (c == "lightblue")      return gClr_lblue_b;
+   if (c == "yellow")         return gClr_yellow; 
+   if (c == "red"   )         return gClr_red; 
+   if (c == "dred"  )         return gClr_darkred; 
+   if (c == "dgreen")         return gClr_darkgreen; 
+   if (c == "lgreenb")        return gClr_lgreen_b;
+   if (c == "dyellow")        return gClr_darkyellow; 
 
-   if (c=="bwhite")  return gClr_white_b; 
+   if (c == "bold")           return gClr_bold; 
+   if (c == "bblack")         return gClr_black_b; 
 
-   if (c=="blue_bgd")  return gClr_blue_bg; 
-   if (c=="red_bgd")  return gClr_red_bg; 
+   if (c == "blue_bgd")       return gClr_blue_bg; 
+   if (c == "red_bgd" )       return gClr_red_bg; 
  
-   if (c=="white_on_blue")  return gClr_whiteonblue; 
-   if (c=="white_on_green")  return gClr_whiteongreen; 
+   if (c == "white_on_blue" ) return gClr_whiteonblue; 
+   if (c == "white_on_green") return gClr_whiteongreen; 
 
-   if (c=="reset") return gClr_reset; 
+   if (c == "reset") return gClr_reset; 
 
    cout << "Unknown color " << c << endl;
    exit(1);
@@ -719,12 +718,41 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
+void TMVA::Tools::writeFloatArbitraryPrecision(Float_t val, ostream & os) {
+   // writes a float value with the available precision to a stream
+   os << val << " :: ";
+   void * c = &val;
+   for(int i=0; i<4; i++) {
+      Int_t C = *((char*)c+i)-'\0';
+      if(C<0) C+=256;
+      os << C << " ";
+   }
+   os << ":: ";
+}
+
+void TMVA::Tools::readFloatArbitraryPrecision(Float_t & val, istream & is) {
+   // reads a float value with the available precision from a stream
+   Float_t a = 0;
+   is >> a;
+   TString dn;
+   is >> dn;
+   Int_t c[4];
+   void * ap = &a;
+   for(int i=0; i<4; i++) {
+      is >> c[i];
+      *((char*)ap+i) = '\0'+c[i];
+   }
+   is >> dn;
+   val = a;
+}
+
+
 
 void TMVA::Tools::TMVAWelcomeMessage()
 {
    // direct output, eg, when starting ROOT session -> no use of Logger here
    cout << endl;
-   cout << Color("white") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << endl;
+   cout << Color("bold") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << endl;
    cout << "        " << "Copyright (C) 2005-2007 CERN, MPI-K Heidelberg and Victoria U." << endl;
    cout << "        " << "Home page http://tmva.sourceforge.net" << endl;
    cout << "        " << "All rights reserved, please read http://tmva.sf.net/license.txt" << endl << endl;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.24 2007/04/03 22:37:21 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.11 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -22,8 +22,8 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
@@ -91,6 +91,14 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
 
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
+
    private:
 
       // the option handling methods
@@ -109,8 +117,6 @@ namespace TMVA {
       TMatrixD* fInvHMatrixB; // inverse H-matrix (background)
       TVectorD* fVecMeanS;    // vector of mean values (signal)
       TVectorD* fVecMeanB;    // vector of mean values (background)
-
-      Bool_t    fNormaliseInputVars; // normalise input variables
 
       // default initialisation method called by all constructors
       void InitHMatrix( void ); 

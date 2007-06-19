@@ -5,13 +5,13 @@
 
 // input: - No. of tree
 //        - the weight file from which the tree is read
-void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt", Bool_t useTMVAStyle = kTRUE) {
+void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt", Bool_t useTMVAStyle = kTRUE) 
+{
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
  
    draw_tree(itree,fname);
 }
-
 
 //_______________________________________________________________________
 void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt"){
@@ -19,7 +19,8 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
 
    TString *vars;   
    TMVA::DecisionTree *d = read_tree(vars,itree,fname);
-
+   if (d == 0) return;
+   
    Int_t  depth = d->GetDepth();
    Double_t xmax= 2*depth + 0.5;
    Double_t xmin= -xmax;

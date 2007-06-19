@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: Volume.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: Volume.cxx,v 1.11 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::Volume                                                          *
+ * Class  : Volume                                                                *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -12,20 +12,17 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- *                                                                                *
  **********************************************************************************/
 
 #include "TMVA/Volume.h"
@@ -113,7 +110,7 @@ TMVA::Volume::Volume( Float_t l, Float_t u )
    (*fUpper)[0] = Double_t(u);
 }
 
-TMVA::Volume::Volume( TMVA::Volume& V ) 
+TMVA::Volume::Volume( Volume& V ) 
 { 
    // copy constructor
    fLower = new std::vector<Double_t>( *V.fLower );
@@ -138,8 +135,8 @@ void TMVA::Volume::Delete( void )
 void TMVA::Volume::Scale( Double_t f )
 {
    // "scale" the volume by multiplying each upper and lower boundary by "f" 
-   TMVA::Tools::Scale(*fLower,f);
-   TMVA::Tools::Scale(*fUpper,f);
+   Tools::Scale(*fLower,f);
+   Tools::Scale(*fUpper,f);
 }
 
 void TMVA::Volume::ScaleInterval( Double_t f ) 
@@ -158,7 +155,7 @@ void TMVA::Volume::Print( void ) const
    // printout of the volume boundaries
    MsgLogger fLogger( "Volume" );
    for (UInt_t ivar=0; ivar<fLower->size(); ivar++) {
-      fLogger << kINFO << "... TMVA::Volume: var: " << ivar << "\t(fLower, fUpper) = (" 
+      fLogger << kINFO << "... Volume: var: " << ivar << "\t(fLower, fUpper) = (" 
               << (*fLower)[ivar] << "\t " << (*fUpper)[ivar] <<")"<< Endl;   
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -17,8 +17,8 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -65,6 +65,7 @@
   */
 //_______________________________________________________________________
 
+#include <assert.h>
 #include "TMVA/MethodPDERS.h"
 #include "TMVA/Tools.h"
 #include "TMVA/RootFinder.h"
@@ -79,16 +80,14 @@ namespace TMVA {
    const Bool_t MethodPDERS_UseFindRoot = kTRUE;
 }
 
-using std::vector;
+TMVA::MethodPDERS* TMVA::MethodPDERS::fgThisPDERS = NULL;
 
 ClassImp(TMVA::MethodPDERS)
 
 //_______________________________________________________________________
 TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& theData, 
                                 TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ),
-     fBinaryTreeS(0),
-     fBinaryTreeB(0)
+   : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"
@@ -97,13 +96,11 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& t
    //    options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
    //                    - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
    //
-
    InitPDERS();
 
+   // interpretation of configuration option string
    DeclareOptions();
-
    ParseOptions();
-
    ProcessOptions();
 }
 
@@ -111,9 +108,7 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& t
 TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
                                 TString theWeightFile,
                                 TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ),
-     fBinaryTreeS(0),
-     fBinaryTreeB(0)
+   : MethodBase( theData, theWeightFile, theTargetDir )
 {
    // construct MethodPDERS through from file
    InitPDERS();
@@ -125,7 +120,7 @@ void TMVA::MethodPDERS::InitPDERS( void )
 {
    // default initialisation routine called by all constructors
    SetMethodName( "PDERS" );
-   SetMethodType( TMVA::Types::kPDERS );
+   SetMethodType( Types::kPDERS );
    SetTestvarName();
 
    fBinaryTreeS = fBinaryTreeB = NULL;
@@ -155,8 +150,8 @@ void TMVA::MethodPDERS::InitPDERS( void )
 TMVA::MethodPDERS::~MethodPDERS( void )
 {
    // destructor
-   if (NULL != fBinaryTreeS) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-   if (NULL != fBinaryTreeB) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+   if (NULL != fBinaryTreeS) delete fBinaryTreeS;
+   if (NULL != fBinaryTreeB) delete fBinaryTreeB;
 }
 
 //_______________________________________________________________________
@@ -228,29 +223,29 @@ void TMVA::MethodPDERS::ProcessOptions()
    
    MethodBase::ProcessOptions();
 
-   fVRangeMode = TMVA::MethodPDERS::kUnsupported;
+   fVRangeMode = MethodPDERS::kUnsupported;
 
-   if      (fVolumeRange == "MinMax"    ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
-   else if (fVolumeRange == "RMS"       ) fVRangeMode = TMVA::MethodPDERS::kRMS;
-   else if (fVolumeRange == "Adaptive"  ) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
-   else if (fVolumeRange == "Unscaled"  ) fVRangeMode = TMVA::MethodPDERS::kUnscaled;
+   if      (fVolumeRange == "MinMax"    ) fVRangeMode = kMinMax;
+   else if (fVolumeRange == "RMS"       ) fVRangeMode = kRMS;
+   else if (fVolumeRange == "Adaptive"  ) fVRangeMode = kAdaptive;
+   else if (fVolumeRange == "Unscaled"  ) fVRangeMode = kUnscaled;
    else {
       fLogger << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
 
-   if      (fKernelString == "Box"      ) fKernelEstimator = TMVA::MethodPDERS::kBox;
-   else if (fKernelString == "Sphere"   ) fKernelEstimator = TMVA::MethodPDERS::kSphere;
-   else if (fKernelString == "Teepee"   ) fKernelEstimator = TMVA::MethodPDERS::kTeepee;
-   else if (fKernelString == "Gauss"    ) fKernelEstimator = TMVA::MethodPDERS::kGauss;
-   else if (fKernelString == "Sinc3"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc3;
-   else if (fKernelString == "Sinc5"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc5;
-   else if (fKernelString == "Sinc7"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc7;
-   else if (fKernelString == "Sinc9"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc9;
-   else if (fKernelString == "Sinc11"   ) fKernelEstimator = TMVA::MethodPDERS::kSinc11;
-   else if (fKernelString == "Lanczos2" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
-   else if (fKernelString == "Lanczos3" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
-   else if (fKernelString == "Lanczos5" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
-   else if (fKernelString == "Lanczos8" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
+   if      (fKernelString == "Box"      ) fKernelEstimator = kBox;
+   else if (fKernelString == "Sphere"   ) fKernelEstimator = kSphere;
+   else if (fKernelString == "Teepee"   ) fKernelEstimator = kTeepee;
+   else if (fKernelString == "Gauss"    ) fKernelEstimator = kGauss;
+   else if (fKernelString == "Sinc3"    ) fKernelEstimator = kSinc3;
+   else if (fKernelString == "Sinc5"    ) fKernelEstimator = kSinc5;
+   else if (fKernelString == "Sinc7"    ) fKernelEstimator = kSinc7;
+   else if (fKernelString == "Sinc9"    ) fKernelEstimator = kSinc9;
+   else if (fKernelString == "Sinc11"   ) fKernelEstimator = kSinc11;
+   else if (fKernelString == "Lanczos2" ) fKernelEstimator = kLanczos2;
+   else if (fKernelString == "Lanczos3" ) fKernelEstimator = kLanczos3;
+   else if (fKernelString == "Lanczos5" ) fKernelEstimator = kLanczos5;
+   else if (fKernelString == "Lanczos8" ) fKernelEstimator = kLanczos8;
    else {
       fLogger << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
    }
@@ -280,6 +275,10 @@ void TMVA::MethodPDERS::Train( void )
 
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
+   if (IsNormalised()) fLogger << kFATAL << "\"Normalise\" option cannot be used with PDERS; " 
+                               << "please remove the optoin from the configuration string, or "
+                               << "use \"!Normalise\""
+                               << Endl;
 
    CreateBinarySearchTrees( Data().GetTrainingTree() );
    
@@ -298,8 +297,8 @@ Double_t TMVA::MethodPDERS::GetMvaValue()
    if (fInitializedVolumeEle == kFALSE) {
       fInitializedVolumeEle = kTRUE;
 
-      // create binary trees (global member variables) for signal and background
-      //if (!fBinaryTreeS || !fBinaryTreeB) CreateBinarySearchTrees( GetReferenceTree() );
+      // binary trees must exist
+      assert( fBinaryTreeS && fBinaryTreeB );
 
       CalcAverages();
 
@@ -326,17 +325,16 @@ void TMVA::MethodPDERS::CalcAverages()
    }
 }   
 
-
-
 //_______________________________________________________________________
 void TMVA::MethodPDERS::CreateBinarySearchTrees( TTree* tree ) 
 {
    // create binary search trees for signal and background
+   assert( tree != 0 );
 
    if (NULL != fBinaryTreeS) delete fBinaryTreeS;
    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
-   fBinaryTreeS = new TMVA::BinarySearchTree();
-   fBinaryTreeB = new TMVA::BinarySearchTree();
+   fBinaryTreeS = new BinarySearchTree();
+   fBinaryTreeB = new BinarySearchTree();
    fBinaryTreeS->Fill( *this, tree, 1 );
    fBinaryTreeB->Fill( *this, tree, 0 );
 
@@ -345,7 +343,6 @@ void TMVA::MethodPDERS::CreateBinarySearchTrees( TTree* tree )
    fScaleB = 1.0/fBinaryTreeB->GetSumOfWeights();
 
    fLogger << kVERBOSE << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
-
 }
 
 //_______________________________________________________________________
@@ -354,8 +351,8 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
    // defines volume dimensions
 
    // init relative scales
-   fDelta = (GetNvar() > 0) ? new vector<Float_t>( GetNvar() ) : 0;
-   fShift = (GetNvar() > 0) ? new vector<Float_t>( GetNvar() ) : 0;
+   fDelta = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
+   fShift = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
    if (fDelta != 0) {
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
          switch (fVRangeMode) {
@@ -394,8 +391,6 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
    }
 }
 
-TMVA::MethodPDERS* TMVA::MethodPDERS::fgThisPDERS = NULL;
-
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::IGetVolumeContentForRoot( Double_t scale )
 {
@@ -418,21 +413,21 @@ Double_t TMVA::MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 }
 
 //_______________________________________________________________________
-Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
+Float_t TMVA::MethodPDERS::RScalc( const Event& e )
 {
    // computes event weight by counting number of signal and background 
    // events (of reference sample) that are found within given volume
    // defined by the event
-   vector<Double_t> *lb = new vector<Double_t>( GetNvar() );
+   std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
 
-   vector<Double_t> *ub = new vector<Double_t>( *lb );
+   std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
       (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
    }
 
-   TMVA::Volume* volume = new TMVA::Volume( lb, ub );
+   Volume* volume = new Volume( lb, ub );
 
    Float_t countS = 0;
    Float_t countB = 0;
@@ -454,15 +449,13 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
       Data().ReadTrainEvent(ievt_);
       Bool_t inV;
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         Float_t x = GetEvent().GetVal(ivar);
+         Float_t x = GetEventVal(ivar);
          inV = (x > (*volume->Lower)[ivar] && x <= (*volume->Upper)[ivar]);
          if (!inV) break;
       }
       if (inV) {
-         if (GetEvent().IsSignal())
-            iS++;
-         else
-            iB++;
+         if (IsSignalEvent()) iS++;
+         else                 iB++;
       }
    }
    fLogger << kVERBOSE << "debug: my test: S/B: " << iS << "  " << iB << Endl;
@@ -471,16 +464,16 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
    // -------------------------------------------------------------------------
 
    if (fVRangeMode == kRMS || fVRangeMode == kUnscaled) { // Constant volume
-      vector<Double_t> *lb = new vector<Double_t>( GetNvar() );
+      std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
-      vector<Double_t> *ub = new vector<Double_t>( *lb );
+      std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
          (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
          (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
       }
-      TMVA::Volume* volume = new TMVA::Volume( lb, ub );
+      Volume* volume = new Volume( lb, ub );
       // starting values
-      TMVA::Volume v( *volume );
+      Volume v( *volume );
       
       std::vector<const BinarySearchTreeNode*> eventsS;
       std::vector<const BinarySearchTreeNode*> eventsB;
@@ -498,17 +491,16 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 
       // TODO: optimize, perhaps multi stage with broadening limits, 
       // or a different root finding method entirely,
-      if (TMVA::MethodPDERS_UseFindRoot) { 
+      if (MethodPDERS_UseFindRoot) { 
          // that won't need to search through large volume, where the bottle neck probably is
 
-         //fHelpVolume = new TMVA::Volume( *volume );
          fHelpVolume = volume;
 
          UpdateThis(); // necessary update of static pointer
-         TMVA::RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
+         RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 200, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
-         TMVA::Volume v( *volume );
+         Volume v( *volume );
          v.ScaleInterval( scale );
 
          std::vector<const BinarySearchTreeNode*> eventsS;
@@ -520,8 +512,6 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 
          v.Delete();
 
-         //          fHelpVolume->Delete();
-         //          delete fHelpVolume;
          fHelpVolume = NULL;
 
       }
@@ -558,7 +548,7 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
             if (nEventsN < fNEventsMin || nEventsN > fNEventsMax) {
 
                // search for events in rescaled volume
-               TMVA::Volume* v = new TMVA::Volume( *volume );
+               Volume* v = new Volume( *volume );
                v->ScaleInterval( scale );
                cS       = fBinaryTreeS->SearchVolume( v );
                cB       = fBinaryTreeB->SearchVolume( v );
@@ -614,8 +604,8 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
-                                            vector<const BinarySearchTreeNode*>& events, TMVA::Volume& v )
+Double_t TMVA::MethodPDERS::KernelEstimate( const Event & event,
+                                            std::vector<const BinarySearchTreeNode*>& events, Volume& v )
 {
    // Final estimate
    Double_t pdfSum = 0;
@@ -626,7 +616,7 @@ Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
       dim_normalization [ivar] = 2 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
    
    // Iteration over sample points
-   for (vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
+   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
      
       // First switch to the one dimensional distance
       Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
@@ -688,12 +678,14 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf) 
 {
-   // Calculating the normalization factor only once (might need a reset at some point. Can the method be restarted with different params?)
+   // Calculating the normalization factor only once (might need a reset at some point. 
+   // Can the method be restarted with different params?)
 
-   static Double_t ret = 1.; // Caching jammed to disable function. It's not really useful afterall, badly implemented and untested :-)
-
-   if (ret != 0.)
-      return ret*pdf; 
+   // Caching jammed to disable function. 
+   // It's not really useful afterall, badly implemented and untested :-)
+   static Double_t ret = 1.0; 
+   
+   if (ret != 0.0) return ret*pdf; 
 
    // We first normalize by the volume of the hypersphere.
    switch (fKernelEstimator) {
@@ -731,9 +723,10 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::GetNormalizedDistance (   const TMVA::Event &base_event,
-                                                      const BinarySearchTreeNode &sample_event,
-                                                      Double_t *dim_normalization) {
+Double_t TMVA::MethodPDERS::GetNormalizedDistance ( const Event &base_event,
+                                                    const BinarySearchTreeNode &sample_event,
+                                                    Double_t *dim_normalization) 
+{
    // We use Euclidian metric here. Might not be best or most efficient.
    Double_t ret=0;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -776,10 +769,8 @@ Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x)
    Double_t lanczos = (TMath::Sin(pix) / pix) * (TMath::Sin(pixtimesn) / pixtimesn);
    Double_t ret;
 
-   if (GetNvar() % 2)
-      ret = TMath::Power (lanczos, GetNvar());
-   else
-      ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
+   if (GetNvar() % 2) ret = TMath::Power (lanczos, GetNvar());
+   else               ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
 
    return ret;
 }
@@ -807,20 +798,19 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
 {
    // write only a short comment to file
-   if(TxtWeightsOnly()) {
-      if(fBinaryTreeS)
+   if (TxtWeightsOnly()) {
+      if (fBinaryTreeS)
          o << *fBinaryTreeS;
       else
          fLogger << kFATAL << "Signal binary search tree not available" << Endl; 
       
-      if(fBinaryTreeB)
+      if (fBinaryTreeB)
          o << *fBinaryTreeB;
       else
          fLogger << kFATAL << "Background binary search tree not available" << Endl; 
 
-
-
-   } else {
+   } 
+   else {
       TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
       o << "# weights stored in root i/o file: " << rfname << endl;  
    }
@@ -830,12 +820,12 @@ void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
 void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 {
    // read weight info from file
-   if(TxtWeightsOnly()) {
+   if (TxtWeightsOnly()) {
       if (NULL != fBinaryTreeS) { delete fBinaryTreeS; fBinaryTreeS = 0; }
       if (NULL != fBinaryTreeB) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 
-      fBinaryTreeS = new TMVA::BinarySearchTree();
-      fBinaryTreeB = new TMVA::BinarySearchTree();
+      fBinaryTreeS = new BinarySearchTree();
+      fBinaryTreeB = new BinarySearchTree();
       fBinaryTreeS->SetRoot( fBinaryTreeS->CreateNode(&GetVarTransform().Variables()));
       fBinaryTreeS->Read(istr);
       fBinaryTreeB->SetRoot( fBinaryTreeB->CreateNode(&GetVarTransform().Variables()));
@@ -846,7 +836,6 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 
       fBinaryTreeS->CalcStatistics();
       fBinaryTreeB->CalcStatistics();
-
 
       fBinaryTreeS->CountNodes();
       fBinaryTreeB->CountNodes();
@@ -869,18 +858,65 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 void TMVA::MethodPDERS::WriteWeightsToStream( TFile& ) const
 {
    // write training sample (TTree) to file
-   //    if (NULL != fBinaryTreeS) fBinaryTreeS->Write( "SignalBST" );
-   //    if (NULL != fBinaryTreeB) fBinaryTreeB->Write( "BackgroundBST" );
 }
 
 //_______________________________________________________________________
 void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 {
    // read training sample from file
-
-   //    if (NULL != fBinaryTreeS) delete fBinaryTreeS;
-   //    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
-   //    fBinaryTreeS = (BinarySearchTree*)rf.Get( "SignalBST" );
-   //    fBinaryTreeB = (BinarySearchTree*)rf.Get( "BackgroundBST" );
-
 }
+
+//_______________________________________________________________________
+void TMVA::MethodPDERS::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodPDERS::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "PDERS is a generalization of the projective likelihood classifier " << Endl;
+   fLogger << "to N dimensions, where N is the number of input variables used." << Endl;
+   fLogger << "In its adaptive form it is mostly equivalent to k-Nearest-Neighbor" << Endl;
+   fLogger << "(k-NN) methods. If the multidimensional PDF for signal and background" << Endl;
+   fLogger << "were known, this classifier would exploit the full information" << Endl;
+   fLogger << "contained in the input variables, and would hence be optimal. In " << Endl;
+   fLogger << "practice however, huge training samples are necessary to sufficiently " << Endl;
+   fLogger << "populate the multidimensional phase space. " << Endl;
+   fLogger << Endl;
+   fLogger << "The simplest implementation of PDERS counts the number of signal" << Endl;
+   fLogger << "and background events in the vicinity of a test event, and returns" << Endl;
+   fLogger << "a weight according to the majority species of the neighboring events." << Endl;
+   fLogger << "A more involved version of PDERS (selected by the option \"KernelEstimator\")" << Endl;
+   fLogger << "uses Kernel estimation methods to approximate the shape of the PDF." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "PDERS can be very powerful in case of strongly non-linear problems, " << Endl;
+   fLogger << "e.g., distinct islands of signal and background regions. Because of " << Endl;
+   fLogger << "the exponential growth of the phase space, it is important to restrict" << Endl;
+   fLogger << "the number of input variables (dimension) to the strictly necessary." << Endl;
+   fLogger << Endl;
+   fLogger << "Note that PDERS is a slowly responding classifier. Moreover, the necessity" << Endl;
+   fLogger << "to store the entire binary tree in memory, to avoid accessing virtual " << Endl;
+   fLogger << "memory, limits the number of training events that can effectively be " << Endl;
+   fLogger << "used to model the multidimensional PDF." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "If the PDERS response is found too slow when using the adaptive volume " << Endl;
+   fLogger << "size (option \"VolumeRangeMode=Adaptive\"), it might be found beneficial" << Endl;
+   fLogger << "to reduce the number of events required in the volume, and/or to enlarge" << Endl;
+   fLogger << "the allowed range (\"NeventsMin/Max\"). PDERS is relatively insensitive" << Endl;
+   fLogger << "to the width (\"GaussSigma\") of the Gaussian kernel (if used)." << Endl;
+}
+

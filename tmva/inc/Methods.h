@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Methods.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Methods.h,v 1.7 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -46,6 +46,12 @@
 #ifndef ROOT_TMVA_MethodFisher
 #include "TMVA/MethodFisher.h"
 #endif
+#ifndef ROOT_TMVA_MethodKNN
+#include "TMVA/MethodKNN.h"
+#endif
+#ifndef ROOT_TMVA_MethodMLP
+#include "TMVA/MethodMLP.h"
+#endif
 #ifndef ROOT_TMVA_MethodTMlpANN
 #include "TMVA/MethodTMlpANN.h"
 #endif
@@ -70,17 +76,17 @@
 #ifndef ROOT_TMVA_MethodSVM
 #include "TMVA/MethodSVM.h"
 #endif
-#ifndef ROOT_TMVA_MethodMLP
-#include "TMVA/MethodMLP.h"
-#endif
 #ifndef ROOT_TMVA_MethodRuleFit
 #include "TMVA/MethodRuleFit.h"
 #endif
-#ifndef ROOT_TMVA_MethodRuleFitJF
-#include "TMVA/MethodRuleFitJF.h"
-#endif
 #ifndef ROOT_TMVA_MethodBayesClassifier
 #include "TMVA/MethodBayesClassifier.h"
+#endif
+#ifndef ROOT_TMVA_MethodFDA
+#include "TMVA/MethodFDA.h"
+#endif
+#ifndef ROOT_TMVA_MethodSeedDistance
+#include "TMVA/MethodSeedDistance.h"
 #endif
 #ifndef ROOT_TMVA_MethodCommittee
 #include "TMVA/MethodCommittee.h"

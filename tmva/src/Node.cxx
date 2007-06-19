@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
+// @(#)root/tmva $Id: Node.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * CopyRight (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -45,16 +45,15 @@
 
 ClassImp(TMVA::Node)
 
-Int_t           TMVA::Node::fgCount = 0;
+Int_t TMVA::Node::fgCount = 0;
 
-
-TMVA::Node::Node() :
-   fParent ( NULL ),
-   fLeft( NULL),
-   fRight( NULL ),
-   fPos ('u'),
-   fDepth(0),
-   fParentTree(NULL)
+TMVA::Node::Node() 
+   : fParent( NULL ),
+     fLeft  ( NULL),
+     fRight ( NULL ),
+     fPos   ( 'u' ),
+     fDepth ( 0 ),
+     fParentTree( NULL )
 {
    // default constructor
    fgCount++;
@@ -63,9 +62,9 @@ TMVA::Node::Node() :
 //_______________________________________________________________________
 TMVA::Node::Node( Node* p, char pos ) 
    : fParent ( p ), 
-     fLeft( NULL ), 
+     fLeft ( NULL ), 
      fRight( NULL ),  
-     fPos ( pos ), 
+     fPos  ( pos ), 
      fDepth( p->GetDepth() + 1), 
      fParentTree(p->GetParentTree()) 
 {
@@ -77,8 +76,13 @@ TMVA::Node::Node( Node* p, char pos )
 }
 
 //_______________________________________________________________________
-TMVA::Node::Node (const Node &n ) : fParent ( NULL ), fLeft( NULL), fRight( NULL ), 
-                                    fPos (n.fPos), fDepth(n.fDepth), fParentTree(NULL)
+TMVA::Node::Node (const Node &n ) 
+   : fParent( NULL ), 
+     fLeft  ( NULL), 
+     fRight ( NULL ), 
+     fPos   ( n.fPos ), 
+     fDepth ( n.fDepth ), 
+     fParentTree( NULL )
 {
    // copy constructor, make sure you don't just copy the poiter to the node, but
    // that the parents/daugthers are initialized to 0 (and set by the copy 
@@ -98,25 +102,23 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
 {
    //recursively go through the part of the tree below this node and count all daughters
    Int_t n=1;
-   if(this->GetLeft() != NULL) 
+   if (this->GetLeft() != NULL) 
       n+= this->GetLeft()->CountMeAndAllDaughters(); 
-   if(this->GetRight() != NULL) 
+   if (this->GetRight() != NULL) 
       n+= this->GetRight()->CountMeAndAllDaughters(); 
   
    return n;
 }
 
-
 //_______________________________________________________________________
-Int_t TMVA::Node::GetMemSize() const { 
+Int_t TMVA::Node::GetMemSize() const 
+{ 
    // calculates the memory size of the node
    Int_t size = sizeof(*this);
-   if(fLeft!=0) size += fLeft->GetMemSize();
-   if(fRight!=0) size += fRight->GetMemSize();
+   if (fLeft !=0) size += fLeft->GetMemSize();
+   if (fRight!=0) size += fRight->GetMemSize();
    return size;
 }
-
-
 
 // print a node
 //_______________________________________________________________________

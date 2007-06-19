@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinaryTree.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: BinaryTree.cxx,v 1.11 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -126,7 +126,7 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 void TMVA::BinaryTree::Read(istream & istr)
 {
    // recursively read the tree
-   if(GetRoot()==0) SetRoot(CreateNode());
+   if (GetRoot()==0) SetRoot(CreateNode());
    char pos='s';
    UInt_t depth =0;
    GetRoot()->ReadRec(istr,pos,depth);

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.13 2007/04/19 06:53:01 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.14 2007/04/21 14:20:46 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -199,7 +199,7 @@ namespace TMVA {
   
       static MsgLogger* fgLogger;    // static because there is a huge number of nodes...
 
-      ClassDef(DecisionTreeNode,0) //Node for the Decision Tree 
+      ClassDef(DecisionTreeNode,0) // Node for the Decision Tree 
 
    };
 } // namespace TMVA

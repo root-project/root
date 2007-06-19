@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivation.h,v 1.6 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivation.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -32,6 +32,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+
 #include "TObject.h"
 #include "TString.h"
 
@@ -58,6 +60,9 @@ namespace TMVA {
 
       // expression for activation function
       virtual TString GetExpression() = 0;
+
+      // writer of function code
+      virtual void MakeFunction(std::ostream& fout, const TString& fncName) = 0;
 
       ClassDef(TActivation,0) // Interface for TNeuron activation function classes
          ;

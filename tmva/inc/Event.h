@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.h,v 1.11 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Event.h,v 1.12 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -57,7 +57,7 @@ namespace TMVA {
 
    public:
 
-      Event( const std::vector<TMVA::VariableInfo>&, Bool_t AllowExternalLinks = kTRUE );
+      Event( const std::vector<TMVA:: VariableInfo>&, Bool_t AllowExternalLinks = kTRUE );
       Event( const Event& );
       ~Event();
       
@@ -74,23 +74,20 @@ namespace TMVA {
       void    SetType(Types::ESBType t) { fType=(t==Types::kSignal)?1:0; }
       void    SetVal(UInt_t ivar, Float_t val);
       void    SetValFloatNoCheck(UInt_t ivar, Float_t val) { *((Float_t*)fVarPtr[ivar]) = val; }
-      void    SetValIntNoCheck(UInt_t ivar, Int_t val) { *((Int_t*)fVarPtr[ivar]) = val; }
 
 
       void    CopyVarValues( const Event& other );
 
-      Char_t  VarType(Int_t ivar)     const { return fVariables[ivar].VarType(); }
-      Bool_t  IsInt(Int_t ivar)       const { return (fVariables[ivar].VarType()=='I'); }
-      Bool_t  IsFloat(Int_t ivar)     const { return (fVariables[ivar].VarType()=='F'); }
-      Float_t GetVal(Int_t ivar)      const { return *((Float_t*)fVarPtr[ivar]); }
-      Float_t GetValFloat(Int_t ivar) const { return *((Float_t*)fVarPtr[ivar]); }
-      Int_t   GetValInt(Int_t ivar)   const { return *((Int_t*)fVarPtr[ivar]); }
-      UInt_t  GetNVars()              const { return fVariables.size(); }
-      Float_t GetValueNormalized(Int_t ivar) const;
-      void*   GetExternalLink(Int_t ivar) const { return fVariables[ivar].GetExternalLink(); }
+      Char_t  GetVarType (UInt_t ivar)        const { return fVariables[ivar].GetVarType(); }
+      Bool_t  IsInt      (UInt_t ivar)        const { return (fVariables[ivar].GetVarType()=='I'); }
+      Bool_t  IsFloat    (UInt_t ivar)        const { return (fVariables[ivar].GetVarType()=='F'); }
+      Float_t GetVal     (UInt_t ivar)        const;
+      Float_t GetValFloat(UInt_t ivar)        const { return *((Float_t*)fVarPtr[ivar]); }
+      UInt_t  GetNVars()                      const { return fVariables.size(); }
+      Float_t GetValueNormalized(UInt_t ivar) const;
+      void*   GetExternalLink(UInt_t ivar)    const { return fVariables[ivar].GetExternalLink(); }
 
       void Print(std::ostream & o) const;
-
 
       Int_t GetMemSize() const { 
          Int_t size = sizeof(*this);
@@ -104,7 +101,7 @@ namespace TMVA {
    
       const std::vector<TMVA::VariableInfo>& fVariables; // the variables
       void **   fVarPtr;          // array containing values
-      Int_t *   fVarPtrI;         // integer value
+      //    Int_t *   fVarPtrI;         // integer value
       Float_t*  fVarPtrF;         // float value
       Int_t     fType;            // signal or background type
       Float_t   fWeight;          // event weight (product of global and individual weights)

@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariablePCATransform.h,v 1.11 2007/06/08 10:27:25 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,27 +48,30 @@ namespace TMVA {
 
    public:
   
-      VariablePCATransform( std::vector<VariableInfo>& );
+      VariablePCATransform( std::vector<TMVA::VariableInfo>& );
       virtual ~VariablePCATransform( void );
 
       void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
       Bool_t PrepareTransformation( TTree* inputTree );
 
-      void WriteTransformationToStream( std::ostream& ) const;
-      void ReadTransformationToStream ( std::istream& );
+      void WriteTransformationToStream ( std::ostream& ) const;
+      void ReadTransformationFromStream( std::istream& );
+
+      // writer of function code
+      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );
 
    private:
 
       void CalculatePrincipalComponents( TTree* originalTree );
       void X2P( const Double_t*, Double_t*, Int_t index ) const;
 
-      TPrincipal* fPCA[2];     //! PCA [signal/background]
+      TPrincipal* fPCA[2];        //! PCA [signal/background]
       
       // store relevant parts of PCA locally
       TVectorD* fMeanValues[2];   // mean values
       TMatrixD* fEigenVectors[2]; // eigenvectors
 
-      ClassDef(VariablePCATransform,0) // variable transformation base class
+      ClassDef(VariablePCATransform,0) // Variable transformation: Principal Value Composition
    };
 
 } // namespace TMVA

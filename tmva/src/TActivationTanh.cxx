@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationTanh.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TActivationTanh.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -95,4 +95,14 @@ TString TMVA::TActivationTanh::GetExpression()
    else                        expr += fEqnDerivative->GetExpFormula();
 
    return expr;
+}
+
+//______________________________________________________________________________
+void TMVA::TActivationTanh::MakeFunction(std::ostream& fout, const TString& fncName) 
+{
+   // writes the sigmoid activation function source code
+   fout << "double " << fncName << "(double x) const {" << endl;
+   fout << "   // hyperbolic tan" << endl;
+   fout << "   return tanh(-x);" << endl;
+   fout << "}" << endl;
 }

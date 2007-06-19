@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputSum.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuronInputSum.h,v 1.7 2007/04/19 06:53:01 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -53,11 +53,12 @@ namespace TMVA {
       virtual ~TNeuronInputSum() {}
 
       // calculate input value for neuron
-      Double_t GetInput(TNeuron* neuron) {
+      Double_t GetInput( const TNeuron* neuron ) const {
          if (neuron->IsInputNeuron()) return 0;
          Double_t result = 0;
-         for (Int_t i=0; i < neuron->NumPreLinks(); i++)
+         for (Int_t i=0; i < neuron->NumPreLinks(); i++) {
             result += neuron->PreLinkAt(i)->GetWeightedValue();
+         }
          return result;
       }
 

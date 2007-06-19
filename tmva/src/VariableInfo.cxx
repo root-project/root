@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableInfo.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: VariableInfo.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -34,15 +34,14 @@
 
 //_______________________________________________________________________
 TMVA::VariableInfo::VariableInfo( const TString& expression, int varCounter, 
-                                  char varTypeOriginal, void* external, 
+                                  char varType, void* external, 
                                   Double_t min, Double_t max ) 
    : fExpression     ( expression ),
-     fVarTypeOriginal( varTypeOriginal ),
+     fVarType        ( varType ),
      fExternalData   ( external ),
      fVarCounter     ( varCounter )
 {
    // constructor
-   fVarType = 'F'; 
 
    if (min == max) {
       fXminNorm =  1e30;
@@ -52,11 +51,11 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, int varCounter,
       fXminNorm =  min;
       fXmaxNorm =  max;
    }
-   fInternalVarName = TMVA::Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
+   fInternalVarName = Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
 }
 
 //_______________________________________________________________________
-TMVA::VariableInfo::VariableInfo()
+TMVA::VariableInfo::VariableInfo() 
    : fExpression(""),
      fVarType('\0'),
      fExternalData(0)
@@ -64,14 +63,13 @@ TMVA::VariableInfo::VariableInfo()
    // default constructor
    fXminNorm =  1e30;
    fXmaxNorm = -1e30;
-   fInternalVarName = TMVA::Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
+   fInternalVarName = Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
 }
 
-TMVA::VariableInfo::VariableInfo( const VariableInfo& other )
+TMVA::VariableInfo::VariableInfo( const VariableInfo& other ) 
    : fExpression( other.fExpression ),
      fInternalVarName( other.fInternalVarName ),
      fVarType( other.fVarType ),
-     fVarTypeOriginal( other.fVarTypeOriginal ),
      fXminNorm( other.fXminNorm ),
      fXmaxNorm( other.fXmaxNorm ),
      fXmeanNorm( other.fXmeanNorm ),
@@ -83,10 +81,10 @@ TMVA::VariableInfo::VariableInfo( const VariableInfo& other )
 }
 
 //_______________________________________________________________________
-TMVA::VariableInfo& TMVA::VariableInfo::operator=(const TMVA::VariableInfo& rhs)
+TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
 {
    // comparison operator
-   if(this!=&rhs) {
+   if (this!=&rhs) {
       fExpression       = rhs.fExpression;
       fInternalVarName  = rhs.fInternalVarName;
       fVarType          = rhs.fVarType;
@@ -104,8 +102,8 @@ void TMVA::VariableInfo::WriteToStream(std::ostream& o) const
    TString expBr(Form("\'%s\'",GetExpression().Data()));
    o << setw(nc) << GetExpression();
    o << setw(nc) << GetInternalVarName();
-   o << "    \'" << VarType() << "\'    ";
-   o << "[" << GetMin() << "," << GetMax() << "]" << std::endl;
+   o << "    \'" << fVarType << "\'    ";
+   o << "[" << setprecision(12) << GetMin() << "," << setprecision(12) << GetMax() << "]" << std::endl;
 }
 
 //_______________________________________________________________________

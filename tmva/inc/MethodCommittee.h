@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.h,v 1.6 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.h,v 1.7 2007/04/19 06:53:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -107,6 +107,14 @@ namespace TMVA {
       vector<Double_t> GetVariableImportance();
       Double_t GetVariableImportance( UInt_t ivar );
 
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
+
    private:
 
       // accessors
@@ -125,7 +133,7 @@ namespace TMVA {
       TString                         fBoostType;       // string specifying the boost type
 
       // options for the MVA method
-      Types::EMVA                      fMemberType;      // the MVA method to be boosted
+      Types::EMVA                     fMemberType;      // the MVA method to be boosted
       TString                         fMemberOption;    // the options for that method
 
       Bool_t                          fUseMemberDecision;  // use binary information from IsSignal

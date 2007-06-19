@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.h,v 1.10 2007/01/16 09:37:03 brun Exp $   
+// @(#)root/tmva $Id: Tools.h,v 1.11 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -54,8 +54,6 @@ class TString;
 class TH1;
 class TSpline;
 
-#define __N__(a1,a2,a3) Tools::NormVariable(a1,a2,a3)
-
 namespace TMVA {
 
    class Event;
@@ -66,7 +64,10 @@ namespace TMVA {
       void  ComputeStat( TTree* theTree, const TString& theVarName,
                          Double_t&, Double_t&, Double_t&, 
                          Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
-  
+
+      // compute variance from sums
+      inline Double_t ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx );
+
       // creates histograms normalized to one
       TH1* projNormTH1F( TTree* theTree, TString theVarName,
                          TString name, Int_t nbins, 
@@ -83,13 +84,13 @@ namespace TMVA {
                                                 std::vector<Int_t>* nodes );
       
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
-      void GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat );
+      TMatrixD* GetSQRootMatrix( TMatrixDSym* symMat );
 
       // turns covariance into correlation matrix
       const TMatrixD* GetCorrelationMatrix( const TMatrixD* covMat );
 
       // check spline quality by comparison with initial histogram
-      Bool_t CheckSplines( TH1*, TSpline* );
+      Bool_t CheckSplines( const TH1*, const TSpline* );
 
       // normalization of variable output
       Double_t NormVariable( Double_t x, Double_t xmin, Double_t xmax );
@@ -115,13 +116,26 @@ namespace TMVA {
 
       // check if input string contains regular expression
       Bool_t  ContainsRegularExpression( const TString& s );
-      TString ReplaceRegularExpressions( const TString& s, TString replace = "+" );
+      TString ReplaceRegularExpressions( const TString& s, const TString& replace = "+" );
 
       // routines for formatted output -----------------
       void FormattedOutput( const std::vector<Double_t>&, const std::vector<TString>&, 
                             const TString titleVars, const TString titleValues, MsgLogger& logger,
                             TString format = "%+1.3f" );
       void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
+
+      void writeFloatArbitraryPrecision(Float_t val, ostream & os);
+      void readFloatArbitraryPrecision(Float_t & val, istream & is);
+
+      // check variable range and set var to lower or upper if out of range
+      template<typename T>
+      inline Bool_t VerifyRange( MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax );
+
+      template<typename T>
+      inline Bool_t VerifyRange( MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax, T vdef );
+
+      template<typename T>
+      inline Int_t VerifyRange( T & var, T vmin, T vmax );
 
       // output logger
       MsgLogger& Logger();
@@ -146,9 +160,66 @@ namespace TMVA {
       void TMVAWelcomeMessage();
       void TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage m = kStandardWelcomeMsg );
       void TMVAVersionMessage( MsgLogger& logger );
-   }
+   } // Common tools
 
 } // namespace TMVA
+
+//_______________________________________________________________________
+inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx )
+{
+   // compute variance from given sums
+   if (nx<2) return 0;
+   return (sumx2 - ((sumx*sumx)/static_cast<Double_t>(nx)))/static_cast<Double_t>(nx-1);
+}
+
+//_______________________________________________________________________
+template<typename T>
+inline Int_t TMVA::Tools::VerifyRange( T & var, T vmin, T vmax )
+{
+   // check range and return +1 if above, -1 if below or 0 if inside
+   if (var>vmax) return  1;
+   if (var<vmin) return -1;
+   return 0;
+}
+//_______________________________________________________________________
+template<typename T>
+inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax )
+{
+   // verify range and print out message
+   // if outside range, set to closest limit
+   Int_t dir = TMVA::Tools::VerifyRange(var,vmin,vmax);
+   Bool_t modif=kFALSE;
+   if (dir==1) {
+      modif = kTRUE;
+      var=vmax;
+   }
+   if (dir==-1) {
+      modif = kTRUE;
+      var=vmin;
+   }
+   if (modif) {
+      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to new value = " << var << Endl;
+   }
+   return modif;
+}
+
+//_______________________________________________________________________
+template<typename T>
+inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax, T vdef )
+{
+   // verify range and print out message
+   // if outside range, set to given default value
+   Int_t dir = TMVA::Tools::VerifyRange(var,vmin,vmax);
+   Bool_t modif=kFALSE;
+   if (dir!=0) {
+      modif = kTRUE;
+      var=vdef;
+   }
+   if (modif) {
+      mlog << kWARNING << "Option <" << varstr << "> " << (dir==1 ? "above":"below") << " allowed range. Reset to default value = " << var << Endl;
+   }
+   return modif;
+}
 
 #endif
 

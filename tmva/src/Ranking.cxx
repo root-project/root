@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: Ranking.cxx,v 1.8 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -16,8 +16,8 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -45,7 +45,7 @@ TMVA::Ranking::Ranking()
 TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscriminatorName ) 
    : fContext( context ),
      fRankingDiscriminatorName( rankingDiscriminatorName ),
-     fLogger( context.Data(), kINFO )
+     fLogger( fContext.Data(), kINFO )
 {
    // constructor
    fRanking.clear();
@@ -69,8 +69,8 @@ void TMVA::Ranking::AddRank( Rank& rank )
       
    UInt_t sizeofarray=fRanking.size();
    Rank  temp(fRanking[0]);
-   for (unsigned int i=0; i<sizeofarray; i++) {
-      for (unsigned int j=sizeofarray-1; j>i; j--) {
+   for (UInt_t i=0; i<sizeofarray; i++) {
+      for (UInt_t j=sizeofarray-1; j>i; j--) {
          if (fRanking[j-1] < fRanking[j]) {
             temp = fRanking[j-1];fRanking[j-1] = fRanking[j]; fRanking[j] = temp;
          }

@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: KDEKernel.h,v 1.10 2007/06/15 23:23:04 andreas.hoecker Exp $ 
 // Author: Asen Christov
 
 /**********************************************************************************
@@ -17,8 +17,8 @@
  *      Asen Christov   <christov@physik.uni-freiburg.de> - Freiburg U., Germany  *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany,                                                * 
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      Freiburg U., Germany                                                      * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -47,7 +47,7 @@ class TF1;
 
 namespace TMVA {
 
-   class KDEKernel : public TObject  {
+   class KDEKernel {
 
    public:
 

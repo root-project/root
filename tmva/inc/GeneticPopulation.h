@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.h,v 1.10 2007/04/19 06:53:01 brun Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.h,v 1.11 2007/04/21 14:20:46 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,10 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
+ *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -64,9 +62,12 @@ namespace TMVA {
       virtual ~GeneticPopulation();
 
       typedef std::pair<const Double_t, GeneticGenes > entry;
+      
+      void SetRandomSeed( UInt_t seed = 0);
 
       void CreatePopulation( Int_t size );
       void AddPopulation( GeneticPopulation *genePool );
+      void AddPopulation( GeneticPopulation &genePool );
       void TrimPopulation();
       void GiveHint( std::vector< Double_t >& hint, Double_t fitness = 0 );
       void MakeChildren();

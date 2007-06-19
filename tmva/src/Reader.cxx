@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.cxx,v 1.12 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Reader.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -208,7 +208,7 @@ void TMVA::Reader::DeclareOptions()
    
    fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
    
-   Config::Instance().SetUseColor(fColor);
+   gConfig().SetUseColor(fColor);
 
    if (fDataSet!=0) fDataSet->SetVerbose(Verbose());
 }
@@ -226,25 +226,32 @@ void TMVA::Reader::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, float* datalink ) 
+void TMVA::Reader::AddVariable( const TString& expression, Float_t* datalink ) 
 {
    // Add a float variable or expression to the reader
    Data().AddVariable(expression, 'F', (void*)datalink);
 }
 
 //_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, int* datalink ) 
+void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink ) 
 {
    // Add a integer variable or expression to the reader
    Data().AddVariable(expression, 'I', (void*)datalink);
 }
 
 //_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( TString methodName, TString weightfile )
+TMVA::IMethod* TMVA::Reader::BookMVA( TString methodTag, TString weightfile )
 {
    // read method name from weight file
+
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
+   if (it != fMethodMap.end()) {
+      fLogger << kFATAL << "<BookMVA> method tag \"" << methodTag << "\" already exists!" << Endl;
+   }
+
+   fLogger << kINFO << "Booking method tag \"" << methodTag << "\"" << Endl;
    ifstream fin( weightfile );
-   if(!fin.good()) { // file not found --> Error
+   if (!fin.good()) { // file not found --> Error
       fLogger << kFATAL << "<BookMVA> fatal error: "
               << "unable to open input weight file: " << weightfile << Endl;
    }
@@ -258,15 +265,32 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TString methodName, TString weightfile )
    Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
    fin.close();  
 
-   TString MethodTypeFromFile = ls(idx1,idx2);
+   TString fullname = ls(idx1,idx2);
+   idx1 = fullname.First(':');
+   Int_t idxtit = (idx1<0 ? fullname.Length() : idx1);
+   TString methodRealName  = fullname(0, idxtit);
+   TString methodTitle;
+   Bool_t notit;
+   if (idx1<0) {
+      methodTitle=methodRealName;
+      notit=kTRUE;
+   } 
+   else {
+      methodTitle=fullname(idxtit+2,fullname.Length()-1);
+      notit=kFALSE;
+   }
 
-   MethodBase* method = (MethodBase*)this->BookMVA( Types::Instance().GetMethodType(MethodTypeFromFile), 
+
+   MethodBase* method = (MethodBase*)this->BookMVA( Types::Instance().GetMethodType(methodRealName), 
                                                     weightfile );
-   method->SetMethodTitle(methodName);
+   method->SetMethodTitle(methodTitle);
 
-   return fMethodMap[methodName] = method;
+   fLogger << kINFO << "Read method name  : \"" << method->GetMethodName()  << "\"" << Endl;
+   fLogger << kINFO << "   - method title : \"" << method->GetMethodTitle() << "\"" << Endl;
+   fLogger << kINFO << "Method tag : \"" << methodTag << "\"" << Endl;
+
+   return fMethodMap[methodTag] = method;
 }
-
 
 //_______________________________________________________________________
 TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weightfile )
@@ -287,6 +311,10 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
       method = new TMVA::MethodPDERS( Data(), weightfile );
       break; 
 
+   case (TMVA::Types::kKNN):
+      method = new TMVA::MethodKNN( Data(), weightfile );
+      break; 
+
    case (TMVA::Types::kHMatrix):
       method = new TMVA::MethodHMatrix( Data(), weightfile );
       break; 
@@ -294,6 +322,14 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
    case (TMVA::Types::kFisher):
       method = new TMVA::MethodFisher( Data(), weightfile );
       break; 
+
+   case (TMVA::Types::kFDA):
+      method = new TMVA::MethodFDA( Data(), weightfile );
+      break; 
+
+   case (TMVA::Types::kMLP):
+      method = new TMVA::MethodMLP( Data(), weightfile );
+      break;
 
    case (TMVA::Types::kCFMlpANN):
       method = new TMVA::MethodCFMlpANN( Data(), weightfile );
@@ -303,20 +339,16 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
       method = new TMVA::MethodTMlpANN( Data(), weightfile );
       break; 
 
+   case (TMVA::Types::kSVM):
+      method = new TMVA::MethodSVM( Data(), weightfile );
+      break; 
+
    case (TMVA::Types::kBDT):
       method = new TMVA::MethodBDT( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::kMLP):
-      method = new TMVA::MethodMLP( Data(), weightfile );
-      break;
-
    case (TMVA::Types::kRuleFit):
       method = new TMVA::MethodRuleFit( Data(), weightfile );
-      break; 
-
-   case (TMVA::Types::kSVM):
-      method = new TMVA::MethodSVM( Data(), weightfile );
       break; 
 
    case (TMVA::Types::kBayesClassifier):
@@ -328,10 +360,11 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
       return 0;
    }  
 
-   fLogger << kINFO << "Booked classifier: " << ((MethodBase*)method)->GetMethodName() << Endl;
-
    // read weight file
    ((MethodBase*)method)->ReadStateFromFile();
+
+   fLogger << kINFO << "Booked classifier " << ((MethodBase*)method)->GetMethodName()
+           << " with title: \"" << ((MethodBase*)method)->GetMethodTitle() << "\"" << Endl;
 
 #ifdef TMVA_Reader_TestIO__
    // testing the read/write procedure
@@ -344,18 +377,18 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TString methodName, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TString methodTag, Double_t aux )
 {
    // Evaluate a vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
    for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().GetEvent().SetVal( ivar, inputVec[ivar] );
  
-   return EvaluateMVA( methodName, aux );
+   return EvaluateMVA( methodTag, aux );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodName, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodTag, Double_t aux )
 {
    // Evaluate a vector<double> of input data for a given method
 
@@ -363,19 +396,19 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TStri
 
    for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().GetEvent().SetVal( ivar, (Float_t)inputVec[ivar] );
 
-   return EvaluateMVA( methodName, aux );
+   return EvaluateMVA( methodTag, aux );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( TString methodName, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( TString methodTag, Double_t aux )
 {
    // evaluates MVA for given set of input variables
    IMethod* method = 0;
 
-   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodName );
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
       fLogger << kINFO << "<EvaluateMVA> unknown classifier in map; "
-              << "you looked for \"" << methodName << "\" within available methods: " << Endl;
+              << "you looked for \"" << methodTag << "\" within available methods: " << Endl;
       for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << " --> " << it->first << Endl;
       fLogger << "Check calling string" << kFATAL << Endl;
    }
@@ -404,16 +437,17 @@ Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
 
    return method->GetMvaValue();
 }
+
 //_______________________________________________________________________
-Double_t TMVA::Reader::GetProba( TString methodName,  Double_t ap_sig, Double_t mvaVal )
+Double_t TMVA::Reader::GetProba( TString methodTag,  Double_t ap_sig, Double_t mvaVal )
 {
-  // evaluates MVA for given set of input variables
+  // evaluates probability of MVA for given set of input variables
    IMethod* method = 0;
-   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodName );
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it == fMethodMap.end()) {
       for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << "M" << it->first << Endl;
       fLogger << kFATAL << "<EvaluateMVA> unknown classifier in map: " << method << "; "
-              << "you looked for " << methodName<< " while the available methods are : " << Endl;
+              << "you looked for " << methodTag<< " while the available methods are : " << Endl;
    }
    else method = it->second;
 
@@ -421,6 +455,25 @@ Double_t TMVA::Reader::GetProba( TString methodName,  Double_t ap_sig, Double_t 
    if (mvaVal == -9999999) mvaVal = kl->GetMvaValue();
 
    return kl->GetProba( mvaVal, ap_sig );
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Reader::GetRarity( TString methodTag, Double_t mvaVal )
+{
+  // evaluates the MVA's rarity
+   IMethod* method = 0;
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
+   if (it == fMethodMap.end()) {
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << "M" << it->first << Endl;
+      fLogger << kFATAL << "<EvaluateMVA> unknown classifier in map: \"" << method << "\"; "
+              << "you looked for \"" << methodTag<< "\" while the available methods are : " << Endl;
+   }
+   else method = it->second;
+
+   MethodBase* kl = (MethodBase*)method;
+   if (mvaVal == -9999999) mvaVal = kl->GetMvaValue();
+
+   return kl->GetRarity( mvaVal );
 }
 
 // ---------------------------------------------------------------------------------------
@@ -453,7 +506,8 @@ void TMVA::Reader::DecodeVarNames( const TString varNames )
       format.Append(varNames(i));
       if ( (varNames(i)==':') || (i==n)) {
          format.Chop();
-         format_obj = TString(format.Data()).ReplaceAll("@","");
+         format_obj = format;
+         format_obj.ReplaceAll("@","");
          Data().AddVariable( format_obj );
          format.Resize(0); 
       }

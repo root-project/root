@@ -10,48 +10,56 @@
 //        - use of TMVA plotting TStyle
 void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, bool useTMVAStyle=kTRUE )
 {
-   const TString rulefitdir = "Method_RuleFit";
-
-   const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
-                                                          "InputVariables_DecorrTransform",
-                                                          "InputVariables_PCATransform" };
-   
-   const TString outfname[TMVAGlob::kNumOfMethods] = { "rulevisHists",
-                                                       "rulevisHists_decorr",
-                                                       "rulevisHists_pca" };
-
-   const TString maintitle = "Rule importance";
-
-   const Int_t nContours = 100;
-   Double_t contourLevels[nContours];
-   Double_t dcl = 1.0/Double_t(nContours-1);
-   //
-   for (Int_t i=0; i<nContours; i++) {
-      contourLevels[i] = dcl*Double_t(i);
-   }
-
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
    
    // checks if file with name "fin" is already open, and if not opens one
    TFile *file = TMVAGlob::OpenFile( fin );
 
-   TDirectory* rfdir = (TDirectory*)gDirectory->Get( rulefitdir );
-   if (rfdir==0) {
-      cout << "Could not locate directory '" << rulefitdir << "' in file: " << fin << endl;
-      return;
-   }
-   
-   TDirectory* dir = (TDirectory*)gDirectory->Get( directories[type] );
-   if (dir==0) {
-      cout << "Could not locate directory '" << directories[type] << "' in file: " << fin << endl;
-      return;
-   }
+   // get all titles of the method rulefit
+   TList titles;
+   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_RuleFit",titles);
+   if (ninst==0) return;
 
+   // get top dir containing all hists of the variables
+   TDirectory* vardir = TMVAGlob::GetInputVariablesDir( type );
+   if (vardir==0) return;
+
+   TDirectory* corrdir = TMVAGlob::GetCorrelationPlotsDir( type, vardir );
+   if (corrdir==0) return;
+
+   // loop over all titles
+   TIter keyIter(&titles);
+   TDirectory *rfdir;
+   TKey *rfkey;
+   while ((rfkey = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      rfdir = (TDirectory *)rfkey->ReadObj();
+      cout << "Plotting title: " << rfdir->GetName() << endl;
+      rulevisHists( rfdir, vardir, corrdir, type );
+   }
+}
+
+void rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, TMVAGlob::TypeOfPlot type) {
+   //
+   if (rfdir==0)   return;
+   if (vardir==0)  return;
+   if (corrdir==0) return;
+   //
+   const TString rfName    = rfdir->GetName();
+   const TString maintitle = rfName + " : Rule Importance";
+   const TString rfNameOpt = "_RF2D_";
+   const TString outfname[TMVAGlob::kNumOfMethods] = { "rulevisHists",
+                                                       "rulevisHists_decorr",
+                                                       "rulevisHists_pca" };
+
+   const TString outputName = outfname[type]+"_"+rfdir->GetName();
+   //
    TIter rfnext(rfdir->GetListOfKeys());
    TKey *rfkey;
-   Double_t rfmax=-1.0;
+   Double_t rfmax;
+   Double_t rfmin;
    Bool_t allEmpty=kTRUE;
+   Bool_t first=kTRUE;
    while ((rfkey = (TKey*)rfnext())) {
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(rfkey->GetClassName());
@@ -59,20 +67,37 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
       TH2F *hrf = (TH2F*)rfkey->ReadObj();
       TString hname= hrf->GetName();
       if (hname.Contains("__RF_")){ // found a new RF plot
-         Double_t val = hrf->GetMaximum();
-         if (val>rfmax) rfmax=val;
+         Double_t valmin = hrf->GetMinimum();
+         Double_t valmax = hrf->GetMaximum();
+         if (first) {
+            rfmin=valmin;
+            rfmax=valmax;
+            first = kFALSE;
+         } else {
+            if (valmax>rfmax) rfmax=valmax;
+            if (valmin<rfmin) rfmin=valmin;
+         }
          if (hrf->GetEntries()>0) allEmpty=kFALSE;
       }
    }
-   if (rfmax<0) {
+   if (first) {
       cout << "ERROR: no RF plots found..." << endl;
       return;
    }
+
+   const Int_t nContours = 100;
+   Double_t contourLevels[nContours];
+   Double_t dcl = (rfmax-rfmin)/Double_t(nContours-1);
+   //
+   for (Int_t i=0; i<nContours; i++) {
+      contourLevels[i] = rfmin+dcl*Double_t(i);
+   }
+
    ///////////////////////////
-   dir->cd();
+   vardir->cd();
  
    // how many plots are in the directory?
-   Int_t noPlots = ((dir->GetListOfKeys())->GetEntries()) / 2;
+   Int_t noPlots = ((vardir->GetListOfKeys())->GetEntries()) / 2;
  
    // define Canvas layout here!
    // default setting
@@ -106,11 +131,13 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
    Int_t countPad    = 1;
 
    // loop over all objects in directory
-   TIter next(dir->GetListOfKeys());
+   TIter next(vardir->GetListOfKeys());
    TKey *key;
    TH1F *sigCpy=0;
    TH1F *bgdCpy=0;
    //
+   Bool_t first = kTRUE;
+
    while ((key = (TKey*)next())) {
 
       // make sure, that we only look at histograms
@@ -126,9 +153,12 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
          if ((c[countCanvas]==NULL) || (countPad>noPad)) {
             cout << "--- Book canvas no: " << countCanvas << endl;
             char cn[20];
-            sprintf( cn, "canvas%d", countCanvas+1 );
-            c[countCanvas] = new TCanvas( cn, maintitle,
+            sprintf( cn, "rulehist%d_", countCanvas+1 );
+            TString cname(cn);
+            cname += rfdir->GetName();
+            c[countCanvas] = new TCanvas( cname, maintitle,
                                           countCanvas*50+200, countCanvas*20, width, height ); 
+            cout << "New canvas name: " << cname.Data() << endl;
             // style
             c[countCanvas]->Divide(xPad,yPad);
             countPad = 1;
@@ -142,7 +172,7 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
          // find the corredponding background histo
          TString bgname = hname;
          bgname.ReplaceAll("__S","__B");
-         hkey = dir->GetKey(bgname);
+         hkey = vardir->GetKey(bgname);
          bgd = (TH1F*)hkey->ReadObj();
          if (bgd == NULL) {
             cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
@@ -154,10 +184,10 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
          TKey *hrfkey = rfdir->GetKey(rfname);
          TH2F *hrf = (TH2F*)hrfkey->ReadObj();
          Double_t wv = hrf->GetMaximum();
-         if (rfmax>0.0)
-            hrf->Scale(1.0/rfmax);
-         hrf->SetMinimum(0.0); // make sure it's zero  -> for palette axis
-         hrf->SetMaximum(1.0); // make sure max is 1.0 -> idem
+         //         if (rfmax>0.0)
+         //            hrf->Scale(1.0/rfmax);
+         hrf->SetMinimum(rfmin); // make sure it's zero  -> for palette axis
+         hrf->SetMaximum(rfmax); // make sure max is 1.0 -> idem
          hrf->SetContour(nContours,&contourLevels[0]);
 
          // this is set but not stored during plot creation in MVA_Factory
@@ -182,7 +212,12 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
          sig->SetMaximum( TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
          Double_t smax = sig->GetMaximum();
 
-         hrf->SetTitle( TString( maintitle ) + ": " + title );
+         if (first) {
+            hrf->SetTitle( maintitle );
+            first = kFALSE;
+         } else {
+            hrf->SetTitle( "" );
+         }
          hrf->Draw("colz ah");
          TMVAGlob::SetFrameStyle( hrf, 1.2 );
 
@@ -216,7 +251,7 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
          // save canvas to file
          if (countPad > noPad) {
             c[countCanvas]->Update();
-            TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas+1 );
+            TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
             TMVAGlob::imgconv( c[countCanvas], fname );
             //        TMVAGlob::plot_logo(); // don't understand why this doesn't work ... :-(
             countCanvas++;
@@ -226,7 +261,7 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
 
    if (countPad <= noPad) {
       c[countCanvas]->Update();
-      TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas+1 );
+      TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
       TMVAGlob::imgconv( c[countCanvas], fname );
    }
 }

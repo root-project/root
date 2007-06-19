@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: TNeuron.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuron.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::TNeuron                                                         *
+ * Class  : TNeuron                                                               *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *

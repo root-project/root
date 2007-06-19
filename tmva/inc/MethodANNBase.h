@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.h,v 1.9 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodANNBase.h,v 1.10 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -44,11 +44,11 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_TNeuron
-#include "TMVA/TNeuron.h"
-#endif
 #ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
+#endif
+#ifndef ROOT_TMVA_TNeuron
+#include "TMVA/TNeuron.h"
 #endif
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"
@@ -112,6 +112,8 @@ namespace TMVA {
       Bool_t Debug() const { return fgDEBUG; }
       
    protected:
+
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
       
       vector<Int_t>* ParseLayoutString(TString layerSpec);
       virtual void BuildNetwork(vector<Int_t>* layout, vector<Double_t>* weights=NULL);
@@ -125,7 +127,6 @@ namespace TMVA {
       
       // accessors
       Int_t    NumCycles()  { return fNcycles;   }
-      Bool_t   Normalize()  { return fNormalize; }
       TNeuron* GetInputNeuron(Int_t index) { return (TNeuron*)fInputLayer->At(index); }
       TNeuron* GetOutputNeuron()           { return fOutputNeuron; }
       
@@ -163,16 +164,15 @@ namespace TMVA {
       
       // private variables
       Int_t      fNcycles;         // number of epochs to train
-      Bool_t     fNormalize;       // flag for input data normalization
       TString    fNeuronType;      // name of neuron activation function class
       TString    fNeuronInputType; // name of neuron input calculator class
       TObjArray* fInputLayer;      // cache this for fast access
       TNeuron*   fOutputNeuron;    // cache this for fast access
       TString    fLayerSpec;       // layout specification option
       
-      // debugging flags
-      static const Bool_t fgDEBUG      = kTRUE;   // debug flag
-      static const Bool_t fgFIXED_SEED = kFALSE;  // fix rand generator seed
+      // some static flags
+      static const Bool_t fgDEBUG      = kTRUE;  // debug flag
+      static const Bool_t fgFIXED_SEED = kTRUE;  // fix rand generator seed
           
       ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
    };

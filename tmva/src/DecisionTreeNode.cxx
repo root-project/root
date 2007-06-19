@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.12 2007/04/19 06:53:01 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * CopyRight (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -47,6 +47,7 @@
 using std::string;
 
 ClassImp(TMVA::DecisionTreeNode)
+
 TMVA::MsgLogger* TMVA::DecisionTreeNode::fgLogger = 0;
    
 //_______________________________________________________________________
@@ -220,8 +221,8 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
       << " nType: "  << this->GetNodeType()
       <<endl;
   
-   if(this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
-   if(this->GetRight() != NULL) this->GetRight()->PrintRec(os);
+   if (this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
+   if (this->GetRight() != NULL) this->GetRight()->PrintRec(os);
 }
 
 //_______________________________________________________________________
@@ -239,7 +240,7 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
    // 2 r seq: 2 ivar: 0 cut: -1.5324 cType: 0 s: 353 b: 1053 nEv: 1406 suw: 353 buw: 1053 nEvuw: 1406 sepI: 0.188032 sepG: 8.18513 nType: 0
 
    is >> depth;                                         // 2
-   if( depth==-1 ) { delete this; return kFALSE; }
+   if ( depth==-1 ) { delete this; return kFALSE; }
    is >> pos ;                                          // r
    this->SetDepth(depth);
    this->SetPos(pos);
@@ -255,9 +256,8 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
       >> tmp >> dtmp7                                   // buw: 1053            
       >> tmp >> dtmp8                                   // nEvuw: 1406          
       >> tmp >> dtmp9                                   // sepI: 0.188032     
-      >> tmp >> dtmp10                                   // sepG: 8.18513      
-      >> tmp >> itmp2 ;                                 // nType: 0           
-
+      >> tmp >> dtmp10                                  // sepG: 8.18513      
+      >> tmp >> itmp2;                                  // nType: 0           
    
    this->SetSelector((UInt_t)itmp1);
    this->SetCutValue(dtmp1);
@@ -276,14 +276,12 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
    return kTRUE;
 }
 
-
-
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
                                       TMVA::Node* parent )
 {
    //recursively read the node and its daughters (--> read the 'tree')
-   if( ! ReadDataRecord(is) ) return;
+   if (!ReadDataRecord(is)) return;
 
    depth = GetDepth();
    pos   = GetPos();
@@ -291,10 +289,10 @@ void TMVA::DecisionTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
    // find parent node
    while( parent!=0 && parent->GetDepth() != GetDepth()-1) parent=parent->GetParent();
 
-   if(parent!=0) {
+   if (parent!=0) {
       SetParent(parent);
-      if(GetPos()=='l') parent->SetLeft(this);
-      if(GetPos()=='r') parent->SetRight(this);
+      if (GetPos()=='l') parent->SetLeft(this);
+      if (GetPos()=='r') parent->SetRight(this);
    }
    
    char childPos;
@@ -302,8 +300,6 @@ void TMVA::DecisionTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
    TMVA::Node * newNode = new TMVA::DecisionTreeNode();
    newNode->ReadRec(is, childPos, childDepth, this);
 }
-
-
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
@@ -318,9 +314,6 @@ void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
    fSeparationIndex=-1;
    fSeparationGain=-1;
 
-
-   if(this->GetLeft() != NULL)
-      ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
-   if(this->GetRight() != NULL)
-      ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
+   if (this->GetLeft()  != NULL) ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
+   if (this->GetRight() != NULL) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
 }

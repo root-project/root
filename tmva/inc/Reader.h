@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.h,v 1.12 2007/01/16 09:37:03 brun Exp $ 
+// @(#)root/tmva $Id: Reader.h,v 1.13 2007/04/19 06:53:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -76,14 +76,15 @@ namespace TMVA {
 
       virtual ~Reader( void );
   
-      IMethod* BookMVA( TString methodName, TString weightfile );
+      IMethod* BookMVA( TString methodTag, TString weightfile );
 
-      Double_t EvaluateMVA( const std::vector<Float_t>&,  TString methodName, Double_t aux = 0 );    
-      Double_t EvaluateMVA( const std::vector<Double_t>&, TString methodName, Double_t aux = 0 );    
+      Double_t EvaluateMVA( const std::vector<Float_t> &, TString methodTag, Double_t aux = 0 );    
+      Double_t EvaluateMVA( const std::vector<Double_t>&, TString methodTag, Double_t aux = 0 );    
       Double_t EvaluateMVA( MethodBase* method,           Double_t aux = 0 );    
-      Double_t EvaluateMVA( TString methodName,           Double_t aux = 0 );    
+      Double_t EvaluateMVA( TString methodTag,           Double_t aux = 0 );    
 
-      Double_t GetProba( TString methodName, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
+      Double_t GetProba ( TString methodTag, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
+      Double_t GetRarity( TString methodTag, Double_t mvaVal=-9999999 );
 
       // accessors 
       virtual const char* GetName() const { return "Reader"; }
@@ -93,15 +94,15 @@ namespace TMVA {
       const DataSet& Data() const { return *fDataSet; }
       DataSet& Data() { return *fDataSet; }
       
-      void AddVariable( const TString & expression, float * );
-      void AddVariable( const TString & expression, int * );
+      void AddVariable( const TString& expression, Float_t* );
+      void AddVariable( const TString& expression, Int_t* );
   
    private:
 
       // this booking method is internal
       IMethod* BookMVA( Types::EMVA method,  TString weightfile );
 
-      DataSet * fDataSet; // the data set
+      DataSet* fDataSet; // the data set
   
       // Init Reader class
       void Init( void );

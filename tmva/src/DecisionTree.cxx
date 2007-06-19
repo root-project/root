@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.13 2007/04/19 06:53:01 brun Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.14 2007/04/21 14:20:46 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -119,8 +119,6 @@ TMVA::DecisionTree::DecisionTree( DecisionTreeNode* n )
    fLogger.SetSource( "DecisionTree" );
 }
 
-
-
 //_______________________________________________________________________
 TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize,
                                   Int_t nCuts, TMVA::SeparationBase *qtype):
@@ -191,7 +189,8 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n)
    }  else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
       fLogger << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
-   } else { 
+   } 
+   else { 
       if (this->GetLeftDaughter(n) != NULL){
          this->SetParentTreeInNodes( this->GetLeftDaughter(n) );
       }
@@ -203,8 +202,6 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n)
    if (n->GetDepth() > fDepth) fDepth = n->GetDepth();
    return;
 }
-
-
 
 //_______________________________________________________________________
 Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
@@ -237,7 +234,8 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
       if (eventSample[i]->IsSignal()){
          s += eventSample[i]->GetWeight();
          suw += 1;
-      } else {
+      } 
+      else {
          b += eventSample[i]->GetWeight();
          buw += 1;
       }
@@ -269,7 +267,8 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
          if (node->GetPurity() > 0.5) node->SetNodeType(1);
          else node->SetNodeType(-1);
          if (node->GetDepth() > fDepth) fDepth = node->GetDepth();
-      }else{
+      } 
+      else {
          vector<TMVA::Event*> leftSample; leftSample.reserve(nevents);
          vector<TMVA::Event*> rightSample; rightSample.reserve(nevents);
          Double_t nRight=0, nLeft=0;
@@ -325,8 +324,6 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    return fNNodes;
 }
 
-
-
 //_______________________________________________________________________
 void TMVA::DecisionTree::FillTree( vector<TMVA::Event*> & eventSample)
 
@@ -337,7 +334,6 @@ void TMVA::DecisionTree::FillTree( vector<TMVA::Event*> & eventSample)
       this->FillEvent(*(eventSample[i]),NULL);
    }
 }
-
 
 //_______________________________________________________________________
 void TMVA::DecisionTree::FillEvent( TMVA::Event & event,  
@@ -356,7 +352,8 @@ void TMVA::DecisionTree::FillEvent( TMVA::Event & event,
    if (event.IsSignal()){
       node->IncrementNSigEvents( event.GetWeight() );
       node->IncrementNSigEvents_unweighted( );
-   } else {
+   } 
+   else {
       node->IncrementNBkgEvents( event.GetWeight() );
       node->IncrementNSigEvents_unweighted( );
    }
@@ -373,7 +370,6 @@ void TMVA::DecisionTree::FillEvent( TMVA::Event & event,
 
 }
 
-
 //_______________________________________________________________________
 void TMVA::DecisionTree::ClearTree()
 {
@@ -384,7 +380,6 @@ void TMVA::DecisionTree::ClearTree()
 
 }
 
-
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneTree()
 {
@@ -394,13 +389,10 @@ void TMVA::DecisionTree::PruneTree()
    // is implemented
    // 
 
-   if (fPruneMethod == kExpectedErrorPruning) {
-      this->PruneTreeEEP((DecisionTreeNode *)this->GetRoot());
-   } else if (fPruneMethod == kCostComplexityPruning) {
-      this->PruneTreeCC();
-   } else if (fPruneMethod == kMCC) {
-      this->PruneTreeMCC();
-   } else {
+   if      (fPruneMethod == kExpectedErrorPruning)  this->PruneTreeEEP((DecisionTreeNode *)this->GetRoot());
+   else if (fPruneMethod == kCostComplexityPruning) this->PruneTreeCC();
+   else if (fPruneMethod == kMCC)                   this->PruneTreeMCC();
+   else {
       fLogger << kFATAL << "Selected pruning method not yet implemented "
               << Endl;
    }
@@ -408,8 +400,6 @@ void TMVA::DecisionTree::PruneTree()
    this->CountNodes();
 };
       
-
-
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node)
 {
@@ -450,7 +440,6 @@ void TMVA::DecisionTree::PruneTreeCC()
    return;
 }
 
-
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneTreeMCC()
 {
@@ -470,8 +459,6 @@ void TMVA::DecisionTree::PruneTreeMCC()
    }
    return;
 }
-
-
 
 //_______________________________________________________________________
 TMVA::DecisionTreeNode*  TMVA::DecisionTree::GetWeakestLink() 
@@ -520,7 +507,6 @@ void TMVA::DecisionTree::FillLinkStrengthMap(TMVA::DecisionTreeNode *n)
       fLinkStrengthMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > ( alpha, n ));
    }
 }
-
 
 //_______________________________________________________________________
 Double_t TMVA::DecisionTree::MisClassificationCostOfNode(TMVA::DecisionTreeNode *n)
@@ -646,27 +632,25 @@ Double_t TMVA::DecisionTree::GetCostComplexityIfNextPruneStep(Double_t alpha)
       fLogger << kError << "The Quality Map in the BDT-Pruning is empty.. maybe your Tree has "
               << " absolutely no splits ?? e.g.. minimun number of events for node splitting"
               << " being larger than the number of events available ??? " << Endl;
-   } else if (fQualityGainMap.size() == 0 ){
+   } 
+   else if (fQualityGainMap.size() == 0 ){
       fLogger << kError << "The QualityGain Map in the BDT-Pruning is empty.. This can happen"
               << " if your Tree has absolutely no splits ?? e.g.. minimun number of events for"
               << " node splitting being larger than the number of events available ??? " << Endl;
-   } else {
+   } 
+   else {
 
       multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
       Int_t count=0;
       for (;it!=fQualityMap.end(); it++){
          if (it->second->GetParent() != fQualityGainMap.begin()->second ) {
-//             Double_t s=it->second->GetNSigEvents();
-//             Double_t b=it->second->GetNBkgEvents();
             Double_t s=it->second->GetNSigEvents_unweighted();
             Double_t b=it->second->GetNBkgEvents_unweighted();
             cc += (s+b) * it->first ;  
             count++;
          } 
       }
-      //now add the pruning candidates contribution as if it were pruned
-//       Double_t s=fQualityGainMap.begin()->second->GetNSigEvents();
-//       Double_t b=fQualityGainMap.begin()->second->GetNBkgEvents();
+      // now add the pruning candidates contribution as if it were pruned
       Double_t s=fQualityGainMap.begin()->second->GetNSigEvents_unweighted();
       Double_t b=fQualityGainMap.begin()->second->GetNBkgEvents_unweighted();
       
@@ -678,7 +662,6 @@ Double_t TMVA::DecisionTree::GetCostComplexityIfNextPruneStep(Double_t alpha)
 
    return cc;
 }
-
 
 //_______________________________________________________________________
 void TMVA::DecisionTree::FillQualityGainMap(DecisionTreeNode* n )
@@ -710,11 +693,6 @@ void TMVA::DecisionTree::FillQualityGainMap(DecisionTreeNode* n )
           (this->GetRightDaughter(n)->GetLeft() == NULL) && 
           (this->GetRightDaughter(n)->GetRight() == NULL) ){
          
-         //          fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
-         //                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents(),
-         //                                                                     this->GetRightDaughter(n)->GetNBkgEvents(),
-         //                                                                     n->GetNSigEvents(), n->GetNBkgEvents()),
-         //                                   n));
          fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents_unweighted(),
                                                                     this->GetRightDaughter(n)->GetNBkgEvents_unweighted(),
@@ -749,10 +727,6 @@ void TMVA::DecisionTree::FillQualityMap(DecisionTreeNode* n )
    
    //now you are intrested in leaf nodes only
    if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {   
-//       fQualityMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
-//                          ( fQualityIndex->GetSeparationIndex (n->GetNSigEvents(), 
-//                                                               n->GetNBkgEvents()),
-//                            n));
       fQualityMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
                          ( fQualityIndex->GetSeparationIndex (n->GetNSigEvents_unweighted(), 
                                                               n->GetNBkgEvents_unweighted()),
@@ -795,7 +769,6 @@ void TMVA::DecisionTree::DescendTree( DecisionTreeNode *n)
       }
    }
 }
-
 
 //_______________________________________________________________________
 TMVA::DecisionTreeNode* TMVA::DecisionTree::FindCCPruneCandidate()
@@ -902,11 +875,11 @@ Double_t TMVA::DecisionTree::GetSubTreeError(DecisionTreeNode *node)
           r->GetNEvents() * this->GetSubTreeError(r)) /
          node->GetNEvents();
       return subTreeError;
-   }else{
+   }
+   else {
       return this->GetNodeError(node);
    }
 }
-
 
 //_______________________________________________________________________
 TMVA::DecisionTreeNode* TMVA::DecisionTree::GetLeftDaughter( DecisionTreeNode *n)
@@ -922,7 +895,6 @@ TMVA::DecisionTreeNode* TMVA::DecisionTree::GetRightDaughter( DecisionTreeNode *
    return (DecisionTreeNode*) n->GetRight();
 }
    
-
 //_______________________________________________________________________
 TMVA::DecisionTreeNode* TMVA::DecisionTree::GetNode(ULong_t sequence, UInt_t depth)
 {
@@ -1044,8 +1016,6 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
          cutValues[ivar][icut]=(*xmin)[ivar]+(Float_t(icut)+0.5)*istepSize;
       }
    }
-
-
  
 #if USE_HELGE_V1==1
 
@@ -1068,7 +1038,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
             if (eventType==1){
                nTotS+=eventWeight;
                nTotS_unWeighted++;
-            }else {
+            }
+            else {
                nTotB+=eventWeight;
                nTotB_unWeighted++;
             }
@@ -1081,7 +1052,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
                if (eventType==1) {
                   nSelS[ivar][icut]+=eventWeight;
                   nSelS_unWeighted[ivar][icut]++;
-               } else {
+               } 
+               else {
                   nSelB[ivar][icut]+=eventWeight;
                   nSelB_unWeighted[ivar][icut]++;
                }
@@ -1100,7 +1072,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
       if (eventType==1){
          nTotS+=eventWeight;
          nTotS_unWeighted++;
-      }else {
+      }
+      else {
          nTotB+=eventWeight;
          nTotB_unWeighted++;
       }
@@ -1115,7 +1088,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
                if (eventType==1) {
                   nSelS[ivar][icut]+=eventWeight;
                   nSelS_unWeighted[ivar][icut]++;
-               } else {
+               } 
+               else {
                   nSelB[ivar][icut]+=eventWeight;
                   nSelB_unWeighted[ivar][icut]++;
                }
@@ -1125,7 +1099,6 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
    }
 
 #endif
-
 
    // now select the optimal cuts for each varable and find which one gives
    // the best separationGain at the current stage.
@@ -1143,7 +1116,7 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
          // for a node, rather than the sum of event weights.
          if ( (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut]) >= fMinSize &&
               (( nTotS_unWeighted+nTotB_unWeighted)- 
-               (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize){
+               (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize) {
             sepTmp = fSepType->GetSeparationGain(nSelS[ivar][icut], nSelB[ivar][icut], nTotS, nTotB);
             
             if (separationGain < sepTmp) {
@@ -1166,7 +1139,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
       node->SetSeparationGain(separationGain);
       
       fVariableImportance[mxVar] += separationGain*separationGain * (nTotS+nTotB) * (nTotS+nTotB) ;
-   }else{
+   }
+   else {
       separationGain = 0;
    }
    delete xmin;
@@ -1174,7 +1148,6 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
 
    return separationGain;
 }
-
 
 #else 
 
@@ -1224,7 +1197,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
      
       if (event_type == 1){
          nTotS += event_weight;
-      } else {
+      } 
+      else {
          nTotB += event_weight;
       }
      
@@ -1234,7 +1208,8 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
             if (event_val > cut_points[variable][cut]){
                if (event_type == 1){
                   signal_counts[variable][cut] += event_weight;
-               } else {
+               } 
+               else {
                   background_counts[variable][cut] += event_weight;
                }
             }
@@ -1347,9 +1322,6 @@ Double_t  TMVA::DecisionTree::GetVariableImportance(Int_t ivar)
    return -1;
 }
 
-
-
-
 //_______________________________________________________________________
 TH2D*  TMVA::DecisionTree::DrawTree(TString hname)
 {
@@ -1369,9 +1341,7 @@ TH2D*  TMVA::DecisionTree::DrawTree(TString hname)
    return h;
 
 }   
-   
-
-   
+      
 //_______________________________________________________________________
 void TMVA::DecisionTree::DrawNode( TH2D* h,  DecisionTreeNode *n, 
                                    Double_t y, Double_t x, Double_t scale)

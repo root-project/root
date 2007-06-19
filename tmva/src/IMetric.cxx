@@ -1,25 +1,21 @@
-// @(#)root/tmva $Id: GeneticANN.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $ 
-// Author: Andreas Hoecker, Matt Jachowski, Helge Voss
+// @(#)root/tmva $\Id$
+// Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : GeneticANN                                                            *
+ * Class  : IMetric                                                         *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -28,26 +24,19 @@
 
 //_______________________________________________________________________
 //                                                                      
-// User-defined class for genetics algorithm;
-// defines interface to the fitness function
+// interface for a metric
+//
 //_______________________________________________________________________
 
-#include "TMVA/GeneticANN.h"
-#include "TMVA/MethodMLP.h"
+#include "TMVA/IMetric.h"
 
-ClassImp(TMVA::GeneticANN)
+ClassImp(TMVA::IMetric)
 
 //_______________________________________________________________________
-TMVA::GeneticANN::GeneticANN( Int_t size, std::vector<Interval*> ranges, TMVA::MethodMLP* methodMLP ) 
-   : TMVA::GeneticBase( size, ranges ) 
+TMVA::IMetric::IMetric() 
+   : fParameters( NULL )
 {
    // constructor
-   fMethodMLP = methodMLP;
-}
+}            
 
-//_______________________________________________________________________
-Double_t TMVA::GeneticANN::FitnessFunction( const std::vector<Double_t>& parameters )
-{
-   // fitness function interface for GA
-   return fMethodMLP->ComputeEstimator( parameters );
-}
+

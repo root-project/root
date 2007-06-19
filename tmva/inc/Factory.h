@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.h,v 1.10 2007/01/23 10:21:24 brun Exp $   
+// @(#)root/tmva $Id: Factory.h,v 1.11 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -10,8 +10,6 @@
  * Description:                                                                   *
  *      This is the main MVA steering class: it creates (books) all MVA methods,  *
  *      and guides them through the training, testing and evaluation phases.      *
- *      It also manages multiple MVA handling in case of distinct phase space     *
- *      requirements (cuts).                                                      *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -20,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -39,8 +37,7 @@
 //                                                                      //
 // This is the main MVA steering class: it creates all MVA methods,     //
 // and guides them through the training, testing and evaluation         //
-// phases. It also manages multiple MVA handling in case of distinct    //
-// phase space requirements (cuts).                                     //
+// phases                                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -81,9 +78,6 @@ namespace TMVA {
 
       // default destructor
       virtual ~Factory();
-
-      // modified name (remove TMVA::)
-      const char* GetName() const { return TString(TObject::GetName()).ReplaceAll( "TMVA::", "" ).Data(); }
 
       /* 
        * Create signal and background trees from individual ascii files
@@ -135,12 +129,6 @@ namespace TMVA {
       void PrepareTrainingAndTestTree( TCut cut, 
                                        const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
 
-      // book multiple MVAs 
-      void BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *array);
-
-      // process Multiple MVAs
-      void ProcessMultipleMVA();
-
       Bool_t BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );
       Bool_t BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
       Bool_t BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString methodOption,
@@ -160,13 +148,28 @@ namespace TMVA {
       void DeleteAllMethods( void );
 
       // accessors
-      IMethod* GetMVA( TString method );
+      IMethod* GetMethod( const TString& title ) const;
 
       Bool_t Verbose( void ) const { return fVerbose; }
       void SetVerbose( Bool_t v=kTRUE ) { fVerbose = v; Data().SetVerbose(Verbose()); }
+
+      // make ROOT-independent C++ class for classifier response 
+      // (classifier-specific implementation)
+      // If no classifier name is given, help messages for all booked 
+      // classifiers are printed
+      virtual void MakeClass( const TString& methodTitle = "" ) const;
+
+      // prints classifier-specific hepl messages, dedicated to 
+      // help with the optimisation and configuration options tuning.
+      // If no classifier name is given, help messages for all booked 
+      // classifiers are printed
+      void PrintHelpMessage( const TString& methodTitle = "" ) const;
     
    protected:
-    
+
+      //      TString GetDefaultName() const { return TString("default"); } CHGFT
+      //      void CheckMethodTitle( TString & title ) { if (title.Length()==0) title=GetDefaultName(); } CHGFT
+
       DataSet& Data() const { return *fDataSet; }
       DataSet& Data()       { return *fDataSet; }
     
@@ -185,26 +188,6 @@ namespace TMVA {
       std::vector<TTreeFormula*> fInputVarFormulas; // local forulas of the same
       std::vector<IMethod*>      fMethods;          // all MVA methods
       TString                    fJobName;          // jobname, used as extension in weight file names
-
-      // driving flags for multi-cut (multiple MVAs) environment; required for internal mapping
-      Bool_t fMultipleMVAs;                 // multi-cut mode ?
-      Bool_t fMultipleStoredOptions;        // multi-cut driving flag
-      Bool_t fMultiTrain;                   // multi-cut driving flag
-      Bool_t fMultiTest;                    // multi-cut driving flag
-      Bool_t fMultiEvalVar;                 // multi-cut driving flag
-      Bool_t fMultiEval;                    // multi-cut driving flag
-
-      // in case of multiple MVAs, the cut given in the constructor determines the 
-      // distinguished phase-space regions 
-      Int_t  fMultiNtrain;                  // number of training events
-      Int_t  fMultiNtest;                   // number of testing events
-    
-      // maps for multi-cut treatment containing:
-      //   TString: simple bin name (for directories without special characters)
-      //   TString: cut (human readable)
-      //   TCut   : ROOT cut  
-      std::map<TString, std::pair<TString,TCut> >    fMultipleMVAnames;         // map of MVA names
-      std::map<TString, std::pair<TString,TString> > fMultipleMVAMethodOptions; // map of option strings
 
       // local directory for each MVA in output target, used to store 
       // specific monitoring histograms (e.g., reference distributions of likelihood method)

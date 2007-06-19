@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.9 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.10 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -61,9 +61,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -140,6 +140,15 @@ namespace TMVA {
 
    protected:
 
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // header and auxiliary classes
+      virtual void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
+
       Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                            Double_t*, Int_t*, Int_t* );
   
@@ -162,18 +171,11 @@ namespace TMVA {
       Int_t*        fNodes;     // number of nodes per layer
 
       // additional member variables for the independent NN::Evaluation phase
-//       Double_t*     fXmaxNN;    // maximum values of input variables
-//       Double_t*     fXminNN;    // minimum values of input variables
-//       Int_t         fLayermNN;  // number of layers (including input and output layers)
-//       Int_t*        fNeuronNN;  // nodes per layer
-//       Double_t***   fWNN;       // weights
-//       Double_t**    fWwNN;      // weights
       Double_t**    fYNN;       // weights
-//       Double_t*     fTempNN;    // temperature (used in activation function)
       TString       fLayerSpec; // the hidden layer specification string
 
       // auxiliary member functions
-      Double_t EvalANN( vector<Double_t>*, Bool_t& isOK );
+      Double_t EvalANN( vector<Double_t>&, Bool_t& isOK );
       void     NN_ava ( Double_t* );
       Double_t NN_fonc( Int_t, Double_t ) const;
 

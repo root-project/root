@@ -43,7 +43,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3", TMVAGl
    Int_t noPlots = 0;
    TKey* key = 0;
    // how many plots are in the directory?
-   Int_t    noPlots = (TMVAGlob::UsePaperStyle) ? 1 : ((dir->GetListOfKeys())->GetEntries());
+   Int_t    noPlots = (TMVAGlob::UsePaperStyle) ? 1 : ((dir->GetListOfKeys())->GetEntries())/2;
    Double_t noVars  = noPlots == 1 ? 0 : (1 + TMath::Sqrt(1.0 + 2.0*noPlots))/2.0;
    cout << "noPlots: " << noPlots << " --> noVars: " << noVars << endl;
    if (noVars != Int_t(noVars)) {

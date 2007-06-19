@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: Config.h,v 1.13 2007/05/31 14:17:46 andreas.hoecker Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-K Heidelberg, GER   *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland,                                                        *
- *      Iowa State U., USA,                                                       *
- *      MPI-K Heidelberg, Germany,                                                *
+ *      CERN, Switzerland                                                         *
+ *      Iowa State U., USA                                                        *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -37,8 +37,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
-#include "Riostream.h"
+#include "Rtypes.h"
+#include "TString.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
@@ -54,9 +54,17 @@ namespace TMVA {
       virtual ~Config();
 
       Bool_t UseColor() { return fUseColoredConsole; }
-      void SetUseColor(Bool_t uc) { fUseColoredConsole = uc; }
+      void SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }
 
    public:
+
+      class VariablePlotting;
+      class IONames;
+
+      VariablePlotting& GetVariablePlotting() { return fVariablePlotting; }
+      IONames&          GetIONames()          { return fIONames; }
+
+   private:
 
       // publicly accessible global settings
       class VariablePlotting {
@@ -72,7 +80,7 @@ namespace TMVA {
       public:
          TString fWeightFileDir;
          TString fWeightFileExtension;
-      } fIoNames;
+      } fIONames;
          
       
    private:

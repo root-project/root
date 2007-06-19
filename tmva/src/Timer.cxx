@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: Timer.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Timer.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::Timer                                                           *
+ * Class  : Timer                                                                 *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -17,8 +17,8 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -68,11 +68,11 @@ ClassImp(TMVA::Timer)
 //_______________________________________________________________________
 TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
    : fNcounts        ( 0 ),
-     fPrefix         ( TMVA::Timer::fgClassName ),
+     fPrefix         ( Timer::fgClassName ),
      fColourfulOutput( colourfulOutput )
 {
    // constructor
-   if (prefix == "") fPrefix = TMVA::Timer::fgClassName;
+   if (prefix == "") fPrefix = Timer::fgClassName;
    else              fPrefix = prefix;
 
    fLogger = new MsgLogger( fPrefix.Data() );
@@ -89,7 +89,7 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    // the loop will iterate through. At each call of the timer, the current
    // number of counts is provided by the user, so that the timer can obtain
    // the due time from linearly interpolating the spent time.
-   if (prefix == "") fPrefix = TMVA::Timer::fgClassName;
+   if (prefix == "") fPrefix = Timer::fgClassName;
    else              fPrefix = prefix;
 
    fLogger = new MsgLogger( fPrefix.Data() );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodMLP.h,v 1.7 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -41,6 +41,9 @@
 #include "TRandom3.h"
 #include "TH1F.h"
 
+#ifndef ROOT_TMVA_IFitterTarget
+#include "TMVA/IFitterTarget.h"
+#endif
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -59,7 +62,7 @@
 
 namespace TMVA {
 
-   class MethodMLP : public MethodANNBase {
+   class MethodMLP : public MethodANNBase, public IFitterTarget {
 
    public:
 
@@ -79,10 +82,19 @@ namespace TMVA {
       void Train() { Train(NumCycles()); }
 
       // for GA
-      Double_t ComputeEstimator(const std::vector<Double_t>& parameters);
+      Double_t ComputeEstimator( std::vector<Double_t>& parameters);
+      Double_t EstimatorFunction( std::vector<Double_t>& parameters);
 
       enum ETrainingMethod { kBP=0, kGA };
       enum EBPTrainingMode { kSequential=0, kBatch };
+
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
 
    private:
 

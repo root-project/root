@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputAbs.h,v 1.7 2007/02/02 19:16:05 brun Exp $
+// @(#)root/tmva $Id: TNeuronInputAbs.h,v 1.8 2007/04/19 06:53:01 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -36,8 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 // ROOT_VERSION(5,15,02) = (5<<16)+(15<<8)+2 = 364802
-// we use the hardcoded number here since rootcint does not easily
-// understand macro
+// we use the hardcoded number here since CINT does not easily understand macros
 // we tried using rootcints -p option, but that causes rootcint to pick up
 // things from the ROOT version of TMVA
 
@@ -72,7 +71,7 @@ namespace TMVA {
       virtual ~TNeuronInputAbs() {}
 
       // calculate the input value for the neuron
-      Double_t GetInput(TNeuron* neuron) {
+      Double_t GetInput( const TNeuron* neuron ) const {
          if (neuron->IsInputNeuron()) return 0;
          Double_t result = 0;
          for (Int_t i=0; i < neuron->NumPreLinks(); i++)

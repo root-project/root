@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.11 2007/01/16 09:37:03 brun Exp $   
+// @(#)root/tmva $Id: Types.h,v 1.12 2007/04/19 06:53:01 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      GLobal types (singleton)                                                  *
+ *      GLobal types (singleton class)                                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -16,10 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -33,20 +32,18 @@
 //                                                                      //
 // Types                                                                //
 //                                                                      //
-// Singleton class for GLobal types used by TMVA                        //
+// Singleton class for Global types used by TMVA                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
-#include "Riostream.h"
+#include "Rtypes.h"
+#include "TString.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
 
 namespace TMVA {
-
-   //typedef std::pair<Double_t,Double_t> LowHigh_t;
 
    class Types {
       
@@ -56,18 +53,20 @@ namespace TMVA {
       enum EMVA {
          kVariable    = 0,
          kCuts           ,     
+         kSeedDistance   ,     
          kLikelihood     ,
          kPDERS          ,
          kHMatrix        ,
          kFisher         ,
+         kKNN            ,
          kCFMlpANN       ,
          kTMlpANN        , 
          kBDT            ,     
          kRuleFit        ,
-         kRuleFitJF      ,
          kSVM            ,
          kMLP            ,
          kBayesClassifier,
+         kFDA            ,
          kCommittee      ,
          kMaxMethod
       };
@@ -80,7 +79,7 @@ namespace TMVA {
       };
 
       enum ESBType { 
-         kSignal = 0, 
+         kSignal = 0,  // Never change this number - it is elsewhere assumed to be zero !
          kBackground, 
          kSBBoth, 
          kMaxSBType,
@@ -94,17 +93,16 @@ namespace TMVA {
       static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
       ~Types() {}
 
-      EMVA GetMethodType( const TString& method ) const;
+      TMVA::Types::EMVA GetMethodType( const TString& method ) const;
 
    private:
 
-      Types();
-      
+      Types();      
       static Types* fgTypesPtr;
                   
    private:
          
-      std::map<TString, EMVA> fStr2type; // types-to-text map
+      std::map<TString, TMVA::Types::EMVA> fStr2type; // types-to-text map
       mutable MsgLogger       fLogger;   // message logger
          
    };

@@ -76,7 +76,7 @@ void mutransform( TString fin = "TMVA.root", Bool_t logy = kFALSE, Bool_t useTMV
    Float_t dxL = 0.48,  dyH = 0.22;
    TLegend *legend = new TLegend( x0L, y0H-dyH, x0L+dxL, y0H );
    legend->SetTextSize( 0.05 );
-   legend->SetHeader( "MVA Method:" );
+   legend->SetHeader( "TMVA Classifier:" );
    legend->SetMargin( 0.4 );
 
    TString xtit = "mu-transform";

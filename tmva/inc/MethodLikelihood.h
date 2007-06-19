@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.h,v 1.10 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.h,v 1.11 2007/04/19 06:53:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -22,9 +22,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -95,33 +95,30 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking();
 
-      // overload test event reading
-      /*       virtual Bool_t ReadTestEvent(UInt_t ievt, Types::ESBType type = Types::kSignal) const { */
-      /*          fVarTransform->SwitchOffTransformation(); */
-      /*          fVarTransform->ReadEvent(Data().GetTestTree(), ievt, type); */
-      /*          fVarTransform->SwitchOnTransformation(); */
-      /*          return kTRUE; */
-      /*       } */
-
    protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // header and auxiliary classes
+      virtual void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
 
    private:
 
       // returns transformed or non-transformed output
-      Double_t TransformLikelihoodOutput( Double_t ps, Double_t pb );
+      Double_t TransformLikelihoodOutput( Double_t ps, Double_t pb ) const;
 
       // the option handling methods
       virtual void DeclareOptions();
       virtual void ProcessOptions();
       
       // options
-      Int_t     fSpline;                  // Spline order to smooth histograms
       Int_t     fAverageEvtPerBin;        // average events per bin; used to calculate fNbins
       Int_t*    fAverageEvtPerBinVarS;    // average events per bin; used to calculate fNbins
       Int_t*    fAverageEvtPerBinVarB;    // average events per bin; used to calculate fNbins
-
-      // type of Splines used to smooth PDFs
-      PDF::EInterpolateMethod fInterpolateMethod;
 
       Int_t            fNsmooth;        // number of smooth passes
       Int_t*           fNsmoothVarS;    // number of smooth passes
@@ -130,8 +127,13 @@ namespace TMVA {
       Bool_t           fTransformLikelihoodOutput; // likelihood output is sigmoid-transformed
 
 
-      Bool_t                   fUseKDE;        // Use Kernel density estimation
-      TString                  fKDEtypeString; // Kernel type to use for KDE (string) 
+      // type of Splines (or Kernel) used to smooth PDFs
+      TString*           fInterpolateString;  // which interpolation method used for reference histograms (individual for each variable)
+      PDF::EInterpolateMethod *fInterpolateMethod; //enumerators encoding the interpolation method
+
+      Int_t                    fSpline;        // Spline order to smooth histograms (if spline is selected for interpolation)
+
+      TString                  fKDEtypeString; // Kernel type to use for KDE (string) (if KDE is selected for interpolation) 
       TString                  fKDEiterString; // Number of iterations (string)
       KDEKernel::EKernelType   fKDEtype;       // Kernel type to use for KDE
       KDEKernel::EKernelIter   fKDEiter;       // Number of iterations

@@ -1,70 +1,66 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.h,v 1.7 2007/01/16 14:28:35 brun Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $\Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : SimulatedAnnealingBase                                                *
+ * Class  : SimulatedAnnealing                                                    *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Base class for simulated annealing fitting procedure                      *
+ *      Base implementation of simulated annealing fitting procedure              *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ * Copyright (c) 2006:                                                            *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef ROOT_TMVA_SimulatedAnnealingBase
-#define ROOT_TMVA_SimulatedAnnealingBase
+#ifndef ROOT_TMVA_SimulatedAnnealing
+#define ROOT_TMVA_SimulatedAnnealing
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// SimulatedAnnealingBase                                               //
+// SimulatedAnnealing                                                   //
 //                                                                      //
-// Base class for Simulated Annealing fitting procedure                 //
+// Base implementation of simulated annealing fitting procedure         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
 
-#include "TObject.h"
-#include "TRandom.h"
-
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
-#ifndef ROOT_TMVA_Interval
-#include "TMVA/Interval.h"
+#ifndef ROOT_TMVA_MsgLogger
+#include "TMVA/MsgLogger.h"
 #endif
+
+class TRandom;
 
 namespace TMVA {
 
-   class SimulatedAnnealingBase : public TObject {
+   class IFitterTarget;
+   class Interval;
+
+   class SimulatedAnnealing {
 
    public:
 
-      SimulatedAnnealingBase( std::vector<Interval*>& ranges );
-      virtual ~SimulatedAnnealingBase();
+      SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges );
+      virtual ~SimulatedAnnealing();
 
-      virtual Double_t MinimizeFunction( const std::vector<Double_t>& parameters ) = 0;
-   
       // returns FCN value at minimum
       Double_t Minimize( std::vector<Double_t>& parameters );
-      Double_t GetPerturbationProbability( Double_t energy, Double_t energyRef, 
-                                           Double_t temperature);
+
       // accessors
       void SetMaxCalls    ( Int_t    mc    ) { fMaxCalls = mc; }
       void SetTempGrad    ( Double_t dt    ) { fTemperatureGradient = dt; }
@@ -77,20 +73,26 @@ namespace TMVA {
 
    private:
 
-      TRandom*                fRandom;                 // random generator
-      std::vector<Interval*> fRanges;                 // parameter ranges
+      Double_t GetPerturbationProbability( Double_t energy, Double_t energyRef, 
+                                           Double_t temperature );
+
+      IFitterTarget&                fFitterTarget;           // the fitter target
+      TRandom*                      fRandom;                 // random generator
+      const std::vector<Interval*>& fRanges;                 // parameter ranges
 
       // fitter setup 
-      Int_t                   fMaxCalls;               // maximum number of minimisation calls
-      Double_t                fTemperatureGradient;    // temperature gradient
-      Bool_t                  fUseAdaptiveTemperature; // use adaptive termperature
-      Double_t                fInitialTemperature;     // initial temperature
-      Double_t                fMinTemperature;         // mimimum temperature
-      Double_t                fEps;                    // epsilon
-      Int_t                   fNFunLoops;              // number of function loops
-      Int_t                   fNEps;                   // number of epsilons                    
+      Int_t                         fMaxCalls;               // maximum number of minimisation calls
+      Double_t                      fTemperatureGradient;    // temperature gradient
+      Bool_t                        fUseAdaptiveTemperature; // use adaptive termperature
+      Double_t                      fInitialTemperature;     // initial temperature
+      Double_t                      fMinTemperature;         // mimimum temperature
+      Double_t                      fEps;                    // epsilon
+      Int_t                         fNFunLoops;              // number of function loops
+      Int_t                         fNEps;                   // number of epsilons                    
 
-      ClassDef(SimulatedAnnealingBase,0)  // Base class for Simulated Annealing fitting
+      mutable MsgLogger             fLogger;                 // message logger
+
+      ClassDef(SimulatedAnnealing,0)  // Base class for Simulated Annealing fitting
    };   
 
 } // namespace TMVA

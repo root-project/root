@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.h,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.h,v 1.11 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -21,9 +21,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -98,6 +98,12 @@ namespace TMVA {
       const Ranking* CreateRanking();
 
    protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      virtual void GetHelpMessage() const;
 
    private:
 

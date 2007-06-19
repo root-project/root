@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.cxx,v 1.4 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: MethodBayesClassifier.cxx,v 1.5 2007/04/19 06:53:02 brun Exp $    
 // Author: Marcin .... 
 
 /**********************************************************************************
@@ -15,8 +15,8 @@
  *                                                                                *
  * Copyright (c) 2005-2006:                                                       *
  *      University of Houston,                                                    *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
@@ -114,3 +114,31 @@ Double_t TMVA::MethodBayesClassifier::GetMvaValue()
    return myMVA;
 }
 
+//_______________________________________________________________________
+void TMVA::MethodBayesClassifier::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBayesClassifier::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "<None>" << Endl;
+}

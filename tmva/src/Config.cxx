@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: Config.cxx,v 1.13 2007/05/31 14:17:46 andreas.hoecker Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-K Heidelberg, GER   *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland,                                                        *
- *      Iowa State U., USA,                                                       *
- *      MPI-K Heidelberg, Germany,                                                *
+ *      CERN, Switzerland                                                         *
+ *      Iowa State U., USA                                                        *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,8 +48,8 @@ TMVA::Config::Config() :
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
 
    // IO names
-   fIoNames.fWeightFileDir       = "weights";
-   fIoNames.fWeightFileExtension = "weights";
+   fIONames.fWeightFileDir       = "weights";
+   fIONames.fWeightFileExtension = "weights";
 }
 
 //_______________________________________________________________________

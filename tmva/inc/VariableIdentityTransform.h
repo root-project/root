@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariableIdentityTransform.h,v 1.14 2007/06/15 23:23:05 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -36,7 +36,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
+#endif
 
 namespace TMVA {
 
@@ -44,18 +46,21 @@ namespace TMVA {
 
    public:
   
-      VariableIdentityTransform( std::vector<VariableInfo>& );
+      VariableIdentityTransform( std::vector<TMVA::VariableInfo>& );
       virtual ~VariableIdentityTransform( void ) {}
 
       void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
       Bool_t PrepareTransformation( TTree* inputTree );
 
-      void WriteTransformationToStream( std::ostream& ) const {}
-      void ReadTransformationToStream ( std::istream& ) { SetCreated(); }
+      void WriteTransformationToStream ( std::ostream& ) const {}
+      void ReadTransformationFromStream( std::istream& ) { SetCreated(); }
 
       virtual TMVA::Event& GetEvent()  const { return GetEventRaw(); }
 
-      ClassDef(VariableIdentityTransform,0) // variable transformation base class
+      // writer of function code
+      virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part);
+
+      ClassDef(VariableIdentityTransform,0) // Variable transformation: identity
    };
 
 } // namespace TMVA

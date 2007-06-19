@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInput.h,v 1.3 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TNeuronInput.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -47,13 +47,12 @@ namespace TMVA {
       virtual ~TNeuronInput() {}
 
       // calculate input value for neuron
-      virtual Double_t GetInput(TNeuron* neuron) = 0;
+      virtual Double_t GetInput( const TNeuron* neuron ) const = 0;
 
       // name of class
       virtual TString GetName() = 0;
 
       ClassDef(TNeuronInput,0) // Interface for TNeuron input calculation classes
-         ;
    };
 
 } // namespace TMVA

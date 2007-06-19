@@ -1,4 +1,5 @@
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.8 2007/04/19 10:32:04 brun Exp $    
+// ver. 09.05.2007 wprowadzone wagi ( ale bez konkretnych poprawek )
+// @(#)root/tmva $Id: MethodSVM.cxx,v 1.59 2007/06/15 22:01:33 andreas.hoecker Exp $    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -16,7 +17,7 @@
  *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
@@ -46,25 +47,25 @@
 
 const int basketsize__ = 1280000;
 
+Bool_t wbug = kTRUE;
 ClassImp(TMVA::MethodSVM)
 
 //_______________________________________________________________________
-   TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
-                               TString theOption, TDirectory* theTargetDir )
-      : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
+                            TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
    InitSVM();
 
+   // interpretation of configuration option string
    DeclareOptions();
-
    ParseOptions();
-
    ProcessOptions();
 
    SetKernel();
-
    PrepareDataToTrain();
+ 
 }
 
 //_______________________________________________________________________
@@ -80,7 +81,7 @@ TMVA::MethodSVM::MethodSVM( DataSet& theData,
 }
 
 //_______________________________________________________________________
-TMVA::MethodSVM::~MethodSVM( void )
+TMVA::MethodSVM::~MethodSVM()
 {  
    // destructor
 
@@ -94,15 +95,24 @@ TMVA::MethodSVM::~MethodSVM( void )
    if (fTypesVec   != 0) delete fTypesVec;
    if (fI          != 0) delete fI;
    if (fKernelDiag != 0) delete fKernelDiag;
+
+   if (fSupportVectors!=0) {
+      for (vector<Float_t*>::iterator it = fSupportVectors->begin(); it!=fSupportVectors->end(); it++)
+         delete[] *it;
+      delete fSupportVectors;
+   }
 }
 
 //_______________________________________________________________________
-void TMVA::MethodSVM::InitSVM( void )
+void TMVA::MethodSVM::InitSVM()
 {
    // default initialisation
    SetMethodName( "SVM" );
    SetMethodType( TMVA::Types::kSVM );
    SetTestvarName();
+
+   // SVM always uses normalised input variables
+   SetNormalised( kTRUE );
 
    fAlphas     = new vector< Float_t >( Data().GetNEvtTrain());
    fErrorCache = new vector< Float_t >( Data().GetNEvtTrain());
@@ -110,9 +120,9 @@ void TMVA::MethodSVM::InitSVM( void )
    for (Int_t i = 0; i < GetNvar(); i++)
       (*fVariables)[i] = new Float_t[ Data().GetNEvtTrain() ];
 
-   fNormVar    = new vector< Float_t> ( Data().GetNEvtTrain() );
-   fTypesVec   = new vector< Int_t >  ( Data().GetNEvtTrain() );
-   fI          = new vector< Short_t >( Data().GetNEvtTrain() );
+   fNormVar  = new vector< Float_t> ( Data().GetNEvtTrain() );
+   fTypesVec = new vector< Int_t >  ( Data().GetNEvtTrain() );
+   fI        = new vector< Short_t >( Data().GetNEvtTrain() );
    fKernelDiag = new vector< Float_t> ( Data().GetNEvtTrain() );
 }
 
@@ -121,7 +131,7 @@ void TMVA::MethodSVM::DeclareOptions()
    // declare options available for this method
    DeclareOptionRef( fC         = 1.,   "C",       "C parameter" );
    DeclareOptionRef( fTolerance = 0.01, "Tol",     "Tolerance parameter" );
-   DeclareOptionRef( fMaxIter   = 1000, "MaxIter", "Max number of training loops" );
+   DeclareOptionRef( fMaxIter   = 1000, "MaxIter", "Maximum number of training loops" );
 
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fDoubleSigmaSquered = 2., "Sigma", "Kernel parameter: Sigma");
@@ -156,7 +166,7 @@ void TMVA::MethodSVM::ProcessOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodSVM::Train( void )
+void TMVA::MethodSVM::Train()
 {
    // train the SVM
 
@@ -173,10 +183,12 @@ void TMVA::MethodSVM::Train( void )
    (*fErrorCache)[fI_low] =  1;
 
    // timing
-   TMVA::Timer timer( GetName() );
+   Timer timer( GetName() );
    fLogger << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
 
-   Int_t numit = 0;
+   Float_t numChangedOld = 0;
+   Int_t deltaChanges = 0;
+   Int_t numit    = 0;
    while ((numChanged > 0) || (examineAll > 0)) {
       numChanged = 0;
     
@@ -188,7 +200,7 @@ void TMVA::MethodSVM::Train( void )
          for (Int_t k =0; k < Data().GetNEvtTrain(); k++) {
             if ((*fI)[k] == 0) {
                numChanged += this->ExamineExample(k);
-               if (fB_up > fB_low - 2*fTolerance) {
+               if ((fB_up > fB_low - 2*fTolerance) ) {
                   numChanged = 0;
                   break;
                }
@@ -197,15 +209,20 @@ void TMVA::MethodSVM::Train( void )
       }
 
       if      (examineAll == 1) examineAll = 0;
-      else if (numChanged == 0) examineAll = 1;
-      
+      else if (numChanged == 0 || numChanged < 10 || deltaChanges > 3 ) examineAll = 1;
+
+      if (numChanged == numChangedOld) deltaChanges++;
+      else                             deltaChanges = 0;
+      numChangedOld = numChanged;
+      ++numit;
+
       // indicate unordered progress
       if (fB_up > fB_low - 2*fTolerance) 
          timer.DrawProgressBar( Form( "number-changed/examine-all/delta/counter: (%i, %i, %g, %i)", 
-                                      numChanged, examineAll, fB_up - fB_low + 2*fTolerance, ++numit) );
-      if (numit >= fMaxIter) {
+                                      numChanged, examineAll, fB_up - fB_low + 2*fTolerance, numit) );
+      if ( numit >= fMaxIter){
          fLogger << kWARNING << "<Train> Max number of iterations exceeded. "
-                 << " Training may not be completed. Try use less C parameter" << Endl;
+                 << "Training may not be completed. Try use less C parameter" << Endl;
          break;
       }
    }
@@ -220,8 +237,9 @@ void TMVA::MethodSVM::Train( void )
    delete fI; fI = 0;
    delete fErrorCache; fErrorCache = 0;
 
-   this->Results();
-  
+   Results();
+   StoreSupportVectors();
+
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 }
@@ -230,23 +248,17 @@ void TMVA::MethodSVM::Train( void )
 void  TMVA::MethodSVM::WriteWeightsToStream( ostream& o ) const
 {
    // write configuration to output stream
-   if(TxtWeightsOnly()) {
-      Int_t evtCounter=0;
+   if (TxtWeightsOnly()) {
       o << fBparm << endl;
+      o << fNsupv << endl;
 
-      for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++)
-         if ((*fAlphas)[ievt] != 0) evtCounter++;
-      o << evtCounter << endl;
 
-      evtCounter=0;
-      for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
-         if ((*fAlphas)[ievt] != 0) {
-            o << evtCounter++ << "    " << (Double_t)(*fAlphas)[ievt] * (*fTypesVec)[ievt];
-
-            for (Int_t ivar = 0; ivar < GetNvar(); ivar++) o << " " << (*fVariables)[ivar][ievt];
-            o << endl;
-         }
+      for (Int_t isv = 0; isv < fNsupv; isv++ ) {
+         o << isv;
+         for (Int_t ivar = 0; ivar <= GetNvar(); ivar++)	  o << " " << (*fSupportVectors)[ivar][isv];
+         o << endl;
       }
+
       // write max data values
       for (Int_t ivar = 0; ivar < GetNvar(); ivar++) o << GetXmax( ivar ) << " ";
       o << endl;
@@ -279,18 +291,9 @@ void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
    for (UInt_t ivar=0; ivar < Data().GetNVariables(); ivar++) {
       // add Branch to Support Vector Tree
       const char* myVar = Data().GetInternalVarName(ivar).Data();
-      char vt = Data().VarType(ivar);   // the variable type, 'F' 
-      if (vt=='F') { 
-         suppVecTree->Branch( myVar,&sVVar[nvar], Form("%s/%c", myVar, vt), basketsize__ );
-         nvar++;
-      }
-      
-      else {
-         fLogger << kFATAL << "<WriteWeightsToStream> unknown variable type '" 
-                 << vt << "' encountered; allowed are: 'F'"
-                 << Endl;
-      }
-   } // end of loop over input variables
+      suppVecTree->Branch( myVar,&sVVar[nvar], Form("%s/F", myVar), basketsize__ );
+      nvar++;
+   }
     
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
       if ((*fAlphas)[ievt] != 0) {
@@ -313,7 +316,7 @@ void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
    TVectorD maxVars( GetNvar() );
    TVectorD minVars( GetNvar() );
   
-   for( Int_t ivar = 0; ivar < GetNvar(); ivar ++){
+   for ( Int_t ivar = 0; ivar < GetNvar(); ivar ++) {
       maxVars[ivar] = GetXmax( ivar );
       minVars[ivar] = GetXmin( ivar );
    }
@@ -330,15 +333,15 @@ void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
 void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
 {
    // read configuration from input stream
-   if(TxtWeightsOnly()) {
+   if (TxtWeightsOnly()) {
       istr >> fBparm;
    
       istr >> fNsupv;
-      if(fAlphas!=0) delete fAlphas;
+      if (fAlphas!=0) delete fAlphas;
       fAlphas = new vector< Float_t >(fNsupv+1);
 
-      if(fVariables!=0) {
-         for(vector< Float_t* >::iterator it = fVariables->begin(); it!=fVariables->end(); it++)
+      if (fVariables!=0) {
+         for (vector< Float_t* >::iterator it = fVariables->begin(); it!=fVariables->end(); it++)
             delete[] *it;
          delete fVariables;
       }
@@ -346,7 +349,7 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
       for (Int_t i = 0; i < GetNvar(); i++) 
          (*fVariables)[i] = new Float_t[fNsupv + 1];
 
-      if(fNormVar!=0) delete fNormVar;
+      if (fNormVar!=0) delete fNormVar;
       fNormVar = new vector< Float_t >(fNsupv + 1);
 
       fMaxVars = new TVectorD( GetNvar() );
@@ -372,7 +375,8 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
          istr >> (*fMinVars)[ivar];
        
       SetKernel();
-   } else {
+   } 
+   else {
       istr >> fBparm;
    }
 }
@@ -404,13 +408,9 @@ void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
    fMaxVars  = (TVectorD*)fFin.Get( "MaxVars");
    fMinVars  = (TVectorD*)fFin.Get( "MinVars");
    
-   fAlphas = new vector< Float_t >( nevt + 1 );  
-   
-   fVariables = new vector< Float_t* >(nvar);
-   fAlphas = new vector< Float_t >( nevt + 1 );  
-   
-   fVariables = new vector< Float_t* >(nvar);
-   
+   fAlphas    = new vector<Float_t >(nevt + 1);     
+   fVariables = new vector<Float_t*>(nvar);
+
    for (Int_t i = 0; i < nvar; i++) (*fVariables)[i] = new Float_t[nevt + 1];
 
    fNormVar = new vector< Float_t >(nevt + 1);
@@ -436,16 +436,15 @@ Double_t TMVA::MethodSVM::GetMvaValue()
    (*fNormVar)[fNsupv] = 0; 
 
    for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
-      (*fVariables)[ivar][fNsupv] = TMVA::Tools::NormVariable( GetEventVal( ivar ), (*fMinVars)[ivar], (*fMaxVars)[ivar]);
+      (*fVariables)[ivar][fNsupv] = GetEventVal( ivar );
       (*fNormVar)[fNsupv] += (*fVariables)[ivar][fNsupv] * (*fVariables)[ivar][fNsupv]; 
    }
 
-   for (Int_t ievt = 0; ievt < fNsupv - 1; ievt++) {
-      myMVA = myMVA + (*fAlphas)[ievt] * (this->*fKernelFunc)(fNsupv, ievt);
+   for (Int_t ievt = 0; ievt < fNsupv ; ievt++) {
+      myMVA += (*fAlphas)[ievt] * (this->*fKernelFunc)(fNsupv, ievt);
    }
 
-   myMVA -=fBparm;
-
+   myMVA -= fBparm;
    return 1.0/(1.0 + TMath::Exp(-myMVA));
 }
 
@@ -454,16 +453,19 @@ void TMVA::MethodSVM::PrepareDataToTrain()
 {
    // puts all events in std::vectors 
    //normalized data
+   Float_t weightavg = 0;
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {   
 
       ReadTrainingEvent( ievt );  
+      weightavg += GetEventWeight();
       (*fNormVar)[ievt] = 0.;
 
       for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
-         (*fVariables)[ivar][ievt] = GetEvent().GetValueNormalized( ivar );
+            
+         (*fVariables)[ivar][ievt] = GetEventVal(ivar);
          (*fNormVar)[ievt] +=  (*fVariables)[ivar][ievt]* (*fVariables)[ivar][ievt];
       }
-      if (GetEvent().IsSignal()) {
+      if (IsSignalEvent()) {
          (*fTypesVec)[ievt] = 1;
          (*fI)[ievt] = 1;
       }
@@ -473,7 +475,7 @@ void TMVA::MethodSVM::PrepareDataToTrain()
       }
    } 
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
-      switch ( fKernelType ){
+      switch ( fKernelType ) {
 
       case kLinear:
          (*fKernelDiag)[ievt] = (*fNormVar)[ievt];
@@ -488,6 +490,7 @@ void TMVA::MethodSVM::PrepareDataToTrain()
          break;
       }
    }
+   fC = ( fC * Data().GetNEvtTrain()) / weightavg;
 }
 
 //________________________________________________________________________
@@ -506,7 +509,7 @@ void TMVA::MethodSVM::SetKernel()
       fKernelFunc = &MethodSVM::RBFKernel;
       if (fDoubleSigmaSquered <= 0.) {
          fDoubleSigmaSquered = 1.;
-         fLogger <<kWARNING << "wrong Sigma value, uses default ::"<<fDoubleSigmaSquered<<endl;
+         fLogger << kWARNING << "wrong Sigma value, uses default ::" << fDoubleSigmaSquered << Endl;
       }
       break;
      
@@ -514,7 +517,7 @@ void TMVA::MethodSVM::SetKernel()
       fKernelFunc = &MethodSVM::PolynomialKernel;
       if (fOrder < 2) {
          fOrder = 2;
-         fLogger << kWARNING << "wrong polynomial order! Choose Order = "<< fOrder <<Endl;
+         fLogger << kWARNING << "wrong polynomial order! Choose Order = "<< fOrder << Endl;
       }
       break;
     
@@ -586,17 +589,16 @@ Int_t TMVA::MethodSVM::ExamineExample( Int_t jevt )
 Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
 { 
    // take step
-
    if (ievt == jevt) return 0;
    const Float_t epsilon = 1e-12;
-
+   
    Float_t type_I,  type_J;
    Float_t errorC_I,  errorC_J;
    Float_t alpha_I, alpha_J;
-    
+   
    Float_t newAlpha_I, newAlpha_J;
    Int_t   s;  
-
+   
    Float_t l, h, lobj = 0, hobj = 0;
    Float_t eta;
 
@@ -609,34 +611,68 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
    errorC_J = (*fErrorCache)[jevt];
     
    s = Int_t( type_I * type_J );
-  
+
+   ReadTrainingEvent( ievt );
+   Float_t c_i = fC * GetEvent().GetWeight();
+   
+   ReadTrainingEvent( jevt );
+   Float_t c_j = fC * GetEvent().GetWeight();  
+
+   if (!wbug) cout << c_i <<"\t"<< c_j<<"\t\t ";
+
+   // *************************************
+
    // compute l, h
 
    if (type_I == type_J) {
       Float_t gamma = alpha_I + alpha_J;
-      if (gamma > fC) {
-         l = gamma -fC;
-         h = fC;
-      }
+      
+      if ( c_i > c_j ) {
+         if ( gamma < c_j ) {
+            l = 0;
+            h = gamma;
+         }
+         else{
+            h = c_j;
+            if ( gamma < c_i )
+               l = 0;
+            else
+               l = gamma - c_i;
+         }
+      }           
       else {
-         l = 0;
-         h = gamma;
+         if ( gamma < c_i ){
+            l = 0;
+            h = gamma;
+         }
+         else {
+            l = gamma - c_i;
+            if ( gamma < c_j )
+               h = gamma;
+            else
+               h = c_j;
+         }
       }
    }
    else {
       Float_t gamma = alpha_I - alpha_J;
       if (gamma > 0) {
          l = 0;
-         h = fC - gamma;
+         if ( gamma >= (c_i - c_j) ) 
+            h = c_i - gamma;
+         else
+            h = c_j;
       }
       else {
          l = -gamma;
-         h = fC;
+         if ( (c_i - c_j) >= gamma)
+            h = c_j;
+         else 
+            h = c_i - gamma;
       }
    }
   
    if (l == h)  return 0;
-
    Float_t kernel_II, kernel_IJ, kernel_JJ;
 
    kernel_II = (*fKernelDiag)[ievt];
@@ -671,12 +707,13 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
 
    if (newAlpha_I < 0) {
       newAlpha_J += s* newAlpha_I;
+      if (newAlpha_J > c_j) fLogger << kWARNING << "Unbound Alpha J!!" << Endl;
       newAlpha_I = 0;
    }
-   else if (newAlpha_I > fC) {
-      Float_t temp = newAlpha_I -fC;
+   else if (newAlpha_I > c_i) {
+      Float_t temp = newAlpha_I - c_i;
       newAlpha_J += s * temp;
-      newAlpha_I = fC;
+      newAlpha_I = c_i;
    }
   
    Float_t dL_I = type_I * ( newAlpha_I - alpha_I );
@@ -752,6 +789,7 @@ Int_t TMVA::MethodSVM::TakeStep( Int_t ievt , Int_t jevt)
    }  
    return 1;
 }
+
 //_____________________________________________________________
 Float_t TMVA::MethodSVM::LinearKernel( Int_t ievt, Int_t jevt ) const 
 {
@@ -783,7 +821,7 @@ Float_t TMVA::MethodSVM::PolynomialKernel( Int_t ievt, Int_t jevt ) const
    Float_t val = TMVA::MethodSVM::LinearKernel( ievt, jevt );
    val += fTheta;
    Float_t valResult = 1.;
-   for (Int_t i = fOrder; i > 0; i /= 2){
+   for (Int_t i = fOrder; i > 0; i /= 2) {
       if (i%2) valResult = val; 
       val *= val; 
    } 
@@ -806,7 +844,6 @@ Float_t TMVA::MethodSVM::SigmoidalKernel( Int_t ievt, Int_t jevt ) const
 Float_t TMVA::MethodSVM::LearnFunc( Int_t kevt)
 {
    // learn function
-
    Float_t s = 0.;
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
       if ((*fAlphas)[ievt]>0)
@@ -820,17 +857,24 @@ Float_t TMVA::MethodSVM::LearnFunc( Int_t kevt)
 void TMVA::MethodSVM::SetIndex( Int_t ievt )
 {
    // set the index
+   ReadTrainingEvent( ievt );
+   Float_t c_temp = fC * GetEvent().GetWeight();
 
-   if ((0<(*fAlphas)[ievt]) && ((*fAlphas)[ievt])<fC) (*fI)[ievt]=0; // I0
+   if ((0<(*fAlphas)[ievt]) && ((*fAlphas)[ievt]) < c_temp ) 
+      (*fI)[ievt]=0;                                          // I0
   
    if ((*fTypesVec)[ievt] == 1) {
-      if      ((*fAlphas)[ievt] == 0)  (*fI)[ievt] =  1;     // I1
-      else if ((*fAlphas)[ievt] == fC) (*fI)[ievt] = -1;     // I3
+      if      ((*fAlphas)[ievt] == 0)  
+         (*fI)[ievt] =  1;                                    // I1
+      else if ((*fAlphas)[ievt] == c_temp ) 
+         (*fI)[ievt] = -1;                                    // I3
    }
   
    if ((*fTypesVec)[ievt] == -1) {
-      if      ((*fAlphas)[ievt] == 0)  (*fI)[ievt] = -1;     // I4
-      else if ((*fAlphas)[ievt] == fC) (*fI)[ievt] =  1;     // I2
+      if      ((*fAlphas)[ievt] == 0 )  
+         (*fI)[ievt] = -1;                                    // I4
+      else if ((*fAlphas)[ievt] == c_temp ) 
+         (*fI)[ievt] =  1;                                    // I2
    }
 }
 
@@ -839,10 +883,197 @@ void TMVA::MethodSVM::Results()
 {
    // results
    Int_t nvec = 0;
-   for (Int_t i = 0; i < Data().GetNEvtTrain(); i++) if ((*fAlphas)[i] == 0) nvec++;
+   for (Int_t i = 0; i < Data().GetNEvtTrain(); i++) if ((*fAlphas)[i] != 0) nvec++;
 
    fLogger << kINFO << "Results:" << Endl;
    fLogger << kINFO << "- number of support vectors: " << nvec 
            << " (" << 100*nvec/Data().GetNEvtTrain() << "%)" << Endl;
    fLogger << kINFO << "- b: " << fBparm << Endl;
+}
+
+//_______________________________________________________________
+void TMVA::MethodSVM::StoreSupportVectors()
+{
+   UInt_t evtCounter = 0;
+
+   for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++)
+      if ((*fAlphas)[ievt] != 0) evtCounter++;
+
+   fNsupv = evtCounter;
+
+   fSupportVectors = new vector< Float_t* >( GetNvar()+1 );
+   for (Int_t i = 0; i <= GetNvar(); i++) 
+      (*fSupportVectors)[i] = new Float_t[fNsupv];
+
+   evtCounter=0;
+   for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
+      if ((*fAlphas)[ievt] != 0) {
+         (*fSupportVectors)[0][evtCounter] = (Float_t)((*fAlphas)[ievt] * (*fTypesVec)[ievt]);
+         for (Int_t ivar = 0; ivar < GetNvar(); ivar++) 
+            (*fSupportVectors)[ivar+1][evtCounter] = (*fVariables)[ivar][ievt];
+         evtCounter++;
+      }
+   }
+   fLogger << kINFO << "All support vectors stored properly" << Endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   // write specific classifier response
+   fout << "   // not implemented for class: \"" << className << "\"" << endl;
+   fout << "   float        fBparameter;" << endl;
+   fout << "   int          fNOfSuppVec;" << endl;
+   fout << "   static float fAllSuppVectors[][" << fNsupv << "];" << endl;
+   fout << "   static float fAlphaTypeCoef[" << fNsupv << "];" << endl;
+   fout << endl;
+   fout << "   // Kernel parameter(s) " << endl;
+   if (fTheKernel == "Gauss"     ) 
+      fout << "   float fSigmaParm;" << endl;
+   else if (fTheKernel == "Polynomial") {
+      fout << "   float fThetaParm;" << endl;
+      fout << "   int   fOrderParm;" << endl;
+   }
+   else if (fTheKernel == "Sigmoid"   ) {
+      fout << "   float fThetaParm;" << endl;
+      fout << "   float fKappaParm;" << endl;
+   }
+   fout << "};" << endl;
+   fout << "" << endl;
+
+   //Initialize function definition
+   fout << "inline void " << className << "::Initialize() " << endl;
+   fout << "{" << endl;
+   fout << "   fBparameter = " << fBparm << ";" << endl;
+   fout << "   fNOfSuppVec = " << fNsupv << ";" << endl;
+   fout << "" << endl;
+
+   fout << "   // Kernel parameter(s) " << endl;
+   if (fTheKernel == "Gauss"     ) 
+      fout << "   fSigmaParm  = " << -1./fDoubleSigmaSquered << ";" << endl;
+   else if (fTheKernel == "Polynomial") {
+      fout << "   fThetaParm  = " << fTheta << ";" << endl;
+      fout << "   fOrderParm  = " << fOrder << ";" << endl;
+   }
+   else if (fTheKernel == "Sigmoid"   ) {
+      fout << "   fThetaParm = " << fTheta << ";" << endl;
+      fout << "   fKappaParm = " << fKappa << ";" << endl;
+   }
+   fout << "}" << endl;
+   fout << endl;
+
+   // GetMvaValue__ function defninition
+   fout << "inline double " << className << "::GetMvaValue__(const std::vector<double>& inputValues ) const" << endl;
+   fout << "{" << endl;
+   fout << "   double mvaval = 0; " << endl;
+   fout << "   double temp = 0; " << endl;
+   fout << endl;
+   fout << "   for (int ievt = 0; ievt < fNOfSuppVec; ievt++ ){" << endl;
+   fout << "      temp = 0;" << endl;
+   fout << "      for ( unsigned int ivar = 0; ivar < GetNvar(); ivar++ ) {" << endl;
+
+   if (fTheKernel == "Gauss"     ) {
+      fout << "         temp += (fAllSuppVectors[ivar][ievt] - inputValues[ivar])  " << endl;
+      fout << "               * (fAllSuppVectors[ivar][ievt] - inputValues[ivar]); " << endl;
+      fout << "      }" << endl;  
+      fout << "      mvaval += fAlphaTypeCoef[ievt] * exp( fSigmaParm * temp ); " << endl;
+   }   
+   else if (fTheKernel == "Polynomial") {
+      fout << "         temp += fAllSuppVectors[ivar][ievt] * inputValues[ivar]; " << endl;
+      fout << "      }" << endl;  
+      fout << "      temp += fThetaParm;" << endl;
+      fout << "      double val_temp = 1; " << endl;
+      fout << "      for (int i = fOrderParm; i > 0; i /= 2) {" << endl;
+      fout << "         if (i%2) val_temp = temp;" << endl; 
+      fout << "         temp *= temp;" << endl;
+      fout << "      }" << endl;
+      fout << "      mvaval += fAlphaTypeCoef[ievt] * val_temp; " << endl;
+   }
+   else if (fTheKernel == "Sigmoid"   ) {
+      fout << "         temp += fAllSuppVectors[ivar][ievt] * inputValues[ivar]; " << endl;
+      fout << "      }" << endl;
+      fout << "      temp *= fKappaParm;" << endl;
+      fout << "      temp += fThetaParm;" << endl;
+      fout << "      mvaval += fAlphaTypeCoef[ievt] * tanh( temp );" << endl;
+   }
+   else{
+      // for linear case
+      fout << "         temp += fAllSuppVectors[ivar][ievt] * inputValues[ivar]; " << endl;
+      fout << "      }" << endl;  
+      fout << "      mvaval += fAlphaTypeCoef[ievt] * temp;" << endl;
+   }
+
+   fout << "   }" << endl;
+   fout << "   mvaval -= fBparameter;" << endl;
+   fout << "   return 1./(1. + exp( -mvaval));" << endl;
+   fout << "}" << endl;
+   fout << "// Clean up" << endl;
+   fout << "inline void " << className << "::Clear() " << endl;
+   fout << "{" << endl;
+   fout << "   // nothing to clear " << endl;
+   fout << "}" << endl;
+   fout << "" << endl;   
+
+   // define support vectors
+   fout << "float " << className << "::fAlphaTypeCoef[] =" << endl;
+   fout << "{ ";   
+   for (Int_t isv = 0; isv < fNsupv; isv++) {
+      fout << (*fSupportVectors)[0][isv];
+      if (isv < fNsupv-1) fout << ", ";
+   }
+   fout << " };" << endl << endl;
+
+   fout << "float " << className << "::fAllSuppVectors[][" << fNsupv << "] =" << endl;
+   fout << "{";   
+   for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
+      fout << endl;
+      fout << "   { ";
+      for (Int_t isv = 0; isv < fNsupv; isv++){
+         fout << (*fSupportVectors)[ivar+1][isv];
+         if (isv < fNsupv-1) fout << ", ";
+      }
+      fout << " }";
+      if (ivar < GetNvar()-1) fout << ", " << endl;
+      else                    fout << endl;
+   }   
+   fout << "};" << endl;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodSVM::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "The Support Vector Machine (SVM) builds a hyperplance separating" << Endl;
+   fLogger << "signal and background events (vectors) using the minimal subset of " << Endl;
+   fLogger << "all vectors used for training (support vectors). The extension to" << Endl;
+   fLogger << "the non-linear case is performed by mapping input vectors into a " << Endl;
+   fLogger << "higher-dimensional feature space in which linear separation is " << Endl;
+   fLogger << "possible. The use of the kernel functions thereby eliminates the " << Endl;
+   fLogger << "explicit transformation to the feature space. The implemented SVM " << Endl;
+   fLogger << "algorithm performs the classification tasks using linear, polynomial, " << Endl;
+   fLogger << "Gaussian and sigmoidal kernel functions. The Gaussian kernel allows " << Endl;
+   fLogger << "to apply any discriminant shape in the input space." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "SVM is a general purpose non-linear classification method, which " << Endl;
+   fLogger << "does not require data preprocessing like decorrelation or Principal " << Endl;
+   fLogger << "Component Analysis. It generalises quite well and can handle analyses " << Endl;
+   fLogger << "with large numbers of input variables." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "Optimal performance requires primarily a proper choice of the kernel " << Endl;
+   fLogger << "parameters (the width \"Sigma\" in case of Gaussian kernel) and the" << Endl;
+   fLogger << "cost parameter \"C\". The user must optimise them empirically by running" << Endl;
+   fLogger << "SVM several times with different parameter sets. The time needed for " << Endl;
+   fLogger << "each evaluation scales like the square of the number of training " << Endl;
+   fLogger << "events so that a coarse preliminary tuning should be performed on " << Endl;
+   fLogger << "reduced data sets." << Endl;
 }

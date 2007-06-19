@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariablePCATransform.cxx,v 1.25 2007/06/04 20:07:05 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,8 +16,8 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -26,6 +26,7 @@
 
 #include "assert.h"
 
+#include "Riostream.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
@@ -96,7 +97,7 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation( TTree* inputTree )
 void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) const
 {
    // apply the principal component analysis
-   if(!IsCreated()) return;
+   if (!IsCreated()) return;
    const Int_t nvar = GetNVariables();
 
    Double_t *dv = new Double_t[nvar];
@@ -109,6 +110,7 @@ void TMVA::VariablePCATransform::ApplyTransformation( Types::ESBType type ) cons
    GetEvent().SetType       ( GetEventRaw().Type() );
    GetEvent().SetWeight     ( GetEventRaw().GetWeight() );
    GetEvent().SetBoostWeight( GetEventRaw().GetBoostWeight() );
+
    delete [] dv;
    delete [] rv;
 }
@@ -121,7 +123,7 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
 
    const Int_t nvar = GetNVariables();
 
-   for(Int_t i=0; i<2; i++ ) {
+   for (Int_t i=0; i<2; i++ ) {
       if (fPCA[i] != NULL) delete fPCA[i];
       fPCA[i] = new TPrincipal( nvar, "" ); // note: following code assumes that option "N" is NOT set !
    }
@@ -175,7 +177,7 @@ void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) 
       const TVectorD* means = fMeanValues[sbType];
       o << (sbType==0 ? "signal" : "background") << " " << means->GetNrows() << endl;
       for (Int_t row = 0; row<means->GetNrows(); row++) {
-         o << setw(15) << (*means)[row];
+         o << setprecision(12) << setw(20) << (*means)[row];
       }
       o << endl;
    }
@@ -188,7 +190,7 @@ void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) 
       o << (sbType==0 ? "signal" : "background") << " " << mat->GetNrows() << " x " << mat->GetNcols() << endl;
       for (Int_t row = 0; row<mat->GetNrows(); row++) {
          for (Int_t col = 0; col<mat->GetNcols(); col++) {
-            o << setw(15) << (*mat)[row][col];
+            o << setprecision(12) << setw(20) << (*mat)[row][col] << " ";
          }
          o << endl;
       }
@@ -197,7 +199,7 @@ void TMVA::VariablePCATransform::WriteTransformationToStream( std::ostream& o ) 
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::ReadTransformationToStream( std::istream& istr )
+void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& istr )
 {
    // Read mean values from input stream
    char buf[512];
@@ -207,7 +209,7 @@ void TMVA::VariablePCATransform::ReadTransformationToStream( std::istream& istr 
 
    while (!(buf[0]=='#'&& buf[1]=='#')) { // if line starts with ## return
       char* p = buf;
-      while(*p==' ' || *p=='\t') p++; // 'remove' leading whitespace
+      while (*p==' ' || *p=='\t') p++; // 'remove' leading whitespace
       if (*p=='#' || *p=='\0') {
          istr.getline(buf,512);
          continue; // if comment or empty line, read the next line
@@ -261,4 +263,84 @@ void TMVA::VariablePCATransform::ReadTransformationToStream( std::istream& istr 
    }
 
    SetCreated();
+}
+
+//_______________________________________________________________________
+void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString& fcncName, Int_t part ) 
+{
+   // creates a PCA transformation function
+   if (part==1) {
+      fout << std::endl;
+      fout << "   void X2P( const double*, double*, int ) const;" << std::endl;
+      fout << "   double fMeanValues[2]["   
+           << fMeanValues[0]->GetNrows()   << "];" << std::endl;   // mean values
+      fout << "   double fEigenVectors[2][" 
+           << fEigenVectors[0]->GetNrows() << "][" 
+           << fEigenVectors[0]->GetNcols() <<"];" << std::endl;   // eigenvectors
+      fout << std::endl;
+   }
+
+   // sanity check
+   if (fMeanValues[0]->GetNrows()   != fMeanValues[1]->GetNrows() ||
+       fEigenVectors[0]->GetNrows() != fEigenVectors[1]->GetNrows() ||
+       fEigenVectors[0]->GetNcols() != fEigenVectors[1]->GetNcols()) {
+      fLogger << kFATAL << "<MakeFunction> Mismatch in vector/matrix dimensions" << Endl;
+   }
+
+   if (part==2) {
+
+      fout << "inline void " << fcncName << "::X2P( const double* x, double* p, int index ) const" << std::endl;
+      fout << "{" << std::endl;
+      fout << "   // Calculate the principal components from the original data vector" << std::endl;
+      fout << "   // x, and return it in p (function extracted from TPrincipal::X2P)" << std::endl;
+      fout << "   // It's the users responsibility to make sure that both x and p are" << std::endl;
+      fout << "   // of the right size (i.e., memory must be allocated for p)." << std::endl;
+      fout << "   const int nvar = " << GetNVariables() << ";" << std::endl;
+      fout << std::endl;
+      fout << "   for (int i = 0; i < nvar; i++) {" << std::endl;
+      fout << "      p[i] = 0;" << std::endl;
+      fout << "      for (int j = 0; j < nvar; j++) p[i] += (x[j] - fMeanValues[index][j]) * fEigenVectors[index][j][i];" << std::endl;
+      fout << "   }" << std::endl;
+      fout << "}" << std::endl;
+      fout << std::endl;
+      fout << "inline void " << fcncName << "::InitTransform()" << std::endl;
+      fout << "{" << std::endl;
+
+      // fill vector of mean values
+      fout << "   // initialise vector of mean values" << std::endl;
+      for (int index=0; index<2; index++) {
+         for (int i=0; i<fMeanValues[index]->GetNrows(); i++) {
+            fout << "   fMeanValues["<<index<<"]["<<i<<"] = " << std::setprecision(12) 
+                 << (*fMeanValues[index])(i) << ";" << std::endl;
+         }
+      }
+
+      // fill matrix of eigenvectors
+      fout << std::endl;
+      fout << "   // initialise matrix of eigenvectors" << std::endl;
+      for (int index=0; index<2; index++) {
+         for (int i=0; i<fEigenVectors[index]->GetNrows(); i++) {
+            for (int j=0; j<fEigenVectors[index]->GetNcols(); j++) {
+               fout << "   fEigenVectors["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12) 
+                    << (*fEigenVectors[index])(i,j) << ";" << std::endl;
+            }
+         }
+      }
+      fout << "}" << std::endl;
+      fout << std::endl;
+      fout << "inline void " << fcncName << "::Transform( std::vector<double>& iv, int sigOrBgd ) const" << std::endl;
+      fout << "{" << std::endl;      
+      fout << "   const int nvar = " << GetNVariables() << ";" << std::endl;
+      fout << "   double *dv = new double[nvar];" << std::endl;
+      fout << "   double *rv = new double[nvar];" << std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[ivar];" << std::endl;
+      fout << std::endl;
+      fout << "   // Perform PCA and put it into PCAed events tree" << std::endl;
+      fout << "   this->X2P( dv, rv, (sigOrBgd==0 ? 0 : 1 ) );" << std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[ivar] = rv[ivar];" << std::endl;
+      fout << std::endl;
+      fout << "   delete [] dv;" << std::endl;
+      fout << "   delete [] rv;" << std::endl;
+      fout << "}" << std::endl;
+   }
 }

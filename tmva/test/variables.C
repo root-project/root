@@ -46,9 +46,9 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
    Int_t height;
    switch (noPlots) {
    case 1:
-      xPad = 1; yPad = 1; width = 500; height = 0.55*width; break;
+      xPad = 1; yPad = 1; width = 550; height = 0.50*width; break;
    case 2:
-      xPad = 2; yPad = 1; width = 600; height = 0.55*width; break;
+      xPad = 2; yPad = 1; width = 600; height = 0.50*width; break;
    case 3:
       xPad = 3; yPad = 1; width = 900; height = 0.4*width; break;
    case 4:
@@ -81,12 +81,12 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       if (countPad%noPadPerCanv==0) {
          ++countCanvas;
          canv = new TCanvas( Form("canvas%d", countCanvas), titles[type],
-                             countCanvas*50+200, countCanvas*20, width, height );
+                             countCanvas*50+50, countCanvas*20, width, height );
          canv->Divide(xPad,yPad);
          canv->Draw();
       }
 
-      TPad * cPad = (TPad*)canv->cd(countPad++%noPadPerCanv+1);
+      TPad* cPad = (TPad*)canv->cd(countPad++%noPadPerCanv+1);
       
       // find the corredponding backgrouns histo
       TString bgname = hname;
@@ -114,11 +114,12 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
       if (countPad==2) sc = 1.3;
       sig->SetMaximum( TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
       sig->Draw( "hist" );
+      cPad->SetLeftMargin( 0.17 );
 
       bgd->Draw("histsame");
       sig->GetXaxis()->SetTitle( title );
-      sig->GetYaxis()->SetTitleOffset( 1.30 );
-      sig->GetYaxis()->SetTitle("Events");
+      sig->GetYaxis()->SetTitleOffset( 1.80 );
+      sig->GetYaxis()->SetTitle("Normalised");
 
       // Draw legend
       if (countPad==2){
@@ -136,6 +137,17 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
 
       // redraw axes
       sig->Draw("sameaxis");
+
+      // text for overflows
+      Int_t nbin = sig->GetNbinsX();
+      TString uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)% / (%.1f, %.1f)%", 
+                             sig->GetBinContent(0)*100, bgd->GetBinContent(0)*100,
+                             sig->GetBinContent(nbin+1)*100, bgd->GetBinContent(nbin+1)*100 );
+      TText* t = new TText( 0.98, 0.14, uoflow );
+      t->SetNDC();
+      t->SetTextSize( 0.040 );
+      t->SetTextAngle( 90 );
+      t->AppendPad();    
 
       // save canvas to file
       if (countPad%noPadPerCanv==0) {

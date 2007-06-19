@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: PDF.cxx,v 1.44 2007/04/02 08:13:32 andreas.hoecker Exp $
+// @(#)root/tmva $Id: PDF.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $
 // Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany,                                                * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France,                                                     *
  *      Freiburg U., Germany                                                      * 
  *                                                                                *
@@ -30,20 +30,21 @@
  **********************************************************************************/
 
 #include <iomanip>
+#include <assert.h>
 #include "Riostream.h"
-
 #include "TMath.h"
+#include "TF1.h"
+#include "TH1F.h"
 #include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
-#include "TH1F.h"
+#include "TMVA/Version.h"
 
-namespace TMVA {
-   const Bool_t   DEBUG_PDF=kFALSE;
-   const Double_t PDF_epsilon_=1.0e-07;
-}
-
-Int_t TMVA::PDF::NBIN_PdfHist=10000;
+// static configuration settings
+const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
+const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
+const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
+TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
 
 using namespace std;
 
@@ -59,15 +60,18 @@ TMVA::PDF::PDF()
      fHist          ( 0 ),
      fHistOriginal  ( 0 ),
      fGraph         ( 0 ),
+     fIGetVal       ( 0 ),
      fKDEtype       ( KDEKernel::kNone ),
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
+     fReadingVersion( 0 ),
      fLogger        ( this )
 {
    // default constructor needed for ROOT I/O
+   fgThisPDF = this;
 }
 
 //_______________________________________________________________________
-TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::EInterpolateMethod method, Int_t nsmooth )
+TMVA::PDF::PDF( const TH1 *hist, PDF::EInterpolateMethod method, Int_t nsmooth, Bool_t checkHist )
    : fUseHistogram  ( kFALSE ),
      fNsmooth       ( nsmooth ),
      fInterpolMethod( method ),
@@ -76,35 +80,42 @@ TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::EInterpolateMethod method, Int_t nsm
      fHist          ( 0 ),
      fHistOriginal  ( 0 ),
      fGraph         ( 0 ),
+     fIGetVal       ( 0 ),
      fKDEtype       ( KDEKernel::kNone ),
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
      fKDEborder     ( KDEKernel::kNoTreatment ),
      fFineFactor    ( 0. ),
+     fReadingVersion( 0 ),
      fLogger        ( this )
 {  
    // constructor of spline based PDF: 
    // - default Spline method is: Spline2 (quadratic)
    // - default smoothing is none
 
+   fgThisPDF = this;
+
    // sanity check
-   if (hist == NULL) fLogger << kFATAL << "called without valid histogram pointer!" << Endl;
+   if (hist == NULL) fLogger << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty
    if (hist->GetEntries() <= 0) 
-      fLogger << kFATAL << "number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
+      fLogger << kFATAL << "Number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
 
    // another sanity check (nsmooth<0 indicated build with KDE)
    if (nsmooth<0) fLogger << kFATAL << "PDF construction called with nsmooth<0" << Endl;
 
-   fHistOriginal = (TH1*)hist->Clone( TString(hist->GetName()) + "_original" );
-   fHist         = (TH1*)hist->Clone( TString(hist->GetName()) + "_smoothed" );
+   fHistOriginal = (TH1F*)hist->Clone( TString(hist->GetName()) + "_original" );
+   fHist         = (TH1F*)hist->Clone( TString(hist->GetName()) + "_smoothed" );
+   fHistOriginal->SetTitle( fHistOriginal->GetName() ); // reset to new title as well
+   fHist        ->SetTitle( fHist->GetName() );
+
+   // do not store in current target file
    fHistOriginal->SetDirectory(0);
    fHist        ->SetDirectory(0);
 
-   BuildPDF();
-
+   // we are ready to build the PDF
+   BuildPDF( checkHist );
 }
-
 
 //_______________________________________________________________________
 TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, 
@@ -117,6 +128,7 @@ TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKerne
      fHist          ( 0 ),
      fHistOriginal  ( 0 ),
      fGraph         ( 0 ),
+     fIGetVal       ( 0 ),
      fKDEtype       ( ktype ),
      fKDEiter       ( kiter ),
      fKDEborder     ( kborder ),
@@ -127,29 +139,26 @@ TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKerne
    // - default kernel type is Gaussian
    // - default number of iterations is 1 (i.e. nonadaptive KDE)
    // sanity check
-   if (hist == NULL) fLogger << kFATAL << "called without valid histogram pointer!" << Endl;
+   if (hist == NULL) fLogger << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty
    if (hist->GetEntries() <= 0) 
-      fLogger << kFATAL << "number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
+      fLogger << kFATAL << "Number of entries <= 0 in histogram: " << hist->GetTitle() << Endl;
 
-   fLogger << "create " 
+   fLogger << "Create " 
            << ((kiter == KDEKernel::kNonadaptiveKDE) ? "nonadaptive " : 
                (kiter == KDEKernel::kAdaptiveKDE) ? "adaptive " : "??? ")
            << ((ktype == KDEKernel::kGauss) ? "Gauss " : "??? ")
            << "type KDE kernel for histogram: \"" << hist->GetName() << "\""
            << Endl;
       
-   fHistOriginal = (TH1*)hist->Clone( TString(hist->GetName()) + "_original" );
-   fHist         = (TH1*)hist->Clone( TString(hist->GetName()) + "_smoothed" );   
+   fHistOriginal = (TH1F*)hist->Clone( TString(hist->GetName()) + "_original" );
+   fHist         = (TH1F*)hist->Clone( TString(hist->GetName()) + "_smoothed" );   
    fHistOriginal->SetDirectory(0);
    fHist        ->SetDirectory(0);
 
-
    FillKDEToHist();
-  
 }
-
 
 //_______________________________________________________________________
 TMVA::PDF::~PDF()
@@ -159,14 +168,16 @@ TMVA::PDF::~PDF()
    if (fHist         != NULL) delete fHist;
    if (fPDFHist      != NULL) delete fPDFHist;
    if (fHistOriginal != NULL) delete fHistOriginal;
+   if (fIGetVal      != NULL) delete fIGetVal;
 }
 
-
-void TMVA::PDF::BuildPDF() {
+//_______________________________________________________________________
+void TMVA::PDF::BuildPDF( Bool_t checkHist ) 
+{
    // build the PDF from the original histograms
 
    // (not useful for discrete distributions, or if no splines are requested)
-   if (fInterpolMethod != TMVA::PDF::kSpline0) CheckHist();
+   if (fInterpolMethod != PDF::kSpline0 && checkHist) CheckHist();
     
    // use ROOT TH1 smooth methos
    if (fNsmooth > 0) fHist->Smooth( fNsmooth );
@@ -176,30 +187,30 @@ void TMVA::PDF::BuildPDF() {
     
    switch (fInterpolMethod) {
 
-   case TMVA::PDF::kSpline0:
+   case kSpline0:
       // use original histogram as reference
       // this is useful, eg, for discrete variables
       fUseHistogram = kTRUE;
       break;
 
-   case TMVA::PDF::kSpline1:
+   case kSpline1:
       fSpline = new TMVA::TSpline1( "spline1", fGraph );
       break;
 
-   case TMVA::PDF::kSpline2:
+   case kSpline2:
       fSpline = new TMVA::TSpline2( "spline2", fGraph );
       break;
 
-   case TMVA::PDF::kSpline3:
+   case kSpline3:
       fSpline = new TSpline3( "spline3", fGraph );
       break;
     
-   case TMVA::PDF::kSpline5:
+   case kSpline5:
       fSpline = new TSpline5( "spline5", fGraph );
       break;
 
    default:
-      fLogger << kWARNING << "no valid interpolation method given! Use Spline3" << Endl;
+      fLogger << kWARNING << "No valid interpolation method given! Use Spline3" << Endl;
       fSpline = new TMVA::TSpline2( "spline2", fGraph );
    }
 
@@ -213,12 +224,11 @@ void TMVA::PDF::BuildPDF() {
 
    // sanity check
    Double_t integral = GetIntegral();
-   if (integral < 0) fLogger << kFATAL << "integral: " << integral << " <= 0" << Endl;
+   if (integral < 0) fLogger << kFATAL << "Integral: " << integral << " <= 0" << Endl;
 
    // normalize
-   if (integral>0)  fPDFHist->Scale( 1.0/integral );
+   if (integral>0) fPDFHist->Scale( 1.0/integral );
 }
-
 
 //_______________________________________________________________________
 void TMVA::PDF::FillKDEToHist()
@@ -226,57 +236,57 @@ void TMVA::PDF::FillKDEToHist()
    // creates high-binned reference histogram to be used instead of the
    // PDF for speed reasons
 
-   fPDFHist = new TH1F( "", "", NBIN_PdfHist, GetXmin(), GetXmax() );
+   fPDFHist = new TH1F( "", "", fgNbin_PdfHist, GetXmin(), GetXmax() );
    fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_KDE" );
    fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_KDE" );
    
    // create the kernel object  
-   TMVA::KDEKernel *kern = new TMVA::KDEKernel(fKDEiter,
-                                               fHist,
-                                               fPDFHist->GetBinLowEdge(1),
-                                               fPDFHist->GetBinLowEdge(fPDFHist->GetNbinsX()+1),
-                                               fKDEborder,
-                                               fFineFactor);
+   KDEKernel *kern = new TMVA::KDEKernel(fKDEiter,
+                                         fHist,
+                                         fPDFHist->GetBinLowEdge(1),
+                                         fPDFHist->GetBinLowEdge(fPDFHist->GetNbinsX()+1),
+                                         fKDEborder,
+                                         fFineFactor);
    kern->SetKernelType(fKDEtype);
    
    Float_t histoLowEdge=fHist->GetBinLowEdge(1);
    Float_t histoUpperEdge=fHist->GetBinLowEdge(fHist->GetNbinsX()+1);
 
-   for(Int_t i=1;i<fHist->GetNbinsX();i++) {
-   // loop over the bins of the original histo
-      for(Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
+   for (Int_t i=1;i<fHist->GetNbinsX();i++) {
+      // loop over the bins of the original histo
+      for (Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
          // loop over the bins of the new histo and fill it
          fPDFHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                   kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
-                                                              fPDFHist->GetBinLowEdge(j+1),
-                                                              fHist->GetBinCenter(i),
-                                                              i)
-                                );
+                                 kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
+                                                            fPDFHist->GetBinLowEdge(j+1),
+                                                            fHist->GetBinCenter(i),
+                                                            i)
+                                 );
       }
-   if (fKDEborder == 3) { // mirror the saples and fill them again
-   // in order to save time do the mirroring only for the first (the lowwer) 1/5 of the histo to the left; 
-   // and the last (the higher) 1/5 of the histo to the right.
-   // the middle part of the histo, which is not mirrored, has no influence on the border effects anyway ...
-      if (i < fHist->GetNbinsX()/5  ) {  // the first (the lowwer) 1/5 of the histo
-         for(Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
-            // loop over the bins of the PDF histo and fill it
-            fPDFHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                    kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
-                                                               fPDFHist->GetBinLowEdge(j+1),
-                                                               2*histoLowEdge-fHist->GetBinCenter(i), //  mirroring to the left
-                                                               i)
-                                    );
+      if (fKDEborder == 3) { // mirror the saples and fill them again
+         // in order to save time do the mirroring only for the first (the lowwer) 1/5 of the histo to the left; 
+         // and the last (the higher) 1/5 of the histo to the right.
+         // the middle part of the histo, which is not mirrored, has no influence on the border effects anyway ...
+         if (i < fHist->GetNbinsX()/5  ) {  // the first (the lowwer) 1/5 of the histo
+            for (Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
+               // loop over the bins of the PDF histo and fill it
+               fPDFHist->AddBinContent(j,fHist->GetBinContent(i)*
+                                       kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
+                                                                  fPDFHist->GetBinLowEdge(j+1),
+                                                                  2*histoLowEdge-fHist->GetBinCenter(i), //  mirroring to the left
+                                                                  i)
+                                       );
+            }
          }
-      }
-      if (i > 4*fHist->GetNbinsX()/5) { // the last (the higher) 1/5 of the histo
-         for(Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
-            // loop over the bins of the PDF histo and fill it
-            fPDFHist->AddBinContent(j,fHist->GetBinContent(i)*
-                                    kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
-                                                               fPDFHist->GetBinLowEdge(j+1),
-                                                               2*histoUpperEdge-fHist->GetBinCenter(i), // mirroring to the right
-                                                               i)
-                                    );
+         if (i > 4*fHist->GetNbinsX()/5) { // the last (the higher) 1/5 of the histo
+            for (Int_t j=1;j<fPDFHist->GetNbinsX();j++) {
+               // loop over the bins of the PDF histo and fill it
+               fPDFHist->AddBinContent(j,fHist->GetBinContent(i)*
+                                       kern->GetBinKernelIntegral(fPDFHist->GetBinLowEdge(j),
+                                                                  fPDFHist->GetBinLowEdge(j+1),
+                                                                  2*histoUpperEdge-fHist->GetBinCenter(i), // mirroring to the right
+                                                                  i)
+                                       );
             }            
          }
       }
@@ -288,11 +298,10 @@ void TMVA::PDF::FillKDEToHist()
  
    // sanity check
    Double_t integral = GetIntegral();
-   if (integral < 0) fLogger << kFATAL << "integral: " << integral << " <= 0" << Endl; 
+   if (integral < 0) fLogger << kFATAL << "Integral: " << integral << " <= 0" << Endl; 
 
    // normalize 
    if (integral>0) fPDFHist->Scale( 1.0/integral );
- 
 }
 
 //_______________________________________________________________________
@@ -309,18 +318,18 @@ void TMVA::PDF::FillSplineToHist()
    }
    else {
       // create new reference histogram
-      fPDFHist = new TH1F( "", "", NBIN_PdfHist, GetXmin(), GetXmax() );
+      fPDFHist = new TH1F( "", "", fgNbin_PdfHist, GetXmin(), GetXmax() );
       fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_" + fSpline->GetTitle() );
       fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_" + fSpline->GetTitle() );
-      
-      for (Int_t bin=1; bin <= NBIN_PdfHist; bin++) {
+
+      for (Int_t bin=1; bin <= fgNbin_PdfHist; bin++) {
          Double_t x = fPDFHist->GetBinCenter( bin );
          Double_t y = fSpline->Eval( x );
          // sanity correction: in cases where strong slopes exist, accidentally, the 
          // splines can go to zero; in this case we set the corresponding bin content
          // equal to the bin content of the original histogram
-         if (y <= TMVA::PDF_epsilon_) y = fHist->GetBinContent( fHist->FindBin( x ) );
-         fPDFHist->SetBinContent( bin, TMath::Max(y, TMVA::PDF_epsilon_) );
+         if (y <= fgEpsilon) y = fHist->GetBinContent( fHist->FindBin( x ) );
+         fPDFHist->SetBinContent( bin, TMath::Max(y, fgEpsilon) );
       }
    }
    fPDFHist->SetDirectory(0);
@@ -331,26 +340,23 @@ void TMVA::PDF::CheckHist() const
 {
    // sanity check: compare PDF with original histogram
    if (fHist == NULL) {
-      fLogger << kFATAL << "<CheckHist> called without valid histogram pointer!" << Endl;
+      fLogger << kFATAL << "<CheckHist> Called without valid histogram pointer!" << Endl;
    }
 
    Int_t nbins = fHist->GetNbinsX();
 
    Int_t emptyBins=0;
    // count number of empty bins
-   for(Int_t bin=1; bin<=nbins; bin++) 
+   for (Int_t bin=1; bin<=nbins; bin++) 
       if (fHist->GetBinContent(bin) == 0) emptyBins++;
 
    if (((Float_t)emptyBins/(Float_t)nbins) > 0.5) {
-      fLogger << kWARNING << "more than 50% (" << (((Float_t)emptyBins/(Float_t)nbins)*100)
+      fLogger << kWARNING << "More than 50% (" << (((Float_t)emptyBins/(Float_t)nbins)*100)
               <<"%) of the bins in hist '" 
               << fHist->GetName() << "' are empty!" << Endl;
       fLogger << kWARNING << "X_min=" << GetXmin() 
               << " mean=" << fHist->GetMean() << " X_max= " << GetXmax() << Endl;  
    }
-
-   if (DEBUG_PDF) 
-      fLogger << kINFO << GetXmin() << " < x < " << GetXmax() << " in " << nbins << " bins" << Endl;
 }
 
 //_______________________________________________________________________
@@ -374,7 +380,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
    Int_t    nc2  = 0; // deviation counters
    Int_t    nc3  = 0; // deviation counters
    Int_t    nc6  = 0; // deviation counters
-   for(Int_t bin=1; bin<=nbins; bin++) {
+   for (Int_t bin=1; bin<=nbins; bin++) {
       Double_t x  = originalHist->GetBinCenter( bin );
       Double_t y  = originalHist->GetBinContent( bin );
       Double_t ey = originalHist->GetBinError( bin );
@@ -393,7 +399,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       }
    }
    
-   fLogger << "validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
+   fLogger << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
    fLogger << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)", 
                     chi2, ndof, chi2/ndof, TMath::Prob( chi2, ndof ) ) << Endl;
    fLogger << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
@@ -403,31 +409,59 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
 }
 
 //_______________________________________________________________________
-Double_t  TMVA::PDF::GetIntegral() const
+Double_t TMVA::PDF::GetIntegral() const
 {
    // computes normalisation
-   return GetIntegral( GetXmin(), GetXmax() );
+
+   Double_t integral = fPDFHist->GetSumOfWeights();
+   if (!UseHistogram()) integral *= GetPdfHistBinWidth();
+
+   return integral;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax ) const
+Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* ) 
+{
+   // static external auxiliary function (integrand)
+   return ThisPDF()->GetVal( x[0] );
+}
+
+//_______________________________________________________________________
+Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax ) 
 {  
    // computes PDF integral within given ranges
    Double_t  integral = 0;
 
-   if (UseHistogram()) {
-      integral = fPDFHist->GetSumOfWeights();
+   if (fgManualIntegration) {
+
+      // compute integral by summing over bins
+      Int_t imin = fPDFHist->FindBin(xmin);
+      Int_t imax = fPDFHist->FindBin(xmax);
+      if (imin < 1)                     imin = 1;
+      if (imax > fPDFHist->GetNbinsX()) imax = fPDFHist->GetNbinsX();
+
+      for (Int_t bini = imin; bini <= imax; bini++) {
+         Double_t x  = fPDFHist->GetBinCenter(bini);
+         Double_t dx = fPDFHist->GetBinWidth(bini);
+
+         // correct for bin fractions
+         if      (bini == imin) dx = dx/2.0 + (x - xmin);
+         else if (bini == imax) dx = dx/2.0 + (xmax - x); 
+         assert( dx > 0 );
+
+         integral += fPDFHist->GetBinContent(bini)*dx;
+      }
+
    }
    else {
-      Int_t     nsteps = 10000;
-      Double_t  intBin = (xmax - xmin)/nsteps; // bin width for integration
-      for (Int_t bini=0; bini < nsteps; bini++) {
-         Double_t x = (bini + 0.5)*intBin + xmin;
-         integral += GetVal( x );
-      }
-      integral *= intBin;
+
+      // compute via Gaussian quadrature (C++ version of CERNLIB function DGAUSS)
+      if (fIGetVal == 0) 
+         fIGetVal = new TF1( "IGetVal", PDF::IGetVal, GetXmin(), GetXmax(), 0 );
+      integral = fIGetVal->Integral( xmin, xmax );
+
    }
-  
+
    return integral;
 }
 
@@ -443,10 +477,12 @@ Double_t TMVA::PDF::GetVal( Double_t x ) const
 
    Double_t retval = 0;
 
-   if (UseHistogram()) 
+   if (UseHistogram()) {
+      // use directly histogram bins (this is for discrete PDFs)
       retval = fPDFHist->GetBinContent( bin );
-
+   }
    else {
+      // linear interpolation
       Int_t nextbin = bin;
       if ((x > fPDFHist->GetBinCenter(bin) && bin != fPDFHist->GetNbinsX()) || bin == 1)
          nextbin++;
@@ -459,11 +495,11 @@ Double_t TMVA::PDF::GetVal( Double_t x ) const
       retval = fPDFHist->GetBinContent( bin ) + (x - fPDFHist->GetBinCenter( bin ))*dy/dx;
    }
 
-   return TMath::Max( retval, TMVA::PDF_epsilon_ );
+   return TMath::Max( retval, fgEpsilon );
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< (ostream& os, const TMVA::PDF& pdf)
+ostream& TMVA::operator<< ( ostream& os, const PDF& pdf )
 { 
    // write the pdf
    os << "NSmooth         " << pdf.fNsmooth << endl;
@@ -476,53 +512,72 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::PDF& pdf)
    TH1 * histToWrite = pdf.GetOriginalHist();
 
    const Int_t nBins = histToWrite->GetNbinsX();
-   os << nBins                     // nbins
-      << "   " << histToWrite->GetXaxis()->GetXmin()    // x_min
-      << "   " << histToWrite->GetXaxis()->GetXmax()    // x_max
+
+   // note: this is a schema change introduced for v3.7.3
+   os << "Histogram       " 
+      << histToWrite->GetName() 
+      << "   " << nBins                                 // nbins
+      << "   " << setprecision(12) << histToWrite->GetXaxis()->GetXmin()    // x_min
+      << "   " << setprecision(12) << histToWrite->GetXaxis()->GetXmax()    // x_max
       << endl;
 
    // write the smoothed hist
-   //   os.std::setf(ios::left);
-   for(Int_t i=0; i<nBins; i++) {
-      os << std::setw(15) << std::left << histToWrite->GetBinContent(i+1);
+   os << "Weights " << endl;
+   os << std::setprecision(8);
+   for (Int_t i=0; i<nBins; i++) {
+      os << std::setw(15) << std::left << histToWrite->GetBinContent(i+1) << " ";
       if ((i+1)%5==0) os << endl;
    }
    return os; // Return the output stream.
 }
 
 //_______________________________________________________________________
-istream& TMVA::operator>> (istream& istr, TMVA::PDF& pdf)
+istream& TMVA::operator>> ( istream& istr, PDF& pdf )
 { 
-
    // read the tree from an istream
    TString devnullS;
    Int_t   valI;
-   istr >> devnullS >> pdf.fNsmooth;
-   // have to do this with strings to be more stable with developing code
-   istr >> devnullS >> valI; pdf.fInterpolMethod = TMVA::PDF::EInterpolateMethod(valI);
-   istr >> devnullS >> valI; pdf.fKDEtype        = TMVA::KDEKernel::EKernelType(valI);  
-   istr >> devnullS >> valI; pdf.fKDEiter        = TMVA::KDEKernel::EKernelIter(valI);
-   istr >> devnullS >> valI; pdf.fKDEborder      = TMVA::KDEKernel::EKernelBorder(valI);
-   istr >> devnullS >> pdf.fFineFactor;
-  
    Int_t   nbins;
    Float_t xmin, xmax;
-   istr >> nbins >> xmin >> xmax;
+   TString hname="_original";
+   Bool_t doneReading = kFALSE;
+   while (!doneReading) {
+      istr >> devnullS;
+      if (devnullS=="NSmooth") istr >> pdf.fNsmooth;
 
-   // write the smoothed hist
-   TH1 * newhist = new TH1F("_original","", nbins, xmin, xmax);
+      // have to do this with strings to be more stable with developing code
+      else if (devnullS == "InterpolMethod") { istr >> valI; pdf.fInterpolMethod = PDF::EInterpolateMethod(valI);}
+      else if (devnullS == "KDE_type")       { istr >> valI; pdf.fKDEtype        = KDEKernel::EKernelType(valI); }
+      else if (devnullS == "KDE_iter")       { istr >> valI; pdf.fKDEiter        = KDEKernel::EKernelIter(valI);}
+      else if (devnullS == "KDE_border")     { istr >> valI; pdf.fKDEborder      = KDEKernel::EKernelBorder(valI);}
+      else if (devnullS == "KDE_finefactor") {
+         istr  >> pdf.fFineFactor;
+         if (pdf.GetReadingVersion() < TMVA_VERSION(3,7,3)) { // here we expect the histogram limits
+            istr  >> nbins >> xmin >> xmax;
+            doneReading = kTRUE;
+         }
+      }
+      else if (devnullS == "Histogram")     { istr  >> hname >> nbins >> xmin >> xmax;}
+      else if (devnullS == "Weights")       { doneReading = kTRUE; }
+   };
+
+   TString hnameSmooth = hname;
+   hnameSmooth.ReplaceAll( "_original", "_smoothed" );
+
+   // recreate the original hist
+   TH1 * newhist = new TH1F( hname,hname, nbins, xmin, xmax );
    newhist->SetDirectory(0);
-
    Float_t val;
-   for(Int_t i=0; i<nbins; i++) {
+   for (Int_t i=0; i<nbins; i++) {
       istr >> val;
       newhist->SetBinContent(i+1,val);
    }
    
    if (pdf.fHistOriginal != 0) delete pdf.fHistOriginal;
    pdf.fHistOriginal = newhist;
-   pdf.fHist = (TH1*)pdf.fHistOriginal->Clone( "_smoothed" );
-   pdf.fHist ->SetDirectory(0);
+   pdf.fHist = (TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
+   pdf.fHist->SetTitle( hnameSmooth );
+   pdf.fHist->SetDirectory(0);
 
    if (pdf.fNsmooth>=0) pdf.BuildPDF();
    else                 pdf.FillKDEToHist();

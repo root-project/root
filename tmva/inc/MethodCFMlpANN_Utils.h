@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.13 2007/04/19 06:53:01 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.14 2007/04/21 14:20:46 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -22,9 +22,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -108,15 +108,14 @@ namespace TMVA {
       Double_t W_ref(const Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) const {
          return wNN [(a_3*max_nNodes_ + a_2)*max_nLayers_ + a_1 - 187];
       }
-      Double_t & W_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
+      Double_t& W_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
          return wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187];
       }
-
       
       Double_t Ww_ref(const Double_t wwNN[], Int_t a_1,Int_t a_2) const {
          return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
       }
-      Double_t & Ww_ref(Double_t wwNN[], Int_t a_1,Int_t a_2) {
+      Double_t& Ww_ref(Double_t wwNN[], Int_t a_1,Int_t a_2) {
          return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
       }
 
@@ -177,7 +176,7 @@ namespace TMVA {
          Double_t cut[max_nNodes_];
          Double_t deltaww[max_nLayers_*max_nNodes_]; 
          Int_t neuron[max_nLayers_];
-      } neur_1;
+      } fNeur_1;
 
       // ANN weights
       struct {

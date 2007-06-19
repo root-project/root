@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariableIdentityTransform.cxx,v 1.14 2007/06/01 15:52:01 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,8 +16,8 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -26,6 +26,7 @@
 
 
 #include "TMVA/VariableIdentityTransform.h"
+#include <iostream>
 
 ClassImp(TMVA::VariableIdentityTransform)
 
@@ -57,4 +58,11 @@ void TMVA::VariableIdentityTransform::ApplyTransformation( Types::ESBType ) cons
    if      (fEvent == fEventRaw) return;
    else if (fEvent != 0)         delete fEvent;
    else    fEvent = fEventRaw;
+}
+
+//_______________________________________________________________________
+void TMVA::VariableIdentityTransform::MakeFunction(std::ostream& fout, const TString& fncName, Int_t /*part*/) {
+   fout << "inline void " << fncName << "::InitTransform() {}" << std::endl;
+   fout << std::endl;
+   fout << "inline void " << fncName << "::Transform(const std::vector<double> &, int) const {}" << std::endl;
 }

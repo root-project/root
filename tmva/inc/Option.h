@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.h,v 1.10 2007/04/21 14:20:46 brun Exp $   
+// @(#)root/tmva $Id: Option.h,v 1.11 2007/04/21 14:42:43 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -55,16 +55,22 @@
 
 namespace TMVA {
 
+   class Configurable;
+
    class OptionBase : public TObject {
 
    public:
 
+      friend class Configurable;
+
       OptionBase( const TString& name, const TString& desc ) 
-         : TObject(), fName(name), fDescription(desc), fIsSet(false), fLogger("OptionBase") {}
+         : TObject(), fName(name), fNameAllLower(name), fDescription(desc), fIsSet(kFALSE), fLogger("OptionBase") {
+         fNameAllLower.ToLower();
+      }
       virtual ~OptionBase() {}
          
-      virtual const char* GetName() const { TString s(fName); s.ToLower(); return s.Data(); }
-      virtual const char* TheName() const { return fName; }
+      virtual const char* GetName() const { return fNameAllLower.Data(); }
+      virtual const char* TheName() const { return fName.Data(); }
       virtual TString     GetValue(Int_t i=-1) const = 0;
 
       Bool_t IsSet() const { return fIsSet; }
@@ -73,18 +79,19 @@ namespace TMVA {
       virtual Bool_t IsPreDefinedVal(const TString&) const = 0;
       virtual Bool_t HasPreDefinedVal() const = 0;
       virtual Int_t  GetArraySize() const = 0;
-      virtual Bool_t SetValue(const TString& vs, Int_t i=-1);
+      virtual Bool_t SetValue( const TString& vs, Int_t i=-1 );
 
       using TObject::Print;
-      virtual void Print(ostream&, Int_t levelofdetail=0) const = 0;
+      virtual void Print( ostream&, Int_t levelofdetail=0 ) const = 0;
 
    private:
 
       virtual void SetValueLocal(const TString& vs, Int_t i=-1) = 0;         
 
-      const TString fName;        // name of variable 
-      const TString fDescription; // its description
-      Bool_t        fIsSet;       // set by user ?
+      const TString fName;         // name of variable 
+      TString fNameAllLower;       // name of variable 
+      const TString fDescription;  // its description
+      Bool_t        fIsSet;        // set by user ?
 
    protected:
 
@@ -105,25 +112,25 @@ namespace TMVA {
       virtual ~Option() {}
 
       // getters
-      virtual TString GetValue(Int_t i=-1) const;
-      virtual const T& Value(Int_t i=-1) const;
+      virtual TString  GetValue( Int_t i=-1 ) const;
+      virtual const T& Value   ( Int_t i=-1 ) const;
       virtual Bool_t HasPreDefinedVal() const { return (fPreDefs.size()!=0); }
-      virtual Bool_t IsPreDefinedVal(const TString&) const; 
-      virtual Bool_t IsArrayOpt() const { return kFALSE; }
+      virtual Bool_t IsPreDefinedVal( const TString& ) const; 
+      virtual Bool_t IsArrayOpt()   const { return kFALSE; }
       virtual Int_t  GetArraySize() const { return 0; }
 
       // setters
       virtual void AddPreDefVal(const T&);
       using OptionBase::Print;
-      virtual void Print(ostream&, Int_t levelofdetail=0) const;
-      virtual void PrintPreDefs(ostream&, Int_t levelofdetail=0) const;
+      virtual void Print       ( ostream&, Int_t levelofdetail=0 ) const;
+      virtual void PrintPreDefs( ostream&, Int_t levelofdetail=0 ) const;
 
    protected:
 
       T& Value(Int_t=-1);
   
-      virtual void   SetValueLocal(const TString& val, Int_t i=-1);
-      virtual Bool_t IsPreDefinedValLocal(const T&) const;
+      virtual void   SetValueLocal( const TString& val, Int_t i=-1 );
+      virtual Bool_t IsPreDefinedValLocal( const T& ) const;
 
       T* fRefPtr;
       std::vector<T> fPreDefs;  // templated vector
@@ -138,19 +145,19 @@ namespace TMVA {
          Option<T>(*ref,name, desc), fVRefPtr(&ref), fSize(size) {}
       virtual ~Option() {}
 
-      TString GetValue(Int_t i) const {
+      TString GetValue( Int_t i ) const {
          std::stringstream str;
          str << Value(i);
          return str.str();
       }
-      const T& Value(Int_t i) const { return (*fVRefPtr)[i]; }
-      virtual Bool_t IsArrayOpt() const { return kTRUE; }
+      const T& Value( Int_t i ) const { return (*fVRefPtr)[i]; }
+      virtual Bool_t IsArrayOpt()   const { return kTRUE; }
       virtual Int_t  GetArraySize() const { return fSize; }
    
       using Option<T>::Print;
-      virtual void Print(ostream&, Int_t levelofdetail=0) const;
+      virtual void Print( ostream&, Int_t levelofdetail=0 ) const;
 
-      virtual Bool_t SetValue(const TString& val, Int_t i=0);
+      virtual Bool_t SetValue( const TString& val, Int_t i=0 );
 
       T& Value(Int_t i) { return (*fVRefPtr)[i]; }
       T ** fVRefPtr;
@@ -164,34 +171,34 @@ namespace TMVA {
 
    //______________________________________________________________________
    template<class T>
-   inline const T& TMVA::Option<T>::Value(Int_t) const {
+   inline const T& TMVA::Option<T>::Value( Int_t ) const {
       return *fRefPtr;
    }
 
    template<class T>
-   inline T& TMVA::Option<T>::Value(Int_t) {
+   inline T& TMVA::Option<T>::Value( Int_t ) {
       return *fRefPtr;
    }
 
    template<class T>
-   inline TString TMVA::Option<T>::GetValue(Int_t) const {
+   inline TString TMVA::Option<T>::GetValue( Int_t ) const {
       std::stringstream str;
       str << this->Value();
       return str.str();
    }
 
    template<>
-   inline TString TMVA::Option<Bool_t>::GetValue(Int_t) const {
-      return Value()?"True":"False";
+   inline TString TMVA::Option<Bool_t>::GetValue( Int_t ) const {
+      return Value() ? "True" : "False";
    }
 
    template<>
-   inline TString TMVA::Option<Bool_t*>::GetValue(Int_t i) const {
-      return Value(i)?"True":"False";
+   inline TString TMVA::Option<Bool_t*>::GetValue( Int_t i ) const {
+      return Value(i) ? "True" : "False";
    }
 
    template<class T>
-   inline Bool_t TMVA::Option<T>::IsPreDefinedVal(const TString& val) const 
+   inline Bool_t TMVA::Option<T>::IsPreDefinedVal( const TString& val ) const 
    {
       // template 
       T tmpVal;
@@ -215,7 +222,7 @@ namespace TMVA {
    }
 
    template<>
-   inline Bool_t TMVA::Option<TString>::IsPreDefinedValLocal(const TString& val) const 
+   inline Bool_t TMVA::Option<TString>::IsPreDefinedValLocal( const TString& val ) const 
    {
       // template specialization for Bool_t 
       TString tVal(val);
@@ -234,14 +241,14 @@ namespace TMVA {
 
    //______________________________________________________________________
    template<class T>
-   inline void TMVA::Option<T>::AddPreDefVal(const T& val) 
+   inline void TMVA::Option<T>::AddPreDefVal( const T& val ) 
    {
       // template 
       fPreDefs.push_back(val);
    }
 
    template<>
-   inline void TMVA::Option<Bool_t>::AddPreDefVal(const Bool_t&) 
+   inline void TMVA::Option<Bool_t>::AddPreDefVal( const Bool_t& ) 
    {
       // template specialization for Bool_t 
       fLogger << kFATAL << "<AddPreDefVal> predefined values for Option<Bool_t> don't make sense" 
@@ -249,7 +256,7 @@ namespace TMVA {
    }
 
    template<>
-   inline void TMVA::Option<Float_t>::AddPreDefVal(const Float_t&) 
+   inline void TMVA::Option<Float_t>::AddPreDefVal( const Float_t& ) 
    {
       // template specialization for Float_t 
       fLogger << kFATAL << "<AddPreDefVal> predefined values for Option<Float_t> don't make sense" 
@@ -258,7 +265,7 @@ namespace TMVA {
 
    //______________________________________________________________________
    template<class T>
-   inline void TMVA::Option<T>::PrintPreDefs(ostream& os, Int_t levelofdetail) const 
+   inline void TMVA::Option<T>::PrintPreDefs( ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
       if (HasPreDefinedVal() && levelofdetail>0) {
@@ -273,7 +280,7 @@ namespace TMVA {
    }
 
    template<class T>
-   inline void TMVA::Option<T>::Print(ostream& os, Int_t levelofdetail) const 
+   inline void TMVA::Option<T>::Print( ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
       os << TheName() << ": " << "\"" << GetValue() << "\"" << " [" << Description() << "]";
@@ -281,38 +288,39 @@ namespace TMVA {
    }
 
    template<class T>
-   inline void TMVA::Option<T*>::Print(ostream& os, Int_t levelofdetail) const 
+   inline void TMVA::Option<T*>::Print( ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
-      for(Int_t i=0; i<fSize; i++) {
-         if(i==0)
+      for (Int_t i=0; i<fSize; i++) {
+         if (i==0)
             os << this->TheName() << "[" << i << "]: " << "\"" << this->GetValue(i) << "\"" << " [" << this->Description() << "]";
          else
             os << "    " << this->TheName() << "[" << i << "]: " << "\"" << this->GetValue(i) << "\"";
-         if(i!=fSize-1) os << endl;
+         if (i!=fSize-1) os << endl;
       }
       this->PrintPreDefs(os,levelofdetail);
    }
 
    //______________________________________________________________________
    template<class T>
-   inline Bool_t TMVA::Option<T*>::SetValue(const TString& val, Int_t i) 
+   inline Bool_t TMVA::Option<T*>::SetValue( const TString& val, Int_t i ) 
    {
       // template 
-      if(i>=fSize) return kFALSE;
+      if (i>=fSize) return kFALSE;
       std::stringstream str(val.Data());
-      if(i<0) {
+      if (i<0) {
          str >> Value(0);
-         for(Int_t i=1; i<fSize; i++)
+         for (Int_t i=1; i<fSize; i++)
             Value(i) = Value(0);      
-      } else {
+      } 
+      else {
          str >> Value(i);
       }
       return kTRUE;
    }
 
    template<class T>
-   inline void TMVA::Option<T>::SetValueLocal(const TString& val, Int_t i) 
+   inline void TMVA::Option<T>::SetValueLocal( const TString& val, Int_t i ) 
    {
       // template 
       std::stringstream str(val.Data());
@@ -320,7 +328,7 @@ namespace TMVA {
    }
 
    template<>
-   inline void TMVA::Option<TString>::SetValueLocal(const TString& val, Int_t) 
+   inline void TMVA::Option<TString>::SetValueLocal( const TString& val, Int_t ) 
    {
       // set TString value
       TString valToSet(val);
@@ -341,15 +349,15 @@ namespace TMVA {
    }
 
    template<>
-   inline void TMVA::Option<Bool_t>::SetValueLocal(const TString& val, Int_t) 
+   inline void TMVA::Option<Bool_t>::SetValueLocal( const TString& val, Int_t ) 
    {
       // set Bool_t value
       TString valToSet(val);
       valToSet.ToLower();
-      if(valToSet=="1" || valToSet=="true" || valToSet=="ktrue" || valToSet=="t") {
+      if (valToSet=="1" || valToSet=="true" || valToSet=="ktrue" || valToSet=="t") {
          this->Value() = true;
       }
-      else if(valToSet=="0" || valToSet=="false" || valToSet=="kfalse" || valToSet=="f") {
+      else if (valToSet=="0" || valToSet=="false" || valToSet=="kfalse" || valToSet=="f") {
          this->Value() = false;
       }
       else {

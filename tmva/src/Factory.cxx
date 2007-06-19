@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.14 2007/04/19 10:32:04 brun Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.15 2007/04/21 14:20:46 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -31,8 +31,7 @@
 //                                                                      
 // This is the main MVA steering class: it creates all MVA methods,     
 // and guides them through the training, testing and evaluation         
-// phases. It also manages multiple MVA handling in case of distinct    
-// phase space requirements (cuts).                                     
+// phases
 //_______________________________________________________________________
 
 #ifndef ROOT_TMVA_Factory
@@ -90,9 +89,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
      fTargetFile           ( theTargetFile ),
      fVerbose              ( kFALSE ),
      fJobName              ( jobName ),
-     fMultipleMVAs         ( kFALSE ),
-     fMultipleStoredOptions( kFALSE ),
-     fLogger               ( this )
+     fLogger               ( "Factory" )
 {  
    // standard constructor
    //   jobname       : this name will appear in all weight file names produced by the MVAs
@@ -106,24 +103,25 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    DeclareOptionRef( fVerbose, "V", "verbose flag" );
    DeclareOptionRef( fColor=!gROOT->IsBatch(), "Color", "color flag (default on)" );
 
-   ParseOptions(kFALSE);
+   ParseOptions( kFALSE );
 
    fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
 
-   Config::Instance().SetUseColor(fColor);
+   gConfig().SetUseColor( fColor );
 
    Greetings();
 
-   Data().SetBaseRootDir(fTargetFile);
-   Data().SetLocalRootDir(fTargetFile);
-   Data().SetVerbose(Verbose());
+   Data().SetBaseRootDir ( fTargetFile );
+   Data().SetLocalRootDir( fTargetFile );
+   Data().SetVerbose     ( Verbose() );
 }
 
 //_______________________________________________________________________
 void TMVA::Factory::Greetings() 
 {
-   //   Tools::TMVAWelcomeMessage( fLogger, Tools::kIsometricWelcomeMsg );
-   //   Tools::TMVAWelcomeMessage( fLogger, Tools::kLeanWelcomeMsg );
+   // print welcome message
+   // options are: kLogoWelcomeMsg, kIsometricWelcomeMsg, kLeanWelcomeMsg
+
    Tools::TMVAWelcomeMessage( fLogger, Tools::kLogoWelcomeMsg );
    Tools::TMVAVersionMessage( fLogger ); fLogger << Endl;
 }
@@ -161,7 +159,7 @@ void TMVA::Factory::SetInputVariables( vector<TString>* theVariables )
 
    // sanity check
    if (theVariables->size() == 0) {
-      fLogger << kFATAL << "<SetInputVariables> vector of input variables is empty" << Endl;
+      fLogger << kFATAL << "<SetInputVariables> Vector of input variables is empty" << Endl;
    }
 
    for (UInt_t i=0; i<theVariables->size(); i++) Data().AddVariable((*theVariables)[i]);
@@ -190,7 +188,7 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
    // containing both signal and background events distinguished by the type 
    // identifiers: SigCut and BgCut
    if (!inputTree) {
-      fLogger << kFATAL << "Zero pointer for input tree: " << inputTree << endl;
+      fLogger << kFATAL << "Zero pointer for input tree: " << inputTree << Endl;
       return kFALSE;
    }
 
@@ -238,7 +236,7 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
    Data().AddBackgroundTree(backgTree, 1.0);
 
    delete signalList;
-   delete  backgList;
+   delete backgList;
    return kTRUE;    
 }
 
@@ -274,128 +272,6 @@ Bool_t TMVA::Factory::SetInputTrees( TString datFileS, TString datFileB,
    SetBackgroundTree( backgTree,  backgroundWeight );
 
    return kTRUE;
-}
-
-//_______________________________________________________________________
-void TMVA::Factory::BookMultipleMVAs( TString theVariable, Int_t nbins, Double_t *array )
-{
-   // books multiple MVAs according to the variable, number of bins and 
-   // the cut array given
-
-   // here the mess starts!
-   fMultipleMVAs          = kTRUE;
-   fMultiTrain            = kFALSE;
-   fMultiTest             = kFALSE; 
-   fMultiEvalVar          = kFALSE;
-   fMultiEval             = kFALSE; 
-   fMultipleStoredOptions = kFALSE;
-
-   // at least one sanity check:
-   // this method must be called *before* any Method has been booked!
-   if ( fMethods.size() > 0) {
-      fLogger << kFATAL << "<BookMultipleMVAs> must be called befor booking any Method!" << Endl;
-   }
-
-   // print out
-   fLogger << kINFO << "MulitCut Analysis Booked:  "
-           << theVariable << " is splitted in " << nbins << " bins:" << Endl;
-
-   // check if already some bins are booked
-   // if yes add the new bins to *every* existing one
-   if (fMultipleMVAnames.size() >0) {
-     
-      // loop over existing bins and add the new ones
-      // store their values in temporary opjects
-      Int_t nOldBins =  fMultipleMVAnames.size();
-      TString* simpleName  = new TString[nOldBins];
-      TString* description = new TString[nOldBins];
-
-      TCut oldCut[1000];
-      Int_t binc=0;
-      for (map<TString, std::pair<TString,TCut> >::iterator oldBin = fMultipleMVAnames.begin();
-           oldBin != fMultipleMVAnames.end(); oldBin++) {
-         simpleName[binc]=oldBin->first;
-         description[binc]=(oldBin->second).first;
-         oldCut[binc]=(oldBin->second).second;
-         binc++;
-      } // end of loop over existing bins
-
-      map<TString, std::pair<TString,TCut> >::iterator startBins = fMultipleMVAnames.begin();
-      map<TString, std::pair<TString,TCut> >::iterator endBins   = fMultipleMVAnames.end();
-      fMultipleMVAnames.erase(startBins, endBins);
-
-      // create new map
-      for (Int_t oldbin=0; oldbin<nOldBins; oldbin++) {
-         for (Int_t bin=0; bin<(nbins); bin++) {
-            // prepare string for this bin
-            // FIXME!!! assume at the moment that array is sorted!
-            // --> fMultipleMVAnames = new TMap(nbins);
-         
-            // simple bin name
-            TString *binMVAname = new TString( simpleName[oldbin] + "__" + theVariable + 
-                                               Form("_bin_%d",(bin+1)));
-            // this is the cut in human readable version
-            TString *binMVAdescription = new TString( description[oldbin] + " && " 
-                                                      + Form(" %g < ",array[bin])  
-                                                      + theVariable  
-                                                      + Form(" < %g",array[bin+1]));
-            // create ROOT TCut
-            TString *binMVAtmp = new TString("("+ theVariable +
-                                             Form(" > %g ",array[bin]) +
-                                             ") && (" +
-                                             theVariable + Form(" < %g",array[bin+1]) +")");
-         
-            TCut *binMVACut = new TCut(binMVAtmp->Data());
-                 
-            // fill all three into the map
-            fMultipleMVAnames[*binMVAname] = std::pair<TString,TCut>(*binMVAdescription, *binMVACut + oldCut[oldbin]);
-
-            fLogger << kVERBOSE << binMVAname->Data()
-                    << "  ["<< binMVAdescription->Data() << "]  " << Endl;
-            delete binMVAname;
-            delete binMVAdescription;
-            delete binMVAtmp;
-            delete binMVACut;
-         }// end of loop over bins
-      } // end of loop over oldbins
-
-      delete[] simpleName;
-      delete[] description;
-
-   } 
-   else { // this is the first time BookMultipleMVAs is being called
-      for (Int_t bin=0; bin<(nbins); bin++) {
-         // prepare string for this bin
-         // FIXME!!! assume at the moment that array is sorted!
-         //    fMultipleMVAnames = new TMap(nbins);
-       
-         // simple bin name
-         TString *binMVAname = new TString( theVariable + 
-                                            Form("_bin_%d",(bin+1)));
-         // this is the cut in human readable version
-         TString *binMVAdescription = new TString( Form("%g < ",array[bin]) + 
-                                                   theVariable + 
-                                                   Form(" < %g",array[bin+1]));
-         // create ROOT TCut
-         TString *binMVAtmp = new TString("("+ theVariable +
-                                          Form(" > %g ",array[bin]) +
-                                          ") && (" +
-                                          theVariable + Form(" < %g",array[bin+1]) +")");
-       
-         TCut *binMVACut = new TCut(binMVAtmp->Data());
-       
-         // fill all three into the map
-         fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut);
-         fLogger << kVERBOSE << binMVAname->Data()
-                 << "  ["<< binMVAdescription->Data() << "]  " << Endl;
-
-         delete binMVAname;
-         delete binMVAdescription;
-         delete binMVAtmp;
-         delete binMVACut;
-      } // end of loop over bins
-   } // end of if (fMultipleMVAnames.size() >0)
-
 }
 
 //_______________________________________________________________________
@@ -481,12 +357,12 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nt
    PrepareTrainingAndTestTree( cut, opt );
 }
 
+//_______________________________________________________________________
 void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, const TString& splitOpt )
 { 
    // prepare the training and test trees
    fLogger << kINFO << "Preparing trees for training and testing..." << Endl;
-   if (fMultipleMVAs) Data().SetMultiCut(cut);
-   else               Data().SetCut(cut);
+   Data().SetCut(cut);
 
    Data().PrepareForTrainingAndTesting( splitOpt );
 }
@@ -527,19 +403,7 @@ Bool_t TMVA::Factory::BookMethod( TString theMethodName, TString methodTitle, TS
    // booking via name; the names are translated into enums and the 
    // corresponding overloaded BookMethod is called
 
-   if (fMultipleMVAs && !fMultipleStoredOptions ) {
-      fLogger << kINFO << "Store method " << methodTitle
-              << " and its options for multiple MVAs" << Endl;
-    
-      fLogger << kINFO << "Multiple cuts are currently not supported :-("
-              << " ... this will be fixed soon, promised ! ==> abort" << Endl;
-      exit(1);
-
-      return kTRUE;
-   }
-
-   if (theMethodName != "Variable") 
-      fLogger << kINFO << "Create method: " << theMethodName << Endl;
+   if (theMethodName != "Variable") fLogger << kINFO << "Create method: " << theMethodName << Endl;
 
    return BookMethod( Types::Instance().GetMethodType( theMethodName ), methodTitle, theOption );
 
@@ -553,15 +417,22 @@ Bool_t TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TS
    // the TString field "theNameAppendix" serves to define (and distringuish) 
    // several instances of a given MVA, eg, when one wants to compare the 
    // performance of various configurations
-
-   IMethod *method = 0;
+   if (GetMethod( methodTitle ) != 0) {
+      fLogger << kFATAL << "Booking failed since method with title <"
+              << methodTitle <<"> already exists"
+              << Endl;
+   }
 
    // initialize methods
+   MethodBase *method = 0;
+
    switch(theMethod) {
    case Types::kCuts:       
       method = new MethodCuts           ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kFisher:     
       method = new MethodFisher         ( fJobName, methodTitle, Data(), theOption ); break;
+   case Types::kKNN:     
+      method = new MethodKNN            ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kMLP:        
       method = new MethodMLP            ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kTMlpANN:    
@@ -582,14 +453,17 @@ Bool_t TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TS
       method = new MethodSVM            ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kRuleFit:    
       method = new MethodRuleFit        ( fJobName, methodTitle, Data(), theOption ); break;
-   case Types::kRuleFitJF:    
-      method = new MethodRuleFitJF      ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kBayesClassifier:    
       method = new MethodBayesClassifier( fJobName, methodTitle, Data(), theOption ); break;
+   case Types::kFDA:    
+      method = new MethodFDA            ( fJobName, methodTitle, Data(), theOption ); break;
+   case Types::kSeedDistance:    
+      method = new MethodSeedDistance   ( fJobName, methodTitle, Data(), theOption ); break;
    default:
       fLogger << kFATAL << "Method: " << theMethod << " does not exist" << Endl;
    }
 
+   fLogger << kINFO << "Booking method: " << method->GetMethodTitle() << Endl;
    fMethods.push_back( method );
 
    return kTRUE;
@@ -620,14 +494,15 @@ Bool_t TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TS
 }
 
 //_______________________________________________________________________
-TMVA::IMethod* TMVA::Factory::GetMVA( TString method )
+TMVA::IMethod* TMVA::Factory::GetMethod( const TString &methodTitle ) const
 {
-   // returns pointer to MVA that corresponds to "method"
-   vector<IMethod*>::iterator itrMethod    = fMethods.begin();
-   vector<IMethod*>::iterator itrMethodEnd = fMethods.end();
+   // returns pointer to MVA that corresponds to given method title
+   vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
+   vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
+   //
    for (; itrMethod != itrMethodEnd; itrMethod++) {
       MethodBase* mva = (MethodBase*)(*itrMethod);    
-      if ( (mva->GetMethodName()).Contains(method)) return mva;
+      if ( (mva->GetMethodTitle())==methodTitle ) return mva;
    }
    return 0;
 }
@@ -638,13 +513,6 @@ void TMVA::Factory::TrainAllMethods( void )
    // iterates over all MVAs that have been booked, and calls their training methods
    fLogger << kINFO << "Training all methods..." << Endl;
 
-   // if multiple  MVAs 
-   if (fMultipleMVAs && !fMultipleStoredOptions ) {
-      fLogger << kINFO << "TrainAllMethods will be called for multiple MVAs " << Endl;
-      fMultiTrain=kTRUE;
-      return;
-   }
-  
    // iterate over methods and train
    vector<IMethod*>::iterator itrMethod    = fMethods.begin();
    vector<IMethod*>::iterator itrMethodEnd = fMethods.end();
@@ -671,7 +539,7 @@ void TMVA::Factory::TrainAllMethods( void )
          // create and print ranking
          const Ranking* ranking = (*itrMethod)->CreateRanking();
          if (ranking != 0) ranking->Print();
-         else fLogger << kINFO << "No variable ranking supplied by method: " 
+         else fLogger << kINFO << "No variable ranking supplied by classifier: " 
                       << ((MethodBase*)*itrMethod)->GetMethodTitle() << Endl;
       }
    }
@@ -682,22 +550,12 @@ void TMVA::Factory::TrainAllMethods( void )
 void TMVA::Factory::TestAllMethods( void )
 {
    // iterates over all MVAs that have been booked, and calls their testing methods
-   fLogger << kINFO << "Testing all methods..." << Endl;
+   fLogger << kINFO << "Testing all classifiers..." << Endl;
 
-   // if multiple  MVAs 
-   if (fMultipleMVAs && !fMultipleStoredOptions ) {
-      fLogger << kINFO << "TestAllMethods will be called for multiple MVAs " << Endl;
-      fMultiTest=kTRUE;
-      return;
-   } 
-   else if (Data().GetTrainingTree() == NULL) {
+   if (Data().GetTrainingTree() == NULL) {
       fLogger << kWARNING << "You perform testing without training before, hope you "
               << "provided a reasonable test tree and weight files " << Endl;
    } 
-   else if ((Data().GetTrainingTree()->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain) {
-      fLogger << kWARNING << "Skip testing since training wasn't performed for this bin" << Endl;
-      return;
-   }
 
    // iterate over methods and test
    vector<IMethod*>::iterator itrMethod    = fMethods.begin();
@@ -711,25 +569,67 @@ void TMVA::Factory::TestAllMethods( void )
 }
 
 //_______________________________________________________________________
+void TMVA::Factory::MakeClass( const TString& methodTitle ) const
+{
+   // Print predefined help message of classifier
+   // iterate over methods and test
+   if (methodTitle != "") {
+      IMethod* method = GetMethod( methodTitle );
+      if (method) method->MakeClass();
+      else {
+         fLogger << kWARNING << "<MakeClass> Could not find classifier \"" << methodTitle 
+                 << "\" in list" << Endl;
+      }
+   }
+   else {
+
+      // no classifier specified, print all hepl messages
+      vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
+      vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
+      for (; itrMethod != itrMethodEnd; itrMethod++) {
+         MethodBase* method = (MethodBase*)*itrMethod;
+         fLogger << kINFO << "Make response class for classifier: " << method->GetMethodTitle() << Endl;
+         method->MakeClass();
+      }
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::PrintHelpMessage( const TString& methodTitle ) const
+{
+   // Print predefined help message of classifier
+   // iterate over methods and test
+   if (methodTitle != "") {
+      IMethod* method = GetMethod( methodTitle );
+      if (method) method->PrintHelpMessage();
+      else {
+         fLogger << kWARNING << "<PrintHelpMessage> Could not find classifier \"" << methodTitle 
+                 << "\" in list" << Endl;
+      }
+   }
+   else {
+
+      // no classifier specified, print all hepl messages
+      vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
+      vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
+      for (; itrMethod != itrMethodEnd; itrMethod++) {
+         MethodBase* method = (MethodBase*)*itrMethod;
+         fLogger << kINFO << "Print help message for classifier: " << method->GetMethodTitle() << Endl;
+         method->PrintHelpMessage();
+      }
+   }
+}
+
+//_______________________________________________________________________
 void TMVA::Factory::EvaluateAllVariables( TString options )
 {
    // iterates over all MVA input varables and evaluates them
    fLogger << kINFO << "Evaluating all variables..." << Endl;
 
-   // if multiple  MVAs 
-   if (fMultipleMVAs && !fMultipleStoredOptions ) {
-      fLogger << kINFO << "EvaluateAllVariables will be called for multiple MVAs " << Endl;
-      fMultiEvalVar=kTRUE;
-      return;
-   } 
-   else if (Data().GetTrainingTree() == NULL) {
+   if (Data().GetTrainingTree() == NULL) {
       fLogger << kWARNING << "You perform testing without training before, hope you "
               << "provided a reasonable test tree and weight files " << Endl;
    } 
-   else if ((Data().GetTrainingTree()->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain) {
-      fLogger << kWARNING << "Skip testing since training wasn't performed for this bin" << Endl;
-      return;
-   }
 
    for (UInt_t i=0; i<Data().GetNVariables(); i++) {
       TString s = Data().GetInternalVarName(i);
@@ -743,22 +643,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
 {
    // iterates over all MVAs that have been booked, and calls their evaluation methods
 
-   fLogger << kINFO << "Evaluating all methods..." << Endl;
+   fLogger << kINFO << "Evaluating all classifiers..." << Endl;
 
-   // if multiple  MVAs 
-   if (fMultipleMVAs && !fMultipleStoredOptions ) {
-      fLogger << kINFO << "EvaluateAllMethods will be called for multiple MVAs " << Endl;
-      fMultiEval=kTRUE;
-      return;
-   } 
-   else if (Data().GetTrainingTree() == NULL) {
+   if (Data().GetTrainingTree() == NULL) {
       fLogger << kWARNING << "You perform testing without training before, hope you "
               << "provided a reasonable test tree and weight files " << Endl;
    } 
-   else if ((Data().GetTrainingTree()->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain) {
-      fLogger << kWARNING << "Skip testing since training wasn't performed for this bin" << Endl;
-      return;
-   }
 
    // -----------------------------------------------------------------------
    // First part of evaluation process
@@ -767,11 +657,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
    // although equal, we now want to seperate the outpuf for the variables
    // and the real methods
-   Int_t    isel; //will be 0 for a Method; 1 for a Variable
-   Int_t nmeth_used[2] = {0,0}; //0 Method; 1 Variable
+   Int_t isel;                  // will be 0 for a Method; 1 for a Variable
+   Int_t nmeth_used[2] = {0,0}; // 0 Method; 1 Variable
 
    vector<vector<TString> >  mname(2);
-   vector<vector<Double_t> > sig(2), sep(2), mutr(2);
+   vector<vector<Double_t> > sig(2), sep(2);
    vector<vector<Double_t> > eff01(2), eff10(2), eff30(2), effArea(2);
    vector<vector<Double_t> > eff01err(2), eff10err(2), eff30err(2);
    vector<vector<Double_t> > trainEff01(2), trainEff10(2), trainEff30(2);
@@ -786,11 +676,13 @@ void TMVA::Factory::EvaluateAllMethods( void )
       MethodBase* theMethod = (MethodBase*)*itrMethod;
       if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
 
-      fLogger << kINFO << "Evaluate method: " << theMethod->GetMethodTitle() << Endl;
-      isel=0; if (theMethod->GetMethodName().Contains("Variable")) isel=1;
+      fLogger << kINFO << "Evaluate classifier: " << theMethod->GetMethodTitle() << Endl;
+      isel = (theMethod->GetMethodName().Contains("Variable")) ? 1 : 0;
 
+      
       // perform the evaluation
       theMethod->TestInit(0);
+
       // do the job
       if (theMethod->IsOK()) theMethod->Test(0);
       if (theMethod->IsOK()) {
@@ -799,19 +691,18 @@ void TMVA::Factory::EvaluateAllMethods( void )
          sep[isel].push_back  ( theMethod->GetSeparation() );
          TTree * testTree = theMethod->Data().GetTestTree();
          Double_t err;
-         eff01[isel].push_back( theMethod->GetEfficiency("Efficiency:0.01", testTree, err)  );
+         eff01[isel].push_back( theMethod->GetEfficiency("Efficiency:0.01", testTree, err) );
          eff01err[isel].push_back( err );
-         eff10[isel].push_back( theMethod->GetEfficiency("Efficiency:0.10", testTree, err)  );
+         eff10[isel].push_back( theMethod->GetEfficiency("Efficiency:0.10", testTree, err) );
          eff10err[isel].push_back( err );
-         eff30[isel].push_back( theMethod->GetEfficiency("Efficiency:0.30", testTree, err)  );
+         eff30[isel].push_back( theMethod->GetEfficiency("Efficiency:0.30", testTree, err) );
          eff30err[isel].push_back( err );
          effArea[isel].push_back( theMethod->GetEfficiency("", testTree, err)  ); // computes the area (average)
 
-         trainEff01[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.01")  ); // the first pass takes longer
-         trainEff10[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.10")  );
-         trainEff30[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.30")  );
+         trainEff01[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.01") ); // the first pass takes longer
+         trainEff10[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.10") );
+         trainEff30[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.30") );
 
-         mutr[isel].push_back ( theMethod->GetmuTransform(testTree) );
          nmeth_used[isel]++;
          theMethod->WriteEvaluationHistosToFile();
       }
@@ -836,23 +727,21 @@ void TMVA::Factory::EvaluateAllMethods( void )
       vtemp.push_back( trainEff30[k] );
       vtemp.push_back( sig[k]   );
       vtemp.push_back( sep[k]   );
-      vtemp.push_back( mutr[k]  ); 
       vector<TString> vtemps = mname[k];
       Tools::UsefulSortDescending( vtemp, &vtemps );
-      effArea[k] = vtemp[0];
-      eff10[k] = vtemp[1];
-      eff01[k] = vtemp[2];
-      eff30[k] = vtemp[3];
-      eff10err[k] = vtemp[4];
-      eff01err[k] = vtemp[5];
-      eff30err[k] = vtemp[6];
+      effArea[k]    = vtemp[0];
+      eff10[k]      = vtemp[1];
+      eff01[k]      = vtemp[2];
+      eff30[k]      = vtemp[3];
+      eff10err[k]   = vtemp[4];
+      eff01err[k]   = vtemp[5];
+      eff30err[k]   = vtemp[6];
       trainEff10[k] = vtemp[7];
       trainEff01[k] = vtemp[8];
       trainEff30[k] = vtemp[9];
-      sig[k]   = vtemp[10];
-      sep[k]   = vtemp[11];
-      mutr[k]  = vtemp[12];
-      mname[k] = vtemps;
+      sig[k]        = vtemp[10];
+      sep[k]        = vtemp[11];
+      mname[k]      = vtemps;
    }
 
    // -----------------------------------------------------------------------
@@ -928,32 +817,32 @@ void TMVA::Factory::EvaluateAllMethods( void )
       // print correlation matrices
       if (corrMatS != 0 && corrMatB != 0) {
 
-         fLogger << Endl;
+         fLogger << kINFO << Endl;
          fLogger << kINFO << "Inter-MVA correlation matrix (signal):" << Endl;
          Tools::FormattedOutput( *corrMatS, *theVars, fLogger );
-         fLogger << Endl;
+         fLogger << kINFO << Endl;
 
          fLogger << kINFO << "Inter-MVA correlation matrix (background):" << Endl;
          Tools::FormattedOutput( *corrMatB, *theVars, fLogger );
-         fLogger << Endl;   
+         fLogger << kINFO << Endl;   
       }
       else fLogger << kWARNING << "<TestAllMethods> cannot compute correlation matrices" << Endl;
 
       // print overlap matrices
       fLogger << kINFO << "The following \"overlap\" matrices contain the fraction of events for which " << Endl;
       fLogger << kINFO << "the MVAs 'i' and 'j' have returned conform answers about \"signal-likeness\"" << Endl;
-      fLogger << kINFO << "An event is signal-like, if its MVA output exceeds the following value:" << endl;
+      fLogger << kINFO << "An event is signal-like, if its MVA output exceeds the following value:" << Endl;
       Tools::FormattedOutput( rvec, *theVars, "Method" , "Cut value", fLogger );
       fLogger << kINFO << "which correspond to the working point: eff(signal) = 1 - eff(background)" << Endl;
 
       // give notice that cut method has been excluded from this test
       if (nvar != (Int_t)fMethods.size()) 
-         fLogger << kINFO << "Note: no correlations and overlap with cut method are provided at present" << endl;
+         fLogger << kINFO << "Note: no correlations and overlap with cut method are provided at present" << Endl;
 
       fLogger << kINFO << Endl;
       fLogger << kINFO << "Inter-MVA overlap matrix (signal):" << Endl;
       Tools::FormattedOutput( *overlapS, *theVars, fLogger );
-      fLogger << Endl;
+      fLogger << kINFO << Endl;
       
       fLogger << kINFO << "Inter-MVA overlap matrix (background):" << Endl;
       Tools::FormattedOutput( *overlapB, *theVars, fLogger );
@@ -983,7 +872,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    fLogger << kINFO << "Methods:         @B=0.01    @B=0.10    @B=0.30    Area   |  ration:  cance:  "   << Endl;
    fLogger << kINFO << hLine << Endl;
    for (Int_t k=0; k<2; k++) {
-      if (k == 1 && nmeth_used[k] > 0 && !fMultipleMVAs) {
+      if (k == 1 && nmeth_used[k] > 0) {
          fLogger << kINFO << hLine << Endl;
          fLogger << kINFO << "Input Variables: " << Endl << hLine << Endl;
       }
@@ -1006,7 +895,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    fLogger << kINFO << "Methods:         @B=0.01             @B=0.10            @B=0.30   "   << Endl;
    fLogger << kINFO << hLine << Endl;
    for (Int_t k=0; k<2; k++) {
-      if (k == 1 && nmeth_used[k] > 0 && !fMultipleMVAs) {
+      if (k == 1 && nmeth_used[k] > 0) {
          fLogger << kINFO << hLine << Endl;
          fLogger << kINFO << "Input Variables: " << Endl << hLine << Endl;
       }
@@ -1026,114 +915,3 @@ void TMVA::Factory::EvaluateAllMethods( void )
    Data().GetTestTree()->Write("",TObject::kOverwrite);
 }
 
-//_______________________________________________________________________
-void TMVA::Factory::ProcessMultipleMVA()
-{
-   // multiple MVAs in different phase space regions are trained and tested
-
-   if (fMultipleMVAs) {
-      // assume that we have booked all method:
-      // all other methods know that they are called from this method!
-      fMultipleStoredOptions=kTRUE;
-
-      // loop over bins:
-      for (map<TString, std::pair<TString,TCut> >::iterator bin = fMultipleMVAnames.begin();
-           bin != fMultipleMVAnames.end(); bin++) {
-
-         fLogger << kINFO << "---------------------------------------------------------------------------"   << Endl;  
-         fLogger << kINFO << "Process Bin "<< bin->first<< Endl;
-         fLogger << kINFO << "---                 with cut ["<< (bin->second).first <<"]"<< Endl;
-         fLogger << kINFO << "---------------------------------------------------------------------------"   << Endl;      
-         TString binName( "multicutTMVA::" +  bin->first );
-         fLocalTDir = fTargetFile->mkdir( binName, (bin->second).first);    
-         fLocalTDir->cd();
-
-         Data().PrepareForTrainingAndTesting( fMultiNtrain, fMultiNtest );
-
-         // reset list of methods: 
-         fLogger << kVERBOSE << "Delete previous methods" << Endl;
-         this->DeleteAllMethods();
-
-         // loop over stored methods
-         for (map<TString, std::pair<TString,TString> >::iterator method = fMultipleMVAMethodOptions.begin();
-              method != fMultipleMVAMethodOptions.end(); method++) {
-        
-            // book methods
-            this->BookMethod(method->first, (method->second).first, (method->second).second ) ;
-         } // end of loop over methods
-
-         // set weigt file dir: SetWeightFileDir
-         // iterate over methods and test      
-         vector<IMethod*>::iterator itrMethod2    = fMethods.begin();
-         vector<IMethod*>::iterator itrMethod2End = fMethods.end();
-         for (; itrMethod2 != itrMethod2End; itrMethod2++) {
-            TString binDir( gConfig().fIoNames.fWeightFileDir + bin->first );
-            ((MethodBase*)(*itrMethod2))->SetWeightFileDir(binDir);
-         }
-      
-         fLogger << kVERBOSE << "Booked " << fMethods.size() << " methods" << Endl;
-      
-         if (fMultiTrain) this->TrainAllMethods();
-         if (fMultiTest)  this->TestAllMethods();
-         if (fMultiEval) {
-            this->EvaluateAllMethods();
-        
-            //check if fTestTree contains MVA variables
-            Bool_t hasMVA=kFALSE;
-            TIter next_branch1( Data().GetTestTree()->GetListOfBranches() );
-            while (TBranch *branch = (TBranch*)next_branch1()) {
-               if (((TString)branch->GetName()).Contains("MVA_")) hasMVA=kTRUE;
-            } // end of loop over fTestTree branches
-            
-            if (hasMVA) {
-
-               if (Data().GetMultiCutTestTree() == NULL)
-                  Data().SetMultiCutTestTree(Data().GetTestTree()->CloneTree(0));
-
-               Data().GetMultiCutTestTree()->CopyEntries(Data().GetTestTree());
-
-            } //end of if (fTesttree has MVA branches
-
-         } // end of if (fMultiEval) 
-      } // end loop over bins
-      // write global tree to top directory of the file
-
-      fTargetFile->cd();
-      if (Data().GetMultiCutTestTree() != NULL) Data().GetMultiCutTestTree()->Write();
-      if (DEBUG_TMVA_Factory) Data().GetMultiCutTestTree()->Print();
-
-      // Evaluate MVA methods globally for all multiCut Bins
-
-      // reset list of methods: 
-      fLogger << kVERBOSE << "Delete previous methods" << Endl;
-      this->DeleteAllMethods();
-
-      // evaluate the combined TestTree
-      fLogger << Endl;
-      fLogger << kINFO << "-------------------------------------------------------------------" << Endl;
-      fLogger << kINFO << "Combined Overall Evaluation:" << Endl;
-      fLogger << kINFO << "-------------------------------------------------------------------" << Endl;
-      fLogger << Endl;
-
-      IMethod *method = 0;
-      TIter next_branch1( Data().GetTestTree()->GetListOfBranches() );
-      while (TBranch *branch = (TBranch*)next_branch1()) {
-         TLeaf *leaf = branch->GetLeaf(branch->GetName());
-         if (((TString)branch->GetName()).Contains("TMVA::")) {
-            method = new MethodVariable( fJobName, (TString)leaf->GetName(), Data(), 
-                                         (TString)leaf->GetName(), fTargetFile );   
-            fMethods.push_back( method );
-         } // is MVA variable
-      }
-
-      fLocalTDir = fTargetFile;
-      this->EvaluateAllMethods();
-      
-      // this is save:
-      fMultipleStoredOptions = kFALSE;
-   } 
-   else {
-      fLogger << kFATAL << "ProcessMultipleMVA without bin definitions!" << Endl;
-   }   
-   // plot input variables in global tree   
-}

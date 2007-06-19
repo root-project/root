@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.h,v 1.7 2006/11/23 17:43:38 rdm Exp $
+// @(#)root/tmva $Id: DataSet.h,v 1.8 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -66,17 +66,18 @@ namespace TMVA {
 
    public:
 
-      TreeInfo(TTree* tr, Double_t weight=1.0) : fTree(tr), fWeight(weight) {}
-      ~TreeInfo(){}
-      TTree* GetTree() const { return fTree; }
+      TreeInfo( TTree* tr, Double_t weight=1.0 ) 
+         : fTree(tr), fWeight(weight) {}
+      ~TreeInfo() {}
+
+      TTree*   GetTree()   const { return fTree; }
       Double_t GetWeight() const { return fWeight; }
 
    private:
 
-      TTree* fTree;    //! pointer to the tree
-      Double_t  fWeight;  //  weight for the tree
+      TTree*   fTree;    //! pointer to the tree
+      Double_t fWeight;  //  weight for the tree
    };
-
 
    class DataSet {
 
@@ -88,22 +89,21 @@ namespace TMVA {
       const char* GetName() const { return "DataSet"; }
 
       // the tree data
-      void       AddSignalTree    ( TTree* tr, Double_t weight=1.0 );
-      void       AddBackgroundTree( TTree* tr, Double_t weight=1.0 );
-      UInt_t     NSignalTrees()                const { return fTreeCollection[Types::kSignal].size(); }
-      UInt_t     NBackgroundTrees()            const { return fTreeCollection[Types::kBackground].size(); }
-      const TreeInfo&  SignalTreeInfo(Int_t i)       const { return fTreeCollection[Types::kSignal][i]; }
-      const TreeInfo&  BackgroundTreeInfo(Int_t i)   const { return fTreeCollection[Types::kBackground][i]; }
-      void       ClearSignalTreeList()     { fTreeCollection[Types::kSignal].clear(); }
-      void       ClearBackgroundTreeList() { fTreeCollection[Types::kBackground].clear(); }
+      void     AddSignalTree    ( TTree* tr, Double_t weight=1.0 );
+      void     AddBackgroundTree( TTree* tr, Double_t weight=1.0 );
+      UInt_t   NSignalTrees()                const { return fTreeCollection[Types::kSignal].size(); }
+      UInt_t   NBackgroundTrees()            const { return fTreeCollection[Types::kBackground].size(); }
+      const TreeInfo&  SignalTreeInfo(Int_t i)     const { return fTreeCollection[Types::kSignal][i]; }
+      const TreeInfo&  BackgroundTreeInfo(Int_t i) const { return fTreeCollection[Types::kBackground][i]; }
+      void     ClearSignalTreeList()     { fTreeCollection[Types::kSignal].clear(); }
+      void     ClearBackgroundTreeList() { fTreeCollection[Types::kBackground].clear(); }
 
       // the variable data
       void     AddVariable( const TString& expression, char varType='F', void* external = 0 );
       void     AddVariable( const TString& expression, Double_t min, Double_t max, char varType, void* external = 0 );
       std::vector<VariableInfo>& GetVariableInfos() { return fVariables; }
       UInt_t   GetNVariables()               const { return fVariables.size(); }
-      char     VarType(Int_t i)              const { return fVariables[i].VarType(); }
-      char     VarTypeOriginal(Int_t i)      const { return fVariables[i].VarTypeOriginal(); }
+      char     GetVarType(Int_t i)           const { return fVariables[i].GetVarType(); }
       Int_t    FindVar(const TString& var)   const;
 
       const TString& GetExpression(Int_t i)      const { return fVariables[i].GetExpression(); }
@@ -135,7 +135,7 @@ namespace TMVA {
 
       // data preparation
       // prepare input tree for training
-      void PrepareForTrainingAndTesting( const TString & splitOpt, TString TreeName="" );
+      void PrepareForTrainingAndTesting( const TString & splitOpt );
 
       // auxiliary functions to compute correlations
       void GetCorrelationMatrix( Bool_t isSignal, TMatrixDBase* mat );
@@ -202,17 +202,14 @@ namespace TMVA {
       TCut                       fCut;              // the pretraining cut
       TCut                       fMultiCut;         // phase-space cut
 
-      TTree*                     fTrainingTree;      //! tree used for training
-      TTree*                     fTestTree;          //! tree used for testing 
-      TTree*                     fMultiCutTestTree;  //! tree used for testing of multicut method
+      TTree*                     fTrainingTree;     //! tree used for training
+      TTree*                     fTestTree;         //! tree used for testing 
+      TTree*                     fMultiCutTestTree; //! tree used for testing of multicut method
 
       // data stats
       UInt_t                     fDataStats[Types::kMaxTreeType][Types::kMaxSBType]; //! statistics of the dataset for training/test tree
 
-      // 
-      /*       TMatrixD*                 fCovarianceMatrix[2]; //! Covariance matrix [signal/background] */
       TMatrixD*                  fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
-      /*       TPrincipal*               fPrincipal[2];        //! Principal [signal/background] */
 
       std::map<Types::EVariableTransform,VariableTransformBase*> fVarTransforms; //! Registered variable transformations
       

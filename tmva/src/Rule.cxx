@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.9 2006/11/23 17:43:39 rdm Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.10 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -18,7 +18,7 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      Iowa State U.                                                             *
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -69,7 +69,7 @@ TMVA::Rule::Rule( RuleEnsemble *re,
 
    //
    // input:
-   //   nodes  - a vector of TMVA::Node; from these all possible rules will be created
+   //   nodes  - a vector of Node; from these all possible rules will be created
    //
    //
    
@@ -79,18 +79,46 @@ TMVA::Rule::Rule( RuleEnsemble *re,
 }
 
 //_______________________________________________________________________
+TMVA::Rule::Rule( RuleEnsemble *re )
+   : fNorm          ( 1.0 )
+   , fSupport       ( 0.0 )
+   , fSigma         ( 0.0 )
+   , fCoefficient   ( 0.0 )
+   , fImportance    ( 0.0 )
+   , fImportanceRef ( 1.0 )
+   , fRuleEnsemble  ( re )
+   , fLogger( "RuleFit" )
+{
+   // the simple constructor
+}
+
+//_______________________________________________________________________
+TMVA::Rule::Rule()
+   : fNorm          ( 1.0 )
+   , fSupport       ( 0.0 )
+   , fSigma         ( 0.0 )
+   , fCoefficient   ( 0.0 )
+   , fImportance    ( 0.0 )
+   , fImportanceRef ( 1.0 )
+   , fRuleEnsemble  ( 0 )
+   , fLogger( "RuleFit" )
+{
+   // the simple constructor
+}
+
+//_______________________________________________________________________
 Bool_t TMVA::Rule::ContainsVariable(UInt_t iv) const
 {
    // check if variable in node
    Bool_t found    = kFALSE;
    Bool_t doneLoop = kFALSE;
-   UInt_t ncuts    = fCut->GetNcuts();
+   UInt_t nvars    = fCut->GetNvars();
    UInt_t i        = 0;
    //
    while (!doneLoop) {
       found = (fCut->GetSelector(i) == iv);
       i++;
-      doneLoop = (found || (i==ncuts));
+      doneLoop = (found || (i==nvars));
    }
    return found;
 }
@@ -124,9 +152,9 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
    //   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
    // If not useCutValue, the distance is exactly zero if they are equal
    //
-   if (fCut->GetNcuts()!=other.GetRuleCut()->GetNcuts()) return -1.0; // check number of cuts
+   if (fCut->GetNvars()!=other.GetRuleCut()->GetNvars()) return -1.0; // check number of cuts
    //
-   const UInt_t ncuts  = fCut->GetNcuts();
+   const UInt_t nvars  = fCut->GetNvars();
    //
    Int_t    sel;         // cut variable
    Double_t rms;         // rms of cut variable
@@ -145,7 +173,7 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
    Bool_t   equal  = true; // flag if cut are equal
    //
    const RuleCut *otherCut = other.GetRuleCut();
-   while ((equal) && (in<ncuts)) {
+   while ((equal) && (in<nvars)) {
       // check equality in cut topology
       equal = ( (fCut->GetSelector(in) == (otherCut->GetSelector(in))) &&
                 (fCut->GetCutDoMin(in) == (otherCut->GetCutDoMin(in))) &&
@@ -159,7 +187,7 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
             vminB = other.GetRuleCut()->GetCutMin(in);
             vmaxB = other.GetRuleCut()->GetCutMax(in);
             // messy - but ok...
-            rms = fRuleEnsemble->GetRuleFit()->GetMethodRuleFit()->GetRMS(sel);
+            rms = fRuleEnsemble->GetRuleFit()->GetMethodBase()->GetRMS(sel);
             smin=0;
             smax=0;
             if (fCut->GetCutDoMin(in))
@@ -179,7 +207,7 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Rule::operator==( const TMVA::Rule& other ) const
+Bool_t TMVA::Rule::operator==( const Rule& other ) const
 {
    // comparison operator ==
 
@@ -187,14 +215,14 @@ Bool_t TMVA::Rule::operator==( const TMVA::Rule& other ) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Rule::operator<( const TMVA::Rule& other ) const
+Bool_t TMVA::Rule::operator<( const Rule& other ) const
 {
    // comparison operator <
    return (fImportance < other.GetImportance());
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< ( ostream& os, const TMVA::Rule& rule )
+ostream& TMVA::operator<< ( ostream& os, const Rule& rule )
 {
    // ostream operator
    rule.Print( os );
@@ -206,7 +234,7 @@ const TString & TMVA::Rule::GetVarName( Int_t i ) const
 {
    // returns the name of a rule
 
-   return fRuleEnsemble->GetMethodRuleFit()->GetInputExp(i);
+   return fRuleEnsemble->GetMethodBase()->GetInputExp(i);
 }
 
 //_______________________________________________________________________
@@ -231,8 +259,8 @@ void TMVA::Rule::Copy( const Rule& other )
 void TMVA::Rule::Print( ostream& os ) const
 {
    // print function
-   const Int_t ncuts = fCut->GetNcuts();
-   if (ncuts<1) os << "     *** WARNING - <EMPTY RULE> ***" << endl; // TODO: Fix this, use fLogger
+   const UInt_t nvars = fCut->GetNvars();
+   if (nvars<1) os << "     *** WARNING - <EMPTY RULE> ***" << endl; // TODO: Fix this, use fLogger
    //
    Int_t sel;
    Double_t valmin, valmax;
@@ -242,7 +270,7 @@ void TMVA::Rule::Print( ostream& os ) const
    os << "    Support     = " << Form("%1.4f", fSupport)  << endl;
    os << "    S/(S+B)     = " << Form("%1.4f", fSSB)  << endl;  
 
-   for ( Int_t i=0; i<ncuts; i++) {
+   for ( UInt_t i=0; i<nvars; i++) {
       os << "    ";
       sel    = fCut->GetSelector(i);
       valmin = fCut->GetCutMin(i);
@@ -262,8 +290,8 @@ void TMVA::Rule::Print( ostream& os ) const
 void TMVA::Rule::PrintLogger(const char *title) const
 {
    // print function
-   const Int_t ncuts = fCut->GetNcuts();
-   if (ncuts<1) fLogger << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
+   const UInt_t nvars = fCut->GetNvars();
+   if (nvars<1) fLogger << kWARNING << "BUG TRAP: EMPTY RULE!!!" << Endl;
    //
    Int_t sel;
    Double_t valmin, valmax;
@@ -274,7 +302,7 @@ void TMVA::Rule::PrintLogger(const char *title) const
    //           << "Coefficient = " << Form("%1.4f", fCoefficient) << Endl;
 
 
-   for ( Int_t i=0; i<ncuts; i++) {
+   for ( UInt_t i=0; i<nvars; i++) {
       
       fLogger << kINFO << "            ";
       sel    = fCut->GetSelector(i);
@@ -295,8 +323,9 @@ void TMVA::Rule::PrintLogger(const char *title) const
 void TMVA::Rule::PrintRaw( ostream& os ) const
 {
    // extensive print function used to print info for the weight file
-   const UInt_t ncuts = fCut->GetNcuts();
+   const UInt_t nvars = fCut->GetNvars();
    os << "Parameters: "
+      << setprecision(10)
       << fImportance << " "
       << fImportanceRef << " "
       << fCoefficient << " "
@@ -306,10 +335,11 @@ void TMVA::Rule::PrintRaw( ostream& os ) const
       << fSSB << " "
       << fSSBNeve << " "
       << endl;                                                  \
-   os << "N(cuts): " << ncuts << endl; // mark end of nodes
-   for ( UInt_t i=0; i<ncuts; i++) {
+   os << "N(cuts): " << nvars << endl; // mark end of nodes
+   for ( UInt_t i=0; i<nvars; i++) {
       os << "Cut " << i << " : " << flush;
       os <<        fCut->GetSelector(i)
+         << setprecision(10)
          << " " << fCut->GetCutMin(i)
          << " " << fCut->GetCutMax(i)
          << " " << (fCut->GetCutDoMin(i) ? "T":"F")
@@ -324,7 +354,7 @@ void TMVA::Rule::ReadRaw( istream& istr )
    // read function (format is the same as written by PrintRaw)
 
    TString dummy;
-   UInt_t ncuts;
+   UInt_t nvars;
    istr >> dummy
         >> fImportance
         >> fImportanceRef
@@ -334,14 +364,14 @@ void TMVA::Rule::ReadRaw( istream& istr )
         >> fNorm
         >> fSSB
         >> fSSBNeve;
-   istr >> dummy >> ncuts;
+   istr >> dummy >> nvars;
    Double_t cutmin,cutmax;
    UInt_t   sel,idum;
    Char_t   bA, bB;
    //
-   fCut = new TMVA::RuleCut();
-   fCut->SetNcuts( ncuts );
-   for ( UInt_t i=0; i<ncuts; i++) {
+   fCut = new RuleCut();
+   fCut->SetNvars( nvars );
+   for ( UInt_t i=0; i<nvars; i++) {
       istr >> dummy >> idum; // get 'Node' and index
       istr >> dummy;         // get ':'
       istr >> sel >> cutmin >> cutmax >> bA >> bB;
@@ -352,4 +382,3 @@ void TMVA::Rule::ReadRaw( istream& istr )
       fCut->SetCutDoMax(i,(bB=='T' ? kTRUE:kFALSE));
    }
 }
-

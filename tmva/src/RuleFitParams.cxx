@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.9 2007/02/02 20:18:02 brun Exp $
+// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.10 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -15,7 +15,7 @@
  *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      Iowa State U.                                                             *
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -39,19 +39,31 @@
 
 Bool_t gFIRSTTST=kTRUE;
 Bool_t gFIRSTORG=kTRUE;
+
+Double_t gGDInit=0;
+Double_t gGDPtr=0;
+Double_t gGDNorm=0;
+Double_t gGDEval=0;
+Double_t gGDEvalRule=0;
+Double_t gGDRuleLoop=0;
+Double_t gGDLinLoop=0;
+
 //_______________________________________________________________________
 TMVA::RuleFitParams::RuleFitParams()
    : fRuleFit ( 0 )
    , fRuleEnsemble ( 0 )
+   , fNRules ( 0 )
+   , fNLinear ( 0 )
    , fPathIdx1 ( 0 )
    , fPathIdx2 ( 0 )
    , fPerfIdx1 ( 0 )
    , fPerfIdx2 ( 0 )
-   , fGDNTau     ( 1 )
-   , fGDTauScan  ( 300 )
-   , fGDTauMin   ( 0.6 )
-   , fGDTauMax   ( 0.6 )
-   , fGDTau      ( 0.6 )
+   , fGDNTau     ( 51 )
+   , fGDTauPrec  ( 0.02 )
+   , fGDTauScan  ( 1000 )
+   , fGDTauMin   ( 0.0 )
+   , fGDTauMax   ( 1.0 )
+   , fGDTau      ( -1.0 )
    , fGDPathStep ( 0.01 )
    , fGDNPathSteps ( 1000 )
    , fGDErrScale ( 1.1 )
@@ -77,45 +89,67 @@ void TMVA::RuleFitParams::Init()
 {
    // Initializes all parameters using the RuleEnsemble and the training tree
    if (fRuleFit==0) return;
+   if (fRuleFit->GetMethodRuleFit()==0) {
+      fLogger << kFATAL << "RuleFitParams::Init() - MethodRuleFit ptr is null" << Endl;
+   }
+   UInt_t neve = fRuleFit->GetTrainingEvents().size();
    //
    fRuleEnsemble   = fRuleFit->GetRuleEnsemblePtr();
    fNRules         = fRuleEnsemble->GetNRules();
    fNLinear        = fRuleEnsemble->GetNLinear();
-   fTrainingEvents = fRuleFit->GetTrainingEvents();
-//    fPathIdx1 = 0;
-//    fPathIdx2 = (2*fTrainingEvents.size())/3;
-//    fPerfIdx1 = fPathIdx2+1;
-//    fPerfIdx2 = fTrainingEvents.size()-1;
-   UInt_t   nsub    = fRuleFit->GetNSubsamples();
-   Double_t fsubUse = fRuleFit->GetMethodRuleFit()->GetSubSampleFraction();
-   if (fsubUse<0.0) fsubUse=0.0;
-   if (fsubUse>1.0) fsubUse=1.0;
-   UInt_t   nsubUse = static_cast<UInt_t>(fsubUse*static_cast<Double_t>(nsub)); //hmm probably overkill;)
-   if (nsubUse==0) nsubUse=1;
+
    //
-   // always use full training sample for evaluation
+   // Fraction of events used for validation should be close of unity..
+   // Always selection from the END
    //
-   UInt_t dummy;
-   fRuleFit->GetSubsampleEvents(0,      fPerfIdx1, dummy);
-   fRuleFit->GetSubsampleEvents(nsub-1, dummy,     fPerfIdx2);
+   UInt_t ofs;
+   fPerfIdx1 = 0;
+   if (neve>1) {
+      fPerfIdx2 = static_cast<UInt_t>((neve-1)*fRuleFit->GetMethodRuleFit()->GetGDValidEveFrac());
+   } else {
+      fPerfIdx2 = 0;
+   }
+   ofs = neve - fPerfIdx2 - 1;
+   fPerfIdx1 += ofs;
+   fPerfIdx2 += ofs;
    //
-   // use first nsubUse sub-samples for the GD path finding
+   // Fraction of events used for the path search can be allowed to be a smaller value, say 0.5
+   // Alwas select events from the BEGINNING.
+   // This means that the validation and search samples will not overlap if both fractions are <0.5.
    //
-   fRuleFit->GetSubsampleEvents(0,         fPathIdx1, dummy);
-   fRuleFit->GetSubsampleEvents(nsubUse-1, dummy,     fPathIdx2);
+   fPathIdx1 = 0;
+   if (neve>1) {
+      fPathIdx2 = static_cast<UInt_t>((neve-1)*fRuleFit->GetMethodRuleFit()->GetGDPathEveFrac());
+   } else {
+      fPathIdx2 = 0;
+   }
    //
-   fLogger << kVERBOSE << "path constr. - event index range = [ " << fPathIdx1 << ", " << fPathIdx2 << " ]" << Endl;
-   fLogger << kVERBOSE << "error estim. - event index range = [ " << fPerfIdx1 << ", " << fPerfIdx2 << " ]" << Endl;
+   // summarize weights
+   //
+   fNEveEffPath = 0;;
+   for (UInt_t ie=fPathIdx1; ie<fPathIdx2+1; ie++) {
+      fNEveEffPath += fRuleFit->GetTrainingEventWeight(ie);
+   }
+
+   fNEveEffPerf=0;
+   for (UInt_t ie=fPerfIdx1; ie<fPerfIdx2+1; ie++) {
+      fNEveEffPerf += fRuleFit->GetTrainingEventWeight(ie);
+   }
+   //
+   fLogger << kVERBOSE << "Path constr. - event index range = [ " << fPathIdx1 << ", " << fPathIdx2 << " ]"
+           << ", effective N(events) = " << fNEveEffPath << Endl;
+   fLogger << kVERBOSE << "Error estim. - event index range = [ " << fPerfIdx1 << ", " << fPerfIdx2 << " ]"
+           << ", effective N(events) = " << fNEveEffPerf << Endl;
    //
    if (fRuleEnsemble->DoRules()) 
-      fLogger << kINFO << "number of rules in ensemble = " << fNRules << Endl;
+      fLogger << kDEBUG << "Number of rules in ensemble: " << fNRules << Endl;
    else 
-      fLogger << kINFO << "rules are disabled " << Endl;
+      fLogger << kDEBUG << "Rules are disabled " << Endl;
 
    if (fRuleEnsemble->DoLinear())
-      fLogger << kINFO << "number of linear terms = " << fNLinear << Endl;
+      fLogger << kDEBUG << "Number of linear terms: " << fNLinear << Endl;
    else
-      fLogger << kINFO << "linear terms are disabled " << Endl;
+      fLogger << kDEBUG << "Linear terms are disabled " << Endl;
 }
 
 //_______________________________________________________________________
@@ -142,102 +176,141 @@ void TMVA::RuleFitParams::InitNtuple()
 }
 
 //_______________________________________________________________________
-const std::vector< Int_t >  *TMVA::RuleFitParams::GetSubsampleEvents() const
+void TMVA::RuleFitParams::EvaluateAverage( UInt_t ind1, UInt_t ind2,
+                                           std::vector<Double_t> &avsel,
+                                           std::vector<Double_t> &avrul )
 {
-   // accessor to the subsamples
-   return &(fRuleFit->GetSubsampleEvents());
-}
-
-//_______________________________________________________________________
-void TMVA::RuleFitParams::GetSubsampleEvents(UInt_t sub, UInt_t & ibeg, UInt_t & iend) const
-{
-   // calls the Subsample Events
-   fRuleFit->GetSubsampleEvents(sub,ibeg,iend);
-}
-
-//_______________________________________________________________________
-UInt_t TMVA::RuleFitParams::GetNSubsamples() const
-{
-   // get the number of subsamples
-   return fRuleFit->GetNSubsamples();
-}
-
-//_______________________________________________________________________
-const TMVA::Event *TMVA::RuleFitParams::GetTrainingEvent(UInt_t i, UInt_t isub) const
-{
-   // accesses a training event
-   return fRuleFit->GetTrainingEvent(i,isub);
-}
-
-//_______________________________________________________________________
-void TMVA::RuleFitParams::EvaluateAverage(UInt_t ibeg, UInt_t iend)
-{
-   // evaluate the average of each variable and f(x) in the given range - TODO: not very nice!
-   UInt_t neve = iend-ibeg+1;
+   // evaluate the average of each variable and f(x) in the given range
+   UInt_t neve = ind2-ind1+1;
    if (neve<1) {
-      fLogger << kWARNING << "EvaluateAverage() - invalid start/end indices!" << Endl;
-      return;
+      fLogger << kFATAL << "<EvaluateAverage> - no events selected for path search -> BUG!" << Endl;
    }
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
-   Double_t val;
-   //   const std::vector< Rule *> *rules= &(fRuleEnsemble->GetRulesConst());
-   //   UInt_t nsel = fRuleEnsemble->GetMethodRuleFit()->GetNvar();
-   if (fNLinear>0) fAverageSelector.resize(fNLinear,0);
-   if (fNRules>0)  fAverageRule.resize(fNRules,0);
+   avsel.clear();
+   avrul.clear();
    //
-   for ( UInt_t i=ibeg; i<iend+1; i++) {
-      // first cache rule/lin response
-      val = fRuleEnsemble->EvalLinEvent(*((*events)[i]));
-      val = fRuleEnsemble->EvalEvent(*((*events)[i]));
-      // loop over linear terms
-      for ( UInt_t sel=0; sel<fNLinear; sel++ ) {
-         fAverageSelector[sel] += fRuleEnsemble->EvalLinEvent(sel,kTRUE); //(*events)[i]->GetVal(sel);
+   if (fNLinear>0) avsel.resize(fNLinear,0);
+   if (fNRules>0)  avrul.resize(fNRules,0);
+   const std::vector<UInt_t> *eventRuleMap=0;
+   Double_t ew;
+   Double_t sumew=0;
+   //
+   // Loop over events and calculate average of linear terms (normalised) and rule response.
+   //
+   if (fRuleEnsemble->IsRuleMapOK()) { // MakeRuleMap() has been called
+      for ( UInt_t i=ind1; i<ind2+1; i++) {
+         ew = fRuleFit->GetTrainingEventWeight(i);
+         sumew += ew;
+         for ( UInt_t sel=0; sel<fNLinear; sel++ ) {
+            avsel[sel] += ew*fRuleEnsemble->EvalLinEvent(i,sel);
+         }
+         // loop over rules
+         UInt_t nrules=0;
+         if (fRuleEnsemble->DoRules()) {
+            eventRuleMap = &(fRuleEnsemble->GetEventRuleMap(i));
+            nrules = (*eventRuleMap).size();
+         }
+         for (UInt_t r=0; r<nrules; r++) {
+            avrul[(*eventRuleMap)[r]] += ew;
+         }
       }
-      // loop over rules
-      for (UInt_t r=0; r<fNRules; r++) {
-         fAverageRule[r] += fRuleEnsemble->GetEventRuleVal(r); //(*rules)[r]->EvalEvent( *(*events)[i] ); // exclude coeff.
+   } else { // MakeRuleMap() has not yet been called
+      const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+      for ( UInt_t i=ind1; i<ind2+1; i++) {
+         ew = fRuleFit->GetTrainingEventWeight(i);
+         sumew += ew;
+         // first cache rule/lin response
+         Double_t val = fRuleEnsemble->EvalLinEvent(*((*events)[i]));
+         val = fRuleEnsemble->EvalEvent(*((*events)[i]));
+         // loop over linear terms
+         for ( UInt_t sel=0; sel<fNLinear; sel++ ) {
+            avsel[sel] += ew*fRuleEnsemble->GetEventLinearValNorm(sel);
+         }
+         // loop over rules
+         for (UInt_t r=0; r<fNRules; r++) {
+            avrul[r] += ew*fRuleEnsemble->GetEventRuleVal(r);
+         }
       }
    }
    // average variable
    for ( UInt_t sel=0; sel<fNLinear; sel++ ) {
-      fAverageSelector[sel] = fAverageSelector[sel] / neve;
-      //      fLogger << kVERBOSE << "AVESEL: " << sel << " -> " << fAverageSelector[sel] << Endl;
+      avsel[sel] = avsel[sel] / sumew;
    }
    // average rule response, excl coeff
    for (UInt_t r=0; r<fNRules; r++) {
-      fAverageRule[r] = fAverageRule[r] / neve;
-      //      fLogger << kVERBOSE << "AVERUL: " << r << " -> " << fAverageRule[r] << Endl;
+      avrul[r] = avrul[r] / sumew;
    }
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::LossFunction( const TMVA::Event& e ) const
+Double_t TMVA::RuleFitParams::LossFunction( const Event& e ) const
 {
    // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
    // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
    Double_t h = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( e )) );
    Double_t diff = (e.IsSignal()?1:-1) - h;
    //
-   return diff*diff;
+   return diff*diff*e.GetWeight();
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::Risk(UInt_t ibeg, UInt_t iend) const
+Double_t TMVA::RuleFitParams::LossFunction( UInt_t evtidx ) const
+{
+   // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
+   // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
+   Double_t h = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( evtidx )) );
+   Double_t diff = (fRuleEnsemble->GetRuleMapEvent( evtidx )->IsSignal()?1:-1) - h;
+   //
+   return diff*diff*fRuleFit->GetTrainingEventWeight(evtidx);
+}
+
+//_______________________________________________________________________
+Double_t TMVA::RuleFitParams::LossFunction( UInt_t evtidx, UInt_t itau ) const
+{
+   // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
+   // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
+   Double_t e = fRuleEnsemble->EvalEvent( evtidx , fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau]);
+   Double_t h = max( -1.0, min(1.0,e) );
+   Double_t diff = (fRuleEnsemble->GetRuleMapEvent( evtidx )->IsSignal()?1:-1) - h;
+   //
+   return diff*diff*fRuleFit->GetTrainingEventWeight(evtidx);
+}
+
+//_______________________________________________________________________
+Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff) const
 {
    // risk asessment
-   UInt_t neve = iend-ibeg+1;
+   UInt_t neve = ind2-ind1+1;
    if (neve<1) {
-      fLogger << kWARNING << "makeGradientVector() - invalid start/end indices!" << Endl;
-      return 0;
+      fLogger << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
    }
    Double_t rval=0;
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
-   for ( UInt_t i=ibeg; i<iend+1; i++) {
-      rval += LossFunction( *(*events)[i] );
+   //   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   for ( UInt_t i=ind1; i<ind2+1; i++) {
+      rval += LossFunction(i);
    }
-   rval = rval/Double_t(neve);
+   rval  = rval/neff;
+
+   return rval;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff, UInt_t itau) const
+{
+   // risk asessment for tau model <itau>
+   UInt_t neve = ind2-ind1+1;
+   if (neve<1) {
+      fLogger << kFATAL << "<Risk> Invalid start/end indices! BUG!!!" << Endl;
+   }
+   Double_t rval=0;
+   //
+   //   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   for ( UInt_t i=ind1; i<ind2+1; i++) {
+      rval += LossFunction(i,itau);
+   }
+   rval  = rval/neff;
+
    return rval;
 }
 
@@ -245,6 +318,9 @@ Double_t TMVA::RuleFitParams::Risk(UInt_t ibeg, UInt_t iend) const
 Double_t TMVA::RuleFitParams::Penalty() const
 {
    // This is the "lasso" penalty
+   // To be used for regression.
+   // --- NOT USED ---
+   fLogger << kWARNING << "<Penalty> Using unverified code! Check!" << Endl;
    Double_t rval=0;
    const std::vector<Double_t> *lincoeff = & (fRuleEnsemble->GetLinCoefficients());
    for (UInt_t i=0; i<fNRules; i++) {
@@ -260,11 +336,21 @@ Double_t TMVA::RuleFitParams::Penalty() const
 void TMVA::RuleFitParams::InitGD()
 {
    // Initialize GD path search
-   if (fGDNTau<1) {
+   if (fGDNTau<2) {
       fGDNTau    = 1;
-      fGDTauScan = 1;
+      fGDTauScan = 0;
+   }
+   if (fGDTau<0.0) {
+      //      fGDNTau    = 50; already set in MethodRuleFit
+      fGDTauScan = 1000;
+      fGDTauMin  = 0.0;
+      fGDTauMax  = 1.0;
+   } else {
+      fGDNTau    = 1;
+      fGDTauScan = 0;
    }
    // set all taus
+   fGDTauVec.clear();
    fGDTauVec.resize( fGDNTau );
    if (fGDNTau==1) {
       fGDTauVec[0] = fGDTau;
@@ -282,7 +368,8 @@ void TMVA::RuleFitParams::InitGD()
    fGradVecLin.clear();
    fGradVecTst.clear();
    fGradVecLinTst.clear();
-   fGDErrSum.clear();
+   fGDErrTst.clear();
+   fGDErrTstOK.clear();
    fGDOfsTst.clear();
    fGDCoefTst.clear();
    fGDCoefLinTst.clear();
@@ -309,82 +396,79 @@ void TMVA::RuleFitParams::InitGD()
    //
    // error, coefs etc
    //
-   fGDErrSum.resize(fGDNTau,0);
+   fGDErrTst.resize(fGDNTau,0);
+   fGDErrTstOK.resize(fGDNTau,kTRUE);
    fGDOfsTst.resize(fGDNTau,0);
+   fGDNTauTstOK = fGDNTau;
    //
    // calculate average selectors and rule responses for the path sample size
    //
-   EvaluateAverage( fPathIdx1, fPathIdx2 );
-
 }
 
 //_______________________________________________________________________
 Int_t TMVA::RuleFitParams::FindGDTau()
 {
-   // This finds the regularization parameter tau by scanning several different paths
-   if (fGDNTau==0) return 0;
+   // This finds the cutoff parameter tau by scanning several different paths
+   if (fGDNTau<2) return 0;
    if (fGDTauScan==0) return 0;
 
    if (fGDOfsTst.size()<1)
       fLogger << kFATAL << "BUG! FindGDTau() has been called BEFORE InitGD()." << Endl;
+  //
+   fLogger << kINFO << "Estimating the cutoff parameter tau. The estimated time is a pessimistic maximum." << Endl;
    //
-   fLogger << kINFO << "estimating the regularization parameter tau"
-           << Endl;
    // Find how many points to scan and how often to calculate the error
-   Int_t nscan = fGDTauScan; //std::min(static_cast<Int_t>(fGDTauScan),fGDNPathSteps);
-   Int_t netst = 100; //std::min(nscan/10,100);
+   UInt_t nscan = fGDTauScan; //std::min(static_cast<Int_t>(fGDTauScan),fGDNPathSteps);
+   UInt_t netst = std::min(nscan,UInt_t(100));
+   UInt_t nscanned=0;
    //
-   // loop over paths
+   //--------------------
+   // loop over the paths
+   //--------------------
+   // The number of MAXIMUM loops is given by nscan.
+   // At each loop, the paths being far away from the minimum
+   // are rejected. Hence at each check (every netst events), the number
+   // of paths searched will be reduced.
+   // The maximum 'distance' from the minimum error rate is
+   // 1 sigma. See RiskPerfTst() for details.
    //
-   TMVA::Timer timer( nscan, "RuleFit" );
-   for (Int_t ip=0; ip<nscan; ip++) {
+   Bool_t doloop=kTRUE;
+   UInt_t ip=0;
+   UInt_t itauMin=0;
+   Timer timer( nscan, "RuleFit" );
+   while (doloop) {
       // make gradvec
-      MakeTstGradientVector( fPathIdx1, fPathIdx2 );
+      MakeTstGradientVector();
       // update coefs
       UpdateTstCoefficients();
       // estimate error and do the sum
       // do this at index=0, netst-1, 2*netst-1 ...
+      nscanned++;
       if ( (ip==0) || ((ip+1)%netst==0) ) {
-         if (fLogger.GetMinType()>kVERBOSE)
-            timer.DrawProgressBar(ip);
-         ErrorRateRocTst( fPerfIdx1, fPerfIdx2 );
-         UInt_t itauMin=0;
-         Double_t errmin = fGDErrSum[0];
-         fLogger << kDEBUG << Form("TAU: %4d  ",ip);
-         for (UInt_t itau=0; itau<fGDNTau; itau++) {
-            fLogger << kDEBUG << Form("%4.4f  ",fGDErrSum[itau]);
-            if (fGDErrSum[itau]<errmin) {
-               itauMin = itau;
-               errmin = fGDErrSum[itau];
-            }
-         }
-         fLogger << kDEBUG << Endl;
+         //         ErrorRateRocTst( );
+         itauMin = RiskPerfTst();
          fLogger << kVERBOSE << Form("%4d",ip+1) << ". tau = " << Form("%4.4f",fGDTauVec[itauMin])
-                 << " => error sum = " << fGDErrSum[itauMin] << Endl;
+                 << " => error rate = " << fGDErrTst[itauMin] << Endl;
       }
+      ip++;
+      doloop = ((ip<nscan) && (fGDNTauTstOK>3));
       gFIRSTTST=kFALSE;
-   }
-   //
-   // loop over each tau and find which one gave the lowest error
-   //
-   Double_t errmin = 1000.0;
-   UInt_t   itauMin=0;
-   for (UInt_t itau=0; itau<fGDNTau; itau++) {
-      if (fGDErrSum[itau]<errmin) {
-         itauMin = itau;
-         errmin = fGDErrSum[itau];
-      }
+      if (fLogger.GetMinType()>kVERBOSE)
+         timer.DrawProgressBar(ip);
    }
    //
    // Set tau and coefs
    // Downscale tau slightly in order to avoid numerical problems
    //
+   if (nscanned==0) {
+      fLogger << kERROR << "<FindGDTau> number of scanned loops is zero! Should NOT see this message." << Endl;
+   }
    fGDTau = fGDTauVec[itauMin];
    fRuleEnsemble->SetCoefficients( fGDCoefTst[itauMin] );
    fRuleEnsemble->SetLinCoefficients( fGDCoefLinTst[itauMin] );
    fRuleEnsemble->SetOffset( fGDOfsTst[itauMin] );
-   fLogger << kINFO << "best path found with tau = " << Form("%4.4f",fGDTau)
-           << " after " << timer.GetElapsedTime() << " s" << Endl;
+   fLogger << kINFO << "Best path found with tau = " << Form("%4.4f",fGDTau)
+           << " after " << timer.GetElapsedTime() << "      " << Endl;
 
    return nscan;
 }
@@ -415,8 +499,8 @@ void TMVA::RuleFitParams::MakeGDPath()
 
    fLogger << kINFO << "GD path scan - the scan stops when the max num. of steps is reached or a min is found"
            << Endl;
-   fLogger << kVERBOSE << "number of events used per path step = " << fPathIdx2-fPathIdx1+1 << Endl;
-   fLogger << kVERBOSE << "number of events used for error estimation = " << fPerfIdx2-fPerfIdx1+1 << Endl;
+   fLogger << kVERBOSE << "Number of events used per path step = " << fPathIdx2-fPathIdx1+1 << Endl;
+   fLogger << kVERBOSE << "Number of events used for error estimation = " << fPerfIdx2-fPerfIdx1+1 << Endl;
 
    // check if debug mode
    const Bool_t isVerbose = (fLogger.GetMinType()<=kVERBOSE);
@@ -425,8 +509,12 @@ void TMVA::RuleFitParams::MakeGDPath()
    // init GD parameters and clear coeff vectors
    InitGD();
 
+   // evaluate average response of rules/linear terms (with event weights)
+   EvaluateAveragePath();
+   EvaluateAveragePerf();
+
    // initial estimate; all other a(i) are zero
-   fLogger << kVERBOSE << "creating GD path"  << Endl;
+   fLogger << kVERBOSE << "Creating GD path"  << Endl;
    fLogger << kVERBOSE << "  N(steps)     = "   << fGDNPathSteps << Endl;
    fLogger << kVERBOSE << "  step         = "   << fGDPathStep   << Endl;
    fLogger << kVERBOSE << "  N(tau)       = "   << fGDNTau       << Endl;
@@ -479,7 +567,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    if (imod>100) imod=100;
 
    // reset coefficients
-   fAverageTruth = -CalcAverageTruth(fPathIdx1, fPathIdx2);
+   fAverageTruth = -CalcAverageTruth();
    offsetMin     = fAverageTruth;
    fRuleEnsemble->SetOffset(offsetMin);
    fRuleEnsemble->ClearCoefficients(0);
@@ -487,7 +575,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    for (UInt_t i=0; i<fGDOfsTst.size(); i++) {
       fGDOfsTst[i] = offsetMin;
    }
-   fLogger << kVERBOSE << "obtained initial offset = " << offsetMin << Endl;
+   fLogger << kVERBOSE << "Obtained initial offset = " << offsetMin << Endl;
 
    // find the best tau - returns the number of steps performed in scan
    Int_t nprescan = FindGDTau();
@@ -507,12 +595,13 @@ void TMVA::RuleFitParams::MakeGDPath()
    // a local flag indicating for what reason the search was stopped
    Int_t stopCondition=0;
 
+   fLogger << kINFO << "Fitting model..." << Endl;
    // start loop with timer
-   TMVA::Timer timer( fGDNPathSteps, "RuleFit" );
+   Timer timer( fGDNPathSteps, "RuleFit" );
    while (!done) {
       // Make gradient vector (eq 44, ref 1)
       if (isVerbose) t0 = clock();
-      MakeGradientVector(fPathIdx1, fPathIdx2);
+      MakeGradientVector();
       if (isVerbose) {
          tgradvec = Double_t(clock()-t0)/CLOCKS_PER_SEC;
          stgradvec += tgradvec;
@@ -543,7 +632,7 @@ void TMVA::RuleFitParams::MakeGDPath()
          
          // calculate risk
          t0 = clock();
-         fNTRisk = Risk(fPathIdx1, fPathIdx2);
+         fNTRisk = RiskPath();
          trisk =  Double_t(clock()-t0)/CLOCKS_PER_SEC;
          strisk += trisk;
          //
@@ -557,9 +646,9 @@ void TMVA::RuleFitParams::MakeGDPath()
                fLogger << kWARNING << "Risk(i+1)>=Risk(i) in path" << Endl;
                riskFlat=(nbadrisk>3);
                if (riskFlat) {
-                  fLogger << kWARNING << "chaotic behaviour of risk evolution => the regularization is too small" << Endl;
+                  fLogger << kWARNING << "Chaotic behaviour of risk evolution" << Endl;
                   fLogger << kWARNING << "--- STOPPING MINIMIZATION ---" << Endl;
-                  fLogger << kWARNING << "this may be OK if minimum is already found" << Endl;
+                  fLogger << kWARNING << "This may be OK if minimum is already found" << Endl;
                }
             }
          }
@@ -573,8 +662,11 @@ void TMVA::RuleFitParams::MakeGDPath()
          fNTErrorRate = 0;
 
          // Check error rate
-         Double_t errroc  = ErrorRateRoc(fPerfIdx1, fPerfIdx2);
-
+         Double_t errroc;//= ErrorRateRoc();
+         Double_t riskPerf = RiskPerf();
+         //         Double_t optimism = Optimism();
+         //
+         errroc = riskPerf;
          //
          fNTErrorRate = errroc;
          //
@@ -616,13 +708,15 @@ void TMVA::RuleFitParams::MakeGDPath()
                     << setw(10)
                     << Form("%8d",iloop+1) << " "
                     << Form("%4.4f",fNTRisk) << " "
-                    << Form("%4.4f",errroc)  << " "
-                    << Form("%4.4f",fsigave+fbkgave) << " "
-                    << Form("%4.4f",fsigave) << " "
-                    << Form("%4.4f",fsigrms) << " "
-                    << Form("%4.4f",fbkgave) << " "
-                    << Form("%4.4f",fbkgrms) << " "
-                    << Form("%4.4f",fRuleEnsemble->CoefficientRadius())
+                    << Form("%4.4f",riskPerf)  << " "
+                    << Form("%4.4f",fNTRisk+riskPerf)  << " "
+//                     << Form("%4.4f",fsigave+fbkgave) << " "
+//                     << Form("%4.4f",fsigave) << " "
+//                     << Form("%4.4f",fsigrms) << " "
+//                     << Form("%4.4f",fbkgave) << " "
+//                     << Form("%4.4f",fbkgrms) << " "
+
+               //                    << Form("%4.4f",fRuleEnsemble->CoefficientRadius())
                     << Endl;
          }
       }
@@ -651,10 +745,10 @@ void TMVA::RuleFitParams::MakeGDPath()
       }
       done = (found);
    }
-   fLogger << kINFO << "minimization elapsed time : " << timer.GetElapsedTime() << " s" << Endl;
-   fLogger << kINFO << "------------------------------------------------------------------" << Endl;
-   fLogger << kINFO << "Found minimum at step " << indMin+1 << " with area under ROC = " << errmin << Endl;
-   fLogger << kINFO << "Reason for ending loop : ";
+   fLogger << kINFO << "Minimization elapsed time : " << timer.GetElapsedTime() << "      " << Endl;
+   fLogger << kINFO << "----------------------------------------------------------------"  << Endl;
+   fLogger << kINFO << "Found minimum at step " << indMin+1 << " with error = " << errmin << Endl;
+   fLogger << kINFO << "Reason for ending loop: ";
    switch (stopCondition) {
    case 0:
       fLogger << kINFO << "clear minima found";
@@ -670,12 +764,12 @@ void TMVA::RuleFitParams::MakeGDPath()
       break;
    }
    fLogger << Endl;
-   fLogger << kINFO << "------------------------------------------------------------------" << Endl;
+   fLogger << kINFO << "----------------------------------------------------------------"  << Endl;
 
    // check if early minima - might be an indication of too large stepsize
    if ( Double_t(indMin)/Double_t(nprescan+fGDNPathSteps) < 0.05 ) {
-      fLogger << kWARNING << "reached minimum early in the search - check results and maybe decrease GDStep size"
-              << Endl;
+      fLogger << kWARNING << "Reached minimum early in the search" << Endl;
+      fLogger << kWARNING << "Check results and maybe decrease GDStep size" << Endl;
    }
    //
    // quick check of the sign of the slope for the last npreg points
@@ -685,8 +779,8 @@ void TMVA::RuleFitParams::MakeGDPath()
    Double_t sumy  = std::accumulate( valy.begin(), valy.end(), Double_t() );
    Double_t slope = Double_t(valx.size())*sumxy - sumx*sumy;
    if (slope<0) {
-      fLogger << kWARNING << "the error rate was still decreasing when the end of the path was reached;" << Endl;
-      fLogger << kWARNING << "increase number of steps (GDNSteps)." << Endl;
+      fLogger << kWARNING << "The error rate was still decreasing at the end of the path" << Endl;
+      fLogger << kWARNING << "Increase number of steps (GDNSteps)." << Endl;
    }
    //
    // set coefficients
@@ -710,7 +804,16 @@ void TMVA::RuleFitParams::MakeGDPath()
       fLogger << kVERBOSE << "   risk    = " << 1000*strisk/iloop    << Endl;
       fLogger << kVERBOSE << "   perf    = " << 1000*stperf/iloop    << Endl;
       fLogger << kVERBOSE << "   loop    = " << 1000*stloop/iloop    << Endl;
+      //
+      fLogger << kVERBOSE << "   GDInit      = " << 1000*gGDInit/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDPtr       = " << 1000*gGDPtr/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDEval      = " << 1000*gGDEval/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDEvalRule  = " << 1000*gGDEvalRule/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDNorm      = " << 1000*gGDNorm/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDRuleLoop  = " << 1000*gGDRuleLoop/iloop    << Endl;
+      fLogger << kVERBOSE << "   GDLinLoop   = " << 1000*gGDLinLoop/iloop    << Endl;
    }
+   //
    // write ntuple (DEBUG)
    if (isDebug) fGDNtuple->Write();
 }
@@ -731,25 +834,27 @@ void TMVA::RuleFitParams::FillCoefficients()
 }
 
 //_______________________________________________________________________
-void TMVA::RuleFitParams::CalcFStar(UInt_t ibeg, UInt_t iend)
+void TMVA::RuleFitParams::CalcFStar()
 {
    // Estimates F* (optimum scoring function) for all events for the given sets.
    // The result is used in ErrorRateReg().
+   // --- NOT USED ---
    //
-   UInt_t neve = iend-ibeg+1;
+   fLogger << kWARNING << "<CalcFStar> Using unverified code! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<CalcFStar> invalid start/end indices!" << Endl;
+      fLogger << kFATAL << "<CalcFStar> Invalid start/end indices!" << Endl;
       return;
    }
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    fFstar.clear();
    std::vector<Double_t> fstarSorted;
    Double_t fstarVal;
    // loop over all events and estimate F* for each event
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event& e = *(*events)[i];
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
+      const Event& e = *(*events)[i];
       fstarVal = fRuleEnsemble->FStar(e);
       fFstar.push_back(fstarVal);
       fstarSorted.push_back(fstarVal);
@@ -767,26 +872,68 @@ void TMVA::RuleFitParams::CalcFStar(UInt_t ibeg, UInt_t iend)
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::ErrorRateReg(UInt_t ibeg, UInt_t iend)
+Double_t TMVA::RuleFitParams::Optimism()
 {
+   // implementation of eq. 7.17 in Hastie,Tibshirani & Friedman book
+   // this is the covariance between the estimated response yhat and the
+   // true value y.
+   // NOT REALLY SURE IF THIS IS CORRECT!
+   // --- THIS IS NOT USED ---
    //
+   fLogger << kWARNING << "<Optimism> Using unverified code! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
+   if (neve<1) {
+      fLogger << kFATAL << "<Optimism> Invalid start/end indices!" << Endl;
+   }
+   //
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   //
+   Double_t sumy=0;
+   Double_t sumyhat=0;
+   Double_t sumyhaty=0;
+   Double_t sumw2=0;
+   Double_t sumw=0;
+   Double_t yhat;
+   Double_t y;
+   Double_t w;
+   //
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
+      const Event& e = *(*events)[i];
+      yhat = fRuleEnsemble->EvalEvent(i);         // evaluated using the model
+      y    = (e.IsSignal() ? 1.0:-1.0);           // the truth
+      w    = fRuleFit->GetTrainingEventWeight(i)/fNEveEffPerf; // the weight, reweighted such that sum=1
+      sumy     += w*y;
+      sumyhat  += w*yhat;
+      sumyhaty += w*yhat*y;
+      sumw2    += w*w;
+      sumw     += w;
+   }
+   Double_t div = 1.0-sumw2;
+   Double_t cov = sumyhaty - sumyhat*sumy;
+   return 2.0*cov/div;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::RuleFitParams::ErrorRateReg()
+{
    // Estimates the error rate with the current set of parameters
    // This code is pretty messy at the moment.
    // Cleanup is needed.
+   // -- NOT USED ---
    //
-   UInt_t neve = iend-ibeg+1;
+   fLogger << kWARNING << "<ErrorRateReg> Using unverified code! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<ErrorRateReg> invalid start/end indices!" << Endl;
-      return 1000000.0;
+      fLogger << kFATAL << "<ErrorRateReg> Invalid start/end indices!" << Endl;
    }
    if (fFstar.size()!=neve) {
-      fLogger << kFATAL << "--- RuleFitParams::ErrorRateReg() - F* not initialised! BUG!!!"
+      fLogger << kFATAL << "--- RuleFitParams::ErrorRateReg() - F* not initialized! BUG!!!"
               << " Fstar.size() = " << fFstar.size() << " , N(events) = " << neve << Endl;
    }
    //
    Double_t sF;
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sumdf = 0;
    Double_t sumdfmed = 0;
@@ -795,12 +942,12 @@ Double_t TMVA::RuleFitParams::ErrorRateReg(UInt_t ibeg, UInt_t iend)
    // I believe the binary error classification is appropriate here.
    // The problem is stability.
    //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event& e = *(*events)[i];
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
+      const Event& e = *(*events)[i];
       sF = fRuleEnsemble->EvalEvent( e );
       // scaled abs error, eq 20 in RuleFit paper
-      sumdf += TMath::Abs(fFstar[i-ibeg] - sF);
-      sumdfmed += TMath::Abs(fFstar[i-ibeg] - fFstarMedian);
+      sumdf += TMath::Abs(fFstar[i-fPerfIdx1] - sF);
+      sumdfmed += TMath::Abs(fFstar[i-fPerfIdx1] - fFstarMedian);
    }
    // scaled abs error, eq 20
    // This error (df) is large - need to think on how to compensate...
@@ -809,66 +956,30 @@ Double_t TMVA::RuleFitParams::ErrorRateReg(UInt_t ibeg, UInt_t iend)
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::ErrorRateRisk(UInt_t ibeg, UInt_t iend)
-{
-   //
-   // Estimates the error rate with the current set of parameters
-   // This code is pretty messy at the moment.
-   // Cleanup is needed.
-   //
-   UInt_t neve = iend-ibeg+1;
-   if (neve<1) {
-      fLogger << kFATAL << "<ErrorRateRisk> invalid start/end indices!" << Endl;
-      return 1000000.0;
-   }
-   //
-   Double_t sF, sFstar, ytrue;
-   Double_t sR;
-   const std::vector<const Event *> *events = GetTrainingEvents();
-   Double_t sumRstar=0;
-   Double_t sumR=0;
-   //
-   // A bit messy here.
-   //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event& e = *(*events)[i];
-      sF     = std::max(-1.0,std::min(fRuleEnsemble->EvalEvent( e ),1.0));
-      sFstar = std::max(-1.0,std::min(fRuleEnsemble->FStar(),1.0));
-      ytrue = (e.IsSignal() ? +1.0:-1.0);
-      //
-      sR        = (ytrue-sFstar);
-      sumRstar += sR*sR;
-      sR        = (ytrue-sF);
-      sumR     += sR*sR;
-   }
-
-   return TMath::Abs(sumR-sumRstar)/sumRstar;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::RuleFitParams::ErrorRateBin(UInt_t ibeg, UInt_t iend)
+Double_t TMVA::RuleFitParams::ErrorRateBin()
 {
    //
    // Estimates the error rate with the current set of parameters
    // It uses a binary estimate of (y-F*(x))
    // (y-F*(x)) = (Num of events where sign(F)!=sign(y))/Neve
    // y = {+1 if event is signal, -1 otherwise}
+   // --- NOT USED ---
    //
-   UInt_t neve = iend-ibeg+1;
+   fLogger << kWARNING << "<ErrorRateBin> Using unverified code! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<ErrorRateBin> invalid start/end indices!" << Endl;
-      return 1000000.0;
+      fLogger << kFATAL << "<ErrorRateBin> Invalid start/end indices!" << Endl;
    }
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sumdfbin = 0;
    Double_t dneve = Double_t(neve);
    Int_t signF, signy;
    Double_t sF;
    //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event& e = *(*events)[i];
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
+      const Event& e = *(*events)[i];
       sF     = fRuleEnsemble->EvalEvent( e );
       //      Double_t sFstar = fRuleEnsemble->FStar(e); // THIS CAN BE CALCULATED ONCE!
       signF = (sF>0 ? +1:-1);
@@ -877,7 +988,7 @@ Double_t TMVA::RuleFitParams::ErrorRateBin(UInt_t ibeg, UInt_t iend)
       sumdfbin += TMath::Abs(Double_t(signF-signy))*0.5;
    }
    Double_t f = sumdfbin/dneve;
-   //   Double_t   df = f*sqrt((1.0/sumdfbin) + (1.0/dneve));
+   //   Double_t   df = f*TMath::Sqrt((1.0/sumdfbin) + (1.0/dneve));
    return f;
 }
 
@@ -897,12 +1008,12 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
    const Double_t minbkg = sFbkg.front();
    const Double_t maxsig = sFsig.back();
    const Double_t maxbkg = sFbkg.back();
-   const Double_t minf = std::min(minsig,minbkg);
-   const Double_t maxf = std::max(maxsig,maxbkg);
-   const Int_t    nsig = Int_t(sFsig.size());
-   const Int_t    nbkg = Int_t(sFbkg.size());
-   const Int_t    np   = std::min((nsig+nbkg)/4,50);
-   const Double_t df   = (maxf-minf)/(np-1);
+   const Double_t minf   = std::min(minsig,minbkg);
+   const Double_t maxf   = std::max(maxsig,maxbkg);
+   const Int_t    nsig   = Int_t(sFsig.size());
+   const Int_t    nbkg   = Int_t(sFbkg.size());
+   const Int_t    np     = std::min((nsig+nbkg)/4,50);
+   const Double_t df     = (maxf-minf)/(np-1);
    //
    // calculate area under rejection/efficiency curve
    //
@@ -947,21 +1058,21 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::ErrorRateRoc(UInt_t ibeg, UInt_t iend)
+Double_t TMVA::RuleFitParams::ErrorRateRoc()
 {
    //
    // Estimates the error rate with the current set of parameters.
    // It calculates the area under the bkg rejection vs signal efficiency curve.
    // The value returned is 1-area.
+   // This works but is less efficient than calculating the Risk using RiskPerf().
    //
-
-   UInt_t neve = iend-ibeg+1;
+   fLogger << kWARNING << "<ErrorRateRoc> Should not be used in the current version! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<ErrorRateRoc> invalid start/end indices!" << Endl;
-      return 1000000.0;
+      fLogger << kFATAL << "<ErrorRateRoc> Invalid start/end indices!" << Endl;
    }
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sF;
    //
@@ -972,9 +1083,9 @@ Double_t TMVA::RuleFitParams::ErrorRateRoc(UInt_t ibeg, UInt_t iend)
    Double_t sumf2sig=0;
    Double_t sumf2bkg=0;
    //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event& e = *(*events)[i];
-      sF     = fRuleEnsemble->EvalEvent( e );
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
+      const Event& e = *(*events)[i];
+      sF = fRuleEnsemble->EvalEvent(i);// * fRuleFit->GetTrainingEventWeight(i);
       if (e.IsSignal()) {
          sFsig.push_back(sF);
          sumfsig  +=sF;
@@ -987,27 +1098,30 @@ Double_t TMVA::RuleFitParams::ErrorRateRoc(UInt_t ibeg, UInt_t iend)
    }
    fsigave = sumfsig/sFsig.size();
    fbkgave = sumfbkg/sFbkg.size();
-   fsigrms = sqrt((sumf2sig - (sumfsig*sumfsig/sFsig.size()))/(sFsig.size()-1));
-   fbkgrms = sqrt((sumf2bkg - (sumfbkg*sumfbkg/sFbkg.size()))/(sFbkg.size()-1));
+   fsigrms = TMath::Sqrt(Tools::ComputeVariance(sumf2sig,sumfsig,sFsig.size()));
+   fbkgrms = TMath::Sqrt(Tools::ComputeVariance(sumf2bkg,sumfbkg,sFbkg.size()));
    //
    return ErrorRateRocRaw( sFsig, sFbkg );
 }
 
 //_______________________________________________________________________
-void TMVA::RuleFitParams::ErrorRateRocTst(UInt_t ibeg, UInt_t iend)
+void TMVA::RuleFitParams::ErrorRateRocTst()
 {
    //
    // Estimates the error rate with the current set of parameters.
    // It calculates the area under the bkg rejection vs signal efficiency curve.
    // The value returned is 1-area.
    //
-   UInt_t neve = iend-ibeg+1;
+   // See comment under ErrorRateRoc().
+   //
+   fLogger << kWARNING << "<ErrorRateRocTst> Should not be used in the current version! Check!" << Endl;
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<ErrorRateRocTst> invalid start/end indices!" << Endl;
+      fLogger << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
       return;
    }
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    //   std::vector<Double_t> sF;
    Double_t sF;
@@ -1018,10 +1132,11 @@ void TMVA::RuleFitParams::ErrorRateRocTst(UInt_t ibeg, UInt_t iend)
    sFbkg.resize( fGDNTau );
    //   sF.resize( fGDNTau ); 
 
-   for (UInt_t i=ibeg; i<iend+1; i++) {
+   for (UInt_t i=fPerfIdx1; i<fPerfIdx2+1; i++) {
       for (UInt_t itau=0; itau<fGDNTau; itau++) {
-         if (itau==0) sF = fRuleEnsemble->EvalEvent( *(*events)[i], fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
-         else         sF = fRuleEnsemble->EvalEvent(                fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+         //         if (itau==0) sF = fRuleEnsemble->EvalEvent( *(*events)[i], fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+         //         else         sF = fRuleEnsemble->EvalEvent(                fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+         sF = fRuleEnsemble->EvalEvent( i, fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
          if ((*events)[i]->IsSignal()) {
             sFsig[itau].push_back(sF);
          } else {
@@ -1030,65 +1145,137 @@ void TMVA::RuleFitParams::ErrorRateRocTst(UInt_t ibeg, UInt_t iend)
       }
    }
    Double_t err;
-   // name is fGDErrSum but it is the current value -> CHANGE NAME!
+
    for (UInt_t itau=0; itau<fGDNTau; itau++) {
       err = ErrorRateRocRaw( sFsig[itau], sFbkg[itau] );
-      fGDErrSum[itau] = err;
+      fGDErrTst[itau] = err;
    }
 }
 
 //_______________________________________________________________________
-void TMVA::RuleFitParams::MakeTstGradientVector( UInt_t ibeg, UInt_t iend )
+UInt_t TMVA::RuleFitParams::RiskPerfTst()
+{
+   //
+   // Estimates the error rate with the current set of parameters.
+   // using the <Perf> subsample.
+   // Return the tau index giving the lowest error
+   //
+   UInt_t neve = fPerfIdx2-fPerfIdx1+1;
+   if (neve<1) {
+      fLogger << kFATAL << "<ErrorRateRocTst> Invalid start/end indices!" << Endl;
+      return 0;
+   }
+   //
+   Double_t sumx    = 0;
+   Double_t sumx2   = 0;
+   Double_t maxx    = -100.0;
+   Double_t minx    = 1e30;
+   UInt_t   itaumin = 0;
+   UInt_t   nok=0;
+   for (UInt_t itau=0; itau<fGDNTau; itau++) {
+      if (fGDErrTstOK[itau]) {
+         nok++;
+         fGDErrTst[itau] = RiskPerf(itau);
+         sumx  += fGDErrTst[itau];
+         sumx2 += fGDErrTst[itau]*fGDErrTst[itau];
+         if (fGDErrTst[itau]>maxx) maxx=fGDErrTst[itau];
+         if (fGDErrTst[itau]<minx) {
+            minx=fGDErrTst[itau];
+            itaumin = itau;
+         }
+      }
+   }
+   Double_t sigx = TMath::Sqrt(Tools::ComputeVariance( sumx2, sumx, nok ) );
+   Double_t maxacc = minx+sigx;
+   //
+   if (nok>0) {
+      nok = 0;
+      for (UInt_t itau=0; itau<fGDNTau; itau++) {
+         if (fGDErrTstOK[itau]) {
+            if (fGDErrTst[itau] > maxacc) {
+               fGDErrTstOK[itau] = kFALSE;
+            } else {
+               nok++;
+            }
+         }
+      }
+   }
+   fGDNTauTstOK = nok;
+   fLogger << kVERBOSE << "TAU: "
+           << itaumin << "   "
+           << nok     << "   "
+           << minx    << "   "
+           << maxx    << "   "
+           << sigx    << Endl;
+   //
+   return itaumin;
+}
+
+//_______________________________________________________________________
+void TMVA::RuleFitParams::MakeTstGradientVector()
 {
    // make test gradient vector for all tau
    // same algorithm as MakeGradientVector()
-   UInt_t neve = iend-ibeg+1;
+   UInt_t neve = fPathIdx1-fPathIdx2+1;
    if (neve<1) {
-      fLogger << kFATAL << "<MakeTstGradientVector> invalid start/end indices!" << Endl;
+      fLogger << kFATAL << "<MakeTstGradientVector> Invalid start/end indices!" << Endl;
       return;
    }
    //
-   Double_t norm   = 2.0/Double_t(neve);
+   Double_t norm   = 2.0/fNEveEffPath;
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
 
    // Clear gradient vectors
    for (UInt_t itau=0; itau<fGDNTau; itau++) {
-      for (UInt_t ir=0; ir<fNRules; ir++) {
-         fGradVecTst[itau][ir]=0;
-      }
-      for (UInt_t il=0; il<fNLinear; il++) {
-         fGradVecLinTst[itau][il]=0;
+      if (fGDErrTstOK[itau]) {
+         for (UInt_t ir=0; ir<fNRules; ir++) {
+            fGradVecTst[itau][ir]=0;
+         }
+         for (UInt_t il=0; il<fNLinear; il++) {
+            fGradVecLinTst[itau][il]=0;
+         }
       }
    }
    //
-   Double_t val; // temp store
+   //   Double_t val; // temp store
    Double_t sF;   // score function value
    Double_t r;   // eq 35, ref 1
    Double_t y;   // true score (+1 or -1)
+   const std::vector<UInt_t> *eventRuleMap=0;
+   UInt_t rind;
    //
    // Loop over all events
    //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event *e = (*events)[i];
+   UInt_t nsfok=0;
+   for (UInt_t i=fPathIdx1; i<fPathIdx2+1; i++) {
+      const Event *e = (*events)[i];
+      UInt_t nrules=0;
+      if (fRuleEnsemble->DoRules()) {
+         eventRuleMap = &(fRuleEnsemble->GetEventRuleMap(i));
+         nrules = (*eventRuleMap).size();
+      }
       for (UInt_t itau=0; itau<fGDNTau; itau++) { // loop over tau
-         if (itau==0) sF = fRuleEnsemble->EvalEvent( *e, fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
-         else         sF = fRuleEnsemble->EvalEvent(     fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
-         if (TMath::Abs(sF)<1.0) {
-            r = 0;
-            y = (e->IsSignal()?1.0:-1.0);
-            r = y - sF;
-
-            // rule gradient vector
-            for (UInt_t ir=0; ir<fNRules; ir++) {
-               val = fRuleEnsemble->GetEventRuleVal(ir); // filled by EvalEvent() call above
-               if (val>0) fGradVecTst[itau][ir] += norm*r*val;
-            }
-            // linear terms
-            for (UInt_t il=0; il<fNLinear; il++) {
-               fGradVecLinTst[itau][il] += norm*r*fRuleEnsemble->EvalLinEvent( il, kTRUE );
-            }
-         } // if (TMath::Abs(F)<xxx)
+         //         if (itau==0) sF = fRuleEnsemble->EvalEvent( *e, fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+         //         else         sF = fRuleEnsemble->EvalEvent(     fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+         if (fGDErrTstOK[itau]) {
+            sF = fRuleEnsemble->EvalEvent( i, fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau] );
+            if (TMath::Abs(sF)<1.0) {
+               nsfok++;
+               r = 0;
+               y = (e->IsSignal()?1.0:-1.0);
+               r = norm*(y - sF) * fRuleFit->GetTrainingEventWeight(i);
+               // rule gradient vector
+               for (UInt_t ir=0; ir<nrules; ir++) {
+                  rind = (*eventRuleMap)[ir];
+                  fGradVecTst[itau][rind] += r;
+               }
+               // linear terms
+               for (UInt_t il=0; il<fNLinear; il++) {
+                  fGradVecLinTst[itau][il] += r*fRuleEnsemble->EvalLinEventRaw( il,i, kTRUE );
+               }
+            } // if (TMath::Abs(F)<xxx)
+         }
       }
    }
 }
@@ -1102,60 +1289,64 @@ void TMVA::RuleFitParams::UpdateTstCoefficients()
    Double_t maxr, maxl, cthresh, val;
    // loop over all taus
    for (UInt_t itau=0; itau<fGDNTau; itau++) {
-      // find max gradient
-      maxr = ( (fNRules>0 ? 
-                TMath::Abs(*(std::max_element( fGradVecTst[itau].begin(), fGradVecTst[itau].end(), TMVA::AbsValue()))):0) );
-      maxl = ( (fNLinear>0 ? 
-                TMath::Abs(*(std::max_element( fGradVecLinTst[itau].begin(), fGradVecLinTst[itau].end(), TMVA::AbsValue()))):0) );
+      if (fGDErrTstOK[itau]) {
+         // find max gradient
+         maxr = ( (fNRules>0 ? 
+                   TMath::Abs(*(std::max_element( fGradVecTst[itau].begin(), fGradVecTst[itau].end(), AbsValue()))):0) );
+         maxl = ( (fNLinear>0 ? 
+                   TMath::Abs(*(std::max_element( fGradVecLinTst[itau].begin(), fGradVecLinTst[itau].end(), AbsValue()))):0) );
 
-      // Use the maximum as a threshold
-      Double_t maxv = (maxr>maxl ? maxr:maxl);
-      cthresh = maxv * fGDTauVec[itau];
+         // Use the maximum as a threshold
+         Double_t maxv = (maxr>maxl ? maxr:maxl);
+         cthresh = maxv * fGDTauVec[itau];
 
-      // Add to offset, if gradient is large enough:
-      // Loop over the gradient vector and move to next set of coefficients
-      // size of GradVec (and GradVecLin) should be 0 if learner is disabled
-      //
-      // Step-size is divided by 10 when looking for the best path.
-      //
-      if (maxv>0) {
-         const Double_t stepScale=1.0;
-         for (UInt_t i=0; i<fNRules; i++) {
-            val = fGradVecTst[itau][i];
+         // Add to offset, if gradient is large enough:
+         // Loop over the gradient vector and move to next set of coefficients
+         // size of GradVec (and GradVecLin) should be 0 if learner is disabled
+         //
+         // Step-size is divided by 10 when looking for the best path.
+         //
+         if (maxv>0) {
+            const Double_t stepScale=1.0;
+            for (UInt_t i=0; i<fNRules; i++) {
+               val = fGradVecTst[itau][i];
 
-            if (TMath::Abs(val)>=cthresh) {
-               fGDCoefTst[itau][i] += fGDPathStep*val*stepScale;
+               if (TMath::Abs(val)>=cthresh) {
+                  fGDCoefTst[itau][i] += fGDPathStep*val*stepScale;
+               }
             }
-         }
-         // Loop over the gradient vector for the linear part and move to next set of coefficients
-         for (UInt_t i=0; i<fNLinear; i++) {
-            val = fGradVecLinTst[itau][i];
-            if (TMath::Abs(val)>=cthresh) {
-               fGDCoefLinTst[itau][i] += fGDPathStep*val*stepScale/fRuleEnsemble->GetLinNorm(i);
+            // Loop over the gradient vector for the linear part and move to next set of coefficients
+            for (UInt_t i=0; i<fNLinear; i++) {
+               val = fGradVecLinTst[itau][i];
+               if (TMath::Abs(val)>=cthresh) {
+                  fGDCoefLinTst[itau][i] += fGDPathStep*val*stepScale/fRuleEnsemble->GetLinNorm(i);
+               }
             }
          }
       }
-      // set the offset
-      //   CalcTstAverageResponse( ibeg, iend );
-      CalcTstAverageResponse();
    }
+   // set the offset - should be outside the itau loop!
+   CalcTstAverageResponse();
 }
 
 //_______________________________________________________________________
-void TMVA::RuleFitParams::MakeGradientVector( UInt_t ibeg, UInt_t iend )
+void TMVA::RuleFitParams::MakeGradientVector()
 {
    // make gradient vector
    //
-   //  clock_t t0=clock();
-   UInt_t neve = iend-ibeg+1;
+   clock_t t0;
+   //   clock_t t10;
+   t0 = clock();
+   //
+   UInt_t neve = fPathIdx2-fPathIdx1+1;
    if (neve<1) {
-      fLogger << kFATAL << "<MakeGradientVector> invalid start/end indices!" << Endl;
+      fLogger << kFATAL << "<MakeGradientVector> Invalid start/end indices!" << Endl;
       return;
    }
    //
-   Double_t norm   = 2.0/Double_t(neve);
+   const Double_t norm   = 2.0/fNEveEffPath;
    //
-   const std::vector<const Event *> *events = GetTrainingEvents();
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
 
    // Clear gradient vectors
    for (UInt_t ir=0; ir<fNRules; ir++) {
@@ -1165,28 +1356,41 @@ void TMVA::RuleFitParams::MakeGradientVector( UInt_t ibeg, UInt_t iend )
       fGradVecLin[il]=0;
    }
    //
-   Double_t val; // temp store
+   //   Double_t val; // temp store
    Double_t sF;   // score function value
    Double_t r;   // eq 35, ref 1
    Double_t y;   // true score (+1 or -1)
+   const std::vector<UInt_t> *eventRuleMap=0;
+   UInt_t rind;
    //
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      const TMVA::Event *e = (*events)[i];
-      sF = fRuleEnsemble->EvalEvent( *e );
-      if (TMath::Abs(sF)<1.0) {
-         r = 0;
-         y = (e->IsSignal()?1.0:-1.0);
-         r = y - sF;
+   gGDInit += Double_t(clock()-t0)/CLOCKS_PER_SEC;
 
+   for (UInt_t i=fPathIdx1; i<fPathIdx2+1; i++) {
+      const Event *e = (*events)[i];
+
+      //    t0 = clock(); //DEB
+      sF = fRuleEnsemble->EvalEvent( i ); // should not contain the weight
+      //    gGDEval += Double_t(clock()-t0)/CLOCKS_PER_SEC;
+      if (TMath::Abs(sF)<1.0) {
+         UInt_t nrules=0;
+         if (fRuleEnsemble->DoRules()) {
+            eventRuleMap = &(fRuleEnsemble->GetEventRuleMap(i));
+            nrules = (*eventRuleMap).size();
+         }
+         y = (e->IsSignal()?1.0:-1.0);
+         r = norm*(y - sF) * fRuleFit->GetTrainingEventWeight(i);
          // rule gradient vector
-         for (UInt_t ir=0; ir<fNRules; ir++) {
-            val = fRuleEnsemble->GetEventRuleVal(ir); // filled by EvalEvent() call above
-            if (val>0) fGradVec[ir] += norm*r*val;
+         for (UInt_t ir=0; ir<nrules; ir++) {
+            rind = (*eventRuleMap)[ir];
+            fGradVec[rind] += r;
          }
+         //       gGDRuleLoop += Double_t(clock()-t0)/CLOCKS_PER_SEC;
          // linear terms
+         //       t0 = clock(); //DEB
          for (UInt_t il=0; il<fNLinear; il++) {
-            fGradVecLin[il] += norm*r*fRuleEnsemble->EvalLinEvent( il, kTRUE );
+            fGradVecLin[il] += r*fRuleEnsemble->EvalLinEventRaw( il, i, kTRUE );
          }
+         //       gGDLinLoop += Double_t(clock()-t0)/CLOCKS_PER_SEC;
       } // if (TMath::Abs(F)<xxx)
    }
 }
@@ -1198,9 +1402,9 @@ void TMVA::RuleFitParams::UpdateCoefficients()
    // Establish maximum gradient for rules, linear terms and the offset
    //
    Double_t maxr = ( (fRuleEnsemble->DoRules() ? 
-                      TMath::Abs(*(std::max_element( fGradVec.begin(), fGradVec.end(), TMVA::AbsValue()))):0) );
+                      TMath::Abs(*(std::max_element( fGradVec.begin(), fGradVec.end(), AbsValue()))):0) );
    Double_t maxl = ( (fRuleEnsemble->DoLinear() ? 
-                      TMath::Abs(*(std::max_element( fGradVecLin.begin(), fGradVecLin.end(), TMVA::AbsValue()))):0) );
+                      TMath::Abs(*(std::max_element( fGradVecLin.begin(), fGradVecLin.end(), AbsValue()))):0) );
    // Use the maximum as a threshold
    Double_t maxv = (maxr>maxl ? maxr:maxl);
    Double_t cthresh = maxv * fGDTau;
@@ -1236,13 +1440,8 @@ void TMVA::RuleFitParams::UpdateCoefficients()
          }
       }
    // Set the offset
-   // Double_t ofs     = fRuleEnsemble->GetOffset();
-   //   Double_t respons = CalcAverageResponse( ibeg, iend );
       Double_t offset = CalcAverageResponse();
-   //   fRuleEnsemble->SetOffset( fAverageTruth + ofs - respons );
-   //   fRuleEnsemble->SetOffset( ofs - respons );
       fRuleEnsemble->SetOffset( offset );
-   //   respons = CalcAverageResponse( ibeg, iend );
    }
 }
 
@@ -1252,12 +1451,14 @@ void TMVA::RuleFitParams::CalcTstAverageResponse()
    // calc average response for all test paths - TODO: see comment under CalcAverageResponse()
    // note that 0 offset is used
    for (UInt_t itau=0; itau<fGDNTau; itau++) {
-      fGDOfsTst[itau] = 0;
-      for (UInt_t s=0; s<fNLinear; s++) {
-         fGDOfsTst[itau] -= fGDCoefLinTst[itau][s] * fAverageSelector[s];
-      }
-      for (UInt_t r=0; r<fNRules; r++) {
-         fGDOfsTst[itau] -= fGDCoefTst[itau][r] * fAverageRule[r];
+      if (fGDErrTstOK[itau]) {
+         fGDOfsTst[itau] = 0;
+         for (UInt_t s=0; s<fNLinear; s++) {
+            fGDOfsTst[itau] -= fGDCoefLinTst[itau][s] * fAverageSelectorPath[s];
+         }
+         for (UInt_t r=0; r<fNRules; r++) {
+            fGDOfsTst[itau] -= fGDCoefTst[itau][r] * fAverageRulePath[r];
+         }
       }
    }
    //
@@ -1271,52 +1472,34 @@ Double_t TMVA::RuleFitParams::CalcAverageResponse()
    // note that 0 offset is used
    Double_t ofs = 0;
    for (UInt_t s=0; s<fNLinear; s++) {
-      ofs -= fRuleEnsemble->GetLinCoefficients(s) * fAverageSelector[s];
+      ofs -= fRuleEnsemble->GetLinCoefficients(s) * fAverageSelectorPath[s];
    }
    for (UInt_t r=0; r<fNRules; r++) {
-      ofs -= fRuleEnsemble->GetRules(r)->GetCoefficient() * fAverageRule[r];
+      ofs -= fRuleEnsemble->GetRules(r)->GetCoefficient() * fAverageRulePath[r];
    }
    return ofs;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::RuleFitParams::CalcAverageResponseOLD(UInt_t ibeg, UInt_t iend)
-{
-   // calulate the average response
-
-   UInt_t neve = iend-ibeg+1;
-   if (neve<1) {
-      fLogger << kFATAL << "<CalcAverageResponse> invalid start/end indices!" << Endl;
-      return 0;
-   }
-   Double_t sum=0;
-   const std::vector<const Event *> *events = GetTrainingEvents();
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      sum += fRuleEnsemble->EvalEvent( *(*events)[i] );
-   }
-   return sum/neve;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::RuleFitParams::CalcAverageTruth(UInt_t ibeg, UInt_t iend)
+Double_t TMVA::RuleFitParams::CalcAverageTruth()
 {
    // calulate the average truth
 
-   UInt_t neve = iend-ibeg+1;
-   if (neve<1) {
-      fLogger << kFATAL << "<CalcAverageTruth> invalid start/end indices!" << Endl;
+   if (fPathIdx2<=fPathIdx1) {
+      fLogger << kFATAL << "<CalcAverageTruth> Invalid start/end indices!" << Endl;
       return 0;
    }
    Double_t sum=0;
-   Int_t nsig=0;
-   Int_t nbkg=0;
-   const std::vector<const Event *> *events = GetTrainingEvents();
-   for (UInt_t i=ibeg; i<iend+1; i++) {
-      if ((*events)[i]->IsSignal()) nsig++;
-      else                          nbkg++;
-      sum += Double_t((*events)[i]->IsSignal()?1:-1);
+   Double_t ensig=0;
+   Double_t enbkg=0;
+   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   for (UInt_t i=fPathIdx1; i<fPathIdx2+1; i++) {
+      Double_t ew = fRuleFit->GetTrainingEventWeight(i);
+      if ((*events)[i]->IsSignal()) ensig += ew;
+      else                          enbkg += ew;
+      sum += ew*((*events)[i]->IsSignal()?1.0:-1.0);
    }
-   fLogger << kVERBOSE << "num of signal / background = " << nsig << " / " << nbkg << Endl;
+   fLogger << kVERBOSE << "Effective number of signal / background = " << ensig << " / " << enbkg << Endl;
 
-   return sum/neve;
+   return sum/fNEveEffPath;
 }

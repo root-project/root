@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.h,v 1.9 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodBDT.h,v 1.10 2007/04/19 06:53:01 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -44,32 +44,16 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-#ifndef ROOT_TMVA_BinarySearchTree
-#include "TMVA/BinarySearchTree.h"
-#endif
 #ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
 #endif
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
-#ifndef ROOT_TMVA_SeparationBase
-#include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_GiniIndex
-#include "TMVA/GiniIndex.h"
-#endif
-#ifndef ROOT_TMVA_CrossEntropy
-#include "TMVA/CrossEntropy.h"
-#endif
-#ifndef ROOT_TMVA_MisClassificationError
-#include "TMVA/MisClassificationError.h"
-#endif
-#ifndef ROOT_TMVA_SdivSqrtSplusB
-#include "TMVA/SdivSqrtSplusB.h"
-#endif
 
 namespace TMVA {
+
+   class SeparationBase;
 
    class MethodBDT : public MethodBase {
 
@@ -157,9 +141,20 @@ namespace TMVA {
      std::vector<Double_t> GetVariableImportance();
      Double_t GetVariableImportance(UInt_t ivar);
 
-     Double_t  PruneTree( TMVA::DecisionTree *dt, Int_t itree);
-     Double_t TestTreeQuality( TMVA::DecisionTree *dt );
+     Double_t  PruneTree( DecisionTree *dt, Int_t itree);
+     Double_t TestTreeQuality( DecisionTree *dt );
 
+
+     // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+     virtual void MakeClassSpecific( std::ostream&, const TString& ) const; 
+
+      // header and auxiliary classes
+     virtual void MakeClassSpecificHeader( std::ostream&, const TString& ) const; 
+
+     void MakeClassInstantiateNode( DecisionTreeNode *n, std::ostream& fout, 
+                                    const TString& className ) const;
+     
+     void GetHelpMessage() const;
 
    private:
 
@@ -201,7 +196,7 @@ namespace TMVA {
       Double_t                         fBoostWeight;     // ntuple var: boost weight
       Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction 
       Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted 
-      TMVA::DecisionTree::EPruneMethod fPruneMethod;     // method used for prunig 
+      DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig 
       TString                          fPruneMethodS;    // prune method option String
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Timer.h,v 1.13 2007/04/02 17:43:10 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: Timer.h,v 1.10 2007/04/19 06:53:01 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,7 +17,7 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *

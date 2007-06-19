@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodMLP.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -32,30 +32,16 @@
 #include <vector>
 #include "TTree.h"
 #include "Riostream.h"
-#include "TRandom3.h"
 #include "TFitter.h"
 
-#ifndef ROOT_TMVA_MethodMLP
+#include "TMVA/Interval.h"
 #include "TMVA/MethodMLP.h"
-#endif
-#ifndef ROOT_TMVA_TNeuron
 #include "TMVA/TNeuron.h"
-#endif
-#ifndef ROOT_TMVA_TSynapse
 #include "TMVA/TSynapse.h"
-#endif
-#ifndef ROOT_TMVA_Timer
 #include "TMVA/Timer.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_GeneticANN
-#include "TMVA/GeneticANN.h"
-#endif
+#include "TMVA/GeneticFitter.h"
 
 #ifdef MethodMLP_UseMinuit__
 TMVA::MethodMLP* TMVA::MethodMLP::fgThis = 0;
@@ -69,16 +55,14 @@ ClassImp(TMVA::MethodMLP)
 //______________________________________________________________________________
 TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theData, 
                             TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodANNBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   : MethodANNBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
-
    InitMLP();
 
+   // interpretation of configuration option string
    DeclareOptions();
-
    ParseOptions();
-
    ProcessOptions();
 
    InitializeLearningRates();
@@ -91,7 +75,7 @@ TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theDa
 
 //______________________________________________________________________________
 TMVA::MethodMLP::MethodMLP( DataSet& theData, TString theWeightFile, TDirectory* theTargetDir )
-   : TMVA::MethodANNBase( theData, theWeightFile, theTargetDir ) 
+   : MethodANNBase( theData, theWeightFile, theTargetDir ) 
 {
    // construct from a weight file -- most work is done by MethodANNBase constructor
    InitMLP();
@@ -111,7 +95,7 @@ void TMVA::MethodMLP::InitMLP()
 {
    // default initializations
    SetMethodName( "MLP" );
-   SetMethodType( TMVA::Types::kMLP );
+   SetMethodType( Types::kMLP );
    SetTestvarName();
 
    // the minimum requirement to declare an event signal-like
@@ -135,14 +119,15 @@ void TMVA::MethodMLP::DeclareOptions()
    //    available values are:         sequential <default>
    //                                  batch
    //
-   // BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode, -1 for BatchSize=number_of_events
+   // BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode, 
+   //                                          -1 for BatchSize=number_of_events
 
    DeclareOptionRef(fTrainMethodS="BP", "TrainingMethod", 
-                    "Train with Back-Propagation (BP) or Genetic Algorithm (GA) (takes a LONG time)");
+                    "Train with Back-Propagation (BP - default) or Genetic Algorithm (GA - slower and worse)");
    AddPreDefVal(TString("BP"));
    AddPreDefVal(TString("GA"));
 
-   DeclareOptionRef(fLearnRate=0.02, "LearningRate", "NN learning rate parameter");
+   DeclareOptionRef(fLearnRate=0.02, "LearningRate", "ANN learning rate parameter");
    DeclareOptionRef(fDecayRate=0.01, "DecayRate",    "Decay rate for learning parameter");
    DeclareOptionRef(fTestRate =10,   "TestRate",     "Test for overtraining performed at each #th epochs");
 
@@ -181,12 +166,12 @@ void TMVA::MethodMLP::InitializeLearningRates()
 }
 
 //______________________________________________________________________________ 
-Double_t TMVA::MethodMLP::CalculateEstimator( TMVA::Types::ETreeType treeType )
+Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType )
 {
    // calculate the estimator that training is attempting to minimize
 
-   Int_t nEvents = ( (treeType == TMVA::Types::kTesting ) ? Data().GetNEvtTest() :
-                     (treeType == TMVA::Types::kTraining) ? Data().GetNEvtTrain() : -1 );
+   Int_t nEvents = ( (treeType == Types::kTesting ) ? Data().GetNEvtTest() :
+                     (treeType == Types::kTraining) ? Data().GetNEvtTrain() : -1 );
 
    // sanity check
    if (nEvents <=0) 
@@ -197,7 +182,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( TMVA::Types::ETreeType treeType )
    // loop over all training events 
    for (Int_t i = 0; i < nEvents; i++) {
 
-      if (treeType == TMVA::Types::kTesting )
+      if (treeType == Types::kTesting )
          ReadTestEvent(i);
       else
          ReadTrainingEvent(i);
@@ -219,7 +204,7 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
 {
    // train the network
    PrintMessage("Training Network");
-   TMVA::Timer timer( nEpochs, GetName() );
+   Timer timer( nEpochs, GetName() );
 
 #ifdef MethodMLP_UseMinuit__  
    if (useMinuit) MinuitMinimize();
@@ -236,7 +221,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 {
    // minimize estimator / train network with backpropagation algorithm
 
-   TMVA::Timer timer( nEpochs, GetName() );
+   Timer timer( nEpochs, GetName() );
    Int_t lateEpoch = (Int_t)(nEpochs*0.95) - 1;
 
    // create histograms for overtraining monitoring
@@ -255,8 +240,8 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 
       // monitor convergence of training and control sample
       if ((i+1)%fTestRate == 0) {
-         Double_t trainE = CalculateEstimator( TMVA::Types::kTraining ); // estimator for training sample
-         Double_t testE  = CalculateEstimator( TMVA::Types::kTesting  );  // estimator for test samplea
+         Double_t trainE = CalculateEstimator( Types::kTraining ); // estimator for training sample
+         Double_t testE  = CalculateEstimator( Types::kTesting  );  // estimator for test samplea
          fEstimatorHistTrain->Fill( i+1, trainE );
          fEstimatorHistTest ->Fill( i+1, testE );
       }
@@ -360,7 +345,7 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    
    for (Int_t j = 0; j < GetNvar(); j++) {
       x = branchVar[j];
-      if (Normalize()) x = Norm(j, x);
+      if (IsNormalised()) x = Norm(j, x);
       neuron = GetInputNeuron(j);
       neuron->ForceValue(x);
    }
@@ -381,11 +366,11 @@ void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
    // should be good if set around 0.02 (a good value if all event weights are 1)
 
    ReadTrainingEvent(ievt);
-   Double_t eventWeight = GetEvent().GetWeight();
+   Double_t eventWeight = GetEventWeight();
    Double_t desired     = GetDesiredOutput();
    ForceNetworkInputs();
    ForceNetworkCalculations();
-   UpdateNetwork(desired, eventWeight);
+   UpdateNetwork( desired, eventWeight );
 }
 
 //______________________________________________________________________________
@@ -393,8 +378,8 @@ Double_t TMVA::MethodMLP::GetDesiredOutput()
 {
    // get the desired output of this event
    Double_t desired;
-   if (GetEvent().IsSignal()) desired = fActivation->GetMax(); // signal
-   else                           desired = fActivation->GetMin();
+   if (IsSignalEvent()) desired = fActivation->GetMax(); // signal
+   else                 desired = fActivation->GetMin();
 
    return desired;
 }
@@ -447,11 +432,11 @@ void TMVA::MethodMLP::GeneticMinimize()
    PrintMessage("Minimizing Estimator with GA");
 
    // define GA parameters
-   fGA_preCalc        = 1;
-   fGA_SC_steps       = 10;
-   fGA_SC_rate    = 5;
-   fGA_SC_factor      = 0.95;
-   fGA_nsteps         = 30;
+   fGA_preCalc   = 1;
+   fGA_SC_steps  = 10;
+   fGA_SC_rate   = 5;
+   fGA_SC_factor = 0.95;
+   fGA_nsteps    = 30;
 
    // ranges
    vector<Interval*> ranges;
@@ -462,78 +447,21 @@ void TMVA::MethodMLP::GeneticMinimize()
       //ranges.push_back( new Interval( 0, GetXmax(ivar) - GetXmin(ivar) ));
    }
 
-   GeneticANN *bestResultsStore = new GeneticANN( 0, ranges, this ); 
-   GeneticANN *bestResults      = new GeneticANN( 0, ranges, this );
-
-   Timer timer1( fGA_preCalc, GetName() ); 
-
-   // precalculation
-   for (Int_t preCalc = 0; preCalc < fGA_preCalc; preCalc++) {
-    
-      //timer1.DrawProgressBar(preCalc);
-
-      // ---- perform series of fits to achieve best convergence
-
-      GeneticANN ga( ranges.size() * 10, ranges, this ); 
-
-      ga.GetGeneticPopulation().AddPopulation( &bestResults->GetGeneticPopulation() );
-      ga.CalculateFitness();
-      ga.GetGeneticPopulation().TrimPopulation();
-
-      while (true) {
-         ga.Init();
-         ga.CalculateFitness();
-         ga.SpreadControl( fGA_SC_steps, fGA_SC_rate, fGA_SC_factor );
-         if (ga.HasConverged( Int_t(fGA_nsteps*0.67), 0.0001 )) break;
-      }
-      
-      bestResultsStore->GetGeneticPopulation().GiveHint( ga.GetGeneticPopulation().GetGenes( 0 )->GetFactors() );
-    
-      delete bestResults;
-      bestResults = bestResultsStore;
-      bestResultsStore = new GeneticANN( 0, ranges, this );
-   }
+   FitterBase *gf = new GeneticFitter( *this, fLogger.GetPrintedSource(), ranges, GetOptions() );
+   gf->Run();
 
    Double_t estimator = CalculateEstimator();
-
-   bestResults->Init();
-
-   // main run
-   fLogger << kINFO << "GA: starting main course                                  "  << Endl;
-
-   vector<Double_t> par(2*GetNvar());
-  
-   // ---- perform series of fits to achieve best convergence
-
-   TMVA::GeneticANN ga( ranges.size() * 10, ranges, this );
-   ga.SetSpread( 0.1 );
-   ga.GetGeneticPopulation().AddPopulation( &bestResults->GetGeneticPopulation() );
-   ga.CalculateFitness();
-   ga.GetGeneticPopulation().TrimPopulation();
-
-   while(true) {
-      ga.Init();
-      ga.CalculateFitness();
-      ga.SpreadControl( fGA_SC_steps, fGA_SC_rate, fGA_SC_factor );
-      if (ga.HasConverged( fGA_nsteps, 0.00001 )) break;
-   }
-
-   Int_t n = 0;
-   vector< Double_t >::iterator vec = ga.GetGeneticPopulation().GetGenes( 0 )->GetFactors().begin();
-   for (; vec < ga.GetGeneticPopulation().GetGenes( 0 )->GetFactors().end(); vec++ ) {
-      par[n] = (*vec);
-      n++;
-   }
-
-   // get elapsed time
-   fLogger << kINFO << "GA: elapsed time: " << timer1.GetElapsedTime() << Endl;    
-
-   estimator = CalculateEstimator();
-   fLogger << kINFO << "GA: stimator after optimization: " << estimator << Endl;
+   fLogger << kINFO << "GA: estimator after optimization: " << estimator << Endl;
 }
 
 //______________________________________________________________________________
-Double_t TMVA::MethodMLP::ComputeEstimator(const vector<Double_t>& parameters)
+Double_t TMVA::MethodMLP::EstimatorFunction( std::vector<Double_t>& parameters)
+{
+   return ComputeEstimator( parameters );
+}
+
+//______________________________________________________________________________
+Double_t TMVA::MethodMLP::ComputeEstimator( std::vector<Double_t>& parameters)
 {
    // this function is called by GeneticANN for GA optimization
 
@@ -685,3 +613,66 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
 }
 
 #endif
+
+//_______________________________________________________________________
+void TMVA::MethodMLP::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   MethodANNBase::MakeClassSpecific(fout, className);   
+}
+
+//_______________________________________________________________________
+void TMVA::MethodMLP::GetHelpMessage() const
+{
+   // get help message text
+   //
+   // typical length of text line: 
+   //         "|--------------------------------------------------------------|"
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
+   fLogger << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
+   fLogger << "defined hidden layer architecture, while the number of input (output)" << Endl;
+   fLogger << "nodes is determined by the input variables (output classes, i.e., " << Endl;
+   fLogger << "signal and one background). " << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "Neural networks are stable and performing for a large variety of " << Endl;
+   fLogger << "linear and non-linear classification problems. However, in contrast" << Endl;
+   fLogger << "to (e.g.) boosted decision trees, the user is advised to reduce the " << Endl;
+   fLogger << "number of input variables that have only little discrimination power. " << Endl;
+   fLogger << "" << Endl;
+   fLogger << "In the tests we have carried out so far, the MLP and ROOT networks" << Endl;
+   fLogger << "(TMlpANN, interfaced via TMVA) performed equally well, with however" << Endl;
+   fLogger << "a clear speed advantage for the MLP. The Clermont-Ferrand neural " << Endl;
+   fLogger << "net (CFMlpANN) exhibited worse classification performance in these" << Endl;
+   fLogger << "tests, which is partly due to the slow convergence of its training" << Endl;
+   fLogger << "(at least 10k training cycles are required to achieve approximately" << Endl;
+   fLogger << "competitive results)." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "Overtraining: " << Tools::Color("reset")
+           << "only the TMlpANN performs an explicit separation of the" << Endl;
+   fLogger << "full training sample into independent training and validation samples." << Endl;
+   fLogger << "We have found that in most high-energy physics applications the " << Endl;
+   fLogger << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
+   fLogger << "constrain the weights of the relatively simple architectures required" << Endl;
+   fLogger << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
+   fLogger << "the use of validation samples would only reduce the available training" << Endl;
+   fLogger << "information. However, if the perrormance on the training sample is " << Endl;
+   fLogger << "found to be significantly better than the one found with the inde-" << Endl;
+   fLogger << "pendent test sample, caution is needed. The results for these samples " << Endl;
+   fLogger << "are printed to standard output at the end of each training job." << Endl;
+   fLogger << Endl;
+   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "The hidden layer architecture for all ANNs is defined by the option" << Endl;
+   fLogger << "\"HiddenLayers=N+1,N,...\", where here the first hidden layer has N+1" << Endl;
+   fLogger << "neurons and the second N neurons (and so on), and where N is the number  " << Endl;
+   fLogger << "of input variables. Excessive numbers of hidden layers should be avoided," << Endl;
+   fLogger << "in favour of more neurons in the first hidden layer." << Endl;
+   fLogger << "" << Endl;
+   fLogger << "The number of cycles should be above 500. As said, if the number of" << Endl;
+   fLogger << "adjustable weights is small compared to the training sample size," << Endl;
+   fLogger << "using a large number of training samples should not lead to overtraining." << Endl;
+}

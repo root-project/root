@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.h,v 1.9 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MethodCuts.h,v 1.10 2007/04/19 06:53:01 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -20,9 +20,9 @@
  *      Kai Voss         <Kai.Voss@cern.ch>       - U. of Victoria, Canada        *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -52,18 +52,20 @@
 #ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
 #endif
-#ifndef ROOT_TMVA_GeneticBase
-#include "TMVA/GeneticBase.h"
-#endif
 #ifndef ROOT_TMVA_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TMVA_IFitterTarget
+#include "IFitterTarget.h"
 #endif
 
 class TRandom;
 
 namespace TMVA {
 
-   class MethodCuts : public MethodBase {
+   class Interval;
+
+   class MethodCuts : public MethodBase, public IFitterTarget {
 
    public:
 
@@ -108,13 +110,15 @@ namespace TMVA {
       virtual Double_t GetEfficiency  ( TString, TTree *, Double_t& );
       virtual Double_t GetTrainingEfficiency( TString );
 
+      // rarity distributions (signal or background (default) is uniform in [0,1])
+      virtual Double_t GetRarity( Double_t, Types::ESBType ) const { return 0; }
+
       // accessors for Minuit
-      Double_t ComputeEstimator( const std::vector<Double_t> & );
+      Double_t ComputeEstimator( std::vector<Double_t> & );
+      
+      Double_t EstimatorFunction( std::vector<Double_t> & );
 
       void SetTestSignalEfficiency( Double_t eff ) { fTestSignalEff = eff; }
-
-      // static pointer to this object
-      static MethodCuts* ThisCuts( void ) { return fgThisCuts; } // original version of above
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -124,16 +128,19 @@ namespace TMVA {
 
    protected:
 
-   private:
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
 
-      // determines type of data to be optimised
-      enum EConstrainType { kConstrainEffS = 0,
-                            kConstrainEffB } fConstrainType;
+      // get help message text
+      void GetHelpMessage() const;
+
+   private:
 
       // optimisation method
       enum EFitMethodType { kUseMonteCarlo = 0,
                             kUseGeneticAlgorithm,
-                            kUseSimulatedAnnealing };
+                            kUseSimulatedAnnealing,
+                            kUseMinuit };
 
       // efficiency calculation method
       // - kUseEventSelection: computes efficiencies from given data sample
@@ -157,30 +164,14 @@ namespace TMVA {
       vector<EFitParameters>* fFitParams;     // vector for series of fit methods
       Double_t                fTestSignalEff; // used to test optimized signal efficiency
       Double_t                fEffSMin;       // used to test optimized signal efficiency
-      Double_t                fEffSMax;       // used to test optimized signal efficiency
+      Double_t                fEffSMax;       // used to test optimized signal efficiency      
+      Double_t*               fCutRangeMin;   // minimum of allowed cut range
+      Double_t*               fCutRangeMax;   // maximum of allowed cut range
+      vector<Interval*>       fCutRange;      // allowed ranges for cut optimisation
 
       // for the use of the binary tree method
       BinarySearchTree*  fBinaryTreeS;
       BinarySearchTree*  fBinaryTreeB;
-
-      // GA (genetic algorithm) options
-      Int_t              fGA_nsteps;          // GA settings: number of steps
-      Int_t              fGA_cycles;          // GA settings: number of calculations
-      Int_t              fGA_popSize;         // GA settings: population size
-      Int_t              fGA_SC_steps;        // GA settings: SC_steps
-      Int_t              fGA_SC_rate;     // GA settings: SC_rate
-      Double_t           fGA_SC_factor;       // GA settings: SC_factor
-      Double_t           fGA_convCrit;        // GA settings: GA_convCrit
- 
-      // SA (simulated annealing) options
-      Int_t              fSA_MaxCalls;                // max number of FCN calls
-      Double_t           fSA_TemperatureGradient;     // starting value for temperature gradient
-      Bool_t             fSA_UseAdaptiveTemperature;  // compute temperature steps on the fly
-      Double_t           fSA_InitialTemperature;      // initial temperature (depends on FCN)
-      Double_t           fSA_MinTemperature;          // minimum temperature before SA quit
-      Double_t           fSA_Eps;                     // relative required FCN accuracy at minimum
-      Int_t              fSA_NFunLoops;               // number of FCN loops
-      Int_t              fSA_NEps;                    // test parameter
 
       // MC method
       Int_t              fNRandCuts;          // number of random cut samplings
@@ -188,10 +179,7 @@ namespace TMVA {
       Double_t**         fCutMax;             // maximum requirement
       Double_t*          fTmpCutMin;          // temporary minimum requirement
       Double_t*          fTmpCutMax;          // temporary maximum requirement
-
-      //TString            fAllVars;
-      TString*           fAllVarsI;
-
+      TString*           fAllVarsI;           // what to do with variables
 
       // relevant for all methods
       Int_t              fNpar;               // number of parameters in fit (default: 2*Nvar)
@@ -204,8 +192,6 @@ namespace TMVA {
       vector<Double_t>*  fMeanB;              // means of variables (background)
       vector<Double_t>*  fRmsS;               // RMSs of variables (signal)
       vector<Double_t>*  fRmsB;               // RMSs of variables (background)
-      vector<Double_t>*  fXmin;               // minimum values of variables
-      vector<Double_t>*  fXmax;               // maximum values of variables 
 
       TH1*               fEffBvsSLocal;       // intermediate eff. background versus eff signal histo
 
@@ -216,9 +202,6 @@ namespace TMVA {
       vector<TH1*>*      fVarHistB_smooth;    // smoothed reference histograms (background)
       vector<PDF*>*      fVarPdfS;            // reference PDFs (signal)
       vector<PDF*>*      fVarPdfB;            // reference PDFs (background)
-
-      static MethodCuts* fgThisCuts;          // used for function reference (GA)
-
 
       // the definition of fit parameters can be different from the actual 
       // cut requirements; these functions provide the matching

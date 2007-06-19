@@ -65,38 +65,41 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
 
    Int_t color = 1;
    Int_t nmva  = 0;
-   TIter next(file->GetListOfKeys());
    TKey *key, *hkey;
 
    TString hNameRef = "effBvsS";
    if (type == 2) hNameRef = "rejBvsS";
 
    TList hists;
+   TList methods;
+   UInt_t nm = TMVAGlob::GetListOfMethods( methods );
+   //   TIter next(file->GetListOfKeys());
+   TIter next(&methods);
 
-   // loop over all histograms with that name
+   // loop over all methods
    while (key = (TKey*)next()) {
-      //      TClass *cl = gROOT->GetClass(key->GetClassName());
-
-      if (TString(key->GetClassName()) != "TDirectory" && TString(key->GetClassName()) != "TDirectoryFile") continue;
-      //      if (!cl->InheritsFrom("TDirectory")) continue;    
-      if(! TString(key->GetName()).BeginsWith("Method_") ) continue;
-
       TDirectory * mDir = (TDirectory*)key->ReadObj();
-      TIter nextInMDir(mDir->GetListOfKeys());
-      while (hkey = (TKey*)nextInMDir()) {
-
-         TClass *cl = gROOT->GetClass(hkey->GetClassName());
-         if (!cl->InheritsFrom("TH1")) continue;    
-         TH1 *h = (TH1*)hkey->ReadObj();    
-         TString hname = h->GetName();
-         
-         if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
-            h->SetLineWidth(3);
-            h->SetLineColor(color);
-            color++; if (color == 5 || color == 10 || color == 11) color++; 
-            h->Draw("csame");
-            hists.Add(h);
-            nmva++;
+      TList titles;
+      UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
+      TIter nextTitle(&titles);
+      TKey *titkey;
+      TDirectory *titDir;
+      while ((titkey = TMVAGlob::NextKey(nextTitle,"TDirectory"))) {
+         titDir = (TDirectory *)titkey->ReadObj();
+         TString methodTitle;
+         TMVAGlob::GetMethodTitle(methodTitle,titDir);
+         TIter nextKey( titDir->GetListOfKeys() );
+         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey->ReadObj();    
+            TString hname = h->GetName();
+            if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
+               h->SetLineWidth(3);
+               h->SetLineColor(color);
+               color++; if (color == 5 || color == 10 || color == 11) color++; 
+               h->Draw("csame");
+               hists.Add(h);
+               nmva++;
+            }
          }
       }
    }

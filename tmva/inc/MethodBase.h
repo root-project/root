@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.h,v 1.12 2007/04/19 06:53:01 brun Exp $   
+// @(#)root/tmva $Id: MethodBase.h,v 1.13 2007/04/21 14:20:46 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -56,6 +56,9 @@
 #endif
 #ifndef ROOT_TMVA_Option
 #include "TMVA/Option.h"
+#endif
+#ifndef ROOT_TMVA_Tools
+#include "TMVA/Tools.h"
 #endif
 #ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
@@ -97,7 +100,7 @@ namespace TMVA {
                   TDirectory* theBaseDir = 0 );
 
       // default destructur
-      virtual ~MethodBase( void );
+      virtual ~MethodBase();
       
       // prepare tree branch with the method's discriminating variable
       virtual void PrepareEvaluationTree( TTree* theTestTree );
@@ -107,18 +110,18 @@ namespace TMVA {
       void   CreateMVAPdfs();
 
       void   WriteStateToFile   () const;
-      void   WriteStateToStream ( std::ostream& tf ) const;
+      void   WriteStateToStream ( std::ostream& tf, Bool_t isClass = kFALSE ) const;
       void   WriteStateToStream ( TFile&        rf ) const;
       void   ReadStateFromFile  ();
       void   ReadStateFromStream( std::istream& tf );
       void   ReadStateFromStream( TFile&        rf );
       
       virtual void WriteWeightsToStream ( std::ostream& tf ) const = 0;
-      virtual void WriteWeightsToStream ( TFile&      /*rf*/ ) const {};
+      virtual void WriteWeightsToStream ( TFile&      /*rf*/ ) const {}
       virtual void ReadWeightsFromStream( std::istream& tf ) = 0;
-      virtual void ReadWeightsFromStream( TFile&      /*rf*/ ){};
+      virtual void ReadWeightsFromStream( TFile&      /*rf*/ ) {}
 
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      virtual void WriteMonitoringHistosToFile() const;
 
       virtual Bool_t IsSignalLike() { return GetMvaValue() > GetSignalReferenceCut() ? kTRUE : kFALSE; }     
 
@@ -133,22 +136,25 @@ namespace TMVA {
       virtual Double_t GetMvaValue() = 0;
       virtual Double_t GetProba( Double_t mvaVal, Double_t ap_sig );
 
+      // rarity distributions (signal or background (default) is uniform in [0,1])
+      virtual Double_t GetRarity( Double_t mvaVal, Types::ESBType reftype = Types::kBackground ) const;
+
       // test the method
       virtual void Test( TTree* theTestTree = 0 );
 
       // accessors
-      const TString&   GetJobName    ( void ) const { return fJobName; }
-      const TString&   GetMethodName ( void ) const { return fMethodName; }
-      const char*      GetName       ( void ) const { return GetMethodName().Data(); }
-      const TString&   GetMethodTitle( void ) const { return fMethodTitle; }
-      Types::EMVA      GetMethodType ( void ) const { return fMethodType; }
+      const TString& GetJobName    () const { return fJobName; }
+      const TString& GetMethodName () const { return fMethodName; }
+      const char*    GetName       () const { return GetMethodName().Data(); }
+      const TString& GetMethodTitle() const { return fMethodTitle; }
+      Types::EMVA    GetMethodType () const { return fMethodType; }
 
       void    SetJobName    ( TString jobName )        { fJobName     = jobName; }
       void    SetMethodName ( TString methodName )     { fMethodName  = methodName; }
       void    SetMethodTitle( TString methodTitle )    { fMethodTitle = methodTitle; }
       void    SetMethodType ( Types::EMVA methodType ) { fMethodType  = methodType; }
 
-      TString GetWeightFileDir( void ) const { return fFileDir; }
+      TString GetWeightFileDir() const { return fFileDir; }
       void    SetWeightFileDir( TString fileDir );
 
       const TString& GetInputVar( int i ) const { return Data().GetInternalVarName(i); }
@@ -159,30 +165,30 @@ namespace TMVA {
 
       Bool_t  HasTrainingTree() const { return Data().GetTrainingTree() != 0; }
       TTree*  GetTrainingTree() const { 
-         if (GetVariableTransform()!=Types::kNone) {
+         if (GetVariableTransform() != Types::kNone) {
             fLogger << kFATAL << "Trying to access correlated Training tree in method " 
-                    << GetMethodName() << endl;
+                    << GetMethodName() << Endl;
          }
          return Data().GetTrainingTree();
       }
       TTree*  GetTestTree() const {
-         if (GetVariableTransform()!=Types::kNone) {
+         if (GetVariableTransform() != Types::kNone) {
             fLogger << kFATAL << "Trying to access correlated Training tree in method " 
-                    << GetMethodName() << endl;
+                    << GetMethodName() << Endl;
          }
          return Data().GetTestTree();
       }
 
-      Int_t   GetNvar( void ) const { return fNvar; }
+      Int_t   GetNvar() const { return fNvar; }
       void    SetNvar( Int_t n) { fNvar = n; }
 
       // variables (and private menber functions) for the Evaluation:
       // get the effiency. It fills a histogram for efficiency/vs/bkg
       // and returns the one value fo the efficiency demanded for 
       // in the TString argument. (Watch the string format)
-      virtual Double_t  GetEfficiency   ( TString, TTree*, Double_t& err );
+      virtual Double_t  GetEfficiency( TString, TTree*, Double_t& err );
       virtual Double_t  GetTrainingEfficiency( TString );
-      virtual Double_t  GetSignificance ( void ) const;
+      virtual Double_t  GetSignificance() const;
       virtual Double_t  GetOptimalSignificance( Double_t SignalEvents, Double_t BackgroundEvents, 
                                                 Double_t& optimal_significance_value  ) const;
       virtual Double_t  GetSeparation( TH1*, TH1* ) const;
@@ -193,20 +199,24 @@ namespace TMVA {
       Double_t GetRMS( Int_t ivar )          const { return GetVarTransform().Variable(ivar).GetRMS(); }
       Double_t GetXmin( Int_t ivar )         const { return GetVarTransform().Variable(ivar).GetMin(); }
       Double_t GetXmax( Int_t ivar )         const { return GetVarTransform().Variable(ivar).GetMax(); }
-      Double_t GetXmin( const TString& var ) const { return GetVarTransform().Variable(var).GetMin(); } // slow
-      Double_t GetXmax( const TString& var ) const { return GetVarTransform().Variable(var).GetMax(); } // slow
+      Double_t GetXmin( const TString& var ) const { return GetVarTransform().Variable(var) .GetMin(); } // slow !!
+      Double_t GetXmax( const TString& var ) const { return GetVarTransform().Variable(var) .GetMax(); } // slow !!
       void     SetXmin( Int_t ivar, Double_t x )          { GetVarTransform().Variable(ivar).SetMin(x); }
       void     SetXmax( Int_t ivar, Double_t x )          { GetVarTransform().Variable(ivar).SetMax(x); }
-      void     SetXmin( const TString& var, Double_t x )  { GetVarTransform().Variable(var).SetMin(x); }
-      void     SetXmax( const TString& var, Double_t x )  { GetVarTransform().Variable(var).SetMax(x); }
+      void     SetXmin( const TString& var, Double_t x )  { GetVarTransform().Variable(var) .SetMin(x); }
+      void     SetXmax( const TString& var, Double_t x )  { GetVarTransform().Variable(var) .SetMax(x); }
 
       // main normalization method is in Tools
-      Double_t Norm       ( Int_t ivar,  Double_t x ) const;
-      Double_t Norm       ( TString var, Double_t x ) const;
+      Double_t Norm   ( Int_t ivar,  Double_t x ) const;
+      Double_t Norm   ( TString var, Double_t x ) const;
+
+      // are variables normalised ?
+      Bool_t   IsNormalised() const { return fNormalise; }
+      void     SetNormalised( Bool_t norm ) { fNormalise = norm; }
 
       // member functions for the "evaluation" 
       // accessors
-      Bool_t   IsOK     ( void  )  const { return fIsOK; }
+      Bool_t   IsOK()  const { return fIsOK; }
 
       // write method-specific histograms to file
       void WriteEvaluationHistosToFile( TDirectory* targetDir = 0 );
@@ -214,8 +224,10 @@ namespace TMVA {
       Types::EVariableTransform GetVariableTransform() const { return fVariableTransform; }
       void SetVariableTransform ( Types::EVariableTransform m ) { fVariableTransform = m; }
       
-      Bool_t Verbose( void ) const { return fVerbose; }
+      Bool_t Verbose() const { return fVerbose; }
+      Bool_t Help   () const { return fHelp; }
       void   SetVerbose( Bool_t v = kTRUE ) { fVerbose = v; }
+      void   SetHelp   ( Bool_t h = kTRUE ) { fHelp    = h; }
 
       DataSet& Data() const { return fData; }
       virtual Bool_t ReadEvent( TTree* tr, UInt_t ievt, Types::ESBType type = Types::kMaxSBType ) const { 
@@ -232,10 +244,13 @@ namespace TMVA {
          return ReadEvent( Data().GetTestTree(), ievt, type );
       }
 
-      TMVA::Event& GetEvent() const { return GetVarTransform().GetEvent(); }
-      Double_t GetEventVal( Int_t ivar ) const { return GetEvent().GetVal(ivar); }
-      Double_t GetEventValNormalized(Int_t ivar) const;
-      Double_t GetEventWeight() const { return GetEvent().GetWeight(); }
+      TMVA::Event& GetEvent()                const { return GetVarTransform().GetEvent(); }
+      Bool_t       IsSignalEvent()           const { return GetEvent().IsSignal(); }
+      Double_t     GetEventVal( Int_t ivar ) const { 
+         if (IsNormalised()) return GetEventValNormalised(ivar);
+         else                return GetEvent().GetVal(ivar); 
+      }
+      Double_t     GetEventWeight() const { return GetEvent().GetWeight(); }
 
       virtual void DeclareOptions();
       virtual void ProcessOptions();
@@ -251,12 +266,27 @@ namespace TMVA {
       Double_t GetSignalReferenceCut() const { return fSignalReferenceCut; }
  
       // make ROOT-independent C++ class
-      virtual void MakeClass( TString classFileName = "" ) const;
+      virtual void MakeClass( const TString& classFileName = "" ) const;
+
+      // print help message
+      void PrintHelpMessage() const;
+
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& = "" ) const {}
+
+      // header and auxiliary classes
+      virtual void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
 
    public:
 
       // static pointer to this object
-      static MethodBase* GetThisBase( void ) { return fgThisBase; }        
+      static MethodBase* GetThisBase() { return fgThisBase; }        
+
+      // pointers to root directories
+      TDirectory*      BaseDir() const;
+      TDirectory*      MethodBaseDir() const;
 
    protected:
 
@@ -265,7 +295,7 @@ namespace TMVA {
       ECutOrientation GetCutOrientation() const { return fCutOrientation; }
 
       // reset required for RootFinder
-      void ResetThisBase( void ) { fgThisBase = this; }
+      void ResetThisBase() { fgThisBase = this; }
 
       // sets the minimum requirement on the MVA output to declare an event signal-like
       void     SetSignalReferenceCut( Double_t cut ) { fSignalReferenceCut = cut; }
@@ -282,14 +312,17 @@ namespace TMVA {
       // if(GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
       // or
       // if(GetTrainingROOTVersionCode()>ROOT_VERSION(5,15,5)) {...}
-      UInt_t GetTrainingTMVAVersionCode() const { return fTMVATrainingVersion; }
-      UInt_t GetTrainingROOTVersionCode() const { return fROOTTrainingVersion; }
+      UInt_t  GetTrainingTMVAVersionCode()   const { return fTMVATrainingVersion; }
+      UInt_t  GetTrainingROOTVersionCode()   const { return fROOTTrainingVersion; }
       TString GetTrainingTMVAVersionString() const;
-      TString GetTrainingROOTVersionString() const;
+      TString GetTrainingROOTVersionString() const;      
+
+      const TString& GetInternalVarName( Int_t ivar ) const { return (*fInputVars)[ivar]; }
+      const TString& GetOriginalVarName( Int_t ivar ) const { return Data().GetExpression(ivar); }
 
    private:
 
-      DataSet &      fData;            //! the data set
+      DataSet&       fData;                   //! the data set
 
       Double_t       fSignalReferenceCut;     // minimum requirement on the MVA output to declare an event signal-like
       Types::ESBType fVariableTransformType;  // this is the event type (sig or bgd) assumed for variable transform
@@ -297,7 +330,7 @@ namespace TMVA {
    protected:
 
       // protected accessors for derived classes
-      TDirectory*      BaseDir() const;
+      //      TDirectory*      BaseDir() const;
       TDirectory*      LocalTDir() const { return Data().LocalRootDir(); }
 
       // TestVar (the variable name used for the MVA)
@@ -328,13 +361,26 @@ namespace TMVA {
       TString     fTestvarPrefix;       // 'MVA_' prefix of MVA variable
       UInt_t      fTMVATrainingVersion; // TMVA version used for training
       UInt_t      fROOTTrainingVersion; // ROOT version used for training
- 
+      Bool_t      fNormalise;           // normalise input variables
+
    private:
 
       void SetBaseDir( TDirectory* d ) { fBaseDir = d; }
+      Double_t GetEventValNormalised(Int_t ivar) const {         
+          // normalises input variables
+         return Tools::NormVariable( GetEvent().GetVal(ivar), GetXmin(ivar), GetXmax(ivar) );
+      }
       
       Int_t       fNvar;                // number of input variables
-      TDirectory* fBaseDir;             // base director, needed to know where to jump back from localDir
+
+      //
+      // Directory structure:
+      //   fMethodBaseDir/fBaseDir
+      // where the first is defined by the method type
+      // and the second is user supplied (the title given in Factory::BookMethod())
+      //
+      TDirectory* fBaseDir;             // base directory for the instance, needed to know where to jump back from localDir
+      TDirectory* fMethodBaseDir;       // base directory for the method
 
 
       TString   fFileDir;               // unix sub-directory for weight files (default: "weights")
@@ -344,27 +390,29 @@ namespace TMVA {
 
    protected:
 
-      Bool_t    fIsOK;                  // status of sanity checks
-      TH1*      fHistS_plotbin;         // MVA plots used for graphics representation (signal)
-      TH1*      fHistB_plotbin;         // MVA plots used for graphics representation (background)
-      TH1*      fProbaS_plotbin;        // P(MVA) plots used for graphics representation (signal)
-      TH1*      fProbaB_plotbin;        // P(MVA) plots used for graphics representation (background)
-      TH1*      fHistS_highbin;         // MVA plots used for efficiency calculations (signal)    
-      TH1*      fHistB_highbin;         // MVA plots used for efficiency calculations (background)
-      TH1*      fEffS;                  // efficiency plot (signal)
-      TH1*      fEffB;                  // efficiency plot (background)
-      TH1*      fEffBvsS;               // background efficiency versus signal efficiency
-      TH1*      fRejBvsS;               // background rejection (=1-eff.) versus signal efficiency
-      TH1*      finvBeffvsSeff;         // inverse background eff (1/eff.) versus signal efficiency
-      TH1*      fHistBhatS;             // working histograms needed for mu-transform (signal)
-      TH1*      fHistBhatB;             // working histograms needed for mu-transform (background)
-      TH1*      fHistMuS;               // mu-transform (signal)
-      TH1*      fHistMuB;               // mu-transform (background)
+      Bool_t     fIsOK;                 // status of sanity checks
+      TH1*       fHistS_plotbin;        // MVA plots used for graphics representation (signal)
+      TH1*       fHistB_plotbin;        // MVA plots used for graphics representation (background)
+      TH1*       fProbaS_plotbin;       // P(MVA) plots used for graphics representation (signal)
+      TH1*       fProbaB_plotbin;       // P(MVA) plots used for graphics representation (background)
+      TH1*       fRarityS_plotbin;      // R(MVA) plots used for graphics representation (signal)
+      TH1*       fRarityB_plotbin;      // R(MVA) plots used for graphics representation (background)
+      TH1*       fHistS_highbin;        // MVA plots used for efficiency calculations (signal)    
+      TH1*       fHistB_highbin;        // MVA plots used for efficiency calculations (background)
+      TH1*       fEffS;                 // efficiency plot (signal)
+      TH1*       fEffB;                 // efficiency plot (background)
+      TH1*       fEffBvsS;              // background efficiency versus signal efficiency
+      TH1*       fRejBvsS;              // background rejection (=1-eff.) versus signal efficiency
+      TH1*       finvBeffvsSeff;        // inverse background eff (1/eff.) versus signal efficiency
+      TH1*       fHistBhatS;            // working histograms needed for mu-transform (signal)
+      TH1*       fHistBhatB;            // working histograms needed for mu-transform (background)
+      TH1*       fHistMuS;              // mu-transform (signal)
+      TH1*       fHistMuB;              // mu-transform (background) 
 
-      TH1*      fTrainEffS;             // Training efficiency plot (signal)
-      TH1*      fTrainEffB;             // Training efficiency plot (background)
-      TH1*      fTrainEffBvsS;          // Training background efficiency versus signal efficiency
-      TH1*      fTrainRejBvsS;          // Training background rejection (=1-eff.) versus signal efficiency
+      TH1*       fTrainEffS;            // Training efficiency plot (signal)
+      TH1*       fTrainEffB;            // Training efficiency plot (background)
+      TH1*       fTrainEffBvsS;         // Training background efficiency versus signal efficiency
+      TH1*       fTrainRejBvsS;         // Training background rejection (=1-eff.) versus signal efficiency
 
       Int_t      fNbinsMVAPdf;          // number of bins used in histogram that creates PDF
       Int_t      fNsmoothMVAPdf;        // number of times a histogram is smoothed before creating the PDF
@@ -372,50 +420,50 @@ namespace TMVA {
       TMVA::PDF* fMVAPdfB;              // background MVA PDF
 
       // mu-transform
-      Double_t  fX;
-      Double_t  fMode;
+      Double_t   fX;
+      Double_t   fMode;
 
-      TGraph*   fGraphS;                // graphs used for splines for efficiency (signal)
-      TGraph*   fGraphB;                // graphs used for splines for efficiency (background)
-      TGraph*   fGrapheffBvsS;          // graphs used for splines for signal eff. versus background eff.
-      PDF*      fSplS;                  // PDFs of MVA distribution (signal)
-      PDF*      fSplB;                  // PDFs of MVA distribution (background)
-      TSpline*  fSpleffBvsS;            // splines for signal eff. versus background eff.
+      TGraph*    fGraphS;               // graphs used for splines for efficiency (signal)
+      TGraph*    fGraphB;               // graphs used for splines for efficiency (background)
+      TGraph*    fGrapheffBvsS;         // graphs used for splines for signal eff. versus background eff.
+      PDF*       fSplS;                 // PDFs of MVA distribution (signal)
+      PDF*       fSplB;                 // PDFs of MVA distribution (background)
+      TSpline*   fSpleffBvsS;           // splines for signal eff. versus background eff.
 
 
-      TGraph*   fGraphTrainS;           // graphs used for splines for training efficiency (signal)
-      TGraph*   fGraphTrainB;           // graphs used for splines for training efficiency (background)
-      TGraph*   fGraphTrainEffBvsS;     // graphs used for splines for training signal eff. versus background eff.
-      PDF*      fSplTrainS;             // PDFs of training MVA distribution (signal)
-      PDF*      fSplTrainB;             // PDFs of training MVA distribution (background)
-      TSpline*  fSplTrainEffBvsS;       // splines for training signal eff. versus background eff.
+      TGraph*    fGraphTrainS;          // graphs used for splines for training efficiency (signal)
+      TGraph*    fGraphTrainB;          // graphs used for splines for training efficiency (background)
+      TGraph*    fGraphTrainEffBvsS;    // graphs used for splines for training signal eff. versus background eff.
+      PDF*       fSplTrainS;            // PDFs of training MVA distribution (signal)
+      PDF*       fSplTrainB;            // PDFs of training MVA distribution (background)
+      TSpline*   fSplTrainEffBvsS;      // splines for training signal eff. versus background eff.
 
    private:
 
       // basic statistics quantities of MVA
-      Double_t  fMeanS;                 // mean (signal)
-      Double_t  fMeanB;                 // mean (background)
-      Double_t  fRmsS;                  // RMS (signal)
-      Double_t  fRmsB;                  // RMS (background)
-      Double_t  fXmin;                  // minimum (signal and background)
-      Double_t  fXmax;                  // maximum (signal and background)
+      Double_t   fMeanS;                // mean (signal)
+      Double_t   fMeanB;                // mean (background)
+      Double_t   fRmsS;                 // RMS (signal)
+      Double_t   fRmsB;                 // RMS (background)
+      Double_t   fXmin;                 // minimum (signal and background)
+      Double_t   fXmax;                 // maximum (signal and background)
 
-      Bool_t    fUseDecorr;                          // kept for backward compatibility
+      Bool_t     fUseDecorr;                         // kept for backward compatibility
       Types::EVariableTransform fVariableTransform;  // Decorrelation, PCA, etc.
-      TString fVarTransformString;                   // labels variable transform method
-      TString fVariableTransformTypeString;          // labels variable transform type
+      TString    fVarTransformString;                // labels variable transform method
+      TString    fVariableTransformTypeString;       // labels variable transform type
 
-      Bool_t    fVerbose;               // verbose flag
-      TString   fVerbosityLevelString;  // verbosity level (user input string)
-      EMsgType  fVerbosityLevel;        // verbosity level
-      Bool_t    fHelp;                  // help flag
-      Bool_t    fIsMVAPdfs;             // create MVA Pdfs
-      Bool_t    fTxtWeightsOnly;        // if TRUE, write weights only to text files 
+      Bool_t     fVerbose;              // verbose flag
+      TString    fVerbosityLevelString; // verbosity level (user input string)
+      EMsgType   fVerbosityLevel;       // verbosity level
+      Bool_t     fHelp;                 // help flag
+      Bool_t     fIsMVAPdfs;            // create MVA Pdfs
+      Bool_t     fTxtWeightsOnly;       // if TRUE, write weights only to text files 
 
    protected:
 
-      Int_t     fNbins;                 // number of bins in representative histograms
-      Int_t     fNbinsH;                // number of bins in evaluation histograms
+      Int_t      fNbins;                // number of bins in representative histograms
+      Int_t      fNbinsH;               // number of bins in evaluation histograms
 
       // orientation of cut: depends on signal and background mean values
       ECutOrientation fCutOrientation;  // +1 if Sig>Bkg, -1 otherwise
@@ -439,7 +487,7 @@ namespace TMVA {
       static MethodBase* fgThisBase;    // this pointer
 
       // Init used in the various constructors
-      void Init( void );
+      void Init();
       bool GetLine(std::istream& fin, char * buf );
             
    protected:
@@ -447,8 +495,8 @@ namespace TMVA {
       // the mutable declaration is needed to use the logger in const methods
       mutable MsgLogger fLogger; // message logger
 
-   public:
       ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
+
    };
 } // namespace TMVA
 

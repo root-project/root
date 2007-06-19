@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariableDecorrTransform.h,v 1.11 2007/06/08 10:27:25 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,26 +48,28 @@ namespace TMVA {
 
    public:
   
-      VariableDecorrTransform( std::vector<VariableInfo>& );
+      VariableDecorrTransform( std::vector<TMVA::VariableInfo>& );
       virtual ~VariableDecorrTransform( void ) {}
 
       void   ApplyTransformation( Types::ESBType type = Types::kMaxSBType ) const;
       Bool_t PrepareTransformation( TTree* inputTree );
 
-      void WriteTransformationToStream( std::ostream& ) const;
-      void ReadTransformationToStream ( std::istream& );
+      void WriteTransformationToStream ( std::ostream& ) const;
+      void ReadTransformationFromStream( std::istream& );
 
-      virtual void PrintTransformation(ostream & o);
+      virtual void PrintTransformation( ostream & o );
+
+      // writer of function code
+      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );
 
    private:
 
       TMatrixD* fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
 
       void GetSQRMats( TTree* tr );
-
       void GetCovarianceMatrix( TTree* tr, Bool_t isSignal, TMatrixDBase* mat );
 
-      ClassDef(VariableDecorrTransform,0) // variable transformation base class
+      ClassDef(VariableDecorrTransform,0) // Variable transformation: decorrelation
    };
 
 } // namespace TMVA

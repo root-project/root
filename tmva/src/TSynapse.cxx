@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: TSynapse.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TSynapse.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::TSynapse                                                        *
+ * Class  : TSynapse                                                              *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -41,7 +41,7 @@ ClassImp(TMVA::TSynapse)
 
 //______________________________________________________________________________
 TMVA::TSynapse::TSynapse()
-   : fLogger( this )
+   : fLogger( "TSynapse" )
 {
    // constructor
 

@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.7 2007/01/12 16:03:17 brun Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $\Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : SimulatedAnnealingBase                                                *
+ * Class  : SimulatedAnnealing                                                    *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -14,13 +14,10 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ * Copyright (c) 2006:                                                            *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,37 +29,51 @@
 // Implementation of Simulated Annealing fitter  
 //_______________________________________________________________________
 
+#include "TRandom.h"
 #include "TMath.h"
 #include "Riostream.h"
-#include "TMVA/SimulatedAnnealingBase.h"
+#include "TMVA/SimulatedAnnealing.h"
+#include "TMVA/Interval.h"
+#include "TMVA/IFitterTarget.h"
 
-ClassImp(TMVA::SimulatedAnnealingBase)
+ClassImp(TMVA::SimulatedAnnealing)
 
-TMVA::SimulatedAnnealingBase::SimulatedAnnealingBase( std::vector<Interval*>& ranges )
-   : fRandom                ( new TRandom() )
-   , fRanges                ( ranges )
-   , fMaxCalls              ( 500000 )
-   , fTemperatureGradient   ( 0.3 )
-   , fUseAdaptiveTemperature( kFALSE )
-   , fInitialTemperature    ( 1000 )
-   , fMinTemperature        ( 0 )
-   , fEps                   ( 1e-04 )
-   , fNFunLoops             ( 25 )
-   , fNEps                  ( 4 ) // needs to be at leas 2 !
+//_______________________________________________________________________
+TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges )
+   : fFitterTarget          ( target ),
+     fRandom                ( new TRandom(100) ),
+     fRanges                ( ranges ),
+     fMaxCalls              ( 500000 ),
+     fTemperatureGradient   ( 0.3 ),
+     fUseAdaptiveTemperature( kFALSE ),
+     fInitialTemperature    ( 1000 ),
+     fMinTemperature        ( 0 ),
+     fEps                   ( 1e-04 ),
+     fNFunLoops             ( 25 ),
+     fNEps                  ( 4 ), // needs to be at leas 2 !
+     fLogger( "SimulatedAnnealing" )
 {   
    // constructor
 }
 
-TMVA::SimulatedAnnealingBase::~SimulatedAnnealingBase()
+//_______________________________________________________________________
+TMVA::SimulatedAnnealing::~SimulatedAnnealing()
 {
    // destructor
 }
 
-Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& parameters )
+//_______________________________________________________________________
+Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
 {
+   // minimisation
+
    // speed up loops
-   Int_t npar = parameters.size();
+   UInt_t npar = parameters.size();
       
+   // sanity check
+   if (npar != fRanges.size()) fLogger << kFATAL << "<Minimize> Mismatch in vector lengths: "
+                                       << npar << " != " << fRanges.size() << Endl;
+
    // set values
    Double_t deltaT = fTemperatureGradient;
 
@@ -70,27 +81,27 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
    Double_t stepWidth = 3*npar;
    if (npar < 20) stepWidth = 50; // don't go below some minimum 
 
-   Int_t i; // predefine for compatibility with old platforms (eg, SunOS5)
-   std::vector <Double_t> diffFCN; 
-   for (i = 0; i < fNEps; ++i) diffFCN.push_back(1e20);
+   UInt_t i; // predefine for compatibility with old platforms (eg, SunOS5)
+   std::vector<Double_t> diffFCN; 
+   for (i = 0; i < (UInt_t)fNEps; ++i) diffFCN.push_back(1e20);
 
    // result vector
-   std::vector <Double_t> bestParameters( parameters );
+   std::vector<Double_t> bestParameters( parameters );
 
    // auxiliary vectors
-   std::vector <Double_t> xPars( parameters );
-   std::vector <Double_t> yPars( parameters );
+   std::vector<Double_t> xPars( parameters );
+   std::vector<Double_t> yPars( parameters );
    
    // initialize adaptive errors with bold guess
-   std::vector <Double_t> adaptiveErrors;
-   std::vector <Int_t>    nAccepted;
-   for (Int_t k = 0; k < npar; k++ ) {
+   std::vector<Double_t> adaptiveErrors;
+   std::vector<Int_t>    nAccepted;
+   for (UInt_t k = 0; k < npar; k++ ) {
       adaptiveErrors.push_back( (fRanges[k]->GetMax() - fRanges[k]->GetMin())/10.0 );
       nAccepted.push_back(0);
    }
 
    // starting point (note that simulated annealing searches for maximum!)
-   Double_t retFCN = - MinimizeFunction( xPars );
+   Double_t retFCN = - fFitterTarget.EstimatorFunction( xPars );
    Int_t    nCalls = 1;
    Double_t maxFCN = retFCN;
    diffFCN[1] = retFCN;
@@ -118,7 +129,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
             if (optPoint.first          > 0 && optPoint.second          == 0 && 
                 optPoint_previous.first > 0 && optPoint_previous.second == 0) {
                if (stepWidth > 20) {
-                 deltaT = TMath::Sqrt( deltaT );
+                  deltaT = TMath::Sqrt( deltaT );
                   stepWidth = 0.5*stepWidth;
                }
             }
@@ -138,7 +149,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
          for (Int_t j = 0; j < fNFunLoops; j++) {
 
             // loop over parameters
-            for (Int_t h = 0; h < npar; h++) {
+            for (UInt_t h = 0; h < npar; h++) {
 
                // randomize parameter h
                yPars[h] = xPars[h] + gRandom->Uniform(-1.0,1.0)*adaptiveErrors[h];
@@ -152,7 +163,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
                if (h >= 1) yPars[h-1] = xPars[h-1];
 
                // compute estimator for given variable set (again, searches for maximum)
-               Double_t retFCNi = - MinimizeFunction( yPars ); 
+               Double_t retFCNi = - fFitterTarget.EstimatorFunction( yPars ); 
 
                // too many function evaluations ? --> stop simulated annealing
                ++nCalls;
@@ -217,7 +228,7 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
       //  terminate simulated annealing if appropriate 
       diffFCN[1] = retFCN;
       if (TMath::Abs(maxFCN - diffFCN[1]) < fEps) 
-         for (i = 0; i < fNEps; ++i) if (TMath::Abs(retFCN - diffFCN[i]) > fEps) continueWhile = kTRUE;
+         for (i = 0; i < (UInt_t)fNEps; ++i) if (TMath::Abs(retFCN - diffFCN[i]) > fEps) continueWhile = kTRUE;
 
       // more quite criteria
       if (TMath::Abs(maxFCN) < 1e-06   ) continueWhile = kFALSE;
@@ -230,6 +241,11 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
          for (i = 0; i < npar; ++i) xPars[i] = bestParameters[i];
          retFCN = maxFCN;
          printf( "new temp: %g --> maxFCN: %f10.10\n" , temperature, maxFCN );
+         fLogger << kVERBOSE << "parameters: ";
+         for (UInt_t i=0; i<parameters.size(); i++) 
+            cout << parameters[i] << " ";
+         fLogger << kVERBOSE << Endl << Endl;
+         
       }
    } // end of while loop
 
@@ -237,11 +253,11 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
    for (i = 0; i < npar; i++ ) parameters[i] = bestParameters[i];
 
    return - maxFCN;
-
 }
 
-Double_t TMVA::SimulatedAnnealingBase::GetPerturbationProbability( Double_t E, Double_t Eref, 
-                                                                   Double_t temperature )
+//_______________________________________________________________________
+Double_t TMVA::SimulatedAnnealing::GetPerturbationProbability( Double_t E, Double_t Eref, 
+                                                               Double_t temperature )
 {
    // calculates the probability that a perturbation occured
    return (temperature > 0) ? TMath::Exp( (Eref - E)/temperature ) : 0;

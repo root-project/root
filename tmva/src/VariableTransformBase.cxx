@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: VariableTransformBase.cxx,v 1.46 2007/06/08 20:11:38 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -16,24 +16,25 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      MPI-K Heidelberg, Germany ,                                               *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TMVA/VariableTransformBase.h"
-#include "TMVA/Ranking.h"
-#include "TMVA/Config.h"
-#include "TMVA/Tools.h"
-
+#include "Riostream.h"
 #include "TMath.h"
 #include "TVectorD.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
+
+#include "TMVA/VariableTransformBase.h"
+#include "TMVA/Ranking.h"
+#include "TMVA/Config.h"
+#include "TMVA/Tools.h"
 
 ClassImp(TMVA::VariableTransformBase)
 
@@ -45,7 +46,7 @@ TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& v
      fVariableTransform(tf),
      fEnabled( kTRUE ),
      fCreated( kFALSE ),
-     fNormalize( kFALSE ),
+     fNormalise( kFALSE ),
      fTransformName("TransBase"),
      fVariables( varinfo ),
      fCurrentTree(0), 
@@ -55,7 +56,7 @@ TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& v
 {
    // standard constructor
    std::vector<VariableInfo>::iterator it = fVariables.begin();
-   for( ; it!=fVariables.end(); it++ ) (*it).ResetMinMax();
+   for (; it!=fVariables.end(); it++ ) (*it).ResetMinMax();
 }
 
 //_______________________________________________________________________
@@ -76,15 +77,18 @@ void TMVA::VariableTransformBase::ResetBranchAddresses( TTree* tree ) const
 }
 
 //_______________________________________________________________________
-void TMVA::VariableTransformBase::CreateEvent() const {
+void TMVA::VariableTransformBase::CreateEvent() const 
+{
    // the fEvent is used to hold the event after the
    // transformation. It should not hold any connections to the
    // outside world, all its Variables shold be stored locally, and
    // the external link pointers should be 0 [creating the event from
    // the fVariables list, does not always guarantie that, so it has
    // to be explicitely ensured]
+   // 
+   // in addition all variables need to be float
    Bool_t allowExternalLinks = kFALSE;
-   fEvent = new TMVA::Event(fVariables, allowExternalLinks); 
+   fEvent = new Event(fVariables, allowExternalLinks); 
 }
 
 //_______________________________________________________________________
@@ -139,9 +143,9 @@ void TMVA::VariableTransformBase::CalcNorm( TTree * tr )
    // method to calculate minimum, maximum, mean, and RMS for all
    // variables used in the MVA
 
-   if(!IsCreated()) return;
+   if (!IsCreated()) return;
 
-   // if PCA has not been succeeded, the tree may be empty
+   // if transformation has not been succeeded, the tree may be empty
    if (tr == 0) return;
 
    ResetBranchAddresses( tr );
@@ -167,7 +171,7 @@ void TMVA::VariableTransformBase::CalcNorm( TTree * tr )
       }
    }
 
-   // get Mean and RMS
+   // set Mean and RMS
    for (UInt_t ivar=0; ivar<nvar; ivar++) {
       Double_t mean = x0(ivar)/sumOfWeights;
       fVariables[ivar].SetMean( mean ); 
@@ -189,7 +193,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    // - histograms for all input variables
    // - scatter plots for all pairs of input variables
 
-   if(!IsCreated()) return;
+   if (!IsCreated()) return;
 
    // if PCA has not been succeeded, the tree may be empty
    if (theTree == 0) return;
@@ -236,8 +240,24 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    for (UInt_t ivar=0; ivar<nvar; ivar++) {
       meanS(ivar) = x0S(ivar)/nS;
       meanB(ivar) = x0B(ivar)/nB;
-      rmsS(ivar) = TMath::Sqrt( x2S(ivar)/nS - x0S(ivar)*x0S(ivar)/nS/nS );   
-      rmsB(ivar) = TMath::Sqrt( x2B(ivar)/nB - x0B(ivar)*x0B(ivar)/nB/nB );   
+      
+      rmsS(ivar) = x2S(ivar)/nS - x0S(ivar)*x0S(ivar)/nS/nS;   
+      rmsB(ivar) = x2B(ivar)/nB - x0B(ivar)*x0B(ivar)/nB/nB;   
+      if (rmsS(ivar) <= 0) {
+         fLogger << kWARNING << "Variable \"" << Variable(ivar).GetExpression() 
+                 << "\" has zero or negative RMS^2 for signal " 
+                 << "==> set to zero. Please check the variable content" << Endl;
+         rmsS(ivar) = 0;
+      }
+      if (rmsB(ivar) <= 0) {
+         fLogger << kWARNING << "Variable \"" << Variable(ivar).GetExpression() 
+                 << "\" has zero or negative RMS^2 for background "
+                 << "==> set to zero. Please check the variable content" << Endl;
+         rmsB(ivar) = 0;
+      }
+
+      rmsS(ivar) = TMath::Sqrt( rmsS(ivar) );   
+      rmsB(ivar) = TMath::Sqrt( rmsB(ivar) );   
    }
 
    // Create all histograms
@@ -258,26 +278,36 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    // if there are too many input variables, the creation of correlations plots blows up
    // memory and basically kills the TMVA execution
    // --> avoid above critical number (which can be user defined)
-   if (nvar > (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
+   if (nvar > (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
       Int_t nhists = nvar*(nvar - 1)/2;
-      fLogger << kWARNING << "<PlotVariables> Problem with creation of scatter and profile plots. "
-              << "The number of " << nvar << " input variables would require " << nhists 
-              << " two-dimensional histograms, which would blow up the computer's memory. "
-              << "The current critical number of input variables is set to " 
-              << gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots
-              << ", it can be modified in the user script by the call: "
-              << "\"gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = <some int>\"." 
-              << Endl;
+      fLogger << kINFO << Tools::Color("dgreen") << Endl;
+      fLogger << kINFO << "<PlotVariables> Will not produce scatter plots ==> " << Endl;
+      fLogger << kINFO
+              << "|  The number of " << nvar << " input variables would require " << nhists << " two-dimensional" << Endl;
+      fLogger << kINFO
+              << "|  histograms, which would occupy the computer's memory. Note that this" << Endl;
+      fLogger << kINFO
+              << "|  suppression does not have any consequences for your analysis, other" << Endl;
+      fLogger << kINFO
+              << "|  than not disposing of these scatter plots. You can modify the maximum" << Endl;
+      fLogger << kINFO
+              << "|  number of input variables allowed to generate scatter plots in your" << Endl; 
+      fLogger << "|  script via the command line:" << Endl;
+      fLogger << kINFO
+              << "|  \"(TMVA::gConfig().GetVariablePlotting()).fMaxNumOfAllowedVariablesForScatterPlots = <some int>;\""
+              << Tools::Color("reset") << Endl;
+      fLogger << Endl;
+      fLogger << kINFO << "Some more output" << Endl;
    }
 
-   Float_t timesRMS  = gConfig().fVariablePlotting.fTimesRMS;
-   UInt_t  nbins1D   = gConfig().fVariablePlotting.fNbins1D;
-   UInt_t  nbins2D   = gConfig().fVariablePlotting.fNbins2D;
+   Float_t timesRMS  = gConfig().GetVariablePlotting().fTimesRMS;
+   UInt_t  nbins1D   = gConfig().GetVariablePlotting().fNbins1D;
+   UInt_t  nbins2D   = gConfig().GetVariablePlotting().fNbins2D;
    for (UInt_t i=0; i<nvar; i++) {
       TString myVari = Variable(i).GetInternalVarName();  
 
       // choose reasonable histogram ranges, by removing outliers
-      if (Variable(i).VarTypeOriginal() == 'I') {
+      if (Variable(i).GetVarType() == 'I') {
          // special treatment for integer variables
          Int_t xmin = TMath::Nint( Variable(i).GetMin() );
          Int_t xmax = TMath::Nint( Variable(i).GetMax() + 1 );
@@ -289,9 +319,13 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
       else {
          Double_t xmin = TMath::Max( Variable(i).GetMin(), TMath::Min( meanS(i) - timesRMS*rmsS(i), meanB(i) - timesRMS*rmsB(i) ) );
          Double_t xmax = TMath::Min( Variable(i).GetMax(), TMath::Max( meanS(i) + timesRMS*rmsS(i), meanB(i) + timesRMS*rmsB(i) ) );
+         
+         // protection
+         if (xmin >= xmax) xmax = xmin*1.1; // try first...
+         if (xmin >= xmax) xmax = xmin + 1; // this if xmin == xmax == 0
 
          vS[i] = new TH1F( Form("%s__S%s", myVari.Data(), transfType.Data()), Variable(i).GetExpression(), nbins1D, xmin, xmax );
-         vB[i] = new TH1F( Form("%s__B%s", myVari.Data(), transfType.Data()), Variable(i).GetExpression(), nbins1D, xmin, xmax );
+         vB[i] = new TH1F( Form("%s__B%s", myVari.Data(), transfType.Data()), Variable(i).GetExpression(), nbins1D, xmin, xmax );         
       }
 
       vS[i]->SetXTitle(Variable(i).GetExpression());
@@ -300,7 +334,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
       vB[i]->SetLineColor(2);
       
       // profile and scatter plots
-      if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
+      if (nvar <= (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
 
          for (UInt_t j=i+1; j<nvar; j++) {
             TString myVarj = Variable(j).GetInternalVarName();  
@@ -342,7 +376,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
          else                       vB[i]->Fill( vali, weight );
          
          // correlation histos
-         if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
+         if (nvar <= (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
 
             for (UInt_t j=i+1; j<nvar; j++) {
                Float_t valj = GetEvent().GetVal(j);
@@ -362,7 +396,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    // computes ranking of input variables
    fRanking = new Ranking( GetName(), "Separation" );
    for (UInt_t i=0; i<nvar; i++) {   
-      Double_t sep = TMVA::Tools::GetSeparation( vS[i], vB[i] );
+      Double_t sep = Tools::GetSeparation( vS[i], vB[i] );
       fRanking->AddRank( *new Rank( vS[i]->GetTitle(), sep ) );
    }
 
@@ -387,7 +421,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    }
 
    // correlation plots have dedicated directory
-   if (nvar <= (UInt_t)gConfig().fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots) {
+   if (nvar <= (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
 
       localDir = localDir->mkdir( "CorrelationPlots" );
       localDir ->cd();
@@ -421,13 +455,13 @@ void TMVA::VariableTransformBase::PrintVariableRanking() const
 }
 
 //_______________________________________________________________________
-void TMVA::VariableTransformBase::WriteVarsToStream( std::ostream& o ) const 
+void TMVA::VariableTransformBase::WriteVarsToStream( std::ostream& o, const TString& prefix ) const 
 {
    // write the list of variables (name, min, max) for a given data
    // transformation method to the stream
-   o << "NVar " << GetNVariables() << endl;
+   o << prefix << "NVar " << GetNVariables() << endl;
    std::vector<VariableInfo>::const_iterator varIt = fVariables.begin();
-   for (;varIt!=fVariables.end(); varIt++) varIt->WriteToStream(o);
+   for (; varIt!=fVariables.end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
 }
 
 //_______________________________________________________________________
@@ -441,7 +475,7 @@ void TMVA::VariableTransformBase::ReadVarsFromStream( std::istream& istr )
    UInt_t readNVar;
    istr >> dummy >> readNVar;
 
-   if(readNVar!=fVariables.size()) {
+   if (readNVar!=fVariables.size()) {
       fLogger << kFATAL << "You declared "<< fVariables.size() << " variables in the Reader"
               << " while there are " << readNVar << " variables declared in the file"
               << Endl;
@@ -451,12 +485,13 @@ void TMVA::VariableTransformBase::ReadVarsFromStream( std::istream& istr )
    VariableInfo varInfo;
    std::vector<VariableInfo>::iterator varIt = fVariables.begin();
    int varIdx = 0;
-   for (;varIt!=fVariables.end(); varIt++, varIdx++) {
+   for (; varIt!=fVariables.end(); varIt++, varIdx++) {
       varInfo.ReadFromStream(istr);
-      if(varIt->GetExpression() == varInfo.GetExpression()) {
+      if (varIt->GetExpression() == varInfo.GetExpression()) {
          varInfo.SetExternalLink((*varIt).GetExternalLink());
          (*varIt) = varInfo;
-      } else {
+      } 
+      else {
          fLogger << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
          fLogger << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
          fLogger << kINFO << "the correct working of the classifier):" << Endl;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.h,v 1.4 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: MsgLogger.h,v 1.5 2007/04/19 06:53:01 brun Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -14,9 +14,8 @@
  *      Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch> - CERN, Switzerland   *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      MPI-K Heidelberg, Germany ,                                               * 
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -73,8 +72,9 @@ namespace TMVA {
       void        SetSource ( const std::string& source ) { fStrSource = source; }
       EMsgType    GetMinType()                      const { return fMinType; }
       void        SetMinType( EMsgType minType )          { fMinType = minType; }
-      UInt_t      GetMaxSourceSize() const                { return (UInt_t)fMaxSourceSize; }
-      std::string GetPrintedSource() const;
+      UInt_t      GetMaxSourceSize()   const              { return (UInt_t)fMaxSourceSize; }
+      std::string GetSource()          const              { return fStrSource; }
+      std::string GetPrintedSource()   const;
       std::string GetFormattedSource() const;
       
       // Needed for copying
@@ -115,7 +115,7 @@ namespace TMVA {
       std::map<EMsgType, std::string> fColorMap;      // matches output types with terminal colors
       EMsgType                        fMinType;       // minimum type for output
 
-      ClassDef(MsgLogger,0) // ostringstream derivative to redirect and format logging output  
+      ClassDef(MsgLogger,0) // Ostringstream derivative to redirect and format logging output  
    }; // class MsgLogger
 
    inline MsgLogger& MsgLogger::operator<< ( MsgLogger& (*_f)( MsgLogger& ) ) 

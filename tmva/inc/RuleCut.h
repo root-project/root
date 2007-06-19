@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: RuleCut.h,v 1.11 2007/06/08 10:27:24 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -14,7 +14,7 @@
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      Iowa State U.                                                             *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -33,7 +33,6 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
-
 namespace TMVA {
 
    class Node;
@@ -42,7 +41,7 @@ namespace TMVA {
    public:
 
       // main constructor
-      RuleCut( const std::vector< const Node * > & nodes );
+      RuleCut( const std::vector< const TMVA::Node * > & nodes );
 
       // copy constructor
       RuleCut( const RuleCut & other ) { Copy( other ); }
@@ -54,15 +53,18 @@ namespace TMVA {
       virtual ~RuleCut() {}
 
       // evaluate an event
-      inline Double_t EvalEvent( const Event &eve );
+      inline Bool_t EvalEvent( const Event &eve );
 
       // get cut range for a given selector
       Bool_t GetCutRange(Int_t sel,Double_t &rmin, Double_t &rmax, Bool_t &dormin, Bool_t &dormax) const;
 
+      // number of cuts
+      UInt_t GetNcuts() const;
+
       // set members
-      inline void SetNcuts( UInt_t nc );
+      inline void SetNvars( UInt_t nc );
       void SetNeve( Double_t n )                   { fCutNeve     = n;   }
-      void SetPurity( Double_t ssb )              { fPurity     = ssb; }
+      void SetPurity( Double_t ssb )               { fPurity      = ssb; }
       void SetSelector( Int_t i, UInt_t s )        { fSelector[i] = s; }
       void SetCutMin( Int_t i, Double_t v )        { fCutMin[i]   = v; }
       void SetCutMax( Int_t i, Double_t v )        { fCutMax[i]   = v; }
@@ -70,21 +72,21 @@ namespace TMVA {
       void SetCutDoMax( Int_t i, Bool_t v )        { fCutDoMax[i] = v; }
 
       // accessors
-      UInt_t   GetNcuts()              const { return fNcuts; }
+      UInt_t   GetNvars()              const { return fSelector.size(); }
       UInt_t   GetSelector(Int_t is)   const { return fSelector[is]; }
       Double_t GetCutMin(Int_t is)     const { return fCutMin[is]; }
       Double_t GetCutMax(Int_t is)     const { return fCutMax[is]; }
       Double_t GetCutDoMin(Int_t is)   const { return fCutDoMin[is]; }
       Double_t GetCutDoMax(Int_t is)   const { return fCutDoMax[is]; }
       Double_t GetCutNeve()            const { return fCutNeve; }
-      Double_t GetPurity()            const { return fPurity; }
+      Double_t GetPurity()             const { return fPurity; }
 
    private:
       // copy
       inline void Copy( const RuleCut & other);
 
       // make the cuts from the array of nodes
-      void MakeCuts( const std::vector< const Node * > & nodes );
+      void MakeCuts( const std::vector< const TMVA::Node * > & nodes );
 
       std::vector<UInt_t>   fSelector; // array of selectors (expressions)
       std::vector<Double_t> fCutMin;   // array of lower limits
@@ -93,7 +95,7 @@ namespace TMVA {
       std::vector<Bool_t>   fCutDoMax; // array of usage flags for upper limits
       Double_t              fCutNeve;  // N(events) after cut (possibly weighted)
       Double_t              fPurity;  // S/(S+B) on training data
-      UInt_t                fNcuts;    // number of cuts == fSelector.size()
+
 
       mutable MsgLogger     fLogger;   // message logger
    };
@@ -104,8 +106,7 @@ inline void TMVA::RuleCut::Copy( const TMVA::RuleCut & other )
 {
    // copy from another
    if (&other != this) {
-      fNcuts = other.GetNcuts();
-      for (UInt_t ns=0; ns<fNcuts; ns++) {
+      for (UInt_t ns=0; ns<other.GetNvars(); ns++) {
          fSelector.push_back( other.GetSelector(ns) );
          fCutMin.push_back( other.GetCutMin(ns) );
          fCutMax.push_back( other.GetCutMax(ns) );
@@ -118,7 +119,7 @@ inline void TMVA::RuleCut::Copy( const TMVA::RuleCut & other )
 }
 
 //_______________________________________________________________________
-inline Double_t TMVA::RuleCut::EvalEvent( const Event &eve )
+inline Bool_t TMVA::RuleCut::EvalEvent( const Event &eve )
 {
    // evaluate event using the cut
 
@@ -134,15 +135,22 @@ inline Double_t TMVA::RuleCut::EvalEvent( const Event &eve )
       minOK = (fCutDoMin[nc] ? (val>fCutMin[nc]):kTRUE); // min cut ok
       cutOK = (minOK ? ((fCutDoMax[nc] ? (val<fCutMax[nc]):kTRUE)) : kFALSE); // cut ok
       nc++;
-      done = ((!cutOK) || (nc==fNcuts)); // done if 
+      done = ((!cutOK) || (nc==fSelector.size())); // done if 
    }
-   return ( cutOK ? 1.0: 0.0 );
+   //   return ( cutOK ? 1.0: 0.0 );
+   return cutOK;
 }
 
-inline void TMVA::RuleCut::SetNcuts( UInt_t nc )
+//_______________________________________________________________________
+inline void TMVA::RuleCut::SetNvars( UInt_t nc )
 {
    // set the number of cuts
-   fNcuts = nc;
+   fSelector.clear();
+   fCutMin.clear();
+   fCutMax.clear();
+   fCutDoMin.clear();
+   fCutDoMax.clear();
+   //
    fSelector.resize(nc);
    fCutMin.resize(nc);
    fCutMax.resize(nc);

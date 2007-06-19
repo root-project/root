@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: Interval.h,v 1.9 2007/05/31 14:17:46 andreas.hoecker Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,7 +14,7 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
+ *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -40,6 +40,8 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
+class TRandom;
+
 namespace TMVA {
    
    class Interval {
@@ -47,12 +49,20 @@ namespace TMVA {
    public:
 
       Interval( Double_t min, Double_t max, Int_t nbins = 0 );
+      Interval( const Interval& other );
       virtual ~Interval();
 
+      // accessors
       Double_t GetMin()   const { return fMin; }
       Double_t GetMax()   const { return fMax; }
+      Double_t GetWidth() const { return fMax - fMin; }
       Int_t    GetNbins() const { return fNbins; }
-      Double_t GetElement( Int_t position ) const;
+      Double_t GetMean()  const { return (fMax + fMin)/2; }
+      Double_t GetRndm( TRandom& )  const;
+      Double_t GetElement( Int_t position ) const;      
+
+      void SetMax( Double_t m ) { fMax = m; }
+      void SetMin( Double_t m ) { fMin = m; }
 
    private:
 

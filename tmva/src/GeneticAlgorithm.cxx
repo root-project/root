@@ -1,10 +1,10 @@
-// @(#)root/tmva $Id: GeneticBase.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $\Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::GeneticBase                                                     *
+ * Class  : TMVA::GeneticAlgorithm                                                *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -14,10 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-K Heidelberg, Germany ,                                               *
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -29,46 +27,54 @@
 // Base definition for genetic algorithm                                
 //_______________________________________________________________________
 
-#include "TMVA/GeneticBase.h"
 #include "Riostream.h"
 
+#include "TMVA/GeneticAlgorithm.h"
+#include "TMVA/Interval.h"
+#include "TMVA/IFitterTarget.h"
+
 namespace TMVA {
-   const Bool_t GeneticBase__DEBUG__=kFALSE;
+   const Bool_t GeneticAlgorithm__DEBUG__ = kFALSE;
 }
 
-using namespace std;
-
-ClassImp(TMVA::GeneticBase)
+ClassImp(TMVA::GeneticAlgorithm)
    
 //_______________________________________________________________________
-TMVA::GeneticBase::GeneticBase( Int_t populationSize, vector<Interval*> ranges )
-   : fLogger( "GeneticBase" )
+TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
+                                          const std::vector<Interval*>& ranges, UInt_t seed )
+   : fFitterTarget( target ),
+     fRanges( ranges ),
+     fLogger( "GeneticAlgorithm" )
 {
    // Constructor
    // Parameters: 
    //     int populationSize : defines the number of "Individuals" which are created and tested 
    //                          within one Generation (Iteration of the Evolution)
-   //     vector<Interval*> ranges : Interval holds the information of an interval, where the GetMin 
+   //     vector<TMVA::Interval*> ranges : Interval holds the information of an interval, where the GetMin 
    //                          gets the low and GetMax gets the high constraint of the variable
    //                          the size of "ranges" is the number of coefficients which are optimised
    // Purpose: 
    //     Creates a random population with individuals of the size ranges.size()
+   if( seed != 0 ){
+      fPopulation.SetRandomSeed( seed );
+   }
 
-   for (vector< Interval* >::iterator it = ranges.begin(); it<ranges.end(); it++) {
+   for (std::vector<TMVA::Interval*>::const_iterator it = fRanges.begin(); it<fRanges.end(); it++) {
       fPopulation.AddFactor( (*it) );
    }
 
    fPopulation.CreatePopulation( populationSize );
-   fSexual = kTRUE;
-   fFirstTime = kTRUE;
-   fSpread = 0.1;
-   fMirror = kTRUE;
+   fPopulationSize = populationSize;
+   fSexual      = kTRUE;
+   fFirstTime   = kTRUE;
+   fSpread      = 0.1;
+   fMirror      = kTRUE;
    fConvCounter = -1;
-   fConvValue = 0.;
+   fConvValue   = 0.;
 }
 
 //_______________________________________________________________________
-void TMVA::GeneticBase::Init()
+void TMVA::GeneticAlgorithm::Init()
 {
    // calls evolution, but if it is not the first time. 
    // If it's the first time, the random population created by the
@@ -82,31 +88,7 @@ void TMVA::GeneticBase::Init()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticBase::Calc() 
-{
-   // calls calculateFitness
-   CalculateFitness( );
-   return 0;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::GeneticBase::FitnessFunction( const std::vector< Double_t > & /* factors */)
-{
-   // the "fitnessFunction" 
-   // this function is designed to be overridden. 
-   // when overridden it should give back a (double) value which 
-   // tells the "fitness" (= quality) of the result. This might be 
-   // a resolution, a distance, ... 
-   // 
-   // Parameter:
-   //       vector< double > factors : the factors are given by the 
-   //                     Genetic Algorithm. These are the factors that
-   //                     have to be tested to assess its quality.
-   return 1;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::GeneticBase::NewFitness( Double_t /*oldValue*/, Double_t newValue )
+Double_t TMVA::GeneticAlgorithm::NewFitness( Double_t /*oldValue*/, Double_t newValue )
 {
    // if the "fitnessFunction" is called multiple times for one set of 
    // factors (because i.e. each event of a TTree has to be assessed with 
@@ -124,26 +106,26 @@ Double_t TMVA::GeneticBase::NewFitness( Double_t /*oldValue*/, Double_t newValue
 }
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticBase::CalculateFitness()
+Double_t TMVA::GeneticAlgorithm::CalculateFitness()
 {
    // starts the evaluation of the fitness of all different individuals of
    // the population. 
    //
    // this function calls implicitly (many times) the "fitnessFunction" which
    // has been overridden by the user. 
-   TMVA::GeneticGenes *genes;
+   GeneticGenes *genes;
    Double_t fitness = 0;
    fPopulation.Reset();
    do {
       genes = fPopulation.GetGenes();
-      fitness = NewFitness( fPopulation.GetFitness(), FitnessFunction( genes->GetFactors()) );
+      fitness = NewFitness( fPopulation.GetFitness(), fFitterTarget.EstimatorFunction( genes->GetFactors()) );
    } while( fPopulation.SetFitness( genes, fitness, kTRUE ) );
 
    return fPopulation.GetFitness( 0 );
 }
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticBase::DoRenewFitness()
+Double_t TMVA::GeneticAlgorithm::DoRenewFitness()
 {
    // the fitness values of every individual is stored ..
    // if the fitness has been evaluated for many events, all the results are 
@@ -155,7 +137,7 @@ Double_t TMVA::GeneticBase::DoRenewFitness()
    // the right place to call this function would be at the end of one "Generation"
    // to set the fitness of every individual new depending on all the results it obtained 
    // in this generation. 
-   TMVA::GeneticGenes *genes;
+   GeneticGenes *genes;
    Double_t fitness = 0;
    fPopulation.Reset();
    do {
@@ -167,7 +149,8 @@ Double_t TMVA::GeneticBase::DoRenewFitness()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticBase::RenewFitness( vector<Double_t>  /*factors*/, vector<Double_t> /* results */)
+Double_t TMVA::GeneticAlgorithm::RenewFitness( std::vector<Double_t> /*factors*/, 
+                                               std::vector<Double_t> /* results */)
 {
    // this function has to be overridden if "doRenewFitness" is called
    // Parameters: 
@@ -182,7 +165,7 @@ Double_t TMVA::GeneticBase::RenewFitness( vector<Double_t>  /*factors*/, vector<
 }
 
 //_______________________________________________________________________
-void TMVA::GeneticBase::Evolution()
+void TMVA::GeneticAlgorithm::Evolution()
 {
    // this function is called from "init" and controls the evolution of the 
    // individuals. 
@@ -195,7 +178,8 @@ void TMVA::GeneticBase::Evolution()
 
       fPopulation.Mutate( 10, 3, kTRUE, fSpread, fMirror );
       fPopulation.Mutate( 40, fPopulation.GetPopulationSize()*3/4 );
-   } else {
+   } 
+   else {
       fPopulation.MakeCopies( 3 );  
       fPopulation.MakeMutants(100,true, 0.1, true);
       fPopulation.NextGeneration();
@@ -203,7 +187,7 @@ void TMVA::GeneticBase::Evolution()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticBase::SpreadControl( Int_t ofSteps, Int_t successSteps, Double_t factor )
+Double_t TMVA::GeneticAlgorithm::SpreadControl( Int_t ofSteps, Int_t successSteps, Double_t factor )
 {
    // this function provides the ability to change the stepSize of a mutation according to
    // the success of the last generations. 
@@ -231,7 +215,7 @@ Double_t TMVA::GeneticBase::SpreadControl( Int_t ofSteps, Int_t successSteps, Do
    Int_t n = 0;
    Int_t sum = 0;
    std::deque<Int_t>::iterator vec = fSuccessList.begin();
-   for( ; vec<fSuccessList.end() ; vec++ ) {
+   for (; vec<fSuccessList.end() ; vec++) {
       sum += *vec;
       n++;
    }
@@ -240,14 +224,14 @@ Double_t TMVA::GeneticBase::SpreadControl( Int_t ofSteps, Int_t successSteps, Do
       fSuccessList.pop_back();
       if ( sum > successSteps ) { // too much success
          fSpread /= factor;
-         if (TMVA::GeneticBase__DEBUG__) fLogger << kINFO << ">" << flush;
+         if (GeneticAlgorithm__DEBUG__) fLogger << kINFO << ">" << flush;
       }
       else if ( sum == successSteps ) { // on the optimal path
-         if (TMVA::GeneticBase__DEBUG__) fLogger << "=" << flush;
+         if (GeneticAlgorithm__DEBUG__) fLogger << "=" << flush;
       }
       else {        // not very successful
          fSpread *= factor;
-         if (TMVA::GeneticBase__DEBUG__) fLogger << "<" << flush;
+         if (GeneticAlgorithm__DEBUG__) fLogger << "<" << flush;
       }
    }
 
@@ -255,7 +239,7 @@ Double_t TMVA::GeneticBase::SpreadControl( Int_t ofSteps, Int_t successSteps, Do
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::GeneticBase::HasConverged( Int_t steps, Double_t improvement )
+Bool_t TMVA::GeneticAlgorithm::HasConverged( Int_t steps, Double_t improvement )
 {
    // gives back true if the last "steps" steps have lead to an improvement of the
    // "fitness" of the "individuals" of at least "improvement"
@@ -273,14 +257,13 @@ Bool_t TMVA::GeneticBase::HasConverged( Int_t steps, Double_t improvement )
       fConvCounter = 0;
       fConvValue = fPopulation.GetFitness( 0 );
    }
-   if (TMVA::GeneticBase__DEBUG__) fLogger << "." << flush;
+   if (GeneticAlgorithm__DEBUG__) fLogger << "." << flush;
    if (fConvCounter < steps) return kFALSE;
    return kTRUE;
 }
 
-
 //_______________________________________________________________________
-void TMVA::GeneticBase::Finalize()
+void TMVA::GeneticAlgorithm::Finalize()
 {
    // nothing so far...
 }

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.4 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.5 2007/04/19 06:53:01 brun Exp $    
 // Author: Abhishek Narain
 
 /**********************************************************************************
@@ -15,8 +15,8 @@
  *                                                                                *
  * Copyright (c) 2005-2006:                                                       *
  *      University of Houston,                                                    *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
@@ -77,6 +77,14 @@ namespace TMVA {
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
+
+   protected:
+
+      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+
+      // get help message text
+      void GetHelpMessage() const;
 
    private:
 

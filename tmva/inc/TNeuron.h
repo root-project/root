@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuron.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TNeuron.h,v 1.7 2007/04/19 06:53:01 brun Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -105,20 +105,20 @@ namespace TMVA {
       void PrintActivationEqn();
 
       // inlined functions
-      Double_t GetValue()                 { return fValue;                          }
-      Double_t GetActivationValue()       { return fActivationValue;                }
-      Double_t GetDelta()                 { return fDelta;                          }
-      Int_t NumPreLinks()                 { return NumLinks(fLinksIn);              }
-      Int_t NumPostLinks()                { return NumLinks(fLinksOut);             }
-      TSynapse* PreLinkAt( Int_t index )  { return (TSynapse*)fLinksIn->At(index);  }
-      TSynapse* PostLinkAt( Int_t index ) { return (TSynapse*)fLinksOut->At(index); }
-      void SetInputNeuron()               { NullifyLinks(fLinksIn);                 }
-      void SetOutputNeuron()              { NullifyLinks(fLinksOut);                }
-      void SetBiasNeuron()                { NullifyLinks(fLinksIn);                 }
-      Bool_t IsInputNeuron()              { return fLinksIn == NULL;                }
-      Bool_t IsOutputNeuron()             { return fLinksOut == NULL;               }
-      void PrintPreLinks()                { PrintLinks(fLinksIn); return;           }
-      void PrintPostLinks()               { PrintLinks(fLinksOut); return;          }
+      Double_t  GetValue() const                { return fValue;                          }
+      Double_t  GetActivationValue() const      { return fActivationValue;                }
+      Double_t  GetDelta() const                { return fDelta;                          }
+      Int_t     NumPreLinks() const             { return NumLinks(fLinksIn);              }
+      Int_t     NumPostLinks() const            { return NumLinks(fLinksOut);             }
+      TSynapse* PreLinkAt ( Int_t index ) const { return (TSynapse*)fLinksIn->At(index);  }
+      TSynapse* PostLinkAt( Int_t index ) const { return (TSynapse*)fLinksOut->At(index); }
+      void      SetInputNeuron()                { NullifyLinks(fLinksIn);                 }
+      void      SetOutputNeuron()               { NullifyLinks(fLinksOut);                }
+      void      SetBiasNeuron()                 { NullifyLinks(fLinksIn);                 }
+      Bool_t    IsInputNeuron() const           { return fLinksIn == NULL;                }
+      Bool_t    IsOutputNeuron() const          { return fLinksOut == NULL;               }
+      void      PrintPreLinks()                 { PrintLinks(fLinksIn); return;           }
+      void      PrintPostLinks()                { PrintLinks(fLinksOut); return;          }
 
    private:
 
@@ -129,7 +129,7 @@ namespace TMVA {
       void PrintMessage    ( EMsgType, TString message );
 
       // inlined helper functions
-      Int_t NumLinks(TObjArray* links) { 
+      Int_t NumLinks(TObjArray* links) const { 
          if (links == NULL) return 0; return links->GetEntriesFast(); 
       }
       void NullifyLinks(TObjArray*& links) { 
@@ -137,17 +137,17 @@ namespace TMVA {
       }
 
       // private member variables
-      TObjArray* fLinksIn;                        // array of input synapses
-      TObjArray* fLinksOut;                       // array of output synapses
-      Double_t fValue;                            // input value
-      Double_t fActivationValue;                  // activation/output value
-      Double_t fDelta;                            // error field of neuron
-      Double_t fError;                            // error, only set for output neurons
-      Bool_t fForcedValue;                        // flag for forced input value
-      TActivation*  fActivation;                  // activation equation
-      TNeuronInput* fInputCalculator;             // input calculator
+      TObjArray*    fLinksIn;                 // array of input synapses
+      TObjArray*    fLinksOut;                // array of output synapses
+      Double_t      fValue;                   // input value
+      Double_t      fActivationValue;         // activation/output value
+      Double_t      fDelta;                   // error field of neuron
+      Double_t      fError;                   // error, only set for output neurons
+      Bool_t        fForcedValue;             // flag for forced input value
+      TActivation*  fActivation;              // activation equation
+      TNeuronInput* fInputCalculator;         // input calculator
 
-      mutable MsgLogger fLogger;                  // message logger
+      mutable MsgLogger fLogger;              // message logger
 
       ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
    };

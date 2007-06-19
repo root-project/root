@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationRadial.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: TActivationRadial.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -93,4 +93,14 @@ TString TMVA::TActivationRadial::GetExpression()
    else                        expr += fEqnDerivative->GetExpFormula();
 
    return expr;
+}
+
+//______________________________________________________________________________
+void TMVA::TActivationRadial::MakeFunction(std::ostream& fout, const TString& fncName) 
+{
+   // writes the sigmoid activation function source code
+   fout << "double " << fncName << "(double x) const {" << endl;
+   fout << "   // radial" << endl;
+   fout << "   return exp(-x*x/2.0);" << endl;
+   fout << "}" << endl;
 }
