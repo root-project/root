@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.28 2007/03/05 08:42:50 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.90 2007/06/14 20:31:43 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -14,16 +14,18 @@
 // "double-buffere widget
 
 #include <qapplication.h>
+
 #if QT_VERSION >= 0x40000
-//Added by qt3to4:
-#include <QFocusEvent>
-#include <QPaintEvent>
-#include <QKeyEvent>
-#include <QShowEvent>
-#include <QResizeEvent>
-#include <QMouseEvent>
-#include <QCustomEvent>
+#  include <QFocusEvent>
+#  include <QPaintEvent>
+#  include <QKeyEvent>
+#  include <QShowEvent>
+#  include <QResizeEvent>
+#  include <QMouseEvent>
+#  include <QCustomEvent>
+#  include <QDebug>
 #endif /* QT_VERSION */
+
 #include "TQtWidget.h"
 #include "TQtTimer.h"
 
@@ -125,7 +127,7 @@ ClassImp(TQtWidget)
 
 //_____________________________________________________________________________
 TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded):QWidget(parent,name,f)
-          ,fBits(0),fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fBits(0),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
 #if QT_VERSION < 0x40000
@@ -133,7 +135,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
 #else /* QT_VERSION */
   setFocusPolicy(Qt::WheelFocus);
-  setWindowFlags(windowFlags () | Qt::WNoAutoErase | Qt:: WResizeNoErase );
+//  setAttribute(Qt::WA_OpaquePaintEvent);
   setAttribute(Qt::WA_PaintOnScreen);
   setAttribute(Qt::WA_PaintOutsidePaintEvent);
 #endif /* QT_VERSION */
@@ -164,26 +166,48 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
 #endif
 }
 //______________________________________________________________________________
+TQtWidget::TQtWidget( TQtWidget &main) : QWidget(&main) 
+          ,fBits(0),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(true)
+          ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(TRUE),fEmbedded(TRUE)
+          ,fWrapper(0),fSaveFormat("PNG")
+
+{
+    // Create the shadow widget 
+#if QT_VERSION < 0x40000
+  setFocusPolicy(QWidget::WheelFocus);
+  setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
+#else /* QT_VERSION */
+//  setWindowFlags(windowFlags () | Qt::WNoAutoErase | Qt:: WResizeNoErase );
+   setBackgroundRole(QPalette::Window);
+   QPalette palette;
+   palette.setColor(backgroundRole(), QColor(0,200,0,128));
+   setPalette(palette); 
+#endif /* QT_VERSION */
+}
+//______________________________________________________________________________
 TQtWidget::~TQtWidget()
 {
-  TCanvas *c = 0;
-  // to block the double deleting from
-  TGQt::UnRegisterWid(this);
-  if (fEmbedded) {
-     // one has to set CanvasID = 0 to disconnect things properly.
-     c = fCanvas; 
-     fCanvas = 0; 
-     delete c;
-  } else {
-      fCanvas = 0;
-  }
+   TCanvas *c = 0;
+   // to block the double deleting from
+   if (!IsShadow()) {
+      TGQt::UnRegisterWid(this);
+      if (fEmbedded) {
+         // one has to set CanvasID = 0 to disconnect things properly.
+         c = fCanvas; 
+         fCanvas = 0; 
+         delete c;
+      } else {
+         fCanvas = 0;
+      }
+   }
 }
 
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
    return GetCanvas();
-};
+}
+
 //_____________________________________________________________________________
 TCanvas   *TQtWidget::Canvas(TQtWidget *widget)
 {
@@ -280,12 +304,12 @@ void TQtWidget::adjustSize()
   update();
 }
 //_____________________________________________________________________________
-void TQtWidget::erase ()
+void TQtWidget::Erase ()
 {
-  // Erases the specified area (x, y, w, h) in the widget
-  // without generating a paint event.
-  QWidget::erase();
-  fPixmapID.fill();
+  // Erases the entire widget and its double buffer
+ 
+  fPixmapID.fill(this,QPoint(0,0));
+  erase();
 }
 //_____________________________________________________________________________
 void TQtWidget::cd()
@@ -334,10 +358,20 @@ void TQtWidget::resize (int w, int h)
 }
 
 //_____________________________________________________________________________
+void TQtWidget::resize (const QSize &size)
+{
+   // resize the widget and its double buffer
+   // fprintf(stderr,"TQtWidget::resize (int w=%d, int h=%d)\n",w,h);
+   QWidget::resize(size);
+   AdjustBufferSize();
+   // fPixmapID.fill();
+}
+//_____________________________________________________________________________
+void
 #if (QT_VERSION > 0x039999)
-void TQtWidget::customEvent(QEvent *e)
+TQtWidget::customEvent(QEvent *e)
 #else
-void TQtWidget::customEvent(QCustomEvent *e)
+TQtWidget::customEvent(QCustomEvent *e)
 #endif      
 {
    // The custom responce to the special WIN32 events
@@ -399,6 +433,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
    // a widget or when the mouse cursor is moved.
 
    //    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3,
+
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
    if (c || !fWrapper ){
@@ -413,6 +448,11 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
          c->HandleInput(rootButton, e->x(), e->y());
          e->accept(); 
          EmitSignal(kMousePressEvent);
+         if (!( IsDoubleBuffered() || IsShadow()) ) {
+            if (GetShadow() && ! GetShadow()->isVisible() ) {
+               GetShadow()->show();
+            }
+         }
          return;
       }
    } else {
@@ -432,7 +472,14 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    if (c || !fWrapper){
       if (e->state() & Qt::LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
-      e->accept();  EmitSignal(kMouseMoveEvent); return;
+      e->accept();  
+      EmitSignal(kMouseMoveEvent);
+      if ( IsDoubleBuffered() && IsShadow()) {
+//        fprintf(stderr,"TQtWidget::mouseMoveEvent this=%x, shadow=%d updates=%d\n", this, IsShadow(), updatesEnabled());
+//        update(rect());
+        repaint(rect());
+      }
+      return;
    } else {
       e->ignore();
    }
@@ -444,6 +491,12 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
 {
    //  Map the Qt mouse button release event to the ROOT TCanvas events
    //   kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13
+
+   if ( IsDoubleBuffered() && IsShadow()) 
+   { 
+      hide(); 
+//      fprintf(stderr,"TQtWidget::mouseReleaseEvent this=%x, shadow=%d\n", this, IsShadow());
+   }   
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
    if (c || !fWrapper){
@@ -457,12 +510,14 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
          gPad->Modified();
-         e->accept(); EmitSignal(kMouseReleaseEvent);return;
+         e->accept(); EmitSignal(kMouseReleaseEvent);
+         return;
       }
    } else {
       e->ignore();
    }
    QWidget::mouseReleaseEvent(e);
+   
 }
 
 //_____________________________________________________________________________
@@ -637,6 +692,35 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
    return Ok;
 }
 //_____________________________________________________________________________
+void  TQtWidget::SetDoubleBuffer(bool on)
+{ 
+     // Set the double buffered mode on/off
+   if (fDoubleBufferOn != on ) {
+      fDoubleBufferOn = on;
+#if QT_VERSION >= 0x040000
+#ifdef SHAWDOWBUFEFR      
+      fprintf(stderr, "TQtWidget::SetDoubleBuffer buffer=%d \n", fDoubleBufferOn );
+      if (!fDoubleBufferOn) {
+         // Activate the shadow widget
+         if (!(fShadowWidget || IsShadow())) { 
+            fShadowWidget = new TQtWidget(*this); 
+            fprintf(stderr, "TQtWidget::SetDoubleBuffer created  %d\n", fShadowWidget);
+         }
+//        fShadowWidget->setGeometry(geometry());
+         fShadowWidget->move(0,0);
+         fShadowWidget->resize(size()/2);
+         QBrush brush(QColor(0,0,128,128));
+         (fShadowWidget->GetBuffer()).fill(brush);
+          fprintf(stderr,   "TQtWidget::SetDoubleBuffer visible %d \n", fShadowWidget->isVisible());
+      } else if (fShadowWidget) {
+         fprintf(stderr,   "TQtWidget::SetDoubleBuffer invisible %d \n", fShadowWidget->isVisible());
+         fShadowWidget->hide();
+      }
+#endif     
+#endif     
+   }
+}
+//_____________________________________________________________________________
 void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
 {
    // Stretch the widget during sizing
@@ -671,7 +755,7 @@ void TQtWidget::exitSizeEvent ()
 {
    // Responce to the "exit size event"
 
-   if (!fSizeChanged) return;
+   if (!fSizeChanged && !IsShadow() ) return;
    Refresh();
 }
 
@@ -717,15 +801,22 @@ void TQtWidget::paintEvent (QPaintEvent *e)
    }
 #endif
    QRect rect = e->rect();
-   if ( fPaint && !rect.isEmpty() )
+//   fprintf(stderr,"TQtWidget::paintEvent Shhadow = %d\n",IsShadow() );
+   if ( ( fPaint && !rect.isEmpty() ) || IsShadow() )
    {
-      // fprintf(stderr,"TQtWidget::paintEvent: window = %p; buffer =  %p\n",
-      //  (QPaintDevice *)this, (QPaintDevice *)&GetBuffer());
+     //  fprintf(stderr,"TQtWidget::paintEvent: window = %p; buffer =  %p\n",
+     //   (QPaintDevice *)this, (QPaintDevice *)&GetBuffer());
 #if QT_VERSION < 0x40000
       bitBlt(this, rect.x(),rect.y(),&GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
 #else
       QPainter screen(this);
-      screen.drawPixmap(rect,GetBuffer());      
+      screen.drawPixmap(rect.x(),rect.y(),GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
+      if ( IsShadow() ) {
+         QColor bc("yellow");
+         bc.setAlpha(128);
+         screen.fillRect(10,10,40,40,QBrush(bc));
+         fprintf(stderr,"Shadow painted visible %d\n", isVisible());
+      }
 #endif
    }
 }

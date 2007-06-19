@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.9 2006/05/03 09:55:49 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.10 2006/06/27 09:14:00 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -20,9 +20,15 @@
 
 
 #include <assert.h>
-#include "qapplication.h"
-
 #include "TQtApplication.h"
+
+#if QT_VERSION < 0x40000
+#  include "qapplication.h"
+#else
+#  include <QApplication>
+#  include <QCoreApplication>
+#endif
+
 #include "TSystem.h"
 
 #include "TROOT.h"
@@ -71,7 +77,17 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
 #if QT_VERSION < 0x40000
        qApp = new QApplication(argc,argv,GUIenabled);
 #else /* QT_VERSION */
+#ifdef NOSYNC       
+       int argC = 2;
+       static char *argV[] = {"root.exe", "-sync" };
+       fprintf(stderr," argc = %d, argv = %s %s\n", argC,argV[0],argV[1]);
+       new QApplication(argC,argV,GUIenabled);
+#else       
+#ifndef R__WIN32       
+       QCoreApplication::setAttribute(Qt::AA_ImmediateWidgetCreation);
+#endif       
        new QApplication(argc,argv,GUIenabled);
+#endif       
 #endif /* QT_VERSION */
        // The string must be one of the QStyleFactory::keys(),
        // typically one of

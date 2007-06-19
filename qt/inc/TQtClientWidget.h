@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.46 2007/01/23 17:47:43 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.48 2007/06/14 19:41:10 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -17,14 +17,11 @@
 #  if QT_VERSION < 0x40000
 #     include <qframe.h>
 #  else /* QT_VERSION */
-//    Added by qt3to4:
-#     include <QCloseEvent>
-#     include <q3frame.h>
+#     include <QFrame>
 #  endif /* QT_VERSION */
 #  include <qcursor.h>
 #else
   class QFrame;
-  class Q3Frame;
   class QCursor;
   class QAccel;
 #endif
@@ -38,18 +35,13 @@
 
 class QCursor;
 class QCloseEvent;
+class QPaintEvent;
 class TQtClientGuard;
 class TQtWidget;
-
-#if (QT_VERSION >= 0x39999)
-// Trick to fool the stupid Qt "moc" utility 15.12.2005
 class Q3Accel;
-#define CLIENT_WIDGET_BASE_CLASS Q3Frame
-#else
-#define CLIENT_WIDGET_BASE_CLASS QFrame
-#endif
+class TGWindow;
 
-class TQtClientWidget: public CLIENT_WIDGET_BASE_CLASS {
+class TQtClientWidget: public QFrame {
 #ifndef __CINT__
      Q_OBJECT
 #endif
@@ -78,7 +70,8 @@ protected:
        bool     fDeleteNotify;
        TQtClientGuard  *fGuard;
        TQtWidget       *fCanvasWidget;
-             friend class TQtClientGuard;
+       TGWindow *fMyRootWindow;  // back pointer to the host window object
+       friend class TQtClientGuard;
        friend class TGQt;
 #ifndef __CINT__
       TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, Qt::WFlags f=0);
@@ -86,6 +79,7 @@ protected:
       TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0);
 #endif
       void SetCanvasWidget(TQtWidget *widget);
+      virtual void paintEvent       ( QPaintEvent * );
 public:
     enum {kRemove = -1, kTestKey = 0, kInsert = 1};
     virtual ~TQtClientWidget();
@@ -121,7 +115,7 @@ public:
     UInt_t ButtonMask  ()    const;
     UInt_t ButtonEventMask() const;
     UInt_t SelectEventMask() const;
-      EMouseButton Button()    const;
+    EMouseButton Button()    const;
     UInt_t PointerMask ()    const;
 #ifndef __CINT__
 protected slots:

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.17 2007/01/26 07:51:09 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.18 2007/05/25 07:45:10 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -104,22 +104,26 @@ public:
 #endif  
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c)                 { fCanvas = c;}
-  inline TCanvas  *GetCanvas() const         { return fCanvas;}
+//  inline TCanvas  *GetCanvas() const         { return fCanvas;}
+  inline TCanvas  *GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
   inline QPixmap  &GetBuffer()               { return fPixmapID;}
   inline const QPixmap  &GetBuffer()  const  { return fPixmapID;}
 
   // overloaded methods
   virtual void adjustSize();
-  virtual void resize (int w, int h);
-  virtual void erase ();
+  void resize (int w, int h);
+  void resize (const QSize &size);
+  virtual void Erase ();
   bool    IsDoubleBuffered() { return fDoubleBufferOn; }
-  void    SetDoubleBuffer(bool on=TRUE){ fDoubleBufferOn = on;}
+  void    SetDoubleBuffer(bool on=TRUE);
   virtual void SetSaveFormat(const char *format);
 
 protected:
    friend class TGQt;
    TCanvas         *fCanvas;
    TQtWidgetBuffer  fPixmapID; // Double buffer of this widget
+   TQtWidget       *fShadowWidget ; // the "shadow" canvas for the Qt4 offscreen operation
+   bool        fIsShadow;
    bool        fPaint;
    bool        fSizeChanged;
    bool        fDoubleBufferOn;
@@ -127,6 +131,8 @@ protected:
    QSize       fSizeHint;
    QWidget    *fWrapper;
    QString     fSaveFormat;
+
+   TQtWidget(TQtWidget &main);
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;
    virtual void EmitCanvasPainted() { emit CanvasPainted(); }
@@ -201,6 +207,8 @@ public:
    static TQtWidget *Canvas(const TCanvas *canvas);
    static TQtWidget *Canvas(Int_t id);
 
+   bool    IsShadow() const { return fIsShadow; }
+   TQtWidget *GetShadow() const { return fShadowWidget;}
 public slots:
    virtual void cd();
    virtual void cd(int subpadnumber);

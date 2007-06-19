@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.37 2007/04/05 18:03:56 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.38 2007/04/06 19:49:19 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -49,7 +49,8 @@
 #  include <QImageWriter>
 #  include <q3ptrvector.h>
 #  include <q3valuestack.h>
-#  include <q3picture.h>
+#  include <QPicture>
+#  include <QDebug>
 #endif /* QT_VERSION */
 
 #include <qpixmap.h>
@@ -96,9 +97,29 @@
 #include "TError.h"
 
 TGQt *gQt=0;
-TVirtualX *TGQt::fgTQt = 0; // to remember the poiner fulishing ROOT PluginManager later.
-// static const int kDefault=2;
+TVirtualX *TGQt::fgTQt = 0; // to remember the pointer foolishing ROOT PluginManager later.
+#if 1 
+// #if QT_VERSION < 0x40000
+   static const char *romanFontName   = "Times New Roman";
+   static const char *arialFontName   = "Arial";
+   static const char *courierFontName = "Courier New";
+//   static const char *symbolFontName  = "Symbol"; // "Symbol";
+//   static const char *symbolFontName  = "Standard Symbols L"; // "Symbol";
+#else
+   static const char *romanFontName   = "Nimbus Roman No9 L";
+   static const char *arialFontName   = "Nimbus Sans L";
+   static const char *courierFontName = "Nimbus Mono L ";
+   static const char *symbolFontName  = "Standard Symbols L";
+#endif      
 
+// static const int kDefault=2;
+//__________________________________________________________________
+static QWidget *IsWidget(QPaintDevice *d)
+{ return  dynamic_cast<QWidget *>(d);   }
+
+//__________________________________________________________________
+static QPixmap *IsPixmap(QPaintDevice *d)
+{ return dynamic_cast<QPixmap *>(d); }
 //__________________________________________________________________
 QString TGQt::SetFileName(const QString &fileName)
 {
@@ -386,7 +407,12 @@ static float CalibrateFont()
 
           bool  italic = TRUE;
           long  bold   = 5;
-          QString fontName = "Times New Roman";
+          QString fontName = 
+#if QT_VERSION < 0x40000
+            romanFontName;
+#else          
+            "Nimbus Roman No9 L";
+#endif           
 
           QFont pattern;
 
@@ -403,16 +429,18 @@ static float CalibrateFont()
 // I found 0.94 matches well what Rene thinks it should be
 // for TTF and XFT and it should be 1.1 for X Fonts
 //
-//  X11 returns      h = 12
-//  XFT returns      h = 14
-// WIN32 TTF returns h = 16
+//  X11 returns         h = 12
+//  XFT returns         h = 14
+// WIN32 TTF returns    h = 16
+// Nimbus Roman returns h = 18
 
-          // printf(" Font metric w = %d , h = %d\n", w,h);
+         // printf(" Font metric w = %d , h = %d\n", w,h);
           float f;
           switch (h) {
              case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
              case 14: f = 0.915; break;// it was f = 0.94  :-(;
              case 16: f = 0.94;  break;// to be tested yet
+             case 18: f = 0.92;  break;// to be tested yet
              default: f = 1.10;  break;
           }
           fontCalibFactor = f;
@@ -659,7 +687,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
    //*-*                    ===================
    fgTQt = this;
    gQt   = this;
-   fSelectedBuffer = 0;
+   fSelectedBuffer = 0; 
    fSelectedWindow = fPrevWindow = NoOperation;
 }
 
@@ -701,7 +729,13 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.148 2007/04/06 17:49:52 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.158 2007/06/15 01:35:51 fine Exp $ this=%p\n",this);
+#if QT_VERSION >= 0x40000
+#ifndef R__QTWIN32
+   extern void qt_x11_set_global_double_buffer(bool);
+//   qt_x11_set_global_double_buffer(false);  
+#endif   
+#endif   
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -793,11 +827,42 @@ Bool_t TGQt::Init(void* /*display*/)
     QFontDatabase fdb;
     QStringList families = fdb.families();
     Bool_t symbolFontFound = kFALSE;
+    Bool_t isXdfSupport = 
+#if QT_VERSION < 0x40000          
+          kTRUE;
+#else
+          !gSystem->Getenv("QT_X11_NO_FONTCONFIG");
+#endif            
     for ( QStringList::Iterator f = families.begin(); f != families.end(); ++f ) {
-        // fprintf(stderr," TGQt::TGQt %s \n", (const char *)*f);
-        if ( *f == fSymbolFontFamily) { symbolFontFound = kTRUE; break; }
+        // fprintf(stderr," TGQt::TGQt %s \n", (*f).ascii());
+        if ( (isXdfSupport && (*f).contains(fSymbolFontFamily))
+            || (!isXdfSupport && (*f) == fSymbolFontFamily) ) 
+        { 
+           symbolFontFound = kTRUE; 
+           fSymbolFontFamily = *f;
+#if QT_VERSION < 0x40000
+//              fprintf(stderr, "Symbol font family found %s\n", fSymbolFontFamily);
+#else
+//              qDebug() << "Symbol font family found:" << fSymbolFontFamily;
+#endif                                        
+           break; 
+        }
     }
-    if (!symbolFontFound) {
+#if QT_VERSION >= 0x40000
+    if (isXdfSupport && !symbolFontFound) {
+// Load the local ROOT font 
+       QString fontdir =
+#ifdef TTFFONTDIR
+    		TTFFONTDIR
+#else
+		  "$ROOOTSYS/fonts"
+#endif
+        ;
+        QString symbolFontFile = fontdir + "/" + QString(fSymbolFontFamily).toLower() + ".ttf";
+        symbolFontFound = QFontDatabase::addApplicationFont(symbolFontFile);
+    }
+#endif                
+    if (!symbolFontFound) {       
         fprintf(stderr, "The font \"symbol.ttf\" was not installed yet\n");
          //  provide the replacement and the codec
         fSymbolFontFamily = "Arial";
@@ -920,8 +985,11 @@ Int_t TGQt::InitWindow(ULong_t window)
    {
       // fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), rootwid(parent));
    }
-
-   return fWidgetArray->GetFreeId(wid);
+   Int_t id = fWidgetArray->GetFreeId(wid);
+   // The default mode is the dubble buffer mode 
+   wid->SetDoubleBuffer(1);
+  // fprintf(stderr," TGQt::InitWindow %d id=%d\n",window,id);  
+   return id;
 }
 
 //______________________________________________________________________________
@@ -929,8 +997,9 @@ Int_t TGQt::OpenPixmap(UInt_t w, UInt_t h)
 {
    //*-*  Create a new pixmap object
    QPixmap *obj =  new QPixmap(w,h);
+   // fprintf(stderr," TGQt::OpenPixmap %d %d \n",w,h);  
    return fWidgetArray->GetFreeId(obj);
-   return iwid(obj);
+   // return iwid(obj);
 }
 
 //______________________________________________________________________________
@@ -998,29 +1067,15 @@ void TGQt::GetPlanes(Int_t &nplanes){
 void  TGQt::ClearWindow()
 {
    // Clear current window.
-   // fprintf(stderr,"TGQt::ClearWindow() %p\n",fSelectedWindow);
+//   fprintf(stderr,"TGQt::ClearWindow() %p\n",fSelectedWindow);
    if (fSelectedWindow && fSelectedWindow != NoOperation)
    {
-      switch (fSelectedWindow->devType()) {
-    case QInternal::Widget:
-       ((TQtWidget *)fSelectedWindow)->erase();
-       break;
-    case QInternal::Pixmap:
-       ((QPixmap *)fSelectedWindow)->fill();
-       break;
-    case QInternal::Picture:
-    case QInternal::Printer:
-#if QT_VERSION < 0x40000
-    case QInternal::UndefinedDevice:
-#else /* QT_VERSION */
-   // case QInternal::UndefinedDevice:
-#endif /* QT_VERSION */
-       fQPainter->eraseRect(GetQRect(*fSelectedWindow));
-       break;
-    default:
-       assert(0);
-       break;
-      };
+      if (IsWidget(fSelectedWindow)) 
+         ((TQtWidget *)fSelectedWindow)->Erase();
+      else if (IsPixmap(fSelectedWindow) )
+         ((QPixmap *)fSelectedWindow)->fill();
+      else 
+         fQPainter->eraseRect(GetQRect(*fSelectedWindow));
    }
 }
 
@@ -1081,11 +1136,7 @@ QRect TGQt::GetQRect(QPaintDevice &dev)
      break;
                           }
   case QInternal::Picture:
-#if QT_VERSION < 0x40000
      res = ((QPicture *)&dev)->boundingRect();
-#else /* QT_VERSION */
-     res = ((Q3Picture *)&dev)->boundingRect();
-#endif /* QT_VERSION */
      break;
 
   case QInternal::Printer:
@@ -1111,9 +1162,9 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
    QPaintDevice *dev = iwid(wid);
    assert(dev->devType() == QInternal::Pixmap);
    QPixmap *src = (QPixmap *)dev;
-   //   QPixmap *src = (QPixmap *)(QPaintDevice *)wid;
-   // fprintf(stderr," TGQt::CopyPixmap Selected = %p, Buffer = %p, wid = %p\n",
-   //    fSelectedWindow,fSelectedBuffer,iwid(wid));
+     //  QPixmap *src = (QPixmap *)(QPaintDevice *)wid;
+     //  fprintf(stderr," TGQt::CopyPixmap Selected = %p, Buffer = %p, wid = %p\n",
+     //  fSelectedWindow,fSelectedBuffer,iwid(wid));
    if (fSelectedWindow )
    {
       // fprintf(stderr,"x=%d,y=%d: %d %d %d %d\n",xpos,ypos,sr.x(),sr.y(),sr.width(),sr.height());
@@ -1155,7 +1206,8 @@ void TGQt::CopyPixmap(const QPixmap &src, Int_t xpos, Int_t ypos)
 #else /* QT_VERSION */
       {
         QPainter paint(dst);
-        paint.setCompositionMode(QPainter::CompositionMode_Source);
+        // setCompistion makes sense for QImage only
+        // paint.setCompositionMode(QPainter::CompositionMode_Source);
         paint.drawPixmap(xpos,ypos,src);
       }
      //  ----  !!!!  bitBlt ( dst,QPoint(xpos,ypos),src,sr,QPainter::CompositionMode_Source); // bool ignoreMask )
@@ -1212,16 +1264,25 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    // Draw a box.
    // mode=0 hollow  (kHollow)
    // mode=1 solid   (kSolid)
-
+#if QT_VERSION < 0x40000
+   static const int Q3=1;
+#else  
+   // Read: http://doc.trolltech.com/4.3/porting4.html
+   // "In Qt 4, the result of drawing a QRect with
+   //  a pen width of 1 pixel is 1 pixel wider and 
+   //  1 pixel taller than in Qt 3 "
+ 
+   static const int Q3=0;
+#endif   
    TQtLock lock;
    if (fSelectedWindow)
    {
       fQPainter->save();
-      //    fprintf(stderr, " Drawbox x1=%d, y1=%d, x2=%d, y2=%d, mode=%d\n",x1,y1,x2,y2,mode);
+      // fprintf(stderr, " Drawbox x1=%d, y1=%d, x2=%d, y2=%d, mode=%d\n",x1,y1,x2,y2,mode);
       if (mode == kHollow)
       {
          fQPainter->setBrush(Qt::NoBrush);
-         fQPainter->drawRect(x1,y2,x2-x1+1,y1-y2+1);
+         fQPainter->drawRect(x1,y2,x2-x1+Q3,y1-y2+Q3);
       } else {
          if (fQBrush->style() != Qt::SolidPattern)
             fQPainter->setPen(fQBrush->GetColor());  
@@ -1540,7 +1601,7 @@ void  TGQt::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 //______________________________________________________________________________
 QPaintDevice *TGQt::GetDoubleBuffer(QPaintDevice *dev)
 {
-   // Query the pointer to the dev offscrenn buffer if any
+   // Query the pointer to the dev offscreen buffer if any
 
    QPaintDevice *buffer = 0;
    if (dev) {
@@ -1593,7 +1654,7 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
    y = devSize.top();
    w = devSize.width();
    h = devSize.height();
-   // fprintf(stderr," TGQt::GetGeometry %d %d %d %d %d\n", wid, x,y,w,h);
+ //  fprintf(stderr," 2. TGQt::GetGeometry %d %d %d %d %d\n", wid, x,y,w,h);
 }
 
 //______________________________________________________________________________
@@ -1652,8 +1713,8 @@ const QTextCodec *TGQt::GetTextDecoder()
                           QTextCodec::codecForName("ISO8859-1"); //iso8859-1
          } else {
             fGreekCodec  = QTextCodec::codecForName("symbol"); // ISO8859-7
+         }
       }
-   }
       if (fGreekCodec) codec=fGreekCodec;
    }
    return codec;
@@ -1784,7 +1845,7 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
      }
      res = reqDialog.exec();
      if (res == QDialog::Accepted ) {
-        // save the correct text font to select the proper codec
+        // save the currect test font to select the proper codec
         Font_t textFontSave =  fTextFont;
         fTextFont = 62;
 #if QT_VERSION < 0x40000
@@ -1871,10 +1932,12 @@ void   TGQt::SelectPixmap(Int_t qpixid){ SelectWindow(qpixid);}
 void  TGQt::SelectWindow(int wid)
 {
    // Select window to which subsequent output is directed.
-
+   // fprintf(stderr," TGQt::SelectWindow %d \n", wid);
    // Don't select things twice
+   
    if (wid == -1 || wid == (int) kNone) {
        fSelectedBuffer=0; fSelectedWindow = NoOperation;
+      //return;
    } else {
       QPaintDevice *dev = iwid(wid);
       if (!dev) {
@@ -1886,13 +1949,18 @@ void  TGQt::SelectWindow(int wid)
          if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
          else {
             fSelectedWindow = dev;
-            fSelectedBuffer = offScreenBuffer;
+            fSelectedBuffer = offScreenBuffer; 
          }
       }
    }
-
-   if (fPrevWindow && fPrevWindow != (void *)-1 && (fWidgetArray->find(fPrevWindow) != -1) )   End();
-   if (fSelectedWindow && (fSelectedWindow != NoOperation))  Begin();
+   if (fPrevWindow && fPrevWindow != (void *)-1 && (fWidgetArray->find(fPrevWindow) != -1) )  {
+//       fprintf(stderr," TGQt::SelectWindow End %d \n", wid);
+      End();
+   }
+   if (fSelectedWindow && (fSelectedWindow != NoOperation)) {
+//      fprintf(stderr," TGQt::SelectWindow  begin %d \n", wid);
+      Begin();
+   }
 }
 
 //______________________________________________________________________________
@@ -1954,10 +2022,8 @@ void  TGQt::SetCursor(Int_t wid, ECursor cursor)
    if (wid && wid != -1 && wid != kDefault)
    {
       QPaintDevice *widget = iwid(wid);
-      if (widget->devType() == QInternal::Widget )
-      {
-         ((TQtWidget *)widget)->setCursor(*fCursors[fCursor]);
-      }
+      if ( TQtWidget *w = (TQtWidget *)IsWidget(widget) )
+         w->setCursor(*fCursors[fCursor]);
    }
 }
 
@@ -1972,9 +2038,12 @@ void  TGQt::SetDoubleBuffer(int wid, int mode)
 
    if (wid == -1 && wid == kDefault) return;
    QPaintDevice *dev = iwid(wid);
-   TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-   if (widget) {
+   if ( TQtWidget *widget = (TQtWidget *)IsWidget(dev) ) {              
       widget->SetDoubleBuffer(mode);
+      // fprintf(stderr," TGQt::SetDoubleBuffer \n"); 
+#if QT_VERSION >= 0x40000
+ //     End();
+#endif      
    }
 }
 
@@ -2009,10 +2078,13 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 #if QT_VERSION < 0x40000
       if (fQPainter->isActive()) { fQPainter->setRasterOp(fDrawMode); }
 #else /* QT_VERSION */
-      if (fQPainter->isActive() && (fQPainter->device()->devType() !=  QInternal::Widget )) {
+//      if (fQPainter->isActive() && (fQPainter->device()->devType() !=  QInternal::Widget )) 
+      if (fQPainter->isActive() && (fQPainter->device()->devType() ==  QInternal::Image )) 
+      {
          fQPainter->setCompositionMode(fDrawMode);
      }
 #endif /* QT_VERSION */
+     // sfprintf(stderr,"TGQt::SetDrawMode \n");
    }
 }
 
@@ -2082,7 +2154,7 @@ void  TGQt::SetLineColor(Color_t cindex)
 }
 
 //______________________________________________________________________________
-void  TGQt::SetLineType(int n, int* /*dash*/)
+void  TGQt::SetLineType(int n, int*dash)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============
@@ -2100,7 +2172,9 @@ void  TGQt::SetLineType(int n, int* /*dash*/)
 //*-*    e.g. n=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
 //*-*    and a gap of 7 between dashes
 //*-*
-  if (n < 0 ) {
+
+  if (n == 0 ) n = -1; // solid lines
+  if (n < 0) {
     Qt::PenStyle styles[] = {
       Qt::NoPen          // - no line at all.
      ,Qt::SolidLine      // - a simple line.
@@ -2112,8 +2186,17 @@ void  TGQt::SetLineType(int n, int* /*dash*/)
     int l = -n;
     if (l > int(sizeof(styles)/sizeof(Qt::PenStyle)) ) l = 1; // Solid line "by default"
     fQPen->setStyle(styles[l]);
-    UpdatePen();
+  } 
+#if QT_VERSION >= 0x40000
+  else if (dash) {
+     // - A custom pattern defined using QPainterPathStroker::setDashPattern(). 
+     QVector<qreal> dashes;
+     int i;
+     for (i=0;i<n;i++) dashes << dash[i];
+     fQPen->setDashPattern(dashes);
   }
+#endif  
+  UpdatePen();          
 }
 
 //______________________________________________________________________________
@@ -2553,6 +2636,22 @@ void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
    fQFont->setWeight((long) bold*10);
    fQFont->setItalic((Bool_t)italic);
    fQFont->setFamily(fontname);
+#if QT_VERSION >= 0x40000
+   if (!strcmp(fontname,romanFontName)) {
+      fQFont->setStyleHint(QFont::Serif);
+   } else if (!strcmp(fontname,arialFontName)) {
+      fQFont->setStyleHint(QFont::SansSerif);
+   } else if (!strcmp(fontname,courierFontName)){
+      fQFont->setStyleHint(QFont::TypeWriter);
+   }  
+   fQFont->setStyleStrategy(QFont::PreferDevice);
+#if 0   
+   qDebug() << "TGQt::SetTextFont:" << fontname 
+         << fQFont->lastResortFamily ()
+         << fQFont->lastResortFont () 
+         << fQFont->substitute (fontname);
+#endif   
+#endif   
    fTextFontModified = 1;
    // fprintf(stderr, "TGQt::SetTextFont font: <%s> bold=%d italic=%d\n",fontname,bold,italic);
 }
@@ -2579,7 +2678,7 @@ void  TGQt::SetTextFont(Font_t fontnumber)
    //*-*       12 : symbol-medium-r-normal     "Symbol"               0           6
    //*-*       13 : times-medium-r-normal      "Times New Roman"      0           5
    //*-*       14 :                            "Wingdings"            0           5
-
+   
    if ( fTextFont == fontnumber) return;
    fTextFont = fontnumber;
    if (fTextFont == -1) {
@@ -2587,75 +2686,74 @@ void  TGQt::SetTextFont(Font_t fontnumber)
       return;
    }
    int italic, bold;
-   const char *fontName = "Times New Roman";
+   const char *fontName = romanFontName;
 
    switch(fontnumber/10) {
 
    case  1:
       italic = 1;
       bold   = 5;
-      fontName = "Times New Roman";
+      fontName = romanFontName;
       break;
    case  2:
       italic = 0;
       bold   = 8;
-      fontName = "Times New Roman";
+      fontName = romanFontName;
       break;
    case  3:
       italic = 1;
       bold   = 8;
-      fontName = "Times New Roman";
+      fontName = romanFontName;
       break;
    case  4:
       italic = 0;
       bold   = 5;
-      fontName = "Arial";
+      fontName = arialFontName;
       break;
    case  5:
       italic = 1;
       bold   = 5;
-      fontName = "Arial";
+      fontName = arialFontName;
       break;
    case  6:
       italic = 0;
       bold   = 8;
-      fontName = "Arial";
+      fontName = arialFontName;
       break;
    case  7:
       italic = 1;
       bold   = 8;
-      fontName = "Arial";
+      fontName = arialFontName;
       break;
    case  8:
       italic = 0;
       bold   = 5;
-      fontName = "Courier New";
+      fontName = courierFontName;
       break;
    case  9:
       italic = 1;
       bold   = 5;
-      fontName = "Courier New";
+      fontName = courierFontName;
       break;
    case 10:
       italic = 0;
       bold   = 8;
-      fontName = "Courier New";
+      fontName = courierFontName;
       break;
    case 11:
       italic = 1;
       bold   = 8;
-      fontName = "Courier New";
+      fontName = courierFontName;
       break;
    case 12:
       italic = 0;
       bold   = 5;
       fontName = fSymbolFontFamily;
-//      fontName = "Monospace";
       break;
    case 13:
       italic = 0;
       bold   = 5;
-      fontName = "Times New Roman";
+      fontName = romanFontName;
       break;
    case 14:
       italic = 0;
@@ -2665,7 +2763,7 @@ void  TGQt::SetTextFont(Font_t fontnumber)
    default:
       italic = 0;
       bold   = 5;
-      fontName = "Times New Roman";
+      fontName = romanFontName;
       break;
 
    }
@@ -2887,7 +2985,18 @@ void TGQt::Begin()
       QPaintDevice *src = fSelectedBuffer ? fSelectedBuffer : fSelectedWindow;
       // Adjust size
       if ( fSelectedWindow->devType() ==  QInternal::Widget)
+      {
          ((TQtWidget *)fSelectedWindow)->AdjustBufferSize();
+#if QT_VERSION >= 0x40000
+#ifdef SHWDOWBUFFER         
+         if (src == fSelectedWindow) {
+            TQtWidget *ww = (TQtWidget *)fSelectedWindow;
+            if (ww && !ww->IsShadow()) 
+               src = &ww->GetShadow()->GetBuffer();
+         }
+#endif         
+#endif         
+      }
       if (!fQPainter->begin(src) ) {
          fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
       } else {
@@ -2904,10 +3013,12 @@ void TGQt::Begin()
 #if QT_VERSION < 0x40000
          fQPainter->setRasterOp(fDrawMode);
 #else /* QT_VERSION */
-         if (fQPainter->device()->devType() !=  QInternal::Widget )
+//         if (fQPainter->device()->devType() !=  QInternal::Widget )
+         if (fQPainter->device()->devType() ==  QInternal::Image )
                  fQPainter->setCompositionMode(fDrawMode);
 #endif /* QT_VERSION */
       }
+      // fprintf(stderr,"---> TGQt::Begin() finished\n");
    }
 }
 
@@ -2916,7 +3027,7 @@ void TGQt::End()
 {
    // End  the painting of the current slection (Pixmap or Widget)
 
-   if ( fQPainter->isActive() )
+   if ( fQPainter && fQPainter->isActive() )
    {
       // fprintf(stderr,"<--- TGQt::End() %p\n",fQPainter->device());
       fQPainter->end();

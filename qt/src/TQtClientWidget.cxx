@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.14 2006/08/15 08:32:34 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.15 2006/08/30 14:43:50 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #endif /* QT_VERSION */
 #include <qevent.h>
 
+#include "TGClient.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  TQtClientWidget is QFrame designed to back the ROOT GUI TGWindow class objects
@@ -45,15 +47,20 @@
 
 //______________________________________________________________________________
 TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const char* name, Qt::WFlags f ):
-          CLIENT_WIDGET_BASE_CLASS(parent,name,f),
-          fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
+#if QT_VERSION < 0x40000
+          QFrame(parent,name,f)
+#else
+          QFrame(parent,f)
+#endif          
+         ,fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
          ,fGrabEventButtonMask(kNoEventMask), fSelectEventMask(kNoEventMask), fSaveSelectInputMask(kNoEventMask) // ,fAttributeEventMask(0)
          ,fButton(kAnyButton),fGrabbedKey(0), fPointerOwner(kFALSE)
          ,fNormalPointerCursor(0),fGrabPointerCursor(0),fGrabButtonCursor(0)
          ,fIsClosing(false)  ,fDeleteNotify(false), fGuard(guard)
-         ,fCanvasWidget(0)
+         ,fCanvasWidget(0),fMyRootWindow(0)
 {
 #if QT_VERSION >= 0x40000
+   setName(name);
    setAttribute(Qt::WA_PaintOnScreen);
    setAttribute(Qt::WA_PaintOutsidePaintEvent);
 #endif
@@ -354,6 +361,25 @@ void TQtClientWidget::Disconnect()
 
    SetCanvasWidget(0);           }
 
+//______________________________________________________________________________
+void TQtClientWidget::paintEvent( QPaintEvent *e )
+{
+   QFrame::paintEvent(e);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,15,9)
+   if (gClient) {
+      // Find my host ROOT TGWindow
+      if (!fMyRootWindow)
+         fMyRootWindow = gClient->GetWindowById(TGQt::rootwid(this));
+   
+      if (fMyRootWindow) {
+         Event_t event;
+         gVirtualX->NextEvent(event); // to remove this event from the ROOT event  queu 
+         assert( (event.fType  == kExpose) && ( event.fWindow == TGQt::rootwid(this)));
+         gClient->NeedRedraw(fMyRootWindow,true);
+      }
+   }
+#endif   
+}
 //______________________________________________________________________________
 void TQtClientWidget::polish()
 {

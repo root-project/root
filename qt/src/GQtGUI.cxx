@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.29 2007/02/10 16:28:27 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.179 2007/06/17 03:09:52 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -11,12 +11,15 @@
  *************************************************************************/
 
 #include <assert.h>
-#include "TQUserEvent.h"
 #include "TGQt.h"
+#include "TQUserEvent.h"
 #include "TQtClientFilter.h"
 #include "TQtWidget.h"
 #include "TQtClientWidget.h"
 #include "TQtEventQueue.h"
+#include "TQtEventQueue.h"
+#include "TGObject.h"
+
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -43,6 +46,7 @@
 #  include <QVBoxLayout>
 #  include <Q3PointArray>
 #  include <QDesktopWidget>
+#  include <QDebug>
 #endif /* QT_VERSION */
 
 #include <qfontmetrics.h>
@@ -526,7 +530,8 @@ public:
 #if QT_VERSION < 0x40000
             setRasterOp (rootContext.fROp);
 #else /* QT_VERSION */
-           if (device()->devType() !=  QInternal::Widget ) 
+//           if (device()->devType() !=  QInternal::Widget ) 
+           if (pd->devType() ==  QInternal::Image ) 
               setCompositionMode(rootContext.fROp);
 #endif /* QT_VERSION */
          }
@@ -586,7 +591,7 @@ bool TQtGrabPointerFilter::eventFilter( QObject *, QEvent *e)
 }
 //______________________________________________________________________________
 class TXlfd {
-   // Naive parsinf and comparision of XLDF font descriptors
+   // Naive parsing and comparision of XLDF font descriptors
    public:
          QString fFontFoundry;
          QString fFontFamily;
@@ -710,7 +715,7 @@ class TXlfd {
       // AVERAGE_WIDTH  - unweighted arithmetic mean of absolute value of width of each glyph 
       //                  in tenths of pixels
       
-      xLDF += "*-*-*-*-";  // we do not crae (yet) about  RESOLUTION_X RESOLUTION_Y  SPACING  AVERAGE_WIDTH
+      xLDF += "*-*-*-*-";  // we do not create (yet) about  RESOLUTION_X RESOLUTION_Y  SPACING  AVERAGE_WIDTH
 
       // CHARSET_REGISTRY and CHARSET_ENCODING 
       //                         the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts 
@@ -741,7 +746,11 @@ Window_t TGQt::GetWindowID(Int_t id) {
          ,0,0,canvasWidget->width(),canvasWidget->height()
          ,0,0,0,0,0,0));
       // reparent the canvas
+#if QT_VERSION < 0x40000
       canvasWidget->reparent(client,QPoint(0,0));
+#else
+      canvasWidget->setParent(client);
+#endif            
       QBoxLayout * l = new QVBoxLayout( client );
       l->addWidget( canvasWidget );
       canvasWidget->SetRootID(client);
@@ -1132,6 +1141,25 @@ void  TGQt::IconifyWindow(Window_t id)
 }
 
 //______________________________________________________________________________
+Bool_t TGQt::NeedRedraw(ULong_t w, Bool_t force)
+{
+   // Notify the low level GUI layer ROOT requires "w" to be updated
+   // Return kTRUE if the notification was desirable and it was sent
+   //
+   // At the moment only Qt4 layer needs that
+   //
+   // One needs to process the notification to confine 
+   // all paint operations within "expose" / "paint" like low level event
+   // or equivalent
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,15,11)
+   if (!force) wid(((TGWindow *)w)->GetId())->update();
+   return force;
+#else
+   if (w||force) {}
+   return kFALSE;   
+#endif     
+}
+//______________________________________________________________________________
 void  TGQt::RaiseWindow(Window_t id)
 {
   // Put window on top of window stack.
@@ -1172,20 +1200,50 @@ void         TGQt::SetIconPixmap(Window_t id, Pixmap_t pix)
    wid(id)->setIcon(*fQPixmapGuard.Pixmap(pix));
 }
 //______________________________________________________________________________
+void         TGQt::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
+{
+   // If the specified window is mapped, ReparentWindow automatically
+   // performs an UnmapWindow request on it, removes it from its current
+   // position in the hierarchy, and inserts it as the child of the specified
+   // parent. The window is placed in the stacking order on top with respect
+   // to sibling windows.
+  
+#if QT_VERSION < 0x40000
+      wid(id)->reparent(wid(pid),QPoint(x,y));
+#else
+      wid(id)->setParent(wid(pid));
+      if (x || y) wid(id)->move(x,y);
+#endif            
+
+}
+
+//______________________________________________________________________________
 void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
    if (id == kNone || id == kDefault ) return;
+#if QT_VERSION < 0x40000
    wid(id)->setEraseColor(QtColor(color));
-   // wid(id)->setPaletteBackgroundColor(QtColor(color));
+#else   
+   QPalette palette;
+   palette.setColor(wid(id)->backgroundRole(), QtColor(color));
+   wid(id)->setPalette(palette);
+#endif   
 }
 //______________________________________________________________________________
 void         TGQt::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
    // Set pixmap as window background.
-   if (pxm  != kNone && id != kNone && id != kDefault )
+   if (pxm  != kNone && id != kNone && id != kDefault ) {
+#if QT_VERSION < 0x40000
       wid(id)->setPaletteBackgroundPixmap(*fQPixmapGuard.Pixmap(pxm));
-}
+#else   
+      QPalette palette;
+      palette.setBrush(wid(id)->backgroundRole(), QBrush(*fQPixmapGuard.Pixmap(pxm)));
+      wid(id)->setPalette(palette);
+#endif      
+   }
+ }
 //______________________________________________________________________________
 Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
                                     UInt_t w, UInt_t h, UInt_t border,
@@ -1218,17 +1276,17 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
 //         printf(" 2 TGQt::CreateWindow %p parent = %p \n", win,pWidget);
       }
 #else
-      win->setFrameShape(Q3Frame::Box);      //  xattr.window_type = GDK_WINDOW_DIALOG;
+      win->setFrameShape(QFrame::Box);      //  xattr.window_type = GDK_WINDOW_DIALOG;
    }  else if (wtype & kMainFrame)  {
       win =  fQClientGuard.Create(pWidget,"MainFrame"); //,Qt::WDestructiveClose);
-      win->setFrameShape(Q3Frame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
+      win->setFrameShape(QFrame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
    }  else if (wtype & kTempFrame) {
       win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
-      win->setFrameStyle(QFrame::StyledPanel | Q3Frame::Plain);
+      win->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
    } else {
       win =  fQClientGuard.Create(pWidget,"Other",   Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM  );
       if (!pWidget) {
-         win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
+         win->setFrameStyle(QFrame::WinPanel | QFrame::Plain);
        //   printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
       }
 #endif
@@ -1240,7 +1298,11 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win->installEventFilter(QClientFilter());
    }
    if (border > 0)
-      win->setMargin(border);
+#if QT_VERSION < 0x40000
+      win->setMargin((int)border);
+#else
+      win->setContentsMargins((int)border,(int)border,(int)border,(int)border);
+#endif      
    if (attr) {
       if ((attr->fMask & kWABackPixmap))
          if (attr->fBackgroundPixmap != kNone && attr->fBackgroundPixmap != kParentRelative )
@@ -1401,6 +1463,9 @@ FontStruct_t TGQt::LoadQueryFont(const char *font_name)
          newFont->setPixelSize(int(TMath::Max(fontPixelSize,1)));
    }
 #endif
+#if QT_VERSION >= 0x40000
+   newFont->setStyleHint(QFont::System,QFont::PreferDevice);
+#endif   
    //fprintf(stderr, " 0x%p = LoadQueryFont(const char *%s) = family=%s, w=%s, size=%d (pt), pixel size=%d\n",
    //        newFont, font_name,(const char *)fontFamily,(const char *)fontWeight,fontSize,newFont->pixelSize());
    return FontStruct_t(newFont);
@@ -1686,9 +1751,30 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
             pix->resize(mask->width(), mask->height());
         }
          pix->setMask(*mask);
+#if QT_VERSION < 0x40000
          bitBlt(iwid(dest), dest_x,dest_y,pix, src_x,src_y,width,height, qtcontext(gc).fROp);
+#else
+         QPainter copyArea(iwid(dest));
+         copyArea.setCompositionMode(qtcontext(gc).fROp);
+         copyArea.drawPixmap(dest_x,dest_y, *pix, src_x,src_y,width,height);
+#endif
       } else {
+#if QT_VERSION < 0x40000
          bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp);
+#else
+         QPainter copyArea(iwid(dest));
+         copyArea.setCompositionMode(qtcontext(gc).fROp);
+         if (pix) {
+           copyArea.drawPixmap(dest_x,dest_y,*pix, src_x,src_y,width,height);
+         } else {
+            QImage *im = dynamic_cast<QImage*>(iwid(src)); 
+            if (im) {
+               copyArea.drawImage(dest_x,dest_y,*im, src_x,src_y,width,height);
+            } else {
+               qDebug() << " TGQt::CopyArea: illegal image source. Shoudl be either QPixmap or QImage";
+            }
+         }
+#endif
       }
    }
 }
@@ -2445,7 +2531,7 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
 void  TGQt::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
 {
    // FillPolygon fills the region closed by the specified path.
-   // The path is cosed automatically if the last point in the list does
+   // The path is closed automatically if the last point in the list does
    // not coincide with the first point. All point coordinates are
    // treated as relative to the origin. For every pair of points
    // inside the polygon, the line segment connecting them does not
@@ -2742,13 +2828,16 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
    // count    - returns the actual number of font names
 
    // ------------------------------------------------------
-   //  ROOT uses nin-portable XLDF font description:
+   //  ROOT uses non-portable XLDF font description:
    //  XLFD 
    // ------------------------------------------------------
 
-   // The X Logical Font Descriptor (XLFD) is a text string made up of 13 parts separated by a minus sign, i.e.: 
-   // -Misc-Fixed-Medium-R-Normal-13-120-75-75-C-70-ISO8859-1 -Adobe-Helvetica-Medium-R-Normal-12-120-75-75-P-67-ISO8859-1 
+   // The X Logical Font Descriptor (XLFD) is a text string made up of 13 parts 
+   // separated by a minus sign, i.e.: 
    // 
+   // -Misc -Fixed    -Medium-R-Normal-13-120-75-75-C-70-ISO8859-1 
+   // -Adobe-Helvetica-Medium-R-Normal-12-120-75-75-P-67-ISO8859-1 
+   // ------------------------------------------------------------
    // 
    // FOUNDRY 
    // text name of font creator 
@@ -2786,7 +2875,7 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
    // AVERAGE_WIDTH 
    // unweighted arithmetic mean of absolute value of width of each glyph in tenths of pixels 
    // CHARSET_REGISTRY and CHARSET_ENCODING 
-   // the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts    fprintf(stderr,"No implementation: TGQt::ListFonts\n");
+   // the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts
    
    //  Check whether "Symbol" font is available
     count = 0;
