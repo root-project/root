@@ -10,13 +10,15 @@ CONFIG += create_prl
 
 TARGET = QtRoot
 
+QTROOTSYSPATHINSTALL = $(QTROOTSYSDIR)
 
-!isEmpty(QTROOTSYSDIR) {
-  DESTDIR=$$QTROOTSYSDIR
-}
 isEmpty(DESTDIR) {
-  DESTDIR=.
+  DESTDIR=..
 }
+isEmpty(QTROOTSYSPATHINSTALL) {
+  QTROOTSYSPATHINSTALL = $$DESTDIR
+}
+
 QTROOTSYSDIR=$$DESTDIR
 
 GQTDIRI   = ../qt/inc
@@ -53,9 +55,10 @@ mac {
 #    LIBS -= -lGQt
 }
 
-headerfiles.path  = $$DESTDIR/include
+headerfiles.path   = $$QTROOTSYSPATHINSTALL/include
 headerfiles.files = $$QTROOTDIRI/*.*
-target.path = $$DESTDIR/lib
+headerfiles.files -= $$QTROOTDIRI/LinkDef.h
+target.path = $$QTROOTSYSPATHINSTALL/lib
 
 INSTALLS += headerfiles target
 
@@ -71,3 +74,5 @@ unix {
   OBJECTS_DIR = .obj
 
 }
+#The following line was inserted by qt3to4
+QT += qt3support 

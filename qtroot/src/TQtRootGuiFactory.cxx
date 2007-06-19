@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtRootGuiFactory.cxx,v 1.5 2004/06/28 20:17:09 fine Exp $
+** $Id: TQtRootGuiFactory.cxx,v 1.7 2006/12/18 23:07:27 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -30,7 +30,9 @@
 
 #include "TSystem.h"
 #ifdef R__QTWIN32
+#  if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
 # include "TWin32Application.h" 
+#  endif
 #else
 # include "TROOT.h"
 # include "TQtRootApplication.h"
@@ -54,7 +56,9 @@ TQtRootGuiFactory::TQtRootGuiFactory()
    // TQtRootGuiFactory ctor.
    // Restore the right TVirtulaX pointer      
    if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,15,9)
    gSystem->Load("libGui");
+#endif   
    fGuiProxy = new TRootGuiFactory(); 
 }
 
@@ -65,19 +69,22 @@ TQtRootGuiFactory::TQtRootGuiFactory(const char *name, const char *title)
    // TQtRootGuiFactory ctor.
    // Restore the right TVirtulaX pointer      
    if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,15,9)
    gSystem->Load("libGui");
+#endif   
    fGuiProxy = new TRootGuiFactory(name,title); 
 }
 //______________________________________________________________________________
 TApplicationImp *TQtRootGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
  TGQt::CreateQtApplicationImp();
+ TApplicationImp *app = 0;
 #ifdef R__QTWIN32
-  TApplicationImp *app = 
-       new TWin32Application(classname, argc, argv);
+#  if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
+    app = new TWin32Application(classname, argc, argv);
+#  endif 
 #else
-  TApplicationImp *app = 
-       new TQtRootApplication (classname, argc, argv);
+  app = new TQtRootApplication (classname, argc, argv);
 #endif
   CreateQClient();
   return app;        
