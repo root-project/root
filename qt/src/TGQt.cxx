@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.38 2007/04/06 19:49:19 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.39 2007/06/19 06:51:46 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -729,7 +729,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.158 2007/06/15 01:35:51 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.39 2007/06/19 06:51:46 antcheva Exp $ this=%p\n",this);
 #if QT_VERSION >= 0x40000
 #ifndef R__QTWIN32
    extern void qt_x11_set_global_double_buffer(bool);
@@ -2154,7 +2154,7 @@ void  TGQt::SetLineColor(Color_t cindex)
 }
 
 //______________________________________________________________________________
-void  TGQt::SetLineType(int n, int*dash)
+void  TGQt::SetLineType(int n, int* /*dash*/)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============
