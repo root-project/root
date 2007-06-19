@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.14 2007/03/09 06:06:56 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.15 2007/06/14 05:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -13,11 +13,11 @@
 namespace {
 
 // top of buffer (rest of buffer object has changed across python versions)
-   struct PyBufferTop {
+   struct PyBufferTop_t {
       PyObject_HEAD
-      PyObject*  b_base;
-      void*      b_ptr;
-      Py_ssize_t b_size;
+      PyObject*  fBase;            // b_base in python
+      void*      fPtr;             // b_ptr in python
+      Py_ssize_t fSize;            // b_size in python
    };
 
 // size callback label
@@ -122,7 +122,7 @@ namespace {
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
-   PyObject* buffer_setsize( PyBufferTop* self, PyObject* args, PyObject* /* kw */ )
+   PyObject* buffer_setsize( PyBufferTop_t* self, PyObject* args, PyObject* /* kw */ )
    {
       if ( PyTuple_GET_SIZE( args ) != 1 ) {
          PyErr_SetString( PyExc_TypeError, "buffer.SetSize takes exactly 1 argument" );
@@ -133,7 +133,7 @@ namespace {
       if ( nlen == -1 && PyErr_Occurred() )
          return 0;
 
-      self->b_size = nlen;
+      self->fSize = nlen;
 
       Py_INCREF( Py_None );
       return Py_None;
