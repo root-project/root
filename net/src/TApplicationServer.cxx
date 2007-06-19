@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.3 2007/05/14 13:27:17 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.cxx,v 1.4 2007/05/16 10:34:38 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TROOT.h"
 #include "TSocket.h"
 #include "TSystem.h"
+#include "TRemoteObject.h"
 #include "TUrl.h"
 #include "TObjString.h"
 #include "compiledata.h"
@@ -291,6 +292,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
 
    fInterrupt       = kFALSE;
    fSocket          = 0;
+   fWorkingDir      = 0;
 
    fLogFilePath     = logfile;
    fLogFile         = flog;
@@ -360,6 +362,7 @@ TApplicationServer::TApplicationServer(Int_t *argc, char **argv,
    fIsValid = kTRUE;
 
    // Startup notification
+   BrowseDirectory(0);
    SendLogFile();
 }
 
@@ -910,6 +913,108 @@ Int_t TApplicationServer::SendCanvases()
          nc++;
          fSentCanvases->Add(o);
       }
+   }
+   return nc;
+}
+
+//______________________________________________________________________________
+Int_t TApplicationServer::BrowseDirectory(const char *dirname)
+{
+   // Browse directory and send back its content to client.
+
+   Int_t nc = 0;
+
+   TMessage mess(kMESS_OBJECT);
+   if (!fWorkingDir || !dirname || !*dirname) {
+      if (!fWorkingDir)
+         fWorkingDir = new TRemoteObject(fWorkDir, fWorkDir, "TSystemDirectory");
+      fWorkingDir->Browse();
+      mess.Reset(kMESS_OBJECT);
+      mess.WriteObject(fWorkingDir);
+      fSocket->Send(mess);
+      nc++;
+   }
+   else if (fWorkingDir) {
+      TRemoteObject dir(dirname, dirname, "TSystemDirectory");
+      TList *list = dir.Browse();
+      mess.Reset(kMESS_OBJECT);
+      mess.WriteObject(list);
+      fSocket->Send(mess);
+      nc++;
+   }
+   return nc;
+}
+
+//______________________________________________________________________________
+Int_t TApplicationServer::BrowseFile(const char *fname)
+{
+   // Browse root file and send back its content;
+   // if fname is null, send the full list of files.
+
+   Int_t nc = 0;
+
+   TList *list = new TList;
+   TMessage mess(kMESS_OBJECT);
+   if (!fname || !*fname) {
+      // fname is null, so send the list of files.
+      TIter next(gROOT->GetListOfFiles());
+      TNamed *fh = 0;
+      TRemoteObject *robj;
+      while ((fh = (TNamed *)next())) {
+         robj = new TRemoteObject(fh->GetName(), fh->GetTitle(), "TFile");
+         list->Add(robj);
+      }
+      if (list->GetEntries() > 0) {
+         mess.Reset(kMESS_OBJECT);
+         mess.WriteObject(list);
+         fSocket->Send(mess);
+         nc++;
+      }
+   }
+   else {
+      // get Root file content and send the list of objects
+      TDirectory *fh = (TDirectory *)gROOT->GetListOfFiles()->FindObject(fname);
+      if (fh) {
+         fh->cd();
+         TRemoteObject dir(fh->GetName(), fh->GetTitle(), "TFile");
+         TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%lx)->GetListOfKeys();", fh));
+         TIter nextk(keylist);
+         TNamed *key = 0;
+         TRemoteObject *robj;
+         while ((key = (TNamed *)nextk())) {
+            robj = new TRemoteObject(key->GetName(), key->GetTitle(), "TKey");
+            const char *classname = (const char *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->GetClassName();", key));
+            robj->SetKeyClassName(classname);
+            Bool_t isFolder = (Bool_t)gROOT->ProcessLine(Form("((TKey *)0x%lx)->IsFolder();", key));
+            robj->SetFolder(isFolder);
+            robj->SetRemoteAddress((Long_t) key);
+            list->Add(robj);
+         }
+         if (list->GetEntries() > 0) {
+            mess.Reset(kMESS_OBJECT);
+            mess.WriteObject(list);
+            fSocket->Send(mess);
+            nc++;
+         }
+      }
+   }
+   return nc;
+}
+
+//______________________________________________________________________________
+Int_t TApplicationServer::BrowseKey(const char *keyname)
+{
+   // Read key object and send it back to client.
+
+   Int_t nc = 0;
+
+   TMessage mess(kMESS_OBJECT);
+   TNamed *obj = (TNamed *)gROOT->ProcessLine(Form("gFile->GetKey(\"%s\")->ReadObj();", keyname));
+   if (obj) {
+      mess.Reset(kMESS_OBJECT);
+      mess.WriteObject(obj);
+      fSocket->Send(mess);
+      nc++;
    }
    return nc;
 }

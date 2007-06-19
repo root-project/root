@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.30 2007/05/14 13:26:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.31 2007/05/16 11:14:35 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -132,6 +132,9 @@ public:
    Bool_t          QuitOpt() const { return fQuit; }
    TObjArray      *InputFiles() const { return fFiles; }
    void            ClearInputFiles();
+
+   TApplication   *GetAppRemote() const { return fAppRemote; }
+   static TList   *GetApplications();
 
    Bool_t          IsRunning() const { return fIsRunning; }
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }

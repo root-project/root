@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.h,v 1.3 2007/05/14 13:27:17 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -49,7 +49,9 @@
 class THashList;
 class TMonitor;
 class TSocket;
-
+class TBrowser;
+class TRemoteObject;
+class TSeqCollection;
 
 class TApplicationRemote : public TApplication {
 
@@ -73,21 +75,24 @@ private:
          Long_t fModtime;    //file's modification time
    };
 
-   TString         fName;           //Unique name identifying this instance
-   Int_t           fProtocol;       //server protocol version number
-   TUrl            fUrl;            //server's url
-   TSocket        *fSocket;         //socket connection to server
-   TMonitor       *fMonitor;        //monitor for the input socket
-   Bool_t          fInterrupt;      //flag interrupt state
-   TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
+   TString            fName;           //Unique name identifying this instance
+   Int_t              fProtocol;       //server protocol version number
+   TUrl               fUrl;            //server's url
+   TSocket           *fSocket;         //socket connection to server
+   TMonitor          *fMonitor;        //monitor for the input socket
+   Bool_t             fInterrupt;      //flag interrupt state
+   TSignalHandler    *fIntHandler;     //interrupt signal handler (ctrl-c)
 
-   TString         fLogFilePath;    //Full remote path to log file
+   TString            fLogFilePath;    //Full remote path to log file
+   THashList         *fFileList;       // List of files already uploaded
 
-   THashList      *fFileList;       // List of files already uploaded
-
-   static Int_t  fgPortAttempts;    // number of attempts to find a port
-   static Int_t  fgPortLower;       // lower bound for ports
-   static Int_t  fgPortUpper;       // upper bound for ports
+   TObject           *fReceivedObject; // last received object
+   TSeqCollection    *fRootFiles;      // list of (remote) root files
+   TRemoteObject     *fWorkingDir;     // working (remote) directory
+   
+   static Int_t       fgPortAttempts;  // number of attempts to find a port
+   static Int_t       fgPortLower;     // lower bound for ports
+   static Int_t       fgPortUpper;     // upper bound for ports
 
    Int_t         Broadcast(const TMessage &mess);
    Int_t         Broadcast(const char *mess, Int_t kind = kMESS_STRING, Int_t type = kRRT_Undef);
@@ -104,6 +109,8 @@ public:
    TApplicationRemote(const char *url, Int_t debug = 0, const char *script = 0);
    virtual ~TApplicationRemote();
 
+   virtual void  Browse(TBrowser *b);
+   Bool_t        IsFolder() const { return kTRUE; }
    const char   *ApplicationName() const { return fName; }
    Long_t        ProcessLine(const char *line, Bool_t /*sync*/ = kFALSE, Int_t *error = 0);
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.41 2007/06/07 13:25:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.42 2007/06/12 08:16:02 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
 #include "Riostream.h"
+#include "TRemoteObject.h"
 #include <time.h>
 
 ClassImp(TGFileItem)
@@ -712,6 +713,60 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       AddItem(item);
    }
 
+   return item;
+}
+
+//______________________________________________________________________________
+TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
+                                           const TGPicture *ilpic)
+{
+   // Add remote file in container.
+
+   Bool_t      is_link;
+   Int_t       type, uid, gid;
+   Long_t      modtime;
+   Long64_t    size;
+   TString     filename;
+   TGFileItem *item = 0;
+   const TGPicture *spic, *slpic;
+   TGPicture *pic, *lpic;
+
+   FileStat_t sbuf;
+
+   type    = 0;
+   size    = 0;
+   uid     = 0;
+   gid     = 0;
+   modtime = 0;
+   is_link = kFALSE;
+   
+   TRemoteObject *robj = (TRemoteObject *)obj;
+
+   robj->GetFileStat(&sbuf);
+   is_link = sbuf.fIsLink;
+   type    = sbuf.fMode;
+   size    = sbuf.fSize;
+   uid     = sbuf.fUid;
+   gid     = sbuf.fGid;
+   modtime = sbuf.fMtime;
+   filename = robj->GetName();
+   if (R_ISDIR(type) || fFilter == 0 ||
+       (fFilter && filename.Index(*fFilter) != kNPOS)) {
+
+      if (ipic && ilpic) { // dynamic icons
+         spic = ipic;
+         slpic = ilpic;
+      } else {
+         GetFilePictures(&spic, &slpic, type, is_link, filename, kTRUE);
+      }
+
+      pic = (TGPicture*)spic; pic->AddReference();
+      lpic = (TGPicture*)slpic; lpic->AddReference();
+
+      item = new TGFileItem(this, lpic, slpic, spic, pic, new TGString(filename),
+                            type, size, uid, gid, modtime, fViewMode);
+      AddItem(item);
+   }
    return item;
 }
 

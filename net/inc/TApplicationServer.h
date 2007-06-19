@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationServer.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationServer.h,v 1.3 2007/05/14 13:27:17 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 class TList;
 class TMessage;
 class TSocket;
+class TRemoteObject;
 
 class TApplicationServer : public TApplication {
 
@@ -57,6 +58,7 @@ private:
    TString       fWorkDir;          // Working dir
 
    TList        *fSentCanvases;     // List of canvases already sent
+   TRemoteObject *fWorkingDir;      // Working (remote) directory
 
    void          ExecLogon();
    Int_t         Setup();
@@ -91,6 +93,9 @@ public:
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
    void           Run(Bool_t retrn = kFALSE);
    void           SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
+   Int_t          BrowseDirectory(const char *dirname);
+   Int_t          BrowseFile(const char *fname);
+   Int_t          BrowseKey(const char *keyname);
 
    void           Terminate(Int_t status);
 

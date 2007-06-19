@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.7 2007/05/16 23:53:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.8 2007/05/21 10:30:21 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 
 #include "TApplicationRemote.h"
 
+#include "TBrowser.h"
 #include "TDirectory.h"
 #include "TError.h"
 #include "THashList.h"
@@ -32,6 +33,7 @@
 #include "TROOT.h"
 #include "TServerSocket.h"
 #include "TSystem.h"
+#include "TRemoteObject.h"
 #ifdef WIN32
 #include <io.h>
 #include <sys/types.h>
@@ -94,6 +96,9 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    fSocket = 0;
    fMonitor = 0;
    fFileList = 0;
+   fWorkingDir = 0;
+   fRootFiles = 0;
+   fReceivedObject = 0;
    ResetBit(kCollecting);
 
    // Create server socket; generate randomly a port to find a free one
@@ -133,8 +138,15 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    TString scriptCmd;
    scriptCmd.Form(gScriptCmd, sc.Data(), kRRemote_Protocol, rport, fUrl.GetFile(), debug);
    TString cmd;
-   cmd.Form(gSshCmd, verb, userhost.Data(), rport, port, scriptCmd.Data(), scriptCmd.Data());
-
+//   cmd.Form(gSshCmd, verb, userhost.Data(), rport, port, scriptCmd.Data(), scriptCmd.Data());
+   cmd.Form("ssh -f4 %s -R %d:localhost:%d \"$SHELL -c \'%s %d localhost:%d/%s -d=%d\'\"",
+            userhost.Data(), rport, port, sc.Data(), kRRemote_Protocol, rport,
+            fUrl.GetFile(), debug);
+#ifdef WIN32
+   // make sure that the Gpad and GUI libs are loaded
+   TApplication::NeedGraphicsLibs();
+   gApplication->InitializeGraphics();
+#endif
    if (gDebug > 0)
       Info("TApplicationRemote","Executing: %s", cmd.Data());
    if (gSystem->Exec(cmd) != 0) {
@@ -204,6 +216,9 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    // To get the right cleaning sequence
    gROOT->GetListOfSockets()->Remove(fSocket);
    gROOT->GetListOfSockets()->Add(this);
+
+   fRootFiles = new TList; 
+   fRootFiles->SetName("Files");
 
    // Collect startup notifications
    Collect();
@@ -388,6 +403,27 @@ Int_t TApplicationRemote::CollectInput()
             // If a canvas, draw it
             if (TString(o->ClassName()) == "TCanvas")
                o->Draw();
+            else if (TString(o->ClassName()) == "TRemoteObject") {
+               TRemoteObject *robj = (TRemoteObject *)o;
+               if (TString(robj->GetClassName()) == "TSystemDirectory") {
+                  if (fWorkingDir == 0) {
+                     fWorkingDir = (TRemoteObject *)o;
+                  }
+               }
+            }
+            else if (TString(o->ClassName()) == "TList") {
+               TList *list = (TList *)o;
+               TRemoteObject *robj = (TRemoteObject *)list->First();
+               if (robj && (TString(robj->GetClassName()) == "TFile")) {
+                  TIter next(list);
+                  while ((robj = (TRemoteObject *)next())) {
+                     if (!fRootFiles->FindObject(robj->GetName()))
+                        fRootFiles->Add(robj);
+                  }
+                  gROOT->RefreshBrowsers();
+               }
+            }
+            fReceivedObject = o;
          }
          break;
 
@@ -794,6 +830,7 @@ void TApplicationRemote::Terminate(Int_t status)
    mess << (Int_t)kRRT_Terminate << status;
    Broadcast(mess);
 
+   SafeDelete(fRootFiles);
    SafeDelete(fMonitor);
    SafeDelete(fSocket);
 }
@@ -835,6 +872,8 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
       return 1;
    }
 
+   fReceivedObject = 0;
+
    // Init graphics
    InitializeGraphics();
 
@@ -845,6 +884,7 @@ Long_t TApplicationRemote::ProcessLine(const char *line, Bool_t, Int_t *)
    Collect();
 
    // Done
+   return (Long_t)fReceivedObject;
    return 1;
 }
 
@@ -983,3 +1023,13 @@ void TApplicationRemote::Interrupt(Int_t type)
    }
 #endif
 }
+
+//______________________________________________________________________________
+void TApplicationRemote::Browse(TBrowser *b)
+{
+   
+   b->Add(fRootFiles, "ROOT Files");
+   b->Add(fWorkingDir, fWorkingDir->GetTitle());
+   gROOT->RefreshBrowsers();
+}
+

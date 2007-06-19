@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.22 2007/05/22 11:44:25 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.23 2007/06/07 13:25:34 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -50,7 +50,6 @@ class TGFileIcon;
 class TGFileItem;
 class TTimer;
 class TString;
-
 
 class TGFileItem : public TGLVEntry {
 
@@ -171,6 +170,7 @@ public:
    void StartRefreshTimer(ULong_t msec=1000);
 
    virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = 0, const TGPicture *lpic = 0);
+   virtual TGFileItem *AddRemoteFile(TObject *obj, const TGPicture *ipic = 0, const TGPicture *ilpic = 0);
    virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void Sort(EFSSortMode sortType);
    virtual void SetFilter(const char *filter);

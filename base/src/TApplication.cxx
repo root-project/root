@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.95 2007/05/16 11:14:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.96 2007/05/23 15:42:45 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TSystemDirectory.h"
 #include "TPluginManager.h"
 #include "TClassTable.h"
+#include "TBrowser.h"
 #include "TUrl.h"
 
 #ifdef R__WIN32
@@ -1051,6 +1052,12 @@ TApplication *TApplication::Open(const char *url,
    // Add to the list
    if (ap && !(ap->TestBit(kInvalidObject))) {
       fgApplications->Add(ap);
+      gROOT->GetListOfBrowsables()->Add(ap, ap->ApplicationName());
+      TIter next(gROOT->GetListOfBrowsers());
+      TBrowser *b;
+      while ((b = (TBrowser*) next()))
+         b->Add(ap, ap->ApplicationName());
+      gROOT->RefreshBrowsers();
    } else {
       SafeDelete(ap);
       ::Error("TApplication::Open",
@@ -1069,6 +1076,12 @@ void TApplication::Close(TApplication *app)
    if (app) {
       app->Terminate(0);
       fgApplications->Remove(app);
+      gROOT->GetListOfBrowsables()->RecursiveRemove(app);
+      TIter next(gROOT->GetListOfBrowsers());
+      TBrowser *b;
+      while ((b = (TBrowser*) next()))
+         b->RecursiveRemove(app);
+      gROOT->RefreshBrowsers();
    }
 }
 
@@ -1086,4 +1099,12 @@ void TApplication::ls(Option_t *opt) const
    } else {
       Print(opt);
    }
+}
+
+//______________________________________________________________________________
+TList *TApplication::GetApplications()
+{
+   // Static method returning the list of available applications
+
+   return fgApplications;
 }

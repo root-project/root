@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.115 2007/06/07 08:48:22 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.116 2007/06/15 14:13:02 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TEnv.h"
 #include "TBrowser.h"
 #include "TApplication.h"
+#include "TRint.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TKeyMapFile.h"
@@ -55,6 +56,7 @@
 #include "TSystem.h"
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"
+#include "TRemoteObject.h"
 #include "TInterpreter.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
@@ -67,6 +69,7 @@
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
 #include "TFolder.h"
+#include "Getline.h"
 
 #include "HelpText.h"
 
@@ -548,12 +551,21 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
    if (!cl) return;
 
+   Bool_t isSystemFile = kFALSE;
    TGFileItem *fi;
    fWasGrouped = kFALSE;
    const TGPicture *pic = 0;
    const TGPicture *spic = 0;
 
-   if (obj->IsA() == TSystemFile::Class() ||
+   if (obj->InheritsFrom("TRemoteObject")) {
+      // check if the real remote object is a system file or directory
+      TRemoteObject *robj = (TRemoteObject *)obj;
+      if ((TString(robj->GetClassName()) == "TSystemFile") ||
+          (TString(robj->GetClassName()) == "TSystemDirectory"))
+         isSystemFile = kTRUE;
+   }
+
+   if (isSystemFile || obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
       if (fCheckHeaders) {
          if (strcmp(fListView->GetHeader(1), "Attributes")) {
@@ -584,7 +596,11 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
          pic =  thumb->fLarge;
       }
 
-      fi = AddFile(name, spic, pic);
+      if (obj->InheritsFrom("TRemoteObject"))
+         // special case for remote object
+         fi = AddRemoteFile(obj, spic, pic);
+      else
+         fi = AddFile(name, spic, pic);
       if (fi) {
          fi->SetUserData(obj);
          if (obj->IsA() == TSystemFile::Class()) {
@@ -718,6 +734,10 @@ void TRootIconList::Browse(TBrowser *)
          key = (TKey *)obj;
       } else if (obj->IsA() == TKeyMapFile::Class()) {
          cl = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
+      } else if (obj->InheritsFrom("TRemoteObject")) {
+         // special case for remote object: get real object class
+         TRemoteObject *robj = (TRemoteObject *)obj;
+         cl = TClass::GetClass(robj->GetClassName());
       } else {
          cl = obj->IsA();
       }
@@ -1365,6 +1385,14 @@ void TRootBrowser::AddToBox(TObject *obj, const char *name)
          objClass = TClass::GetClass(((TKey *)obj)->GetClassName());
       else if (obj->IsA() == TKeyMapFile::Class())
          objClass = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
+      else if (obj->InheritsFrom("TRemoteObject")) {
+         // special case for remote object: get real object class
+         TRemoteObject *robj = (TRemoteObject *)obj;
+         if (!strcmp(robj->GetClassName(), "TKey"))
+            objClass = TClass::GetClass(robj->GetKeyClassName());
+         else
+            objClass = TClass::GetClass(robj->GetClassName());
+      }
       else
          objClass = obj->IsA();
 
@@ -1377,6 +1405,8 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
 {
    // Add items to the current TGListTree of the browser.
 
+   if (obj->InheritsFrom("TApplication"))
+      fListLevel = 0;
    if (obj && !fTreeLock) {
       if (!name) name = obj->GetName();
       if (name[0] == '.' && name[1] == '.')
@@ -1391,7 +1421,15 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
          }
          fLt->SetToolTipItem(item, tip.Data());
       } else {
-         fLt->AddItem(fListLevel, name, obj);
+         // special case for remote object
+         if (obj->InheritsFrom("TRemoteObject")) {
+            // add the remote object only if not already in the list
+            if ((!fLt->FindChildByName(fListLevel, name)) &&
+                (!fLt->FindChildByData(fListLevel, obj)))
+               fLt->AddItem(fListLevel, name, obj);
+         }
+         else
+            fLt->AddItem(fListLevel, name, obj);
       }
    }
 }
@@ -1544,7 +1582,8 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
    TFile *wasf = gFile;
 
    // Special case for file system objects...
-   if (obj->IsA() == TSystemFile::Class()) {
+   if (obj->IsA() == TSystemFile::Class() ||
+       obj->InheritsFrom("TRemoteObject")) {
       TString act;
       TString ext = obj->GetName();
 
@@ -1557,11 +1596,21 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             act.Remove(0, 1);
             gSystem->Exec(act.Data());
          } else {
+            // special case for remote object: remote process
+            if (obj->InheritsFrom("TRemoteObject"))
+               gApplication->SetBit(TApplication::kProcessRemotely);
             gApplication->ProcessLine(act.Data());
          }
          Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       }
 
+      // special case for remote object: browse real object
+      if (obj->InheritsFrom("TRemoteObject") && ext.EndsWith(".root")) {
+         TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
+         gApplication->SetBit(TApplication::kProcessRemotely);
+         gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
+         Refresh();
+      }
       ////////// new TFile was opened. Add it to the browser /////
       if (gFile && (wasf != gFile) && ext.EndsWith(".root")) {
          TGListTreeItem *itm = fLt->FindChildByData(0, gROOT->GetListOfFiles());
@@ -1578,7 +1627,9 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          }
       }
 
-      BrowseTextFile(obj->GetName());
+      // only valid for local text files
+      if (!obj->InheritsFrom("TRemoteObject"))
+         BrowseTextFile(obj->GetName());
 
       /////////////// cache and change file's icon ///////////////////////
       TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
@@ -2224,6 +2275,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 
    if (item) {
       TObject *obj = (TObject *) item->GetUserData();
+      TRint *rint = dynamic_cast<TRint *>(gApplication);
 
       if (obj) {
          if (obj->IsA() == TKey::Class()) {
@@ -2243,8 +2295,86 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                   item = parent;
                }
             }
-         } else if (obj->InheritsFrom(TDirectoryFile::Class()))
+         } else if (obj->InheritsFrom(TDirectoryFile::Class())) {
             Chdir(item->GetParent());
+         }
+         else if (obj->InheritsFrom("TApplicationRemote")) {
+            if (!gApplication->GetAppRemote()) {
+               gROOT->ProcessLine(Form(".R %s", item->GetText()));
+               if (rint && gApplication->GetAppRemote()) {
+                  rint->SetPrompt(Form("%s:root [%%d] ", 
+                        gApplication->GetAppRemote()->ApplicationName()));
+                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+               }
+            }
+         }
+         else if (obj->InheritsFrom("TRemoteObject")) {
+            // special case for remote object
+            TRemoteObject *robj = (TRemoteObject *)obj;
+            // the real object is a TKey
+            if (!strcmp(robj->GetClassName(), "TKey")) {
+               TGListTreeItem *parent = item;
+               TRemoteObject *probj = (TRemoteObject *)parent->GetUserData();
+               // find the TFile remote object containing the TKey
+               while ( probj && strcmp(probj->GetClassName(), "TFile")) {
+                  parent = parent->GetParent();
+                  probj = (TRemoteObject *)parent->GetUserData();
+               }
+               if (probj) {
+                  // remotely browse file (remotely call TFile::cd())
+                  gApplication->SetBit(TApplication::kProcessRemotely);
+                  gApplication->ProcessLine(
+                     Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
+                          probj->GetName()));
+               }
+            }
+         }
+         if (item->GetParent() && item->GetParent()->GetUserData() &&
+            ((TObject *)item->GetParent()->GetUserData())->InheritsFrom("TApplicationRemote")) {
+            // switch to remote session
+            if (!gApplication->GetAppRemote()) {
+               gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
+               if (rint && gApplication->GetAppRemote()) {
+                  rint->SetPrompt(Form("%s:root [%%d] ", 
+                        gApplication->GetAppRemote()->ApplicationName()));
+                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+               }
+            }
+            else if (!strcmp(item->GetText(), "ROOT Files")) {
+               // update list of files opened in the remote session
+               gApplication->SetBit(TApplication::kProcessRemotely);
+               gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
+            }
+         }
+         else {
+            // check if the listtree item is from a local session or 
+            // from a remote session, then switch to the session it belongs to
+            TGListTreeItem *top = item;
+            while (top->GetParent()) {
+               top = top->GetParent();
+            }
+            TObject *topobj = (TObject *) top->GetUserData();
+            if (topobj->InheritsFrom("TApplicationRemote")) {
+               // it belongs to a remote session
+               if (!gApplication->GetAppRemote()) {
+                  // switch to remote session if not already in
+                  gROOT->ProcessLine(Form(".R %s", top->GetText()));
+                  if (rint && gApplication->GetAppRemote()) {
+                     rint->SetPrompt(Form("%s:root [%%d] ", 
+                           gApplication->GetAppRemote()->ApplicationName()));
+                     Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+                  }
+               }
+            }
+            else if (gApplication->GetAppRemote()) {
+               // switch back to local session if not already in
+               gApplication->ProcessLine(".R");
+               if (rint) {
+                  rint->SetPrompt("root [%d] ");
+                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+               }
+            }
+         }
 
          if (!fListLevel || !fListLevel->IsActive()) {
             fListLevel = item;
@@ -2343,6 +2473,14 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       if (obj->IsA()->GetMethodWithPrototype("Browse", "TBrowser*"))
          browsable = kTRUE;
 
+      if (obj->InheritsFrom("TLeaf")) {
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();", 
+                                                      obj->ClassName(), obj));
+         if (!dir) {
+            browsable = kFALSE;
+         }
+      }
+
       if (obj->IsA() == TSystemDirectory::Class()) {
          useLock = kFALSE;
 
@@ -2382,8 +2520,25 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          }
 
          if (!itm && fListLevel) {
-            itm = fLt->AddItem(fListLevel, obj->GetName());
-            if (itm) itm->SetUserData(obj);
+            // special case for remote objects
+            if (obj->InheritsFrom("TRemoteObject")) {
+               // add the remote object only if not already in the list
+               if ((!fLt->FindChildByName(fListLevel, obj->GetName())) &&
+                   (!fLt->FindChildByData(fListLevel, obj))) {
+                  itm = fLt->AddItem(fListLevel, obj->GetName());
+                  if (itm) itm->SetUserData(obj);
+               }
+               else {
+                  // set the current item to the one found in the list
+                  itm = fLt->FindChildByData(fListLevel, obj) ?
+                     fLt->FindChildByData(fListLevel, obj) :
+                     fLt->FindChildByName(fListLevel, obj->GetName());
+               }
+            }
+            else {
+               itm = fLt->AddItem(fListLevel, obj->GetName());
+               if (itm) itm->SetUserData(obj);
+            }
          }
 
          if (itm) {
@@ -2452,6 +2607,12 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    if (obj->IsA() == TFile::Class()) {
       fListLevel = 0;
       BrowseObj(gROOT);
+   }
+   if (obj->InheritsFrom("TRemoteObject") ||
+       obj->InheritsFrom("TApplicationRemote")) {
+      // go to root (top level)
+      fListLevel = 0;
+      Refresh(kTRUE);
    }
 }
 
