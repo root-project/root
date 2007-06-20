@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.60 2007/04/19 16:23:13 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.61 2007/05/04 15:19:04 antcheva Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -101,8 +101,8 @@ enum ETestCommandIdentifiers {
 
 Int_t mb_button_id[13] = { kMBYes, kMBNo, kMBOk, kMBApply,
                            kMBRetry, kMBIgnore, kMBCancel,
-                           kMBClose, kMBDismiss, kMBYesAll,
-                           kMBNoAll, kMBAppend, kMBNewer };
+                           kMBClose, kMBYesAll, kMBNoAll, 
+                           kMBNewer, kMBAppend, kMBDismiss};
 
 EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,
                            kMBIconExclamation, kMBIconAsterisk };
