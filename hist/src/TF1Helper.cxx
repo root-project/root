@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.138 2007/05/28 14:35:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1Helper.cxx,v 1.1 2007/06/12 15:29:23 moneta Exp $
 // Author: Lorenzo Moneta 12/06/07
 
 /**********************************************************************
@@ -10,7 +10,7 @@
 
 // helper functions and classes used internally by TF1 
 
-#include "TF1.h"
+#include "TF1Helper.h"
 #include "TVirtualFitter.h"
 #include "TError.h"
 #include <vector>
@@ -23,29 +23,6 @@ namespace ROOT {
 
    namespace TF1Helper{ 
 
-/**
-   function class representing the derivative with respect a parameter of a given TF1  
- */
-class GradientParFunction { 
-
-public: 
-
-   GradientParFunction(int ipar, TF1 * f)  : 
-      fPar(ipar),
-      fFunc(f)
-   {}
-
-   double operator() (double * x, double *) const 
-   { 
-      // evaluate gradient vector of functions at point x
-      return fFunc->GradientPar(fPar,x);  
-   }
-    
-private: 
-
-   unsigned int fPar; 
-   mutable TF1 * fFunc;
-}; 
 
 
 double IntegralError(TF1 * func, double a, double b, double epsilon) { 
