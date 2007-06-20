@@ -100,8 +100,8 @@ enum ETestCommandIdentifiers {
 
 Int_t mb_button_id[13] = { kMBYes, kMBNo, kMBOk, kMBApply,
                            kMBRetry, kMBIgnore, kMBCancel,
-                           kMBClose, kMBDismiss, kMBYesAll,
-                           kMBNoAll, kMBAppend, kMBNewer };
+                           kMBClose, kMBYesAll, kMBNoAll, 
+                           kMBNewer, kMBAppend, kMBDismiss};
 
 EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,
                            kMBIconExclamation, kMBIconAsterisk };
@@ -1443,12 +1443,11 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    fC[5]  = new TGCheckButton(fG1, new TGHotString("Ignore"),     -1);
    fC[6]  = new TGCheckButton(fG1, new TGHotString("Cancel"),     -1);
    fC[7]  = new TGCheckButton(fG1, new TGHotString("Close"),      -1);
-   fC[8]  = new TGCheckButton(fG1, new TGHotString("Dismiss"),    -1);
-   fC[9]  = new TGCheckButton(fG1, new TGHotString("Yes to All"), -1);
-   fC[10]  = new TGCheckButton(fG1, new TGHotString("No to All"),  -1);
-   fC[11] = new TGCheckButton(fG1, new TGHotString("Newer Only"), -1);
-   fC[12] = new TGCheckButton(fG1, new TGHotString("Append"),     -1);
-   //fC[13] = new TGCheckButton(fG1, new TGHotString("Dismiss"),    -1);
+   fC[8]  = new TGCheckButton(fG1, new TGHotString("Yes to All"), -1);
+   fC[9]  = new TGCheckButton(fG1, new TGHotString("No to All"),  -1);
+   fC[10] = new TGCheckButton(fG1, new TGHotString("Newer Only"), -1);
+   fC[11] = new TGCheckButton(fG1, new TGHotString("Append"),     -1);
+   fC[12] = new TGCheckButton(fG1, new TGHotString("Dismiss"),    -1);
 
    for (i=0; i<13; ++i) fG1->AddFrame(fC[i], fL4);
 
