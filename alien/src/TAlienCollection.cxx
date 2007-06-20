@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.15 2007/03/20 16:17:22 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.16 2007/05/08 13:50:40 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -31,8 +31,9 @@
 #include "TObjString.h"
 #include "TEntryList.h"
 #include "TObjArray.h"
-#include "TFileMerger.h"
 #include "TROOT.h"
+#include "TError.h"
+
 
 ClassImp(TAlienCollection)
 
@@ -107,17 +108,13 @@ TGridCollection *TAlienCollection::Open(const char *collectionurl,
    // You can restrict the number of importet entries using the maxentries value
 
    //! stage the url to /tmp/
-   if (gROOT->LoadClass("TFileMerger", "Proof") == -1) {
-      return 0;
-   }
 
    TUUID uuid;
    TString rndname = "/tmp/";
    rndname += "aliencollection.";
    rndname += uuid.AsString();
-   TFileMerger m;
-   if (!m.Cp(collectionurl, rndname.Data())) {
-      m.Error("Open", "Cannot make a local copy of collection with url %s",
+   if (!TFile::Cp(collectionurl, rndname.Data())) {
+      ::Error("TAlienCollection::Open", "Cannot make a local copy of collection with url %s",
               collectionurl);
       return 0;
    }
@@ -126,7 +123,7 @@ TGridCollection *TAlienCollection::Open(const char *collectionurl,
        new TAlienCollection(rndname, maxentries);
 
    if (gSystem->Unlink(rndname.Data())) {
-      m.Error("Open", "Cannot remove the local copy of the collection %s",
+      ::Error("TAlienCollection::Open", "Cannot remove the local copy of the collection %s",
               rndname.Data());
    }
 
@@ -1024,7 +1021,7 @@ Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
       // bulk request
       TList* stagelist = new TList();
       stagelist->SetOwner(kTRUE);
-      Bool_t stageresult;
+      Bool_t stageresult=kFALSE;
       Reset();
       UInt_t fc=0;
       while ((filemap = Next())) {
