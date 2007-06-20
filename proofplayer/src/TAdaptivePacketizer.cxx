@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.11 2007/06/06 10:21:01 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.12 2007/06/12 18:03:24 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -873,11 +873,11 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
             PDB(kPacketizer,2)
-                Info("ValidateFiles",
-                     "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                     dset->IsTree() ? "tree" : "objects",
-                     elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
+               Info("ValidateFiles",
+                    "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                    s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                    dset->IsTree() ? "tree" : "objects",
+                    elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          }
       }
 
