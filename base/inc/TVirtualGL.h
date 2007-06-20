@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.37 2007/02/19 18:51:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.38 2007/06/11 19:56:33 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -134,16 +134,16 @@ class TGLFormat;
 class TGLPaintDevice {
    friend class TGLContext;
 public:
-	virtual ~TGLPaintDevice(){}
-	virtual Bool_t MakeCurrent() = 0;
-	virtual void SwapBuffers() = 0;
-	virtual const TGLFormat *GetPixelFormat()const = 0;
-	virtual const TGLContext *GetContext()const = 0;
+   virtual ~TGLPaintDevice(){}
+   virtual Bool_t MakeCurrent() = 0;
+   virtual void SwapBuffers() = 0;
+   virtual const TGLFormat *GetPixelFormat()const = 0;
+   virtual const TGLContext *GetContext()const = 0;
  
 private:
    virtual void AddContext(TGLContext *ctx) = 0;
    virtual void RemoveContext(TGLContext *ctx) = 0;
-	
+
    ClassDef(TGLPaintDevice, 0)
 };
 
