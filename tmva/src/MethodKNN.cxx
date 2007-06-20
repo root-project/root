@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MethodKNN.cxx,v 1.8 2007/06/20 08:47:18 stelzer Exp $
 // Author: Rustem Ospanov 
 
 /**********************************************************************************
@@ -31,6 +31,7 @@
 // C++
 #include <assert.h>
 #include <cmath>
+#include <algorithm>
 
 // ROOT
 #include "TFile.h"
@@ -379,9 +380,9 @@ void TMVA::MethodKNN::WriteWeightsToStream(ostream& os) const
 
    const string delim = ", ";
 
-   for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event) {
-      const UInt_t ievent = distance(fEvent.begin(), event);
-      
+   UInt_t ievent = 0;
+   for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event, ++ievent) {
+
       os << ievent << delim;
       os << event->GetType() << delim;
       os << event->GetWeight() << delim; 

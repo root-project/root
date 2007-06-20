@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MethodSeedDistance.h,v 1.6 2007/06/15 23:23:05 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: NodekNN.h,v 1.6 2007/06/20 08:47:18 stelzer Exp $
 // Author: Rustem Ospanov 
 
 /**********************************************************************************
@@ -122,7 +122,7 @@ namespace TMVA
 
       // recursive search for k-nearest neighbor: k = nfind 
       template<class T>
-      UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
+      UInt_t Find(std::list<std::pair<const Node<T> *, Float_t> > &nlist,
                         const Node<T> *node, const T &event, UInt_t nfind);
 
       // recursively travel upward until root node is reached
@@ -315,8 +315,8 @@ void TMVA::kNN::Node<T>::Print(std::ostream& os, const std::string &offset) cons
 
 //-------------------------------------------------------------------------------------------
 template<class T>
-UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
-                       const Node<T> *node, const T &event, const UInt_t nfind)
+UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> > &nlist,
+                       const TMVA::kNN::Node<T> *node, const T &event, const UInt_t nfind)
 {
    // This is a global templated function that searches for k-nearest neighbors.
    // list contains k or less nodes that are closest to event.
@@ -336,10 +336,10 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
 
    if (node->GetWeight() > 0.0) {
       Float_t max_dist = 0.0;
-      if (!list.empty()) {
-         max_dist = list.back().second;
+      if (!nlist.empty()) {
+         max_dist = nlist.back().second;
          
-         if (list.size() == nfind) {
+         if (nlist.size() == nfind) {
             if (value > node->GetVarMax() && 
                 event.GetDist(node->GetVarMax(), node->GetMod()) > max_dist) {
                return 0;
@@ -356,10 +356,10 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
       Bool_t insert_this = kFALSE;
       Bool_t remove_back = kFALSE;
       
-      if (list.size() < nfind) {
+      if (nlist.size() < nfind) {
          insert_this = true;
       }
-      else if (list.size() == nfind) {
+      else if (nlist.size() == nfind) {
          if (distance < max_dist) {
             insert_this = true;
             remove_back = true;
@@ -373,10 +373,10 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
       if (insert_this) {
          // need typename keyword because qualified dependent names 
          // are not valid types unless preceded by 'typename'.
-         typename std::list<std::pair<const Node<T> *, Float_t> >::iterator lit = list.begin();
+         typename std::list<std::pair<const Node<T> *, Float_t> >::iterator lit = nlist.begin();
          
          // find a place where current node should be inserted
-         for (; lit != list.end(); ++lit) {
+         for (; lit != nlist.end(); ++lit) {
             if (distance < lit->second) {
                break;
             }
@@ -386,10 +386,10 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
                }
          }
          
-         list.insert(lit, std::pair<const Node<T> *, Float_t>(node, distance));
+         nlist.insert(lit, std::pair<const Node<T> *, Float_t>(node, distance));
          
          if (remove_back) {
-            list.pop_back();
+            nlist.pop_back();
          }
       }
    }   
@@ -397,20 +397,20 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const Node<T> *, Float_t> > &list,
    UInt_t count = 1;
    if (node->GetNodeL() && node->GetNodeR()) {
       if (value < node->GetVarDis()) {
-         count += Find(list, node->GetNodeL(), event, nfind);
-         count += Find(list, node->GetNodeR(), event, nfind);
+         count += Find(nlist, node->GetNodeL(), event, nfind);
+         count += Find(nlist, node->GetNodeR(), event, nfind);
       }
       else {	 
-         count += Find(list, node->GetNodeR(), event, nfind);
-         count += Find(list, node->GetNodeL(), event, nfind);
+         count += Find(nlist, node->GetNodeR(), event, nfind);
+         count += Find(nlist, node->GetNodeL(), event, nfind);
       }
    }
    else {
       if (node->GetNodeL()) {
-         count += Find(list, node->GetNodeL(), event, nfind);
+         count += Find(nlist, node->GetNodeL(), event, nfind);
       }
       if (node->GetNodeR()) {
-         count += Find(list, node->GetNodeR(), event, nfind);
+         count += Find(nlist, node->GetNodeR(), event, nfind);
       }
    }
    

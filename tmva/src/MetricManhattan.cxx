@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MetricManhattan.cxx,v 1.3 2007/06/14 10:11:40 speckmayer Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************

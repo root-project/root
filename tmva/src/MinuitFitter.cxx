@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MinuitFitter.cxx,v 1.15 2007/06/13 13:49:51 speckmayer Exp $ 
 // Author: Andraes Hoecker
 
 /**********************************************************************************

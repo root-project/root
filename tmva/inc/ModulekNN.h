@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: ModulekNN.h,v 1.7 2007/06/20 08:47:18 stelzer Exp $
 // Author: Rustem Ospanov
 
 /**********************************************************************************
@@ -81,7 +81,7 @@ namespace TMVA
          Short_t fType;
       };
 
-      typedef std::vector<kNN::Event> EventVec;
+      typedef std::vector<TMVA::kNN::Event> EventVec;
       typedef std::pair<const Node<Event> *, VarType> Elem;
       typedef std::list<Elem> List;
 

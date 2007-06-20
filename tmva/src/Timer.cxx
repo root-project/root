@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Timer.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $   
+// @(#)root/tmva $Id: Timer.cxx,v 1.13 2007/06/19 13:26:21 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -61,7 +61,8 @@
 
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 24;  
-using namespace TMVA::Tools;
+
+using TMVA::Tools::Color;
 
 ClassImp(TMVA::Timer)
 

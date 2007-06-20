@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: GeneticAlgorithm.h,v 1.5 2007/06/07 13:19:11 speckmayer Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

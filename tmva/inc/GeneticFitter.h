@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: GeneticFitter.h,v 1.14 2007/06/07 13:19:11 speckmayer Exp $ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************

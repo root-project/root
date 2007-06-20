@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MinuitFitter.h,v 1.7 2007/05/31 14:17:48 andreas.hoecker Exp $ 
 // Author: Andreas Hoecker
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MinuitWrapper.h,v 1.4 2007/05/31 14:17:48 andreas.hoecker Exp $ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************

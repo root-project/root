@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: IMetric.h,v 1.2 2007/06/15 23:23:04 andreas.hoecker Exp $ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MethodKNN.h,v 1.5 2007/05/31 14:17:47 andreas.hoecker Exp $
 // Author: Rustem Ospanov
 
 /**********************************************************************************

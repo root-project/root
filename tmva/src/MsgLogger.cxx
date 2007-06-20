@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.cxx,v 1.5 2007/04/19 06:53:02 brun Exp $
+// @(#)root/tmva $Id: MsgLogger.cxx,v 1.6 2007/06/19 13:26:21 brun Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -31,11 +31,13 @@
 // STL include(s):
 #include <iomanip>
 #include <iostream>
+#include <string>
+
+using std::string;
+using std::cout;
+using std::endl;
 
 // ROOT include(s):
-
-
-using namespace std;
 
 ClassImp(TMVA::MsgLogger)
 
@@ -87,8 +89,8 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
 
 TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
    //   basic_ios< MsgLogger::char_type, MsgLogger::traits_type >( new MsgLogger::__stringbuf_type() ),
-   basic_ios< MsgLogger::char_type, MsgLogger::traits_type >(),
-   ostringstream(),
+   std::basic_ios< MsgLogger::char_type, MsgLogger::traits_type >(),
+   std::ostringstream(),
    TObject(),
    fPrefix( PREFIX ), 
    fSuffix( SUFFIX ),
@@ -157,9 +159,9 @@ void TMVA::MsgLogger::Send()
       current_pos = message.find( '\n', previous_pos );
       string line = message.substr( previous_pos, current_pos - previous_pos );
 
-      ostringstream message_to_send;
+      std::ostringstream message_to_send;
       // must call the modifiers like this, otherwise g++ get's confused with the operators...
-      message_to_send.setf( ios::adjustfield, ios::left );
+      message_to_send.setf( std::ios::adjustfield, std::ios::left );
       message_to_send.width( fMaxSourceSize );
       message_to_send << source_name << fSuffix << line;
       this->WriteMsg( fActiveType, message_to_send.str() );
@@ -179,7 +181,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // switcher together into a single string
 
    if (type < fMinType) return;
-   map<EMsgType, std::string>::const_iterator stype;
+   std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
    if (gConfig().UseColor()) {
       // no text for INFO

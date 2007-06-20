@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.13 2007/04/21 14:20:46 brun Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.14 2007/06/19 13:26:21 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -31,8 +31,6 @@
 #include "TSystem.h"
 #include "TRandom3.h"
 #include "TH1.h"
-
-using namespace std;
 
 ClassImp(TMVA::GeneticPopulation)
    

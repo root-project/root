@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MethodFDA.cxx,v 1.16 2007/06/15 22:01:32 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************

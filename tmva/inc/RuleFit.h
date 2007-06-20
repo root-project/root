@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.h,v 1.8 2007/04/19 06:53:01 brun Exp $
+// @(#)root/tmva $Id: RuleFit.h,v 1.9 2007/06/19 13:26:20 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -26,6 +26,8 @@
 
 #ifndef ROOT_TMVA_RuleFit
 #define ROOT_TMVA_RuleFit
+
+#include <algorithm>
 
 #ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"

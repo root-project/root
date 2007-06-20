@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: ModulekNN.cxx,v 1.8 2007/06/20 08:47:18 stelzer Exp $
 // Author: Rustem Ospanov 
 
 /**********************************************************************************
@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <algorithm>
 
 // TMVA
 #include "TMVA/ModulekNN.h"
@@ -390,7 +391,8 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
       return 0;
    }
 
-   for (VarMap::const_iterator it = fVar.begin(); it != fVar.end(); ++it) {
+   VarMap::const_iterator it = fVar.begin();
+   for (; it != fVar.end(); ++it) {
       if ((it->second).size() != size) {
          fLogger << kWARNING << "<Optimize> # of variables doesn't match between dimensions" << Endl;
          return 0;
@@ -406,7 +408,7 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
 
    std::vector<Node<Event> *> pvec, cvec;
 
-   VarMap::const_iterator it = fVar.find(0);
+   it = fVar.find(0);
    if (it == fVar.end() || (it->second).size() < 2) {
       fLogger << kWARNING << "<Optimize> Missing 0 variable" << Endl;
       return 0;
@@ -501,8 +503,8 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
       std::vector<Double_t>::const_iterator beg_it = dvec.end();
       std::vector<Double_t>::const_iterator end_it = dvec.end();
       
-      for (std::vector<Double_t>::const_iterator dit = dvec.begin(); dit != dvec.end(); ++dit) {
-         const Int_t dist = distance(dvec.begin(), dit);
+      Int_t dist = 0;
+      for (std::vector<Double_t>::const_iterator dit = dvec.begin(); dit != dvec.end(); ++dit, ++dist) {
          
          if ((100*dist)/dvec.size() == lfrac && beg_it == dvec.end()) {
             beg_it = dit;

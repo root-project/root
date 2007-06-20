@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Config.h,v 1.13 2007/05/31 14:17:46 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: Config.h,v 1.3 2007/06/19 13:26:20 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -63,8 +63,6 @@ namespace TMVA {
 
       VariablePlotting& GetVariablePlotting() { return fVariablePlotting; }
       IONames&          GetIONames()          { return fIONames; }
-
-   private:
 
       // publicly accessible global settings
       class VariablePlotting {

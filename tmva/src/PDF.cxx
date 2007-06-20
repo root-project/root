@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: PDF.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $
+// @(#)root/tmva $Id: PDF.cxx,v 1.14 2007/06/19 13:26:21 brun Exp $
 // Author: Asen Christov, Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -45,8 +45,6 @@ const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
 const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
 const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
 TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
-
-using namespace std;
 
 ClassImp(TMVA::PDF)
 

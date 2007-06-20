@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.18 2007/04/21 14:20:46 brun Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.19 2007/06/19 13:26:21 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -713,9 +713,11 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
 {
    // write specific classifier response
    fout << "   double       fEpsilon;" << endl;
-   Int_t nbin[GetNvar()];
+
+   Int_t * nbin = new Int_t[GetNvar()];
+
    Int_t nbinMax=-1;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       nbin[ivar]=(*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX();
       if (nbin[ivar] > nbinMax) nbinMax=nbin[ivar];
    }
@@ -898,6 +900,8 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    }   
    fout << "}; " << endl;
    fout << endl;
+
+   delete nbin;
 }
 
 //_______________________________________________________________________

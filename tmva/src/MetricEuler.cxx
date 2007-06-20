@@ -1,4 +1,4 @@
-// @(#)root/tmva $\Id$
+// @(#)root/tmva $Id: MetricEuler.cxx,v 1.3 2007/06/14 10:11:40 speckmayer Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -29,7 +29,6 @@
 //_______________________________________________________________________
 
 #include "TMVA/MetricEuler.h"
-#include <cmath>
 
 ClassImp(TMVA::MetricEuler)
 
@@ -55,7 +54,7 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itA)-(*itB);
-         distance += std::pow( val, 2 );
+         distance += pow( val, 2 );
          itA++;
       }
    }else{
@@ -70,12 +69,12 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itPar)*( (*itA)-(*itB) );
-         distance += std::pow( val, 2 );
+         distance += pow( val, 2 );
          itA++;
          itPar++;
       }
       if( itA != pointA.end() ){
-         distance *= std::pow( (*itA),2 );
+         distance *= pow( (*itA),2 );
       }
    }
    return sqrt( distance );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.15 2007/04/21 14:20:46 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.16 2007/06/19 13:26:21 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -612,7 +612,7 @@ void TMVA::MethodFisher::GetHelpMessage() const
    fLogger << Endl;
    fLogger << "Optimal performance for Fisher discriminants is obtained for " << Endl;
    fLogger << "linearly correlated Gaussian-distributed variables. Any deviation" << Endl;
-   fLogger << "from this ideal reduces the achivable separation power. In " << Endl;
+   fLogger << "from this ideal reduces the achievable separation power. In " << Endl;
    fLogger << "particular, no discrimination at all is achieved for a variable" << Endl;
    fLogger << "that has the same sample mean for signal and background, even if " << Endl;
    fLogger << "the shapes of the distributions are very different. Thus, Fisher " << Endl;

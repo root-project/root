@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.15 2007/04/21 14:20:46 brun Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.16 2007/06/19 13:26:21 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -77,8 +77,6 @@ const Bool_t DEBUG_TMVA_Factory = kFALSE;
 const int MinNoTrainingEvents = 10;
 const int MinNoTestEvents     = 1;
 const long int basketsize     = 1280000;
-
-using namespace std;
 
 ClassImp(TMVA::Factory)
 
