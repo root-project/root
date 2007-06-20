@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.39 2007/06/19 06:51:46 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.40 2007/06/19 06:57:36 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -729,7 +729,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.39 2007/06/19 06:51:46 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.40 2007/06/19 06:57:36 antcheva Exp $ this=%p\n",this);
 #if QT_VERSION >= 0x40000
 #ifndef R__QTWIN32
    extern void qt_x11_set_global_double_buffer(bool);
@@ -1667,9 +1667,15 @@ ULong_t  TGQt::GetPixel(Color_t cindex)
    // see: GQTGUI.cxx:QtColor() also
    ULong_t rootPixel = 0;
    QColor color = ColorIndex(cindex);
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,12,0)
    rootPixel =                    ( color.blue () & 255 );
    rootPixel = (rootPixel << 8) | ( color.green() & 255 ) ;
    rootPixel = (rootPixel << 8) | ( color.red  () & 255 );
+#else
+   rootPixel =                    ( color.red  () & 255 );
+   rootPixel = (rootPixel << 8) | ( color.green() & 255 ) ;
+   rootPixel = (rootPixel << 8) | ( color.blue () & 255 );
+#endif   
 
    return rootPixel;
 }
