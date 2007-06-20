@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.cxx,v 1.14 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.cxx,v 1.15 2007/06/06 08:25:34 brun Exp $
 // Author: Andreas Peters + Fons Rademakers + Rene Brun  26/5/2005
 
 /*************************************************************************
@@ -35,7 +35,9 @@
 #include "THashList.h"
 #include "TObjString.h"
 #include "TClass.h"
+#include "TMethodCall.h"
 #include "Riostream.h"
+
 
 ClassImp(TFileMerger)
 
@@ -61,166 +63,6 @@ TFileMerger::~TFileMerger()
 }
 
 //______________________________________________________________________________
-void TFileMerger::PrintProgress(Long64_t bytesread, Long64_t size)
-{
-   // Print file copy progress.
-
-   fprintf(stderr, "[TFile::Cp] Total %.02f MB\t|", (Double_t)size/1048576);
-
-   for (int l = 0; l < 20; l++) {
-      if (size > 0) {
-         if (l < 20*bytesread/size)
-            fprintf(stderr, "=");
-         else if (l == 20*bytesread/size)
-            fprintf(stderr, ">");
-         else if (l > 20*bytesread/size)
-            fprintf(stderr, ".");
-      } else
-         fprintf(stderr, "=");
-   }
-   // Allow to update the GUI while uploading files
-   gSystem->ProcessEvents();
-   fWatch.Stop();
-   Double_t lCopy_time = fWatch.RealTime();
-   fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
-           100.0*(size?(bytesread/size):1), bytesread/lCopy_time/1048576.);
-   fWatch.Continue();
-}
-
-//______________________________________________________________________________
-Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
-                       UInt_t buffersize)
-{
-   // Allows to copy file from src to dst URL.
-
-   Bool_t success = kFALSE;
-
-   TUrl sURL(src, kTRUE);
-   TUrl dURL(dst, kTRUE);
-
-   TString oopt = "RECREATE";
-   TString ourl = dURL.GetUrl();
-
-   TString raw = "filetype=raw";
-
-   TString opt = sURL.GetOptions();
-   if (opt == "")
-      opt = raw;
-   else
-      opt += "&&" + raw;
-   sURL.SetOptions(opt);
-
-   opt = dURL.GetOptions();
-   if (opt == "")
-      opt = raw;
-   else
-      opt += "&&" + raw;
-   dURL.SetOptions(opt);
-
-   char *copybuffer = 0;
-
-   TFile *sfile = 0;
-   TFile *dfile = 0;
-
-   sfile = TFile::Open(sURL.GetUrl(), "READ");
-
-   if (!sfile) {
-      Error("Cp", "cannot open source file %s", src);
-      goto copyout;
-   }
-
-   // "RECREATE" does not work always well with XROOTD
-   // namely when some pieces of the path are missing;
-   // we force "NEW" in such a case
-   if (TFile::GetType(ourl, "") == TFile::kNet)
-      if (gSystem->AccessPathName(ourl)) {
-         oopt = "NEW";
-         // Force creation of the missing parts of the path
-         opt += "&mkpath=1";
-         dURL.SetOptions(opt);
-      }
-
-   dfile = TFile::Open(dURL.GetUrl(), oopt);
-
-   if (!dfile) {
-      Error("Cp", "cannot open destination file %s", dst);
-      goto copyout;
-   }
-
-   sfile->Seek(0);
-   dfile->Seek(0);
-
-   copybuffer = new char[buffersize];
-   if (!copybuffer) {
-      Error("Cp", "cannot allocate the copy buffer");
-      goto copyout;
-   }
-
-   Bool_t   readop;
-   Bool_t   writeop;
-   Long64_t read;
-   Long64_t written;
-   Long64_t totalread;
-   Long64_t filesize;
-   Long64_t b00;
-   filesize  = sfile->GetSize();
-   totalread = 0;
-   fWatch.Start();
-
-   b00 = sfile->GetBytesRead();
-
-   do {
-      if (progressbar) PrintProgress(totalread, filesize);
-
-      Long64_t b1 = sfile->GetBytesRead() - b00;
-
-      Long64_t readsize;
-      if (filesize - b1 > (Long64_t)buffersize) {
-         readsize = buffersize;
-      } else {
-         readsize = filesize - b1;
-      }
-
-      Long64_t b0 = sfile->GetBytesRead();
-      sfile->Seek(totalread,TFile::kBeg);
-      readop = sfile->ReadBuffer(copybuffer, (Int_t)readsize);
-      read   = sfile->GetBytesRead() - b0;
-      if (read < 0) {
-         Error("Cp", "cannot read from source file %s", src);
-         goto copyout;
-      }
-
-      Long64_t w0 = dfile->GetBytesWritten();
-      writeop = dfile->WriteBuffer(copybuffer, (Int_t)read);
-      written = dfile->GetBytesWritten() - w0;
-      if (written != read) {
-         Error("Cp", "cannot write %d bytes to destination file %s", read, dst);
-         goto copyout;
-      }
-      totalread += read;
-   } while (read == (Long64_t)buffersize);
-
-   if (progressbar) {
-      PrintProgress(totalread, filesize);
-      fprintf(stderr, "\n");
-   }
-
-   success = kTRUE;
-
-copyout:
-   if (sfile) sfile->Close();
-   if (dfile) dfile->Close();
-
-   if (sfile) delete sfile;
-   if (dfile) delete dfile;
-   if (copybuffer) delete[] copybuffer;
-
-   fWatch.Stop();
-   fWatch.Reset();
-
-   return success;
-}
-//______________________________________________________________________________
 void TFileMerger::Reset()
 {
    // Reset merger file list.
@@ -239,7 +81,7 @@ Bool_t TFileMerger::AddFile(const char *url)
    localcopy += uuid.AsString();
    localcopy += ".root";
 
-   if (!Cp(url, localcopy)) {
+   if (!TFile::Cp(url, localcopy)) {
       Error("AddFile", "cannot get a local copy of file %s", url);
       return kFALSE;
    }
@@ -311,7 +153,7 @@ Bool_t TFileMerger::Merge()
    } else {
       fOutputFile->Write();
       // copy the result file to the final destination
-      Cp(fOutputFilename1, fOutputFilename);
+      TFile::Cp(fOutputFilename1, fOutputFilename);
    }
 
    // remove the temporary result file
@@ -338,7 +180,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 {
    // Merge all objects in a directory
    // NB. This function is a copy of the hadd function MergeROOTFile
-   
+
    //cout << "Target path: " << target->GetPath() << endl;
    TString path( (char*)strstr( target->GetPath(), ":" ) );
    path.Remove( 0, 2 );
@@ -358,14 +200,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
       TKey *key, *oldkey=0;
       //gain time, do not add the objects in the list in memory
       TH1::AddDirectory(kFALSE);
-  
+
       while ( (key = (TKey*)nextkey())) {
          if (current_sourcedir == target) break;
          //keep only the highest cycle number for each key
          if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
          if (allNames.FindObject(key->GetName())) continue;
          allNames.Add(new TObjString(key->GetName()));
-            
+
          // read object from first source file
          current_sourcedir->cd();
          TObject *obj = key->ReadObj();
@@ -396,7 +238,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                nextsource = (TFile*)sourcelist->After( nextsource );
             }
          } else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
-      
+
             // loop over all source files create a chain of Trees "globChain"
             if (!fNoTrees) {
                TString obj_name;
@@ -408,7 +250,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                globChain = new TChain(obj_name);
                globChain->Add(first_source->GetName());
                TFile *nextsource = (TFile*)sourcelist->After( first_source );
-               while ( nextsource ) {     	  
+               while ( nextsource ) {
                   //do not add to the list a file that does not contain this Tree
                   TFile *curf = TFile::Open(nextsource->GetName());
                   if (curf) {
@@ -443,9 +285,40 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             MergeRecursive( newdir, sourcelist,1);
 
          } else {
-            // object is of no type that we know or can handle
-            cout << "Unknown object type, name: " 
-                 << obj->GetName() << " title: " << obj->GetTitle() << endl;
+            TMethodCall callEnv;
+            if (obj->IsA())
+               callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
+            if (callEnv.IsValid()) {
+               TList* tomerge = new TList;
+               TFile *nextsource = (TFile*)sourcelist->After(first_source);
+               while (nextsource) {
+                  nextsource->cd(path);
+                  TObject *newobj = gDirectory->Get(obj->GetName());
+                  if (newobj) {
+                     tomerge->Add(newobj);
+                  }
+                  nextsource = (TFile*)sourcelist->After(nextsource);
+               }
+               callEnv.SetParam((Long_t) tomerge);
+               callEnv.Execute(obj);
+               delete tomerge;
+            } else {
+               target->cd();
+               obj->Write();
+               TFile *nextsource = (TFile*)sourcelist->After(first_source);
+               while (nextsource) {
+                  nextsource->cd(path);
+                  TObject *newobj = gDirectory->Get(obj->GetName());
+                  if (newobj) {
+                     target->cd();
+                     newobj->Write();
+                  }
+                  nextsource = (TFile*)sourcelist->After(nextsource);
+               }
+               Warning("MergeRecursive", "object type without Merge function will be added unmerged, name: %s title: %s",
+                       obj->GetName(), obj->GetTitle());
+               return kTRUE;
+            }
          }
 
          // now write the merged histogram (which is "in" obj) to the target file
@@ -454,7 +327,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          // by "target->Write()" below
          if ( obj ) {
             target->cd();
-       
+
             //!!if the object is a tree, it is stored in globChain...
             if(obj->IsA()->InheritsFrom( "TDirectory" )) {
                //printf("cas d'une directory\n");

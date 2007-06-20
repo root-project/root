@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.h,v 1.4 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.h,v 1.5 2007/06/06 08:25:34 brun Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -54,9 +54,8 @@ protected:
    TString        fOutputFilename;  // the name of the outputfile for merging
    TString        fOutputFilename1; // the name of the temporary outputfile for merging
    Bool_t         fFastMethod;      // True if using Fast merging algorithm (default)
-   Bool_t         fNoTrees;         // True if Trees should not be merged (default is kFALSE)   
+   Bool_t         fNoTrees;         // True if Trees should not be merged (default is kFALSE)
 
-   void           PrintProgress(Long64_t bytesread, Long64_t size);
 
 public:
    TFileMerger();
@@ -65,8 +64,6 @@ public:
    const char *GetOutputFileName() const { return fOutputFilename; }
 
     //--- file management interface
-   virtual Bool_t Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
-                     UInt_t buffersize = 1000000);
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
    virtual const char *GetCWD() { MayNotUse("GetCWD"); return 0; }
 
@@ -79,7 +76,7 @@ public:
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Int_t isdir);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
-   
+
    ClassDef(TFileMerger,1)  // File copying and merging services
 };
 
