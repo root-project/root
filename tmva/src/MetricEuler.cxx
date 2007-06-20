@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricEuler.cxx,v 1.3 2007/06/14 10:11:40 speckmayer Exp $ 
+// @(#)root/tmva $Id: MetricEuler.cxx,v 1.3 2007/06/20 09:41:24 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -29,6 +29,7 @@
 //_______________________________________________________________________
 
 #include "TMVA/MetricEuler.h"
+#include "TMath.h"
 
 ClassImp(TMVA::MetricEuler)
 
