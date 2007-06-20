@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.cxx,v 1.1 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContextPrivate.cxx,v 1.2 2007/06/18 10:58:34 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 #ifndef WIN32
@@ -12,7 +12,7 @@ void TGLContextPrivate::RegisterContext(TGLContext *ctx)
 {
    //Register gl-context to find it later as current (GetCurrentContext)
    if (ctx->IsValid())
-      fContexts[ctx->fPimpl->fGLContext] = ctx;
+      fgContexts[ctx->fPimpl->fGLContext] = ctx;
 }
 
 //______________________________________________________________________________
@@ -20,21 +20,21 @@ void TGLContextPrivate::RemoveContext(TGLContext *ctx)
 {
    //Un-register deleted context.
    if (ctx->IsValid())
-      fContexts.erase(ctx->fPimpl->fGLContext);
+      fgContexts.erase(ctx->fPimpl->fGLContext);
 }
 
 #ifdef WIN32
 
-std::map<HGLRC, TGLContext *> TGLContextPrivate::fContexts;
+std::map<HGLRC, TGLContext *> TGLContextPrivate::fgContexts;
 
 //______________________________________________________________________________
 TGLContext *TGLContextPrivate::GetCurrentContext()
 {
    //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    HGLRC glContext = wglGetCurrentContext();
-   std::map<HGLRC, TGLContext *>::const_iterator it = fContexts.find(glContext);
+   std::map<HGLRC, TGLContext *>::const_iterator it = fgContexts.find(glContext);
 
-   if (it != fContexts.end())
+   if (it != fgContexts.end())
       return it->second;
 
    return 0;
@@ -42,16 +42,16 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
 
 #else
 
-std::map<GLXContext, TGLContext *> TGLContextPrivate::fContexts;
+std::map<GLXContext, TGLContext *> TGLContextPrivate::fgContexts;
 
 //______________________________________________________________________________
 TGLContext *TGLContextPrivate::GetCurrentContext()
 {
    //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    GLXContext glContext = glXGetCurrentContext();
-   std::map<GLXContext, TGLContext *>::const_iterator it = fContexts.find(glContext);
+   std::map<GLXContext, TGLContext *>::const_iterator it = fgContexts.find(glContext);
 
-   if (it != fContexts.end())
+   if (it != fgContexts.end())
       return it->second;
 
    return 0;
