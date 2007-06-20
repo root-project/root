@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.50 2007/06/12 13:51:04 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.51 2007/06/14 09:16:30 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1033,6 +1033,9 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
       fgEDest.Say(0, "Proofd : Configure: PROOF pool namespace: ", fgNamespace);
 
       if (fgResourceType == kRTStatic) {
+         fgEDest.Say(0, "Proofd : Configure: PROOF config file: ",
+                        ((fgPROOFcfg.fName.length() > 0) ? fgPROOFcfg.fName.c_str()
+                                                          : "none"));
          // Initialize the list of workers if a static config has been required
          // Default file path, if none specified
          if (fgPROOFcfg.fName.length() <= 0) {
@@ -1043,16 +1046,14 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
             if (fgNumLocalWrks > 0)
                if (CreateDefaultPROOFcfg() != 0)
                   fgEDest.Say(0, "Proofd : Configure: unable to create the default worker list");
-         }
-         fgEDest.Say(0, "Proofd : Configure: PROOF config file: ",
-                         ((fgPROOFcfg.fName.length() > 0) ? fgPROOFcfg.fName.c_str()
-                                                          : "none"));
-         // Load file content in memory
-         if (ReadPROOFcfg() != 0) {
-            fgEDest.Say(0, "Proofd : Configure: unable to find valid information"
-                           "in PROOF config file ", fgPROOFcfg.fName.c_str());
-            fgPROOFcfg.fMtime = 0;
-            return 0;
+         } else {
+            // Load file content in memory
+            if (ReadPROOFcfg() != 0) {
+               fgEDest.Say(0, "Proofd : Configure: unable to find valid information"
+                              " in PROOF config file ", fgPROOFcfg.fName.c_str());
+               fgPROOFcfg.fMtime = 0;
+               return 0;
+            }
          }
          const char *st[] = { "disabled", "enabled" };
          fgEDest.Say(0, "Proofd : Configure: user config files are ", st[fgWorkerUsrCfg]);
