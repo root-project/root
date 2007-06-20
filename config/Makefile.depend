@@ -62,7 +62,8 @@ RUBYLIBDEPM            = $(HISTLIB)
 GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB)
 XMLLIBDEPM             = $(IOLIB)
 FOAMLIBDEPM            = $(HISTLIB)
-ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFLIB)
+ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFPLAYERLIB) \
+                         $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                          $(MINUITLIB) $(HTMLLIB) $(IOLIB)
 ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB)
@@ -240,7 +241,7 @@ GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
 XMLLIBEXTRA             = lib/libRIO.lib
 FOAMLIBEXTRA            = lib/libHist.lib
 ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
-                          lib/libProof.lib
+                          lib/libProofPlayer.lib lib/libNet.lib lib/RIO.lib
 ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib \
                           lib/libRIO.lib
@@ -323,7 +324,7 @@ GUIBLDLIBEXTRA          = -Llib -lGui -lGraf
 GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
 FOAMLIBEXTRA            = -Llib -lHist
-ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof
+ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProofPlayer -lNet -lRIO
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml -lRIO
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO
 CINT7LIBEXTRA           = -Llib -lReflex
