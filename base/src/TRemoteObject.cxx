@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.64 2007/05/04 15:14:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.2 2007/06/19 13:50:21 rdm Exp $
 // Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************
@@ -13,7 +13,15 @@
 //                                                                      //
 // TRemoteObject                                                        //
 //                                                                      //
-// Describes a Remote Object for the browser.                           //
+// The TRemoteObject class provides protocol for browsing ROOT objects  //
+// from a remote ROOT session.                                          //
+// It contains informations on the real remote object as:               //
+//  - Object Properties (i.e. file stat if the object is a TSystemFile) //
+//  - Object Name                                                       //
+//  - Class Name                                                        //
+//  - TKey Object Name (if the remote object is a TKey)                 //
+//  - TKey Class Name (if the remote object is a TKey)                  //
+//  - Remote object address                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +63,7 @@ TRemoteObject::TRemoteObject(const char *name, const char *title,
 //______________________________________________________________________________
 TRemoteObject::~TRemoteObject()
 {
-   // Delete system directory object.
+   // Delete remote object.
 
 }
 

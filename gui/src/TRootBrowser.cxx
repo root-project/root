@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.116 2007/06/15 14:13:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.117 2007/06/19 12:55:18 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1422,7 +1422,23 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
          fLt->SetToolTipItem(item, tip.Data());
       } else {
          // special case for remote object
-         if (obj->InheritsFrom("TRemoteObject")) {
+         Bool_t isRemote = kFALSE;
+         if (obj->InheritsFrom("TRemoteObject"))
+            isRemote = kTRUE;
+         else if (fListLevel) {
+            // check also if one of its parents is a remote object
+            TGListTreeItem *top = fListLevel;
+            while (top->GetParent()) {
+               TObject *tobj = (TObject *) top->GetUserData();
+               if (tobj && (tobj->InheritsFrom("TRemoteObject") ||
+                  tobj->InheritsFrom("TApplicationRemote"))) {
+                  isRemote = kTRUE;
+                  break;
+               }
+               top = top->GetParent();
+            }
+         }
+         if (isRemote) {
             // add the remote object only if not already in the list
             if ((!fLt->FindChildByName(fListLevel, name)) &&
                 (!fLt->FindChildByData(fListLevel, obj)))
@@ -2521,7 +2537,23 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
          if (!itm && fListLevel) {
             // special case for remote objects
-            if (obj->InheritsFrom("TRemoteObject")) {
+            Bool_t isRemote = kFALSE;
+            if (obj->InheritsFrom("TRemoteObject"))
+               isRemote = kTRUE;
+            else if (fListLevel) {
+               // check also if one of its parents is a remote object
+               TGListTreeItem *top = fListLevel;
+               while (top->GetParent()) {
+                  TObject *tobj = (TObject *) top->GetUserData();
+                  if (tobj && (tobj->InheritsFrom("TRemoteObject") ||
+                     tobj->InheritsFrom("TApplicationRemote"))) {
+                     isRemote = kTRUE;
+                     break;
+                  }
+                  top = top->GetParent();
+               }
+            }
+            if (isRemote) {
                // add the remote object only if not already in the list
                if ((!fLt->FindChildByName(fListLevel, obj->GetName())) &&
                    (!fLt->FindChildByData(fListLevel, obj))) {
