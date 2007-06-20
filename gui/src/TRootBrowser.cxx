@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.117 2007/06/19 12:55:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.118 2007/06/20 14:45:17 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2491,6 +2491,13 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
       if (obj->InheritsFrom("TLeaf")) {
          TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();", 
+                                                      obj->ClassName(), obj));
+         if (!dir) {
+            browsable = kFALSE;
+         }
+      }
+      if (obj->InheritsFrom("TBranchElement")) {
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();", 
                                                       obj->ClassName(), obj));
          if (!dir) {
             browsable = kFALSE;
