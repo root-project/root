@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.3 2007/04/20 15:07:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.4 2007/04/22 15:48:59 brun Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
@@ -54,6 +54,8 @@ TGDNDManager *gDNDManager = 0;
 
 Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
+ClassImp(TGDragWindow)
+ClassImp(TGDNDManager)
 
 //______________________________________________________________________________
 TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
