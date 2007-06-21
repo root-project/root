@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.2 2007/06/21 07:41:06 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.3 2007/06/21 10:46:09 ganis Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -413,7 +413,7 @@ int XrdProofGroupMgr::Config(const char *fn)
          // Property definition: format of property is
          // property <group> <property_name> <nominal_value> [<effective_value>]
          XrdOucString name;
-         int nom;
+         int nom=0;
          bool gotname = 0, gotnom = 0;
          while ((from = gl.tokenize(tok, from, ',')) != -1) {
             if (tok.length() > 0) {
