@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.cxx,v 1.5 2007/05/25 10:46:29 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
+// Last update: $Id: Quaternion.cxx,v 1.5 2007/05/25 10:46:29 moneta Exp $
 //
 #include "Math/GenVector/Quaternion.h"
 
@@ -54,28 +54,20 @@ void Quaternion::Rectify()
 
 // ========== Operations =====================
 
-DisplacementVector3D< Cartesian3D<double> >
-Quaternion::operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
-{
-   // apply to a 3D Vector 
-   const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
-   const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
-   const Scalar twoU  = 2 * fU;
-   return  DisplacementVector3D< Cartesian3D<double> >            (
-                                                                   alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI
-                                                                   , alpha * v.Y() + twoU * (fK*v.X() - fI*v.Z()) + twoQv * fJ
-                                                                   , alpha * v.Z() + twoU * (fI*v.Y() - fJ*v.X()) + twoQv * fK
-                                                                   );
-}
+// DisplacementVector3D< Cartesian3D<double> >
+// Quaternion::operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
+// {
+//    // apply to a 3D Vector 
+// }
 
-Quaternion Quaternion::operator * (const Quaternion & q) const {
-   // combination of rotations
-   return Quaternion                          (
-                                               fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK
-                                               , fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ
-                                               , fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI
-                                               , fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
-}
+// Quaternion Quaternion::operator * (const Quaternion & q) const {
+//    // combination of rotations
+//    return Quaternion                          (
+//                                                fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK
+//                                                , fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ
+//                                                , fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI
+//                                                , fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
+//}
 
 Quaternion Quaternion::operator * (const Rotation3D  & r) const {
    // combination of rotations

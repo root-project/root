@@ -21,7 +21,8 @@
 #include "Math/GenVector/PtEtaPhiE4D.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
 #include "Math/GenVector/LorentzVector.h"
-#include "Math/GenVector/LorentzVectorfwd.h"
+
+#include "Math/Vector4Dfwd.h"  // for typedefs definitions
 
 #include "CoordinateTraits.h"
 

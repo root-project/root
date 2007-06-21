@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.14 2007/05/25 10:46:29 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.14 2007/05/25 10:46:29 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -383,7 +383,28 @@ public:
    /**
       Multiply (combine) two rotations
    */
-   Rotation3D operator * (const Rotation3D  & r) const;
+   Rotation3D operator * (const Rotation3D  & r) const { 
+   return Rotation3D 
+   (  fM[kXX]*r.fM[kXX] + fM[kXY]*r.fM[kYX] + fM[kXZ]*r.fM[kZX]
+    , fM[kXX]*r.fM[kXY] + fM[kXY]*r.fM[kYY] + fM[kXZ]*r.fM[kZY]
+    , fM[kXX]*r.fM[kXZ] + fM[kXY]*r.fM[kYZ] + fM[kXZ]*r.fM[kZZ]
+    
+    , fM[kYX]*r.fM[kXX] + fM[kYY]*r.fM[kYX] + fM[kYZ]*r.fM[kZX]
+    , fM[kYX]*r.fM[kXY] + fM[kYY]*r.fM[kYY] + fM[kYZ]*r.fM[kZY]
+    , fM[kYX]*r.fM[kXZ] + fM[kYY]*r.fM[kYZ] + fM[kYZ]*r.fM[kZZ]
+    
+    , fM[kZX]*r.fM[kXX] + fM[kZY]*r.fM[kYX] + fM[kZZ]*r.fM[kZX]
+    , fM[kZX]*r.fM[kXY] + fM[kZY]*r.fM[kYY] + fM[kZZ]*r.fM[kZY]
+    , fM[kZX]*r.fM[kXZ] + fM[kZY]*r.fM[kYZ] + fM[kZZ]*r.fM[kZZ]   );
+
+   }
+   
+
+   /**
+      Multiplication with arbitrary rotations 
+    */
+    // note: cannot have a  template method since it is ambigous with the operator * on vectors 
+
    Rotation3D operator * (const AxisAngle   & a) const;
    Rotation3D operator * (const EulerAngles & e) const;
    Rotation3D operator * (const Quaternion  & q) const;

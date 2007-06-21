@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.12 2007/05/22 13:35:16 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.13 2007/05/25 10:46:28 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -65,8 +65,9 @@
 #pragma link C++ class ROOT::Math::BoostZ+;
 
 
-#pragma link C++ class ROOT::Math::Transform3D+;
 #pragma link C++ class ROOT::Math::Plane3D+;
+#pragma link C++ class ROOT::Math::Transform3D+;
+#pragma link C++ class ROOT::Math::Translation3D+;
 
 //#endif
 

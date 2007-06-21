@@ -8,6 +8,7 @@
 #include "Math/EulerAngles.h"
 
 #include "Math/Transform3D.h"
+#include "Math/Translation3D.h"
 
 #include "Math/Rotation3D.h"
 #include "Math/RotationX.h"
@@ -492,11 +493,26 @@ int testTransform3D() {
 //   std::cout << Rotation3D(r) * Rotation3D(r).Inverse() << std::endl; 
 
 
+  // test Translation3D
+
+  Translation3D tr1(v);
+  Translation3D tr2(v.X(),v.Y(),v.Z());
+  iret |= compare(tr1 ==tr2, 1,"eq transl",1 );
+
+  Translation3D tr3 = tr1 * tr1.Inverse(); 
+  GlobalPolar3DVector vp2 = tr3 * v;
+  iret |= compare(vp2.X(), v.X(),"x diff",10 );
+  iret |= compare(vp2.Y(), v.Y(),"y diff",10 );
+  iret |= compare(vp2.Z(), v.Z(),"z diff",10 );
 
 
+  Transform3D t2b = tr1 * Rotation3D(r);
+  iret |= compare(t2 ==t2b, 1,"eq1 transf",1 );
+  Transform3D t2c( r, tr1);
+  iret |= compare(t2 ==t2c, 1,"eq2 transf",1 );
 
 
-  Transform3D t3( vr, r );
+  Transform3D t3 =  Rotation3D(r) * Translation3D(vr); 
 
   //std::cout << t2 << std::endl; 
   //std::cout << t3 << std::endl; 
@@ -553,8 +569,9 @@ int testTransform3D() {
   iret |= compare( (lr==lr2),true,"Get/SetLRotMatrix");
 #endif
 
-  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
-  else std::cout << "\t\t\t\tFAILED\n"; 
+
+  if (iret == 0) std::cout << "\t\t\tOK\n"; 
+  else std::cout << "\t\t\tFAILED\n"; 
 
   return iret; 
 }

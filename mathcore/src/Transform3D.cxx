@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.11 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.13 2006/11/07 16:24:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
@@ -71,26 +71,34 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
       
       z2 = (x2.Cross(y2)).Unit();
       y2  = z2.Cross(x2);
+
+      double x1x = x1.x();      double x1y = x1.y();      double x1z = x1.z();
+      double y1x = y1.x();      double y1y = y1.y();      double y1z = y1.z();
+      double z1x = z1.x();      double z1y = z1.y();      double z1z = z1.z();
+
+      double x2x = x2.x();      double x2y = x2.y();      double x2z = x2.z();
+      double y2x = y2.x();      double y2y = y2.y();      double y2z = y2.z();
+      double z2x = z2.x();      double z2y = z2.y();      double z2z = z2.z();
       
-      double detxx =  (y1.y()*z1.z() - z1.y()*y1.z());
-      double detxy = -(y1.x()*z1.z() - z1.x()*y1.z());
-      double detxz =  (y1.x()*z1.y() - z1.x()*y1.y());
-      double detyx = -(x1.y()*z1.z() - z1.y()*x1.z());
-      double detyy =  (x1.x()*z1.z() - z1.x()*x1.z());
-      double detyz = -(x1.x()*z1.y() - z1.x()*x1.y());
-      double detzx =  (x1.y()*y1.z() - y1.y()*x1.z());
-      double detzy = -(x1.x()*y1.z() - y1.x()*x1.z());
-      double detzz =  (x1.x()*y1.y() - y1.x()*x1.y());
+      double detxx =  (y1y *z1z  - z1y *y1z );
+      double detxy = -(y1x *z1z  - z1x *y1z );
+      double detxz =  (y1x *z1y  - z1x *y1y );
+      double detyx = -(x1y *z1z  - z1y *x1z );
+      double detyy =  (x1x *z1z  - z1x *x1z );
+      double detyz = -(x1x *z1y  - z1x *x1y );
+      double detzx =  (x1y *y1z  - y1y *x1z );
+      double detzy = -(x1x *y1z  - y1x *x1z );
+      double detzz =  (x1x *y1y  - y1x *x1y );
       
-      double txx = x2.x()*detxx + y2.x()*detyx + z2.x()*detzx;
-      double txy = x2.x()*detxy + y2.x()*detyy + z2.x()*detzy;
-      double txz = x2.x()*detxz + y2.x()*detyz + z2.x()*detzz;
-      double tyx = x2.y()*detxx + y2.y()*detyx + z2.y()*detzx;
-      double tyy = x2.y()*detxy + y2.y()*detyy + z2.y()*detzy;
-      double tyz = x2.y()*detxz + y2.y()*detyz + z2.y()*detzz;
-      double tzx = x2.z()*detxx + y2.z()*detyx + z2.z()*detzx;
-      double tzy = x2.z()*detxy + y2.z()*detyy + z2.z()*detzy;
-      double tzz = x2.z()*detxz + y2.z()*detyz + z2.z()*detzz;
+      double txx = x2x *detxx + y2x *detyx + z2x *detzx;
+      double txy = x2x *detxy + y2x *detyy + z2x *detzy;
+      double txz = x2x *detxz + y2x *detyz + z2x *detzz;
+      double tyx = x2y *detxx + y2y *detyx + z2y *detzx;
+      double tyy = x2y *detxy + y2y *detyy + z2y *detzy;
+      double tyz = x2y *detxz + y2y *detyz + z2y *detzz;
+      double tzx = x2z *detxx + y2z *detyx + z2z *detzx;
+      double tzy = x2z *detxy + y2z *detyy + z2z *detzy;
+      double tzz = x2z *detxz + y2z *detyz + z2z *detzz;
       
       //   S E T    T R A N S F O R M A T I O N
       
@@ -135,63 +143,7 @@ void Transform3D::Invert()
 }
 
 
-// get rotations and translations
-void Transform3D::GetDecomposition ( Rotation3D &r, XYZVector &v) const
-{
-   // decompose a trasfomation in a 3D rotation and in a 3D vector (cartesian coordinates) 
-   r.SetComponents( fM[kXX], fM[kXY], fM[kXZ],
-                    fM[kYX], fM[kYY], fM[kYZ],
-                    fM[kZX], fM[kZY], fM[kZZ] );
-   
-   v.SetCoordinates( fM[kDX], fM[kDY], fM[kDZ] );
-}
 
-// transformation on Position Vector (rotation + translations)
-XYZPoint Transform3D::operator() (const XYZPoint & p) const
-{
-   // pass through rotation class (could be implemented directly to be faster)
-   
-   Rotation3D r;
-   XYZVector  t;
-   GetDecomposition(r, t);
-   XYZPoint pnew = r(p);
-   pnew += t;
-   return pnew;
-}
-
-// transformation on Displacement Vector (only rotation)
-XYZVector Transform3D::operator() (const XYZVector & v) const
-{
-   // pass through rotation class ( could be implemented directly to be faster)
-   
-   Rotation3D r;
-   XYZVector  t;
-   GetDecomposition(r, t);
-   // only rotation
-   return r(v);
-}
-
-Transform3D & Transform3D::operator *= (const Transform3D  & t)
-{
-   // combination of transformations
-   
-   SetComponents(fM[kXX]*t.fM[kXX]+fM[kXY]*t.fM[kYX]+fM[kXZ]*t.fM[kZX],
-                 fM[kXX]*t.fM[kXY]+fM[kXY]*t.fM[kYY]+fM[kXZ]*t.fM[kZY],
-                 fM[kXX]*t.fM[kXZ]+fM[kXY]*t.fM[kYZ]+fM[kXZ]*t.fM[kZZ],
-                 fM[kXX]*t.fM[kDX]+fM[kXY]*t.fM[kDY]+fM[kXZ]*t.fM[kDZ]+fM[kDX],
-                 
-                 fM[kYX]*t.fM[kXX]+fM[kYY]*t.fM[kYX]+fM[kYZ]*t.fM[kZX],
-                 fM[kYX]*t.fM[kXY]+fM[kYY]*t.fM[kYY]+fM[kYZ]*t.fM[kZY],
-                 fM[kYX]*t.fM[kXZ]+fM[kYY]*t.fM[kYZ]+fM[kYZ]*t.fM[kZZ],
-                 fM[kYX]*t.fM[kDX]+fM[kYY]*t.fM[kDY]+fM[kYZ]*t.fM[kDZ]+fM[kDY],
-                 
-                 fM[kZX]*t.fM[kXX]+fM[kZY]*t.fM[kYX]+fM[kZZ]*t.fM[kZX],
-                 fM[kZX]*t.fM[kXY]+fM[kZY]*t.fM[kYY]+fM[kZZ]*t.fM[kZY],
-                 fM[kZX]*t.fM[kXZ]+fM[kZY]*t.fM[kYZ]+fM[kZZ]*t.fM[kZZ],
-                 fM[kZX]*t.fM[kDX]+fM[kZY]*t.fM[kDY]+fM[kZZ]*t.fM[kDZ]+fM[kDZ]);
-   
-   return *this;
-}
 
 void Transform3D::SetIdentity()
 {

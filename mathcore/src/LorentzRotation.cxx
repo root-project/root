@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.7 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.9 2006/11/07 16:24:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -176,19 +176,6 @@ LorentzRotation::Rectify() {
    x /= std::sqrt(-m2);
 }
 
-LorentzVector< PxPyPzE4D<double> >
-LorentzRotation::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
-   // apply a LR to a 4D LoentzVector
-   Scalar x = v.Px();
-   Scalar y = v.Py();
-   Scalar z = v.Pz();
-   Scalar t = v.E();
-   return LorentzVector< PxPyPzE4D<double> > 
-      ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
-        , fM[kYX]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
-        , fM[kZX]*x + fM[kZY]*y + fM[kZZ]*z + fM[kZT]*t
-        , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );
-}
 
 void LorentzRotation::Invert() {
    // invert modifying current content

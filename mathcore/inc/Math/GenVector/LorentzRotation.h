@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -323,7 +323,17 @@ public:
      LorentzVector
   */
   LorentzVector< ROOT::Math::PxPyPzE4D<double> >
-  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
+  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const { 
+        Scalar x = v.Px();
+        Scalar y = v.Py();
+        Scalar z = v.Pz();
+        Scalar t = v.E();
+        return LorentzVector< ROOT::Math::PxPyPzE4D<double> > 
+           ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
+             , fM[kYX]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
+             , fM[kZX]*x + fM[kZY]*y + fM[kZZ]*z + fM[kZT]*t
+             , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );        
+  }
   
   /**
      Lorentz transformation operation on a LorentzVector in any 

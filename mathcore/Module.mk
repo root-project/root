@@ -45,6 +45,7 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/AxisAngle.h \
                  $(MODDIRI)/Math/Quaternion.h \
                  $(MODDIRI)/Math/Transform3D.h \
+                 $(MODDIRI)/Math/Translation3D.h \
                  $(MODDIRI)/Math/Plane3D.h \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/DistFuncMathCore.h \

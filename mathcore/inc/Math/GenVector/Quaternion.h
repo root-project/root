@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.10 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.11 2007/05/25 10:46:29 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.10 2006/11/10 11:04:42 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.11 2007/05/25 10:46:29 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -169,7 +169,15 @@ public:
       Rotation operation on a cartesian vector
    */
    typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
-   XYZVector operator() (const XYZVector & v) const;
+   XYZVector operator() (const XYZVector & v) const { 
+
+      const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
+      const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
+      const Scalar twoU  = 2 * fU;
+      return XYZVector  (  alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI , 
+                           alpha * v.Y() + twoU * (fK*v.X() - fI*v.Z()) + twoQv * fJ ,
+                           alpha * v.Z() + twoU * (fI*v.Y() - fJ*v.X()) + twoQv * fK );
+   }
 
    /**
       Rotation operation on a displacement vector in any coordinate system
@@ -248,7 +256,13 @@ public:
    /**
       Multiply (combine) two rotations
    */
-   Quaternion operator * (const Quaternion  & q) const;
+   Quaternion operator * (const Quaternion  & q) const { 
+      return Quaternion  (   fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK ,
+                             fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ ,
+                             fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI ,
+                             fU*q.fK + fI*q.fJ - fJ*q.fI + fK*q.fU  );
+   }
+
    Quaternion operator * (const Rotation3D  & r) const;
    Quaternion operator * (const AxisAngle   & a) const;
    Quaternion operator * (const EulerAngles & e) const;

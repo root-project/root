@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.11 2006/11/07 16:24:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.12 2007/05/25 10:46:29 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -101,18 +101,6 @@ void Rotation3D::Rectify()
 } // Rectify()
 
 
-// ========== Operations =====================
-
-// DisplacementVector3D< Cartesian3D<double> >
-// Rotation3D::
-// operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
-// {
-//   return  DisplacementVector3D< Cartesian3D<double> >  (
-//       fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z()
-//     , fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z()
-//     , fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
-// }
-
 static inline void swap(double & a, double & b) { 
    // swap two values
    double t=b; b=a; a=t; 
@@ -125,24 +113,6 @@ void Rotation3D::Invert() {
    swap (fM[kYZ], fM[kZY]);
 }
 
-Rotation3D Rotation3D::operator * (const Rotation3D  & r) const {
-   // combine with a rotation of the same type
-   
-   return Rotation3D 
-   (
-    fM[kXX]*r.fM[kXX] + fM[kXY]*r.fM[kYX] + fM[kXZ]*r.fM[kZX]
-    , fM[kXX]*r.fM[kXY] + fM[kXY]*r.fM[kYY] + fM[kXZ]*r.fM[kZY]
-    , fM[kXX]*r.fM[kXZ] + fM[kXY]*r.fM[kYZ] + fM[kXZ]*r.fM[kZZ]
-    
-    , fM[kYX]*r.fM[kXX] + fM[kYY]*r.fM[kYX] + fM[kYZ]*r.fM[kZX]
-    , fM[kYX]*r.fM[kXY] + fM[kYY]*r.fM[kYY] + fM[kYZ]*r.fM[kZY]
-    , fM[kYX]*r.fM[kXZ] + fM[kYY]*r.fM[kYZ] + fM[kYZ]*r.fM[kZZ]
-    
-    , fM[kZX]*r.fM[kXX] + fM[kZY]*r.fM[kYX] + fM[kZZ]*r.fM[kZX]
-    , fM[kZX]*r.fM[kXY] + fM[kZY]*r.fM[kYY] + fM[kZZ]*r.fM[kZY]
-    , fM[kZX]*r.fM[kXZ] + fM[kZY]*r.fM[kYZ] + fM[kZZ]*r.fM[kZZ]
-    );
-}
 
 Rotation3D Rotation3D::operator * (const AxisAngle   & a) const {
    // combine with an AxisAngle rotation
