@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.26 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.27 2007/06/15 11:38:28 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1321,6 +1321,9 @@ Int_t TXSocket::Send(const TMessage &mess)
    // Parse message type to choose sending options
    kXR_int32 fSendOptDefault = fSendOpt;
    switch (mess.What()) {
+      case kPROOF_PROCESS:
+         fSendOpt |= kXPD_process;
+         break;
       case kPROOF_PROGRESS:
       case kPROOF_FEEDBACK:
          fSendOpt |= kXPD_fb_prog;

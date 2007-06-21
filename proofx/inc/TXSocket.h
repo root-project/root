@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.12 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.13 2007/03/19 15:14:10 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -144,7 +144,8 @@ public:
                         kQueryLogPaths,
                         kReadBuffer,
                         kQueryROOTVersions,
-                        kROOTVersion };
+                        kROOTVersion,
+                        kGroupProperties };
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 
