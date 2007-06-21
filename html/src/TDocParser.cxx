@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.13 2007/06/11 14:39:01 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.14 2007/06/21 17:15:35 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1201,7 +1201,6 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
             // an opening parathesis
             Ssiz_t posMethodEnd = posMethodName + lookFor.Length();
             while (isspace((UChar_t)fLineRaw[posMethodEnd])) ++posMethodEnd;
-            printf("DEBUG endmethod=%s for line %s\n", fLineRaw.Data()+posMethodEnd, fLineRaw.Data());
             if (fLineRaw[posMethodEnd] == '(') {
                meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
                                                 anchor, sourceFile, allowPureVirtual);
