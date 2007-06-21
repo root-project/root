@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.14 2007/06/21 14:13:12 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.14 2007/06/21 14:13:12 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -328,7 +328,7 @@ public:
         Scalar y = v.Py();
         Scalar z = v.Pz();
         Scalar t = v.E();
-        return LorentzVector< ROOT::Math::PxPyPzE4D<double> > 
+        return LorentzVector< PxPyPzE4D<double> > 
            ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
              , fM[kYX]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
              , fM[kZX]*x + fM[kZY]*y + fM[kZZ]*z + fM[kZT]*t
