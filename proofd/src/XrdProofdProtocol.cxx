@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.52 2007/06/20 06:22:15 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.53 2007/06/21 07:46:54 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -6413,7 +6413,6 @@ int XrdProofdProtocol::SetInflateFactors()
    float *aa = new float[sorted.size()];
    int nn = sorted.size() - 1;
    i = nn;
-   std::list<XrdProofServProxy *>::iterator psvi;
    ssvi = sorted.end();
    while (ssvi != sorted.begin()) {
       --ssvi;
