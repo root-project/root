@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.5 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.6 2006/12/03 23:34:04 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -56,6 +56,41 @@ enum XProofRequestTypes {
 #define kXPD_OpModeOpen       0
 #define kXPD_OpModeControlled 1
 
+// Type of resources
+enum EResourceType {
+   kRTStatic,
+   kRTDynamic
+};
+
+// Worker selection options
+enum EStaticSelOpt {
+   kSSORoundRobin = 0,
+   kSSORandom     = 1,
+   kSSOLoadBased  = 2
+};
+
+// Should be the same as in proofx/inc/TXSocket.h
+enum EAdminMsgType {
+   kQuerySessions     = 1000,
+   kSessionTag        = 1001,
+   kSessionAlias      = 1002,
+   kGetWorkers        = 1003,
+   kQueryWorkers      = 1004,
+   kCleanupSessions   = 1005,
+   kQueryLogPaths     = 1005,
+   kReadBuffer        = 1007,
+   kQueryROOTVersions = 1008,
+   kROOTVersion       = 1009,
+   kGroupProperties   = 1010
+};
+
+// XPROOFD Worker CPU load sharing options
+enum XProofSchedOpts {
+   kXPD_sched_off = 0,
+   kXPD_sched_fraction = 1,
+   kXPD_sched_priority = 2
+};
+
 // XPROOFD SERVER STATUS
 enum XProofSessionStatus {
    kXPD_idle            = 0,
@@ -72,6 +107,7 @@ enum XProofSessionStatus {
 #define kXPD_fb_prog      0x10
 #define kXPD_logmsg       0x20
 #define kXPD_querynum     0x40
+#define kXPD_process      0x80
 
 //_______________________________________________
 // PROTOCOL DEFINITION: SERVER'S RESPONSES TYPES
@@ -99,7 +135,8 @@ enum XProofActionCode {
    kXPD_errmsg,    // 5106     // Error message from server with log string
    kXPD_timer,     // 5107     // Server request to start a timer for delayed termination
    kXPD_urgent,    // 5108     // Urgent message to be processed in the reader thread
-   kXPD_flush      // 5109     // Server request to flush stdout (before retrieving logs)
+   kXPD_flush,     // 5109     // Server request to flush stdout (before retrieving logs)
+   kXPD_inflate    // 5110     // Server request to inflate processing times
 };
 
 //_______________________________________________
