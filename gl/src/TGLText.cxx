@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.0 Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.1 2007/06/21 14:55:36 couet Exp $
 // Author:  Olivier Couet  12/04/2007
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TGLText::TGLText()
 
 
 //______________________________________________________________________________
-TGLText::TGLText(Double_t x, Double_t y, Double_t z, const char */*text*/)
+TGLText::TGLText(Double_t x, Double_t y, Double_t z, const char * /*text*/)
 {
    // TGLext normal constructor.
 
