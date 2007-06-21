@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdPlatform.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdPlatform.h,v 1.2 2007/06/14 09:16:30 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -64,6 +64,7 @@
 #   include <sys/systeminfo.h>
 #   include <sys/filio.h>
 #   include <sys/sockio.h>
+#   include <fcntl.h>
 #   define HASNOT_INETATON
 #   define INADDR_NONE (UInt_t)-1
 #endif

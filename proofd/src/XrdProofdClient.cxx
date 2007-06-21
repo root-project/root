@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.cxx,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.cxx,v 1.2 2007/06/21 07:41:06 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -35,9 +35,95 @@
 static const char *gTraceID = " ";
 extern XrdOucTrace *XrdProofdTrace;
 #define TRACEID gTraceID
-extern bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs);
 
 int XrdProofdClient::fgMaxOldLogs = 10;
+
+//__________________________________________________________________________
+bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs)
+{
+   // Compare times from session tag strings
+
+   if (!lhs || !rhs)
+      return 1;
+
+   // Left hand side
+   XrdOucString ll(*lhs);
+   ll.erase(ll.rfind('-'));
+   ll.erase(0, ll.rfind('-')+1);
+   int tl = strtol(ll.c_str(), 0, 10);
+
+   // Right hand side
+   XrdOucString rr(*rhs);
+   rr.erase(rr.rfind('-'));
+   rr.erase(0, rr.rfind('-')+1);
+   int tr = strtol(rr.c_str(), 0, 10);
+
+   // Done
+   return ((tl < tr) ? 0 : 1);
+}
+
+#if defined(__sun)
+//__________________________________________________________________________
+static void Sort(std::list<XrdOucString *> *lst)
+{
+   // Sort ascendingly the list.
+   // Function used on Solaris where std::list::sort() does not support an
+   // alternative comparison algorithm.
+
+   // Check argument
+   if (!lst)
+      return;
+
+   // If empty or just one element, nothing to do
+   if (lst->size() < 2)
+      return;
+
+   // Fill a temp array with the current status
+   XrdOucString **ta = new XrdOucString *[lst->size()];
+   std::list<XrdOucString *>::iterator i;
+   int n = 0;
+   for (i = lst->begin(); i != lst->end(); ++i)
+      ta[n++] = *i;
+
+   // Now start the loops
+   XrdOucString *tmp = 0;
+   bool notyet = 1;
+   int jold = 0;
+   while (notyet) {
+      int j = jold;
+      while (j < n - 1) {
+         if (XpdSessionTagComp(ta[j], ta[j+1]))
+            break;
+         j++;
+      }
+      if (j >= n - 1) {
+         notyet = 0;
+      } else {
+         jold = j + 1;
+         XPDSWAP(ta[j], ta[j+1], tmp);
+         int k = j;
+         while (k > 0) {
+            if (!XpdSessionTagComp(ta[k], ta[k-1])) {
+               XPDSWAP(ta[k], ta[k-1], tmp);
+            } else {
+               break;
+            }
+            k--;
+         }
+      }
+   }
+
+   // Empty the original list
+   lst->clear();
+
+   // Fill it again
+   while (n--)
+      lst->push_back(ta[n]);
+
+   // Clean up
+   delete[] ta;
+}
+#endif
 
 //__________________________________________________________________________
 XrdProofdClient::XrdProofdClient(const char *cid,
