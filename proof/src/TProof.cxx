@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.204 2007/06/08 09:17:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.205 2007/06/12 10:06:00 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1423,10 +1423,9 @@ Int_t TProof::GetParallel() const
 }
 
 //______________________________________________________________________________
-TList *TProof::GetSlaveInfo()
+TList *TProof::GetListOfSlaveInfos()
 {
-   // Returns number of slaves active in parallel mode. Returns 0 in case
-   // there are no active slaves. Returns -1 in case of error.
+   // Returns list of TSlaveInfo's. In case of error return 0.
 
    if (!IsValid()) return 0;
 
@@ -1441,7 +1440,7 @@ TList *TProof::GetSlaveInfo()
    TIter next(GetListOfSlaves());
    TSlave *slave;
 
-   while((slave = (TSlave *) next()) != 0) {
+   while ((slave = (TSlave *) next()) != 0) {
       if (slave->GetSlaveType() == TSlave::kSlave) {
          TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(),
                                                 slave->GetName(),

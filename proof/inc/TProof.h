@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.113 2007/05/25 13:53:59 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.114 2007/06/12 13:51:04 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -617,7 +617,7 @@ public:
    Int_t       GetLogLevel() const { return fLogLevel; }
    Int_t       GetParallel() const;
    Int_t       GetSessionID() const { return fSessionID; }
-   TList      *GetSlaveInfo();
+   TList      *GetListOfSlaveInfos();
 
    EQueryMode  GetQueryMode(Option_t *mode = 0) const;
    void        SetQueryMode(EQueryMode mode);
