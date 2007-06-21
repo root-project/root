@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.179 2007/06/12 13:51:41 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.180 2007/06/21 07:12:37 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -80,6 +80,9 @@
 #include "TFileInfo.h"
 #include "TMutex.h"
 #include "TClass.h"
+#include "TSQLServer.h"
+#include "TSQLResult.h"
+#include "TSQLRow.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -355,6 +358,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    SetErrorHandler(ErrorHandler);
 
    fNcmd            = 0;
+   fGroupPriority   = 100;
    fInterrupt       = kFALSE;
    fProtocol        = 0;
    fOrdinal         = gEnv->GetValue("ProofServ.Ordinal", "-1");
@@ -419,7 +423,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 Int_t TProofServ::CreateServer()
 {
    // Finalize the server setup. If master, create the TProof instance to talk
-   // the worker or submaster nodes.
+   // to the worker or submaster nodes.
    // Return 0 on success, -1 on error
 
    // Get socket to be used (setup in proofd)
@@ -1122,7 +1126,7 @@ void TProofServ::HandleSocketInput()
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Enter");
 
             if (IsMaster()) {
-               TList *info = fProof->GetSlaveInfo();
+               TList *info = fProof->GetListOfSlaveInfos();
 
                TMessage answ(kPROOF_GETSLAVEINFO);
                answ << info;
@@ -2135,8 +2139,10 @@ Int_t TProofServ::Setup()
       }
    }
 
-   // Set group
+   // Set group and get the group priority
    fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
+   if (IsMaster())
+      fGroupPriority = GetPriority();
 
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {
@@ -3253,7 +3259,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          fPlayer->AddInput(o);
       }
 
-      // Signal the master that we are starting processing 
+      // Signal the master that we are starting processing
       fSocket->Send(kPROOF_STARTPROCESS);
 
       // Process
@@ -4789,6 +4795,62 @@ void TProofServ::DeletePlayer()
    else
       delete fPlayer;
    fPlayer = 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::GetPriority()
+{
+   // Get the processing priority for the group the user belongs too. This
+   // prioroty is a number (0 - 100) determined by a scheduler (third
+   // party process) based on some basic priority the group has, e.g.
+   // we might want to give users in a specific group (e.g. promptana)
+   // a higher priority than users in other groups, and on the analysis
+   // of historical logging data (i.e. usage of CPU by the group in a
+   // previous time slot, as recorded in TPerfStats::WriteQueryLog()).
+   //
+   // Currently the group priority is obtained by a query in a SQL DB
+   // table proofpriority, which has the format:
+   // CREATE TABLE proofpriority (
+   //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+   //   group         VARCHAR(32) NOT NULL,
+   //   priority      INT
+   //)
+
+   TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
+   TString sqluser = gEnv->GetValue("ProofServ.QueryLogUser","");
+   TString sqlpass = gEnv->GetValue("ProofServ.QueryLogPasswd","");
+
+   Int_t priority = 100;
+
+   if (sqlserv == "")
+      return priority;
+
+   TString sql;
+   sql.Form("SELECT priority WHERE group='%s' FROM proofpriority", fGroup.Data());
+
+   // open connection to SQL server
+   TSQLServer *db =  TSQLServer::Connect(sqlserv, sqluser, sqlpass);
+
+   if (!db || db->IsZombie()) {
+      Error("GetPriority", "failed to connect to SQL server %s as %s %s",
+            sqlserv.Data(), sqluser.Data(), sqlpass.Data());
+      printf("%s\n", sql.Data());
+   } else {
+      TSQLResult *res = db->Query(sql);
+
+      if (!res) {
+         Error("GetPriority", "query into proofpriority failed");
+         printf("%s\n", sql.Data());
+      } else {
+         TSQLRow *row = res->Next();   // first row is header
+         priority = atoi(row->GetField(0));
+         delete row;
+      }
+      delete res;
+   }
+   delete db;
+
+   return priority;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.36 2007/06/12 13:51:41 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.37 2007/06/21 07:12:37 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -741,8 +741,10 @@ Int_t TXProofServ::Setup()
       fSocket->Send(m);
    }
 
-   // Set group
+   // Set group and get the group priority
    fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
+   if (IsMaster())
+      fGroupPriority = GetPriority();
 
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {

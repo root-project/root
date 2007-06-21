@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.54 2007/06/06 09:52:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.55 2007/06/21 07:12:37 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -99,6 +99,7 @@ private:
    Int_t         fGroupSize;        //size of the active slave group
    Int_t         fLogLevel;         //debug logging level
    Int_t         fNcmd;             //command history number
+   Int_t         fGroupPriority;    //priority of group the user belongs to (0 - 100)
    Bool_t        fEndMaster;        //true for a master in direct contact only with workers
    Bool_t        fMasterServ;       //true if we are a master server
    Bool_t        fInterrupt;        //if true macro execution will be stopped
@@ -132,6 +133,7 @@ private:
    Int_t         UnloadPackage(const char *package);
    Int_t         UnloadPackages();
    Int_t         OldAuthSetup(TString &wconf);
+   Int_t         GetPriority();
 
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
