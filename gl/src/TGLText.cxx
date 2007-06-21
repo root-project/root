@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.1 2007/06/21 14:55:36 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.2 2007/06/21 15:15:07 couet Exp $
 // Author:  Olivier Couet  12/04/2007
 
 /*************************************************************************
@@ -156,7 +156,7 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;
 
-   char *fontname;
+   char *fontname=0;
    if (fontid == 0)  fontname = "arialbd.ttf";
    if (fontid == 1)  fontname = "timesi.ttf";
    if (fontid == 2)  fontname = "timesbd.ttf";

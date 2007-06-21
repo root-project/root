@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLAxis.cxx,v 1.0 Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLAxis.cxx,v 1.1 2007/06/21 14:55:36 couet Exp $
 // Author:  Olivier Couet  17/04/2007
 
 /*************************************************************************
@@ -176,7 +176,7 @@ void TGLAxis::PaintGLAxisTickMarks()
    Int_t i;
 
    // Ticks marks orientation;
-   Double_t yo, zo;
+   Double_t yo=0, zo=0;
    switch (fTickMarksOrientation) {
       case 0:
          yo = 0;
@@ -246,7 +246,7 @@ void TGLAxis::PaintGLAxisLabels()
 
    if (!fLabelsSize) return;
 
-   Double_t x,y,z;
+   Double_t x=0,y=0,z=0;
    Int_t i;
 
    if (!fText) {
