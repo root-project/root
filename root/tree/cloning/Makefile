@@ -2,11 +2,11 @@
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root \
-	CopyTree.root Event.h copiedEvent hsimple.out
+	CopyTree.root Event.h copiedEvent hsimple.out index*.root
 
 
 #Set the list of target to make while testing
-TEST_TARGETS += deepClass mergeWithDir treeCloneTest treeCloneTest2
+TEST_TARGETS += deepClass mergeWithDir treeCloneTest treeCloneTest2 index
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -54,4 +54,7 @@ CopyTree.root: make_CopyTree.C ver_40200.root $(ROOTCORELIBS)
 deepClass.log: CopyTree.root
 
 deepClass: deepClass.log
+	$(TestDiff)
+
+index: index.clog
 	$(TestDiff)
