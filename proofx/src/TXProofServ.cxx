@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.35 2007/05/23 09:11:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.36 2007/06/12 13:51:41 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -998,6 +998,17 @@ Bool_t TXProofServ::HandleInput(const void *in)
       default:
          Info("HandleInput","kXPD_urgent: unknown type: %d", type);
       }
+
+   } else if (acod == kXPD_inflate) {
+
+      // Inflate factor
+      Int_t factor = (hin->fInt2 >= 1000) ? hin->fInt2 : fInflateFactor;
+
+      // Set inflate factor
+      fInflateFactor = factor;
+      // Notify
+      Info("HandleInput",
+           "kXPD_inflate: inflate factor set to %f", (Float_t) factor / 1000.);
 
    } else {
       // Standard socket input

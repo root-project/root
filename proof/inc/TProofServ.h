@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.53 2007/05/23 09:10:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.54 2007/06/06 09:52:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -123,6 +123,8 @@ private:
    TTimer       *fShutdownTimer;    // Timer used for delayed session shutdown
    TMutex       *fShutdownTimerMtx; // Actions on the timer must be atomic
 
+   Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
+
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
    void          RedirectOutput();
@@ -197,6 +199,8 @@ public:
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
+
+   Int_t          GetInflateFactor() const { return fInflateFactor; }
 
    const char    *GetPrefix()     const { return fPrefix; }
 

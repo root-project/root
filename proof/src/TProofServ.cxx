@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.178 2007/06/08 09:17:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.179 2007/06/12 13:51:41 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -393,6 +393,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fShutdownTimer   = 0;
    fShutdownTimerMtx = 0;
 
+   fInflateFactor   = 1000;
+
    gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
    fLogLevel = gProofDebugLevel;
 
@@ -720,11 +722,24 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       fCompute.Stop();
 
    TMessage req(kPROOF_GETPACKET);
-   req << fLatency.RealTime() << fCompute.RealTime()
-       << fCompute.CpuTime() << bytesRead
-       << totalEntries;
+   Double_t cputime = fCompute.CpuTime();
+   Double_t realtime = fCompute.RealTime();
+   req << fLatency.RealTime() << realtime << cputime
+       << bytesRead << totalEntries;
    if (fPlayer)
        req << fPlayer->GetEventsProcessed();
+
+   // Apply inflate factor, if needed
+   PDB(kLoop, 2)
+      Info("GetNextPacket", "inflate factor: %d"
+                            " (realtime: %f, cputime: %f, entries: %lld)",
+                            fInflateFactor, realtime, cputime, totalEntries);
+   if (fInflateFactor > 1000) {
+      UInt_t sleeptime = (UInt_t) (cputime * (fInflateFactor - 1000)) ;
+      PDB(kLoop, 2)
+         Info("GetNextPacket","sleeping %d millisec", sleeptime);
+      gSystem->Sleep(sleeptime);
+   }
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);
@@ -3238,6 +3253,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          fPlayer->AddInput(o);
       }
 
+      // Signal the master that we are starting processing 
+      fSocket->Send(kPROOF_STARTPROCESS);
+
       // Process
       PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
       fPlayer->Process(dset, filename, opt, nentries, first);
@@ -3277,6 +3295,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Cleanup
       SafeDelete(dset);
       fPlayer->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
+
+      // Signal the master that we are idle
+      fSocket->Send(kPROOF_SETIDLE);
 
       DeletePlayer();
    }
