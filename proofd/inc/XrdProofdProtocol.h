@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.24 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.25 2007/06/21 07:41:05 ganis Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -230,7 +230,7 @@ public:
    static int    Config(const char *fn);
    static char  *FilterSecConfig(const char *cfn, int &nd);
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
-   static XrdProofSched *XrdProofdProtocol::LoadScheduler(const char *cfn, XrdOucError *edest);
+   static XrdProofSched *LoadScheduler(const char *cfn, XrdOucError *edest);
    static XrdSecService *LoadSecurity(const char *seclib, const char *cfn);
    static int    LogTerminatedProc(int pid);
    static int    ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
