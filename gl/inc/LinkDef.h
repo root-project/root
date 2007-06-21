@@ -81,6 +81,8 @@
 #pragma link C++ class TGLPolyMarker;
 #pragma link C++ class TGLCylinder;
 #pragma link C++ class TGLSphere;
+#pragma link C++ class TGLText;
+#pragma link C++ class TGLAxis;
 
 #pragma link C++ class TGLSelectionBuffer;
 #pragma link C++ class TGLPlotCoordinates;
