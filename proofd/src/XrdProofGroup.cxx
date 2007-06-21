@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.2 2007/06/21 07:41:06 ganis Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -191,7 +191,7 @@ bool XrdProofGroup::HasMember(const char *usr)
    XrdOucString u(usr); u += ",";
    int iu = fMembers.find(u);
    if (iu != STR_NPOS)
-      if (iu == 0 || u[iu-1] == ',')
+      if (iu == 0 || fMembers[iu-1] == ',')
          return 1;
    return 0;
 }
