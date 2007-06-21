@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.9 2007/02/05 10:44:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.10 2007/03/19 15:14:10 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -15,6 +15,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/uio.h>
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__)
+#include <sched.h>
+#endif
 
 #include <list>
 #include <map>
@@ -97,6 +100,7 @@ public:
 #define kXPROOFSRVTAGMAX   64
 #define kXPROOFSRVALIASMAX 256
 
+class XrdProofGroup;
 class XrdProofWorker;
 class XrdNet;
 
@@ -112,6 +116,8 @@ public:
    inline const char  *Alias() const { XrdOucMutexHelper mhp(fMutex); return fAlias; }
    inline const char  *Client() const { XrdOucMutexHelper mhp(fMutex); return fClient; }
    inline const char  *Fileout() const { XrdOucMutexHelper mhp(fMutex); return fFileout; }
+   inline float        FracEff() const { XrdOucMutexHelper mhp(fMutex); return fFracEff; }
+   inline XrdProofGroup *Group() const { XrdOucMutexHelper mhp(fMutex); return fGroup; }
    inline short int    ID() const { XrdOucMutexHelper mhp(fMutex); return fID; }
    inline bool         IsParent(XrdProofdProtocol *p) const
                                  { XrdOucMutexHelper mhp(fMutex); return (fParent && fParent->fP == p); }
@@ -123,16 +129,20 @@ public:
    inline XrdOucSemWait *PingSem() const { XrdOucMutexHelper mhp(fMutex); return fPingSem; }
    inline const char  *Ordinal() const { XrdOucMutexHelper mhp(fMutex); return (const char *)fOrdinal; }
    inline XrdSrvBuffer *QueryNum() const { XrdOucMutexHelper mhp(fMutex); return fQueryNum; }
+   inline XrdSrvBuffer *Requirements() const { XrdOucMutexHelper mhp(fMutex); return fRequirements; }
    inline XrdROOT     *ROOT() const { XrdOucMutexHelper mhp(fMutex); return fROOT; }
    inline int          SrvID() const { XrdOucMutexHelper mhp(fMutex); return fSrvID; }
    inline int          SrvType() const { XrdOucMutexHelper mhp(fMutex); return fSrvType; }
-   inline void         SetLink(XrdLink *lnk) { XrdOucMutexHelper mhp(fMutex); fLink = lnk;}
+   inline void         SetFracEff(float ef) { XrdOucMutexHelper mhp(fMutex); fFracEff = ef; }
+   inline void         SetGroup(XrdProofGroup *g) { XrdOucMutexHelper mhp(fMutex); fGroup = g; }
    inline void         SetID(short int id) { XrdOucMutexHelper mhp(fMutex); fID = id;}
+   inline void         SetLink(XrdLink *lnk) { XrdOucMutexHelper mhp(fMutex); fLink = lnk;}
    inline void         SetParent(XrdClientID *cid) { XrdOucMutexHelper mhp(fMutex); fParent = cid; }
    inline void         SetProtVer(int pv) { XrdOucMutexHelper mhp(fMutex); fProtVer = pv; }
    inline void         SetQueryNum(XrdSrvBuffer *qn) { XrdOucMutexHelper mhp(fMutex); fQueryNum = qn; }
+   inline void         SetRequirements(XrdSrvBuffer *rq)
+                          { XrdOucMutexHelper mhp(fMutex); fRequirements = rq; }
    inline void         SetROOT(XrdROOT *r) { XrdOucMutexHelper mhp(fMutex); fROOT = r; }
-   inline void         SetSrv(int id) { XrdOucMutexHelper mhp(fMutex); fSrvID = id; }
    inline void         SetSrvType(int id) { XrdOucMutexHelper mhp(fMutex); fSrvType = id; }
    inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdOucMutexHelper mhp(fMutex); fStartMsg = sm; }
    inline void         SetStatus(int st) { XrdOucMutexHelper mhp(fMutex); fStatus = st; }
@@ -168,21 +178,30 @@ public:
    void                RemoveWorker(XrdProofWorker *w) { XrdOucMutexHelper mhp(fMutex); fWorkers.remove(w); }
 
    void                SetAlias(const char *a, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fAlias, a, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fAlias, a, l); }
    void                SetClient(const char *c, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fClient, c, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fClient, c, l); }
    void                SetFileout(const char *f, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fFileout, f, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fFileout, f, l); }
    void                SetOrdinal(const char *o, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fOrdinal, o, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fOrdinal, o, l); }
    void                SetTag(const char *t, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fTag, t, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fTag, t, l); }
    void                SetUserEnvs(const char *t, int l = 0)
-                          { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fUserEnvs, t, l); }
+                          { XrdOucMutexHelper mhp(fMutex); SetCharValue(&fUserEnvs, t, l); }
 
    bool                IsShutdown() const { XrdOucMutexHelper mhp(fMutex); return fIsShutdown; }
    bool                IsValid() const { XrdOucMutexHelper mhp(fMutex); return fIsValid; }
    const char         *StatusAsString() const;
+
+   int                 ChangeProcessPriority(int deltap);
+   int                 SetShutdownTimer(int opt, int delay, bool on = 1);
+   int                 TerminateProofServ();
+   int                 VerifyProofServ(int timeout);
+
+   int                 SetInflate(int inflate, bool sendover);
+   int                 SetSchedRoundRobin(bool on = 1);
+   void                SetSrv(int id);
 
    void                Reset();
 
@@ -201,6 +220,8 @@ public:
    XrdSrvBuffer             *fQueryNum;  // Msg with sequential number of currebt query
    XrdSrvBuffer             *fStartMsg;  // Msg with start processing info
 
+   XrdSrvBuffer             *fRequirements;  // Buffer with session requirements
+
    int                       fStatus;
    int                       fSrvID;     // Srv process ID
    int                       fSrvType;
@@ -218,6 +239,15 @@ public:
    char                     *fUserEnvs;  // List of envs received from the user
 
    XrdROOT                  *fROOT;      // ROOT version run by this session
+
+   XrdProofGroup            *fGroup;     // Group, if any, to which the owner belongs
+
+   int                       fInflate;   // Inflate factor in 1/1000
+   int                       fSched;     // Current scheduler policy 
+   int                       fDefSched;  // Default scheduler policy 
+   struct sched_param        fDefSchedParam;    // Default scheduling param
+   int                       fDefSchedPriority; // Default scheduling priority
+   float                     fFracEff;   // Effective resource fraction
 
    void                      ClearWorkers();
 

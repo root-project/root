@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 
 #include "Xrd/XrdProtocol.hh"
 #include "XProofProtocol.h"
+#include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 
 //
@@ -80,15 +81,18 @@ public:
 //
 // Static methods
 //
+class XrdOucStream;
 class XrdProofdAux {
 public:
    XrdProofdAux() { }
 
    static int AssertDir(const char *path, XrdProofUI ui);
    static int ChangeToDir(const char *dir, XrdProofUI ui);
+   static int CheckIf(XrdOucStream *s, const char *h);
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);
    static long int GetLong(char *str);
+   static int GetNumCPUs();
    static int GetUserInfo(const char *usr, XrdProofUI &ui);
    static int GetUserInfo(int uid, XrdProofUI &ui);
    static int SymLink(const char *path, const char *link);
@@ -112,6 +116,10 @@ public:
 
 #ifndef DIGIT
 #define DIGIT(x) (x >= 48 && x <= 57)
+#endif
+
+#ifndef XPDSWAP
+#define XPDSWAP(a,b,t) { t = a ; a = b; b = t; }
 #endif
 
 #ifndef XpdBadPGuard

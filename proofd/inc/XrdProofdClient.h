@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 // Used by XrdProofdProtocol.                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <list>
 #include <vector>
 
 #include "XrdOuc/XrdOucPthread.hh"
@@ -43,10 +44,9 @@ class XrdProofdClient {
 
    virtual ~XrdProofdClient();
 
-   inline int              WorkerProofServ() const { return fWorkerProofServ; }
-   void                    CountWorker(int n = 1) { fWorkerProofServ += n; }
    inline int              MasterProofServ() const { return fMasterProofServ; }
-   void                    CountMaster(int n = 1) { fMasterProofServ += n; }
+   inline int              WorkerProofServ() const { return fWorkerProofServ; }
+   void                    CountSession(int n = 1, bool worker =1);
    inline XrdProofGroup   *Group() const { return fGroup; }
    inline const char      *ID() const
                               { return (const char *)fClientID; }
@@ -83,6 +83,14 @@ class XrdProofdClient {
    void                    SaveUNIXPath(); // Save path in the sandbox
    void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
 
+   int                     AddNewSession(const char *tag);
+   int                     GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
+                                          XrdOucString *tag = 0);
+   int                     GuessTag(XrdOucString &tag, int ridx = 1);
+   int                     MvOldSession(const char *tag);
+
+   static void             SetMaxOldLogs(int mx = 10) { fgMaxOldLogs = mx; }
+
  private:
 
    XrdOucRecMutex          fMutex; // Local mutex
@@ -107,6 +115,8 @@ class XrdProofdClient {
 
    int                     fWorkerProofServ; // Number of active (non idle) ProofServ worker sessions
    int                     fMasterProofServ; // Number of active (non idle) ProofServ master sessions
+
+   static int              fgMaxOldLogs; // max number of old sessions workdirs per client
 };
 
 #endif

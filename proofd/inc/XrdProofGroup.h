@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
 };
 
 class XrdProofGroup {
+friend class XrdProofGroupMgr;
 private:
    XrdOucString  fName;    // group name
 
@@ -56,25 +57,19 @@ private:
    int           fSize;    // Number of members
    int           fActive;  // Number of active (i.e. non-idle) members
 
-   XrdOucHash<XrdProofGroupProperty> fProperties; // list of properties identified by name
+   // Properties
+   int           fPriority; // Arbitrary number indicating the priority of this group
+   int           fFraction; // Resource fraction in % (nominal)
+   float         fFracEff;  // Resource fraction in % (effective)
 
    XrdOucRecMutex *fMutex; // Local mutex
 
    void          AddMember(const char *usr) { XrdOucMutexHelper mhp(fMutex);
                                               fMembers += usr; fMembers += ","; fSize++; }
-   void          AddProperty(XrdProofGroupProperty *p);
-
    XrdProofGroup(const char *n, const char *m = 0);
-
-   static XrdOucHash<XrdProofGroup> fgGroups;  // keeps track of group of users
-   static XrdOucRecMutex fgMutex; // Mutex to protect access to fgGroups
-
-   static XrdProofdFile fgCfgFile; // Last used group configuration file
 
 public:
    ~XrdProofGroup();
-
-   static int    Config(const char *fn);
 
    inline int    Active() const { XrdOucMutexHelper mhp(fMutex); return fActive; }
    bool          HasMember(const char *usr);
@@ -82,18 +77,62 @@ public:
    inline const char *Name() const { XrdOucMutexHelper mhp(fMutex); return fName.c_str(); }
    inline int    Size() const { XrdOucMutexHelper mhp(fMutex); return fSize; }
 
+   inline int    Fraction() const { XrdOucMutexHelper mhp(fMutex); return fFraction; }
+   inline float  FracEff() const { XrdOucMutexHelper mhp(fMutex); return fFracEff; }
+   inline int    Priority() const { XrdOucMutexHelper mhp(fMutex); return fPriority; }
+   void          SetFracEff(float f) { XrdOucMutexHelper mhp(fMutex); fFracEff = f; }
+   void          SetFraction(int f) { XrdOucMutexHelper mhp(fMutex); fFraction = f; }
+   void          SetPriority(int p) { XrdOucMutexHelper mhp(fMutex); fPriority = p; }
+
    void          Count(const char *usr, int n = 1);
    void          Print();
-
-   XrdProofGroupProperty *GetProperty(const char *p);
-
-   static XrdProofGroup *Apply(int (*f)(const char *, XrdProofGroup *, void *), void *arg);
-
-   static XrdOucString Export(const char *grp);
-   static void         Print(const char *grp);
-
-   static XrdProofGroup *GetGroup(const char *grp);
-   static XrdProofGroup *GetUserGroup(const char *usr, const char *grp = 0);
 };
+
+
+//
+// Group Manager class
+//
+class XrdProofGroupMgr {
+private:
+   XrdOucString              fIterator; // Keeps track of groups already processed 
+   XrdOucHash<XrdProofGroup> fGroups;  // Keeps track of groups managed by this instance
+   XrdOucRecMutex            fMutex;   // Mutex to protect access to fGroups
+
+   XrdProofdFile             fCfgFile; // Last used group configuration file
+
+public:
+   XrdProofGroupMgr(const char *fn = 0);
+   ~XrdProofGroupMgr() { }
+
+   int            Config(const char *fn);
+
+   XrdProofGroup *Apply(int (*f)(const char *, XrdProofGroup *, void *), void *arg);
+
+   XrdOucString   Export(const char *grp);
+   int            Num() { return fGroups.Num(); }
+   void           Print(const char *grp);
+
+   XrdProofGroup *GetGroup(const char *grp);
+   XrdProofGroup *GetUserGroup(const char *usr, const char *grp = 0);
+
+   // Pseudo-iterator functionality
+   void           ResetIter() { fIterator = "getnextgrp:"; }
+   XrdProofGroup *Next();
+};
+
+// Auc structures for scan through operations
+typedef struct {
+   int prmax;
+   int prmin;
+   int nofrac;
+   float totfrac;
+} XpdGroupGlobal_t;
+
+typedef struct {
+   int opt;
+   XpdGroupGlobal_t *glo;
+   float cut;
+   float norm;
+} XpdGroupEff_t;
 
 #endif

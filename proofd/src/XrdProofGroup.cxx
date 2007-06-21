@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -23,10 +23,6 @@
 #include "XrdProofGroup.h"
 #include "XrdProofdTrace.h"
 
-XrdOucHash<XrdProofGroup> XrdProofGroup::fgGroups;  // keeps track of group of users
-XrdOucRecMutex XrdProofGroup::fgMutex;  // Mutex to protect access to fgGroups
-XrdProofdFile XrdProofGroup::fgCfgFile; // Last used group configuration file
-
 static const char *gTraceID = " ";
 extern XrdOucTrace *XrdProofdTrace;
 
@@ -34,21 +30,6 @@ extern XrdOucTrace *XrdProofdTrace;
 #define TRACEID gTraceID
 
 // Functions used in scanning hash tables
-
-//__________________________________________________________________________
-static int PrintProperty(const char *k, XrdProofGroupProperty *p, void *)
-{
-   // Print content of property 'p'
-
-   if (p) {
-      XPDPRT("+++ Property: "<< k <<": nom: "<<p->Nominal()<<", eff: "<<p->Effective());
-   } else {
-      XPDPRT("+++ Undefined Property instance for key: "<<k<<" !!! ");
-   }
-
-   // Process next
-   return 0;
-}
 
 //__________________________________________________________________________
 static int CheckUser(const char *, XrdProofGroup *g, void *u)
@@ -96,6 +77,30 @@ static int PrintGroup(const char *, XrdProofGroup *g, void *)
 }
 
 //__________________________________________________________________________
+static int AuxFunc(const char *, XrdProofGroup *g, void *s)
+{
+   // Generic function used for auxiliary purpose
+
+   XrdOucString *opt = (XrdOucString *)s;
+
+   if (!opt || opt->length() <= 0 || (*opt) == "getfirst")
+      // Stop going through the table
+      return 1;
+
+   if (opt->beginswith("getnextgrp:")) {
+      XrdOucString grp("||");
+      grp.insert(g->Name(),1);
+      if (opt->find(grp) == STR_NPOS) {
+         *opt += grp;
+         return 1;
+      }
+   }
+
+   // Process next
+   return 0;
+}
+
+//__________________________________________________________________________
 XrdProofGroup::XrdProofGroup(const char *n, const char *m)
               : fName(n), fMembers(m)
 {
@@ -103,6 +108,9 @@ XrdProofGroup::XrdProofGroup(const char *n, const char *m)
 
    fSize = 0;
    fActive = 0;
+   fPriority = -1;
+   fFraction = -1;
+   fFracEff = 0;
    fMutex = new XrdOucRecMutex;
 }
 //__________________________________________________________________________
@@ -116,34 +124,6 @@ XrdProofGroup::~XrdProofGroup()
 }
 
 //__________________________________________________________________________
-XrdProofGroupProperty *XrdProofGroup::GetProperty(const char *pname)
-{
-   // Get link to property named 'pname'; return 0 if nothing is found
-
-   if (!pname || strlen(pname) <= 0)
-      // Invalid input
-      return (XrdProofGroupProperty *)0;
-
-   XrdOucMutexHelper mhp(fMutex); 
-   return fProperties.Find(pname);
-}
-
-//__________________________________________________________________________
-void XrdProofGroup::AddProperty(XrdProofGroupProperty *p)
-{
-   // Add or update property
-
-   if (!p || strlen(p->Name()) <= 0)
-      // Invalid input
-      return;
-
-   XrdOucMutexHelper mhp(fMutex); 
-
-   // Add or Replace existing entry
-   fProperties.Rep(p->Name(), p);
-}
-
-//__________________________________________________________________________
 void XrdProofGroup::Print()
 {
    // Dump group content
@@ -152,14 +132,11 @@ void XrdProofGroup::Print()
 
    if (fName != "default") {
       XPDPRT("+++ Group: "<<fName<<", size "<<fSize<<" member(s) ("<<fMembers<<")");
-      XPDPRT("+++ Properties: "<<fProperties.Num());
-      if (fProperties.Num() > 0)
-         fProperties.Apply(PrintProperty, this);
+      XPDPRT("+++ Priority: "<<fPriority<<", fraction: "<<fFraction);
       XPDPRT("+++ End of Group: "<<fName);
-   } else if (fProperties.Num() > 0) {
+   } else {
       XPDPRT("+++ Group: "<<fName);
-      XPDPRT("+++ Properties: "<<fProperties.Num());
-      fProperties.Apply(PrintProperty, this);
+      XPDPRT("+++ Priority: "<<fPriority<<", fraction: "<<fFraction);
       XPDPRT("+++ End of Group: "<<fName);
    }
 }
@@ -220,8 +197,17 @@ bool XrdProofGroup::HasMember(const char *usr)
 }
 
 //__________________________________________________________________________
-XrdProofGroup *XrdProofGroup::Apply(int (*f)(const char *, XrdProofGroup *,
-                                             void *), void *arg)
+XrdProofGroupMgr::XrdProofGroupMgr(const char *fn)
+{
+   // Constructor
+
+   ResetIter(); 
+   Config(fn);
+}
+
+//__________________________________________________________________________
+XrdProofGroup *XrdProofGroupMgr::Apply(int (*f)(const char *, XrdProofGroup *,
+                                                void *), void *arg)
 {
    // Apply function 'f' to the hash table of groups; 'arg' is passed to 'f'
    // in the last argument. After applying 'f', the action depends on the
@@ -230,22 +216,22 @@ XrdProofGroup *XrdProofGroup::Apply(int (*f)(const char *, XrdProofGroup *,
    //         = 0 - the next hash table item is processed.
    //         > 0 - processing stops and the hash table item is returned.
 
-   return fgGroups.Apply(f,arg);
+   return (fGroups.Num() > 0 ? fGroups.Apply(f,arg) : (XrdProofGroup *)0);
 }
 
 //__________________________________________________________________________
-XrdOucString XrdProofGroup::Export(const char *grp)
+XrdOucString XrdProofGroupMgr::Export(const char *grp)
 {
    // Return a string describing the group
 
-   XrdOucMutexHelper mhp(fgMutex); 
+   XrdOucMutexHelper mhp(fMutex); 
 
    XrdOucString msg;
 
    if (!grp) {
-      fgGroups.Apply(ExportGroup, (void *) &msg);
+      fGroups.Apply(ExportGroup, (void *) &msg);
    } else {
-      XrdProofGroup *g = fgGroups.Find(grp);
+      XrdProofGroup *g = fGroups.Find(grp);
       ExportGroup(grp, g, (void *) &msg);
    }
 
@@ -253,16 +239,16 @@ XrdOucString XrdProofGroup::Export(const char *grp)
 }
 
 //__________________________________________________________________________
-void XrdProofGroup::Print(const char *grp)
+void XrdProofGroupMgr::Print(const char *grp)
 {
    // Return a string describing the group
 
-   XrdOucMutexHelper mhp(fgMutex); 
+   XrdOucMutexHelper mhp(fMutex); 
 
    if (!grp) {
-      fgGroups.Apply(PrintGroup, 0);
+      fGroups.Apply(PrintGroup, 0);
    } else {
-      XrdProofGroup *g = fgGroups.Find(grp);
+      XrdProofGroup *g = fGroups.Find(grp);
       PrintGroup(grp, g, 0);
    }
 
@@ -270,19 +256,19 @@ void XrdProofGroup::Print(const char *grp)
 }
 
 //__________________________________________________________________________
-XrdProofGroup *XrdProofGroup::GetGroup(const char *grp)
+XrdProofGroup *XrdProofGroupMgr::GetGroup(const char *grp)
 {
    // Returns the instance of for group 'grp.
    // Return 0 in the case the group does not exist
 
    // If the group is defined and exists, check it 
    if (grp && strlen(grp) > 0)
-      return fgGroups.Find(grp);
+      return fGroups.Find(grp);
    return (XrdProofGroup *)0;
 }
 
 //__________________________________________________________________________
-XrdProofGroup *XrdProofGroup::GetUserGroup(const char *usr, const char *grp)
+XrdProofGroup *XrdProofGroupMgr::GetUserGroup(const char *usr, const char *grp)
 {
    // Returns the instance of the first group to which this user belongs;
    // if grp != 0, return the instance corresponding to group 'grp', if
@@ -298,7 +284,7 @@ XrdProofGroup *XrdProofGroup::GetUserGroup(const char *usr, const char *grp)
 
    // If the group is defined and exists, check it 
    if (grp && strlen(grp) > 0) {
-      g = fgGroups.Find(grp);
+      g = fGroups.Find(grp);
       if (g && g->HasMember(usr))
          return g;
       else
@@ -306,14 +292,28 @@ XrdProofGroup *XrdProofGroup::GetUserGroup(const char *usr, const char *grp)
    }
 
    // Scan the table
-   g = fgGroups.Apply(CheckUser, (void *)usr);
+   g = fGroups.Apply(CheckUser, (void *)usr);
 
    // Assign to "default" group if nothing was found
-   return ((!g) ? fgGroups.Find("default") : g);
+   return ((!g) ? fGroups.Find("default") : g);
 }
 
 //__________________________________________________________________________
-int XrdProofGroup::Config(const char *fn)
+XrdProofGroup *XrdProofGroupMgr::Next()
+{
+   // Returns the instance of next group in the pseudo-iterator
+   // functionality. To scan over all the groups do the following:
+   //         ResetIter();
+   //         while ((g = Next())) {
+   //            // ... Process group
+   //         }
+   // Return 0 when there are no more groups
+
+   return fGroups.Apply(AuxFunc,&fIterator);
+}
+
+//__________________________________________________________________________
+int XrdProofGroupMgr::Config(const char *fn)
 {
    // (Ri-)configure the group info using the file 'fn'.
    // Return the number of active groups or -1 in case of error.
@@ -321,49 +321,49 @@ int XrdProofGroup::Config(const char *fn)
    if (!fn || strlen(fn) <= 0) {
       // This call is to reset existing info and remain with
       // the 'default' group only
-      XrdOucMutexHelper mhp(fgMutex);
+      XrdOucMutexHelper mhp(fMutex);
       // Reset existing info
-      fgGroups.Purge();
+      fGroups.Purge();
       // Create "default" group
-      fgGroups.Add("default", new XrdProofGroup("default"));
-      return fgGroups.Num();;
+      fGroups.Add("default", new XrdProofGroup("default"));
+      return fGroups.Num();;
    }
 
    // Did the file changed ?
-   if (fgCfgFile.fName != fn) {
-      fgCfgFile.fName = fn;
-      XrdProofdAux::Expand(fgCfgFile.fName);
-      fgCfgFile.fMtime = 0;
+   if (fCfgFile.fName != fn) {
+      fCfgFile.fName = fn;
+      XrdProofdAux::Expand(fCfgFile.fName);
+      fCfgFile.fMtime = 0;
    }
 
    // Get the modification time
    struct stat st;
-   if (stat(fgCfgFile.fName.c_str(), &st) != 0)
+   if (stat(fCfgFile.fName.c_str(), &st) != 0)
       return -1;
    TRACE(DBG, "Config: enter: time of last modification: " << st.st_mtime);
 
    // File should be loaded only once
-   if (st.st_mtime <= fgCfgFile.fMtime)
+   if (st.st_mtime <= fCfgFile.fMtime)
       return 0;
 
    // Save the modification time
-   fgCfgFile.fMtime = st.st_mtime;
+   fCfgFile.fMtime = st.st_mtime;
 
    // Open the defined path.
    FILE *fin = 0;
-   if (!(fin = fopen(fgCfgFile.fName.c_str(), "r"))) {
-      TRACE(XERR, "Config: cannot open file: "<<fgCfgFile.fName<<" (errno:"<<errno<<")");
+   if (!(fin = fopen(fCfgFile.fName.c_str(), "r"))) {
+      TRACE(XERR, "Config: cannot open file: "<<fCfgFile.fName<<" (errno:"<<errno<<")");
       return -1;
    }
 
    // This part must be modified in atomic way
-   XrdOucMutexHelper mhp(fgMutex);
+   XrdOucMutexHelper mhp(fMutex);
 
    // Reset existing info
-   fgGroups.Purge();
+   fGroups.Purge();
 
    // Create "default" group
-   fgGroups.Add("default", new XrdProofGroup("default"));
+   fGroups.Add("default", new XrdProofGroup("default"));
 
    // Read now the directives
    char lin[2048];
@@ -397,13 +397,13 @@ int XrdProofGroup::Config(const char *fn)
       }
 
       // Get linked to the group, if any
-      XrdProofGroup *g = fgGroups.Find(group.c_str());
+      XrdProofGroup *g = fGroups.Find(group.c_str());
 
       // Action depends on key
       if (key == "group") {
          if (!g)
             // Create new group container
-            fgGroups.Add(group.c_str(), (g = new XrdProofGroup(group.c_str())));
+            fGroups.Add(group.c_str(), (g = new XrdProofGroup(group.c_str())));
          while ((from = gl.tokenize(tok, from, ',')) != -1) {
             if (tok.length() > 0)
                // Add group member
@@ -413,8 +413,8 @@ int XrdProofGroup::Config(const char *fn)
          // Property definition: format of property is
          // property <group> <property_name> <nominal_value> [<effective_value>]
          XrdOucString name;
-         int nom, eff = -1;
-         bool gotname = 0, gotnom = 0, goteff = 0;
+         int nom;
+         bool gotname = 0, gotnom = 0;
          while ((from = gl.tokenize(tok, from, ',')) != -1) {
             if (tok.length() > 0) {
                if (!gotname) {
@@ -423,9 +423,6 @@ int XrdProofGroup::Config(const char *fn)
                } else if (!gotnom) {
                   nom = atoi(tok.c_str());
                   gotnom = 1;
-               } else if (!goteff) {
-                  eff = atoi(tok.c_str());
-                  goteff = 1;
                   break;
                }
             }
@@ -435,17 +432,17 @@ int XrdProofGroup::Config(const char *fn)
             TRACE(DBG, "Config: incomplete property line: " << lin);
             continue;
          }
-         if (!goteff)
-            eff = nom;
-         XrdProofGroupProperty *gp = new XrdProofGroupProperty(name.c_str(), nom, eff);
          if (!g)
             // Create new group container
-            fgGroups.Add(group.c_str(), (g = new XrdProofGroup(group.c_str())));
-         g->AddProperty(gp);
+            fGroups.Add(group.c_str(), (g = new XrdProofGroup(group.c_str())));
+         if (name == "priority")
+            g->SetPriority(nom);
+         if (name == "fraction")
+            g->SetFraction(nom);
       }
    }
 
    // Return the number of active groups
-   return fgGroups.Num();
+   return fGroups.Num();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.23 2007/04/19 09:27:55 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.24 2007/06/12 13:51:03 ganis Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -33,7 +33,9 @@
 #include "Xrd/XrdObject.hh"
 
 #include "XProofProtocol.h"
+#include "XrdProofdManager.h"
 #include "XrdProofdResponse.h"
+#include "XrdProofGroup.h"
 #include "XrdProofServProxy.h"
 #include "XrdProofdAux.h"
 
@@ -51,9 +53,6 @@
 #define XPD_ADMINUSER      4
 #define XPD_NEED_MAP       8
 
-enum EResourceType { kRTStatic, kRTPlb };
-enum EStaticSelOpt { kSSORoundRobin, kSSORandom };
-
 class XrdROOT;
 class XrdBuffer;
 class XrdClientMessage;
@@ -63,6 +62,7 @@ class XrdOucTrace;
 class XrdProofdClient;
 class XrdProofdPInfo;
 class XrdProofdPriority;
+class XrdProofSched;
 class XrdProofWorker;
 class XrdScheduler;
 class XrdSrvBuffer;
@@ -86,6 +86,7 @@ public:
    const char   *GetID() const { return (const char *)fClientID; }
 
    static int    Reconfig();
+   static int    TraceConfig(const char *cfn);
    static int    TrimTerminatedProcesses();
 
  private:
@@ -114,18 +115,10 @@ public:
    int           SetUserEnvironment();
    int           Urgent();
 
-   int           Broadcast(int type, const char *msg);
-   bool          CanDoThis(const char *client);
    int           CleanupProofServ(bool all = 0, const char *usr = 0);
-   int           KillProofServ(int pid, bool forcekill = 0, bool add = 1);
-   int           KillProofServ(XrdProofServProxy *xps, bool forcekill = 0, bool add = 1);
-   XrdClientMessage *SendCoordinator(const char *url, int type, const char *msg, int srvtype);
+   int           KillProofServ(int pid, bool forcekill = 0);
    int           SetProofServEnv(int psid = -1, int loglevel = -1, const char *cfg = 0);
    int           SetProofServEnvOld(int psid = -1, int loglevel = -1, const char *cfg = 0);
-   int           SetShutdownTimer(XrdProofServProxy *xps, bool on = 1);
-   int           TerminateProofServ(XrdProofServProxy *xps, bool add = 1);
-   int           VerifyProofServ(XrdProofServProxy *xps);
-
    //
    // Local area
    //
@@ -173,46 +166,36 @@ public:
    static XrdSecService         *fgCIA;       // Authentication Server
    static XrdScheduler          *fgSched;     // System scheduler
    static XrdOucError            fgEDest;     // Error message handler
+   static XrdOucLogger           fgMainLogger; // Error logger
 
    //
    // Static area: protocol configuration section
    //
    static XrdProofdFile          fgCfgFile;    // Main config file
    static bool                   fgConfigDone; // Whether configure has been run
-   static kXR_int32              fgSrvType;    // Master, Submaster, Worker or any
    static std::list<XrdROOT *>   fgROOT;     // ROOT versions; the first is the default
    static char                  *fgTMPdir;   // directory for temporary files
-   static char                  *fgImage;    // image name for these servers
-   static char                  *fgWorkDir;  // working dir for these servers
-   static char                  *fgDataSetDir;  // dataset dir for this master server
-   static int                    fgPort;
    static char                  *fgSecLib;
    // 
-   static XrdOucString           fgEffectiveUser;  // Effective user
-   static XrdOucString           fgLocalHost;  // FQDN of this machine
    static char                  *fgPoolURL;    // Local pool URL
    static char                  *fgNamespace;  // Local pool namespace
    //
    static XrdOucSemWait          fgForkSem;   // To serialize fork requests
    //
-   static EResourceType          fgResourceType; // resource type
    static int                    fgMaxSessions; // max number of sessions per client
-   static int                    fgMaxOldLogs; // max number of old sessions workdirs per client
    static int                    fgWorkerMax; // max number or workers per user
    static EStaticSelOpt          fgWorkerSel; // selection option
-   static std::vector<XrdProofWorker *> fgWorkers;  // vector of possible workers
    static std::list<XrdOucString *> fgMastersAllowed;  // list of master (domains) allowed
    static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
    static char                  *fgSuperUsers;  // ':' separated list of privileged users
    //
-   static XrdProofdFile          fgPROOFcfg; // PROOF static configuration
    static bool                   fgWorkerUsrCfg; // user cfg files enabled / disabled
    //
    static int                    fgReadWait;
    static int                    fgInternalWait; // Timeout on replies from proofsrv
    //
-   static kXR_int32              fgShutdownOpt; // What to do when a client disconnects
-   static kXR_int32              fgShutdownDelay; // Delay shutdown by this (if enabled)
+   static int                    fgShutdownOpt; // What to do when a client disconnects
+   static int                    fgShutdownDelay; // Delay shutdown by this (if enabled)
    // 
    static int                    fgCron; // Cron thread option [1 ==> start]
    static int                    fgCronFrequency; // Frequency for running cron checks in secs
@@ -223,84 +206,39 @@ public:
    static XrdOucString           fgProofServEnvs; // Additional envs to be exported before proofserv
    static XrdOucString           fgProofServRCs; // Additional rcs to be passed to proofserv
    //
-   static int                    fgNumLocalWrks; // Number of local workers [== n cpus]
+   static XrdProofGroupMgr       fgGroupsMgr; // Groups manager
    //
-   static int                    fgNumGroups; // Number of groups
-
+   static XrdProofdManager       fgMgr;       // Cluster manager
+   //
+   static XrdProofSched         *fgProofSched;   // Instance of the PROOF scheduler
+   //
+   // Worker level scheduling control
+   static float                  fgOverallInflate; // Overall inflate factor
+   static int                    fgSchedOpt;  // Worker sched option
    //
    // Static area: client section
    //
    static std::list<XrdProofdClient *> fgProofdClients;  // keeps track of all users
    static std::list<XrdProofdPInfo *> fgTerminatedProcess; // List of pids of processes terminating
+   static std::list<XrdProofServProxy *> fgActiveSessions; // List of active sessions (non-idle)
 
    //
    // Static area: methods
    //
-   static int    AddNewSession(XrdProofdClient *client, const char *tag);
-   static int    ChangeProcessPriority(int pid, int deltap);
-   static int    CheckIf(XrdOucStream *s);
    static bool   CheckMaster(const char *m);
    static int    CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
    static int    Config(const char *fn);
-   static int    CreateDefaultPROOFcfg();
    static char  *FilterSecConfig(const char *cfn, int &nd);
-   static int    GetNumCPUs();
-   static int    GetSessionDirs(XrdProofdClient *pcl, int opt,
-                                std::list<XrdOucString *> *sdirs,
-                                XrdOucString *tag = 0);
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
-   static int    GuessTag(XrdProofdClient *pcl, XrdOucString &tag, int ridx = 1);
-   static XrdSecService *LoadSecurity(char *seclib, char *cfn);
-   static int    MvOldSession(XrdProofdClient *client,
-                              const char *tag, int maxold = 10);
-   static int    ReadPROOFcfg();
+   static XrdProofSched *XrdProofdProtocol::LoadScheduler(const char *cfn, XrdOucError *edest);
+   static XrdSecService *LoadSecurity(const char *seclib, const char *cfn);
+   static int    LogTerminatedProc(int pid);
    static int    ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
+   static int    SetGroupEffectiveFractions();
+   static int    SetInflateFactors();
    static int    SetProofServEnv(XrdROOT *r);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
    static int    VerifyProcessByID(int pid, const char *pname = 0);
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// XrdProofWorker                                                       //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2006                                        //
-//                                                                      //
-// Small class with information about a potential worker.               //
-// A list of instances of this class is built using the config file or  //
-// or the information collected from the resource discoverers.          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class XrdProofWorker {
-
- public:
-   XrdProofWorker(const char *str = 0);
-   virtual ~XrdProofWorker() { }
-
-   void                    Reset(const char *str); // Set from 'str'
-
-   const char             *Export();
-
-   bool                    Matches(const char *host);
-
-   // Counters
-   int                     fActive;      // number of active sessions
-   int                     fSuspended;   // number of suspended sessions 
-
-   std::list<XrdProofServProxy *> fProofServs; // ProofServ sessions using
-                                               // this worker
-
-   // Worker definitions
-   XrdOucString            fExport;      // export string
-   char                    fType;        // type: worker ('W') or submaster ('S')
-   XrdOucString            fHost;        // user@host
-   int                     fPort;        // port
-   int                     fPerfIdx;     // performance index
-   XrdOucString            fImage;       // image name
-   XrdOucString            fWorkDir;     // work directory
-   XrdOucString            fMsd;         // mass storage domain
-   XrdOucString            fId;          // ID string
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.16 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.17 2007/03/20 16:16:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -12,6 +12,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/uio.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include <list>
 #include <map>
@@ -20,6 +22,7 @@
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdProofServProxy.h"
 #include "XrdProofdProtocol.h"
+#include "XrdProofWorker.h"
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -58,6 +61,13 @@ XrdProofServProxy::XrdProofServProxy()
    fUserEnvs = 0;
    fClients.reserve(10);
    fROOT = 0;
+   fRequirements = 0;
+   fGroup = 0;
+   fInflate = 1000;
+   fSched = -1;
+   fDefSched = -1;
+   fDefSchedPriority = 0;
+   fFracEff = 0.;
 }
 
 //__________________________________________________________________________
@@ -67,6 +77,7 @@ XrdProofServProxy::~XrdProofServProxy()
 
    SafeDelete(fQueryNum);
    SafeDelete(fStartMsg);
+   SafeDelete(fRequirements);
    SafeDelete(fPingSem);
 
    std::vector<XrdClientID *>::iterator i;
@@ -111,6 +122,7 @@ void XrdProofServProxy::Reset()
    fLink = 0;
    fParent = 0;
    SafeDelete(fQueryNum);
+   SafeDelete(fRequirements);
    SafeDelete(fStartMsg);
    SafeDelete(fPingSem);
    fStatus = kXPD_idle;
@@ -128,6 +140,12 @@ void XrdProofServProxy::Reset()
    SafeDelArray(fUserEnvs);
    fClients.clear();
    fROOT = 0;
+   fGroup = 0;
+   fInflate = 1000;
+   fSched = -1;
+   fDefSched = -1;
+   fDefSchedPriority = 0;
+   fFracEff = 0.;
    // Cleanup worker info
    ClearWorkers();
 }
@@ -251,4 +269,321 @@ void XrdProofServProxy::SetCharValue(char **carr, const char *v, int l)
          (*carr)[len] = 0;
       }
    }
+}
+
+//______________________________________________________________________________
+int XrdProofServProxy::SetShutdownTimer(int opt, int delay, bool on)
+{
+   // Start (on = TRUE) or stop (on = FALSE) the shutdown timer for the session.
+   // Return 0 on success, -1 in case of error.
+   int rc = -1;
+
+   TRACE(ACT, "XrdProofServProxy::SetShutdownTimer: enter: on/off: "<<on);
+
+   // Prepare buffer
+   int len = 2 *sizeof(kXR_int32);
+   char *buf = new char[len];
+   // Option
+   kXR_int32 itmp = (on) ? (kXR_int32)opt : -1;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf, &itmp, sizeof(kXR_int32));
+   // Delay
+   itmp = (on) ? (kXR_int32)delay : 0;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf + sizeof(kXR_int32), &itmp, sizeof(kXR_int32));
+   // Send over
+   if (ProofSrv()->Send(kXR_attn, kXPD_timer, buf, len) != 0) {
+      TRACE(XERR, "XrdProofServProxy::SetShutdownTimer: "
+                  "could not send shutdown info to proofsrv");
+   } else {
+      rc = 0;
+      XrdOucString msg = "XrdProofServProxy::SetShutdownTimer: ";
+      if (on) {
+         if (delay > 0) {
+            msg += "delayed (";
+            msg += delay;
+            msg += " secs) ";
+         }
+         msg += "shutdown notified to process ";
+         msg += SrvID();
+         if (opt == 1)
+            msg += "; action: when idle";
+         else if (opt == 2)
+            msg += "; action: immediate";
+         SetShutdown(1);
+      } else {
+         msg += "cancellation of shutdown action notified to process ";
+         msg += SrvID();
+         SetShutdown(0);
+      }
+      TRACE(DBG, msg.c_str());
+   }
+   // Cleanup
+   delete[] buf;
+
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+int XrdProofServProxy::TerminateProofServ()
+{
+   // Terminate the associated process.
+   // A shutdown interrupt message is forwarded.
+   // If add is TRUE (default) the pid is added to the list of processes
+   // requested to terminate.
+   // Return the pid of tyhe terminated process on success, -1 if not allowed
+   // or other errors occured.
+
+   TRACE(ACT, "XrdProofServProxy::TerminateProofServ: enter: " << Ordinal());
+
+   // Send a terminate signal to the proofserv
+   int pid = SrvID();
+   if (pid > -1) {
+
+      int type = 3;
+      if (ProofSrv()->Send(kXR_attn, kXPD_interrupt, type) != 0)
+         // Could not send: signal failure
+         return -1;
+      // For registration/monitoring purposes
+      return pid;
+   }
+
+   // Failed
+   return -1;
+}
+
+//______________________________________________________________________________
+int XrdProofServProxy::VerifyProofServ(int timeout)
+{
+   // Check if the associated proofserv process is alive.
+   // A ping message is sent and the reply waited for the internal timeout.
+   // Return 1 if successful, 0 if reply was not received within the
+   // internal timeout, -1 in case of error.
+   int rc = -1;
+
+   TRACE(ACT, "XrdProofServProxy::VerifyProofServ: enter");
+
+   // Create semaphore
+   CreatePingSem();
+
+   // Propagate the ping request
+   if (ProofSrv()->Send(kXR_attn, kXPD_ping, 0, 0) != 0) {
+      TRACE(XERR, "XrdProofServProxy::VerifyProofServ: could not propagate ping to proofsrv");
+      DeletePingSem();
+      return rc;
+   }
+
+   // Wait for reply
+   rc = 1;
+   if (PingSem()->Wait(timeout) != 0) {
+      XrdOucString msg = "XrdProofServProxy::VerifyProofServ: did not receive ping reply after ";
+      msg += timeout;
+      msg += " secs";
+      TRACE(XERR, msg.c_str());
+      rc = 0;
+   }
+
+   // Cleanup
+   DeletePingSem();
+
+   // Done
+   return rc;
+}
+//__________________________________________________________________________
+int XrdProofServProxy::ChangeProcessPriority(int dp)
+{
+   // Change priority of the server process by dp (positive or negative)
+   // Returns 0 in case of success, -errno in case of error.
+
+   TRACE(ACT, "ChangeProcessPriority: enter: pid: " << fSrvID << ", dp: " << dp);
+
+   // No action requested
+   if (dp == 0)
+      return 0;
+
+   // Get current priority; errno needs to be reset here, as -1
+   // could be a legitimate priority value
+   errno = 0;
+   int priority = getpriority(PRIO_PROCESS, fSrvID);
+   if (priority == -1 && errno != 0) {
+      TRACE(XERR, "ChangeProcessPriority:"
+                 " getpriority: errno: " << errno);
+      return -errno;
+   }
+
+   // Reference priority
+   int refpriority = priority + dp;
+
+   // Chaneg the priority
+   if (setpriority(PRIO_PROCESS, fSrvID, refpriority) != 0) {
+      TRACE(XERR, "ChangeProcessPriority:"
+                 " setpriority: errno: " << errno);
+      return ((errno != 0) ? -errno : -1);
+   }
+
+   // Check that it worked out
+   errno = 0;
+   if ((priority = getpriority(PRIO_PROCESS, fSrvID)) == -1 && errno != 0) {
+      TRACE(XERR, "ChangeProcessPriority:"
+                 " getpriority: errno: " << errno);
+      return -errno;
+   }
+   if (priority != refpriority) {
+      TRACE(XERR, "ChangeProcessPriority:"
+                 " unexpected result of action: found " << priority <<
+                 ", expected "<<refpriority);
+      errno = EPERM;
+      return -errno;
+   }
+
+   // We are done
+   return 0;
+}
+
+//__________________________________________________________________________
+int XrdProofServProxy::SetInflate(int inflate, bool sendover)
+{
+   // Set the inflate factor for this session; this factor is used to
+   // artificially inflate the processing time (by delaying new packet
+   // requests) to control resource sharing.
+   // If 'sendover' is TRUE the factor is communicated to proofserv,
+   // otherwise is just stored.
+
+   XrdOucMutexHelper mhp(fMutex);
+   fInflate = inflate;
+
+   if (sendover) {
+      // Prepare buffer
+      int len = sizeof(kXR_int32);
+      char *buf = new char[len];
+      kXR_int32 itmp = inflate;
+      itmp = static_cast<kXR_int32>(htonl(itmp));
+      memcpy(buf, &itmp, sizeof(kXR_int32));
+      // Send over
+      if (fProofSrv.Send(kXR_attn, kXPD_inflate, buf, len) != 0) {
+         // Failure
+         TRACE(XERR,"XrdProofServProxy::SetInflate: problems telling proofserv");
+         return -1;
+      }
+      TRACE(DBG,"XrdProofServProxy::SetInflate: inflate factor set to "<<inflate);
+   }
+   // Done
+   return 0;
+}
+
+//__________________________________________________________________________
+void XrdProofServProxy::SetSrv(int pid)
+{
+   // Set the server PID. Also find the scheduling policy
+
+   XrdOucMutexHelper mhp(fMutex);
+
+   // The PID
+   fSrvID = pid;
+
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__)
+   // The scheduling policy
+   fSched = sched_getscheduler(pid);
+   fDefSched = fSched;
+#endif
+
+   // Done
+   return;
+}
+
+//__________________________________________________________________________
+int XrdProofServProxy::SetSchedRoundRobin(bool on)
+{
+   // Set the scheduling policy for process 'pid' to SCHED_RR (Round Robin)
+   // if on is TRUE, or to the original one if on is FALSE.
+   // Round Robin is needed to control the exact CPU time assigned to a
+   // process. This is needed when the priority-based worker level load
+   // balancing is enabled. Under Linux, the default policy SCHED_OTHER increases
+   // dynamically the priority of sleeping processes so that load balancing
+   // based on the slowdown of low priority sessions does not work.
+   // Return 0 on success, -1 if any problem occured.
+
+   TRACE(ACT, "SetSchedRoundRobin: enter: pid: " << fSrvID<<", ON: "<<on);
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+   TRACE(ACT, "SetSchedRoundRobin: functionality unsupported on this platform");
+#else
+
+   // Next depends on 'on'
+   if (on) {
+
+      const char *lab = "SetSchedRoundRobin: ON: ";
+
+      // Nothing to do if already Round Robin
+      if ((fDefSched = sched_getscheduler(fSrvID)) == SCHED_RR) {
+         TRACE(DBG, lab << "current policy is already SCHED_RR - do nothing");
+         return 0;
+      }
+
+      // Save current parameters
+      sched_getparam(fSrvID, &fDefSchedParam);
+
+      // Min RoundRobin priorities
+      int pr_min = sched_get_priority_min(SCHED_RR);
+      if (pr_min < 0) {
+         TRACE(XERR, lab << "sched_get_priority_min: errno: "<<errno);
+         return -1;
+      }
+
+      // Retrieve the privileges
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+
+      // Set new schema with minimal priority
+      struct sched_param par;
+      par.sched_priority = pr_min;
+      if (sched_setscheduler(fSrvID, SCHED_RR, &par) != 0) {
+         TRACE(XERR, lab << "sched_setscheduler: errno: "<<errno);
+         return -1;
+      }
+
+      // We increase the nice level to avoid overloading the machine
+      fDefSchedPriority = getpriority(PRIO_PROCESS, fSrvID);
+      if (setpriority(PRIO_PROCESS, fSrvID, fDefSchedPriority + 5) != 0) {
+         TRACE(XERR, lab << "setpriority: errno: "<<errno);
+      }
+
+      // Current policy
+      fSched = fDefSched;
+
+//         TRACE(DBG, lab << "scheduling policy set to SCHED_RR for process "<<fSrvID);
+      XPDPRT(lab << "scheduling policy set to SCHED_RR for process "<<fSrvID);
+
+   } else {
+
+      const char *lab = "SetSchedRoundRobin: OFF: ";
+
+      // Nothing to do if already done
+      if ((fSched = sched_getscheduler(fSrvID)) == fDefSched) {
+         TRACE(DBG, lab << "current policy the default one - do nothing");
+         return 0;
+      }
+
+      // Retrieve the privileges
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+
+      // Set default policy and params
+      if (sched_setscheduler(fSrvID, fDefSched, &fDefSchedParam) != 0) {
+         TRACE(XERR, lab << "sched_setscheduler: errno: "<<errno);
+         return -1;
+      }
+
+      // Reset initial scheduling priority
+      if (setpriority(PRIO_PROCESS, fSrvID, fDefSchedPriority) != 0) {
+         TRACE(XERR, lab << "setpriority: errno: "<<errno);
+      }
+
+      // Current policy
+      fSched = fDefSched;
+
+//         TRACE(DBG, lab << "scheduling policy set to "<<fSched<<" for process "<<fSrvID);
+      XPDPRT(lab << "scheduling policy set to  "<<fSched<<" for process "<<fSrvID);
+   }
+#endif
+   // Done
+   return 0;
 }

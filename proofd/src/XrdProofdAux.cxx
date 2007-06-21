@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:  $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.cxx,v 1.1 2007/06/12 13:51:03 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
 
+#include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
 
 #include "XrdProofdAux.h"
@@ -287,10 +288,18 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui)
    struct stat st;
    if (stat(path,&st) != 0) {
       if (errno == ENOENT) {
-         if (mkdir(path, 0755) != 0) {
-            MERROR(MHEAD, "AssertDir: unable to create dir: "<<path<<
-                          " (errno: "<<errno<<")");
-            return -1;
+
+         {  XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+            if (XpdBadPGuard(pGuard, ui.fUid)) {
+               MERROR(MHEAD, "AsserDir: could not get privileges");
+               return -1;
+            }
+
+            if (mkdir(path, 0755) != 0) {
+               MERROR(MHEAD, "AssertDir: unable to create dir: "<<path<<
+                             " (errno: "<<errno<<")");
+               return -1;
+            }
          }
          if (stat(path,&st) != 0) {
             MERROR(MHEAD, "AssertDir: unable to stat dir: "<<path<<
@@ -384,4 +393,97 @@ int XrdProofdAux::SymLink(const char *path, const char *link)
 
    // We are done
    return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
+{
+   // Check existence and match condition of an 'if' directive
+   // If none (valid) is found, return -1.
+   // Else, return number of chars matching.
+
+   // There must be an 'if'
+   char *val = s ? s->GetToken() : 0;
+   if (!val || strncmp(val,"if",2)) {
+      if (val)
+         // allow the analysis of the token
+         s->RetToken();
+      return -1;
+   }
+
+   // check value if any
+   val = s->GetToken();
+   if (!val)
+      return -1;
+
+   // Notify
+   MTRACE(DBG, MHEAD, "CheckIf: <pattern>: " <<val);
+
+   // Return number of chars matching
+   XrdOucString h(host);
+   return h.matches((const char *)val);
+}
+
+//______________________________________________________________________________
+int XrdProofdAux::GetNumCPUs()
+{
+   // Find out and return the number of CPUs in the local machine.
+   // Return -1 in case of failure.
+
+   static int ncpu = -1;
+
+   // Use cached value, if any
+   if (ncpu > 0)
+      return ncpu;
+
+#if defined(linux)
+   // Look for in the /proc/cpuinfo file
+   XrdOucString fcpu("/proc/cpuinfo");
+   FILE *fc = fopen(fcpu.c_str(), "r");
+   if (!fc) {
+      if (errno == ENOENT) {
+         MTRACE(DBG, MHEAD, "GetNumCPUs: /proc/cpuinfo missing!!! Something very bad going on");
+      } else {
+         XrdOucString emsg("GetNumCPUs: cannot open ");
+         emsg += fcpu;
+         emsg += ": errno: ";
+         emsg += errno;
+         MTRACE(XERR, MHEAD, emsg.c_str());
+      }
+      return -1;
+   }
+   // Read lines and count those starting with "processor"
+   char line[2048] = { 0 };
+   while (fgets(line, sizeof(line), fc)) {
+      if (!strncmp(line, "processor", strlen("processor")))
+         ncpu++;
+   }
+   // Close the file
+   fclose(fc);
+
+#elif defined(__sun)
+
+   // Run "psrinfo" in popen and count lines
+   FILE *fp = popen("psrinfo", "r");
+   if (fp != 0) {
+      char line[2048] = { 0 };
+      while (fgets(line, sizeof(line), fp))
+         ncpu++;
+      pclose(fp);
+   }
+
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+
+   // Run "sysctl -n hw.ncpu" in popen and decode the output
+   FILE *fp = popen("sysctl -n hw.ncpu", "r");
+   if (fp != 0) {
+      char line[2048] = { 0 };
+      while (fgets(line, sizeof(line), fp))
+         ncpu = XrdProofdAux::GetLong(&line[0]);
+      pclose(fp);
+   }
+#endif
+
+   // Done
+   return (ncpu <= 0) ? (int)(-1) : ncpu ;
 }
