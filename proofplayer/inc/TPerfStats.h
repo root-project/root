@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.5 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.6 2007/06/06 10:03:48 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -89,6 +89,7 @@ private:
    Double_t       fTotCpuTime;   //!total cpu time of all slaves
    Long64_t       fTotBytesRead; //!total bytes read on all slaves
    Long64_t       fTotEvents;    //!total number of events processed
+   Int_t          fSlaves;       //!number of active slaves
 
    Bool_t         fDoHist;       //!Fill histos
    Bool_t         fDoTrace;      //!Trace details in master

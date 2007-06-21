@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.12 2007/06/06 10:03:48 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.13 2007/06/12 18:01:23 ganis Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -108,19 +108,18 @@ void TPerfEvent::Print(Option_t *) const
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
-      fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fDoHist(kFALSE),
+      fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fSlaves(0), fDoHist(kFALSE),
       fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE)
 {
    // Normal Constructor.
 
-   Int_t nslaves = 0;
    TProof *proof = gProofServ->GetProof();
-   TList *l = proof ? proof->GetSlaveInfo() : 0 ;
+   TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
    TIter nextslaveinfo(l);
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
-      if (si->fStatus == TSlaveInfo::kActive) nslaves++;
+      if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
 
-   PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", nslaves);
+   PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
 
    fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
    fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
@@ -143,26 +142,26 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       Int_t ntime_bins = 1000;
 
       fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Slave",
-                              nslaves, 0, nslaves);
+                              fSlaves, 0, fSlaves);
       fPacketsHist->SetDirectory(0);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
 
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Slave",
-                             nslaves, 0, nslaves);
+                             fSlaves, 0, fSlaves);
       fEventsHist->SetDirectory(0);
       fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
 
       fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
-                           nslaves, 0, nslaves);
+                           fSlaves, 0, fSlaves);
       fNodeHist->SetDirectory(0);
       fNodeHist->SetMinimum(0);
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
 
       fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Slave",
-                              nslaves, 0, nslaves,
+                              fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
       fLatencyHist->SetDirectory(0);
       fLatencyHist->SetMarkerStyle(4);
@@ -170,7 +169,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       output->Add(fLatencyHist);
 
       fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Slave",
-                               nslaves, 0, nslaves,
+                               fSlaves, 0, fSlaves,
                                ntime_bins, min_time, time_per_bin);
       fProcTimeHist->SetDirectory(0);
       fProcTimeHist->SetMarkerStyle(4);
@@ -178,7 +177,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       output->Add(fProcTimeHist);
 
       fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Slave",
-                              nslaves, 0, nslaves,
+                              fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
       fCpuTimeHist->SetDirectory(0);
       fCpuTimeHist->SetMarkerStyle(4);
@@ -200,7 +199,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    }
 
    if (gProofServ->IsMaster()) {
-      if (gSystem->Getenv("ROOTPROOFQUERYLOGDB"))
+      TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
+      if (sqlserv != "")
          fDoQuota = kTRUE;
    }
 }
@@ -384,25 +384,26 @@ void TPerfStats::WriteQueryLog()
    // The proofquerylog table has the format:
    // CREATE TABLE proofquerylog (
    //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-   //   user          VARCHAR(128) NOT NULL,
-   //   group         VARCHAR(128),
+   //   user          VARCHAR(32) NOT NULL,
+   //   group         VARCHAR(32),
    //   begin         DATETIME,
    //   end           DATETIME,
    //   walltime      INT,
    //   cputime       FLOAT,
    //   bytesread     BIGINT,
-   //   events        BIGINT
+   //   events        BIGINT,
+   //   workers       INT
    //)
 
    TTimeStamp stop;
    TString sql;
 
    sql.Form("INSERT INTO proofquerylog VALUES (0, '%s', '%s', "
-            "'%s', '%s', %d, %.2f, %lld, %lld)",
+            "'%s', '%s', %d, %.2f, %lld, %lld, %d)",
             gProofServ->GetUser(), gProofServ->GetGroup(),
             fTzero.AsString("s"), stop.AsString("s"),
             stop.GetSec()-fTzero.GetSec(), fTotCpuTime,
-            fTotBytesRead, fTotEvents);
+            fTotBytesRead, fTotEvents, fSlaves);
 
    // open connection to SQL server
    TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
