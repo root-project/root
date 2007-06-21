@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.13 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.14 2007/01/12 16:03:17 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -179,6 +179,70 @@ TTreeIndex::~TTreeIndex()
 }
 
 //______________________________________________________________________________
+void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort ) 
+{
+   // Append 'add' to this index.  Entry 0 in add will become entry n+1 in this.
+   // If delaySort is true, do not sort the value, then you must call
+   // Append(0,kFALSE);
+
+   
+   if (add && add->GetN()) {
+      // Create new buffer (if needed)
+
+      Long64_t oldn = fN;
+      fN += add->GetN();
+      
+
+      Long64_t *oldIndex = fIndex;
+      Long64_t *oldValues = fIndexValues;
+
+      fIndex = new Long64_t[fN];
+      fIndexValues = new Long64_t[fN];
+
+      // Copy data
+
+      Long_t size = sizeof(Long64_t) * oldn;
+      Long_t add_size = sizeof(Long64_t) * add->GetN();
+      
+      memcpy(fIndex,oldIndex, size);
+      memcpy(fIndexValues,oldValues, size);
+
+      Long64_t *addIndex = dynamic_cast<const TTreeIndex*>(add)->GetIndex();
+      Long64_t *addValues = dynamic_cast<const TTreeIndex*>(add)->GetIndexValues();
+
+      memcpy(fIndex + oldn, addIndex, add_size);
+      memcpy(fIndexValues + oldn, addValues, add_size);
+      for(Int_t i = 0; i < add->GetN(); i++) {
+         fIndex[oldn + i] += oldn;
+      }
+
+      delete [] oldIndex;
+      delete [] oldValues;
+   }
+
+   // Sort.
+   if (!delaySort) {
+      Long64_t *w = fIndexValues;
+      Long64_t *ind = fIndex;
+      Long64_t *conv = new Long64_t[fN];
+
+      TMath::Sort(fN,w,conv,0);
+
+      fIndex = new Long64_t[fN];
+      fIndexValues = new Long64_t[fN];
+
+      for (Int_t i=0;i<fN;i++) {
+         fIndex[i] = ind[conv[i]];
+         fIndexValues[i] = w[conv[i]];
+      }
+      delete [] w;
+      delete [] ind;
+      delete [] conv;
+   }
+
+}
+
+//______________________________________________________________________________
 Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
 {
 // returns the entry number in this friend Tree corresponding to entry in
@@ -330,20 +394,40 @@ void TTreeIndex::Print(Option_t * option) const
    // if option = "1000" print only the first 1000 entries
 
    TString opt = option;
+   Bool_t printEntry = kFALSE;
    Long64_t n = fN;
    if (opt.Contains("10"))   n = 10;
    if (opt.Contains("100"))  n = 100;
    if (opt.Contains("1000")) n = 1000;
+   if (opt.Contains("all")) {
+      printEntry = kTRUE;
+   }
 
-   Printf("\n**********************************************");
-   Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
-   Printf("**********************************************");
-   Printf("%8s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data());
-   Printf("**********************************************");
-   for (Long64_t i=0;i<n;i++) {
-      Long64_t minor = fIndexValues[i] & 0xffff;
-      Long64_t major = fIndexValues[i]>>31;
-      Printf("%8lld :         %8lld :         %8lld",i,major,minor);
+   if (printEntry) {
+
+      Printf("\n*****************************************************************");
+      Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
+      Printf("*****************************************************************");
+      Printf("%8s : %16s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data(),"entry number");
+      Printf("*****************************************************************");
+      for (Long64_t i=0;i<n;i++) {
+         Long64_t minor = fIndexValues[i] & 0xffff;
+         Long64_t major = fIndexValues[i]>>31;
+         Printf("%8lld :         %8lld :         %8lld :         %8lld",i,major,minor,fIndex[i]);
+      }
+
+   } else {
+
+      Printf("\n**********************************************");
+      Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
+      Printf("**********************************************");
+      Printf("%8s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data());
+      Printf("**********************************************");
+      for (Long64_t i=0;i<n;i++) {
+         Long64_t minor = fIndexValues[i] & 0xffff;
+         Long64_t major = fIndexValues[i]>>31;
+         Printf("%8lld :         %8lld :         %8lld",i,major,minor);
+      }
    }
 }
 

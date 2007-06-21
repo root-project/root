@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.3 2007/02/03 17:28:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.4 2007/06/01 11:42:24 pcanal Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    TChainIndex();
    TChainIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual               ~TChainIndex();
+   virtual void           Append(const TVirtualIndex *, Bool_t delaySort = kFALSE);
    virtual Int_t          GetEntryNumberFriend(const TTree *T);
    virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
    virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const;

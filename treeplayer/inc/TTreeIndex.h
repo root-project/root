@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.4 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.5 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
    TTreeIndex();
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual               ~TTreeIndex();
+   virtual void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE);
    virtual Int_t          GetEntryNumberFriend(const TTree *T);
    virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
    virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const;

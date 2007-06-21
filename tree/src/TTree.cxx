@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.329 2007/05/02 20:18:39 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.330 2007/06/21 15:42:50 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4636,6 +4636,12 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
          newtree->Fill();
       }
       tree->ResetBranchAddresses(); // Disconnect from new tree.
+      if (newtree->GetTreeIndex()) {
+         newtree->GetTreeIndex()->Append(tree->GetTreeIndex(),kTRUE);
+      }
+   }
+   if (newtree->GetTreeIndex()) {
+      newtree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
    }
    return newtree;
 }
@@ -4666,9 +4672,14 @@ Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
          tree->GetEntry(i);
          Fill();
       }
+      if (GetTreeIndex()) {
+         GetTreeIndex()->Append(tree->GetTreeIndex(),kTRUE);
+      }
       tree->ResetBranchAddresses();
    }
-
+   if (GetTreeIndex()) {
+      GetTreeIndex()->Append(0,kFALSE); // Force the sorting
+   }
    return GetEntries();
 }
 

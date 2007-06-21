@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.166 2007/05/06 14:44:17 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.167 2007/06/21 15:42:50 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1748,6 +1748,9 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
          if (cloner.IsValid()) {
             newTree->SetEntries(newTree->GetEntries() + GetTree()->GetEntries());
             cloner.Exec();
+            if (i!=0 && newTree->GetTreeIndex()) {
+               newTree->GetTreeIndex()->Append(GetTree()->GetTreeIndex(),kTRUE);
+            }
          } else {
             if (GetFile()) {
                Warning("Merge", "Skipped file %s\n", GetFile()->GetName());
@@ -1756,12 +1759,25 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
             }
          }
       }
+      if (newTree->GetTreeIndex()) {
+         newTree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
+      }
    } else {
+      Int_t treenumber = 0;
       for (Long64_t i = 0; i < nentries; i++) {
          if (GetEntry(i) <= 0) {
             break;
          }
          newTree->Fill();
+         if (treenumber != GetTreeNumber()) {
+            if (newTree->GetTreeIndex()) {
+               newTree->GetTreeIndex()->Append(GetTree()->GetTreeIndex(),kTRUE);
+            }
+            treenumber = GetTreeNumber();
+         }
+      }
+      if (newTree->GetTreeIndex()) {
+         newTree->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
       }
    }
 

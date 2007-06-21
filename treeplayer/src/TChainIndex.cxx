@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.6 2007/01/06 09:24:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.7 2007/02/03 17:28:54 brun Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -63,10 +63,12 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 
    // Go through all the trees and check if they have indeces. If not then build them.
    for (i = 0; i < chain->GetNtrees(); i++) {
-      TChainIndexEntry entry;
       chain->LoadTree((chain->GetTreeOffset())[i]);
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
+
+      TChainIndexEntry entry;
       entry.fTreeIndex = 0;
+
       if (!index) {
          chain->GetTree()->BuildIndex(majorname, minorname);
          index = chain->GetTree()->GetTreeIndex();
@@ -78,18 +80,47 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          MakeZombie();
          Error("TChainIndex", "Error creating a tree index on a tree in the chain");
       }
+
       R__ASSERT(dynamic_cast<TTreeIndex*>(index));
+
       entry.fMinIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[0];
       entry.fMaxIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[index->GetN() - 1];
-
       fEntries.push_back(entry);
    }
+
    // Check if the indices of different trees are in order. If not then return an error.
    for (i = 0; i < Int_t(fEntries.size() - 1); i++) {
       if (fEntries[i].fMaxIndexValue > fEntries[i+1].fMinIndexValue) {
          DeleteIndices();
          MakeZombie();
          Error("TChainIndex", "The indices in files of this chain aren't sorted.");
+      }
+   }
+
+}
+
+//______________________________________________________________________________
+void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
+{
+
+   if (index) {
+      R__ASSERT(dynamic_cast<const TTreeIndex*>(index));
+
+      TChainIndexEntry entry;
+      entry.fTreeIndex = 0;
+      entry.fMinIndexValue = dynamic_cast<const TTreeIndex*>(index)->GetIndexValues()[0];
+      entry.fMaxIndexValue = dynamic_cast<const TTreeIndex*>(index)->GetIndexValues()[index->GetN() - 1];
+      fEntries.push_back(entry);
+   }
+   
+   if (!delaySort) {
+      // Check if the indices of different trees are in order. If not then return an error.
+      for (Int_t i = 0; i < Int_t(fEntries.size() - 1); i++) {
+         if (fEntries[i].fMaxIndexValue > fEntries[i+1].fMinIndexValue) {
+            DeleteIndices();
+            MakeZombie();
+            Error("TChainIndex", "The indices in files of this chain aren't sorted.");
+         }
       }
    }
 }
