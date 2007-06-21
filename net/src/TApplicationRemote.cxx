@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.8 2007/05/21 10:30:21 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.9 2007/06/19 12:55:18 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -1027,7 +1027,8 @@ void TApplicationRemote::Interrupt(Int_t type)
 //______________________________________________________________________________
 void TApplicationRemote::Browse(TBrowser *b)
 {
-   
+   // Browse remote application (working directory and ROOT files).
+
    b->Add(fRootFiles, "ROOT Files");
    b->Add(fWorkingDir, fWorkingDir->GetTitle());
    gROOT->RefreshBrowsers();
