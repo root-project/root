@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.165 2007/05/03 15:27:40 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.166 2007/05/06 14:44:17 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -819,13 +819,14 @@ Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
    // Return the total number of bytes read,
    // 0 bytes read indicates a failure.
 
-   if (LoadTree(entry) < 0) {
+   Long64_t treeReadEntry = LoadTree(entry);
+   if (treeReadEntry < 0) {
       return 0;
    }
    if (!fTree) {
       return 0;
    }
-   return fTree->GetEntry(fReadEntry, getall);
+   return fTree->GetEntry(treeReadEntry, getall);
 }
 
 //______________________________________________________________________________
@@ -1113,14 +1114,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
    }
 
    // Calculate the entry number relative to the found tree.
-   fReadEntry = entry - fTreeOffset[treenum];
+   Long64_t treeReadEntry = entry - fTreeOffset[treenum];
+   fReadEntry = entry;
 
    // If entry belongs to the current tree return entry.
    if (treenum == fTreeNumber) {
       // First set the entry the tree on its owns friends
       // (the friends of the chain will be updated in the
       // next loop).
-      fTree->LoadTree(fReadEntry);
+      fTree->LoadTree(treeReadEntry);
       if (fFriends) {
          // The current tree has not changed but some of its friends might.
          //
@@ -1164,7 +1166,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
                // else we assume it is a simple tree If the tree is a
                // direct friend of the chain, it should be scanned
                // used the chain entry number and NOT the tree entry
-               // number (fReadEntry) hence we redo:
+               // number (treeReadEntry) hence we redo:
                at->LoadTreeFriend(entry, this);
             }
          }
@@ -1179,7 +1181,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             }
          }
       }
-      return fReadEntry;
+      return treeReadEntry;
    }
 
    // If the tree has clones, copy them into the chain
@@ -1220,7 +1222,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    TChainElement* element = (TChainElement*) fFiles->At(treenum);
    if (!element) {
-      if (fReadEntry) {
+      if (treeReadEntry) {
          return -4;
       }
       // Last attempt, just in case all trees in the chain have 0 entries.
@@ -1297,7 +1299,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          if ((fTreeNumber < (fNtrees - 1)) && (entry < fTreeOffset[fTreeNumber+2])) {
             return LoadTree(entry);
          } else {
-            fReadEntry = -2;
+            treeReadEntry = fReadEntry = -2;
          }
       }
    }
@@ -1327,7 +1329,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // they use the correct read entry number).
 
    // Change the new current tree to the new entry.
-   fTree->LoadTree(fReadEntry);
+   fTree->LoadTree(treeReadEntry);
 
    // Change the chain friends to the new entry.
    if (fFriends) {
@@ -1403,7 +1405,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    }
 
    // Return the new local entry number.
-   return fReadEntry;
+   return treeReadEntry;
 }
 
 //______________________________________________________________________________

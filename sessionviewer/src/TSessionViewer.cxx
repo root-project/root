@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.11 2007/02/22 16:45:48 brun Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.12 2007/03/17 18:02:24 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -3069,7 +3069,7 @@ void TSessionQueryFrame::OnBtnSubmit()
             OnBtnRetrieve();
             TChain *chain = (TChain *)newquery->fChain;
             ProgressLocal(chain->GetEntries(),
-                          chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+                          chain->GetReadEntry()+1);
             if ((newquery->fStatus != TQueryDescription::kSessionQueryAborted) &&
                 (newquery->fStatus != TQueryDescription::kSessionQueryStopped))
                newquery->fStatus = TQueryDescription::kSessionQueryCompleted;
@@ -3233,7 +3233,7 @@ void TSessionQueryFrame::UpdateInfos()
             TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
             if (chain) {
                ProgressLocal(chain->GetEntries(),
-                     chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+                             chain->GetReadEntry()+1);
             }
             else {
                ProgressLocal(0, 0);
@@ -4841,7 +4841,7 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
          TChain *chain = (TChain *)fActDesc->fActQuery->fChain;
          if (chain)
             fQueryFrame->ProgressLocal(chain->GetEntries(),
-                        chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+                                       chain->GetReadEntry()+1);
       }
    }
 

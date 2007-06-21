@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.219 2007/05/15 19:59:51 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.220 2007/05/16 21:21:21 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -706,7 +706,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
    TString name = fullExpression;
 
    TBranch *branch = leaf ? leaf->GetBranch() : 0;
-   Long64_t readentry = fTree->GetReadEntry();
+   Long64_t readentry = fTree->GetTree()->GetReadEntry();
    if (readentry==-1) readentry=0;
 
    Bool_t useLeafReferenceObject = false;
@@ -1964,7 +1964,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
    // Later on we will need to read one entry, let's make sure
    // it is a real entry.
-   Long64_t readentry = fTree->GetReadEntry();
+   Long64_t readentry = fTree->GetTree()->GetReadEntry();
    if (readentry==-1) readentry=0;
    const char *cname = expression;
    char    first[kMaxLen];  first[0] = '\0';
@@ -2473,6 +2473,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       Int_t code = fNcodes++;
       fCodes[code] = 0;
       fLookupType[code] = kIndexOfEntry;
+      return code;
+   }
+   if (name == "LocalEntry$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kIndexOfLocalEntry;
       return code;
    }
    if (name == "Entries$") {
@@ -3320,6 +3326,7 @@ void* TTreeFormula::EvalObject(int instance)
 
    switch (fLookupType[0]) {
       case kIndexOfEntry:
+      case kIndexOfLocalEntry:
       case kEntries:
       case kLength:
       case kLengthFunc:
@@ -3513,6 +3520,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue((TLeaf*)0x0,real_instance);
          }
          case kIndexOfEntry: return (Double_t)fTree->GetReadEntry();
+         case kIndexOfLocalEntry: return (Double_t)fTree->GetTree()->GetReadEntry();
          case kEntries:      return (Double_t)fTree->GetEntries();
          case kLength:       return fManager->fNdata;
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
@@ -3520,7 +3528,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
          case kEntryList: {
             TEntryList *elist = (TEntryList*)fMethods.At(0);
-            return elist->Contains(fTree->GetReadEntry());
+            return elist->Contains(fTree->GetTree()->GetReadEntry());
          }
          case -1: break;
       }
@@ -3744,6 +3752,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             const Int_t lookupType = fLookupType[code];
             switch (lookupType) {
                case kIndexOfEntry: tab[pos++] = (Double_t)fTree->GetReadEntry(); continue;
+               case kIndexOfLocalEntry: tab[pos++] = (Double_t)fTree->GetTree()->GetReadEntry(); continue;
                case kEntries:      tab[pos++] = (Double_t)fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
                case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
@@ -4095,6 +4104,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
    if (fLeaves.GetEntries() != 1) {
       switch (fLookupType[0]) {
          case kIndexOfEntry:
+         case kIndexOfLocalEntry:
          case kEntries:
          case kLength:
          case kLengthFunc:
@@ -4123,6 +4133,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
    if (!leaf) {
       switch (fLookupType[code]) {
          case kIndexOfEntry:
+         case kIndexOfLocalEntry:
          case kEntries:
          case kLength:
          case kLengthFunc:

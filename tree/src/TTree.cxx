@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.328 2007/04/27 08:34:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.329 2007/05/02 20:18:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2886,9 +2886,10 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  other entry use:
    //    tree.Draw("myvar","Entry$%2==0");
    //
-   //  Entry$    : return the current entry number (== TTree::GetReadEntry())
-   //  Entries$  : return the total number of entries (== TTree::GetEntries())
-   //  Length$   : return the total number of element of this formula for this
+   //  Entry$      : return the current entry number (== TTree::GetReadEntry())
+   //  LocalEntry$ : return the current entry number in the current tree of a chain (== GetTree()->GetReadEntry())
+   //  Entries$    : return the total number of entries (== TTree::GetEntries())
+   //  Length$     : return the total number of element of this formula for this
    //                 entry (==TTreeFormula::GetNdata())
    //  Iteration$: return the current iteration over this formula for this
    //                 entry (i.e. varies from 0 to Length$).

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.242 2007/05/02 20:18:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.243 2007/06/04 17:07:17 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -760,11 +760,12 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  other entry use:
 //    tree.Draw("myvar","Entry$%2==0");
 //
-//  Entry$    : return the current entry number (== TTree::GetReadEntry())
-//  Entries$  : return the total number of entries (== TTree::GetEntries())
-//  Length$   : return the total number of element of this formula for this
+//  Entry$      : return the current entry number (== TTree::GetReadEntry())
+//  LocalEntry$ : return the current entry number in the current tree of a chain (== GetTree()->GetReadEntry())
+//  Entries$    : return the total number of entries (== TTree::GetEntries())
+//  Length$     : return the total number of element of this formula for this
 //              entry (==TTreeFormula::GetNdata())
-//  Iteration$: return the current iteration over this formula for this
+//  Iteration$:   return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
 //  Length$(formula): return the total number of element of the formula given as a
@@ -963,6 +964,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    if ( dot_pos != kNPOS
        && possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
        && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
+       && possibleFilename.Index("LocalEntry$")<0
        && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
        && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
@@ -978,6 +980,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       possibleFilename = selection;
       if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0
           && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0
+          && possibleFilename.Index("LocalEntry$")<0
           && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
           && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
