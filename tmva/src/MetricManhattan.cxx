@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricManhattan.cxx,v 1.3 2007/06/14 10:11:40 speckmayer Exp $ 
+// @(#)root/tmva $Id: MetricManhattan.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -43,6 +43,8 @@ TMVA::MetricManhattan::MetricManhattan()
 //_______________________________________________________________________
 Double_t TMVA::MetricManhattan::Distance( std::vector<Double_t>& pointA, std::vector<Double_t>& pointB )
 {
+   // the Manhatten distance between point A and B:
+   // linear sum of differences between A in B in all variables
    Double_t distance = 0.0;
    Double_t val = 0.0;
    std::vector<Double_t>::iterator itA;

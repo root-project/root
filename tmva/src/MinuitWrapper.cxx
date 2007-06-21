@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MinuitWrapper.cxx,v 1.5 2007/05/31 14:17:48 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MinuitWrapper.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -37,6 +37,7 @@ TMVA::MinuitWrapper::MinuitWrapper( IFitterTarget& target, Int_t maxpar )
      fFitterTarget( target ),
      fNumPar( maxpar )
 {
+   // constructor
    for ( Int_t i=0; i< maxpar; i++ ) {
       fParameters.push_back(0.0);
    }
@@ -125,6 +126,7 @@ Int_t TMVA::MinuitWrapper::SetParameter(Int_t ipar,const char *parname,Double_t 
 //______________________________________________________________________________
 TObject *TMVA::MinuitWrapper::Clone(char const* newname) const
 {
+   // produces a clone of this MinuitWrapper
    MinuitWrapper *named = (MinuitWrapper*)TNamed::Clone(newname);
    named->fFitterTarget = fFitterTarget;
    return 0;

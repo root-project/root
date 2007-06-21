@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.14 2007/06/19 13:26:21 brun Exp $    
+// @(#)root/tmva $Id: GeneticPopulation.cxx,v 1.15 2007/06/20 09:41:24 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -60,8 +60,8 @@ ClassImp(TMVA::GeneticPopulation)
 //_______________________________________________________________________
 void TMVA::GeneticPopulation::SetRandomSeed( UInt_t seed )
 {
-   delete fRandomGenerator;
-   fRandomGenerator = new TRandom3( seed );
+   // the random seed of the random generator
+   fRandomGenerator->SetSeed( seed );
 }
 
 //_______________________________________________________________________

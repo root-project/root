@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.19 2007/06/19 13:26:21 brun Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.20 2007/06/20 09:41:24 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -705,6 +705,7 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 
 void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const TString& ) const
 {
+   // write specific header of the classifier (mostly include files)
    fout << "#include <math.h>" << endl;
 }
 

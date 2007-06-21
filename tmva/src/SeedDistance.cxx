@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SeedDistance.cxx,v 1.1 2007/06/13 09:53:32 speckmayer Exp $ 
+// @(#)root/tmva $Id: SeedDistance.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -45,6 +45,7 @@ TMVA::SeedDistance::SeedDistance( IMetric& metric, std::vector< std::vector<Doub
 //_______________________________________________________________________
 std::vector<Double_t>& TMVA::SeedDistance::GetDistances( std::vector<Double_t>& point )
 {
+   // calculates distances of all seeds to a point and stores the result in a distance vector
    fDistances.clear();
    Double_t val = 0.0;
    for( std::vector< std::vector<Double_t> >::iterator itSeed = fSeeds.begin(); itSeed != fSeeds.end(); itSeed++ ){

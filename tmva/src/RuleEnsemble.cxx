@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.9 2007/04/19 06:53:02 brun Exp $
+// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.10 2007/06/19 13:26:21 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -1182,6 +1182,8 @@ TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::MakeRuleMap(const std::vector<Event *> *events, UInt_t ifirst, UInt_t ilast)
 {
+   // Makes rule map for all events
+
    fLogger << kVERBOSE << "Making Rule map for all events" << Endl;
    // make rule response map
    if (events==0) events = GetTrainingEvents();

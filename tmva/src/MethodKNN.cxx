@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodKNN.cxx,v 1.8 2007/06/20 08:47:18 stelzer Exp $
+// @(#)root/tmva $Id: MethodKNN.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $
 // Author: Rustem Ospanov 
 
 /**********************************************************************************
@@ -419,8 +419,10 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          continue;
       }
       
-      const UInt_t count = std::count(line.begin(), line.end(), ',');
-      
+      UInt_t count = 0;
+      std::string::size_type pos=0;
+      while( (pos=line.find(',',pos)) != std::string::npos ) { count++; pos++; }
+
       if (nvar == 0) {
          nvar = count - 2;
       }

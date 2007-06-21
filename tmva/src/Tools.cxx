@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $   
+// @(#)root/tmva $Id: Tools.cxx,v 1.13 2007/06/19 13:26:21 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -723,9 +723,9 @@ void TMVA::Tools::writeFloatArbitraryPrecision(Float_t val, ostream & os) {
    os << val << " :: ";
    void * c = &val;
    for(int i=0; i<4; i++) {
-      Int_t C = *((char*)c+i)-'\0';
-      if(C<0) C+=256;
-      os << C << " ";
+      Int_t ic = *((char*)c+i)-'\0';
+      if(ic<0) ic+=256;
+      os << ic << " ";
    }
    os << ":: ";
 }

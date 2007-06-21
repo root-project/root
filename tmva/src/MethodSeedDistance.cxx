@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSeedDistance.cxx,v 1.8 2007/06/15 22:01:33 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodSeedDistance.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $    
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -237,23 +237,24 @@ TMVA::MethodSeedDistance::~MethodSeedDistance( void )
 }
 
 //_______________________________________________________________________
- void TMVA::MethodSeedDistance::ClearAll( void )
- {
-    std::map< Interval*, Int_t > delmap;
+void TMVA::MethodSeedDistance::ClearAll( void )
+{
+   // reset all parameters of the method
+   std::map< Interval*, Int_t > delmap;
     
-    for (UInt_t ipar=0; ipar<fParRange.size(); ipar++) {
-       delmap[fParRange[ipar]] = ipar;
-       fParRange[ipar] = 0;
-    }
-    for( std::map< Interval*, Int_t >::iterator it = delmap.begin(); it != delmap.end(); it++ ){
-       delete it->first;
-    }
-    fParRange.clear(); 
+   for (UInt_t ipar=0; ipar<fParRange.size(); ipar++) {
+      delmap[fParRange[ipar]] = ipar;
+      fParRange[ipar] = 0;
+   }
+   for( std::map< Interval*, Int_t >::iterator it = delmap.begin(); it != delmap.end(); it++ ){
+      delete it->first;
+   }
+   fParRange.clear(); 
 
-    fMetricPars.clear();
+   fMetricPars.clear();
 
-    fPars.clear();
- }
+   fPars.clear();
+}
 
 //_______________________________________________________________________
 void TMVA::MethodSeedDistance::Train( void )
@@ -551,6 +552,7 @@ void TMVA::MethodSeedDistance::MakeStructureFromList( std::vector<Double_t>& lin
                                   std::vector< std::vector< Double_t > >& seeds,
                                   std::vector<Double_t>& metricParams )
 {
+   // makes the structure from the list
    std::vector<Double_t>::iterator loc = linear.begin();
    for( std::vector< std::vector<Double_t> >::iterator itSeed = seeds.begin(); itSeed != seeds.end(); itSeed++ ){
       for( std::vector<Double_t>::iterator it = (*itSeed).begin(); it != (*itSeed).end(); it++ ){

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.14 2007/04/21 14:20:46 brun Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.15 2007/06/19 13:26:21 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -425,7 +425,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
          for (Int_t i=1; i<=fNeur_1.neuron[layer-1]; i++) {
             for (Int_t j=jmin; j<=jmax; j++) {
                istr >> W_ref(fNeur_1.w, layer+1, j, i);
-           }
+            }
          }
          // skip two empty lines
          istr.getline( dumchar, nchar );

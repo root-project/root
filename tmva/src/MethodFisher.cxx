@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.16 2007/06/19 13:26:21 brun Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.17 2007/06/20 09:41:24 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -241,7 +241,7 @@ Double_t TMVA::MethodFisher::GetMvaValue()
    // returns the Fisher value (no fixed range)
    Double_t result = fF0;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-     result += (*fFisherCoeff)[ivar]*GetEventVal(ivar);
+      result += (*fFisherCoeff)[ivar]*GetEventVal(ivar);
    return result;
 }
 

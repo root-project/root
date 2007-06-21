@@ -1,5 +1,5 @@
 // ver. 09.05.2007 wprowadzone wagi ( ale bez konkretnych poprawek )
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.59 2007/06/15 22:01:33 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodSVM.cxx,v 1.10 2007/06/19 13:26:21 brun Exp $    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -894,6 +894,7 @@ void TMVA::MethodSVM::Results()
 //_______________________________________________________________
 void TMVA::MethodSVM::StoreSupportVectors()
 {
+   // creates support vectors from training events
    UInt_t evtCounter = 0;
 
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++)

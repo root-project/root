@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: ModulekNN.cxx,v 1.8 2007/06/20 08:47:18 stelzer Exp $
+// @(#)root/tmva $Id: ModulekNN.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $
 // Author: Rustem Ospanov 
 
 /**********************************************************************************
@@ -532,11 +532,12 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
          continue;	 
       }
       
-      fLogger << kINFO << "Variable " << vit->first 
-              << " included " << distance(beg_it, end_it) + 1
-              << " events: width = " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos - lpos
-              << ", (min, max) = (" << std::setfill(' ') << std::setw(5) << std::setprecision(3) << lpos 
-              << ", " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos << ")" << Endl;
+      // Rustem: please find a solution that does not use distance (it does not exist on solaris)
+      //       fLogger << kINFO << "Variable " << vit->first 
+      //               << " included " << distance(beg_it, end_it) + 1
+      //               << " events: width = " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos - lpos
+      //               << ", (min, max) = (" << std::setfill(' ') << std::setw(5) << std::setprecision(3) << lpos 
+      //               << ", " << std::setfill(' ') << std::setw(5) << std::setprecision(3) << rpos << ")" << Endl;
       
       fVarScale[vit->first] = rpos - lpos;
    }

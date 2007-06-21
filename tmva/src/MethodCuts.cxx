@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.14 2007/04/21 14:20:46 brun Exp $ 
+// @(#)root/tmva $Id: MethodCuts.cxx,v 1.15 2007/06/19 13:26:21 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -502,6 +502,7 @@ void TMVA::MethodCuts::Test( TTree* )
 //_______________________________________________________________________
 Double_t TMVA::MethodCuts::EstimatorFunction( std::vector<Double_t>& par )
 {
+   // returns estimator for "cut fitness" used by GA
    return ComputeEstimator( par );
 }
 

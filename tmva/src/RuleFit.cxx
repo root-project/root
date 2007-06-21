@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.cxx,v 1.7 2007/04/19 06:53:02 brun Exp $
+// @(#)root/tmva $Id: RuleFit.cxx,v 1.8 2007/06/19 13:26:21 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -68,7 +68,7 @@ TMVA::RuleFit::~RuleFit()
 void TMVA::RuleFit::InitNEveEff()
 {
    // init effective number of events (using event weights)
-    UInt_t neve = fTrainingEvents.size();
+   UInt_t neve = fTrainingEvents.size();
    if (neve==0) return;
    //
    fNEveEffTrain = CalcWeightSum( &fTrainingEvents );

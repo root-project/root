@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MinuitFitter.cxx,v 1.15 2007/06/13 13:49:51 speckmayer Exp $ 
+// @(#)root/tmva $Id: MinuitFitter.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $ 
 // Author: Andraes Hoecker
 
 /**********************************************************************************
@@ -55,6 +55,7 @@ TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target,
 //_______________________________________________________________________
 TMVA::MinuitFitter::~MinuitFitter( )
 {
+   // destructor
    fLogger << kINFO << "d" << Endl;
    delete fMinWrap;
 }
@@ -118,6 +119,8 @@ void TMVA::MinuitFitter::Init()
 //_______________________________________________________________________
 Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 {
+   // performs the fit
+
    // minuit-specific settings
    Double_t args[10];
 
@@ -198,6 +201,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 //_______________________________________________________________________
 Double_t TMVA::MinuitFitter::EstimatorFunction( std::vector<Double_t>& pars )
 { 
+   // performs the fit by calliung Run(pars)
    return Run( pars ); 
 }
 

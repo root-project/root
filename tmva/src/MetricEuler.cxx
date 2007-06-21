@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricEuler.cxx,v 1.3 2007/06/20 09:41:24 brun Exp $ 
+// @(#)root/tmva $Id: MetricEuler.cxx,v 1.4 2007/06/20 10:18:08 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -44,6 +44,7 @@ TMVA::MetricEuler::MetricEuler()
 //_______________________________________________________________________
 Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector<Double_t>& pointB )
 {
+   // the Euler distance between point A and B
    Double_t distance = 0.0;
    Double_t val = 0.0;
    std::vector<Double_t>::iterator itA;

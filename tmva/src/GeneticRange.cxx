@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.12 2007/04/19 06:53:02 brun Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.13 2007/06/19 13:26:21 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -75,7 +75,7 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
        return RandomDiscrete();
    }
    else if (fFrom == fTo) {
-       return fFrom;
+      return fFrom;
    }
    else if (near) {
       Double_t ret;
