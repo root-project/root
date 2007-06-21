@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.12 2007/06/11 14:09:06 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.13 2007/06/11 14:39:01 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1194,14 +1194,20 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       for (MethodCount_t::iterator iMethodName = fMethodCounts.begin();
          !name.Length() && iMethodName != fMethodCounts.end(); ++iMethodName) {
          TString lookFor(iMethodName->first);
-         lookFor += "(";
          posMethodName = fLineRaw.Index(lookFor);
          if (posMethodName != kNPOS && posMethodName < posBlock 
             && (posMethodName == 0 || !IsWord(fLineRaw[posMethodName - 1]))) {
-            meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
-               anchor, sourceFile, allowPureVirtual);
-            if (name.Length())
-               return meth;
+            // check whether the method name is followed by optional spaces and
+            // an opening parathesis
+            Ssiz_t posMethodEnd = posMethodName + lookFor.Length();
+            while (isspace((UChar_t)fLineRaw[posMethodEnd])) ++posMethodEnd;
+            printf("DEBUG endmethod=%s for line %s\n", fLineRaw.Data()+posMethodEnd, fLineRaw.Data());
+            if (fLineRaw[posMethodEnd] == '(') {
+               meth = LocateMethodInCurrentLine(posMethodName, ret, name, params, srcOut, 
+                                                anchor, sourceFile, allowPureVirtual);
+               if (name.Length())
+                  return meth;
+            }
          }
       }
       return 0;
@@ -1269,6 +1275,8 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 
    params = name(posParam, name.Length() - posParam);
    name.Remove(posParam);
+   while (isspace((UChar_t)name[name.Length() - 1]))
+      name.Remove(name.Length() - 1);
 
    MethodCount_t::const_iterator iMethodName = fMethodCounts.find(name.Data());
    if (iMethodName == fMethodCounts.end() || iMethodName->second <= 0) {
