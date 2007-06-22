@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.179 2007/06/17 03:09:52 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.183 2007/06/21 22:03:33 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 #include "TQtClientWidget.h"
 #include "TQtEventQueue.h"
 #include "TQtEventQueue.h"
-#include "TGObject.h"
+#include "TGWindow.h"
 
 
 #include "TROOT.h"
@@ -47,6 +47,7 @@
 #  include <Q3PointArray>
 #  include <QDesktopWidget>
 #  include <QDebug>
+#  include <QPalette>
 #endif /* QT_VERSION */
 
 #include <qfontmetrics.h>
@@ -152,7 +153,7 @@ QColor &TGQt::QtColor(ULong_t pixel)
       // this is a new color (blue x green x red)
       
       ColorStruct_t newColor;
-#ifdef R__WIN32      
+#ifdef R__WIN32
       newColor.fRed  =  (pixel & 255);
       pixel = pixel >> 8;
       newColor.fGreen = (pixel & 255);
@@ -497,8 +498,14 @@ void   QtGContext::SetBackground(ULong_t background)
 {
     // reset the context background color
     SETBIT(fMask,kBrush);
+#if QT_VERSION < 0x40000    
     setPaletteBackgroundColor(QtColor(background));
     setEraseColor(QtColor(background));
+#else    
+    QPalette pp;
+    pp.setColor(backgroundRole(), QtColor(background));
+    setPalette(pp);    
+#endif 
 }
 //______________________________________________________________________________
 void   QtGContext::SetForeground(ULong_t foreground)
@@ -507,7 +514,13 @@ void   QtGContext::SetForeground(ULong_t foreground)
    // QColor paletteBackgroundColor - the background color of the widget
    SETBIT(fMask,kBrush);
    SETBIT(fMask,kPen);
+#if QT_VERSION < 0x40000   
    setPaletteForegroundColor (QtColor(foreground));
+#else   
+   QPalette palette;
+   palette.setColor(foregroundRole(), QtColor(foreground));
+   setPalette(palette);
+#endif
    fBrush.setColor(QtColor(foreground));
    fPen.setColor(QtColor(foreground)); 
 }
@@ -1151,11 +1164,16 @@ Bool_t TGQt::NeedRedraw(ULong_t w, Bool_t force)
    // One needs to process the notification to confine 
    // all paint operations within "expose" / "paint" like low level event
    // or equivalent
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,15,11)
-   if (!force) wid(((TGWindow *)w)->GetId())->update();
-   return force;
+#if ROOT_VERSION_CODE >= ROOT_VERSION(9,15,9)
+   if (!force)
+   {
+      TGWindow *www =(TGWindow *)w;
+      Window_t id = www->GetId();
+      if (id) wid(id)->update();
+   }
+   return !force;
 #else
-   if (w||force) {}
+  if (w||force) {}
    return kFALSE;   
 #endif     
 }
@@ -1794,14 +1812,27 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
           case kNone:
           case kParentRelative:
              break;
-          default: f.setPaletteBackgroundPixmap (*(QPixmap *)attr->fBackgroundPixmap);
-             break;
+          default: {
+#if QT_VERSION < 0x40000
+                f.setPaletteBackgroundPixmap (*(QPixmap *)attr->fBackgroundPixmap);
+#else                
+                QPalette palette;
+                palette.setBrush(f.backgroundRole(), QBrush(*(QPixmap *)attr->fBackgroundPixmap));
+                f.setPalette(palette);
+#endif                
+               }
+              break;
       };
    }
    if ( attr->fMask & kWABackPixel) {
       // background pixel
+#if QT_VERSION < 0x40000
       f.setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
-//      f.setEraseColor(QtColor(attr->fBackgroundPixel));
+#else
+      QPalette palette;
+      palette.setColor(f.backgroundRole(),QtColor(attr->fBackgroundPixel));
+      f.setPalette(palette);    
+#endif            
    }
    if ( attr->fMask & kWABorderPixmap) {
       // fBorderPixmap;         // border of the window
@@ -1870,9 +1901,29 @@ void TGQt::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, 
 //______________________________________________________________________________
 void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Clear a window area to the bakcground color.
+   // Clear a window area to the background color.
    if (id == kNone || id == kDefault ) return;
-   wid(id)->erase (x, y, w, h );
+   QPainter paint(iwid(id));  
+   paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
+   TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
+   const QColor  *c = 0;
+   const QPixmap *p = 0;
+#if QT_VERSION < 0x40000
+   c = wd ? wd->fEraseColor  : 0;
+   p = wd ? wd->fErasePixmap : 0;
+   const QColor  &cr = *c;
+   const QPixmap &pr = *p;
+#else
+   const QColor  &cr = wd ? wd->palette().color(QPalette::Window) : *c;
+   c = wd ? &cr : 0;
+   const QPixmap &pr = *p;
+#endif      
+   if (p && c) 
+         paint.fillRect ( x, y, w, h, QBrush(cr,pr));
+   else if (c)
+         paint.fillRect ( x, y, w, h, cr);
+   else 
+       wid(id)->erase (x, y, w, h );
 }
 //______________________________________________________________________________
 Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &) 
@@ -2229,7 +2280,27 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
  {
     // Clear window.
    if (id == kNone || id == kDefault ) return;
-   wid(id)->erase();
+   QPainter paint(iwid(id));   
+   paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
+   TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
+   const QColor  *c = 0;
+   const QPixmap *p = 0;
+#if QT_VERSION < 0x40000
+   c = wd ? wd->fEraseColor  : 0;
+   p = wd ? wd->fErasePixmap : 0;
+   const QColor  &cr = *c;
+   const QPixmap &pr = *p;
+#else
+   const QColor  &cr = wd ? wd->palette().color(QPalette::Window) : *c;
+   c = wd ? &cr : 0;
+   const QPixmap &pr = *p;
+#endif      
+   if (p && c ) 
+         paint.fillRect ( wd->rect(),QBrush(cr,pr)); 
+   else if (c)
+         paint.fillRect ( wd->rect(), cr);
+   else 
+      wid(id)->erase();
  }
 
 //---- Key symbol mapping
@@ -2339,7 +2410,11 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
              //paint.setBackgroundColor(qtcontext(gc).paletteBackgroundColor());
              paint.setPen(qtcontext(gc).paletteForegroundColor());
           } else {
+#if QT_VERSION < 0x40000             
              paint.setBackgroundColor(Qt::white);
+#else             
+             paint.setBackground(Qt::white);
+#endif             
              paint.setPen(Qt::black);
           }
           paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode

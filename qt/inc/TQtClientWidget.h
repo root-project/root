@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.48 2007/06/14 19:41:10 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.49 2007/06/21 01:11:09 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -22,8 +22,9 @@
 #  include <qcursor.h>
 #else
   class QFrame;
-  class QCursor;
   class QAccel;
+  class QColor;
+  class QPixmap;
 #endif
   
 #include "GuiTypes.h"
@@ -71,6 +72,8 @@ protected:
        TQtClientGuard  *fGuard;
        TQtWidget       *fCanvasWidget;
        TGWindow *fMyRootWindow;  // back pointer to the host window object
+       QColor   *fEraseColor;    // Color to paint widget background with our PainEvent
+       QPixmap  *fErasePixmap;   // pixmap to paint widget background with our PainEvent
        friend class TQtClientGuard;
        friend class TGQt;
 #ifndef __CINT__
@@ -84,6 +87,8 @@ public:
     enum {kRemove = -1, kTestKey = 0, kInsert = 1};
     virtual ~TQtClientWidget();
     virtual void closeEvent(QCloseEvent *ev);
+    virtual void setEraseColor(const QColor &color);
+    virtual void setErasePixmap (const QPixmap &pixmap);
     bool   DeleteNotify();
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
