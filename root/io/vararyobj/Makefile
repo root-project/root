@@ -14,7 +14,7 @@ vararyobj: vararyruns
 	$(CMDECHO) rm -f tmp1.log tmp2.log ; \
 	tail -3 varyingArrayWrite.clog > tmp1.log ; \
 	tail -3 varyingArrayRead.clog > tmp2.log ; \
-	diff tmp1.log tmp2.log ; \
+	diff -b tmp1.log tmp2.log ; \
 	if [ "$$?" != "0" ] ; \
 	then \
 	  exit 255 ; \
@@ -30,7 +30,7 @@ vararyruns: varyingArrayWrite.clog
 	$(CMDECHO) $(MAKE) --no-print-directory varyingArrayRead.clog
 
 varary51508: varyingArrayRead_51508.clog
-	$(CMDECHO) diff -u varyingArrayRead_51508.good varyingArrayRead_51508.clog
+	$(CMDECHO) diff -bu varyingArrayRead_51508.good varyingArrayRead_51508.clog
 
 vararynoclassdefobj: vararynoclassdefruns
 	$(CMDECHO) rm -rf tmp3.log tmp4.log ; \
@@ -52,13 +52,13 @@ vararynoclassdefruns: varyingArrayNoClassDefWrite.clog
 	$(CMDECHO) $(MAKE) --no-print-directory varyingArrayNoClassDefRead.clog
 
 vararypolypobj: vararypolypruns
-	$(CMDECHO)diff -u writevararypolyp.good writevararypolyp.clog; \
+	$(CMDECHO)diff -bu writevararypolyp.good writevararypolyp.clog; \
 	status=$$?; \
 	if test $$status -ne 0; \
 	then \
 	  exit $$status; \
 	fi; \
-	diff -u readvararypolyp.good readvararypolyp.clog
+	diff -bu readvararypolyp.good readvararypolyp.clog
 
 
 # We do it this way so that if make -j is used the Read test
