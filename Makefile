@@ -803,6 +803,20 @@ install: all
 	      $(INSTALLDATA) $(GDKDLL)             $(DESTDIR)$(BINDIR); \
 	      $(INSTALLDATA) $(GDKDLLS)            $(DESTDIR)$(BINDIR); \
 	   fi; \
+	   if [ -d lib/python ]; then \
+	      echo "Installing python files in $(DESTDIR)$(LIBDIR)/python"; \
+	      $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR)/python; \
+	      (cd lib; for entry in python/*; do \
+	         if [ -d $${entry} -a "x`ls $${entry}/*.py $${entry}/*.pyc 2>/dev/null`" != "x" ]; then \
+	            $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR)/$${entry}; \
+	            $(INSTALLDATA) $${entry}/*.py $${entry}/*.pyc $(DESTDIR)$(LIBDIR)/$${entry}; \
+	         fi; \
+	      done;); \
+	      if [ "x`ls *.py *.pyc 2>/dev/null`" != "x" ]; then \
+	         $(INSTALLDATA) *.py *.pyc    $(DESTDIR)$(LIBDIR)/python/; \
+	      fi; \
+	   fi; \
+	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
