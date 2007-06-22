@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.37 2007/06/21 07:12:37 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.38 2007/06/21 08:47:42 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
+#include "THashList.h"
 #include "TInterpreter.h"
 #include "TProofDebug.h"
 #include "TProof.h"
@@ -674,6 +675,31 @@ Int_t TXProofServ::Setup()
       Info("Setup", "package directory set to %s", fPackageDir.Data());
    fPackageLock =
       new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,fUser.Data()));
+
+   // List of directories where to look for global packages
+   TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
+   if (globpack.Length() > 0) {
+      Int_t ng = 0;
+      Int_t from = 0;
+      TString ldir;
+      while (globpack.Tokenize(ldir, from, ":")) {
+         if (gSystem->AccessPathName(ldir, kReadPermission)) {
+            Warning("Setup", "directory for global packages %s does not"
+                             " exist or is not readable", ldir.Data());
+         } else {
+            // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
+            TString key = Form("G%d", ng++);
+            if (!fGlobalPackageDirList) {
+               fGlobalPackageDirList = new THashList();
+               fGlobalPackageDirList->SetOwner();
+            }
+            fGlobalPackageDirList->Add(new TNamed(key,ldir));
+            Info("Setup", "directory for global packages %s added to the list",
+                          ldir.Data());
+            FlushLogFile();
+         }
+      }
+   }
 
    // Get Session tag
    if ((fSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1") {

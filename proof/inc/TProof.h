@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.114 2007/06/12 13:51:04 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.115 2007/06/21 08:44:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -66,6 +66,7 @@ class TCondorSlave;
 class TDrawFeedback;
 class TDSet;
 class TEventList;
+class THashList;
 class TList;
 class TCollection;
 class TMessage;
@@ -382,6 +383,7 @@ private:
    Bool_t          fEndMaster;       //true for a master in direct contact only with workers
 
    TString         fPackageDir;      //package directory (used on client)
+   THashList      *fGlobalPackageDirList;//list of directories containing global packages libs
    TProofLockPath *fPackageLock;     //package lock
    TList          *fEnabledPackagesOnClient; //list of packages enabled on client
 

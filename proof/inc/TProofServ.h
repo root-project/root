@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.55 2007/06/21 07:12:37 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.56 2007/06/21 08:47:42 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -48,6 +48,7 @@ class TProof;
 class TVirtualProofPlayer;
 class TProofLockPath;
 class TSocket;
+class THashList;
 class TList;
 class TDSetElement;
 class TMessage;
@@ -79,6 +80,7 @@ private:
    TString       fSessionTag;       //tag for the session
    TString       fSessionDir;       //directory containing session dependent files
    TString       fPackageDir;       //directory containing packages and user libs
+   THashList    *fGlobalPackageDirList;  //list of directories containing global packages libs
    TString       fCacheDir;         //directory containing cache of user files
    TString       fQueryDir;         //directory containing query results and status
    TString       fDataSetDir;       //directory containing info about known data sets

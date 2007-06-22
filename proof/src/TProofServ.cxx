@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.180 2007/06/21 07:12:37 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.181 2007/06/21 08:47:42 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #include "TEventList.h"
 #include "TException.h"
 #include "TFile.h"
+#include "THashList.h"
 #include "TInterpreter.h"
 #include "TKey.h"
 #include "TMessage.h"
@@ -372,6 +373,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
 
+   fGlobalPackageDirList = 0;
+
    fLogFile         = flog;
    fLogFileDes      = -1;
 
@@ -614,6 +617,7 @@ TProofServ::~TProofServ()
    SafeDelete(fCacheLock);
    SafeDelete(fQueryLock);
    SafeDelete(fDataSetLock);
+   SafeDelete(fGlobalPackageDirList);
    close(fLogFileDes);
 }
 
@@ -2073,6 +2077,31 @@ Int_t TProofServ::Setup()
 
    fPackageLock =
       new TProofLockPath(Form("%s%s", kPROOF_PackageLockFile, fUser.Data()));
+
+   // List of directories where to look for global packages
+   TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
+   if (globpack.Length() > 0) {
+      Int_t ng = 0;
+      Int_t from = 0;
+      TString ldir;
+      while (globpack.Tokenize(ldir, from, ":")) {
+         if (gSystem->AccessPathName(ldir, kReadPermission)) {
+            Warning("Setup", "directory for global packages %s does not"
+                             " exist or is not readable", ldir.Data());
+         } else {
+            // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
+            TString key = Form("G%d", ng++);
+            if (!fGlobalPackageDirList) {
+               fGlobalPackageDirList = new THashList();
+               fGlobalPackageDirList->SetOwner();
+            }
+            fGlobalPackageDirList->Add(new TNamed(key,ldir));
+            Info("Setup", "directory for global packages %s added to the list",
+                          ldir.Data());
+            FlushLogFile();
+         }
+      }
+   }
 
    // host first name
    TString host = gSystem->HostName();
@@ -3826,6 +3855,19 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          break;
       case TProof::kShowPackages:
          (*mess) >> all;
+         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+            // Scan the list of global packages dirs
+            TIter nxd(fGlobalPackageDirList);
+            TNamed *nm = 0;
+            while ((nm = (TNamed *)nxd())) {
+               printf("*** Global Package cache %s %s:%s ***\n",
+                      nm->GetName(), gSystem->HostName(), nm->GetTitle());
+               fflush(stdout);
+               gSystem->Exec(Form("%s %s", kLS, nm->GetTitle()));
+               printf("\n");
+               fflush(stdout);
+            }
+         }
          printf("*** Package cache %s:%s ***\n", gSystem->HostName(),
                 fPackageDir.Data());
          fflush(stdout);
@@ -3861,22 +3903,43 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          break;
       case TProof::kBuildPackage:
          (*mess) >> package;
+ 
+         // always follows BuildPackage so no need to check for PROOF-INF
+         pdir = fPackageDir + "/" + package;
+
+         if (gSystem->AccessPathName(pdir, kReadPermission) ||
+             gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+            // Is there a global package with this name?
+            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+               // Scan the list of global packages dirs
+               TIter nxd(fGlobalPackageDirList);
+               TNamed *nm = 0;
+               while ((nm = (TNamed *)nxd())) {
+                  pdir = Form("%s/%s", nm->GetTitle(), package.Data());
+                  if (!gSystem->AccessPathName(pdir, kReadPermission) &&
+                      !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+                     // Package found, stop searching
+                     break;
+                  }
+                  pdir = "";
+               }
+               if (pdir.Length() <= 0) {
+                  // Package not found
+                  SendAsynMessage(Form("%s: kBuildPackage: failure locating %s ...",
+                                       noth.Data(), package.Data()));
+                  break;
+               } else {
+                  // Package is in the global dirs
+                  break;
+               }
+            }
+         }
+
          if (IsMaster()) {
             // make sure package is available on all slaves, even new ones
             fProof->UploadPackage(fPackageDir + "/" + package + ".par");
          }
          fPackageLock->Lock();
-         // check that package and PROOF-INF directory exists
-         pdir = fPackageDir + "/" + package;
-         if (gSystem->AccessPathName(pdir)) {
-            Error("HandleCache", "package %s does not exist",
-                  package.Data());
-            status = -1;
-         } else if (gSystem->AccessPathName(pdir + "/PROOF-INF")) {
-            Error("HandleCache", "package %s does not have a PROOF-INF directory",
-                  package.Data());
-            status = -1;
-         }
 
          if (!status) {
 
@@ -3959,6 +4022,29 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          // always follows BuildPackage so no need to check for PROOF-INF
          pdir = fPackageDir + "/" + package;
+
+         if (gSystem->AccessPathName(pdir, kReadPermission)) {
+            // Is there a global package with this name?
+            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+               // Scan the list of global packages dirs
+               TIter nxd(fGlobalPackageDirList);
+               TNamed *nm = 0;
+               while ((nm = (TNamed *)nxd())) {
+                  pdir = Form("%s/%s", nm->GetTitle(), package.Data());
+                  if (!gSystem->AccessPathName(pdir, kReadPermission)) {
+                     // Package found, stop searching
+                     break;
+                  }
+                  pdir = "";
+               }
+               if (pdir.Length() <= 0) {
+                  // Package not found
+                  SendAsynMessage(Form("%s: kLoadPackage: failure locating %s ...",
+                                       noth.Data(), package.Data()));
+                  break;
+               }
+            }
+         }
 
          ocwd = gSystem->WorkingDirectory();
          gSystem->ChangeDirectory(pdir);

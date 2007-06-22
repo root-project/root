@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.205 2007/06/12 10:06:00 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.206 2007/06/21 08:44:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFTP.h"
+#include "THashList.h"
 #include "TInterpreter.h"
 #include "TMap.h"
 #include "TMessage.h"
@@ -367,6 +368,7 @@ TProof::~TProof()
    SafeDelete(fEnabledPackages);
    SafeDelete(fEnabledPackagesOnClient);
    SafeDelete(fPackageLock);
+   SafeDelete(fGlobalPackageDirList);
 
    // remove file with redirected logs
    if (!IsMaster()) {
@@ -523,6 +525,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    fPackageLock             = 0;
    fEnabledPackagesOnClient = 0;
+   fGlobalPackageDirList    = 0;
    if (!IsMaster()) {
       fPackageDir = kPROOF_WorkDir;
       gSystem->ExpandPathName(fPackageDir);
@@ -537,6 +540,28 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          if (gSystem->MakeDirectory(fPackageDir) == -1) {
             Error("Init", "failure creating directory %s", fPackageDir.Data());
             return 0;
+         }
+      }
+
+      // List of directories where to look for global packages
+      TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
+      if (globpack.Length() > 0) {
+         Int_t ng = 0;
+         Int_t from = 0;
+         TString ldir;
+         while (globpack.Tokenize(ldir, from, ":")) {
+            if (gSystem->AccessPathName(ldir, kReadPermission)) {
+               Warning("Init", "directory for global packages %s does not"
+                               " exist or is not readable", ldir.Data());
+            } else {
+               // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
+               TString key = Form("G%d", ng++);
+               if (!fGlobalPackageDirList) {
+                  fGlobalPackageDirList = new THashList();
+                  fGlobalPackageDirList->SetOwner();
+               }
+               fGlobalPackageDirList->Add(new TNamed(key,ldir));
+            }
          }
       }
 
@@ -3892,6 +3917,19 @@ void TProof::ShowPackages(Bool_t all)
    if (!IsValid()) return;
 
    if (!IsMaster()) {
+      if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+         // Scan the list of global packages dirs
+         TIter nxd(fGlobalPackageDirList);
+         TNamed *nm = 0;
+         while ((nm = (TNamed *)nxd())) {
+            printf("*** Global Package cache %s client:%s ***\n",
+                   nm->GetName(), nm->GetTitle());
+            fflush(stdout);
+            gSystem->Exec(Form("%s %s", kLS, nm->GetTitle()));
+            printf("\n");
+            fflush(stdout);
+         }
+      }
       printf("*** Package cache client:%s ***\n", fPackageDir.Data());
       fflush(stdout);
       gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
@@ -4128,24 +4166,42 @@ Int_t TProof::BuildPackageOnClient(const TString &package)
    if (!IsMaster()) {
       Int_t status = 0;
       TString pdir, ocwd;
-      fPackageLock->Lock();
-      // check that package and PROOF-INF directory exists
-      pdir = fPackageDir + "/" + package;
-      if (gSystem->AccessPathName(pdir)) {
-         Error("BuildPackageOnClient", "package %s does not exist",
-               package.Data());
-         fPackageLock->Unlock();
-         return -1;
-      } else if (gSystem->AccessPathName(pdir + "/PROOF-INF")) {
-         Error("BuildPackageOnClient", "package %s does not have a PROOF-INF directory",
-               package.Data());
-         fPackageLock->Unlock();
-         return -1;
-      }
 
+      // Package path
+      pdir = fPackageDir + "/" + package;
+      if (gSystem->AccessPathName(pdir, kReadPermission) ||
+         gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+         // Is there a global package with this name?
+         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+            // Scan the list of global packages dirs
+            TIter nxd(fGlobalPackageDirList);
+            TNamed *nm = 0;
+            while ((nm = (TNamed *)nxd())) {
+               pdir = Form("%s/%s", nm->GetTitle(), package.Data());
+               if (!gSystem->AccessPathName(pdir, kReadPermission) &&
+                   !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+                  // Package found, stop searching
+                  break;
+               }
+               pdir = "";
+            }
+            if (pdir.Length() <= 0) {
+               // Package not found
+               Error("BuildPackageOnClient", "failure locating %s ...", package.Data());
+               return -1;
+            } else {
+               // Package is in the global dirs
+               if (gDebug > 0)
+                  Info("BuildPackageOnClient", "found global package: %s", pdir.Data());
+               return 0;
+            }
+         }
+      }
       PDB(kPackage, 1)
          Info("BuildPackageOnCLient",
               "package %s exists and has PROOF-INF directory", package.Data());
+
+      fPackageLock->Lock();
 
       ocwd = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(pdir);
@@ -4246,6 +4302,28 @@ R__HIDDEN Int_t TProof::LoadPackageOnClient(const TString &package)
 
       // always follows BuildPackage so no need to check for PROOF-INF
       pdir = fPackageDir + "/" + package;
+
+      if (gSystem->AccessPathName(pdir, kReadPermission)) {
+         // Is there a global package with this name?
+         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+            // Scan the list of global packages dirs
+            TIter nxd(fGlobalPackageDirList);
+            TNamed *nm = 0;
+            while ((nm = (TNamed *)nxd())) {
+               pdir = Form("%s/%s", nm->GetTitle(), package.Data());
+               if (!gSystem->AccessPathName(pdir, kReadPermission)) {
+                  // Package found, stop searching
+                  break;
+               }
+               pdir = "";
+            }
+            if (pdir.Length() <= 0) {
+               // Package not found
+               Error("LoadPackageOnClient", "failure locating %s ...", package.Data());
+               return -1;
+            }
+         }
+      }
 
       ocwd = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(pdir);
@@ -4462,8 +4540,30 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       // Try the package dir
       par = Form("%s/%s", fPackageDir.Data(), gSystem->BaseName(par));
       if (gSystem->AccessPathName(par, kReadPermission)) {
+         // Is the package a global one
+         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+            // Scan the list of global packages dirs
+            TIter nxd(fGlobalPackageDirList);
+            TNamed *nm = 0;
+            TString pdir;
+            while ((nm = (TNamed *)nxd())) {
+               pdir = Form("%s/%s", nm->GetTitle(), pack);
+               if (!gSystem->AccessPathName(pdir, kReadPermission)) {
+                  // Package found, stop searching
+                  break;
+               }
+               pdir = "";
+            }
+            if (pdir.Length() > 0) {
+               // Package is in the global dirs
+               if (gDebug > 0)
+                  Info("UploadPackage", "global package found (%s): no upload needed",
+                                        pdir.Data());
+               return 0;
+            }
+         }
          Error("UploadPackage", "PAR file '%s' not found; paths tried: %s, %s",
-                           gSystem->BaseName(par), tried.Data(), par.Data());
+                                gSystem->BaseName(par), tried.Data(), par.Data());
          return -1;
       }
    }
