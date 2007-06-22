@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.17 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.18 2007/06/21 14:13:12 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -645,18 +645,50 @@ inline Transform3D Transform3D::operator * (const Transform3D  & t) const
 
 /**
    combine a translation and a rotation to give a transform3d
-   First the rotation  then the translation
+   First the translation then the rotation
  */
 inline Transform3D operator * (const Rotation3D & r, const Translation3D & t) { 
    return Transform3D( r, r(t.Vect()) );
 }
+/**
+   combine a transformation and a translation to give a transform3d
+   First the translation then the transform3D
+ */
+inline Transform3D operator * (const Transform3D & t, const Translation3D & d) { 
+   Rotation3D r = t.Rotation();
+   return Transform3D( r, r( d.Vect() ) + t.Translation().Vect()  );
+}
+
+/**
+   combine a transformation and a rotation to give a transform3d
+   First the rotation then the transform3D
+ */
+inline Transform3D operator * (const Transform3D & t, const Rotation3D & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
 
 /**
    combine a rotation and a translation to give a transform3d
-   First the translation then the rotation
+   First a rotation then the translation
  */
 inline Transform3D operator * (const Translation3D & t, const Rotation3D & r) { 
    return Transform3D( r, t.Vect());
+}
+
+/**
+   combine a translation and a transformation to give a transform3d
+   First the transformation then the translation
+ */
+inline Transform3D operator * (const Translation3D & d, const Transform3D & t) { 
+   return Transform3D( t.Rotation(), t.Translation().Vect() + d.Vect());
+}
+
+/**
+   combine a rotation and a transformation to give a transform3d
+   First the transformation then the rotation
+ */
+inline Transform3D operator * (const Rotation3D & r, const Transform3D & t) { 
+   return Transform3D( r * t.Rotation(), r * t.Translation().Vect() );
 }
 
 // TODO - I/O should be put in the manipulator form 
