@@ -1106,12 +1106,12 @@ G__value G__checkBase(char *string,int *known4)
 {
   G__value result4;
   int n=0,nchar,base=0;
-  long int value=0,tristate=0;
+  G__uint64 value=0,tristate=0;
   char type;
   int unsign = 0;
 
   /********************************************
-  * default type int
+  * default type int, becomes long through strlen check
   ********************************************/
   type = 'i';
 
@@ -1339,8 +1339,32 @@ G__value G__checkBase(char *string,int *known4)
   /*******************************************************
   * store constant value and type to result4
   *******************************************************/
-  type = type - unsign ;
-  G__letint(&result4,type,(long)value);
+
+  // determine whether int is enough to hold value
+  // standard says:
+  // non-decimals literals have smallest type they fit in,
+  // precedence int, uint, long, ulong,...
+  if (type == 'i') {
+     if (value > (G__uint64(-1ll))/2)
+        type = 'm'; // ull
+     else if (value > ULONG_MAX)
+        type = 'n'; // ll
+     else if (value > LONG_MAX)
+        type = 'k'; // ul
+     else if (value > UINT_MAX)
+        type = 'l'; // l
+     else if (value > INT_MAX)
+        type = 'h'; // u
+  }
+
+  if (type == 'i' || type == 'n' || type == 'l')
+     type = type - unsign ;
+  if (type == 'm')
+     G__letULonglong(&result4,type,value);
+  else if (type == 'n')
+     G__letLonglong(&result4,type,value);
+  else
+     G__letint(&result4,type,(long)value);
   result4.tagnum = -1;
   result4.typenum = -1;
 
@@ -1368,7 +1392,30 @@ int G__isfloat(char *string,int *type)
 {
   int ig17=0;
   int c;
-  int result=0, unsing = 0 ;
+  int result=0, unsign = 0 ;
+  unsigned int len = 0;
+  static unsigned int lenmaxint = 0;
+  static unsigned int lenmaxuint = 0;
+  static unsigned int lenmaxlong = 0;
+  static unsigned int lenmaxulong = 0;
+
+  if (!lenmaxint) {
+     int maxint = INT_MAX;
+     unsigned int maxuint = UINT_MAX;
+
+     while (maxint /= 10) ++lenmaxint;
+     ++lenmaxint;
+     while (maxuint /= 10) ++lenmaxuint;
+     ++lenmaxuint;
+
+     long maxlong = LONG_MAX;
+     unsigned long maxulong = ULONG_MAX;
+
+     while (maxlong /= 10) ++lenmaxlong;
+     ++lenmaxlong;
+     while (maxulong /= 10) ++lenmaxulong;
+     ++lenmaxulong;
+  }
   
   /*************************************************************
    * default type is int
@@ -1403,7 +1450,7 @@ int G__isfloat(char *string,int *type)
        * long
        ******************************/
 #ifndef G__OLDIMPLEMENTATION1874
-      if('l'==*type) *type = 'u';
+      if('l'==*type) *type = 'n';
       else           *type = 'l';
 #else
       *type = 'l';
@@ -1426,7 +1473,7 @@ int G__isfloat(char *string,int *type)
       /******************************
        * unsigned
        ******************************/
-      unsing = 1;
+      unsign = 1;
       break;
     case '0':
     case '1':
@@ -1438,6 +1485,8 @@ int G__isfloat(char *string,int *type)
     case '7':
     case '8':
     case '9':
+     ++len;
+     break;
     case '+':
     case '-':
       break;
@@ -1447,11 +1496,41 @@ int G__isfloat(char *string,int *type)
       break;
     }
   }
-  
+
+  // determine whether unsigned int is enough to hold value
+  int lenmax = unsign ? lenmaxuint : lenmaxint;
+  int lenmaxl = unsign ? lenmaxulong : lenmaxlong;
+  if (*type == 'i')
+     if (len > lenmax)
+        if (len > lenmaxl)
+           *type = 'n';
+        else
+           *type = 'l';
+     else if (len == lenmax) {
+        long l = atol(string);
+        if (!unsign && (l > INT_MAX || l < INT_MIN)
+            || unsign && l > UINT_MAX)
+           *type = 'l';
+     } else if (len == lenmaxl) {
+        if (unsign) {
+           G__uint64 l = G__expr_strtoull(string,0,10);
+           if (l > ULONG_MAX)
+              *type = 'n'; // unsign adjusted below
+           else
+              *type = 'l';
+        } else {
+           G__int64 l = G__expr_strtoll(string,0,10);
+           if (l > LONG_MAX || l < LONG_MIN)
+              *type = 'n';
+           else
+              *type = 'l';
+        }
+     }
+
   /**************************************************************
    * check illegal type specification
    **************************************************************/
-  if(unsing) {
+  if(unsign) {
     switch(*type) {
     case 'd':
     case 'f':
@@ -1461,10 +1540,11 @@ int G__isfloat(char *string,int *type)
       G__genericerror((char*)NULL);
       break;
     default:
-      *type = *type - unsing ;
+      *type = *type - unsign ;
       break;
     }
   }
+
   
   /**************************************************************
    * return 1 if float or double
