@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.65 2007/06/18 07:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.66 2007/06/22 15:11:13 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -231,7 +231,7 @@ TGLViewer::~TGLViewer()
    delete fRedrawTimer;
    if (fPadEditor) fPadEditor = 0;
    fPad->ReleaseViewer3D();
-   delete fGLCtxId;
+   //delete fGLCtxId;
 }
 
 //______________________________________________________________________________
