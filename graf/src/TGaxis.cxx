@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.98 2007/02/12 09:17:01 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.99 2007/02/21 17:35:25 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -578,7 +578,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t first,last,labelnumber;
    Int_t xalign, yalign;
    Int_t nn1, nn2, nn3, n1a, n2a, n3a, nb2, nb3;
-   Int_t nbins, n1aold, nn1old;
+   Int_t nbins=10, n1aold, nn1old;
    n1aold = nn1old = 0;
    Int_t ndyn;
    Int_t nhilab = 0;

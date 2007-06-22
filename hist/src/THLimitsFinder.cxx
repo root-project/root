@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.10 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.11 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -352,7 +352,7 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
 // and recompute the number of bins accordingly.
    
    Double_t binlow,binhigh,binwidth;
-   Int_t n;
+   Int_t n=0;
    Double_t dx = 0.1*(xmax-xmin);
    if (isInteger) dx = 5*(xmax-xmin)/nbins;
    Double_t umin = xmin - dx;
