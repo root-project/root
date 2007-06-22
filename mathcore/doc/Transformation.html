@@ -23,6 +23,7 @@ The following types of transformation classes  are defined:
 </ul>
 <li>3D Transformations (Rotations + Translations)
 <ul>
+<li>ROOT::Math::Translation3D, (only translation) described by a 3D Vector
 <li>ROOT::Math::Transform3D, (rotations and then translation) described by a 3x4 matrix (12 numbers)
 </ul>
 
@@ -99,6 +100,13 @@ Rotation3D           r1(...);
 Rotation3D  r2 =r1.Inverse();                    // return the inverse in a new rotation class 
 </pre>
 We have used rotation as examples, but all these operations can be applied to all the transformation classes. 
+Rotation3D, Transform3D and Translation3D classes can all be combined via the <em>operator *</em>. 
+<pre>
+Rotation3D     r(AxisAngle(phi,ux,uy,uz));   // rotation of an angle phi around u.
+Translation3D  d(dx,dy,dz);                  // translation of a vector d
+Transform3D    t1 = d * r;                   // transformation obtained applying first the rotation 
+Transform3D    t2 = r * d;                   // transformation obtained applying first the translation
+</pre> 
 
 <h4>Set/GetComponents methods</h4> 
 Common methods to all the transformations are the Get and SetComponents. 

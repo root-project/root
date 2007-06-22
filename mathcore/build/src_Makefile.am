@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.6 2006/12/11 16:26:54 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.7 2007/05/29 16:43:27 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -34,6 +34,7 @@ libMathCore_la_SOURCES =		\
          RotationZYX.cxx                \
          SpecFuncMathCore.cxx           \
          Transform3D.cxx                \
+         Translation3D.cxx              \
          VectorUtil.cxx        
 
 

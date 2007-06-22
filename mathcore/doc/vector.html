@@ -79,7 +79,8 @@ Transformation classes can operate on all type of vectors using the <em>operator
 <li><h4>3D Transformation</h4> 
 We describe the transformations defined as a composition between a rotation and a translation  using the class ROOT::Math::Transform3D. 
 It is important to note that transformations act differently on  Vectors and Points. The Vectors only rotate, therefore when applying a transfomation (rotation + translation) on a Vector, only the rotation operates while the translation has no effect. The interface for Transformations is similar to the one used in the CLHEP Geometry package 
-(class <A href="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/classHepGeom_1_1Transform3D.html">Transform3D</A>). 
+(class <A href="http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/classHepGeom_1_1Transform3D.html">Transform3D</A>).<br>
+A class,  ROOT::Math::Translation3D. describe transformations consisting of only a translation. Translation can be applied only on Points, applying them on Vector objects has no effect. The Translation3D class can be combined with both ROOT::Math::Rotation3D and ROOT::Math::Transform3D using the <em>operator *</em> to obtain a new transformation as an instance of a Transform3D class.   
 </li>
 <li><h4>Lorentz Rotation</h4>
 <ul>
