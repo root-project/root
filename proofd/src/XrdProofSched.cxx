@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.1 2007/06/21 08:00:01 ganis Exp $
 // Author: G. Ganis  September 2007
 
 /*************************************************************************
@@ -242,6 +242,9 @@ int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
    if (!mst)
       return -1;
 
+   // The master first (stats are updated in XrdProofdProtocol::GetWorkers)
+   wrks->push_back(mst);
+
    if (fWorkerSel == kSSOLoadBased) {
       // New option in the dyn scheduler
       // determines the #workers to be used given current load and
@@ -252,9 +255,6 @@ int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
 
       // Get the advised number
       int nw = GetNumWorkers(xps);
-
-      // The master first (stats are updated in XrdProofdProtocol::GetWorkers)
-      wrks->push_back(mst);
 
       std::list<XrdProofWorker *>::iterator nxWrk = acws->begin();
       while (nw--) {
@@ -268,10 +268,6 @@ int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
    }
 
    if (fWorkerMax > 0 && fWorkerMax < (int) acws->size()) {
-
-      // Partial list: the master first
-      // (stats are updated in XrdProofdProtocol::GetWorkers)
-      wrks->push_back(mst);
 
       // Now the workers
       if (fWorkerSel == kSSORandom) {
@@ -384,7 +380,7 @@ int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
    }
 
    // Make sure that something has been found
-   if (xps->GetNWorkers() <= 0) {
+   if (acws->size() <= 1) {
       TRACE(XERR, "XrdProofSched::GetWorkers: no worker found: do nothing");
       rc = -1;
    }
