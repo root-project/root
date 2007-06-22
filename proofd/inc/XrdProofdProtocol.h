@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.25 2007/06/21 07:41:05 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.26 2007/06/21 10:33:39 ganis Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -174,6 +174,7 @@ public:
    static XrdProofdFile          fgCfgFile;    // Main config file
    static bool                   fgConfigDone; // Whether configure has been run
    static std::list<XrdROOT *>   fgROOT;     // ROOT versions; the first is the default
+   static XrdOucString           fgBareLibPath; // LIBPATH cleaned from ROOT dists
    static char                  *fgTMPdir;   // directory for temporary files
    static char                  *fgSecLib;
    // 

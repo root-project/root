@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.56 2007/06/21 17:30:21 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.57 2007/06/22 08:21:01 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -84,6 +84,7 @@ XrdOucLogger          XrdProofdProtocol::fgMainLogger;
 XrdProofdFile         XrdProofdProtocol::fgCfgFile;
 bool                  XrdProofdProtocol::fgConfigDone = 0;
 std::list<XrdROOT *>  XrdProofdProtocol::fgROOT;
+XrdOucString          XrdProofdProtocol::fgBareLibPath;
 char                 *XrdProofdProtocol::fgTMPdir   = 0;
 char                 *XrdProofdProtocol::fgSecLib   = 0;
 //
@@ -588,7 +589,6 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    // Bind the protocol to the link and return the protocol
    xp->fLink = lp;
-   xp->fResponse.Set(lp);
    strcpy(xp->fEntity.prot, "host");
    xp->fEntity.host = strdup((char *)lp->Host());
 
@@ -835,6 +835,40 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
       mp = "Proofd : Configure: running in controlled access mode: users allowed: ";
       mp += fgAllowedUsers;
       fgEDest.Say(0, mp.c_str());
+   }
+
+   // Bare lib path
+   if (getenv(XPD_LIBPATH)) {
+      // Try to remove existing ROOT dirs in the path
+      XrdOucString paths = getenv(XPD_LIBPATH);
+      XrdOucString ldir;
+      int from = 0;
+      while ((from = paths.tokenize(ldir, from, ':')) != STR_NPOS) {
+         bool isROOT = 0;
+         if (ldir.length() > 0) {
+            // Check this dir
+            DIR *dir = opendir(ldir.c_str());
+            if (dir) {
+               // Scan the directory
+               struct dirent *ent = 0;
+               while ((ent = (struct dirent *)readdir(dir))) {
+                  if (!strncmp(ent->d_name, "libCore", 7)) {
+                     isROOT = 1;
+                     break;
+                  }
+               }
+               // Close the directory
+               closedir(dir);
+            }
+            if (!isROOT) {
+               if (fgBareLibPath.length() > 0)
+                  fgBareLibPath += ":";
+               fgBareLibPath += ldir;
+            }
+         }
+      }
+      fgEDest.Say(0, "Proofd : Configure: bare lib path for proofserv: ",
+                     fgBareLibPath.c_str());
    }
 
    // Validate the ROOT dirs
@@ -1643,7 +1677,7 @@ int XrdProofdProtocol::Reconfig()
 //______________________________________________________________________________
 int XrdProofdProtocol::Process(XrdLink *)
 {
-   // Process the information received on teh active link.
+   // Process the information received on the active link.
    // (We ignore the argument here)
 
    int rc = 0;
@@ -1661,6 +1695,7 @@ int XrdProofdProtocol::Process(XrdLink *)
    // The stream ID for the reply
    { XrdOucMutexHelper mh(fResponse.fMutex);
       fResponse.Set(fRequest.header.streamid);
+      fResponse.Set(fLink);
    }
    unsigned short sid;
    memcpy((void *)&sid, (const void *)&(fRequest.header.streamid[0]), 2);
@@ -2014,8 +2049,8 @@ int XrdProofdProtocol::GetWorkers(XrdOucString &lw, XrdProofServProxy *xps)
    fgProofSched->GetWorkers(xps, &wrks);
 
    // The full list
-   std::list<XrdProofWorker *>::iterator iw = wrks.begin();
-   for (; iw != wrks.end() ; iw++) {
+   std::list<XrdProofWorker *>::iterator iw;
+   for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
       XrdProofWorker *w = *iw;
       // Add export version of the info
       lw += w->Export();
@@ -2200,7 +2235,8 @@ int XrdProofdProtocol::Login()
             TRACEP(XERR, emsg.c_str());
             fResponse.Send(kXR_InvalidRequest, emsg.c_str());
             return rc;
-         } else if (!g->HasMember(uname.c_str())) {
+         } else if (strncmp(g->Name(),"default",7) &&
+                   !g->HasMember(uname.c_str())) {
             emsg = "Login: user ";
             emsg += uname;
             emsg += " is not member of group ";
@@ -2460,8 +2496,8 @@ int XrdProofdProtocol::MapClient(bool all)
             psrv->SetProtVer(protver);
             // Assign this link to it
             psrv->SetLink(fLink);
-            psrv->ProofSrv()->Set(fLink);
             psrv->ProofSrv()->Set(fRequest.header.streamid);
+            psrv->ProofSrv()->Set(fLink);
             // Set Trace ID
             XrdOucString tid(" : xrd->");
             tid += psrv->Ordinal();
@@ -3402,14 +3438,11 @@ int XrdProofdProtocol::SetProofServEnv(XrdROOT *r)
    if (r) {
       char *rootsys = (char *) r->Dir();
 #ifndef ROOTLIBDIR
-      char *ldpath = 0;
-      if (getenv(XPD_LIBPATH)) {
-         ldpath = new char[32+strlen(rootsys)+strlen(getenv(XPD_LIBPATH))];
-         sprintf(ldpath, "%s=%s/lib:%s", XPD_LIBPATH, rootsys, getenv(XPD_LIBPATH));
-      } else {
-         ldpath = new char[32+strlen(rootsys)];
+      char *ldpath = new char[32 + strlen(rootsys) + fgBareLibPath.length()];
+      if (fgBareLibPath.length() > 0)
+         sprintf(ldpath, "%s=%s/lib:%s", XPD_LIBPATH, rootsys, fgBareLibPath.c_str());
+      else
          sprintf(ldpath, "%s=%s/lib", XPD_LIBPATH, rootsys);
-      }
       putenv(ldpath);
 #endif
       // Set ROOTSYS

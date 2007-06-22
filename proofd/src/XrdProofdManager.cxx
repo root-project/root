@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.1 2007/06/21 08:00:01 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -47,6 +47,7 @@ XrdProofdManager::XrdProofdManager()
    // Constructor
 
    fSrvType  = kXPD_AnyServer;
+   fResourceType = kRTStatic;
    fEffectiveUser = "";
    fHost = "";
    fPort = XPD_DEF_PORT;
@@ -56,7 +57,7 @@ XrdProofdManager::XrdProofdManager()
    fPROOFcfg.fName = "";
    fPROOFcfg.fMtime = 0;
    fWorkers.clear();
-   fNumLocalWrks = -1;
+   fNumLocalWrks = XrdProofdAux::GetNumCPUs();
    fEDest = 0;
 }
 
@@ -259,6 +260,9 @@ int XrdProofdManager::Config(const char *fn, XrdOucError *e)
    }
 
    if (fSrvType != kXPD_WorkerServer || fSrvType == kXPD_AnyServer) {
+      fEDest->Say(0, "ProofdManager: Config: PROOF config file: ",
+                    ((fPROOFcfg.fName.length() > 0) ? fPROOFcfg.fName.c_str()
+                                                    : "none"));
 
       if (fResourceType == kRTStatic) {
          // Initialize the list of workers if a static config has been required
@@ -266,16 +270,14 @@ int XrdProofdManager::Config(const char *fn, XrdOucError *e)
          if (fPROOFcfg.fName.length() <= 0) {
             fNumLocalWrks = XrdProofdAux::GetNumCPUs();
             CreateDefaultPROOFcfg();
-         }
-         fEDest->Say(0, "ProofdManager: Config: PROOF config file: ",
-                         ((fPROOFcfg.fName.length() > 0) ? fPROOFcfg.fName.c_str()
-                                                         : "none"));
-         // Load file content in memory
-         if (ReadPROOFcfg() != 0) {
-            fEDest->Say(0, "ProofdManager: Config: unable to find valid information"
-                           "in PROOF config file ", fPROOFcfg.fName.c_str());
-            fPROOFcfg.fMtime = 0;
-            return 0;
+         } else {
+            // Load file content in memory
+            if (ReadPROOFcfg() != 0) {
+               fEDest->Say(0, "ProofdManager: Config: unable to find valid information"
+                              "in PROOF config file ", fPROOFcfg.fName.c_str());
+               fPROOFcfg.fMtime = 0;
+               return 0;
+            }
          }
       }
    }
@@ -436,14 +438,16 @@ void XrdProofdManager::CreateDefaultPROOFcfg()
 
    // Create 'localhost' lines for each worker
    int nwrk = fNumLocalWrks;
-   while (nwrk--) {
-      mm = "worker localhost port=";
-      mm += fPort;
-      fWorkers.push_back(new XrdProofWorker(mm.c_str()));
-      TRACE(DBG, "CreateDefaultPROOFcfg: added line: " << mm);
+   if (nwrk > 0) {
+      while (nwrk--) {
+         mm = "worker localhost port=";
+         mm += fPort;
+         fWorkers.push_back(new XrdProofWorker(mm.c_str()));
+         TRACE(DBG, "CreateDefaultPROOFcfg: added line: " << mm);
+      }
    }
 
-   TRACE(ACT, "CreateDefaultPROOFcfg: done ("<<fWorkers.size()-1<<")");
+   XPDPRT("CreateDefaultPROOFcfg: done: "<<fWorkers.size()-1<<" workers");
 
    // We are done
    return;
@@ -457,13 +461,14 @@ std::list<XrdProofWorker *> *XrdProofdManager::GetActiveWorkers()
 
    XrdOucMutexHelper mhp(fMutex);
 
-   if (fResourceType == kRTStatic) {
+   if (fResourceType == kRTStatic && fPROOFcfg.fName.length() > 0) {
       // Check if there were any changes in the config file
       if (ReadPROOFcfg() != 0) {
          TRACE(XERR, "GetActiveWorkers: unable to read the configuration file");
          return (std::list<XrdProofWorker *> *)0;
       }
    }
+   XPDPRT( "GetActiveWorkers: returning list with "<<fWorkers.size()<<" entries");
 
    return &fWorkers;
 }
