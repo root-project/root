@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.30 2007/05/16 16:06:39 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.31 2007/05/25 15:55:54 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -144,6 +144,7 @@
 #include "TTimer.h"
 #include "THStack.h"
 #include "TVirtualFitter.h"
+#include "TMath.h"
 
 enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
@@ -988,7 +989,7 @@ void TFitEditor::UpdateGUI()
    //  Set the fit panel GUI according to the selected object. 
 
    if (!fFitObject) return;
-   
+
    // sliders
    if (fDim > 0) {
       fSliderX->Disconnect("PositionChanged()");
@@ -1436,20 +1437,10 @@ void TFitEditor::DoFit()
             Int_t npoints = gr->GetN();
             Double_t *gx = gr->GetX();
             Double_t gxmin, gxmax;
-            gxmin = gx[0];
-            gxmax = gx[npoints-1];
-            Double_t err0 = gr->GetErrorX(0);
-            Double_t errn = gr->GetErrorX(npoints-1);
-            if (err0 > 0)
-               gxmin -= 2*err0;
-            if (errn > 0)
-               gxmax += 2*errn;
-            for (Int_t i=0; i<npoints; i++) {
-               if (gx[i] < xmin)
-                  gxmin = gx[i];
-               if (gx[i] > xmax)
-                  gxmax = gx[i];
-            }
+            const Int_t imin =  TMath::LocMin(npoints,gx);
+            const Int_t imax =  TMath::LocMax(npoints,gx);
+            gxmin = gx[imin];
+            gxmax = gx[imax];
             if (xmin < gxmin) xmin = gxmin;
             if (xmax > gxmax) xmax = gxmax;
          }
@@ -1674,6 +1665,7 @@ void TFitEditor::DoLinearFit()
       fSetParam->SetState(kButtonDisabled);
       fBestErrors->SetState(kButtonDisabled);
       fImproveResults->SetState(kButtonDisabled);
+      fRobustValue->SetState(kTRUE);
    } else {
       fPlus = '+';
       if (fFunction.Contains("pol") || fFunction.Contains("++"))
@@ -1681,6 +1673,7 @@ void TFitEditor::DoLinearFit()
       fSetParam->SetState(kButtonUp);
       fBestErrors->SetState(kButtonUp);
       fImproveResults->SetState(kButtonUp);
+      fRobustValue->SetState(kFALSE);
    }
 }
 
@@ -2003,7 +1996,7 @@ void TFitEditor::DoSliderXMoved()
          // graph
          xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
          xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-/*        TGraph *gr = (TGraph *)fFitObject;
+/*         TGraph *gr = (TGraph *)fFitObject;
          Int_t np = gr->GetN();
          Double_t *x = gr->GetX();
          xleft  = x[0];
@@ -2586,36 +2579,29 @@ void TFitEditor::GetFunctionsFromList(TList *list)
 void TFitEditor::CheckRange(TF1 *f1)
 {
    // Check the fit function range (if the object has been fitted).
-   
-   Double_t fxmin, fxmax, xmin, xmax;
+   Double_t fxmin=0, fxmax=0, xmin=0, xmax=0;
 
    f1->GetRange(fxmin, fxmax);
    xmin = fXaxis->GetXmin();
    xmax = fXaxis->GetXmax();
    fXrange = fXaxis->GetNbins();
-   fSliderX->SetRange(1,fXrange);
 
    if (fFitObject->InheritsFrom(TGraph::Class())) {
       TGraph *gr = (TGraph *)fFitObject;
       Int_t npoints = gr->GetN();
       Double_t *gx = gr->GetX();
       Double_t gxmin, gxmax;
-      gxmin = gx[0];
-      gxmax = gx[npoints-1];
-      Double_t err0 = gr->GetErrorX(0);
-      Double_t errn = gr->GetErrorX(npoints-1);
-      if (err0 > 0)
-         gxmin -= 2*err0;
-      if (errn > 0)
-         gxmax += 2*errn;
-      for (Int_t i=0; i<npoints; i++) {
-         if (gx[i] < xmin)
-            gxmin = gx[i];
-         if (gx[i] > xmax)
-            gxmax = gx[i];
-      }
+      const Int_t imin =  TMath::LocMin(npoints,gx);
+      const Int_t imax =  TMath::LocMax(npoints,gx);
+      gxmin = gx[imin];
+      gxmax = gx[imax];
       if (xmin < gxmin) xmin = gxmin;
       if (xmax > gxmax) xmax = gxmax;
+      if (xmin > xmax) {
+         Double_t tmp = gxmin;
+         xmin = xmax;
+         xmax = tmp;
+      }
    }
    if ((fxmin > xmin) || (fxmax < xmax)) {
       fXmin = fXaxis->FindBin(fxmin);
@@ -2626,6 +2612,19 @@ void TFitEditor::CheckRange(TF1 *f1)
       fXmax = fXaxis->FindBin(xmax);
       fUseRange->SetState(kButtonUp);
    }
-   fSliderX->SetPosition(fXmin,fXmax);
+   if (fDim > 0) {
+      fSliderX->Disconnect("PositionChanged()");
+      fSliderX->Disconnect("Pressed()");
+      fSliderX->Disconnect("Released()");
+      fSliderX->SetRange(1,fXrange);
+      if (!fXmin && !fXmax)
+         fSliderX->SetPosition(1,fXrange);
+      else 
+         fSliderX->SetPosition(fXmin,fXmax);
+      fSliderX->SetScale(5);
+      fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
+      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
+      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
+   }
 }
 
