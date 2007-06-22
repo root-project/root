@@ -1,4 +1,4 @@
-/* @(#)root/thread:$Name:  $:$Id: LinkDef.h,v 1.3 2004/11/02 13:07:57 rdm Exp $ */
+/* @(#)root/thread:$Name:  $:$Id: LinkDef.h,v 1.4 2006/11/16 18:07:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,5 +35,6 @@
 #pragma link C++ class TThreadImp;
 #pragma link C++ class TRWLock;
 #pragma link C++ class TAtomicCount;
+#pragma link C++ class TLockFile;
 
 #endif
