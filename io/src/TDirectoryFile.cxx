@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.11 2007/03/01 16:38:36 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.12 2007/05/04 22:15:36 pcanal Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -157,12 +157,6 @@ TDirectoryFile::~TDirectoryFile()
    }
 
    CleanTargets();
-
-   TDirectory* mom = GetMotherDir();
-
-   if (mom) {
-      mom->GetList()->Remove(this);
-   }
 
    if (gDebug) {
       Info("~TDirectoryFile", "dtor called for %s", GetName());
