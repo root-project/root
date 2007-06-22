@@ -1,4 +1,4 @@
-// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.cxx,v 1.3 2007/05/17 15:06:40 brun Exp $
+// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.cxx,v 1.1 2007/06/22 08:18:49 brun Exp $
 // Author: Bertrand Bellenot   20/04/2007
 
 /*************************************************************************
@@ -925,13 +925,20 @@ void TGRootIDE::LoadFile(char *fname)
    if (fname) {
       const char *p = fTab->GetTabTab(fTab->GetCurrent())->GetString();
       if (!strcmp(p, "HTML")) {
-         TString pathtmp = Form("%s/%s.html",
-            gSystem->UnixPathName(gSystem->TempDirectory()),
-            gSystem->BaseName(fname));
-         fHtml->Convert(fname, fname,
-            gSystem->UnixPathName(gSystem->TempDirectory()),
-            gSystem->UnixPathName(gSystem->TempDirectory()));
-         Selected(Form("file://%s", pathtmp.Data()));
+         TString filename(fname);
+         if (filename.EndsWith(".htm") ||
+             filename.EndsWith(".html")) {
+            Selected(Form("file://%s", filename.Data()));
+         }
+         else {
+            TString pathtmp = Form("%s/%s.html",
+               gSystem->UnixPathName(gSystem->TempDirectory()),
+               gSystem->BaseName(fname));
+            fHtml->Convert(fname, fname,
+               gSystem->UnixPathName(gSystem->TempDirectory()),
+               gSystem->UnixPathName(gSystem->TempDirectory()));
+            Selected(Form("file://%s", pathtmp.Data()));
+         }
          //gSystem->Unlink(pathtmp.Data());
       }
       else {
