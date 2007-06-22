@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.206 2007/06/21 08:44:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.207 2007/06/22 17:16:35 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2731,14 +2731,14 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
                          Long64_t first, TEventList *evl)
 {
    // Process a dataset which is stored on the master with name 'dsetname'.
-   // The syntax for dsetname is name[:[dir/]objname], e.g.
+   // The syntax for dsetname is name[#[dir/]objname], e.g.
    //   "mydset"       analysis of the first tree in the top dir of the dataset
    //                  named "mydset"
-   //   "mydset:T"     analysis tree "T" in the top dir of the dataset
+   //   "mydset#T"     analysis tree "T" in the top dir of the dataset
    //                  named "mydset"
-   //   "mydset:adir/T" analysis tree "T" in the dir "adir" of the dataset
+   //   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
    //                  named "mydset"
-   //   "mydset:adir/" analysis of the first tree in the dir "adir" of the
+   //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
    //                  dataset named "mydset"
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
@@ -2751,19 +2751,26 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    TString name(dsetname);
    TString obj;
    TString dir = "/";
-   Int_t idxc = name.Index(":");
-   Int_t idxs = name.Index("/");
-   if (idxs != kNPOS && idxc != kNPOS) {
-      obj = name(idxs+1, name.Length());
-      dir = name(idxc+1, name.Length());
-      dir.Remove(dir.Index("/") + 1);
-      name.Remove(idxc);
-   } else if (idxc != kNPOS && idxs == kNPOS) {
-      obj = name(idxc+1, name.Length());
-      name.Remove(idxc);
-   } else if (idxs != kNPOS && idxc == kNPOS) {
-      Error("Process", "bad name syntax (%s): specification of additional"
-                       " attributes needs a ':' after the dataset name", dsetname);
+   Int_t idxc = name.Index("#");
+   if (idxc != kNPOS) {
+      Int_t idxs = name.Index("/", 1, idxc, TString::kExact);
+      if (idxs != kNPOS && idxc != kNPOS) {
+         obj = name(idxs+1, name.Length());
+         dir = name(idxc+1, name.Length());
+         dir.Remove(dir.Index("/") + 1);
+         name.Remove(idxc);
+      } else if (idxc != kNPOS && idxs == kNPOS) {
+         obj = name(idxc+1, name.Length());
+         name.Remove(idxc);
+      } else if (idxs != kNPOS && idxc == kNPOS) {
+         Error("Process", "bad name syntax (%s): specification of additional"
+                          " attributes needs a '#' after the dataset name", dsetname);
+         return -1;
+      }
+   } else if (name.Index(":") != kNPOS && name.Index("://") == kNPOS) {
+      // protection against using ':' instead of '#'
+      Error("Process", "bad name syntax (%s): please use"
+                       " a '#' after the dataset name", dsetname);
       return -1;
    }
 
