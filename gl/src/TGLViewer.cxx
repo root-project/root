@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.64 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.65 2007/06/18 07:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -120,6 +120,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(-1),
+   fGLCtxId(0),
    fPadEditor(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
@@ -174,6 +175,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
+   fGLCtxId(0),
    fPadEditor(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
@@ -192,6 +194,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
       Int_t viewport[4] = {0};
       gGLManager->ExtractViewport(fGLDevice, viewport);
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+      fGLCtxId = new TGLContextIdentity;
+      fGLCtxId->AddClientRef();
    }
 }
 
@@ -226,8 +230,8 @@ TGLViewer::~TGLViewer()
    delete fContextMenu;
    delete fRedrawTimer;
    if (fPadEditor) fPadEditor = 0;
-//    fPadEditor->SetModel(fPad,0,0); //closing canvas via File menu causes SegV
    fPad->ReleaseViewer3D();
+   delete fGLCtxId;
 }
 
 //______________________________________________________________________________
@@ -981,6 +985,11 @@ void TGLViewer::PreRender()
 {
    fCamera = fCurrentCamera;
    fClip   = fClipSet->GetCurrentClip();
+   if (fGLDevice != -1)
+   {
+      fRnrCtx->SetGLCtxIdentity(fGLCtxId);
+      fGLCtxId->DeleteDisplayLists();
+   }
    TGLViewerBase::PreRender();
    // Setup lighting
    fLightSet->StdSetupLights(fOverallBoundingBox, *fCamera, fDebugMode);

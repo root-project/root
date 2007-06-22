@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.2 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -159,12 +159,21 @@ void TGLViewerBase::PreRender()
 
    TGLContextIdentity* cid = TGLContextIdentity::GetCurrent();
    if (cid == 0)
-      throw std::runtime_error("Can not resolve GL context.");
-   if (cid != fRnrCtx->GetGLCtxIdentity())
    {
-      if (fRnrCtx->GetGLCtxIdentity() != 0) // && gDebug > 0 ?
-         Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
-      fRnrCtx->SetGLCtxIdentity (cid);      
+      // Assume derived class set it up for us.
+      // This happens due to very complex and involved implementation
+      // of gl-in-pad that uses gGLManager directly.
+      // In principle we should throw an exception:
+      // throw std::runtime_error("Can not resolve GL context.");
+   }
+   else
+   {
+      if (cid != fRnrCtx->GetGLCtxIdentity())
+      {
+         if (fRnrCtx->GetGLCtxIdentity() != 0) // && gDebug > 0 ?
+            Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
+         fRnrCtx->SetGLCtxIdentity (cid);      
+      }
    }
 
    fRnrCtx->SetCamera        (fCamera);

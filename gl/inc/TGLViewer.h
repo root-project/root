@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.38 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.39 2007/06/18 07:54:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -41,6 +41,7 @@ class TGLLightSet;
 class TGLClipSet;
 class TGLManipSet;
 class TGLCameraMarkupStyle;
+class TGLContextIdentity;
 
 class TContextMenu;
 
@@ -162,6 +163,7 @@ protected:
 protected:
    TGLWidget         *fGLWindow;
    Int_t              fGLDevice; //!for embedded gl viewer
+   TGLContextIdentity*fGLCtxId;  //!for embedded gl viewer
 
    TGLViewerEditor *fPadEditor;
 
