@@ -1332,9 +1332,7 @@ G__value G__checkBase(char *string,int *known4)
         }
       }
     }
-  if(value>-1) {
-    *known4=1;
-  }
+  *known4=1;
 
   /*******************************************************
   * store constant value and type to result4
@@ -1498,8 +1496,8 @@ int G__isfloat(char *string,int *type)
   }
 
   // determine whether unsigned int is enough to hold value
-  int lenmax = unsign ? lenmaxuint : lenmaxint;
-  int lenmaxl = unsign ? lenmaxulong : lenmaxlong;
+  unsigned int lenmax = unsign ? lenmaxuint : lenmaxint;
+  unsigned int lenmaxl = unsign ? lenmaxulong : lenmaxlong;
   if (*type == 'i')
      if (len > lenmax)
         if (len > lenmaxl)
