@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.55 2007/06/21 11:31:40 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.56 2007/06/21 17:30:21 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1210,7 +1210,7 @@ int XrdProofdProtocol::Config(const char *cfn)
                   XPDSETINT(nm, nmMaxSessions, fgMaxSessions, tval);
                } else if (!strcmp("maxoldlogs",var)) {
                   // Max number of sessions per user
-                  int maxoldlogs;
+                  int maxoldlogs = XPC_DEFMAXOLDLOGS;
                   XPDSETINT(nm, nmMaxOldLogs, maxoldlogs, tval);
                   XrdProofdClient::SetMaxOldLogs(maxoldlogs);
                } else if (!strcmp("poolurl",var)) {
@@ -1487,7 +1487,7 @@ int XrdProofdProtocol::Reconfig()
                   XPDSETINT(nm, nmMaxSessions, fgMaxSessions, tval);
                } else if (!strcmp("maxoldlogs",var)) {
                   // Max number of sessions per user
-                  int maxoldlogs=0;
+                  int maxoldlogs = XPC_DEFMAXOLDLOGS;
                   XPDSETINT(nm, nmMaxOldLogs, maxoldlogs, tval);
                   XrdProofdClient::SetMaxOldLogs(maxoldlogs);
                } else if (!strcmp("allow",var)) {

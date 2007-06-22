@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.h,v 1.2 2007/06/21 07:41:05 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "XrdOuc/XrdOucString.hh"
 
 #include "XrdProofdAux.h"
+
+#define XPC_DEFMAXOLDLOGS 10
 
 class XrdNet;
 class XrdProofdProtocol;
@@ -89,7 +91,7 @@ class XrdProofdClient {
    int                     GuessTag(XrdOucString &tag, int ridx = 1);
    int                     MvOldSession(const char *tag);
 
-   static void             SetMaxOldLogs(int mx = 10) { fgMaxOldLogs = mx; }
+   static void             SetMaxOldLogs(int mx) { fgMaxOldLogs = mx; }
 
  private:
 

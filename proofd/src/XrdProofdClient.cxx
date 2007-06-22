@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.cxx,v 1.2 2007/06/21 07:41:06 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdClient.cxx,v 1.3 2007/06/21 11:31:40 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -36,7 +36,7 @@ static const char *gTraceID = " ";
 extern XrdOucTrace *XrdProofdTrace;
 #define TRACEID gTraceID
 
-int XrdProofdClient::fgMaxOldLogs = 10;
+int XrdProofdClient::fgMaxOldLogs = XPC_DEFMAXOLDLOGS;
 
 //__________________________________________________________________________
 bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs)
