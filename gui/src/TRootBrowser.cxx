@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.118 2007/06/20 14:45:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.119 2007/06/20 19:07:20 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -47,7 +47,6 @@
 #include "TEnv.h"
 #include "TBrowser.h"
 #include "TApplication.h"
-#include "TRint.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TKeyMapFile.h"
@@ -2291,7 +2290,6 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 
    if (item) {
       TObject *obj = (TObject *) item->GetUserData();
-      TRint *rint = dynamic_cast<TRint *>(gApplication);
 
       if (obj) {
          if (obj->IsA() == TKey::Class()) {
@@ -2317,10 +2315,9 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
          else if (obj->InheritsFrom("TApplicationRemote")) {
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetText()));
-               if (rint && gApplication->GetAppRemote()) {
-                  rint->SetPrompt(Form("%s:root [%%d] ", 
-                        gApplication->GetAppRemote()->ApplicationName()));
-                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+               if (gApplication->GetAppRemote()) {
+                  Getlinem(kInit, Form("\n%s:root [0]", 
+                           gApplication->GetAppRemote()->ApplicationName()));
                }
             }
          }
@@ -2350,10 +2347,9 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             // switch to remote session
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
-               if (rint && gApplication->GetAppRemote()) {
-                  rint->SetPrompt(Form("%s:root [%%d] ", 
-                        gApplication->GetAppRemote()->ApplicationName()));
-                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+               if (gApplication->GetAppRemote()) {
+                  Getlinem(kInit, Form("\n%s:root [0]", 
+                           gApplication->GetAppRemote()->ApplicationName()));
                }
             }
             else if (!strcmp(item->GetText(), "ROOT Files")) {
@@ -2375,20 +2371,16 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                if (!gApplication->GetAppRemote()) {
                   // switch to remote session if not already in
                   gROOT->ProcessLine(Form(".R %s", top->GetText()));
-                  if (rint && gApplication->GetAppRemote()) {
-                     rint->SetPrompt(Form("%s:root [%%d] ", 
-                           gApplication->GetAppRemote()->ApplicationName()));
-                     Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
+                  if (gApplication->GetAppRemote()) {
+                     Getlinem(kInit, Form("\n%s:root [0]", 
+                              gApplication->GetAppRemote()->ApplicationName()));
                   }
                }
             }
             else if (gApplication->GetAppRemote()) {
                // switch back to local session if not already in
                gApplication->ProcessLine(".R");
-               if (rint) {
-                  rint->SetPrompt("root [%d] ");
-                  Getlinem(kInit, Form("\n%s", rint->GetPrompt()));
-               }
+               Getlinem(kInit, "\nroot [0]");
             }
          }
 
