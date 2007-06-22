@@ -1244,6 +1244,7 @@ struct G__var_array {
 *
 **************************************************************************/
 
+#ifdef __cplusplus
 
 struct G__tagtable {
   /* tag entry information */
@@ -1278,13 +1279,9 @@ struct G__tagtable {
 
   struct G__comment_info comment[G__MAXSTRUCT];
 
-#ifdef __cplusplus
-
    std::list<G__incsetup> *incsetup_memvar[G__MAXSTRUCT];
    std::list<G__incsetup> *incsetup_memfunc[G__MAXSTRUCT];
    
-#endif
-
   char rootflag[G__MAXSTRUCT];
   struct G__RootSpecial *rootspecial[G__MAXSTRUCT];
 
@@ -1298,6 +1295,12 @@ struct G__tagtable {
   void* vtable[G__MAXSTRUCT];
   /* short vtabledepth[G__MAXSTRUCT]; */
 };
+
+#else /* ifdef __cpluspluc */
+
+struct G__tagtable;
+
+#endif
 
 /**************************************************************************
 * structure typedef information

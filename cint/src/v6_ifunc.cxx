@@ -5781,6 +5781,7 @@ asm_ifunc_start:   /* loop compilation execution label */
           switch(p_ifunc->param[ifn][ipara]->type) {
           case 'f':
             G__Mfloat(libp->para[ipara]);
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             G__ansipara.ref = (long)(&libp->para[ipara].obj.fl);
             break;
           case 'd':
@@ -5788,14 +5789,17 @@ asm_ifunc_start:   /* loop compilation execution label */
             break;
           case 'c':
             G__Mchar(libp->para[ipara]);
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             G__ansipara.ref = (long)(&libp->para[ipara].obj.ch);
             break;
           case 's':
             G__Mshort(libp->para[ipara]);
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             G__ansipara.ref = (long)(&libp->para[ipara].obj.sh);
             break;
           case 'i':
             G__Mint(libp->para[ipara]);
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             G__ansipara.ref = (long)(&libp->para[ipara].obj.in);
             break;
           case 'l':
@@ -5810,9 +5814,11 @@ asm_ifunc_start:   /* loop compilation execution label */
             G__Muchar(libp->para[ipara]);
             G__ansipara.ref = (long)(&libp->para[ipara].obj.uch);
 #endif
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             break;
           case 'r':
             G__Mushort(libp->para[ipara]);
+	    libp->para[ipara].type = p_ifunc->param[ifn][ipara]->type;
             G__ansipara.ref = (long)(&libp->para[ipara].obj.ush);
             break;
           case 'h':

@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "v6_value.h"
 
 extern "C" {
 
@@ -37,37 +38,37 @@ char *G__valuemonitor(G__value buf,char *temp)
                 ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
                                 ,0
                                 ,0)
-                                ,buf.obj.d);
+                                ,G__convertT<double>(&buf));
       else
         sprintf(temp,"(%s)%.17e"
                 ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
                                 ,0
                                 ,0)
-                                ,buf.obj.d);
+                                ,G__convertT<double>(&buf));
       break;
   case 'b':
     if(G__in_pause)
-      sprintf(temp,"(unsigned char)%u",(unsigned char)buf.obj.i);
+      sprintf(temp,"(unsigned char)%u",G__convertT<unsigned char>(&buf));
     else 
-      sprintf(temp,"(unsignedchar)%u",(unsigned char)buf.obj.i);
+      sprintf(temp,"(unsignedchar)%u",G__convertT<unsigned char>(&buf));
     break;
   case 'r':
     if(G__in_pause)
-      sprintf(temp,"(unsigned short)%u",(unsigned short)buf.obj.i);
+      sprintf(temp,"(unsigned short)%u",G__convertT<unsigned short>(&buf));
     else
-      sprintf(temp,"(unsignedshort)%u",(unsigned short)buf.obj.i);
+      sprintf(temp,"(unsignedshort)%u",G__convertT<unsigned short>(&buf));
     break;
   case 'h':
     if(G__in_pause)
-      sprintf(temp,"(unsigned int)%u",(unsigned int)buf.obj.i);
+      sprintf(temp,"(unsigned int)%u",G__convertT<unsigned int>(&buf));
     else
-      sprintf(temp,"(unsignedint)%u",(unsigned int)buf.obj.i);
+      sprintf(temp,"(unsignedint)%u",G__convertT<unsigned int>(&buf));
     break;
   case 'k':
     if(G__in_pause)
-      sprintf(temp,"(unsigned long)%lu",(unsigned long)buf.obj.i);
+      sprintf(temp,"(unsigned long)%lu",G__convertT<unsigned long>(&buf));
     else
-      sprintf(temp,"(unsignedlong)%lu",(unsigned long)buf.obj.i);
+      sprintf(temp,"(unsignedlong)%lu",G__convertT<unsigned long>(&buf));
     break;
     default:
       if(islower(buf.type)) {
@@ -140,16 +141,10 @@ char *G__valuemonitor(G__value buf,char *temp)
         
           else 
 #endif
-             if(buf.obj.i<0)
-                sprintf(temp,"(%s)(%ld)" 
-                        ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-                        ,buf.obj.reftype.reftype,0)
-                        ,buf.obj.i);
-             else
-                sprintf(temp,"(%s)%ld" 
-                        ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-                        ,buf.obj.reftype.reftype,0)
-                        ,buf.obj.i);
+             sprintf(temp,"(%s)(%ld)" 
+                     ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                     ,buf.obj.reftype.reftype,0)
+                     ,G__convertT<long>(&buf));
       }
       else {
         if('C'==buf.type&&G__in_pause && buf.obj.i>0x10000 &&
@@ -174,9 +169,9 @@ char *G__valuemonitor(G__value buf,char *temp)
     break;
   case 'b':
     if(G__in_pause)
-      sprintf(temp,"(unsigned char)%u",(unsigned char)buf.obj.i);
+      sprintf(temp,"(unsigned char)%u",G__convertT<unsigned char>(&buf));
     else 
-      sprintf(temp,"(unsignedchar)%u",(unsigned char)buf.obj.i);
+      sprintf(temp,"(unsignedchar)%u",G__convertT<unsigned char>(&buf));
     break;
   case 'B':
     if(G__in_pause)
@@ -210,7 +205,7 @@ char *G__valuemonitor(G__value buf,char *temp)
     }
     break;
   case 'c':
-    G__charaddquote(temp2,(char)buf.obj.i);
+    G__charaddquote(temp2,G__convertT<char>(&buf));
     if(G__in_pause)
       sprintf(temp,"(char %ld)%s",buf.obj.i,temp2);
     else
@@ -218,9 +213,9 @@ char *G__valuemonitor(G__value buf,char *temp)
     break;
   case 'r':
     if(G__in_pause)
-      sprintf(temp,"(unsigned short)%u",(unsigned short)buf.obj.i);
+      sprintf(temp,"(unsigned short)%u",G__convertT<unsigned short>(&buf));
     else
-      sprintf(temp,"(unsignedshort)%u",(unsigned short)buf.obj.i);
+      sprintf(temp,"(unsignedshort)%u",G__convertT<unsigned short>(&buf));
     break;
   case 'R':
     if(G__in_pause)
@@ -230,18 +225,18 @@ char *G__valuemonitor(G__value buf,char *temp)
     break;
   case 's':
     if(buf.obj.i<0)
-      sprintf(temp,"(short)(%d)",(short)buf.obj.i);
+      sprintf(temp,"(short)(%d)",G__convertT<short>(&buf));
     else 
-      sprintf(temp,"(short)%d",(short)buf.obj.i);
+      sprintf(temp,"(short)%d",G__convertT<short>(&buf));
     break;
   case 'S':
     sprintf(temp,"(short*)0x%lx",buf.obj.i);
     break;
   case 'h':
     if(G__in_pause)
-      sprintf(temp,"(unsigned int)%u",(unsigned int)buf.obj.i);
+      sprintf(temp,"(unsigned int)%u",G__convertT<unsigned int>(&buf));
     else
-      sprintf(temp,"(unsignedint)%u",(unsigned int)buf.obj.i);
+      sprintf(temp,"(unsignedint)%u",G__convertT<unsigned int>(&buf));
     break;
   case 'H':
     if(G__in_pause)
@@ -253,22 +248,22 @@ char *G__valuemonitor(G__value buf,char *temp)
     if(buf.tagnum != -1) {
       if(G__struct.type[buf.tagnum]=='e') {
         if(buf.obj.i<0)
-          sprintf(temp,"(enum %s)(%d)",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
+          sprintf(temp,"(enum %s)(%d)",G__fulltagname(buf.tagnum,1),G__convertT<int>(&buf));
         else
-          sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
+          sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),G__convertT<int>(&buf));
       }
       else {
         if(buf.obj.i<0)
-          sprintf(temp,"(int)(%d)",(int)buf.obj.i);
+          sprintf(temp,"(int)(%d)",G__convertT<int>(&buf));
         else 
-          sprintf(temp,"(int)%d",(int)buf.obj.i);
+          sprintf(temp,"(int)%d",G__convertT<int>(&buf));
       }
     }
     else {
       if(buf.obj.i<0)
-        sprintf(temp,"(int)(%d)",(int)buf.obj.i);
+        sprintf(temp,"(int)(%d)",G__convertT<int>(&buf));
       else 
-        sprintf(temp,"(int)%d",(int)buf.obj.i);
+        sprintf(temp,"(int)%d",G__convertT<int>(&buf));
     }
     break;
   case 'I':
@@ -312,17 +307,13 @@ char *G__valuemonitor(G__value buf,char *temp)
       sprintf(temp,"(long double)%Lg",buf.obj.ld);
     break;
   case 'g':
-#ifdef G__BOOL4BYTE
-    sprintf(temp,"(bool)%d",(int)buf.obj.i?1:0);
-#else
-    sprintf(temp,"(bool)%d",(unsigned char)buf.obj.i?1:0);
-#endif
+    sprintf(temp,"(bool)%d",G__convertT<bool>(&buf));
     break;
   case 'k':
     if(G__in_pause)
-      sprintf(temp,"(unsigned long)%lu",(unsigned long)buf.obj.i);
+      sprintf(temp,"(unsigned long)%lu",G__convertT<unsigned long>(&buf));
     else
-      sprintf(temp,"(unsignedlong)%lu",(unsigned long)buf.obj.i);
+      sprintf(temp,"(unsignedlong)%lu",G__convertT<unsigned long>(&buf));
     break;
   case 'K':
     if(G__in_pause)
@@ -432,7 +423,7 @@ char *G__valuemonitor(G__value buf,char *temp)
         sprintf(temp,"(union %s)%ld" ,G__fulltagname(buf.tagnum,1) ,buf.obj.i);
       break;
     case 'e':
-      sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),(int)buf.obj.i);
+      sprintf(temp,"(enum %s)%d",G__fulltagname(buf.tagnum,1),G__convertT<int>(&buf));
       break;
     default:
       if(buf.obj.i<0)

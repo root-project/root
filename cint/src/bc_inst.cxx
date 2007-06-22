@@ -303,7 +303,7 @@ void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* iref,int ifn,int paran,void* 
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,
 			      "%3x: LD_FUNC bytecode %s paran=%d\n"
-			      ,G__asm_cp,iref->funcname[ifn],paran);
+			      ,G__asm_cp,"n/a" /* iref->funcname[ifn] */ ,paran);
 #endif
   G__asm_inst[G__asm_cp]=G__LD_FUNC;
   G__asm_inst[G__asm_cp+1]=(long)ifunc;

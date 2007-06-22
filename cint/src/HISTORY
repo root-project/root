@@ -4911,7 +4911,24 @@
 * - implement '#pragma link option=...' syntax (for ROOT dictionary flags)
 * - several minor bug fixes: buffer overflow checks, uninitialized vars, 
 *   template class memfunc improvements, default values for function arguments, etc
-
+*
+* 5.16.21 June 22, 2007
+* 6.1.21 June 22, 2007
+* - fix value cast functions
+* - distinguish char, short, int, long, and unsigned ones.
+* - fix type determination of integer literals
+* - improve memory and speed performance of dict setup collection
+* - fix library un/reloading issues with member setup functions
+* - fix an issue with parameter default values and wrappers for virtual 
+*   functions
+* - fix a problem with by-reference parameters, where the reference was 
+*   built to the wrong parameter
+* - fix partial template specialization for non-type template arguments
+* - don't alloc space for static members during dictionary generation
+* - support "#if defined MACRO", the alternative form of "#if defined(MACRO)"
+* - remove configure and Makefile routines for internal readline, now that 
+*   it's not part of the CINT distribution anymore.
+* - test suite now uses external diff
 
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion

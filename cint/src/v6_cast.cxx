@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "v6_value.h"
 
 static void G__SlideString(char *str, unsigned int slide) 
 {
@@ -103,19 +104,7 @@ void G__castclass(G__value *result3,int tagnum, int castflag,int *ptype
 ****************************************************************/
 long G__int_cast(G__value buf) /* used to be int */
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((long)buf.obj.d);
-  case 'n':
-    return((long)buf.obj.ll);
-  case 'm':
-    return((long)buf.obj.ull);
-  case 'q':
-    return((long)buf.obj.ld);
-  default:
-    return(buf.obj.i);
-  }
+   return G__convertT<long>(&buf);
 }
 
 /****************************************************************
@@ -124,24 +113,7 @@ long G__int_cast(G__value buf) /* used to be int */
 ****************************************************************/
 unsigned long G__uint_cast(G__value buf) /* used to be int */
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((unsigned long)buf.obj.d);
-  case 'b':
-  case 'r':
-  case 'h':
-  case 'k':
-    return(buf.obj.ulo);
-  case 'n':
-    return((unsigned long)buf.obj.ll);
-  case 'm':
-    return((unsigned long)buf.obj.ull);
-  case 'q':
-    return((unsigned long)buf.obj.ld);
-  default:
-    return((unsigned long)buf.obj.i);
-  }
+   return G__convertT<unsigned long>(&buf);
 }
 
 /******************************************************************
@@ -756,25 +728,39 @@ G__value G__castvalue_bc(char *casttype,G__value result3, int bc)
     G__letdouble(&result3,type ,(float)G__double(result3));
     break;
   case 'b':
-    G__letint(&result3,type ,(unsigned char)G__int_cast(result3));
+    //G__letint(&result3,type ,(unsigned char)G__int_cast(result3)); 
+    result3.obj.uch = (unsigned char)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'c':
-    G__letint(&result3,type ,(char)G__int_cast(result3));
+    //G__letint(&result3,type ,(char)G__int_cast(result3));
+    result3.obj.ch = (char)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'r':
-    G__letint(&result3,type ,(unsigned short)G__int_cast(result3));
+    //G__letint(&result3,type ,(unsigned short)G__int_cast(result3));
+    result3.obj.ush = (unsigned short)G__int_cast(result3);
+    result3.type = type;
     break;
   case 's':
-    G__letint(&result3,type ,(short)G__int_cast(result3));
+    //G__letint(&result3,type ,(short)G__int_cast(result3));
+    result3.obj.sh = (short)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'h':
-    G__letint(&result3,type ,(unsigned int)G__int_cast(result3));
+    //G__letint(&result3,type ,(unsigned int)G__int_cast(result3));
+    result3.obj.uin = (unsigned int)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'i':
-    G__letint(&result3,type ,(int)G__int_cast(result3));
+    //G__letint(&result3,type ,(int)G__int_cast(result3));
+    result3.obj.in = (int)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'k':
-    G__letint(&result3,type ,(unsigned long)G__int_cast(result3));
+    //G__letint(&result3,type ,(unsigned long)G__int_cast(result3));
+    result3.obj.ulo = (unsigned long)G__int_cast(result3);
+    result3.type = type;
     break;
   case 'l':
     G__letint(&result3,type ,(long)G__int_cast(result3));

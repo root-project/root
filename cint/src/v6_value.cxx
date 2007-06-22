@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "v6_value.h"
 
 extern "C" {
 
@@ -38,7 +39,11 @@ void G__letdouble(G__value *buf,int type,double value)
 void G__letbool(G__value *buf,int type,long value)
 {
         buf->type=type;
+#ifdef G__BOOL4BYTE
         buf->obj.i=value?1:0;
+#else
+        buf->obj.uch=value?1:0;
+#endif
         /*
         buf->tagnum = -1;
         buf->typenum = -1;
@@ -52,8 +57,32 @@ void G__letbool(G__value *buf,int type,long value)
 ****************************************************************/
 void G__letint(G__value *buf,int type,long value)
 {
-        buf->type=type;
-        buf->obj.i=value;
+      buf->type=type;
+
+      switch(buf->type) {
+      case 'w': /* logic */
+      case 'r': /* unsigned short */
+          buf->obj.ush = value; break;	
+      case 'h': /* unsigned int */
+        buf->obj.uin = value; break;
+#ifndef G__BOOL4BYTE
+      case 'g':
+#endif
+      case 'b': /* unsigned char */
+          buf->obj.uch = value; break;
+      case 'k': /* unsigned long */
+         buf->obj.ulo = value; break;
+      case 'n':  buf->obj.ll = value; break;
+      case 'm':buf->obj.ull = value; break;
+      case 'q': buf->obj.ld = value; break;
+      case 'i': buf->obj.i = value; break; // should be "in", but there are too many cases where "i" is read out later
+      case 'c': buf->obj.ch = value; break;
+      case 's':  buf->obj.sh = value; break;
+      default: buf->obj.i=value;;
+      }
+
+      //        buf->type=type;
+      //  
         /*
         buf->tagnum = -1;
         buf->typenum = -1;
@@ -128,23 +157,7 @@ int G__isdouble(G__value buf)
 ****************************************************************/
 float G__float(G__value buf)
 {
-        float result;
-        switch(buf.type) {
-        case 'd': /* double */
-        case 'f': /* float */
-        case 'w': /* logic */
-                result = (float)buf.obj.d;
-                return(result);
-        case 'k': /* unsigned long */
-        case 'h': /* unsigned int */
-        case 'r': /* unsigned short */
-        case 'b': /* unsigned char */
-                result = (float)(buf.obj.ulo);
-                return(result);
-        default:
-                result = (float)buf.obj.i;
-                return(result);
-        }
+   return G__convertT<float>(&buf);
 }
 #endif
 
@@ -154,19 +167,7 @@ float G__float(G__value buf)
 ****************************************************************/
 double G__double(G__value buf)
 {
-        switch(buf.type) {
-        case 'd': /* double */
-        case 'f': /* float */
-        case 'w': /* logic */
-                return(buf.obj.d);
-        case 'k': /* unsigned long */
-        case 'h': /* unsigned int */
-        case 'r': /* unsigned short */
-        case 'b': /* unsigned char */
-                return((double)(buf.obj.ulo));
-        default:
-                return((double)buf.obj.i);
-        }
+   return G__convertT<double>(&buf);
 }
 
 /****************************************************************
@@ -175,13 +176,7 @@ double G__double(G__value buf)
 ****************************************************************/
 long G__bool(G__value buf)
 {
-        switch(buf.type) {
-        case 'd':
-        case 'f':
-                return((long)(0!=buf.obj.d?1:0));
-        default:
-                return(buf.obj.i?1:0);
-        }
+   return G__convertT<bool>(&buf);
 }
 
 /****************************************************************
@@ -190,20 +185,7 @@ long G__bool(G__value buf)
 ****************************************************************/
 long G__int(G__value buf)
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((long)buf.obj.d);
-  case 'n':
-#define G__OLDIMPLEMENTATION2229
-    return((long)buf.obj.ll);
-  case 'm':
-    return((long)buf.obj.ull);
-  case 'q':
-    return((long)buf.obj.ld);
-  default:
-    return(buf.obj.i);
-  }
+   return G__convertT<long>(&buf);
 }
 
 /****************************************************************
@@ -212,24 +194,7 @@ long G__int(G__value buf)
 ****************************************************************/
 unsigned long G__uint(G__value buf)
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((unsigned long)buf.obj.d);
-  case 'b':
-  case 'r':
-  case 'h':
-  case 'k':
-    return(buf.obj.ulo);
-  case 'n':
-    return((unsigned long)buf.obj.ll);
-  case 'm':
-    return((unsigned long)buf.obj.ull);
-  case 'q':
-    return((unsigned long)buf.obj.ld);
-  default:
-    return((unsigned long)buf.obj.i);
-  }
+   return G__convertT<unsigned long>(&buf);
 }
 
 /****************************************************************
@@ -238,19 +203,7 @@ unsigned long G__uint(G__value buf)
 ****************************************************************/
 G__int64 G__Longlong(G__value buf)
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((G__int64)buf.obj.d);
-  case 'n':
-    return((G__int64)buf.obj.ll);
-  case 'm':
-    return((G__int64)buf.obj.ull);
-  case 'q':
-    return((G__int64)buf.obj.ld);
-  default:
-    return((G__int64)buf.obj.i);
-  }
+   return G__convertT<G__int64>(&buf);
 }
 
 /****************************************************************
@@ -259,25 +212,7 @@ G__int64 G__Longlong(G__value buf)
 ****************************************************************/
 G__uint64 G__ULonglong(G__value buf)
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((G__uint64)buf.obj.d);
-  case 'n':
-    return((G__uint64)buf.obj.ll);
-  case 'm':
-    return((G__uint64)buf.obj.ull);
-  case 'q':
-    return((G__uint64)buf.obj.ld);
-#if 1    /* Issue with t1134.cxx about 1<<31 being -1 or 0xffffffffUL */
-  case 'h':
-  case 'k':
-    return((G__uint64)buf.obj.uin);
-#endif
-  default:
-    /* return((G__uint64)buf.obj.uin); */
-    return((G__uint64)buf.obj.i);
-  }
+   return G__convertT<G__uint64>(&buf);
 }
 
 /****************************************************************
@@ -286,23 +221,7 @@ G__uint64 G__ULonglong(G__value buf)
 ****************************************************************/
 long double G__Longdouble(G__value buf)
 {
-  switch(buf.type) {
-  case 'd':
-  case 'f':
-    return((long double)buf.obj.d);
-  case 'n':
-    return((long double)buf.obj.ll);
-  case 'm':
-#ifdef G__WIN32
-    return((long double)buf.obj.ll);
-#else
-    return((long double)buf.obj.ull);
-#endif
-  case 'q':
-    return((long double)buf.obj.ld);
-  default:
-    return((long double)buf.obj.i);
-  }
+   return G__convertT<long double>(&buf);
 }
 
 /******************************************************************
@@ -469,31 +388,31 @@ G__value G__tovalue(G__value p)
     break;
 #endif
   case 'B':
-    result.obj.i = (long)(*(unsigned char *)(p.obj.i));
+    result.obj.uch = (*(unsigned char *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_B;
     break;
   case 'C':
-    result.obj.i = (long)(*(char *)(p.obj.i));
+    result.obj.ch = (*(char *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_C;
     break;
   case 'R':
-    result.obj.i = (long)(*(unsigned short *)(p.obj.i));
+    result.obj.ush = (*(unsigned short *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_R;
     break;
   case 'S':
-    result.obj.i = (long)(*(short *)(p.obj.i));
+    result.obj.sh = (*(short *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_S;
     break;
   case 'H':
-    result.obj.i = (long)(*(unsigned int *)(p.obj.i));
+    result.obj.uin = (*(unsigned int *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_H;
     break;
   case 'I':
-    result.obj.i = (long)(*(int *)(p.obj.i));
+    result.obj.in = (*(int *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_I;
     break;
   case 'K':
-    result.obj.i = (long)(*(unsigned long *)(p.obj.i));
+    result.obj.ulo = (*(unsigned long *)(p.obj.i));
     if(G__asm_noverflow) G__asm_inst[G__asm_cp-1]=(long)G__asm_tovalue_K;
     break;
   case 'L':

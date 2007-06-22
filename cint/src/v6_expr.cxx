@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "v6_value.h"
 
 extern "C" {
 
@@ -1722,28 +1723,11 @@ G__value G__getitem(char *item)
       /* G__letdouble(&result3,c,G__atodouble(item)); */
     }
     else {
-      unsigned long xxx;
-       if('u'==c) { /* long long */
-          c='n';
-          G__letLonglong(&result3,c,G__expr_strtoll(item,NULL,10));
-       } else if('t'==c) {
-          c='m';
-          G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10));
-       } else {
-          xxx=strtoul(item,NULL,10);
-          if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
-          if(xxx==ULONG_MAX) {
-            char ulongmax[100];
-            int ulonglen = strlen(item);
-            sprintf(ulongmax,"%lu",ULONG_MAX);
-            while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
-              item[--ulonglen]=0;
-            if(strcmp(ulongmax,item)!=0) 
-              G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
-          } 
-          G__letint(&result3,c,xxx);
-          result3.obj.i=xxx;
-       }
+       switch (c) {
+       case 'n': G__letLonglong(&result3,c,G__expr_strtoll(item,NULL,10)); break;
+       case 'm': G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10)); break;
+       default: G__letint(&result3,c,strtoul(item,NULL,10));
+      }
     }
 #if  !defined(G__OLDIMPLEMENTATION1874)
     if('u'!=c) {
@@ -2168,18 +2152,7 @@ int G__test(char *expression2)
   G__value result;
   result=G__getexpr(expression2);
   if('u'==result.type) return(G__iosrdstate(&result));
-  if('f'==result.type||'d'==result.type) {
-    /*
-    printf("\n!!! %s type=%c  d=%g i=%ld",expression2
-       ,result.type,result.obj.d,result.obj.i); 
-     G__printlinenum();
-    */
-    return(0.0!=result.obj.d);
-  }
-  else {
-    return(result.obj.i);
-  }
-   
+  return G__convertT<bool>(&result);   
 }
 
 

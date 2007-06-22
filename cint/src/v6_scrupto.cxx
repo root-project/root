@@ -476,17 +476,26 @@ int G__free_struct_upto(int tagnum)
     G__free_ifunc_table(G__struct.memfunc[G__struct.alltag]);
     free((void*)G__struct.memfunc[G__struct.alltag]);
     G__struct.memfunc[G__struct.alltag]=(struct G__ifunc_table_internal *)NULL;
-
-
+    
     /* freeing member variable table */
     G__free_member_table(G__struct.memvar[G__struct.alltag]);
     free((void*)G__struct.memvar[G__struct.alltag]);
     G__struct.memvar[G__struct.alltag]=(struct G__var_array *)NULL;
 
+    // freeing _memfunc_setup and memvar_setup function pointers
+    if (G__struct.incsetup_memvar[G__struct.alltag])
+       G__struct.incsetup_memvar[G__struct.alltag]->clear();  
+
+    if (G__struct.incsetup_memfunc[G__struct.alltag])
+       G__struct.incsetup_memfunc[G__struct.alltag]->clear();
+
     /* freeing tagname */
     free((void*)G__struct.name[G__struct.alltag]);
     G__struct.name[G__struct.alltag]=(char *)NULL;
+
   }
+  
+  
   G__struct.alltag=tagnum;
   return(0);
 }
@@ -772,18 +781,6 @@ void G__close_inputfiles_upto(G__dictposition* pos)
   int nfile = pos->nfile;
   while(G__nfile>nfile) {
     --G__nfile;
-    if(G__srcfile[G__nfile].dictpos) {
-      free((void*)G__srcfile[G__nfile].dictpos);
-      G__srcfile[G__nfile].dictpos=(struct G__dictposition*)NULL;
-    }
-    if(G__srcfile[G__nfile].hasonlyfunc) {
-      free((void*)G__srcfile[G__nfile].hasonlyfunc);
-      G__srcfile[G__nfile].hasonlyfunc=(struct G__dictposition*)NULL;
-    }
-#ifdef G__SHAREDLIB
-    if(G__srcfile[G__nfile].ispermanentsl) {
-      permanentsl[nperm++] = G__srcfile[G__nfile];
-      G__srcfile[G__nfile].initsl=0;
 
       // reset autoload struct entries
       for (int itag = 0; itag < pos->tagnum; ++itag)
@@ -793,8 +790,8 @@ void G__close_inputfiles_upto(G__dictposition* pos)
             char* name = G__struct.name[itag];
             int hash = G__struct.hash[itag];
             char* libname = G__struct.libname[itag];
-            G__struct.name[itag] = 0; // tree_struct must not delete it
-            G__struct.libname[itag] = 0; // tree_struct must not delete it
+            G__struct.name[itag] = 0; // autoload entry - must not delete it, just set it to 0 for G__free_struct_upto
+            G__struct.libname[itag] = 0; // same here
             int alltag = G__struct.alltag;
             G__struct.alltag = itag + 1; // to only free itag
             G__free_struct_upto(itag);
@@ -863,6 +860,18 @@ void G__close_inputfiles_upto(G__dictposition* pos)
             G__struct.defaulttypenum[itag] = 0;
             G__struct.vtable[itag] = 0;
         }
+    if(G__srcfile[G__nfile].dictpos) {
+      free((void*)G__srcfile[G__nfile].dictpos);
+      G__srcfile[G__nfile].dictpos=(struct G__dictposition*)NULL;
+    }
+    if(G__srcfile[G__nfile].hasonlyfunc) {
+      free((void*)G__srcfile[G__nfile].hasonlyfunc);
+      G__srcfile[G__nfile].hasonlyfunc=(struct G__dictposition*)NULL;
+    }
+#ifdef G__SHAREDLIB
+    if(G__srcfile[G__nfile].ispermanentsl) {
+      permanentsl[nperm++] = G__srcfile[G__nfile];
+      G__srcfile[G__nfile].initsl=0;
       continue;
     }
 #endif

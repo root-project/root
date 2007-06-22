@@ -1384,13 +1384,26 @@ int G__pp_if()
   int store_no_exec_compile;
   int store_asm_wholefunction;
   int store_asm_noverflow;
-  
+  bool haveOpenDefined = false; // need to convert defined FOO to defined(FOO)
+
   do {
-    c = G__fgetstream(condition+len,"\n\r");
-    len = strlen(condition)-1;
-    if(len<0) len=0;
-    if(len>0 && (condition[len]=='\n' ||condition[len]=='\r')) --len;
-  } while('\\'==condition[len]);
+    c = G__fgetstream(condition + len," \n\r");
+    len = strlen(condition);
+    if(len>0 && (condition[len] == '\n'
+                 || condition[len] == '\r')) --len;
+    if (haveOpenDefined) {
+       condition[len] = ')';
+       condition[len + 1] = 0; // this might be the end, so terminate it
+       ++len;
+       haveOpenDefined = false;
+    } else
+       if (c == ' ' && len > 6
+           && !strcmp(condition + len - 7, "defined")) {
+          haveOpenDefined = true;
+          condition[len] = '(';
+          ++len;
+       }
+  } while(len > 0 && '\\'==condition[len - 1] || c == ' ');
 
   {
     char *p;

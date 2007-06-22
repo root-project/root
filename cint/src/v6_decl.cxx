@@ -1791,11 +1791,16 @@ void G__define_var(int tagnum, int typenum)
       /**************************************************************
       * declaration of struct object, no pointer, no reference type
       **************************************************************/
-      if(var_type=='u'&&
-         (G__def_struct_member==0||-1==G__def_tagnum||
-          'n'==G__struct.type[G__def_tagnum])
-         &&new_name[0]!='*'&&
-         G__reftype==G__PARANORMAL) {
+      if (
+        (var_type == 'u') && // class, enum, namespace, struct, or union, and
+        (new_name[0] != '*') && // not a pointer, and
+        (G__reftype == G__PARANORMAL) && // not a reference, and
+        (
+          !G__def_struct_member || // not a member, or
+          (G__def_tagnum == -1) || // FIXME: This is probably meant to protect the next check, it cannot happen, or can it?
+          (G__struct.type[G__def_tagnum] == 'n') // is a member of a namespace
+        )
+      ) {
 
         store_prerun = G__prerun;
         if(store_prerun) {
@@ -2372,6 +2377,20 @@ void G__define_var(int tagnum, int typenum)
       * declaration of scaler object, pointer or reference type.
       **************************************************************/
       else {
+        if (
+          (G__globalcomp != G__NOLINK) && // generating a dictionary, and
+          (var_type == 'u') && // class, enum, namespace, struct, or union, and
+          (new_name[0] != '*') && // not a pointer, and
+          (G__reftype == G__PARANORMAL) && // not a reference, and
+          G__def_struct_member && // data member, and
+          G__static_alloc && // const or static data member, and
+          G__prerun // in prerun
+        ) {
+          // -- Static data member of class type in prerun while generating a dictionary. 
+          // Disable memory allocation, just create variable.
+          G__globalvarpointer = G__PINVALID;
+        }
+        // FIXME: Static data members of class type do not get their constructors run!
         G__letvariable(new_name,reg,&G__global,G__p_local);
         if(G__return>G__RETURN_NORMAL) {
           G__decl=store_decl;

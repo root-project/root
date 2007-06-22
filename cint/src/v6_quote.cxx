@@ -333,33 +333,33 @@ G__value G__strip_singlequotation(char *string)
           break;
           */
       case 'b' :
-        result.obj.i='\b';
+        result.obj.ch='\b';
         break;
       case 'f' :
-        result.obj.i='\f';
+        result.obj.ch='\f';
         break;
       case 'n' :
-        result.obj.i='\n';
+        result.obj.ch='\n';
         break;
       case 'r' :
-        result.obj.i='\r';
+        result.obj.ch='\r';
         break;
       case 't' :
-        result.obj.i='\t';
+        result.obj.ch='\t';
         break;
       case 'v' :
-        result.obj.i='\v';
+        result.obj.ch='\v';
         break;
         /*
           case '0' :
-          result.obj.i='\0';
+          result.obj.ch='\0';
           break;
           */
       case 'x' :
       case 'X' :
         string[1]='0';
         string[strlen(string)-1]='\0';
-        result.obj.i=G__int(G__checkBase(string+1,&i));
+        result.obj.ch=G__int(G__checkBase(string+1,&i));
         break;
       case '0' :
       case '1' :
@@ -372,15 +372,15 @@ G__value G__strip_singlequotation(char *string)
         string[0]='0';
         string[1]='o';
         string[strlen(string)-1]='\0';
-        result.obj.i=G__int(G__checkBase(string,&i));
+        result.obj.ch=G__int(G__checkBase(string,&i));
         break;
         default :
-          result.obj.i=string[2];
+          result.obj.ch=string[2];
         break;
       }
       break;
     default:
-      result.obj.i=string[1];
+      result.obj.ch=string[1];
 #ifdef G__MULTIBYTE
       if(G__IsDBCSLeadByte(string[1])) {
         G__CheckDBCS2ndByte(string[2]);
@@ -394,7 +394,7 @@ G__value G__strip_singlequotation(char *string)
     }
   }
   else {
-    result.obj.i=string[0];
+    result.obj.ch=string[0];
   }
   return(result);
 }

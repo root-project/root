@@ -455,11 +455,10 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   for (i = 0; i < libp->paran; ++i) {
     int j = libp->paran - i - 1;
     G__asm_stack[j] = libp->para[i];
-    if (
+    if (var && (
       !G__asm_stack[j].ref ||
       ((var->reftype[idx] == G__PARAREFERENCE) && (var->type[idx] != libp->para[i].type))
-    ) {
-      if (var) {
+    )) {
 	switch (var->type[idx]) {
 	case 'f':
 	  G__asm_stack[j].ref=(long)G__Floatref(&libp->para[i]);
@@ -510,12 +509,13 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
 	  break;
 	}
-        ++idx;
-	if (idx >= var->allvar) {
+    }
+    ++idx;
+    if (var) {
+       if (idx >= var->allvar) {
           var = var->next;
           idx = 0;
-        }
-      }
+       }
     }
   }
 

@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "v6_value.h"
 
 extern "C" {
 
@@ -115,59 +116,59 @@ void G__doubleassignbyref(G__value *defined,double val)
   switch(defined->type) {
   case 'd': /* double */
     *(double*)defined->ref = val;
-    defined->obj.d = val;
+    G__setvalue(defined, val);
     break;
   case 'f': /* float */
     *(float*)defined->ref = (float)val;
-    defined->obj.d = val;
+    G__setvalue(defined, val);
     break;
   case 'l': /* long */
     *(long*)defined->ref = (long)val;
-    defined->obj.i = (long)val;
+    G__setvalue(defined, (long)val);
     break;
   case 'k': /* unsigned long */
     *(unsigned long*)defined->ref = (unsigned long)val;
-    defined->obj.i = (unsigned long)val;
+    G__setvalue(defined, (unsigned long)val);
     break;
   case 'i': /* int */
     *(int*)defined->ref = (int)val;
-    defined->obj.i = (int)val;
+    G__setvalue(defined, (int)val);
     break;
   case 'h': /* unsigned int */
     *(unsigned int*)defined->ref = (unsigned int)val;
-    defined->obj.i = (unsigned int)val;
+    G__setvalue(defined, (unsigned int)val);
     break;
   case 's': /* short */
     *(short*)defined->ref = (short)val;
-    defined->obj.i = (short)val;
+    G__setvalue(defined, (short)val);
     break;
   case 'r': /* unsigned short */
     *(unsigned short*)defined->ref = (unsigned short)val;
-    defined->obj.i = (unsigned short)val;
+    G__setvalue(defined, (unsigned short)val);
     break;
   case 'c': /* char */
     *(char*)defined->ref = (char)val;
-    defined->obj.i = (char)val;
+    G__setvalue(defined, (char)val);
     break;
   case 'b': /* unsigned char */
     *(unsigned char*)defined->ref = (unsigned char)val;
-    defined->obj.i = (unsigned char)val;
+    G__setvalue(defined, (unsigned char)val);
     break;
   case 'n': /* long long */
     *(G__int64*)defined->ref = (G__int64)val;
-    defined->obj.ll = (G__int64)val;
+    G__setvalue(defined, (G__int64)val);
     break;
   case 'm': /* unsigned long long */
     *(G__uint64*)defined->ref = (G__uint64)val;
-    defined->obj.ull = (G__uint64)val;
+    G__setvalue(defined, (G__uint64)val);
     break;
   case 'q': /* unsigned G__int64 */
     *(long double*)defined->ref = (long double)val;
-    defined->obj.ld = (long double)val;
+    G__setvalue(defined, (long double)val);
     break;
   case 'g': /* bool */
     *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
-    defined->obj.i = (int)val?1:0;
+    G__setvalue(defined, (bool)val);
     break;
   default:
     G__genericerror("Invalid operation and assignment, G__doubleassignbyref");
@@ -189,59 +190,59 @@ void G__intassignbyref(G__value *defined,G__int64 val)
   switch(defined->type) {
   case 'i': /* int */
     if(defined->ref) *(int*)defined->ref = (int)val;
-    defined->obj.i = (int)val;
+    G__setvalue(defined,(int)val);    
     break;
   case 'c': /* char */
     if(defined->ref) *(char*)defined->ref = (char)val;
-    defined->obj.i = (char)val;
+    G__setvalue(defined, (char)val);
     break;
   case 'l': /* long */
     if(defined->ref) *(long*)defined->ref = (long)val;
-    defined->obj.i = (long)val;
+    G__setvalue(defined, (long)val);
     break;
   case 's': /* short */
     if(defined->ref) *(short*)defined->ref = (short)val;
-    defined->obj.i = (short)val;
+    G__setvalue(defined, (short)val);
     break;
   case 'k': /* unsigned long */
     if(defined->ref) *(unsigned long*)defined->ref = (unsigned long)val;
-    defined->obj.i = (unsigned long)val;
+    G__setvalue(defined, (unsigned long)val);
     break;
   case 'h': /* unsigned int */
     if(defined->ref) *(unsigned int*)defined->ref = (unsigned int)val;
-    defined->obj.i = (unsigned int)val;
+    G__setvalue(defined, (unsigned int)val);
     break;
   case 'r': /* unsigned short */
     if(defined->ref) *(unsigned short*)defined->ref = (unsigned short)val;
-    defined->obj.i = (unsigned short)val;
+    G__setvalue(defined, (unsigned short)val);
     break;
   case 'b': /* unsigned char */
     if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)val;
-    defined->obj.i = (unsigned char)val;
+    G__setvalue(defined, (unsigned char)val);
     break;
   case 'n': /* long long */
     if(defined->ref) *(G__int64*)defined->ref = (G__int64)val;
-    defined->obj.ll = (G__int64)val;
+    G__setvalue(defined, (G__int64)val);
     break;
   case 'm': /* long long */
     if(defined->ref) *(G__uint64*)defined->ref = (G__uint64)val;
-    defined->obj.ull = (G__uint64)val;
+    G__setvalue(defined, (G__uint64)val);
     break;
   case 'q': /* long double */
     if(defined->ref) *(long double*)defined->ref = (long double)val;
-    defined->obj.ld = (long double)val;
+    G__setvalue(defined, (long double)val);
     break;
   case 'g': /* bool */
     if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
-    defined->obj.i = (int)val?1:0;
+    G__setvalue(defined, (bool)val);
     break;
   case 'd': /* double */
     if(defined->ref) *(double*)defined->ref = (double)val;
-    defined->obj.d = (double)val;
+    G__setvalue(defined, (double)val);
     break;
   case 'f': /* float */
     if(defined->ref) *(float*)defined->ref = (float)val;
-    defined->obj.d = (float)val;
+    G__setvalue(defined, (float)val);
     break;
   default:
     G__genericerror("Invalid operation and assignment, G__intassignbyref");
@@ -1741,10 +1742,10 @@ void G__bstore(int operatortag,G__value expressionin,G__value *defined)
       break;
     case 'L': /* left shift */
         if(!G__prerun) {
-          unsigned long udefined=(unsigned long)G__uint(*defined);
+          long ldefined=G__int(*defined);
           unsigned long uexpression=(unsigned long)G__uint(expressionin);
-          G__letint(defined,'h',udefined<<uexpression);
-          defined->obj.ulo = udefined<<uexpression;
+          G__letint(defined,defined->type,ldefined<<uexpression);
+          defined->obj.i = ldefined<<uexpression;
         }
         else {
           G__letint(defined,'i',ldefined<<lexpression);
