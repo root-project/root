@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.67 2007/02/18 14:58:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.68 2007/03/19 16:02:36 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1234,14 +1234,12 @@ void TSelectorDraw::TakeAction()
    else if (fAction ==  5) {
       if (fObject->InheritsFrom("TEntryList")){
          TEntryList *enlist = (TEntryList*)fObject;
-         // Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
-         //if (elist->GetIndex(enumb) < 0) elist->Enter(enumb);
-         Long64_t enumb = fTree->GetReadEntry();
+         Long64_t enumb = fTree->GetTree()->GetReadEntry();
          enlist->Enter(enumb);
       }
       else {
          TEventList *evlist = (TEventList*)fObject;
-         Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
+         Long64_t enumb = fTree->GetChainOffset() + fTree->GetTree()->GetReadEntry();
          if (evlist->GetIndex(enumb) < 0) evlist->Enter(enumb);
       }
    }
