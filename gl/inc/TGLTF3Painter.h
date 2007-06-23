@@ -41,7 +41,7 @@ private:
 
 public:
    TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
-                 Int_t glContext = -1);
+                 TGLPaintDevice *dev = 0);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();
@@ -132,7 +132,7 @@ private:
 
 public:
    TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
-                 Int_t glContext = -1);
+                 TGLPaintDevice *dev = 0);
 
    //TGLPlotPainter final-overriders.
    char    *GetPlotInfo(Int_t px, Int_t py);

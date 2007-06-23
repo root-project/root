@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.11 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
 
 /*************************************************************************
@@ -12,7 +12,9 @@
 #include <cctype>
 
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 #include "Buttons.h"
+#include "TString.h"
 #include "TColor.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -28,8 +30,8 @@
 ClassImp(TGLLegoPainter)
 
 //______________________________________________________________________________
-TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, cam, coord, ctx, kFALSE, kTRUE, kTRUE),
+TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+                  : TGLPlotPainter(hist, cam, coord, dev, kFALSE, kTRUE, kTRUE),
                     fLegoType(kColorSimple),
                     fMinZ(0.),
                     fDrawErrors(kFALSE)
@@ -65,18 +67,22 @@ char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 Bool_t TGLLegoPainter::InitGeometry()
 {
    //Select method.
+
+   Bool_t ret = kFALSE;
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
-      return InitGeometryCartesian();
+      ret = InitGeometryCartesian(); break;
    case kGLPolar:
-      return InitGeometryPolar();
+      ret = InitGeometryPolar(); break;
    case kGLCylindrical:
-      return InitGeometryCylindrical();
+      ret = InitGeometryCylindrical(); break;
    case kGLSpherical:
-      return InitGeometrySpherical();
+      ret = InitGeometrySpherical(); break;
    default:
       return kFALSE;
    }
+   if (ret && fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -87,7 +93,6 @@ Bool_t TGLLegoPainter::InitGeometryCartesian()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    //Find bin edges
    const Int_t nX = fCoord->GetNXBins();
@@ -190,7 +195,6 @@ Bool_t TGLLegoPainter::InitGeometryPolar()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -250,7 +254,6 @@ Bool_t TGLLegoPainter::InitGeometryCylindrical()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    const Int_t nY = fCoord->GetNYBins();
    fYEdges.resize(nY);
@@ -313,7 +316,6 @@ Bool_t TGLLegoPainter::InitGeometrySpherical()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    const Int_t nY = fCoord->GetNYBins();
    fCosSinTableY.resize(nY + 1);
@@ -988,7 +990,11 @@ void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fYOZSectionPos = frame[0].X();
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
-      gGLManager->PaintSingleObject(this);
+      //gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+      else
+         Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
       Info("ProcessEvent", "Box cut does not exist for lego");
    }

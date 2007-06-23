@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.33 2007/06/12 14:53:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.34 2007/06/18 07:54:17 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -324,7 +324,7 @@ void TGLSAViewer::CreateFrames()
    TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
    compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
 
-   fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, 0, kSunkenFrame | kDoubleBorder);
+   fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, kSunkenFrame | kDoubleBorder);
    // Direct events from the TGWindow directly to the base viewer
    Bool_t ok = kTRUE;
    //Execute event commented now

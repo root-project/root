@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.15 2007/06/06 15:33:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.16 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
 
 /*************************************************************************
@@ -23,11 +23,69 @@
 #include "TGLPlotPainter.h"
 #include "TGLOrthoCamera.h"
 #include "TGLIncludes.h"
+#include "TGLAdapter.h"
 #include "TGLOutput.h"
 #include "gl2ps.h"
 
 ClassImp(TGLPlotPainter)
 
+//______________________________________________________________________________
+TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
+                               TGLPaintDevice *dev, Bool_t xoy, Bool_t xoz, Bool_t yoz)
+                  : //fGLContext(context),
+                    fGLDevice(dev),
+                    fPadColor(0),
+                    fHist(hist),
+                    fXAxis(hist->GetXaxis()),
+                    fYAxis(hist->GetYaxis()),
+                    fZAxis(hist->GetZaxis()),
+                    fCoord(coord),
+                    fCamera(camera),
+                    fUpdateSelection(kTRUE),
+                    fSelectionPass(kFALSE),
+                    fSelectedPart(0),
+                    fXOZSectionPos(0.),
+                    fYOZSectionPos(0.),
+                    fXOYSectionPos(0.),
+                    fBackBox(xoy, xoz, yoz),
+                    fBoxCut(&fBackBox),
+                    fHighColor(kFALSE),
+                    fSelectionBase(kTrueColorSelectionBase)
+{
+   //TGLPlotPainter's ctor.
+   if (MakeGLContextCurrent())
+      fCamera->SetViewport(fGLDevice);
+}
+
+//______________________________________________________________________________
+TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev)
+                  : //fGLContext(context),
+                    fGLDevice(dev),
+                    fPadColor(0),
+                    fHist(0),
+                    fXAxis(0),
+                    fYAxis(0),
+                    fZAxis(0),
+                    fCoord(0),
+                    fCamera(camera),
+                    fUpdateSelection(kTRUE),
+                    fSelectionPass(kFALSE),
+                    fSelectedPart(0),
+                    fXOZSectionPos(0.),
+                    fYOZSectionPos(0.),
+                    fXOYSectionPos(0.),
+                    fBackBox(kFALSE, kFALSE, kFALSE),
+                    fBoxCut(&fBackBox),
+                    fHighColor(kFALSE),
+                    fSelectionBase(kTrueColorSelectionBase)
+{
+   //TGLPlotPainter's ctor.
+   if (MakeGLContextCurrent())
+      fCamera->SetViewport(fGLDevice);
+}
+
+
+/*
 //______________________________________________________________________________
 TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
                                Int_t context, Bool_t xoy, Bool_t xoz, Bool_t yoz)
@@ -80,7 +138,7 @@ TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, Int_t context)
    if (MakeGLContextCurrent())
       fCamera->SetViewport(GetGLContext());
 }
-
+*/
 //______________________________________________________________________________
 void TGLPlotPainter::Paint()
 {
@@ -88,14 +146,14 @@ void TGLPlotPainter::Paint()
    if (!MakeGLContextCurrent())
       return;
 
-   fHighColor = gGLManager->HighColorFormat(GetGLContext())? kTRUE : kFALSE;
+   fHighColor = kFALSE;
    fSelectionBase = fHighColor ? kHighColorSelectionBase : kTrueColorSelectionBase;
 
    InitGL();
    //Save material/light properties in a stack.
    glPushAttrib(GL_LIGHTING_BIT);
 
-   fCamera->SetViewport(GetGLContext());
+   fCamera->SetViewport(fGLDevice);//GetGLContext());
    if (fCamera->ViewportChanged())
       fUpdateSelection = kTRUE;
    //glOrtho etc.
@@ -113,18 +171,23 @@ void TGLPlotPainter::Paint()
    DrawPlot();
    //Restore material properties from stack.
    glPopAttrib();
-   glFlush();
+//   glFlush();
+   glFinish();
    //LegoPainter work is now finished, axes are drawn by axis painter.
    //Here changes are possible in future, if we have real 3d axis painter.
-   gGLManager->ReadGLBuffer(GetGLContext());
-   //Select pixmap/DIB
-   if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
-      gGLManager->SelectOffScreenDevice(GetGLContext());
-      //Draw axes into pixmap/DIB
-      Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
-      Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
+   TGLAdapter *glAdapter = dynamic_cast<TGLAdapter *>(fGLDevice);
+   if (glAdapter) {
+      glAdapter->ReadGLBuffer();
+      //Select pixmap/DIB
+      if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
+         glAdapter->SelectOffScreenDevice();
+         //Draw axes into pixmap/DIB
+         Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
+         Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
+      }
    }
-   gGLManager->Flush(GetGLContext());
+
+   fGLDevice->SwapBuffers();
 }
 
 //______________________________________________________________________________
@@ -188,21 +251,25 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
    if (newSelected != fSelectedPart) {
       //New object was selected (or surface deselected) - re-paint.
       fSelectedPart = newSelected;
-      gGLManager->MarkForDirectCopy(GetGLContext(), kTRUE);
+      TGLAdapter *glAdapter = dynamic_cast<TGLAdapter *>(fGLDevice);
+      if (glAdapter)
+         glAdapter->MarkForDirectCopy(kTRUE);
       Paint();
-      gGLManager->MarkForDirectCopy(GetGLContext(), kFALSE);
+      if (glAdapter)
+         glAdapter->MarkForDirectCopy(kFALSE);
    }
 
    return fSelectedPart ? kTRUE : kFALSE;
 }
 
+/*
 //______________________________________________________________________________
 void TGLPlotPainter::SetGLContext(Int_t context)
 {
    //One plot can be painted in several gl contexts.
-   fGLContext = context;
+//   fGLContext = context;
 }
-
+ */
 //______________________________________________________________________________
 void TGLPlotPainter::SetPadColor(const TColor *c)
 {
@@ -223,14 +290,14 @@ void TGLPlotPainter::InvalidateSelection()
    //Selection must be updated.
    fUpdateSelection = kTRUE;
 }
-
+/*
 //______________________________________________________________________________
 Int_t TGLPlotPainter::GetGLContext()const
 {
    //Get gl context.
-   return fGLContext;
+   return -1;//fGLContext;
 }
-
+  */
 //______________________________________________________________________________
 const TColor *TGLPlotPainter::GetPadColor()const
 {
@@ -242,7 +309,7 @@ const TColor *TGLPlotPainter::GetPadColor()const
 Bool_t TGLPlotPainter::MakeGLContextCurrent()const
 {
    //Make gl context current.
-   return fGLContext != -1 && gGLManager->MakeCurrent(fGLContext);
+   return fGLDevice ? fGLDevice->MakeCurrent() : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -468,7 +535,7 @@ TGLPlotCoordinates::TGLPlotCoordinates()
 //______________________________________________________________________________
 TGLPlotCoordinates::~TGLPlotCoordinates()
 {
-   //Dtor.
+   //Destructor.
 }
 
 //______________________________________________________________________________

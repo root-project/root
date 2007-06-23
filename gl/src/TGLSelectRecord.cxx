@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSelectRecord.cxx,v 1.1 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -268,7 +268,7 @@ Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
 // TGLOvlSelectRecord
 //
 // Selection record for overlay objects.
-// Zero should not be used to identify an element.
+//
 
 ClassImp(TGLOvlSelectRecord)
 

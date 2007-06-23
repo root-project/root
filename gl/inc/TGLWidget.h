@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.h,v 1.5 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.h,v 1.6 2007/06/18 07:54:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -115,11 +115,22 @@ private:
    std::set<TGLContext *>            fValidContexts;
 
 public:
-   TGLWidget(const TGWindow &parent, Bool_t selectInput, UInt_t width, UInt_t height,
-             const TGLPaintDevice *shareDevice = 0, UInt_t options = kSunkenFrame | kDoubleBorder,
+   TGLWidget(const TGWindow &parent, Bool_t selectInput,
+             const TGLPaintDevice *shareDevice,
+             UInt_t width, UInt_t height,
+             UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetDefaultFrameBackground());
    TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput,
-             UInt_t width, UInt_t height, const TGLPaintDevice *shareDevice = 0,
+             const TGLPaintDevice *shareDevice,
+             UInt_t width, UInt_t height,
+             UInt_t options = kSunkenFrame | kDoubleBorder,
+             Pixel_t back = GetDefaultFrameBackground());
+   TGLWidget(const TGWindow &parent, Bool_t selectInput,
+             UInt_t width, UInt_t height,
+             UInt_t options = kSunkenFrame | kDoubleBorder,
+             Pixel_t back = GetDefaultFrameBackground());
+   TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput,
+             UInt_t width, UInt_t height,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetDefaultFrameBackground());
 
@@ -149,13 +160,14 @@ public:
    //via gInterpreter. Do not call it directly.
    void              SetFormat();
    //To repaint gl-widget without GUI events.
-
+   void              ExtractViewport(Int_t *vp)const;
 
 private:
    TGLWidget(const TGLWidget &);
    TGLWidget &operator = (const TGLWidget &);
 
    void CreateWidget(const TGLPaintDevice *shareDevice);
+   void CreateWidget();
 
    void AddContext(TGLContext *ctx);
    void RemoveContext(TGLContext *ctx);

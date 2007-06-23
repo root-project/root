@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.5 2007/06/18 07:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLWidget.cxx,v 1.6 2007/06/18 14:24:57 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -90,8 +90,9 @@ void TGLWidgetContainer::DoRedraw()
 ClassImp(TGLWidget)
 
 //______________________________________________________________________________
-TGLWidget::TGLWidget(const TGWindow &p, Bool_t select, UInt_t w, UInt_t h,
-                     const TGLPaintDevice *shareDevice, UInt_t opt, Pixel_t back)
+TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
+                     const TGLPaintDevice *shareDevice,
+                     UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGCanvas(&p, w, h, opt, back),
                 fWindowIndex(-1),
                 fFromCtor(kTRUE)
@@ -115,8 +116,9 @@ TGLWidget::TGLWidget(const TGWindow &p, Bool_t select, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select, UInt_t w,
-                     UInt_t h, const TGLPaintDevice *shareDevice, UInt_t opt, Pixel_t back)
+TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
+                     const TGLPaintDevice *shareDevice,
+                     UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGCanvas(&p, w, h, opt, back),
                 fWindowIndex(-1),
                 fGLFormat(format),
@@ -124,6 +126,57 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select, 
 {
    //Create widget with the requested pixel format.
    CreateWidget(shareDevice);
+
+   if (select) {
+      gVirtualX->GrabButton(
+                            fContainer->GetId(), kAnyButton, kAnyModifier,
+                            kButtonPressMask | kButtonReleaseMask, kNone, kNone
+                           );
+      gVirtualX->SelectInput(
+                             fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
+                             | kStructureNotifyMask | kFocusChangeMask
+                            );
+      gVirtualX->SetInputFocus(fContainer->GetId());
+   }
+
+   fFromCtor = kFALSE;
+}
+
+//______________________________________________________________________________
+TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
+                     UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
+              : TGCanvas(&p, w, h, opt, back),
+                fWindowIndex(-1),
+                fFromCtor(kTRUE)
+{
+   //Creates widget with default pixel format, default shareList.
+   CreateWidget();
+
+   if (select) {
+      gVirtualX->GrabButton(
+                            fContainer->GetId(), kAnyButton, kAnyModifier,
+                            kButtonPressMask | kButtonReleaseMask, kNone, kNone
+                           );
+      gVirtualX->SelectInput(
+                             fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
+                             | kStructureNotifyMask | kFocusChangeMask
+                            );
+      gVirtualX->SetInputFocus(fContainer->GetId());
+   }
+
+   fFromCtor = kFALSE;
+}
+
+//______________________________________________________________________________
+TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
+                     UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
+              : TGCanvas(&p, w, h, opt, back),
+                fWindowIndex(-1),
+                fGLFormat(format),
+                fFromCtor(kTRUE)
+{
+   //Create widget with the requested pixel format, default shareList.
+   CreateWidget();
 
    if (select) {
       gVirtualX->GrabButton(
@@ -401,6 +454,27 @@ void TGLWidget::CreateWidget(const TGLPaintDevice *shareDevice)
 }
 
 //______________________________________________________________________________
+void TGLWidget::CreateWidget()
+{
+   //CreateWidget. Copy of the above for default shareList.
+   fWindowIndex = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
+
+   try {
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->SetFormat()", this));
+      else
+         SetFormat();
+      fGLContext.reset(new TGLContext(this));
+      fContainer.reset(new TGLWidgetContainer(this, gVirtualX->GetWindowID(fWindowIndex), GetViewPort()));
+      SetContainer(fContainer.get());
+   } catch (std::exception &) {
+      gVirtualX->SelectWindow(fWindowIndex);
+      gVirtualX->CloseWindow();
+      throw;
+   }
+}
+
+//______________________________________________________________________________
 void TGLWidget::SetFormat()
 {
    //Set pixel format.
@@ -534,6 +608,54 @@ void TGLWidget::CreateWidget(const TGLPaintDevice *shareDevice)
 }
 
 //______________________________________________________________________________
+void TGLWidget::CreateWidget()
+{
+   //CreateWidget - X11 version. Copy of above for default context.
+   std::vector<Int_t> format;
+   fill_format(format, fGLFormat);
+
+   Window_t winID = GetViewPort()->GetId();
+   Display *dpy = reinterpret_cast<Display *>(gVirtualX->GetDisplay());
+   XVisualInfo *visInfo = glXChooseVisual(dpy, DefaultScreen(dpy), &format[0]);
+
+   if (!visInfo) {
+      Error("CreateGLContainer", "No good visual found!");
+      throw std::runtime_error("No good visual found!");
+   }
+
+   Int_t  x = 0, y = 0;
+   UInt_t w = 0, h = 0, b = 0, d = 0;
+   Window root = 0;
+   XGetGeometry(dpy, winID, &root, &x, &y, &w, &h, &b, &d);
+
+   XSetWindowAttributes attr(dummyAttr);
+   attr.colormap = XCreateColormap(dpy, root, visInfo->visual, AllocNone); // Can fail?
+   attr.event_mask = NoEventMask;
+   attr.backing_store = Always;
+   attr.bit_gravity = NorthWestGravity;
+
+   ULong_t mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask | CWBackingStore | CWBitGravity;
+   Window glWin = XCreateWindow(dpy, winID, x, y, w, h, 0, visInfo->depth,
+                                InputOutput, visInfo->visual, mask, &attr);
+   XMapWindow(dpy, glWin);
+   // Register window for gVirtualX.
+   fWindowIndex = gVirtualX->AddWindow(glWin, w, h);
+   fInnerData.first  = dpy;
+   fInnerData.second = visInfo;
+
+   try {
+      fGLContext.reset(new TGLContext(this));
+      fContainer.reset(new TGLWidgetContainer(this, gVirtualX->GetWindowID(fWindowIndex), GetViewPort()));
+      SetContainer(fContainer.get());
+   } catch (const std::exception &) {
+      gVirtualX->SelectWindow(fWindowIndex);
+      gVirtualX->CloseWindow();
+      XFree(fInnerData.second);
+      throw;
+   }
+}
+
+//______________________________________________________________________________
 void TGLWidget::SetFormat()
 {
    //Set pixel format.
@@ -546,7 +668,7 @@ void TGLWidget::SetFormat()
 void TGLWidget::Repaint()
 {
    //Forse re-drawing of gl-widget.
-   if (!gVirtualX->IsCmdThread()) {
+/*   if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->Repaint()", this));
       return;
    }
@@ -554,7 +676,7 @@ void TGLWidget::Repaint()
    MakeCurrent();
    InitGL();
    PaintGL();
-   SwapBuffers();
+   SwapBuffers();*/
    
    Emit("Repaint()");
 }
@@ -573,4 +695,14 @@ void TGLWidget::RemoveContext(TGLContext *ctx)
    std::set<TGLContext *>::iterator it = fValidContexts.find(ctx);
    if (it != fValidContexts.end())
       fValidContexts.erase(it);
+}
+
+//______________________________________________________________________________
+void TGLWidget::ExtractViewport(Int_t *vp)const
+{
+   //For camera.
+   vp[0] = 0;
+   vp[1] = 0;
+   vp[2] = GetWidth();
+   vp[3] = GetHeight();
 }

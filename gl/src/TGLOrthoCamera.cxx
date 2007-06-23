@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.17 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -328,11 +328,13 @@ void TGLOrthoCamera::Configure(Double_t left, Double_t right,
 }
 
 //______________________________________________________________________________
-void TGLOrthoCamera::SetViewport(Int_t context)
+void TGLOrthoCamera::SetViewport(TGLPaintDevice *dev)
+//void TGLOrthoCamera::SetViewport(Int_t context)
 {
    //Setup viewport, if it was changed, plus reset arcball.
    Int_t vp[4] = {0};
-   gGLManager->ExtractViewport(context, vp);
+//   gGLManager->ExtractViewport(context, vp);
+   dev->ExtractViewport(vp);
    if (vp[2] != Int_t(fViewport.Width()) || vp[3] != Int_t(fViewport.Height()) ||
        vp[0] != fViewport.X() || vp[1] != fViewport.Y())
    {

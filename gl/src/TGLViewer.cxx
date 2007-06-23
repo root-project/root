@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.66 2007/06/22 15:11:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.67 2007/06/22 16:06:22 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -33,7 +33,13 @@
 #include "TGLOutput.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
+#include "TAtt3D.h"      // Remove when PadPaint delegated to PadScene.
 #include "TVirtualX.h"
+
+#include "TH2.h"         // Preliminary support for GL plot painters
+#include "TH2GL.h"
+#include "TF2.h"
+#include "TF2GL.h"
 
 #include "TColor.h"
 #include "TError.h"
@@ -191,11 +197,12 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    InitSecondaryObjects();
 
    if (fGLDevice != -1) {
+      // For the moment instantiate a fake context identity.
+      fGLCtxId = new TGLContextIdentity;
+      fGLCtxId->AddRef(0);
       Int_t viewport[4] = {0};
       gGLManager->ExtractViewport(fGLDevice, viewport);
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-      fGLCtxId = new TGLContextIdentity;
-      fGLCtxId->AddClientRef();
    }
 }
 
@@ -231,7 +238,8 @@ TGLViewer::~TGLViewer()
    delete fRedrawTimer;
    if (fPadEditor) fPadEditor = 0;
    fPad->ReleaseViewer3D();
-   //delete fGLCtxId;
+   if (fGLDevice != -1)
+      fGLCtxId->Release(0);
 }
 
 //______________________________________________________________________________
@@ -244,6 +252,63 @@ Bool_t TGLViewer::PreferLocalFrame() const
    return kTRUE;
 }
 
+void TGLViewer::PadPaint(TVirtualPad* pad)
+{
+   TVirtualPad *padsav = gPad;
+   gPad = pad;
+
+   TList       *prims = pad->GetListOfPrimitives();
+   TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
+   BeginScene();
+   while (lnk)
+   {
+      TObject *obj = lnk->GetObject();
+      if (obj->InheritsFrom(TAtt3D::Class()))
+      {
+         //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
+         obj->Paint(lnk->GetOption());
+      }
+      else if (obj->InheritsFrom(TH2::Class()))
+      {
+         //printf("histo 2d\n");
+         TGLObject* log = new TH2GL();
+         log->SetModel(obj, lnk->GetOption());
+         log->SetBBox();
+         fScene.AdoptLogical(*log);
+         TGLMatrix identity;
+         Float_t rgba[4] = { 1, 1, 1, 1};
+         TGLPhysicalShape* phys = new TGLPhysicalShape
+            (fNextInternalPID++, *log, identity, false, rgba);
+         fScene.AdoptPhysical(*phys);
+         
+      }
+      else if (obj->InheritsFrom(TF2::Class()))
+      {
+         //printf("func 2d\n");
+         TGLObject* log = new TF2GL();
+         log->SetModel(obj, lnk->GetOption());
+         log->SetBBox();
+         fScene.AdoptLogical(*log);
+         TGLMatrix identity;
+         Float_t rgba[4] = { 1, 1, 1, 1};
+         TGLPhysicalShape* phys = new TGLPhysicalShape
+            (fNextInternalPID++, *log, identity, false, rgba);
+         fScene.AdoptPhysical(*phys);
+      }
+      else
+      {
+         // Handle 2D primitives here.
+         // printf("TGLViewer::PadPaint skipping %p, %s, %s.\n",
+         //        obj, obj->GetName(), obj->ClassName());
+      }
+
+      lnk = (TObjOptLink*)lnk->Next();
+   }
+   EndScene();
+
+   gPad = padsav;
+}
+
 //______________________________________________________________________________
 void TGLViewer::BeginScene()
 {
@@ -251,7 +316,12 @@ void TGLViewer::BeginScene()
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture.
 
+   if (gDebug>2 || fDebugMode) {
+      Info("TGLViewer::BeginScene", "entering.");
+   }
+
    if (!fScene.TakeLock(kModifyLock)) {
+      Error("TGLViewer::BeginScene", "could not take scene lock.");
       return;
    }
 
@@ -289,7 +359,12 @@ void TGLViewer::BeginScene()
    } else {
       // Internal rebuilds - destroy all non-modified physicals no longer of
       // interest to camera - retain logicals
-      destroyedPhysicals = fScene.DestroyPhysicals(kFALSE, &CurrentCamera()); // excluded modified
+
+      // MT !!!! this is spooky:
+      // How can we retain physicals if physical id is checked in insert?
+      // destroyedPhysicals = fScene.DestroyPhysicals(kFALSE, &CurrentCamera()); // excluded modified
+      // Let's wipe them all! This will be fixed in two weeks anyhow.
+      destroyedPhysicals = fScene.DestroyPhysicals(kTRUE);
    }
 
    // Reset internal physical ID counter
@@ -399,7 +474,7 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 
    // Scene should be modify locked
    if (fScene.CurrentLock() != kModifyLock) {
-      Error("TGLViewer::AddObject", "expected scene to be in mode modified locked");
+      Error("TGLViewer::AddObject", "expected scene to be modify-locked.");
       return TBuffer3D::kNone;
    }
 
@@ -670,8 +745,8 @@ Bool_t TGLViewer::RebuildScene()
 
    // Request a scene fill
    // TODO: Just marking modified doesn't seem to result in pad repaint - need to check on
-   //fPad->Modified();
-   fPad->Paint();
+   // MT: This will be obsolete soon.
+   PadPaint(fPad);
 
    if (gDebug>2 || fDebugMode) {
       Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
@@ -871,7 +946,7 @@ void TGLViewer::UpdateScene()
    // Pretend the update request came from outside.
    fInternalRebuild = kFALSE;
 
-   fPad->Paint();
+   PadPaint(fPad);
 }
 
 //______________________________________________________________________________
@@ -1477,7 +1552,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    fCurrentCamera->SetViewport(fViewport);
 
    // Request redraw via timer as window resize can result in stream of calls
-   fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
+   // RequestDraw(TGLRnrCtx::kLODMed);
    if (gDebug>2) {
       Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);
    }
@@ -2016,6 +2091,7 @@ Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 
    if (event) {
       SetViewport(event->fX, event->fY, event->fWidth, event->fHeight);
+      RequestDraw(TGLRnrCtx::kLODMed);
    }
    return kTRUE;
 }
@@ -2153,7 +2229,7 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    Int_t xDelta = event->fX - fLastPos.fX;
    Int_t yDelta = event->fY - fLastPos.fY;
 
-   if (fAction == kDragNone) // /* && fGLDevice == -1*/) // TTTT what with this
+   if (fAction == kDragNone)
    {
       changed = RequestOverlaySelect(event->fX, event->fY);
       if (fCurrentOvlElm)

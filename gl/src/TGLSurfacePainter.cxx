@@ -5,6 +5,7 @@
 
 #include "KeySymbols.h"
 #include "TVirtualGL.h"
+#include "TVirtualX.h"
 #include "Buttons.h"
 #include "TROOT.h"
 #include "TString.h"
@@ -30,8 +31,8 @@ void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
 }
 
 //______________________________________________________________________________
-TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx)
-                                     : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
+TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+                                     : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
                                        fType(kSurf),
                                        fSectionPass(kFALSE),
                                        fUpdateTexMap(kTRUE)
@@ -55,18 +56,21 @@ char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
 Bool_t TGLSurfacePainter::InitGeometry()
 {
    //Set mesh, normals.
+   Bool_t ret = kFALSE;
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
-      return InitGeometryCartesian();
+      ret = InitGeometryCartesian(); break;
    case kGLPolar:
-      return InitGeometryPolar();
+      ret = InitGeometryPolar(); break;
    case kGLCylindrical:
-      return InitGeometryCylindrical();
+      ret = InitGeometryCylindrical(); break;
    case kGLSpherical:
-      return InitGeometrySpherical();
+      ret = InitGeometrySpherical(); break;
    default:
       return kFALSE;
    }
+   if (ret && fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -167,7 +171,10 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYProj.clear();
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
-      gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+      else
+         Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
       if (fHighColor)
          Info("ProcessEvent", "Switch to true color to use box cut");
@@ -418,7 +425,6 @@ Bool_t TGLSurfacePainter::InitGeometryCartesian()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
    //Set surface's mesh
    //Calculates table of X and Y for lego (Z is obtained during drawing) or
    //calculate mesh of triangles with vertices in the centres of bins
@@ -487,7 +493,6 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -555,7 +560,6 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -629,7 +633,6 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;

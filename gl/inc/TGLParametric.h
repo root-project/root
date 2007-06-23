@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLParametric.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLParametric.h,v 1.2 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  26/01/2007
 
 /*************************************************************************
@@ -109,7 +109,7 @@ private:
    TGLParametricEquation *fEquation;
 
 public:
-   TGLParametricPlot(TGLParametricEquation *equation, TGLOrthoCamera *camera, Int_t context = -1);
+   TGLParametricPlot(TGLParametricEquation *equation, TGLOrthoCamera *camera, TGLPaintDevice *dev = 0);
 
    Bool_t   InitGeometry();
    void     StartPan(Int_t px, Int_t py);

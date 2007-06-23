@@ -1,6 +1,8 @@
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 #include "Buttons.h"
+#include "TString.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TMath.h"
@@ -15,8 +17,8 @@ ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
 TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
-                             TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
+                             TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+                  : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
                     fStyle(kDefault),
                     fF3(fun),
                     fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
@@ -50,7 +52,7 @@ Bool_t TGLTF3Painter::InitGeometry()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
+   if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    //Build mesh for TF3 surface
    fMesh.clear();
@@ -152,7 +154,6 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    if (event == kKeyPress) {
       if (py == kKey_s || py == kKey_S) {
          fStyle < kMaple2 ? fStyle = ETF3Style(fStyle + 1) : fStyle = kDefault;
-         //gGLManager->PaintSingleObject(this);
       } else if (py == kKey_c || py == kKey_C) {
          if (fHighColor)
             Info("ProcessEvent", "Cut box does not work in high color, please, switch to true color");
@@ -169,7 +170,10 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fYOZSectionPos = frame[0].X();
       fXOYSectionPos = frame[0].Z();
 
-      gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+      else
+         Paint();
    }
 }
 
@@ -416,8 +420,8 @@ void TGLTF3Painter::DrawSectionXOY()const
 ClassImp(TGLIsoPainter)
 
 //______________________________________________________________________________
-TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
+TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+                  : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
@@ -478,7 +482,7 @@ Bool_t TGLIsoPainter::InitGeometry()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
+   if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    //Move old meshed into the cache.
    if (!fIsos.empty())
@@ -615,7 +619,10 @@ void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fYOZSectionPos = frame[0].X();
       fXOYSectionPos = frame[0].Z();
 
-      gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+      else
+         Paint();
    }
 }
 

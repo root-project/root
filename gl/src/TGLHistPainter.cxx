@@ -67,7 +67,8 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       const Int_t glContext = gPad->GetGLDevice();
 
       if (glContext != -1) {
-         fGLPainter->SetGLContext(glContext);
+         fGLDevice.SetGLDevice(glContext);
+         fGLPainter->SetGLDevice(&fGLDevice);
          if (!gGLManager->PlotSelected(fGLPainter.get(), px, py))
             gPad->SetSelected(gPad);
       } else {
@@ -115,8 +116,10 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          Error("ExecuteEvent",
                "Attempt to use TGLHistPainter, while the current pad (gPad) does not support gl");
          return;
-      } else
-         fGLPainter->SetGLContext(glContext);
+      } else {
+         fGLDevice.SetGLDevice(glContext);
+         fGLPainter->SetGLDevice(&fGLDevice);
+      }
 
       if (event != kKeyPress) {
          //Adjust px and py - canvas can have several pads inside, so we need to convert
@@ -362,8 +365,10 @@ void TGLHistPainter::Paint(Option_t *o)
       if (glContext != -1) {
          //With gl-plot, pad should copy
          //gl-buffer into the final pad/canvas pixmap/DIB.
+         fGLDevice.SetGLDevice(glContext);
          gPad->SetCopyGLDevice(kTRUE);
-         fGLPainter->SetGLContext(glContext);
+         //fGLPainter->SetGLContext(glContext);
+         fGLPainter->SetGLDevice(&fGLDevice);
          if (gPad->GetFrameFillColor() != kWhite)
             fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));
          fGLPainter->SetPadColor(gROOT->GetColor(gPad->GetFillColor()));

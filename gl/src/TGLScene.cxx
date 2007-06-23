@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.51 2007/06/12 10:22:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.52 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -168,6 +168,8 @@ TGLScene::~TGLScene()
    ReleaseGLCtxIdentity();
    DestroyPhysicals(kTRUE); // including modified
    DestroyLogicals();
+   if (fGLCtxIdentity)
+      fGLCtxIdentity->ReleaseClient();
    ReleaseLock(kModifyLock);
 }
 

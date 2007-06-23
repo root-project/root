@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLAxis.h,v 1.0 Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLAxis.h,v 1.1 2007/06/21 14:55:35 couet Exp $
 // Author:  Olivier Couet 17/04/2007
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
    TGLAxis();
    virtual ~TGLAxis();
 
-   void PaintGLAxis             (Double_t p1[3], Double_t p2[3],
+   void PaintGLAxis             (const Double_t p1[3], const Double_t p2[3],
                                  Double_t wmin , Double_t wmax , Int_t ndiv,
                                  Option_t *opt="");
    void Init                    ();

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.2 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.3 2007/06/22 15:11:13 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -162,7 +162,7 @@ void TGLViewerBase::PreRender()
    {
       // Assume derived class set it up for us.
       // This happens due to very complex and involved implementation
-      // of gl-in-pad that uses gGLManager directly.
+      // of gl-in-pad that uses gGLManager.
       // In principle we should throw an exception:
       // throw std::runtime_error("Can not resolve GL context.");
    }
@@ -170,16 +170,16 @@ void TGLViewerBase::PreRender()
    {
       if (cid != fRnrCtx->GetGLCtxIdentity())
       {
-         if (fRnrCtx->GetGLCtxIdentity() != 0) // && gDebug > 0 ?
+         if (fRnrCtx->GetGLCtxIdentity() != 0)
             Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
-         fRnrCtx->SetGLCtxIdentity (cid);      
+         fRnrCtx->SetGLCtxIdentity(cid);      
       }
    }
 
-   fRnrCtx->SetCamera        (fCamera);
-   fRnrCtx->SetViewerLOD     (fLOD);
-   fRnrCtx->SetViewerStyle   (fStyle);
-   fRnrCtx->SetViewerClip    (fClip);
+   fRnrCtx->SetCamera      (fCamera);
+   fRnrCtx->SetViewerLOD   (fLOD);
+   fRnrCtx->SetViewerStyle (fStyle);
+   fRnrCtx->SetViewerClip  (fClip);
 
    if (fResetSceneInfosOnRender)
    {

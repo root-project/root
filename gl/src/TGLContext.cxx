@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContext.cxx,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContext.cxx,v 1.4 2007/06/18 07:02:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdexcept>
+#include <algorithm>
 #include <memory>
 
 #ifndef WIN32
@@ -35,6 +36,31 @@
 ClassImp(TGLContext)
 
 //______________________________________________________________________________
+TGLContext::TGLContext(TGLWidget *wid)
+               : fDevice(wid),
+                 fPimpl(0),
+                 fFromCtor(kTRUE),
+                 fValid(kFALSE),
+                 fIdentity(0)
+{
+   //TGLContext ctor "from" TGLWidget. Use default shareList.
+   //Makes thread switching.
+   const TGLContext *shareList = TGLContextIdentity::GetDefaultContextAny();
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x, (TGLContext *)0x%x)",
+                                  this, wid, shareList));
+   } else
+      SetContext(wid, shareList);
+
+   fIdentity = TGLContextIdentity::GetDefaultIdentity();
+   fIdentity->AddRef(this);
+
+   fFromCtor = kFALSE;
+//   fValid = kTRUE;
+
+}
+
+//______________________________________________________________________________
 TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
                : fDevice(wid),
                  fPimpl(0),
@@ -42,13 +68,16 @@ TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
                  fValid(kFALSE),
                  fIdentity(0)
 {
-   //TGLContext ctor "from" TGLWidget.
+   //TGLContext ctor "from" TGLWidget. Specify shareList, can be null.
    //Makes thread switching.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x, (TGLContext *)0x%x)",
                                   this, wid, shareList));
    } else
       SetContext(wid, shareList);
+
+   fIdentity = shareList ? shareList->GetIdentity() : new TGLContextIdentity;
+   fIdentity->AddRef(this);
 
    fFromCtor = kFALSE;
 //   fValid = kTRUE;
@@ -116,11 +145,14 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 
    const Rgl::TGuardBase &dcGuard = Rgl::make_guard(ReleaseDC, hWND, hDC);
    if (HGLRC glContext = wglCreateContext(hDC)) {
+      if (shareList && !wglShareLists(shareList->fPimpl->fGLContext, glContext)) {
+         wglDeleteContext(glContext);
+         Error("TGLContext::SetContext", "Context sharing failed!");
+         throw std::runtime_error("Context sharing failed");
+      }
       fPimpl->fHWND = hWND;
       fPimpl->fHDC = hDC;
       fPimpl->fGLContext = glContext;
-      if (shareList && !wglShareLists(shareList->fPimpl->fGLContext, glContext))
-         Error("TGLContext::SetContext", "Cannot share lists");
    } else {
       Error("TGLContext::SetContext", "wglCreateContext failed");
       throw std::runtime_error("wglCreateContext failed");
@@ -130,13 +162,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   if (shareList) {
-      fIdentity = shareList->GetIdentity();
-      fIdentity->AddRef();
-   } else {
-      fIdentity = new TGLContextIdentity;
-   }
 
    dcGuard.Stop();
    safe_ptr.release();
@@ -253,13 +278,6 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fPimpl->fGLContext = glCtx;
    fPimpl->fWindowIndex = widget->GetWindowIndex();
 
-   if (shareList) {
-      fIdentity = shareList->GetIdentity();
-      fIdentity->AddRef();
-   } else {
-      fIdentity = new TGLContextIdentity;
-   }
-
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
@@ -344,7 +362,7 @@ TGLContext::~TGLContext()
       fDevice->RemoveContext(this);
    }
 
-   fIdentity->Release();
+   fIdentity->Release(this);
 
    delete fPimpl;
 }
@@ -371,9 +389,36 @@ TGLContext *TGLContext::GetCurrent()
 //
 // Identifier of a shared GL-context.
 // Objects shared among GL-contexts include:
-// display-list definitions, texture objects, shader programs.
+// display-list definitions, texture objects and shader programs.
 
 ClassImp(TGLContextIdentity)
+
+TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdentity;
+
+//______________________________________________________________________________
+void TGLContextIdentity::AddRef(TGLContext* ctx)
+{
+   //Add context ctx to the list of references.
+   ++fCnt;
+   fCtxs.push_back(ctx);
+}
+
+//______________________________________________________________________________
+void TGLContextIdentity::Release(TGLContext* ctx)
+{
+   //Remove context ctx from the list of references.
+   CtxList_t::iterator i = std::find(fCtxs.begin(), fCtxs.end(), ctx);
+   if (i != fCtxs.end())
+   {
+      fCtxs.erase(i);
+      --fCnt;
+      CheckDestroy();
+   }
+   else
+   {
+      Error("TGLContextIdentity::Release", "unregistered context.");
+   }
+}
 
 //______________________________________________________________________________
 void TGLContextIdentity::RegisterDLNameRangeToWipe(UInt_t base, Int_t size)
@@ -394,9 +439,40 @@ void TGLContextIdentity::DeleteDisplayLists()
 }
 
 //______________________________________________________________________________
-TGLContextIdentity *TGLContextIdentity::GetCurrent()
+TGLContextIdentity* TGLContextIdentity::GetCurrent()
 {
-   //Find identitfy of current context.
+   //Find identitfy of current context. Static.
    TGLContext* ctx = TGLContext::GetCurrent();
    return ctx ? ctx->GetIdentity() : 0;
+}
+
+//______________________________________________________________________________
+TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
+{
+   //Get identity of a default Gl context. Static.
+   if (fgDefaultIdentity == 0)
+      fgDefaultIdentity = new TGLContextIdentity;
+   return fgDefaultIdentity;
+}
+
+//______________________________________________________________________________
+TGLContext* TGLContextIdentity::GetDefaultContextAny()
+{
+   //Get the first GL context with the default identity.
+   //Can return zero, but that's OK, too. Static.
+   if (fgDefaultIdentity == 0 || fgDefaultIdentity->fCtxs.empty())
+      return 0;
+   return fgDefaultIdentity->fCtxs.front();
+}
+
+//______________________________________________________________________________
+void TGLContextIdentity::CheckDestroy()
+{
+   //Private function called when reference count is reduced.
+   if (fCnt <= 0 && fClientCnt <= 0)
+   {
+      if (this == fgDefaultIdentity)
+         fgDefaultIdentity = 0;
+      delete this;
+   }
 }

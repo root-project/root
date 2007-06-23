@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.8 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.9 2007/06/18 07:02:16 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 ClassImp(TPointSet3DGL)
 
 //______________________________________________________________________________
-Bool_t TPointSet3DGL::SetModel(TObject* obj)
+Bool_t TPointSet3DGL::SetModel(TObject* obj, const Option_t*)
 {
    // Set model.
 

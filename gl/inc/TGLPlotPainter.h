@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.14 2007/06/06 15:33:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.15 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
 
 /*************************************************************************
@@ -146,7 +146,8 @@ private:
 
 class TGLPlotPainter : public TVirtualGLPainter {
 private:
-   Int_t                 fGLContext;
+//   Int_t                 fGLContext;
+   TGLPaintDevice       *fGLDevice;
    const TColor         *fPadColor;
 
 protected:
@@ -179,11 +180,19 @@ protected:
    ESelectionBase        fSelectionBase;
 
 public:
-   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
+/*   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
-   TGLPlotPainter(TGLOrthoCamera *camera, Int_t context);
+   TGLPlotPainter(TGLOrthoCamera *camera, Int_t context);*/
+   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev,
+                  Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
+   TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev);
 
+   const TGLPlotBox& RefBackBox() const { return fBackBox; }
+
+   virtual void     InitGL()const = 0;
+   virtual void     DrawPlot()const = 0;
    virtual void     Paint();
+
    //Checks, if mouse cursor is above plot.
    virtual Bool_t   PlotSelected(Int_t px, Int_t py);
    //Init geometry does plot's specific initialization.
@@ -197,7 +206,8 @@ public:
    //Function to process additional events (key presses, mouse clicks.)
    virtual void     ProcessEvent(Int_t event, Int_t px, Int_t py) = 0;
    //Used by GLpad
-   void             SetGLContext(Int_t context);
+   //   void             SetGLContext(Int_t context);
+   void             SetGLDevice(TGLPaintDevice *dev){fGLDevice = dev;}
    void             SetPadColor(const TColor *color);
    virtual void     SetFrameColor(const TColor *frameColor);
    //Camera is external to painter, if zoom was changed, or camera
@@ -213,7 +223,7 @@ public:
    Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
 
 protected:
-   Int_t            GetGLContext()const;
+//   Int_t            GetGLContext()const;
    const TColor    *GetPadColor()const;
    Bool_t           MakeGLContextCurrent()const;
    //
@@ -222,9 +232,6 @@ protected:
    virtual void     DrawSectionXOZ()const = 0;
    virtual void     DrawSectionYOZ()const = 0;
    virtual void     DrawSectionXOY()const = 0;
-
-   virtual void     InitGL()const = 0;
-   virtual void     DrawPlot()const = 0;
 
    virtual void     ClearBuffers()const;
 

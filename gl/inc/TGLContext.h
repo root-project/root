@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.6 2007/06/18 09:44:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLContext.h,v 1.7 2007/06/18 10:58:33 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 #include <utility>
@@ -43,8 +43,9 @@ private:
    TGLContextIdentity *fIdentity;
 
 public:
-   TGLContext(TGLWidget *glWidget, const TGLContext *shareList = 0);//2
-//   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);//2
+   TGLContext(TGLWidget *glWidget);
+   TGLContext(TGLWidget *glWidget, const TGLContext *shareList);
+//   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);
 
    TGLContextIdentity *GetIdentity()const;
 
@@ -78,11 +79,11 @@ private:
 
 class TGLContextIdentity {
 public:
-   TGLContextIdentity() : fCnt(1), fClientCnt(0) {}
+   TGLContextIdentity() : fCnt(0), fClientCnt(0) {}
    virtual ~TGLContextIdentity() {}
 
-   void AddRef()  { ++fCnt; }
-   void Release() { --fCnt; CheckDestroy(); }
+   void AddRef(TGLContext* ctx);
+   void Release(TGLContext* ctx);
 
    void AddClientRef()  { ++fClientCnt; }
    void ReleaseClient() { --fClientCnt; CheckDestroy(); }
@@ -97,17 +98,25 @@ public:
 
    static TGLContextIdentity *GetCurrent();
 
+   static TGLContextIdentity *GetDefaultIdentity();
+   static TGLContext         *GetDefaultContextAny();
+
 private:
    Int_t fCnt;
    Int_t fClientCnt;
 
-   void CheckDestroy() { if (fCnt <= 0 && fClientCnt <= 0) delete this; }
+   void CheckDestroy();
 
    typedef std::pair<UInt_t, Int_t>  DLRange_t;
    typedef std::list<DLRange_t>      DLTrash_t;
    typedef DLTrash_t::const_iterator DLTrashIt_t;
 
+   typedef std::list<TGLContext*>    CtxList_t;
+
    DLTrash_t fDLTrash;
+   CtxList_t fCtxs;
+
+   static TGLContextIdentity * fgDefaultIdentity;
 
    ClassDef(TGLContextIdentity, 0) // Identity of a shared GL context.
 };

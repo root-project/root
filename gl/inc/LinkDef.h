@@ -103,6 +103,9 @@
 #pragma link C++ class TGLContext;
 #pragma link C++ class TGLContextIdentity;
 #pragma link C++ class TGLFormat;
+#pragma link C++ class TGLAdapter;
+#pragma link C++ class TF2GL;
+#pragma link C++ class TH2GL;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GLManager;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.39 2007/06/18 07:54:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.40 2007/06/22 15:11:13 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -181,6 +181,10 @@ public:
    TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, Int_t width, Int_t height);
    TGLViewer(TVirtualPad * pad);
    virtual ~TGLViewer();
+
+   // TRY getting histos in:
+   virtual Bool_t CanLoopOnPrimitives() const { return kTRUE; }
+   virtual void   PadPaint(TVirtualPad*);
 
    // TVirtualViewer3D interface
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);

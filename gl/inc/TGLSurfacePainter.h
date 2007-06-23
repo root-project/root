@@ -55,7 +55,7 @@ private:
 
 public:
    TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
-                     Int_t glContext = -1);
+                     TGLPaintDevice *dev = 0);
 
    //TGLPlotPainter's final-overriders.
    char  *GetPlotInfo(Int_t px, Int_t py);

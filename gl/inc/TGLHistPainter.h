@@ -12,6 +12,9 @@
 #ifndef ROOT_TGLOrthoCamera
 #include "TGLOrthoCamera.h"
 #endif
+#ifndef ROOT_TGLAdapter
+#include "TGLAdapter.h"
+#endif
 
 /*
    TGLHistPainter is a proxy class. It inherits TVirtualHistPainter and
@@ -45,6 +48,8 @@ private:
    EGLPlotType            fPlotType;
    TGLOrthoCamera         fCamera;
    TGLPlotCoordinates     fCoord;
+
+   TGLAdapter             fGLDevice;
 
 public:
    TGLHistPainter(TH1 *hist);

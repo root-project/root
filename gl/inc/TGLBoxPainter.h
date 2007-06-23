@@ -40,7 +40,7 @@ private:
    TGLBoxPainter &operator = (const TGLBoxPainter &);
 
 public:
-   TGLBoxPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx = -1);
+   TGLBoxPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev = 0);
 
    char   *GetPlotInfo(Int_t px, Int_t py);
    Bool_t  InitGeometry();

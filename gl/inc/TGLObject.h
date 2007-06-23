@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.5 2007/06/11 19:56:33 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
    virtual void   UpdateBoundingBox();
 
    // TGLObject virtuals
-   virtual Bool_t SetModel(TObject* obj) = 0;
+   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;
    virtual void   SetBBox() = 0;
 
    ClassDef(TGLObject, 1); // Base-class for direct OpenGL renderers

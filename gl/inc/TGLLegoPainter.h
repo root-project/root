@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.8 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
 
 /*************************************************************************
@@ -63,7 +63,7 @@ private:
    TGLLegoPainter &operator = (const TGLLegoPainter &);
 
 public:
-   TGLLegoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx = -1);
+   TGLLegoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, TGLPaintDevice *dev = 0);
 
    //TGLPlotPainter's final-overriders
    char        *GetPlotInfo(Int_t px, Int_t py);

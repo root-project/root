@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.6 2007/06/11 19:56:33 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -29,7 +29,7 @@ protected:
 public:
    TPointSet3DGL() : TGLObject() {}
 
-   virtual Bool_t SetModel(TObject* obj);
+   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }

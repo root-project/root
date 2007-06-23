@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLParametric.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLParametric.cxx,v 1.2 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  26/01/2007
 
 /*************************************************************************
@@ -15,6 +15,10 @@
 #ifdef WIN32
 #define NOMINMAX
 #endif
+
+#include "TVirtualX.h"
+#include "TString.h"
+#include "TROOT.h"
 
 #include "TGLOrthoCamera.h"
 #include "TGLParametric.h"
@@ -262,8 +266,8 @@ ClassImp(TGLParametricPlot)
 
 //______________________________________________________________________________
 TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
-                                     TGLOrthoCamera *camera, Int_t context)
-                      : TGLPlotPainter(camera, context),
+                                     TGLOrthoCamera *camera, TGLPaintDevice *dev)
+                      : TGLPlotPainter(camera, dev),
                         fMeshSize(90),
                         fShowMesh(kFALSE),
                         fColorScheme(4),
@@ -414,7 +418,10 @@ void TGLParametricPlot::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    //Left double click - remove box cut.
    if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();
-      gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+      else
+         Paint();
    } else if (event == kKeyPress) {
       if (py == kKey_c || py == kKey_C) {
          if (fHighColor)

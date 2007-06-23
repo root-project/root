@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLAxis.cxx,v 1.1 2007/06/21 14:55:36 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLAxis.cxx,v 1.2 2007/06/21 17:27:55 brun Exp $
 // Author:  Olivier Couet  17/04/2007
 
 /*************************************************************************
@@ -25,6 +25,8 @@ ClassImp(TGLAxis)
 //______________________________________________________________________________
 TGLAxis::TGLAxis(): TAttLine(1,1,1), TAttText(20,0.,1,42,0.04)
 {
+   // Constructor.
+
    Init();
 }
 
@@ -32,6 +34,8 @@ TGLAxis::TGLAxis(): TAttLine(1,1,1), TAttText(20,0.,1,42,0.04)
 //______________________________________________________________________________
 void TGLAxis::Init()
 {
+   // Default initialization.
+
    fTicks1          = 0;
    fTicks2          = 0;
    fLabels          = 0;
@@ -51,6 +55,8 @@ void TGLAxis::Init()
 //______________________________________________________________________________
 TGLAxis::~TGLAxis()
 {
+   // Destructor.
+
    if (fTicks1) delete [] fTicks1;
    if (fTicks2) delete [] fTicks2;
    if (fLabels) delete [] fLabels;
@@ -59,7 +65,7 @@ TGLAxis::~TGLAxis()
 
 
 //______________________________________________________________________________
-void TGLAxis::PaintGLAxis(Double_t p1[3], Double_t p2[3],
+void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
                           Double_t wmin,  Double_t wmax, Int_t ndiv,
                           Option_t *opt)
 {

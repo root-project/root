@@ -1,7 +1,9 @@
 #include <ctype.h>
 
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 #include "Buttons.h"
+#include "TString.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TColor.h"
@@ -16,8 +18,8 @@ ClassImp(TGLBoxPainter)
 
 
 //______________________________________________________________________________
-TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, cam, coord, ctx, kTRUE, kTRUE, kTRUE),
+TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)
+                  : TGLPlotPainter(hist, cam, coord, dev, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
@@ -69,7 +71,7 @@ Bool_t TGLBoxPainter::InitGeometry()
       return kFALSE;
 
    fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
-   fCamera->SetViewVolume(fBackBox.Get3DBox());
+   if(fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    fMinMaxVal.second  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin(), fCoord->GetFirstZBin());
    fMinMaxVal.first = 0.;
@@ -159,7 +161,10 @@ void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYSectionPos = fBackBox.Get3DBox()[0].Z();
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
-      gGLManager->PaintSingleObject(this);
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter)0x%x)->Paint()", this));
+      else
+         Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
       if (fHighColor)
          Info("ProcessEvent", "Switch to true color mode to use box cut");

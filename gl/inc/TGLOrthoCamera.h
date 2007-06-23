@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.15 2007/06/11 19:56:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -35,6 +35,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+class TGLPaintDevice;
+
 class TGLOrthoCamera : public TGLCamera {
 public:
    enum EType { kXOY, kXOZ, kZOY  }; // pair of world axes aligned to h/v screen
@@ -48,7 +50,7 @@ private:
    Double_t       fZoomMax;      //! maximum zoom factor
    TGLBoundingBox fVolume;       //!
 
-	// Current interaction
+   // Current interaction
    Double_t       fZoom;         //! current zoom
    TGLVector3     fTruck;        //! current truck vector
    TGLMatrix      fMatrix;       //! orthographic orientation matrix
@@ -88,7 +90,7 @@ public:
    void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
 
    //Stuff for TGLPlotPainter.
-   void   SetViewport(Int_t context);
+   void   SetViewport(TGLPaintDevice *dev);
    void   SetViewVolume(const TGLVertex3 *box);
    void   StartRotation(Int_t px, Int_t py);
    void   RotateCamera(Int_t px, Int_t py);
