@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.33 2007/05/24 08:58:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.34 2007/05/28 14:35:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -537,6 +537,18 @@ Bool_t TF3::IsInside(const Double_t *x) const
    if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
    if (x[2] < fZmin || x[2] > fZmax) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TH1* TF3::CreateHistogram()
+{
+// Create a histogram for axis range.
+
+   TH1* h = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
+                         ,fNpy,fYmin,fYmax
+                         ,fNpz,fZmin,fZmax);
+   h->SetDirectory(0);
+   return h;
 }
 
 //______________________________________________________________________________

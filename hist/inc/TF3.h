@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.18 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.19 2007/05/21 08:38:48 moneta Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -95,6 +95,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return TF1::Integral(ax,bx,ay,by,epsilon);}
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual Bool_t   IsInside(const Double_t *x) const;
+   virtual TH1     *CreateHistogram();
    virtual void     Paint(Option_t *option="");
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");

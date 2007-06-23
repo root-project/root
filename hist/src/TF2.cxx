@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.40 2007/05/24 08:56:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.41 2007/05/28 14:35:35 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -684,6 +684,49 @@ Bool_t TF2::IsInside(const Double_t *x) const
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    if (x[1] < fYmin || x[1] > fYmax) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TH1* TF2::CreateHistogram()
+{
+// Create a histogram from function.
+
+   Int_t i,j,bin;
+   Double_t dx, dy;
+   Double_t xv[2];
+
+   TH2F* h = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
+   h->SetDirectory(0);
+
+   InitArgs(xv,fParams);
+   dx = (fXmax - fXmin)/Double_t(fNpx);
+   dy = (fYmax - fYmin)/Double_t(fNpy);
+   for (i=1;i<=fNpx;i++) {
+      xv[0] = fXmin + (Double_t(i) - 0.5)*dx;
+      for (j=1;j<=fNpy;j++) {
+         xv[1] = fYmin + (Double_t(j) - 0.5)*dy;
+         bin   = j*(fNpx + 2) + i;
+         h->SetBinContent(bin,EvalPar(xv,fParams));
+      }
+   }
+   h->Fill(fXmin-1,fYmin-1,0);  //This call to force fNentries non zero
+
+   Double_t *levels = fContour.GetArray();
+   if (levels && levels[0] == -9999) levels = 0;
+   h->SetMinimum(fMinimum);
+   h->SetMaximum(fMaximum);
+   h->SetContour(fContour.fN, levels);
+   h->SetLineColor(GetLineColor());
+   h->SetLineStyle(GetLineStyle());
+   h->SetLineWidth(GetLineWidth());
+   h->SetFillColor(GetFillColor());
+   h->SetFillStyle(GetFillStyle());
+   h->SetMarkerColor(GetMarkerColor());
+   h->SetMarkerStyle(GetMarkerStyle());
+   h->SetMarkerSize(GetMarkerSize());
+   h->SetStats(0);
+
+   return h;
 }
 
 //______________________________________________________________________________
