@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.13 2007/02/19 18:51:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.14 2007/06/11 19:56:33 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -50,6 +50,12 @@ public:
    // prefer local frame & translation - and producers can optionally
    // supply them
    virtual Bool_t PreferLocalFrame() const = 0;
+
+   // Viewers can implement their own loop over pad's primitive list.
+   virtual Bool_t CanLoopOnPrimitives() const { return kFALSE; }
+   // When they can, TPad::Paint() and TPad::PaintModified() simply
+   // call the following function:
+   virtual void   PadPaint(TVirtualPad*) {}
 
    // Addition/removal of objects must occur between Begin/EndUpdate calls
    virtual void   BeginScene() = 0;
