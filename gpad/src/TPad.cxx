@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.265 2007/03/29 13:10:36 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.266 2007/04/16 08:35:03 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2658,6 +2658,12 @@ void TPad::Paint(Option_t * /*option*/)
 {
    // Paint all primitives in pad.
 
+   if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
+      fViewer3D->PadPaint(this);
+      Modified(kFALSE);
+      return;
+   }
+
    if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
 
    TPad *padsav = (TPad*)gPad;
@@ -2863,6 +2869,24 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
 void TPad::PaintModified()
 {
    // Traverse pad hierarchy and (re)paint only modified pads.
+
+   if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
+      if (IsModified()) {
+         fViewer3D->PadPaint(this);
+         Modified(kFALSE);
+      }
+      TList *pList = GetListOfPrimitives();
+      TObjOptLink *lnk = 0;
+      if (pList) lnk = (TObjOptLink*)pList->FirstLink();
+      TObject *obj;
+      while (lnk) {
+         obj = lnk->GetObject();
+         if (obj->InheritsFrom(TPad::Class()))
+            ((TPad*)obj)->PaintModified();
+         lnk = (TObjOptLink*)lnk->Next();
+      }
+      return;
+   }
 
    if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
 
