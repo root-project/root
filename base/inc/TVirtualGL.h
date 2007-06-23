@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.38 2007/06/11 19:56:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.39 2007/06/20 14:41:26 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -139,7 +139,8 @@ public:
    virtual void SwapBuffers() = 0;
    virtual const TGLFormat *GetPixelFormat()const = 0;
    virtual const TGLContext *GetContext()const = 0;
- 
+   virtual void ExtractViewport(Int_t *vp)const = 0;
+
 private:
    virtual void AddContext(TGLContext *ctx) = 0;
    virtual void RemoveContext(TGLContext *ctx) = 0;
