@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.12 2007/02/03 06:40:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.13 2007/02/03 10:21:21 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -220,6 +220,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
+   //EDDY
    switch(op) {
       case kMult:
          AMultB(a,b,1);
@@ -425,12 +426,12 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          return;
       }
@@ -542,12 +543,12 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          return;
       }
@@ -642,12 +643,12 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMultB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMultB","this = &b");
          return;
       }
@@ -744,12 +745,12 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("APlusB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("APlusB","this = &b");
          return;
       }
@@ -835,12 +836,12 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("APlusB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("APlusB","this = &b");
          return;
       }
@@ -911,12 +912,12 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          return;
       }
@@ -1002,12 +1003,12 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
           return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          return;
       }
@@ -1078,12 +1079,12 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
          return;
       }
 
-      if (this->GetMatrixArray() == a.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
          Error("AMinusB","this = &a");
          return;
       }
 
-      if (this->GetMatrixArray() == b.GetMatrixArray()) {
+      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
          Error("AMinusB","this = &b");
          return;
       }
