@@ -1,5 +1,6 @@
 #ifndef __CINT__
 #include "Riostream.h"
+#include "TMath.h"
 #include "TMatrixD.h"
 #include "TMatrixDLazy.h"
 #include "TVectorD.h"
