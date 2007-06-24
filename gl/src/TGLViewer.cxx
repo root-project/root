@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.67 2007/06/22 16:06:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.68 2007/06/23 21:23:22 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TF2.h"
 #include "TF2GL.h"
 
+#include "TMath.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TClass.h"
@@ -275,10 +276,11 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
          log->SetModel(obj, lnk->GetOption());
          log->SetBBox();
          fScene.AdoptLogical(*log);
-         TGLMatrix identity;
+         TGLMatrix mat;
+         mat.RotateLF(3, 2, TMath::PiOver2());
          Float_t rgba[4] = { 1, 1, 1, 1};
          TGLPhysicalShape* phys = new TGLPhysicalShape
-            (fNextInternalPID++, *log, identity, false, rgba);
+            (fNextInternalPID++, *log, mat, false, rgba);
          fScene.AdoptPhysical(*phys);
          
       }
@@ -289,10 +291,11 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
          log->SetModel(obj, lnk->GetOption());
          log->SetBBox();
          fScene.AdoptLogical(*log);
-         TGLMatrix identity;
+         TGLMatrix mat;
+         mat.RotateLF(3, 2, TMath::PiOver2());
          Float_t rgba[4] = { 1, 1, 1, 1};
          TGLPhysicalShape* phys = new TGLPhysicalShape
-            (fNextInternalPID++, *log, identity, false, rgba);
+            (fNextInternalPID++, *log, mat, false, rgba);
          fScene.AdoptPhysical(*phys);
       }
       else

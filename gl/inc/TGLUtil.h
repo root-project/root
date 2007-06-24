@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.40 2007/06/12 10:22:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.41 2007/06/12 14:50:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -734,6 +734,7 @@ public:
    void Translate(const TGLVector3 & vect);
    void Scale(const TGLVector3 & scale);
    void Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
+   void RotateLF(Int_t i1, Int_t i2, Double_t amount);
    void TransformVertex(TGLVertex3 & vertex) const;
    void Transpose3x3();
 

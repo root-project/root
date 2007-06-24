@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.40 2007/06/11 19:56:34 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -727,6 +727,24 @@ void TGLMatrix::Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double
    // TODO: Ugly - should use quaternions to avoid compound rounding errors and
    // triple multiplication
    *this = rotMat * localToWorld * (*this);
+}
+
+//______________________________________________________________________________
+void TGLMatrix::RotateLF(Int_t i1, Int_t i2, Double_t amount)
+{
+   // Rotate in local frame. Does optimised version of MultRight.
+   // i1, i2 are axes indices: 1 ~ x, 2 ~ y, 3 ~ z.
+
+   if(i1 == i2) return;
+   const Double_t cos = TMath::Cos(amount), sin = TMath::Sin(amount);
+   Double_t  b1, b2;
+   Double_t* c = fVals;
+   --i1 <<= 2; --i2 <<= 2; // column major
+   for(int r=0; r<4; ++r, ++c) {
+      b1 = cos*c[i1] + sin*c[i2];
+      b2 = cos*c[i2] - sin*c[i1];
+      c[i1] = b1; c[i2] = b2;
+   }
 }
 
 //______________________________________________________________________________
