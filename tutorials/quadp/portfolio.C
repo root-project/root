@@ -1,6 +1,7 @@
 #include "Riostream.h"
 #include "TCanvas.h"
 #include "TFile.h"
+#include "TMath.h"
 #include "TTree.h"
 #include "TArrayF.h"
 #include "TH1.h"
