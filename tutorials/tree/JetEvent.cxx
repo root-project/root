@@ -7,6 +7,7 @@
 // see $ROOTSYS/tutorials/jets.C for an example creating a Tree
 // with JetEvents.
       
+#include "TMath.h"   
 #include "TRandom.h"   
 #include "JetEvent.h"
 
