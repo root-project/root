@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.82 2007/02/07 20:56:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.83 2007/02/13 05:36:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -238,6 +238,9 @@ void TAxis::Copy(TObject &obj) const
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
    ((TAxis&)obj).fParent       = fParent;
+   if (fLabels) {
+      for (Int_t i=1;i<=fNbins;i++) ((TAxis&)obj).SetBinLabel(i,this->GetBinLabel(i));
+   }
 }
 
 //______________________________________________________________________________
