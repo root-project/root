@@ -10,6 +10,7 @@
 #include "TFile.h"
 #include "TFoam.h"
 #include "TH1.h"
+#include "TMath.h"
 #include "TFoamIntegrand.h"
 #include "TRandom3.h"
 
