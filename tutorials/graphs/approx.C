@@ -66,7 +66,7 @@ void approx()
 void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
 {
    vC1->cd(pad);
-   TH1F *vFrame = vC1->DrawFrame(0,0,15,150);
+   TH1F *vFrame = gPad->DrawFrame(0,0,15,150);
    vFrame->SetTitle(title);
    vFrame->SetTitleSize(0.2);
    vFrame->SetXTitle(xt);
