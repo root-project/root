@@ -1,15 +1,20 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.181 2007/04/27 13:04:46 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.182 2007/05/10 16:02:15 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
 # which values are active do: gEnv->Print().
 
-# Path used by dynamic loader to find shared libraries and macros.
+# Path used by dynamic loader to find shared libraries.
+# This path will be prepended to the (DY)LD_LIBRARY_PATH.
 # Paths are different for Unix and Windows. The example shows the defaults
 # for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:@libdir@:
-Unix.*.Root.MacroPath:      .:@macrodir@:
 WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH);
+
+# Path used to find macros.
+# Paths are different for Unix and Windows. The example shows the defaults
+# for all ROOT applications for either Unix or Windows.
+Unix.*.Root.MacroPath:      .:@macrodir@:
 WinNT.*.Root.MacroPath:     .;@macrodir@;
 
 # Path where to look for TrueType fonts.
