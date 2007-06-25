@@ -41,7 +41,7 @@ void invertMatrix(Int_t msize=6)
   cout << "of the off-diagonal elements of Inv(A) * A              " <<endl;
   cout << "--------------------------------------------------------" <<endl;
 
-  TMatrixT<double> H_square = THilbertMatrixD(msize,msize);
+  TMatrixD H_square = THilbertMatrixD(msize,msize);
 
 //  1. InvertFast(Double_t *det=0)
 //   It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
@@ -104,7 +104,7 @@ void invertMatrix(Int_t msize=6)
   cout << "2. Use .Invert(&det)" <<endl;
 
   Double_t det2;
-  TMatrixT<double> H2 = H_square;
+  TMatrixD H2 = H_square;
   H2.Invert(&det2);
 
   TMatrixD U2(H2,TMatrixD::kMult,H_square);
