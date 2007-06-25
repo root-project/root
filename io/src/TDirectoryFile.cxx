@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.12 2007/05/04 22:15:36 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.13 2007/06/22 15:27:39 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -235,7 +235,7 @@ void TDirectoryFile::Browse(TBrowser *b)
          int skip = 0;
          if (!keyo || (keyo && strcmp(keyo->GetName(), key->GetName()))) {
             skip = 0;
-            obj = fList->FindObject(key->GetName());
+            obj = gROOT->FindObject(key->GetName());
 
             if (obj) {
                sprintf(name, "%s", obj->GetName());
