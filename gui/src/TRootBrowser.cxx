@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.119 2007/06/20 19:07:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.120 2007/06/22 16:55:37 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1563,12 +1563,6 @@ void TRootBrowser::DisplayDirectory()
    while (*p && *(p+1) == '/') ++p;
    fFSComboBox->Update(p);
 
-   if (fListLevel) {
-      AddToHistory(fListLevel);
-   } else {
-      return;
-   }
-
    // disable/enable up level navigation
    TGButton *btn = fToolBar->GetButton(kOneLevelUp);
    const char *dirname = gSystem->DirName(p);
@@ -1581,6 +1575,8 @@ void TRootBrowser::DisplayDirectory()
       disableUp = strlen(p) == 1;
    }
    btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
+   if (fListLevel)
+      AddToHistory(fListLevel);
 }
 
 //____________________________________________________________________________
