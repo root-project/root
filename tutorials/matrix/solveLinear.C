@@ -49,6 +49,16 @@
 // matrices through adoption .
 // This allows data assignment without physically moving bytes around .
 //
+//   USAGE
+//   -----
+// This macro can be execued via CINT or via ACLIC
+// - via CINT, do
+//    root > .x solveLinear.C
+// - via ACLIC
+//    root > gSystem->Load("libMatrix");
+//    root > gSystem->Load("libGpad");
+//    root > .x solveLinear.C+
+//
 #ifndef __CINT__
 #include "Riostream.h"
 #include "TMatrixD.h"
@@ -62,6 +72,9 @@
 
 void solveLinear(Double_t eps = 1.e-12)
 {
+#ifdef __CINT__
+  gSystem->Load("libMatrix");
+#endif
   cout << "Perform the fit  y = c0 + c1 * x in four different ways" << endl;
 
   const Int_t nrVar  = 2;

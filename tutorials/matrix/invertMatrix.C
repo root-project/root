@@ -7,9 +7,14 @@
 // decomposition class. A second possibilty (less preferred) would be to
 // check the determinant
 //
-// You can run this script (using ACLIC only)  with different matrix sizes
-//  root > gSystem->Load("libMatrix");
-//  root > .x invertMatrix.C+
+//   USAGE
+//   -----
+// This macro can be execued via CINT or via ACLIC
+// - via CINT, do
+//    root > .x invertMatrix.C
+// - via ACLIC
+//    root > gSystem->Load("libMatrix");
+//    root > .x invertMatrix.C+
 
 #ifndef __CINT__
 #include "Riostream.h"
@@ -23,6 +28,9 @@
 
 void invertMatrix(Int_t msize=6)
 {
+#ifdef __CINT__
+  gSystem->Load("libMatrix");
+#endif
   if (msize < 2 || msize > 10) {
     cout << "2 <= msize <= 10" <<endl;
     return;
@@ -33,7 +41,7 @@ void invertMatrix(Int_t msize=6)
   cout << "of the off-diagonal elements of Inv(A) * A              " <<endl;
   cout << "--------------------------------------------------------" <<endl;
 
-  TMatrixD H_square = THilbertMatrixD(msize,msize);
+  TMatrixT<double> H_square = THilbertMatrixD(msize,msize);
 
 //  1. InvertFast(Double_t *det=0)
 //   It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
@@ -96,7 +104,7 @@ void invertMatrix(Int_t msize=6)
   cout << "2. Use .Invert(&det)" <<endl;
 
   Double_t det2;
-  TMatrixD H2 = H_square;
+  TMatrixT<double> H2 = H_square;
   H2.Invert(&det2);
 
   TMatrixD U2(H2,TMatrixD::kMult,H_square);
