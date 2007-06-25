@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.26 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.27 2007/03/08 15:52:17 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -68,6 +68,8 @@ public:
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = 0) = 0;
+   virtual Int_t    LoadLibraryMap(const char *rootmapfile = 0) = 0;
+   virtual Int_t    UnloadLibraryMap(const char *library) = 0;
    virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;

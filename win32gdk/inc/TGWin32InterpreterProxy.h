@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.14 2006/12/01 15:05:58 rdm Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.15 2007/03/08 15:52:17 rdm Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -51,6 +51,8 @@ public:
    Int_t    InitializeDictionaries();
    Int_t    Load(const char *filenam, Bool_t system = kFALSE);
    void     LoadMacro(const char *filename, EErrorCode *error = 0);
+   Int_t    LoadLibraryMap(const char *rootmapfile = 0);
+   Int_t    UnloadLibraryMap(const char *library);
    Long_t   ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void     PrintIntro();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.33 2007/02/28 18:10:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.34 2007/03/08 15:52:17 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -72,7 +72,6 @@ private:
    void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:
-   Int_t LoadLibraryMap();
 
 public:
    TCint(const char *name, const char *title);
@@ -96,6 +95,8 @@ public:
    Bool_t  IsLoaded(const char *filename) const;
    Int_t   Load(const char *filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char *filename, EErrorCode *error = 0);
+   Int_t   LoadLibraryMap(const char *rootmapfile = 0);
+   Int_t   UnloadLibraryMap(const char *library);
    Long_t  ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t  ProcessLineAsynch(const char *line, EErrorCode *error = 0);
    Long_t  ProcessLineSynch(const char *line, EErrorCode *error = 0);

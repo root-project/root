@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.147 2007/05/04 16:57:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.148 2007/05/10 15:17:46 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1027,22 +1027,25 @@ const char *TCint::TypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-Int_t TCint::LoadLibraryMap()
+Int_t TCint::LoadLibraryMap(const char *rootmapfile)
 {
-   // Load map between class and library. Cint uses this information to
-   // automatically load the shared library for a class (autoload mechanism).
+   // Load map between class and library. If rootmapfile is specified a
+   // specific rootmap file can be added (typically used by ACLiC).
+   // In case of error -1 is returned, 0 otherwise.
+   // Cint uses this information to automatically load the shared library
+   // for a class (autoload mechanism).
    // See also the AutoLoadCallback() method below.
 
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
+      fMapfile->IgnoreDuplicates(kTRUE);
 
       fRootMapFiles = new TObjArray;
       fRootMapFiles->SetOwner();
 
-      // Load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.).
-      // A rootmap file must start with the string "rootmap" and may be followed
-      // by any extension, like rootmap_ModuleX, rootmap-Module-Y.
+      // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
+      // A rootmap file must end with the string ".rootmap".
       TString ldpath = gSystem->GetDynamicPath();
 #ifdef WIN32
       TObjArray *paths = ldpath.Tokenize(";");
@@ -1065,17 +1068,26 @@ Int_t TCint::LoadLibraryMap()
          if (!skip) {
             void *dirp = gSystem->OpenDirectory(d);
             if (dirp) {
+               if (gDebug > 0)
+                  Info("LoadLibraryMap", "%s", d.Data());
                const char *f1;
                while ((f1 = gSystem->GetDirEntry(dirp))) {
                   TString f = f1;
-                  if (f.BeginsWith("rootmap") || f.EndsWith(".rootmap")) {
+                  if (f.EndsWith(".rootmap")) {
                      TString p;
                      p = d + "/" + f;
                      if (!gSystem->AccessPathName(p, kReadPermission)) {
-                        if (gDebug > 0)
-                           Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
+                        if (gDebug > 1)
+                           Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                         fMapfile->ReadFile(p, kEnvGlobal);
                         fRootMapFiles->Add(new TObjString(p));
+                     }
+                  }
+                  if (f.BeginsWith("rootmap")) {
+                     if (f.Length() > 8 || f(7,7) != "~") {
+                        TString p;
+                        p = d + "/" + f;
+                        Warning("LoadLibraryMap", "please rename %s to end with \".rootmap\"", p.Data());
                      }
                   }
                }
@@ -1088,6 +1100,12 @@ Int_t TCint::LoadLibraryMap()
       if (!fMapfile->GetTable()->GetEntries()) {
          return -1;
       }
+   }
+
+   if (rootmapfile && *rootmapfile) {
+      // Add content of a specific rootmap file
+      fMapfile->IgnoreDuplicates(kFALSE);
+      fMapfile->ReadFile(rootmapfile, kEnvGlobal);
    }
 
    TEnvRec *rec;
@@ -1140,12 +1158,92 @@ Int_t TCint::LoadLibraryMap()
          }
          G__set_class_autoloading_table((char*)cls.Data(), lib);
          G__security_recover(stderr); // Ignore any error during this setting.
-         if (gDebug > 0)
-            Info("LoadLibraryMap", "adding class %s in lib %s", cls.Data(), lib);
+         if (gDebug > 2) {
+            const char *wlib = gSystem->Which(gSystem->GetDynamicPath(), lib);
+            Info("LoadLibraryMap", "class %s in %s", cls.Data(), wlib);
+            delete [] wlib;
+         }
          delete tokens;
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TCint::UnloadLibraryMap(const char *library)
+{
+   // Unload library map entries coming from the specified library.
+   // Returns -1 in case no entries for the specified library were found,
+   // 0 otherwise.
+
+   if (!fMapfile || !library || !*library)
+      return 0;
+
+   TEnvRec *rec;
+   TIter next(fMapfile->GetTable());
+
+   Int_t ret = 0;
+
+   while ((rec = (TEnvRec*) next())) {
+      TString cls = rec->GetName();
+      if (!strncmp(cls.Data(), "Library.", 8) && cls.Length() > 8) {
+
+         // get the first lib from the list of lib and dependent libs
+         TString libs = rec->GetValue();
+         if (libs == "") continue;
+         TString delim(" ");
+         TObjArray *tokens = libs.Tokenize(delim);
+         const char *lib = ((TObjString*)tokens->At(0))->GetName();
+         // convert "@@" to "::", we used "@@" because TEnv
+         // considers "::" a terminator
+         cls.Remove(0,8);
+         cls.ReplaceAll("@@", "::");
+         // convert "-" to " ", since class names may have
+         // blanks and TEnv considers a blank a terminator
+         cls.ReplaceAll("-", " ");
+         if (cls.Contains(":")) {
+            // We have a namespace and we have to check it first
+            int slen = cls.Length();
+            for (int k = 0; k < slen; k++) {
+               if (cls[k] == ':') {
+                  if (k+1 >= slen || cls[k+1] != ':') {
+                     // we expected another ':'
+                     break;
+                  }
+                  if (k) {
+                     TString base = cls(0, k);
+                     if (base == "std") {
+                        // std is not declared but is also ignored by CINT!
+                        break;
+                     } else {
+                        // Only declared the namespace do not specify any library because
+                        // the namespace might be spread over several libraries and we do not
+                        // know (yet?) which one the user will need!
+                        //G__remove_from_class_autoloading_table((char*)base.Data());
+                     }
+                     ++k;
+                  }
+               } else if (cls[k] == '<') {
+                  // We do not want to look at the namespace inside the template parameters!
+                  break;
+               }
+            }
+         }
+
+         if (!strcmp(library, lib)) {
+            if (fMapfile->GetTable()->Remove(rec) == 0) {
+               Error("UnloadLibraryMap", "entry for <%s,%s> not found in library map table", cls.Data(), lib);
+               ret = -1;
+            }
+         }
+
+         //G__remove_from_class_autoloading_table((char*)cls.Data());
+         //G__security_recover(stderr); // Ignore any error during this setting.
+         delete tokens;
+      }
+   }
+
+   return ret;
 }
 
 //______________________________________________________________________________
