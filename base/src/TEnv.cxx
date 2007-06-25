@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.31 2007/01/16 14:41:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.32 2007/03/05 10:42:01 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -262,14 +262,14 @@ TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
 
 //______________________________________________________________________________
 void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
-                          Bool_t append)
+                          Bool_t append, Bool_t ignoredup)
 {
    // Change the value of a resource.
 
    if (l != kEnvChange && fLevel == l && !append) {
       // use global Warning() since interpreter might not yet be initialized
       // at this stage (called from TROOT ctor)
-      if (fValue != v)
+      if (fValue != v && !ignoredup)
          ::Warning("TEnvRec::ChangeValue",
            "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v, l);
       return;
@@ -371,7 +371,9 @@ TEnv::TEnv(const char *name)
    // read additional user defined resource files by creating addtional TEnv
    // objects.
 
-   if (!name || !strlen(name))
+   fIgnoreDup = kFALSE;
+
+   if (!name || !strlen(name) || !gSystem)
       fTable = 0;
    else {
       fTable  = new THashList(1000);
@@ -389,25 +391,13 @@ TEnv::TEnv(const char *name)
       etc += "/etc";
 #endif
       char *s = gSystem->ConcatFileName(etc, sname);
-      if (gSystem->AccessPathName(s)) {
-         // for backward compatibility check also $ROOTSYS/system<name> if
-         // $ROOTSYS/etc/system<name> does not exist
-         delete [] s;
-         s = gSystem->ConcatFileName(gRootDir, sname);
-         if (gSystem->AccessPathName(s)) {
-            // for backward compatibility check also $ROOTSYS/<name> if
-            // $ROOTSYS/system<name> does not exist
-            delete [] s;
-            s = gSystem->ConcatFileName(gRootDir, name);
-         }
-      }
 #endif
       ReadFile(s, kEnvGlobal);
       delete [] s;
       s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
       ReadFile(s, kEnvUser);
       delete [] s;
-      if (gSystem && strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory()))
+      if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory()))
          ReadFile(name, kEnvLocal);
    }
 }
@@ -746,7 +736,7 @@ void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
 
    TEnvRec *er = Lookup(nam);
    if (er)
-      er->ChangeValue(value, type, level, append);
+      er->ChangeValue(value, type, level, append, fIgnoreDup);
    else
       fTable->Add(new TEnvRec(nam, value, type, level));
 }
@@ -782,4 +772,15 @@ void TEnv::SetValue(const char *name, double value)
    // Set or create a double resource value.
 
    SetValue(name, Form("%g", value));
+}
+
+//______________________________________________________________________________
+Bool_t TEnv::IgnoreDuplicates(Bool_t ignore)
+{
+   // If set to true, no warnings in case of duplicates are issued.
+   // Returns previous value.
+
+   Bool_t ret = fIgnoreDup;
+   fIgnoreDup = ignore;
+   return ret;
 }

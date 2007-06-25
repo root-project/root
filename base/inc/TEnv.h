@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.13 2006/03/03 09:48:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.14 2006/05/13 11:00:50 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -100,7 +100,7 @@ private:
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
    Int_t    Compare(const TObject *obj) const;
    void     ChangeValue(const char *v, const char *t, EEnvLevel l,
-                        Bool_t append = kFALSE);
+                        Bool_t append = kFALSE, Bool_t ignoredup = kFALSE);
    TString  ExpandValue(const char *v);
 
 public:
@@ -123,11 +123,12 @@ public:
 class TEnv : public TObject {
 
 private:
-   TEnv(const TEnv&);
-   TEnv& operator=(const TEnv&);
-
    THashList        *fTable;     // hash table containing env records
    TString           fRcName;    // resource file base name
+   Bool_t            fIgnoreDup; // ignore duplicates, don't issue warning
+
+   TEnv(const TEnv&);            // not implemented
+   TEnv& operator=(const TEnv&); // not implemented
 
    const char       *Getvalue(const char *name);
 
@@ -160,6 +161,7 @@ public:
    virtual void        SaveLevel(EEnvLevel level);
    virtual void        Print(Option_t *option="") const;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
+   Bool_t              IgnoreDuplicates(Bool_t ignore);
 
    ClassDef(TEnv,1)  // Handle ROOT configuration resources
 };
