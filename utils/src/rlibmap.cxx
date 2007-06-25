@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.21 2007/02/13 14:44:32 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.22 2007/04/19 12:57:15 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -216,7 +216,10 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                      continue;
                   type = strtok(0, " ");
                }
-               if (!strcmp(type, "class") || !strcmp(type, "typedef")) {
+               //the following statement had to be commented. Currently CINT
+               //cannot autoload when executing a typedef (must be fixed!!!)
+               //if (!strcmp(type, "class") || !strcmp(type, "typedef")) {
+               if (!strcmp(type, "class")) {
                   char *cls = strtok(0, "-!+;");
                   // just in case remove trailing space and tab
                   while (*cls == ' ') cls++;
