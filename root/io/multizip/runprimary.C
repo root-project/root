@@ -1,5 +1,6 @@
 {
 // Fill out the code of the actual test
+   gSystem->Load("libMatrix");
    TFile *f = TFile::Open("multi.zip#1");
    f->ls();
    TArchiveFile *a = f->GetArchive();
