@@ -1,13 +1,4 @@
-#ifndef __CINT__
-#include "Riostream.h"
-#include "TMatrixD.h"
-#include "TVectorD.h"
-#include "TGraphErrors.h"
-#include "TDecompChol.h"
-#include "TDecompSVD.h"
-#include "TF1.h"
-#endif
-
+//Author: Eddy Offermann
 // This macro shows several ways to perform a linear least-squares
 // analysis . To keep things simple we fit a straight line to 4
 // data points
@@ -58,7 +49,16 @@
 // matrices through adoption .
 // This allows data assignment without physically moving bytes around .
 //
-//Author: Eddy Offermann
+#ifndef __CINT__
+#include "Riostream.h"
+#include "TMatrixD.h"
+#include "TVectorD.h"
+#include "TGraphErrors.h"
+#include "TDecompChol.h"
+#include "TDecompSVD.h"
+#include "TF1.h"
+#endif
+
 
 void solveLinear(Double_t eps = 1.e-12)
 {

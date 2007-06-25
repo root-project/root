@@ -1,3 +1,16 @@
+//Author: Eddy Offermann
+
+// This macro shows several ways to invert a matrix . Each  method
+// is a trade-off between accuracy of the inversion and speed.
+// Which method to chose depends on "how well-behaved" the matrix is.
+// This is best checked through a call to Condition(), available in each
+// decomposition class. A second possibilty (less preferred) would be to
+// check the determinant
+//
+// You can run this script (using ACLIC only)  with different matrix sizes
+//  root > gSystem->Load("libMatrix");
+//  root > .x invertMatrix.C+
+
 #ifndef __CINT__
 #include "Riostream.h"
 #include "TMath.h"
@@ -7,16 +20,6 @@
 #include "TDecompLU.h"
 #include "TDecompSVD.h"
 #endif
-
-// This macro shows several ways to invert a matrix . Each  method
-// is a trade-off between accuracy of the inversion and speed.
-// Which method to chose depends on "how well-behaved" the matrix is.
-// This is best checked through a call to Condition(), available in each
-// decomposition class. A second possibilty (less preferred) would be to
-// check the determinant
-//
-// You can run this script with different matrix sizes
-//Author: Eddy Offermann
 
 void invertMatrix(Int_t msize=6)
 {
