@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.346 2007/06/05 10:45:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.347 2007/06/11 10:00:36 moneta Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1443,14 +1443,17 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //  - igood:  
    //       igood=0 - no problems
    //        For unweighted unweighted  comparison               
-   //       igood=1'There is bin in 1st hist with low then 1 exp number of event
-   //       igood=2'There is bin in 2nd  hist with low then 1 exp number of events'
+   //       igood=1'There is a bin in the 1st histogram with less than 1 event'
+   //       igood=2'There is a bin in the 2nd histogram with less than 1 event'
    //        For  unweighted weighted  comparison
-   //       igood=1'There is bin in 1st hist with low then 1 exp number of events'
-   //       igood=2'There is bin in 2nd  hist with low then 10 eff number of events'
+   //       igood=1'There is a bin in the 1st histogram with less then 1 event'
+   //       igood=2'There is a bin in the 2nd histogram with less then 10 effective 
+   //               number of events'
    //        For  weighted weighted  comparison 
-   //       igood=1'There is bin in 1st  hist with low then 10 eff number of events'
-   //       igood=2'There is bin in 2nd  hist with low then 10 eff number of events'
+   //       igood=1'There is a bin in the 1st  histogram with less then 10 effective 
+   //        number of events'
+   //       igood=2'There is a bin in the 2nd  histogram with less then 10 effective 
+   //               number of events'     
    //  - chi2 - chisquare of the test
    //  - ndf  - number of degrees of freedom (important, when both histograms have the same
    //         empty bins)
@@ -1653,11 +1656,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       chi2 /= sum1*sum2;
       if (m) {
          igood = 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
       }
       if (n) {
          igood = 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 1 number of events.\n");
       }
       
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -1735,11 +1738,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       
       if (m) {
          igood = 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 1 exp number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
       }
       if (n) {
          igood = 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
       }
       
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -1780,11 +1783,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       }
       if (m) {
          igood = 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist1 with less than 10 effective number of events.\n");
       }
       if (n) {
          igood = 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 10 eff number of events.\n");
+         Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
       }
       Double_t prob = TMath::Prob(chi2,ndf);
       return prob;
