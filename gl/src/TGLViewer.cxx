@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.68 2007/06/23 21:23:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.69 2007/06/24 18:48:11 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -253,14 +253,48 @@ Bool_t TGLViewer::PreferLocalFrame() const
    return kTRUE;
 }
 
-void TGLViewer::PadPaint(TVirtualPad* pad)
+//______________________________________________________________________________
+void TGLViewer::AddHistoPhysical(TGLLogicalShape* log)
 {
+   // Scale and rotate a histo object to mimic placement in canvas.
+
+   Double_t how = ((Double_t) gPad->GetWh()) / gPad->GetWw();
+
+   Double_t lw = gPad->GetAbsWNDC();
+   Double_t lh = gPad->GetAbsHNDC() * how;
+   Double_t lm = TMath::Min(lw, lh);
+
+   const TGLBoundingBox& bb = log->BoundingBox();
+   // Timur always packs histos in a square: let's just take x-diff.
+   Double_t size  = TMath::Sqrt(3) * (bb.XMax() - bb.XMin());
+   Double_t scale = lm / size;
+   TGLVector3 scaleVec(scale, scale, scale);
+
+   Double_t tx = gPad->GetAbsXlowNDC() + lw;
+   double_t ty = gPad->GetAbsYlowNDC() * how + lh;
+   TGLVector3 transVec(0, ty, tx); // For viewer convention (starts looking along -x).
+
+   TGLMatrix mat;
+   mat.Scale(scaleVec);
+   mat.Translate(transVec);
+   mat.RotateLF(3, 2, TMath::PiOver2());
+   mat.RotateLF(1, 3, TMath::DegToRad()*gPad->GetTheta());
+   mat.RotateLF(1, 2, TMath::DegToRad()*(gPad->GetPhi() - 90));
+   Float_t rgba[4] = { 1, 1, 1, 1};
+   TGLPhysicalShape* phys = new TGLPhysicalShape
+      (fNextInternalPID++, *log, mat, false, rgba);
+   fScene.AdoptPhysical(*phys);
+}
+
+//______________________________________________________________________________
+void TGLViewer::SubPadPaint(TVirtualPad* pad)
+{
+   // Iterate over pad-primitves and import them.
+
    TVirtualPad *padsav = gPad;
    gPad = pad;
-
    TList       *prims = pad->GetListOfPrimitives();
    TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
-   BeginScene();
    while (lnk)
    {
       TObject *obj = lnk->GetObject();
@@ -271,32 +305,25 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
       }
       else if (obj->InheritsFrom(TH2::Class()))
       {
-         //printf("histo 2d\n");
+         // printf("histo 2d\n");
          TGLObject* log = new TH2GL();
          log->SetModel(obj, lnk->GetOption());
          log->SetBBox();
          fScene.AdoptLogical(*log);
-         TGLMatrix mat;
-         mat.RotateLF(3, 2, TMath::PiOver2());
-         Float_t rgba[4] = { 1, 1, 1, 1};
-         TGLPhysicalShape* phys = new TGLPhysicalShape
-            (fNextInternalPID++, *log, mat, false, rgba);
-         fScene.AdoptPhysical(*phys);
-         
+         AddHistoPhysical(log);
       }
       else if (obj->InheritsFrom(TF2::Class()))
       {
-         //printf("func 2d\n");
+         // printf("func 2d\n");
          TGLObject* log = new TF2GL();
          log->SetModel(obj, lnk->GetOption());
          log->SetBBox();
          fScene.AdoptLogical(*log);
-         TGLMatrix mat;
-         mat.RotateLF(3, 2, TMath::PiOver2());
-         Float_t rgba[4] = { 1, 1, 1, 1};
-         TGLPhysicalShape* phys = new TGLPhysicalShape
-            (fNextInternalPID++, *log, mat, false, rgba);
-         fScene.AdoptPhysical(*phys);
+         AddHistoPhysical(log);
+      }
+      else if (obj->InheritsFrom(TVirtualPad::Class()))
+      {
+         SubPadPaint(dynamic_cast<TVirtualPad*>(obj));
       }
       else
       {
@@ -304,12 +331,20 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
          // printf("TGLViewer::PadPaint skipping %p, %s, %s.\n",
          //        obj, obj->GetName(), obj->ClassName());
       }
-
       lnk = (TObjOptLink*)lnk->Next();
    }
-   EndScene();
-
    gPad = padsav;
+}
+
+//______________________________________________________________________________
+void TGLViewer::PadPaint(TVirtualPad* pad)
+{
+   // Entry point for updating viewer contents via VirtualViewer3D
+   // interface.
+
+   BeginScene();
+   SubPadPaint(pad);
+   EndScene();
 }
 
 //______________________________________________________________________________
