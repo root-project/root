@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.222 2007/02/09 14:16:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.223 2007/02/13 14:21:38 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1289,8 +1289,8 @@ Bool_t TClass::CanSplit() const
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
    if (InheritsFrom("TArray"))    return kFALSE;
-   if (InheritsFrom("TVectorF"))  return kFALSE;
-   if (InheritsFrom("TVectorD"))  return kFALSE;
+   if (fName.Contains("TVector")) return kFALSE;
+   if (fName.Contains("TMatrix")) return kFALSE;
    if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
 
    // If we do not have a showMembers and we have a streamer,
