@@ -394,7 +394,7 @@ int G__free_struct_upto(int tagnum)
             (var->globalcomp[i] != G__COMPILEDGLOBAL) &&
             (var->reftype[i] == G__PARANORMAL)
           ) {
-            if (var->type[i] == 'u') {
+            if (var->type[i] == 'u' && var->p[i]) {
               // -- Static class object member try destructor.
               sprintf(com, "~%s()", G__struct.name[var->p_tagtable[i]]);
               store_struct_offset = G__store_struct_offset;
