@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.69 2007/06/24 18:48:11 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.70 2007/06/25 19:25:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -271,7 +271,7 @@ void TGLViewer::AddHistoPhysical(TGLLogicalShape* log)
    TGLVector3 scaleVec(scale, scale, scale);
 
    Double_t tx = gPad->GetAbsXlowNDC() + lw;
-   double_t ty = gPad->GetAbsYlowNDC() * how + lh;
+   Double_t ty = gPad->GetAbsYlowNDC() * how + lh;
    TGLVector3 transVec(0, ty, tx); // For viewer convention (starts looking along -x).
 
    TGLMatrix mat;
