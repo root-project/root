@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.169 2007/05/21 00:44:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.170 2007/06/15 14:44:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1532,9 +1532,27 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       libs.Remove(0, libs.Length());
    }
 
+   char *path = DynamicPathName(module);
+
    // load any dependent libraries
    int ret;
    TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
+   if (deplibs.IsNull()) {
+      TString libmapfilename;
+      if (path) {
+         libmapfilename = path;
+         idx = libmapfilename.Last('.');
+         if (idx != kNPOS) {
+            libmapfilename.Remove(idx);
+         }
+         libmapfilename += ".rootmap";
+      }
+      if (gSystem->GetPathInfo( libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
+         if (gDebug >0) Info("Load","loading %s",libmapfilename.Data());
+         gInterpreter->LoadLibraryMap( libmapfilename );
+         deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
+      }
+   }
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
@@ -1551,9 +1569,9 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete tokens;
    }
 
-   char *path;
+
    ret = -1;
-   if ((path = DynamicPathName(module))) {
+   if (path) {
       gLibraryVersionIdx++;
       if (gLibraryVersionIdx == gLibraryVersionMax) {
          gLibraryVersionMax *= 2;
@@ -2475,6 +2493,16 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       }
 
    }
+
+   TString libmapfilename;
+   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
+   libmapfilename += ".rootmap";
+#if defined(R__MACOSX) || defined(R__WIN32)
+   Bool_t produceRootmap = kTRUE;
+#else
+   Bool_t produceRootmap = kFALSE;
+#endif
+
    if (!recompile) {
       // The library already exist, let's just load it.
       if (loadLib) {
@@ -2484,6 +2512,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
+
+         if (gInterpreter->GetSharedLibDeps(libname) == 0) {
+            gInterpreter->LoadLibraryMap(libmapfilename);
+         }
 
          return !gSystem->Load(library);
       }
@@ -2595,15 +2627,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    mapfile += "map";
    TString mapfilein = mapfile + ".in";
    TString mapfileout = mapfile + ".out";
-
-   TString libmapfilename;
-   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
-   libmapfilename += ".rootmap";
-#if defined(R__MACOSX)
-   Bool_t produceRootmap = kTRUE;
-#else
-   Bool_t produceRootmap = kFALSE;
-#endif
 
    ofstream mapfileStream( mapfilein, ios::out );
    {
@@ -2853,6 +2876,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       // by the library are present.
       G__Set_RTLD_NOW();
 #endif
+      if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
+         gInterpreter->UnloadLibraryMap(libmapfilename);
+         gInterpreter->LoadLibraryMap(libmapfilename);
+      }
       if (gDebug>3)  ::Info("ACLiC","loading the shared library");
       if (loadLib) result = !gSystem->Load(library);
       else result = kTRUE;
