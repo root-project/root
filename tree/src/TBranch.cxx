@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.127 2007/05/05 17:37:27 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.128 2007/05/11 06:37:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1740,7 +1740,7 @@ void TBranch::Streamer(TBuffer& b)
             leaf->SetBranch(this);
          }
          Int_t nbaskets = fBaskets.GetEntries();
-         for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+         for (Int_t j=fWriteBasket,n=0;j>=0 && n<nbaskets;--j) {
             TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
             if (b) {
                b->SetBranch(this);
