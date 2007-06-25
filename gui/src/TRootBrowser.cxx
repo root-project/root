@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.120 2007/06/22 16:55:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.121 2007/06/25 07:30:56 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2275,8 +2275,8 @@ void TRootBrowser::DeleteListTreeItem(TGListTreeItem *item)
 {
    // delete list tree item, remove it from history
 
-   fLt->DeleteItem(item);
    ((TRootBrowserHistory*)fHistory)->DeleteItem(item);
+   fLt->DeleteItem(item);
 }
 
 //______________________________________________________________________________
@@ -2296,7 +2296,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             if (k_obj) {
                TGListTreeItem *parent = item->GetParent();
                DeleteListTreeItem(item);
-               TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName());
+               TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName(), k_obj);
                if (itm) {
                   itm->SetUserData(k_obj);
                   item = itm;
@@ -2580,7 +2580,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
                if (kobj) {
                   TGListTreeItem *parent = fListLevel->GetParent();
                   DeleteListTreeItem(fListLevel);
-                  TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName());
+                  TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName(), kobj);
                   if (kitem) {
                      obj = kobj;
                      useLock = kFALSE;
@@ -2626,21 +2626,19 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    // via TBrowser::Refresh() which should be called once all objects have
    // been removed.
 
-   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
    if (fListLevel && (fListLevel->GetUserData() == obj)) {
-      fListLevel = 0;
+      TGListTreeItem *parent = fListLevel->GetParent();
+      if (parent) {
+         fListLevel = parent;
+         fLt->ClearHighlighted();
+         fLt->HighlightItem(fListLevel);
+         fLt->OpenItem(fListLevel);
+      }
+      else
+         fListLevel = 0;
    }
    if (fHistory) fHistory->RecursiveRemove(obj);
-   if (obj->IsA() == TFile::Class()) {
-      fListLevel = 0;
-      BrowseObj(gROOT);
-   }
-   if (obj->InheritsFrom("TRemoteObject") ||
-       obj->InheritsFrom("TApplicationRemote")) {
-      // go to root (top level)
-      fListLevel = 0;
-      Refresh(kTRUE);
-   }
+   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
 }
 
 //______________________________________________________________________________
