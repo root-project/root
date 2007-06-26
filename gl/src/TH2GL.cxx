@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TH2GL.cxx,v 1.1 2007/06/23 21:23:22 brun Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 
 ClassImp(TH2GL)
 
-TH2GL::TH2GL() : TGLObject(), fM(0)
+TH2GL::TH2GL() : TGLObject(), fM(0), fPlotPainter(0)
 {
    // Constructor.
 
@@ -63,8 +63,6 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
          fPlotPainter = new TGLIsoPainter(fM, 0, &fCoord);
       else if (option.Index("box") != kNPOS)
          fPlotPainter = new TGLBoxPainter(fM, 0, &fCoord);
-      // else if (option.Index("tf3") != kNPOS)
-      //    fPlotPainter = new TGLTF3Painter(fF3, fM, 0, &fCoord);
       else if (option.Index("surf") != kNPOS)
          fPlotPainter = new TGLSurfacePainter(fM, 0, &fCoord);
       else

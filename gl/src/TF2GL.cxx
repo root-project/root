@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TF2GL.cxx,v 1.1 2007/06/23 21:23:21 brun Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 
 ClassImp(TF2GL)
 
-TF2GL::TF2GL() : TGLObject(), fM(0)
+TF2GL::TF2GL() : TGLObject(), fM(0), fH(0)
 {
    // Constructor.
 
