@@ -5,12 +5,14 @@
 
 .PHONY: cintdlls distclean-cintdlls clean-cintdlls
 
-# no: string valarray limits iterator pair vectorbool
-CINTSTLDLLNAMES = vector list deque map map2 set multimap multimap2 multiset \
-                  stack queue exception complex
+# no: iterator pair
+CINTSTLDLLNAMES = string vector vectorbool list deque map map2 set \
+                  multimap multimap2 multiset \
+                  stack queue exception stdexcept climits complex
 CINTINCDLLNAMES = stdfunc stdcxxfunc
 ifneq ($(PLATFORM),win32)
 # FIX THEM!
+  CINTSTLDLLNAMES += valarray
   CINTINCDLLNAMES += posix ipc
 endif
 # ".dll", not ".$(SOEXT)"!
@@ -68,7 +70,9 @@ INCLUDEFILES += $(addsuffix .d,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLL
 
 cintdlls: $(ALLCINTDLLS)
 
+$(CINTDIRDLLSTL)/G__cpp_string.cxx:	$(CINTDIRL)/dll_stl/str.h
 $(CINTDIRDLLSTL)/G__cpp_vector.cxx:	$(CINTDIRL)/dll_stl/vec.h
+$(CINTDIRDLLSTL)/G__cpp_vectorbool.cxx: $(CINTDIRL)/dll_stl/vecbool.h
 $(CINTDIRDLLSTL)/G__cpp_list.cxx:	$(CINTDIRL)/dll_stl/lst.h
 $(CINTDIRDLLSTL)/G__cpp_deque.cxx:	$(CINTDIRL)/dll_stl/dqu.h
 $(CINTDIRDLLSTL)/G__cpp_map.cxx:	$(CINTDIRL)/dll_stl/mp.h
@@ -79,14 +83,13 @@ $(CINTDIRDLLSTL)/G__cpp_multimap2.cxx:	$(CINTDIRL)/dll_stl/multmp.h
 $(CINTDIRDLLSTL)/G__cpp_multiset.cxx:	$(CINTDIRL)/dll_stl/multst.h
 $(CINTDIRDLLSTL)/G__cpp_stack.cxx:	$(CINTDIRL)/dll_stl/stk.h
 $(CINTDIRDLLSTL)/G__cpp_queue.cxx:	$(CINTDIRL)/dll_stl/que.h
+$(CINTDIRDLLSTL)/G__cpp_valarray.cxx:	$(CINTDIRL)/dll_stl/vary.h
 $(CINTDIRDLLSTL)/G__cpp_exception.cxx:	$(CINTDIRL)/dll_stl/cinteh.h
+$(CINTDIRDLLSTL)/G__cpp_stdexcept.cxx:	$(CINTDIRL)/dll_stl/se.h
+$(CINTDIRDLLSTL)/G__cpp_climits.cxx:	$(CINTDIRL)/dll_stl/clim.h
 $(CINTDIRDLLSTL)/G__cpp_complex.cxx:	$(CINTDIRL)/dll_stl/cmplx.h
-$(CINTDIRDLLSTL)/G__cpp_limits.cxx:	$(CINTDIRL)/dll_stl/clim.h
 $(CINTDIRDLLSTL)/G__cpp_iterator.cxx:	$(CINTDIRL)/dll_stl/iter.h
 $(CINTDIRDLLSTL)/G__cpp_pair.cxx:	$(CINTDIRL)/dll_stl/pr.h
-$(CINTDIRDLLSTL)/G__cpp_string.cxx:	$(CINTDIRL)/dll_stl/str.h
-$(CINTDIRDLLSTL)/G__cpp_valarray.cxx:	$(CINTDIRL)/dll_stl/vary.h
-$(CINTDIRDLLSTL)/G__cpp_vectorbool.cxx: $(CINTDIRL)/dll_stl/vecbool.h
 
 $(CINTDIRL)/G__cpp_stdcxxfunc.cxx: 	$(CINTDIRL)/stdstrct/stdcxxfunc.h
 $(CINTDIRL)/G__c_stdfunc.c:		$(CINTDIRL)/stdstrct/stdfunc.h
