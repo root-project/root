@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.11 2007/06/26 13:15:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.12 2007/06/26 14:58:54 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -59,6 +59,7 @@ ClassImp(TApplicationRemote)
 
 static const char *gScript = "roots";
 static const char *gScriptCmd = "\\\"%s %d localhost:%d/%s -d=%d\\\"";
+#ifndef WIN32
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"'(sh=\\`basename \'\\\\\\$SHELL\'\\`; \
    if test xbash = x\'\\\\\\$sh\' -o xsh = x\'\\\\\\$sh\' -o xksh = x\'\\\\\\$sh\'; then \
@@ -68,6 +69,17 @@ static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    else \
       echo \\\"Unknown shell \'\\\\\\$SHELL\'\\\"; \
    fi)'\"";
+#else
+static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
+   \"'(sh=`basename $SHELL`; \
+   if test xbash = x$sh -o xsh = x$sh -o xksh = x$sh; then \
+      $SHELL -l -c %s; \
+   elif test xcsh = x$sh -o xtcsh = x$sh; then \
+      $SHELL -c %s; \
+   else \
+      echo \"Unknown shell $SHELL\"; \
+   fi)'\"";
+#endif
 
 Int_t TApplicationRemote::fgPortAttempts = 100; // number of attempts to find a port
 Int_t TApplicationRemote::fgPortLower =  49152; // lower bound for ports
