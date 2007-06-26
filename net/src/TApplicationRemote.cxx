@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.9 2007/06/19 12:55:18 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.10 2007/06/21 14:17:03 brun Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -61,7 +61,7 @@ static const char *gScript = "roots";
 static const char *gScriptCmd = "\'%s %d localhost:%d/%s -d=%d\'";
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"\\\"(sh=\\`basename \\\\\\$SHELL\\`; \
-   if test \"xbash\" = \"x\\\\\\$sh\" -o \"xsh\" = \"x\\\\\\$sh\"; then \
+   if test \"xbash\" = \"x\\\\\\$sh\" -o \"xsh\" = \"x\\\\\\$sh\" -o \"xksh\" = \"x\\\\\\$sh\"; then \
       \\\\\\$SHELL -l -c %s; \
    elif test \"xcsh\" = \"x\\\\\\$sh\" -o \"xtcsh\" = \"x\\\\\\$sh\"; then \
       \\\\\\$SHELL -c %s; \
@@ -138,19 +138,16 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    TString scriptCmd;
    scriptCmd.Form(gScriptCmd, sc.Data(), kRRemote_Protocol, rport, fUrl.GetFile(), debug);
    TString cmd;
-//   cmd.Form(gSshCmd, verb, userhost.Data(), rport, port, scriptCmd.Data(), scriptCmd.Data());
-   cmd.Form("ssh -f4 %s -R %d:localhost:%d \"$SHELL -c \'%s %d localhost:%d/%s -d=%d\'\"",
-            userhost.Data(), rport, port, sc.Data(), kRRemote_Protocol, rport,
-            fUrl.GetFile(), debug);
+   cmd.Form(gSshCmd, verb, userhost.Data(), rport, port, scriptCmd.Data(), scriptCmd.Data());
 #ifdef WIN32
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
    gApplication->InitializeGraphics();
 #endif
    if (gDebug > 0)
-      Info("TApplicationRemote","Executing: %s", cmd.Data());
+      Info("TApplicationRemote", "executing: %s", cmd.Data());
    if (gSystem->Exec(cmd) != 0) {
-      Info("TApplicationRemote","Some error occured during SSH connection");
+      Info("TApplicationRemote", "an error occured during SSH connection");
       mon->DeActivateAll();
       delete mon;
       delete ss;
@@ -217,7 +214,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    gROOT->GetListOfSockets()->Remove(fSocket);
    gROOT->GetListOfSockets()->Add(this);
 
-   fRootFiles = new TList; 
+   fRootFiles = new TList;
    fRootFiles->SetName("Files");
 
    // Collect startup notifications
