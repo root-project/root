@@ -18,3 +18,4 @@ rootcint_set.cxx
 rootcint_set.h
 rootcint_vector.cxx
 rootcint_vector.h
+rootcint_valarray.h
