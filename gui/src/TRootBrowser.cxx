@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.123 2007/06/26 10:01:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.124 2007/06/26 10:34:40 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2494,10 +2494,11 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
       if (obj->InheritsFrom("TKey")) {
          TObject *keyobj = gROOT->FindObject(obj->GetName());
-         if (keyobj->InheritsFrom("TFormula"))  browsable = kFALSE;
+         if (keyobj && keyobj->ClassName() && 
+            (!strcmp(keyobj->ClassName(), "TFormula")))
+            browsable = kFALSE;
       }
-        
-         
+
       if (obj->IsA() == TSystemDirectory::Class()) {
          useLock = kFALSE;
 
