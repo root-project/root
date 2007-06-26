@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TOffset.cxx,v 1.2 2002/09/27 17:51:14 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TOffset.cxx,v 1.3 2002/11/27 18:48:35 pcanal Exp $
 // Author: Victor Perev   08/05/02
 
 
@@ -352,10 +352,6 @@ Int_t TOffset::GetOffset(const char *name) const
 #include "TH1.h"
 #include "TArrayD.h"
 
-//______________________________________________________________________________
-void TOffset::Test() 
-{
-
 class myProf :public TH1F {
 public:
 virtual ~myProf(){}
@@ -396,36 +392,40 @@ class tailPClass : public fst3Class {public: char c2;};
 
 
 
+//______________________________________________________________________________
+void TOffset::Test() 
+{
+
   myProf my;
-  printf("size TH1D,TArrayD,my=%d,%d,%d offset=%d\n",
+  printf("size TH1D,TArrayD,my=%zu,%zu,%zu offset=%td\n",
   sizeof(TH1F),sizeof(TArrayD),sizeof(my),(char*)&my.fArr-(char*)&my);
 
   myPro2 my2;
-  printf("size TH1D,TArrayD,my=%d,%d,%d offset=%d\n",
+  printf("size TH1D,TArrayD,my=%zu,%zu,%zu offset=%td\n",
   sizeof(TH1F),sizeof(TArrayD),sizeof(my2),(char*)&my2.fArr-(char*)&my2);
 
   myPro3 my3;
-  printf("size TH1D,TArrayD,my=%d,%d,%d offset=%d\n",
+  printf("size TH1D,TArrayD,my=%zu,%zu,%zu offset=%td\n",
   sizeof(TH1F),sizeof(TArrayD),sizeof(my3),(char*)&my3.fArr-(char*)&my3);
 
 //Tail
-{ tailClass t; printf("Tail1: first size=%d c012offset=%d %d %d,TailSize=%d\n"
+{ tailClass t; printf("Tail1: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
   ,sizeof(fstClass),&t.f.c0-(char*)&t, &t.f.c1-(char*)&t,&t.c2-(char*)&t,sizeof(t));
 }
 //Tail2
-{ tail2Class t; printf("Tail2: first size=%d c0121offset=%d %d %d,TailSize=%d\n"
+{ tail2Class t; printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
   ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
 }
 //Tail3
-{ tail3Class t; printf("Tail3: first size=%d c012offset=%d %d %d,TailSize=%d\n"
+{ tail3Class t; printf("Tail3: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
   ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, (char*)&t.c2-(char*)&t, sizeof(t));
 }
 //Tail4
-{ tail2Class t; printf("Tail2: first size=%d c0121offset=%d %d %d,TailSize=%d\n"
+{ tail2Class t; printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
   ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
 }
 //TailP
-{ tailPClass t; printf("TailP: first size=%d offset=%d TailSize=%d\n"
+{ tailPClass t; printf("TailP: first size=%zu offset=%td TailSize=%zu\n"
   ,sizeof(fst3Class),(char*)&t.c2-(char*)&t, sizeof(t));
 }
 
