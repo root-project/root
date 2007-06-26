@@ -6,7 +6,8 @@
 .PHONY: cintdlls distclean-cintdlls clean-cintdlls
 
 # no: iterator pair
-CINTSTLDLLNAMES = string vector vectorbool list deque map map2 set \
+# already in libCore (base/inc/Linkdef2.h): string 
+CINTSTLDLLNAMES = vector vectorbool list deque map map2 set \
                   multimap multimap2 multiset \
                   stack queue exception stdexcept climits complex
 CINTINCDLLNAMES = stdfunc stdcxxfunc
