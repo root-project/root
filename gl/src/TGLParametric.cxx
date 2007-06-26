@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLParametric.cxx,v 1.2 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLParametric.cxx,v 1.3 2007/06/23 21:23:22 brun Exp $
 // Author:  Timur Pocheptsov  26/01/2007
 
 /*************************************************************************
@@ -364,7 +364,7 @@ Bool_t TGLParametricPlot::InitGeometry()
                     fBackBox.SetPlotBox(Range_t(min.X() * xZoom, max.X() * xZoom),
                                         Range_t(min.Y() * yZoom, max.Y() * yZoom),
                                         Range_t(min.Z() * zZoom, max.Z() * zZoom));
-      fCamera->SetViewVolume(fBackBox.Get3DBox());
+      if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
    }
 
    return kTRUE;

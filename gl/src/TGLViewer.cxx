@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.71 2007/06/25 19:33:03 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.72 2007/06/26 09:59:38 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -40,6 +40,8 @@
 #include "TH2GL.h"
 #include "TF2.h"
 #include "TF2GL.h"
+#include "TGLParametric.h"
+#include "TGLParametricEquationGL.h"
 
 #include "TMath.h"
 #include "TColor.h"
@@ -324,6 +326,16 @@ void TGLViewer::SubPadPaint(TVirtualPad* pad)
          fScene.AdoptLogical(*log);
          AddHistoPhysical(log);
       }
+      else if (obj->InheritsFrom(TGLParametricEquation::Class()))
+      {
+         // printf("parametric\n");
+         TGLObject* log = new TGLParametricEquationGL();
+         log->SetModel(obj, lnk->GetOption());
+         log->SetBBox();
+         fScene.AdoptLogical(*log);
+         AddHistoPhysical(log);
+      }
+
       else if (obj->InheritsFrom(TVirtualPad::Class()))
       {
          SubPadPaint(dynamic_cast<TVirtualPad*>(obj));
