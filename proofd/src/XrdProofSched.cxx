@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.1 2007/06/21 08:00:01 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.2 2007/06/22 12:21:27 ganis Exp $
 // Author: G. Ganis  September 2007
 
 /*************************************************************************
@@ -216,8 +216,12 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy */*xps*/)
       if ((*iter)->fType != 'M' && (*iter)->GetNActiveSessions() <= 2)
          nFreeCPUs++;
    }
-   TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< (nFreeCPUs / 2 + 2));
-   return (nFreeCPUs / 2 + 2);
+
+   int nWrks = nFreeCPUs / 2 + 2;
+   nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
+   TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< nWrks);
+
+   return nWrks;
 }
 
 //__________________________________________________________________________
