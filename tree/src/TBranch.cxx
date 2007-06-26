@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.128 2007/05/11 06:37:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.129 2007/06/25 21:11:37 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1754,9 +1754,8 @@ void TBranch::Streamer(TBuffer& b)
          return;
       }
       //====process old versions before automatic schema evolution
+      Int_t n,i,ijunk;
       if (v > 5) {
-
-         Int_t i,ijunk;
          Stat_t djunk;
          TNamed::Streamer(b);
          if (v > 7) TAttFill::Streamer(b);
@@ -1812,7 +1811,6 @@ void TBranch::Streamer(TBuffer& b)
          return;
       }
       //====process very old versions
-      Int_t n,i,ijunk;
       Stat_t djunk;
       TNamed::Streamer(b);
       b >> fCompress;
