@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.121 2007/06/25 07:30:56 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.122 2007/06/25 19:30:02 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -68,6 +68,7 @@
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
 #include "TFolder.h"
+#include "TFormula.h"
 #include "Getline.h"
 
 #include "HelpText.h"
@@ -2492,6 +2493,12 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          }
       }
 
+      if (obj->InheritsFrom(TKey::Class())) {
+         TObject *keyobj = gROOT->FindObject(obj->GetName());
+         if (keyobj->IsA() == TFormula::Class())  browsable = kFALSE;
+      }
+        
+         
       if (obj->IsA() == TSystemDirectory::Class()) {
          useLock = kFALSE;
 
