@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.70 2007/06/25 19:25:05 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.71 2007/06/25 19:33:03 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -291,8 +291,11 @@ void TGLViewer::SubPadPaint(TVirtualPad* pad)
 {
    // Iterate over pad-primitves and import them.
 
-   TVirtualPad *padsav = gPad;
+   TVirtualPad      *padsav  = gPad;
+   TVirtualViewer3D *vv3dsav = pad->GetViewer3D();
    gPad = pad;
+   pad->SetViewer3D(this);
+
    TList       *prims = pad->GetListOfPrimitives();
    TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
    while (lnk)
@@ -330,9 +333,12 @@ void TGLViewer::SubPadPaint(TVirtualPad* pad)
          // Handle 2D primitives here.
          // printf("TGLViewer::PadPaint skipping %p, %s, %s.\n",
          //        obj, obj->GetName(), obj->ClassName());
+         obj->Paint(lnk->GetOption());
       }
       lnk = (TObjOptLink*)lnk->Next();
    }
+
+   pad->SetViewer3D(vv3dsav);
    gPad = padsav;
 }
 
