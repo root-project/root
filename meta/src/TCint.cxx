@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.148 2007/05/10 15:17:46 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.149 2007/06/25 15:39:36 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1084,11 +1084,11 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                      }
                   }
                   if (f.BeginsWith("rootmap")) {
-                     if (f.Length() > 8 || f(7,7) != "~") {
-                        TString p;
-                        p = d + "/" + f;
+                     TString p;
+                     p = d + "/" + f;
+                     FileStat_t stat;
+                     if (gSystem->GetPathInfo(p, stat) == 0 && R_ISREG(stat.fMode))
                         Warning("LoadLibraryMap", "please rename %s to end with \".rootmap\"", p.Data());
-                     }
                   }
                }
             }
