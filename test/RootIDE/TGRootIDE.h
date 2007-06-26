@@ -1,4 +1,4 @@
-// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.h,v 1.3 2007/05/17 15:06:40 brun Exp $
+// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.h,v 1.1 2007/06/22 08:18:49 brun Exp $
 // Author: Bertrand Bellenot   20/04/2007
 
 /*************************************************************************

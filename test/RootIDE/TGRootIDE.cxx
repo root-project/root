@@ -1,4 +1,4 @@
-// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.cxx,v 1.1 2007/06/22 08:18:49 brun Exp $
+// @(#)root/test/RootIDE/:$Name:  $:$Id: TGRootIDE.cxx,v 1.2 2007/06/22 13:30:53 brun Exp $
 // Author: Bertrand Bellenot   20/04/2007
 
 /*************************************************************************
@@ -1917,7 +1917,7 @@ void TGRootIDE::MouseDown(char *url)
 }
 
 //______________________________________________________________________________
-void TGRootIDE::CheckRemote(const char *str)
+void TGRootIDE::CheckRemote(const char * /*str*/)
 {
    // Check if actual ROOT session is a remote one or a local one.
 
