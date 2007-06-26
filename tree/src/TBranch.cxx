@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.129 2007/06/25 21:11:37 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.130 2007/06/26 08:44:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1754,7 +1754,7 @@ void TBranch::Streamer(TBuffer& b)
          return;
       }
       //====process old versions before automatic schema evolution
-      Int_t n,i,ijunk;
+      Int_t n,i,j,ijunk;
       if (v > 5) {
          Stat_t djunk;
          TNamed::Streamer(b);
@@ -1797,7 +1797,7 @@ void TBranch::Streamer(TBuffer& b)
             leaf->SetBranch(this);
          }
          Int_t nbaskets = fBaskets.GetEntries();
-         for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+         for (j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
             TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
             if (b) {
                b->SetBranch(this);
@@ -1826,13 +1826,13 @@ void TBranch::Streamer(TBuffer& b)
       fBranches.Streamer(b);
       fLeaves.Streamer(b);
       fNleaves = fLeaves.GetEntriesFast();
-      for (Int_t i=0;i<fNleaves;i++) {
+      for (i=0;i<fNleaves;i++) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
          leaf->SetBranch(this);
       }
       fBaskets.Streamer(b);
       Int_t nbaskets = fBaskets.GetEntries();
-      for (Int_t j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
+      for (j=fWriteBasket,n=0;j>0 && n<nbaskets;--j) {
          TBasket *b = (TBasket*)fBaskets.UncheckedAt(j);
          if (b) {
             b->SetBranch(this);
