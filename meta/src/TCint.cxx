@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.149 2007/06/25 15:39:36 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.150 2007/06/26 07:41:58 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1237,8 +1237,8 @@ Int_t TCint::UnloadLibraryMap(const char *library)
             }
          }
 
-         //G__remove_from_class_autoloading_table((char*)cls.Data());
-         //G__security_recover(stderr); // Ignore any error during this setting.
+         G__set_class_autoloading_table((char*)cls.Data(), "");
+         G__security_recover(stderr); // Ignore any error during this setting.
          delete tokens;
       }
    }
