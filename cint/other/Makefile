@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log runStaticDataMemberDict.* *.timestamp
 
 #Set the list of target to make while testing
-TEST_TARGETS += fileClose sprintfselect mytest staticConstTest
+TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -13,26 +13,38 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-testWithFailure:
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-endif
-
-staticConstTest.log: staticConst.C
-	$(CMDECHO) root.exe -b -l -q staticConst.C >  staticConstTest.log 
-
-staticConstTest: staticConstTest.log
-	$(CMDECHO) diff -b staticConstTest.log staticConstTest.ref
-
-
-sprintfselect: sprintfselect.log
+fileClose : fileClose.log
 	$(TestDiff)
 
 fileClose.log : fileClose_C.$(DllSuf)
 
-fileClose: fileClose.log
+sprintfselect : sprintfselect.log
 	$(TestDiff)
+
+staticConstTest : staticConstTest.log
+	$(CMDECHO) diff -b staticConstTest.log staticConstTest.ref
+
+staticConstTest.log : staticConst.C
+	$(CMDECHO) root.exe -b -l -q staticConst.C >  staticConstTest.log 
+
+StaticDataMemberDict : runStaticDataMemberDict.C
+
+runStaticDataMemberDict.C : runStaticDataMember.h runStaticDataMember_linkdef.h
+	$(CMDECHO)rootcint -f runStaticDataMemberDict.C -c runStaticDataMember.h runStaticDataMember_linkdef.h
+
+ifeq (,$(strip $(FAIL)))
+StaticDataMember :
+	$(WarnFailTest)
+
+else
+StaticDataMember : StaticDataMember.timestamp
+
+StaticDataMember.timestamp : StaticDataMember.clog StaticDataMember.log
+	$(CMDECHO)egrep -v 'Processing runStaticDataMember\.C' StaticDataMember.clog > tmp$$$$.clog ; \
+	mv tmp$$$$.clog StaticDataMember.clog ; \
+	egrep -v 'Processing runStaticDataMember\.C' StaticDataMember.log > tmp$$$$.log ; \
+	mv tmp$$$$.log StaticDataMember.log ; \
+	touch $@ ; \
+	diff -b -u StaticDataMember.clog StaticDataMember.log
+
+endif
