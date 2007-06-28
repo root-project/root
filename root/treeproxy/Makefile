@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log red.h generatedSel.h
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log red.h generatedSel.h val3dimSel.h forproxy.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist 
+TEST_TARGETS += reducedSpill leaflist valdim3
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -81,3 +81,21 @@ reducedSpill: reducedSpill.log
 red.h: 
 	$(CMDECHO) root.exe -q -l -b createRed.C > createRed.log 2>&1
 
+forproxy.root: val3dimSel.h
+	
+val3dimSel.h: createvaldim3_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+
+createvaldim3_C.$(DllSuf): createvaldim3.C Track_C.$(DllSuf)
+	$(BuildWithLib)
+
+runvaldim3_C.$(DllSuf): runvaldim3.C Track_C.$(DllSuf)
+	$(BuildWithLib)
+
+val3dimSel_h.$(DllSuf): val3dimSel.h createvaldim3_C.$(DllSuf) Track_C.$(DllSuf)
+	$(BuildWithLib) 
+
+valdim3.clog: val3dimSel_h.$(DllSuf)
+
+valdim3: valdim3.clog
+	$(TestDiff)

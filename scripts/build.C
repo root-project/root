@@ -14,6 +14,7 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0) {
       TIter iter(libs);
       TObjString *objstr;
       while ( (objstr=(TObjString*)iter.Next()) ) {
+         fprintf(stderr,"Will try loading %s\n",objstr->String().Data());
          gSystem->Load(objstr->String());
       }
    }
