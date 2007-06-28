@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.73 2007/06/19 15:06:20 pcanal Exp $
+# $Id: Rules.mk,v 1.74 2007/06/19 15:12:58 pcanal Exp $
 #
 
 all: tests
@@ -369,13 +369,13 @@ endif
 ifneq ($(ARCH),macosx)
 
 define BuildWithLib
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1
 endef
 
 else
 
 define BuildWithLib
-        $(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.dylib,$^)\",\"\"\) > $*.build.log 2>&1
+        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.dylib,$^)\",\"\")" > $*.build.log 2>&1
 endef
 
 endif
