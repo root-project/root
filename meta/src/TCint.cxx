@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.151 2007/06/26 15:48:12 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.152 2007/06/28 10:14:45 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1530,13 +1530,18 @@ const char *TCint::GetSharedLibDeps(const char *lib)
    if (!fMapfile || !lib || !lib[0])
       return 0;
 
+   TString libname(lib);
+   Ssiz_t idx = libname.Last('.');
+   if (idx != kNPOS) {
+      libname.Remove(idx+1);
+   }
    TEnvRec *rec;
    TIter next(fMapfile->GetTable());
 
+   size_t l = libname.Length();
    while ((rec = (TEnvRec*) next())) {
-      size_t l = strlen(lib);
       const char *libs = rec->GetValue();
-      if (!strncmp(libs, lib, l) && strlen(libs) > l) {
+      if (!strncmp(libs, libname.Data(), l) && strlen(libs) > l) {
          return libs;
       }
    }
