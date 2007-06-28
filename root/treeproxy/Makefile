@@ -7,8 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log red.h generatedSel.h val3dimSel.h forpro
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist 
-#valdim3
+TEST_TARGETS += reducedSpill leaflist valdim3
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -82,7 +81,10 @@ reducedSpill: reducedSpill.log
 red.h: 
 	$(CMDECHO) root.exe -q -l -b createRed.C > createRed.log 2>&1
 
+Track_C.$(DllSuf): Track.h
+
 forproxy.root: val3dimSel.h
+	$(CMDECHO) root.exe -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 	
 val3dimSel.h: createvaldim3_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
@@ -96,7 +98,8 @@ runvaldim3_C.$(DllSuf): runvaldim3.C Track_C.$(DllSuf)
 val3dimSel_h.$(DllSuf): val3dimSel.h createvaldim3_C.$(DllSuf) Track_C.$(DllSuf)
 	$(BuildWithLib) 
 
-valdim3.clog: val3dimSel_h.$(DllSuf)
+valdim3.log: val3dimSel_h.$(DllSuf) forproxy.root
 
-valdim3: valdim3.clog
+valdim3: valdim3.log
 	$(TestDiff)
+
