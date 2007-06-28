@@ -60,7 +60,8 @@ def loadDictionary(name) :
 loadDict = loadDictionary
 
 #--- Load Cintex module and enable conversions Reflex->CINT-----------
-libPyROOT.gSystem.Load('libReflex')
+# TSystem::Load() already knows that cintex depends on reflex.
+# libPyROOT.gSystem.Load('libReflex')
 libPyROOT.gSystem.Load('libCintex')
 
 Cintex = libPyROOT.MakeRootClass( 'Cintex' )
