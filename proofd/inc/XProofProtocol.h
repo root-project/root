@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.6 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.7 2007/06/21 07:03:55 ganis Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -77,7 +77,7 @@ enum EAdminMsgType {
    kGetWorkers        = 1003,
    kQueryWorkers      = 1004,
    kCleanupSessions   = 1005,
-   kQueryLogPaths     = 1005,
+   kQueryLogPaths     = 1006,
    kReadBuffer        = 1007,
    kQueryROOTVersions = 1008,
    kROOTVersion       = 1009,
