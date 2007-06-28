@@ -338,7 +338,7 @@ PyROOT::TScopeAdapter::operator bool() const
 Bool_t PyROOT::TScopeAdapter::IsComplete() const
 {
 // verify whether the dictionary of this class is fully available
-   return G__TypeInfo( Name().c_str() ).IsLoaded();
+   return G__TypeInfo( Name( ROOT::Reflex::SCOPED ).c_str() ).IsLoaded();
 }
 
 //____________________________________________________________________________
