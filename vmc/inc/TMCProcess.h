@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCProcess.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TMCProcess.h,v 1.2 2006/08/24 16:31:21 rdm Exp $
 // Author: Alice collaboration
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 35;
+const Int_t kMaxMCProcess = 36;
 
 enum TMCProcess
 {
@@ -57,6 +57,7 @@ enum TMCProcess
                         // and tracking stops
 
   kPLightAbsorption,    // Cerenkov photon absorption
+  kPLightDetection,     // Optical photon detection (absorption + photoelectron production)
   kPLightScattering,    // Cerenkov photon reflection/refraction
   kStepMax,             // step limited by STEMAX
 
@@ -98,6 +99,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "No active process",
   "Energy threshold",
   "Light absorption",
+  "Light detection",
   "Light scattering",
   "Maximum allowed step",
   "Cerenkov production",
