@@ -410,33 +410,45 @@ void G__set_class_autoloading_table(char *classname,char *libname)
  ******************************************************************/
 int G__class_autoloading(int tagnum)
 {
-  char* libname;
   if(tagnum<0 || !G__enable_autoloading) return(0);
   /* also autoload classes that were only forward declared */
   if(G__CLASS_AUTOLOAD==G__struct.type[tagnum] ||
      (G__struct.filenum[tagnum]==-1 && G__struct.size[tagnum]==0)) {
-    libname = G__struct.libname[tagnum];
+    char* libname = G__struct.libname[tagnum];
     /* G__struct.type[tagnum]=0; */
+    if (!libname || !libname[0]) 
+       return 0;
+
+    // need to work on copy of libname, because loading a lib
+    // might change the auto-load info, and thus render
+    // the G__struct.libname[tagnum] value invalid.
+    // E.g. ROOT (re-)reads the library's rootmap file when
+    // loading it, and update that for dependent libraries 
+    // can change our libname.
+    char* copyLibname = new char[strlen(libname) + 1];
+    strcpy(copyLibname, libname);
     if(G__p_class_autoloading) {
-      int res;
-      G__enable_autoloading = 0;
-      res = (*G__p_class_autoloading)(G__fulltagname(tagnum,1),libname);
-      G__enable_autoloading = 1;
-      return(res);
+       int res;
+       G__enable_autoloading = 0;
+       res = (*G__p_class_autoloading)(G__fulltagname(tagnum,1),copyLibname);
+       G__enable_autoloading = 1;
+       delete []copyLibname;
+       return(res);
+    } else {
+       G__enable_autoloading = 0;
+       if(G__LOADFILE_SUCCESS<=G__loadfile(copyLibname)) {
+          G__enable_autoloading = 1;
+          delete []copyLibname;
+          return(1);
+       }
+       else {
+          G__struct.type[tagnum]=G__CLASS_AUTOLOAD;
+          G__enable_autoloading = 1;
+          delete []copyLibname;
+          return(-1);
+       }
     }
-    else if(libname && libname[0]) {
-      G__enable_autoloading = 0;
-      if(G__LOADFILE_SUCCESS<=G__loadfile(libname)) {
-        G__enable_autoloading = 1;
-        return(1);
-      }
-      else {
-        G__struct.type[tagnum]=G__CLASS_AUTOLOAD;
-        G__enable_autoloading = 1;
-        return(-1);
-      }
-    }
-    else return(0);
+    delete []copyLibname;
   }
   return(0);
 }
