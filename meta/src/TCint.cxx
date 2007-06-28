@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.150 2007/06/26 07:41:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.151 2007/06/26 15:48:12 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1466,10 +1466,11 @@ const char* TCint::GetSharedLibs()
       if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
          // Filter out the cintdlls
          static const char *excludelist [] = {
-            "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
-            "string.dll","vector.dll","list.dll","deque.dll","map.dll",
-            "map2.dll","set.dll","multimap.dll","multimap2.dll","multiset.dll",
-            "stack.dll","queue.dll","valarray.dll","exception.dll","complex.dll"};
+            "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
+            "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
+            "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
+            "multiset.dll","stack.dll","queue.dll","valarray.dll",
+            "exception.dll","stdexcept.dll","complex.dll","climits.dll"};
          for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
             if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
          }
