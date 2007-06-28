@@ -56,11 +56,7 @@ ifneq ($(BUILDPYTHON),no)
 RFLX_GRFLXPYC := $(subst .py,.pyc,$(RFLX_GRFLXPY))
 endif
 
-ifeq ($(PLATFORM),win32)
-RFLX_LIBDIR = %~d0%~p0\..\lib
-else
-RFLX_LIBDIR = `dirname $$0`/../lib
-endif
+RFLX_LIBDIR = $(LIBDIR)
 
 ifeq ($(PLATFORM),win32)
 RFLX_GENREFLEX = bin/genreflex.bat
