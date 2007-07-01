@@ -237,7 +237,8 @@ GEOMPAINTERLIBEXTRA     = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
 GEOMBUILDERLIBEXTRA     = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libGui.lib lib/libGed.lib
 QTROOTLIBEXTRA          = lib/libGui.lib lib/libGQt.lib
-GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib lib/libRint.lib
+GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib \
+                          lib/libRint.lib
 RUBYLIBEXTRA            = lib/libHist.lib
 GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib
 GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
@@ -320,8 +321,8 @@ SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit
 SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d -lGraf
-QTROOTLIBEXTRA          = -Llib -lGQt
-GQTLIBEXTRA             = -Llib -lGui  -lGpad -lGraf -lRint
+QTROOTLIBEXTRA          = -Llib -lGui -lGQt
+GQTLIBEXTRA             = -Llib -lGui -lGpad -lGraf -lRint
 QUADPLIBEXTRA           = -Llib -lMatrix
 RUBYLIBEXTRA            = -Llib -lHist
 GUIBLDLIBEXTRA          = -Llib -lGui -lGraf
