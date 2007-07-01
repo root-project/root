@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.2 2007/06/19 13:50:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.3 2007/06/20 14:45:17 brun Exp $
 // Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************
@@ -57,7 +57,8 @@ TRemoteObject::TRemoteObject(const char *name, const char *title,
        !strcmp(classname, "TSystemFile")) {
       gSystem->GetPathInfo(name, fFileStat);
    }
-   fRemoteAddress = (Long64_t) this;
+   Long_t raddr = (Long_t) this;
+   fRemoteAddress = raddr;
 }
 
 //______________________________________________________________________________
