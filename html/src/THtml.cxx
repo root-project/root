@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.135 2007/05/14 14:29:58 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.136 2007/05/29 11:04:45 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -256,7 +256,8 @@ generation will occur.</p>
 
 <p>Additional parameters can be set by Root.Html.Homepage (address of the
 user's home page), Root.Html.SearchEngine (search engine for the class
-documentation), Root.Html.Search (search URL), and a ViewCVS base URL 
+documentation), Root.Html.Search (search URL, where %u is replaced by the 
+referer and %s by the escaped search expression), and a ViewCVS base URL 
 Root.Html.ViewCVS. For the latter, the file name is appended or, if 
 the ViewCVS contains %f, it %f is replaced by the file name.
 All values default to "".</p>
@@ -264,7 +265,7 @@ All values default to "".</p>
 <p>Examples:</p><pre>
       Root.Html.Homepage:     http://www.enricos-home.it
       Root.Html.SearchEngine: http://root.cern.ch/root/Search.phtml
-      Root.Html.Search:       http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml</pre>
+      Root.Html.Search:       http://www.google.com/search?q=%s+site%3A%u</pre>
 
 
 <h4><a name="conf:charset">II.8 HTML Charset</a></h4>

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.8 2007/05/29 11:04:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.9 2007/06/11 14:09:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1737,14 +1737,15 @@ void TDocOutput::WriteSearch(std::ostream& out)
    // Write a search link or a search box, based on THtml::GetSearchStemURL()
    // and THtml::GetSearchEngine(). The first one is preferred.
 
-   // e.g. searchCmd = "http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml";
+   // e.g. searchCmd = "http://www.google.com/search?q=%s+site%3A%u";
    const TString& searchCmd = GetHtml()->GetSearchStemURL();
    if (searchCmd.Length()) {
       // create search input
       out << "<script type=\"text/javascript\">" << endl
          << "function onSearch() {" << endl
          << "var s='" << searchCmd <<"';" << endl
-         << "window.location.href=s.replace(/%s/ig,escape(document.searchform.t.value));" << endl
+         << "var ref=String(document.location.href).replace(/https?:\\/\\//,'').replace(/\\/[^\\/]*$/,'').replace(/\\//g,'%2F');" << endl
+         << "window.location.href=s.replace(/%u/ig,ref).replace(/%s/ig,escape(document.searchform.t.value));" << endl
          << "return false;}" << endl
          << "</script><form action=\"javascript:onSearch();\" id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\">" << endl
          << "<input name=\"t\" value=\"Search documentation...\"  onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input>" << endl
