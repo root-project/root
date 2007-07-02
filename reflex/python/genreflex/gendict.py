@@ -42,6 +42,7 @@ class genDictionary(object) :
     self.errors     = 0
     self.warnings   = 0
     self.comments           = opts.get('comments', False)
+    self.iocomments     = opts.get('iocomments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
     self.generated_shadow_classes = []
     self.selectionname      = 'ROOT::Reflex::Selection'
@@ -1141,7 +1142,9 @@ class genDictionary(object) :
     return c
 #----------------------------------------------------------------------------------    
   def genCommentProperty(self, attrs):
-    if not self.comments or 'file' not in attrs or ('artificial' in attrs and attrs['artificial'] == '1') : return '' 
+    if not (self.comments or self.iocomments) \
+       or 'file' not in attrs \
+       or ('artificial' in attrs and attrs['artificial'] == '1') : return '' 
     fd = self.files[attrs['file']]
     # open and read the header file if not yet done
     if 'filelines' not in fd :
@@ -1152,8 +1155,13 @@ class genDictionary(object) :
       except :
         return ''
     line = fd['filelines'][int(attrs['line'])-1]
-    if line.find('//') == -1 : return ''
-    return '\n  .AddProperty("comment","%s")' %  (line[line.index('//')+2:-1]).replace('"','\\"')
+    poscomment = line.find('//')
+    if poscomment == -1 : return ''
+    if not self.comments and self.iocomments:
+      if line[poscomment+2] != '!' \
+         and line[poscomment+2] != '[' \
+         and line[poscomment+2:poscomment+4] != '->' : return ''
+    return '\n  .AddProperty("comment","%s")' %  (line[poscomment+2:-1]).replace('"','\\"')
 #----------------------------------------------------------------------------------
   def genArgument(self, attrs):
     c = self.genTypeName(attrs['type'], enum=True, const=False)

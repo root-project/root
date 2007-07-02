@@ -78,6 +78,8 @@ class genreflex:
          Generate Reflex dictionaries.\n
       --comments
          Add end-of-line comments in data and functions members as a property called "comment" \n
+      --iocomments
+         Add end-of-line comments in data and functions members as a property called "comment", but only for comments relevant for ROOT I/O \n
       --no_membertypedefs
          Disable the definition of class member typedefs \n
       --no_templatetypedefs
@@ -119,7 +121,7 @@ class genreflex:
     try:
       opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
       ['help','debug=', 'output=','selection_file=','pool','deep','gccxmlpath=',
-       'capabilities=','rootmap=','rootmap-lib=','comments','no_membertypedefs',
+       'capabilities=','rootmap=','rootmap-lib=','comments','iocomments','no_membertypedefs',
        'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split','no_templatetypedefs'])
     except getopt.GetoptError, e:
       print "--->> genreflex: ERROR:",e
@@ -150,6 +152,8 @@ class genreflex:
         print '--->> genreflex: WARNING: --reflex option is obsolete'
       if o in ('--comments',):
         self.opts['comments'] = True
+      if o in ('--iocomments',):
+        self.opts['iocomments'] = True
       if o in ('--no_membertypedefs',):
         self.opts['no_membertypedefs'] = True
       if o in ('--fail_on_warnings',):
