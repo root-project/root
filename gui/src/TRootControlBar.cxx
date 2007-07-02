@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.10 2006/03/28 16:23:08 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.11 2006/11/15 16:35:56 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -36,6 +36,7 @@ TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int
    fWidgets = 0;
    fXpos    = x;
    fYpos    = y;
+   fBwidth  = 0;
    fClicked = 0;
    SetCleanup(kDeepCleanup);
 
@@ -66,6 +67,7 @@ void TRootControlBar::Create()
    // TControlBar and create the buttons.
 
    fWidgets = new TList;
+   TGButton *b = 0;
 
    TControlBarButton *button;
    TIter next(fControlBar->GetListOfButtons());
@@ -84,11 +86,13 @@ void TRootControlBar::Create()
 
          case TControlBarButton::kButton:
             {
-               TGButton *b = new TGTextButton(this, button->GetName());
+               b = new TGTextButton(this, button->GetName());
                b->SetToolTipText(button->GetTitle());
                b->SetUserData(button);
                AddFrame(b, fL1);
                fWidgets->Add(b);
+               if (fBwidth < b->GetDefaultWidth())
+                  fBwidth = b->GetDefaultWidth();  //do not cut the label
             }
             break;
       }
@@ -105,6 +109,10 @@ void TRootControlBar::Create()
       Move(fXpos, fYpos);
       SetWMPosition(fXpos, fYpos);
    }
+   if (GetOptions() & kHorizontalFrame)
+      SetWMSize(fBwidth*fWidgets->GetSize(), GetHeight());
+   else
+      SetWMSize(fBwidth, GetHeight());
 }
 
 //______________________________________________________________________________
@@ -234,4 +242,12 @@ void TRootControlBar::SetTextColor(const char *colorName)
       ((TGTextButton *)obj)->SetTextColor(color);
    }
    Resize();
+}
+
+//______________________________________________________________________________
+void TRootControlBar::SetButtonWidth(UInt_t width)
+{
+   // Set button width in pixels.
+   
+   fBwidth = width;
 }

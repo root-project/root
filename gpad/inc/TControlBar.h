@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.7 2003/10/07 13:41:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.8 2006/11/15 16:35:56 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    void            SetNumberOfRows(Int_t n) { fNoroc = n; }
    void            SetOrientation(const char *o);
    void            SetOrientation(Int_t o);
+   void            SetButtonWidth(UInt_t width);
    void            Show();
 
    ClassDef(TControlBar,0) //Control bar

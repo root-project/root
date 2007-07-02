@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.6 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.7 2006/11/15 16:35:56 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TRootControlBar : public TGMainFrame, public TControlBarImp {
 private:
    TList          *fWidgets; // list of TGTextButton or TGPictureButtons
    TGLayoutHints  *fL1;      // button layout hints
+   UInt_t          fBwidth;  // button width in pixels
 
 public:
    TRootControlBar(TControlBar *c = 0, const char *title = "ROOT Control Bar", 
@@ -56,6 +57,7 @@ public:
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void   ReallyDelete();
    void   SetButtonState(const char *label, Int_t state = 0);
+   void   SetButtonWidth(UInt_t width);
    void   SetFont(const char *fontName);
    void   SetTextColor(const char *colorName);
 

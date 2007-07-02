@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.9 2006/11/15 16:35:56 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -275,6 +275,15 @@ void TControlBar::SetButtonState(const char *label, Int_t state)
       return;
    }
    fControlBarImp->SetButtonState(label, state);
+}
+
+
+ //_______________________________________________________________________
+void TControlBar::SetButtonWidth(UInt_t width)
+{
+   // Sets the width in pixels for control bar button.
+
+   fControlBarImp->SetButtonWidth(width);
 }
 
 

@@ -36,6 +36,7 @@
    bar->AddButton("tree",      ".x tree/tree.C",        "The Tree Data Structure");
    bar->AddButton("ntuple1",   ".x tree/ntuple1.C",     "Ntuples and Selections");
    bar->AddButton("rootmarks", ".x rootmarks.C",        "Prints an Estimated ROOTMARKS for Your Machine");
+   bar->SetButtonWidth(90);
    bar->Show();
    gROOT->SaveContext();
 }
