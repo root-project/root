@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.7 2005/01/27 06:16:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.10 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -18,17 +18,14 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
+#ifndef ROOT_TBranch
+#include "TBranch.h"
+#endif
+#ifndef ROOT_TClonesArray
+#include "TClonesArray.h"
+#endif
 #ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TBranchElement
-#include "TBranchElement.h"
-#endif
-#ifndef ROOT_TStreamerInfo
-#include "TStreamerInfo.h"
-#endif
-#ifndef ROOT_TStreamerElement
-#include "TStreamerElement.h"
 #endif
 #ifndef ROOT_Riostream
 #include "Riostream.h"
@@ -39,6 +36,9 @@
 
 #include <list>
 #include <algorithm>
+
+class TBranch;
+class TStreamerElement;
 
 // Note we could protect the arrays more by introducing a class TArrayWrapper<class T> which somehow knows
 // its internal dimensions and check for them ...
@@ -140,6 +140,28 @@ namespace ROOT {
                   fBranchCount->GetEntry(fDirector->GetReadEntry());
                }
                fBranch->GetEntry(fDirector->GetReadEntry());
+            }
+            fRead = fDirector->GetReadEntry();
+         }
+         return IsInitialized();
+      }
+
+      Bool_t ReadEntries() {
+         if (fDirector==0) return false;
+
+         if (fDirector->GetReadEntry()!=fRead) {
+            if (!IsInitialized()) {
+               if (!Setup()) {
+                  Error("Read",Form("Unable to initialize %s\n",fBranchName.Data()));
+                  return false;
+               }
+            }
+            if (fParent) fParent->ReadEntries();
+            else {
+               if (fBranchCount) {
+                  fBranchCount->TBranch::GetEntry(fDirector->GetReadEntry());
+               }
+               fBranch->TBranch::GetEntry(fDirector->GetReadEntry());
             }
             fRead = fDirector->GetReadEntry();
          }
@@ -292,6 +314,13 @@ namespace ROOT {
          return (TClonesArray*)GetStart();
       }
 
+      Int_t GetEntries() {
+         if (!ReadEntries()) return 0;
+         TClonesArray *arr = (TClonesArray*)GetStart();
+         if (arr) return arr->GetEntries();
+         return 0;
+      }
+
       const TClonesArray* operator->() { return GetPtr(); }
 
    };
@@ -334,15 +363,31 @@ namespace ROOT {
 
    };
 
+   // Helper template to be able to determine and
+   // use array dimentsions.
+   template <class T, int d = 0> struct TArrayType {
+#ifndef __CINT__
+      typedef T type_t;
+      typedef T array_t[d];
+#endif
+   };
+   template <class T> struct TArrayType<T,0> {
+#ifndef __CINT__
+      typedef T type_t;
+      typedef T array_t;
+#endif
+   };
+   template <class T, int d> struct TMultiArrayType {
+#ifndef __CINT__
+      typedef typename T::type_t type_t;
+      typedef typename T::array_t array_t[d];
+#endif
+   };
+
    template <class T>
    class TArrayProxy : public TBranchProxy {
+#ifndef __CINT__
    public:
-      void Print() {
-         TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
-      }
-
       TArrayProxy() : TBranchProxy() {}
       TArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
       TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
@@ -352,51 +397,27 @@ namespace ROOT {
       TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TArrayProxy() {};
 
-      const T& At(int i) {
-         static T default_val;
-         if (!Read()) return default_val;
-         // should add out-of bound test
-         return ((T*)GetStart())[i];
-      }
-
-      const T& operator [](int i) {
-         return At(i);
-      }
-
-
-   };
-
-   template <class T, int d2, int d3 >
-   class TArray3Proxy : public TBranchProxy {
-   public:
-      typedef T array_t[d2][d3];
+      typedef typename T::array_t array_t;
+      typedef typename T::type_t type_t;
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+         cout << "fWhere " << GetWhere() << endl;
+         if (GetWhere()) cout << "value? " << *(type_t*)GetWhere() << endl;
       }
 
-      TArray3Proxy() : TBranchProxy() {}
-      TArray3Proxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TArray3Proxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TArray3Proxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TArray3Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
-      ~TArray3Proxy() {};
-
-      const array_t* At(int i) {
+      const array_t &At(int i) {
          static array_t default_val;
-         if (!Read()) return &default_val;
+         if (!Read()) return default_val;
          // should add out-of bound test
-         return ((array_t**)GetStart())[i];
+         array_t *arr = 0;
+         arr = (array_t*)((type_t*)(GetStart()));
+         if (arr) return arr[i];
+         else return default_val;
       }
 
-      const array_t* operator [](int i) {
-         return At(i);
-      }
-
+      const array_t &operator [](int i) { return At(i); }
+#endif
    };
 
    template <class T>
@@ -449,13 +470,15 @@ namespace ROOT {
 
    template <class T>
    class TClaArrayProxy : public TBranchProxy {
+#ifndef __CINT__
    public:
-      typedef T* array_t;
+      typedef typename T::array_t array_t;
+      typedef typename T::type_t type_t;
 
       void Print() {
          TBranchProxy::Print();
          cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+         if (fWhere) cout << "value? " << *(type_t*)GetStart() << endl;
       }
 
       TClaArrayProxy() : TBranchProxy() {}
@@ -467,100 +490,18 @@ namespace ROOT {
       TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
       ~TClaArrayProxy() {};
 
-      /* const */  array_t At(int i) {
-         static T default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
-
-         return (array_t)GetClaStart(i);
-      }
-
-      /* const */ array_t operator [](int i) { return At(i); }
-
-   };
-
-#if !defined(_MSC_VER) || (_MSC_VER>1300)
-   template <class T, const int d2 >
-   class TClaArray2Proxy : public TBranchProxy {
-   public:
-      typedef T array_t[d2];
-
-      void Print() {
-         TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
-      }
-
-      TClaArray2Proxy() : TBranchProxy() {}
-      TClaArray2Proxy(TBranchProxyDirector *director, const char *name)
-         : TBranchProxy(director,name) {};
-      TClaArray2Proxy(TBranchProxyDirector *director, const char *top,
-                      const char *name)
-         : TBranchProxy(director,top,name) {};
-      TClaArray2Proxy(TBranchProxyDirector *director, const char *top,
-                      const char *name, const char *data)
-         : TBranchProxy(director,top,name,data) {};
-      TClaArray2Proxy(TBranchProxyDirector *director, TBranchProxy *parent,
-                      const char *name)
-         : TBranchProxy(director,parent, name) {};
-      ~TClaArray2Proxy() {};
-
-      const array_t &At(int i) {
-         // might need a second param or something !?
-
+      /* const */  array_t *At(int i) {
          static array_t default_val;
          if (!Read()) return &default_val;
          if (fWhere==0) return &default_val;
 
-         T *temp = (T*)GetClaStart(i);
-         if (temp) return *temp;
-         else return default_val;
-
-         // T *temp = *(T**)location;
-         // return ((array_t**)temp)[i];
+         return (array_t*)GetClaStart(i);
       }
 
-      const array_t &operator [](int i) { return At(i); }
-
-   };
-
-   template <class T, int d2, int d3 >
-   class TClaArray3Proxy : public TBranchProxy {
-   public:
-      typedef T array_t[d2][d3];
-
-      void Print() {
-         TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
-      }
-
-      TClaArray3Proxy() : TBranchProxy() {}
-      TClaArray3Proxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TClaArray3Proxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TClaArray3Proxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TClaArray3Proxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
-      ~TClaArray3Proxy() {};
-
-      const array_t* At(int i) {
-         static array_t default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
-
-         T *temp = (T*)GetClaStart(i);
-         if (temp) return (array_t*)temp;
-         else return default_val;
-
-         // T *temp = *(T**)location;
-         // return ((array_t**)temp)[i];
-      }
-
-      const array_t* operator [](int i) { return At(i); }
-
-   };
+      /* const */ array_t *operator [](int i) { return At(i); }
 #endif
+   };
+
 
    //TImpProxy<TObject> d;
    typedef TImpProxy<Double_t>   TDoubleProxy;
@@ -578,20 +519,20 @@ namespace ROOT {
    typedef TImpProxy<Char_t>     TCharProxy;
    typedef TImpProxy<Bool_t>     TBoolProxy;
 
-   typedef TArrayProxy<Double_t>   TArrayDoubleProxy;
-   typedef TArrayProxy<Double32_t> TArrayDouble32Proxy;
-   typedef TArrayProxy<Float_t>    TArrayFloatProxy;
-   typedef TArrayProxy<UInt_t>     TArrayUIntProxy;
-   typedef TArrayProxy<ULong_t>    TArrayULongProxy;
-   typedef TArrayProxy<ULong64_t>  TArrayULong64Proxy;
-   typedef TArrayProxy<UShort_t>   TArrayUShortProxy;
-   typedef TArrayProxy<UChar_t>    TArrayUCharProxy;
-   typedef TArrayProxy<Int_t>      TArrayIntProxy;
-   typedef TArrayProxy<Long_t>     TArrayLongProxy;
-   typedef TArrayProxy<Long64_t>   TArrayLong64Proxy;
-   typedef TArrayProxy<UShort_t>   TArrayShortProxy;
-   //specialized ! typedef TArrayProxy<Char_t>  TArrayCharProxy;
-   typedef TArrayProxy<Bool_t>     TArrayBoolProxy;
+   typedef TArrayProxy<TArrayType<Double_t> >   TArrayDoubleProxy;
+   typedef TArrayProxy<TArrayType<Double32_t> > TArrayDouble32Proxy;
+   typedef TArrayProxy<TArrayType<Float_t> >    TArrayFloatProxy;
+   typedef TArrayProxy<TArrayType<UInt_t> >     TArrayUIntProxy;
+   typedef TArrayProxy<TArrayType<ULong_t> >    TArrayULongProxy;
+   typedef TArrayProxy<TArrayType<ULong64_t> >  TArrayULong64Proxy;
+   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayUShortProxy;
+   typedef TArrayProxy<TArrayType<UChar_t> >    TArrayUCharProxy;
+   typedef TArrayProxy<TArrayType<Int_t> >      TArrayIntProxy;
+   typedef TArrayProxy<TArrayType<Long_t> >     TArrayLongProxy;
+   typedef TArrayProxy<TArrayType<Long64_t> >   TArrayLong64Proxy;
+   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayShortProxy;
+   //specialized ! typedef TArrayProxy<TArrayType<Char_t> >  TArrayCharProxy;
+   typedef TArrayProxy<TArrayType<Bool_t> >     TArrayBoolProxy;
 
    typedef TClaImpProxy<Double_t>   TClaDoubleProxy;
    typedef TClaImpProxy<Double32_t> TClaDouble32Proxy;
@@ -608,21 +549,21 @@ namespace ROOT {
    typedef TClaImpProxy<Char_t>     TClaCharProxy;
    typedef TClaImpProxy<Bool_t>     TClaBoolProxy;
 
-   typedef TClaArrayProxy<Double_t>    TClaArrayDoubleProxy;
-   typedef TClaArrayProxy<Double32_t>  TClaArrayDouble32Proxy;
-   typedef TClaArrayProxy<Float_t>     TClaArrayFloatProxy;
-   typedef TClaArrayProxy<UInt_t>      TClaArrayUIntProxy;
-   typedef TClaArrayProxy<ULong_t>     TClaArrayULongProxy;
-   typedef TClaArrayProxy<ULong64_t>   TClaArrayULong64Proxy;
-   typedef TClaArrayProxy<UShort_t>    TClaArrayUShortProxy;
-   typedef TClaArrayProxy<UChar_t>     TClaArrayUCharProxy;
-   typedef TClaArrayProxy<Int_t>       TClaArrayIntProxy;
-   typedef TClaArrayProxy<Long_t>      TClaArrayLongProxy;
-   typedef TClaArrayProxy<Long64_t>    TClaArrayLong64Proxy;
-   typedef TClaArrayProxy<UShort_t>    TClaArrayShortProxy;
-   typedef TClaArrayProxy<Char_t>      TClaArrayCharProxy;
-   typedef TClaArrayProxy<Bool_t>      TClaArrayBoolProxy;
-   //specialized ! typedef TClaArrayProxy<Char_t>  TClaArrayCharProxy;
+   typedef TClaArrayProxy<TArrayType<Double_t> >    TClaArrayDoubleProxy;
+   typedef TClaArrayProxy<TArrayType<Double32_t> >  TClaArrayDouble32Proxy;
+   typedef TClaArrayProxy<TArrayType<Float_t> >     TClaArrayFloatProxy;
+   typedef TClaArrayProxy<TArrayType<UInt_t> >      TClaArrayUIntProxy;
+   typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;
+   typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;
+   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayUShortProxy;
+   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;
+   typedef TClaArrayProxy<TArrayType<Int_t> >       TClaArrayIntProxy;
+   typedef TClaArrayProxy<TArrayType<Long_t> >      TClaArrayLongProxy;
+   typedef TClaArrayProxy<TArrayType<Long64_t> >    TClaArrayLong64Proxy;
+   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayShortProxy;
+   typedef TClaArrayProxy<TArrayType<Char_t> >      TClaArrayCharProxy;
+   typedef TClaArrayProxy<TArrayType<Bool_t> >      TClaArrayBoolProxy;
+   //specialized ! typedef TClaArrayProxy<TArrayType<Char_t> >  TClaArrayCharProxy;
 
 } // namespace ROOT
 

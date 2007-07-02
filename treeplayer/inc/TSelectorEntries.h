@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.h,v 1.1 2006/09/17 19:06:35 pcanal Exp $
+// @(#)root/treeplayer:$Name: v5-14-00-patches $:$Id: TSelectorEntries.h,v 1.2 2006/09/29 15:40:08 brun Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************

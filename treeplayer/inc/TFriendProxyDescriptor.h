@@ -1,4 +1,4 @@
-// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
+// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.5 2007/02/01 16:08:21 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -14,6 +14,9 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 
 

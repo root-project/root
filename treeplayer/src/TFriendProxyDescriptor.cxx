@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxyDescriptor.cxx,v 1.2 2004/08/25 15:37:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxyDescriptor.cxx,v 1.4 2007/02/01 16:05:36 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TFriendProxyDescriptor.h"
 #include "TBranchProxyDescriptor.h"
+#include "TList.h"
 
 namespace ROOT {
 

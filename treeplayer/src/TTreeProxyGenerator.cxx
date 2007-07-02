@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.24 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.30 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TBranchProxyClassDescriptor.h"
 
 #include "TList.h"
+#include "Varargs.h"
 #include <stdio.h>
 
 class TTree;
@@ -151,26 +152,24 @@ namespace ROOT {
          result += "Array";
          result += subtype;
          result += "Proxy";
-      } else if (ndim==2) {
-         result = "T";
-         result += middle;
-         result += "Array2Proxy<";
-         result += element->GetTypeName();
-         result += ",";
-         result += element->GetMaxIndex(1);
-         result += " >";
-      }  else if (ndim==3) {
-         result = "T";
-         result += middle;
-         result += "Array3Proxy<";
-         result += element->GetTypeName();
-         result += ",";
-         result += element->GetMaxIndex(1);
-         result += ",";
-         result += element->GetMaxIndex(2);
-         result += " >";
       } else {
-         Error("GetArrayTyep","Array of more than 3 dimentsions not implemented yet.");
+         result = "T";
+         result += middle;
+         result += "ArrayProxy<";
+         for(Int_t ind = ndim - 2; ind > 0; --ind) {
+            result += "TMultiArrayType<";
+         }
+         result += "TArrayType<";
+         result += element->GetTypeName();
+         result += ",";
+         result += element->GetMaxIndex(ndim-1);
+         result += "> ";
+         for(Int_t ind = ndim - 2; ind > 0; --ind) {
+            result += ",";
+            result += element->GetMaxIndex(ind);
+            result += "> ";
+         }
+         result += ">";
       }
       return result;
 
@@ -379,7 +378,7 @@ namespace ROOT {
    {
       // Add a header inclusion request.
 
-      AddHeader(gROOT->GetClass(classname));
+      AddHeader(TClass::GetClass(classname));
    }
 
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
@@ -552,8 +551,8 @@ namespace ROOT {
                         TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
                         const char *pclname = parent->GetClassName();
 
-                        TClass *clparent = gROOT->GetClass(pclname);
-                        // TClass *clm = gROOT->GetClass(GetClassName());
+                        TClass *clparent = TClass::GetClass(pclname);
+                        // TClass *clm = TClass::GetClass(GetClassName());
                         Int_t lOffset = 0; // offset in the local streamerInfo.
                         if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
                         else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
@@ -601,7 +600,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc = 0;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl) {
             TStreamerInfo *info = branch->GetInfo();
             if (strcmp(cl->GetName(),info->GetName())!=0) {
@@ -629,7 +628,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc = 0;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl) {
             TStreamerInfo *info = branch->GetInfo();
             if (strcmp(cl->GetName(),info->GetName())!=0) {
@@ -1016,8 +1015,8 @@ namespace ROOT {
       TLeaf *leafcount = leaf->GetLeafCount();
 
       UInt_t dim = 0;
-      Int_t maxDim[3];
-      maxDim[0] = maxDim[1] = maxDim[2] = 1;
+      std::vector<Int_t> maxDim;
+      //maxDim[0] = maxDim[1] = maxDim[2] = 1;
 
       TString dimensions;
       TString temp = leaf->GetName();
@@ -1043,20 +1042,16 @@ namespace ROOT {
          while (current) {
             current++;
             if (current[0] == ']') {
-               maxDim[dim] = -1; // Loop over all elements;
+               maxDim.push_back(-1); // maxDim[dim] = -1; // Loop over all elements;
             } else {
                scanindex = sscanf(current,"%d",&index);
                if (scanindex) {
-                  maxDim[dim] = index;
+                  maxDim.push_back(index); // maxDim[dim] = index;
                } else {
-                  maxDim[dim] = -2; // Index is calculated via a variable.
+                  maxDim.push_back(-2); // maxDim[dim] = -2; // Index is calculated via a variable.
                }
             }
             dim ++;
-            if (dim >= 3) {
-               // NOTE: test that dim this is NOT too big!!
-               break;
-            }
             current = (char*)strstr( current, "[" );
          }
 
@@ -1082,27 +1077,23 @@ namespace ROOT {
             type += "Proxy";
             break;
          }
-         case 2: {
-            type = "TArray2Proxy<";
+         default: {
+            type = "TArrayProxy<";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += "TMultiArrayType<";
+            }
+            type += "TArrayType<";
             type += leaf->GetTypeName();
             type += ",";
-            type += maxDim[1];
-            type += " >";
+            type += maxDim[dim-1];
+            type += "> ";
+            for(Int_t ind = dim - 2; ind > 0; --ind) {
+               type += ",";
+               type += maxDim[ind];
+               type += "> ";
+            }
+            type += ">";
             break;
-         }
-         case 3: {
-            type = "TArray3Proxy<";
-            type += leaf->GetTypeName();
-            type += ",";
-            type += maxDim[1];
-            type += ",";
-            type += maxDim[2];
-            type += " >";
-            break;
-         }
-         default:  {
-            Error("AnalyzeOldLeaf","Array of more than 3 dimentsions not implemented yet.");
-            return 0;
          }
       }
 
@@ -1197,7 +1188,7 @@ namespace ROOT {
          }
 
          TBranchProxyClassDescriptor *desc = 0;
-         TClass *cl = gROOT->GetClass(classname);
+         TClass *cl = TClass::GetClass(classname);
          TString type = "unknown";
          if (cl) {
             Bool_t isclones = false;
@@ -1205,7 +1196,7 @@ namespace ROOT {
                isclones = true;
                if (branch->IsA()==TBranchElement::Class()) {
                   const char *cname = ((TBranchElement*)branch)->GetClonesName();
-                  TClass *ncl = gROOT->GetClass(cname);
+                  TClass *ncl = TClass::GetClass(cname);
                   if (ncl) {
                      cl = ncl;
                   } else {
@@ -1496,7 +1487,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl && cl->CanSplit()) {
             cldesc = new TBranchProxyClassDescriptor(cl->GetName(), cl->GetStreamerInfo(),
                                                      branch->GetName(),
@@ -1757,11 +1748,13 @@ namespace ROOT {
       }
 
       fprintf(hf, "\n   // Proxy for each of the branches, leaves and friends of the tree\n");
+      fprintf(hf,   "\n#ifndef __CINT__\n");
       next = &fListOfTopProxies;
       TBranchProxyDescriptor *data;
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          data->OutputDecl(hf, 3, fMaxDatamemberType);
       }
+      fprintf(hf,   "\n#endif /*__CINT__*/\n");
       if (fListOfFriends.LastIndex()>=0) {
          next = &fListOfFriends;
          TFriendProxyDescriptor *clp;
@@ -1778,7 +1771,7 @@ namespace ROOT {
       fprintf(hf,   ",\n      fInput(0)");
       fprintf(hf,   ",\n      htemp(0)");
       fprintf(hf,   ",\n      fDirector(tree,-1)");
-      fprintf(hf,   ",\n      fClass                (gROOT->GetClass(\"%s\"))",classname.Data());
+      fprintf(hf,   ",\n      fClass                (TClass::GetClass(\"%s\"))",classname.Data());
       fprintf(hf,   ",\n      fBeginMethod          (fClass,\"%s_Begin\",\"(TTree*)0\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fSlaveBeginMethod     (fClass,\"%s_SlaveBegin\",\"(TTree*)0\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fNotifyMethod         (fClass,\"%s_Notify\",\"\")",scriptfunc.Data());
@@ -1856,8 +1849,11 @@ namespace ROOT {
       fprintf(hf,"   if (tree == 0) return;\n");
       fprintf(hf,"   fChain = tree;\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
+      fprintf(hf,"   delete fHelper;\n");
       fprintf(hf,"   fHelper = new TSelectorDraw();\n");
+      fprintf(hf,"   delete fInput;\n");
       fprintf(hf,"   fInput  = new TList();\n");
+      fprintf(hf,"   fInput->SetOwner();\n");
       fprintf(hf,"   fInput->Add(new TNamed(\"varexp\",\"0.0\")); // Fake a double size histogram\n");
       fprintf(hf,"   fInput->Add(new TNamed(\"selection\",\"\"));\n");
       fprintf(hf,"   fHelper->SetInputList(fInput);\n");
@@ -1978,7 +1974,7 @@ namespace ROOT {
       fprintf(hf,"      if (drawflag) htemp->Draw(fOption);\n");
       fprintf(hf,"   }\n");
       fprintf(hf,"   if (fTerminateMethod.IsValid()) fTerminateMethod.Execute(this);\n");
-      fprintf(hf,"\n");
+      fprintf(hf,"   delete fHelper; fHelper = 0;\n");
       fprintf(hf,"}\n");
 
       fclose(hf);
