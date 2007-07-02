@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.167 2007/06/21 15:42:50 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.168 2007/06/21 19:14:20 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -656,6 +656,7 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection,
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);
+      fProofChain->SetEntryList(fEntryList);
       return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
    }
 
@@ -675,6 +676,7 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
       fProofChain->SetEventList(fEventList);
+      fProofChain->SetEntryList(fEntryList);
       return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
    }
    GetPlayer();
@@ -1825,6 +1827,8 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
+      fProofChain->SetEventList(fEventList);
+      fProofChain->SetEntryList(fEntryList);
       return fProofChain->Process(filename, option, nentries, firstentry);
    }
 
@@ -1845,6 +1849,8 @@ Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentrie
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
+      fProofChain->SetEventList(fEventList);
+      fProofChain->SetEntryList(fEntryList);
       return fProofChain->Process(selector, option, nentries, firstentry);
    }
 
@@ -2091,6 +2097,13 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
       fEntryList = elist;
       return;
    }
+   if (fProofChain){
+      //for processing on proof, event list and entry list can't be
+      //set at the same time. 
+      fEventList = 0;
+      fEntryList = elist;
+      return;
+   }
 
    TString option = opt;
    option.ToUpper();
@@ -2271,21 +2284,35 @@ void TChain::SetEventList(TEventList *evlist)
 //GetEntryList() function is called, the TEntryList is not owned by the chain 
 //any more and will not be deleted with it.
 
+   fEventList = evlist;
+   if (fEntryList){
+      if (fEntryList->TestBit(kCanDelete))
+         delete fEntryList;
+   }
 
    if (!evlist) {
-      if (fEntryList){
-         if (fEntryList->TestBit(kCanDelete)){
-            delete fEntryList;
-         }
-      }
       fEntryList = 0;
       fEventList = 0;
       return;
    }
-   fEventList = evlist;
-   if(fProofChain)
-       return;
-   TEntryList *enlist = new TEntryList(evlist->GetName(), evlist->GetTitle());
+
+   if(fProofChain) {
+      //on proof, fEventList and fEntryList shouldn't be set at the same time
+      if (fEntryList){
+         //check, if the chain is the owner of the previous entry list 
+         //(it happens, if the previous entry list was created from a user-defined
+         //TEventList in SetEventList() function)
+         if (fEntryList->TestBit(kCanDelete)){
+            delete fEntryList;
+         }
+         fEntryList = 0;
+      }
+      return;
+   }
+
+   char enlistname[50];
+   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
+   TEntryList *enlist = new TEntryList(enlistname, evlist->GetTitle());
    Int_t nsel = evlist->GetN();
    Long64_t globalentry, localentry;
    for (Int_t i=0; i<nsel; i++){
@@ -2294,6 +2321,7 @@ void TChain::SetEventList(TEventList *evlist)
       enlist->Enter(localentry, fTree);
    }
    enlist->SetBit(kCanDelete, kTRUE);
+   enlist->SetReapplyCut(evlist->GetReapplyCut());
    SetEntryList(enlist);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.330 2007/06/21 15:42:50 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.331 2007/06/21 19:14:20 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3787,6 +3787,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
+//______________________________________________________________________________
 TEntryList* TTree::GetEntryList()
 {
 //Returns the entry list, set to this tree
@@ -3805,7 +3806,6 @@ TEntryList* TTree::GetEntryList()
    return fEntryList;
 }
 
-//______________________________________________________________________________
 //______________________________________________________________________________
 Long64_t TTree::GetEntryNumber(Long64_t entry) const
 {
@@ -5709,19 +5709,22 @@ void TTree::SetEventList(TEventList *evlist)
 //GetEntryList() function is called, the TEntryList is not owned by the tree 
 //any more.
 
+   fEventList = evlist;
+   if (fEntryList){
+      if (fEntryList->TestBit(kCanDelete))
+         delete fEntryList;
+   }
+
    if (!evlist) {
-      if (fEntryList){
-         if (fEntryList->TestBit(kCanDelete)){
-            delete fEntryList;
-         }
-      }
       fEntryList = 0;
       fEventList = 0;
       return;
    }
 
    fEventList = evlist;
-   fEntryList = new TEntryList(evlist->GetName(), evlist->GetTitle());
+   char enlistname[100];
+   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
+   fEntryList = new TEntryList(enlistname, evlist->GetTitle());
    Int_t nsel = evlist->GetN();
    fEntryList->SetTree(this);
    Long64_t entry;
@@ -5729,6 +5732,7 @@ void TTree::SetEventList(TEventList *evlist)
       entry = evlist->GetEntry(i);
       fEntryList->Enter(entry);
    }
+   fEntryList->SetReapplyCut(evlist->GetReapplyCut());
    fEntryList->SetBit(kCanDelete, kTRUE);
 }
 
