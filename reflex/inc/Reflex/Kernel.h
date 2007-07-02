@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.28 2007/04/26 08:58:07 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.29 2007/04/26 13:47:05 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -94,14 +94,6 @@
 // some compilers define the macros below in limits
 #include <limits>
 
-// Large integer definition depends of the platform
-#if defined(_WIN32) && !defined(__CINT__)
-typedef __int64 longlong;
-typedef unsigned __int64 ulonglong;
-#elif defined(__linux) || defined(sun) || defined(__APPLE__) || (defined(__CYGWIN__)&&defined(__GNUC__)) || defined(_AIX) || (defined(__alpha)&&!defined(__linux)) || defined(__sgi) || defined(__FreeBSD__)
-typedef long long int longlong; /* */
-typedef unsigned long long int /**/ ulonglong;
-#endif
 #ifndef LONGLONG_MAX
 #define LONGLONG_MAX 0x7FFFFFFFFFFFFFFFLL
 #endif
@@ -124,6 +116,15 @@ typedef unsigned long long int /**/ ulonglong;
 
 namespace ROOT {
    namespace Reflex {
+
+      // Large integer definition depends of the platform
+#if defined(_WIN32) && !defined(__CINT__)
+      typedef __int64 longlong;
+      typedef unsigned __int64 ulonglong;
+#else
+      typedef long long int longlong; /* */
+      typedef unsigned long long int /**/ ulonglong;
+#endif
 
       // forward declarations
       class Any;
