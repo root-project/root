@@ -122,7 +122,7 @@ void timeonaxis()
 //      %% %
 // The other characters are output as is.
 
-   gt2->GetXaxis()->SetTimeFormat("y. %Y");
+   gt2->GetXaxis()->SetTimeFormat("y. %Y %F2000-01-01 00:00:00");
    gPad->Modified();
    
 }
