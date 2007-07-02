@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.32 2007/04/19 09:33:40 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.33 2007/05/08 14:56:19 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -456,6 +456,7 @@ Long64_t TEventIterTree::GetNextEvent()
          fOldBytesRead = totBytesRead;
       }
 
+      SafeDelete(fElem);
       if (fTree) {
          fElem = fDSet->Next(fTree->GetEntries());
       } else {
