@@ -1160,7 +1160,8 @@ class genDictionary(object) :
     if not self.comments and self.iocomments:
       if line[poscomment+2] != '!' \
          and line[poscomment+2] != '[' \
-         and line[poscomment+2:poscomment+4] != '->' : return ''
+         and line[poscomment+2:poscomment+4] != '->' \
+         and line[poscomment+2:poscomment+4] != '||': return ''
     return '\n  .AddProperty("comment","%s")' %  (line[poscomment+2:-1]).replace('"','\\"')
 #----------------------------------------------------------------------------------
   def genArgument(self, attrs):
