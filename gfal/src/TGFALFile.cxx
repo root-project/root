@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name: v5-14-00-patches $:$Id: TGFALFile.cxx,v 1.6 2006/06/21 13:57:53 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.7 2007/05/23 13:30:55 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -104,12 +104,12 @@ TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
 
    TString stmp;
    char *fname;
-   if ((fname = gSystem->ExpandPathName(fUrl.GetFile()))) {
+   if ((fname = gSystem->ExpandPathName(fUrl.GetFileAndOptions()))) {
       stmp = fname;
       delete [] fname;
       fname = (char *)stmp.Data();
    } else {
-      Error("TGFALFile", "error expanding path %s", fUrl.GetFile());
+      Error("TGFALFile", "error expanding path %s", fUrl.GetFileAndOptions());
       goto zombie;
    }
 
@@ -344,7 +344,7 @@ Int_t TGFALSystem::MakeDirectory(const char *dir)
 
    TUrl url(dir);
 
-   Int_t ret = ::gfal_mkdir(url.GetFile(), 0755);
+   Int_t ret = ::gfal_mkdir(url.GetFileAndOptions(), 0755);
 
    return ret;
 }
@@ -364,13 +364,13 @@ void *TGFALSystem::OpenDirectory(const char *dir)
 
    struct stat64 finfo;
 
-   if (::gfal_stat64(url.GetFile(), &finfo) < 0)
+   if (::gfal_stat64(url.GetFileAndOptions(), &finfo) < 0)
       return 0;
 
    if ((finfo.st_mode & S_IFMT) != S_IFDIR)
       return 0;
 
-   fDirp = (void*) ::gfal_opendir(url.GetFile());
+   fDirp = (void*) ::gfal_opendir(url.GetFileAndOptions());
 
    return fDirp;
 }
@@ -424,7 +424,7 @@ Int_t TGFALSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    struct stat64 sbuf;
 
-   if (path && ::gfal_stat64(url.GetFile(), &sbuf) >= 0) {
+   if (path && ::gfal_stat64(url.GetFileAndOptions(), &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;
@@ -449,7 +449,7 @@ Bool_t TGFALSystem::AccessPathName(const char *path, EAccessMode mode)
 
    TUrl url(path);
 
-   if (::gfal_access(url.GetFile(), mode) == 0)
+   if (::gfal_access(url.GetFileAndOptions(), mode) == 0)
       return kFALSE;
 
    return kTRUE;

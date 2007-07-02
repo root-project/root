@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name: v5-14-00-patches $:$Id: TRFIOFile.cxx,v 1.41 2006/12/01 15:19:29 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.44 2007/06/19 14:11:56 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -29,15 +29,18 @@
 //                                                                       //
 //  rfio://host:port/?path=FILEPATH                                      //
 //  rfio://host/?path=FILEPATH                                           //
-//  rfio:///?path=FILEPATH                                               //
+//  rfio:///castor?path=FILEPATH                                         //
 //  rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/         //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
 //  rfio://stager_host/?path=/castor/cern.ch/user/r/                     //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
-//  rfio:///?path=/castor/cern.ch/user/r/                                //
+//  rfio:///castor?path=/castor/cern.ch/user/r/                          //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
 //                                                                       //
 // path is mandatory as parameter but all the other ones are optional.   //
+//                                                                       //
+// For the ultimate description of supported urls see:                   //
+//    https://twiki.cern.ch/twiki/bin/view/FIOgroup/RfioRootTurl         //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -163,35 +166,14 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
       fOption = "READ";
    }
 
-   TString stmp;
-   char *host;
-   char *name;
-   
-   // it is just called the rfio_parse and no extra parsing is added here to that
-   
-   // to be able to use the turl starting with  castor:
-
-   if (!strcmp(fUrl.GetProtocol(),"castor"))
+   // to be able to use the turl starting with castor:
+   if (!strcmp(fUrl.GetProtocol(), "castor"))
       fUrl.SetProtocol("rfio");
-   
-   stmp=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
-   
+
    // the complete turl in fname
- 
-   TString fname = stmp;
-   
-     
-   if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
-      stmp = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
-   } else {
-      Error("TRFIOFile", "error parsing %s", fUrl.GetUrl());
-      goto zombie;
-   }
-   
- 
-   fname = stmp;
-   
-    
+   TString fname;
+   fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+
    if (recreate) {
       if (::rfio_access(fname.Data(), kFileExists) == 0)
          ::rfio_unlink(fname.Data());
@@ -409,7 +391,7 @@ Int_t TRFIOSystem::MakeDirectory(const char *dir)
 
    TUrl url(dir);
 
-   Int_t ret = ::rfio_mkdir(url.GetFile(), 0755);
+   Int_t ret = ::rfio_mkdir(url.GetFileAndOptions(), 0755);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
@@ -430,13 +412,13 @@ void *TRFIOSystem::OpenDirectory(const char *dir)
 
    struct stat finfo;
 
-   if (::rfio_stat(url.GetFile(), &finfo) < 0)
+   if (::rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
       return 0;
 
    if ((finfo.st_mode & S_IFMT) != S_IFDIR)
       return 0;
 
-   fDirp = (void*) ::rfio_opendir(url.GetFile());
+   fDirp = (void*) ::rfio_opendir(url.GetFileAndOptions());
 
    if (!fDirp)
       gSystem->SetErrorStr(::rfio_serror());
@@ -493,7 +475,7 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    struct stat64 sbuf;
 
-   if (path && ::rfio_stat64(url.GetFile(), &sbuf) >= 0) {
+   if (path && ::rfio_stat64(url.GetFileAndOptions(), &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;
@@ -517,7 +499,7 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    // Attention, bizarre convention of return value!!
 
    TUrl url(path);
-   if (::rfio_access(url.GetFile(), mode) == 0)
+   if (::rfio_access(url.GetFileAndOptions(), mode) == 0)
       return kFALSE;
    gSystem->SetErrorStr(::rfio_serror());
    return kTRUE;
@@ -532,11 +514,12 @@ Int_t TRFIOSystem::Unlink(const char *path)
    TUrl url(path);
 
    struct stat finfo;
-   if (rfio_stat(url.GetFile(), &finfo) < 0)
+   if (rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
       return -1;
 
    if (R_ISDIR(finfo.st_mode))
-      return rfio_rmdir(url.GetFile());
+      return rfio_rmdir(url.GetFileAndOptions());
    else
-      return rfio_unlink(url.GetFile());
+      return rfio_unlink(url.GetFileAndOptions());
 }
+
