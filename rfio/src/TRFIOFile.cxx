@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.44 2007/06/19 14:11:56 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.45 2007/07/02 17:39:13 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -391,7 +391,7 @@ Int_t TRFIOSystem::MakeDirectory(const char *dir)
 
    TUrl url(dir);
 
-   Int_t ret = ::rfio_mkdir(url.GetFile(), 0755);
+   Int_t ret = ::rfio_mkdir(url.GetFileAndOptions(), 0755);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
@@ -412,13 +412,13 @@ void *TRFIOSystem::OpenDirectory(const char *dir)
 
    struct stat finfo;
 
-   if (::rfio_stat(url.GetFile(), &finfo) < 0)
+   if (::rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
       return 0;
 
    if ((finfo.st_mode & S_IFMT) != S_IFDIR)
       return 0;
 
-   fDirp = (void*) ::rfio_opendir(url.GetFile());
+   fDirp = (void*) ::rfio_opendir(url.GetFileAndOptions());
 
    if (!fDirp)
       gSystem->SetErrorStr(::rfio_serror());
@@ -475,7 +475,7 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    struct stat64 sbuf;
 
-   if (path && ::rfio_stat64(url.GetFile(), &sbuf) >= 0) {
+   if (path && ::rfio_stat64(url.GetFileAndOptions(), &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;
@@ -499,7 +499,7 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    // Attention, bizarre convention of return value!!
 
    TUrl url(path);
-   if (::rfio_access(url.GetFile(), mode) == 0)
+   if (::rfio_access(url.GetFileAndOptions(), mode) == 0)
       return kFALSE;
    gSystem->SetErrorStr(::rfio_serror());
    return kTRUE;
@@ -514,12 +514,12 @@ Int_t TRFIOSystem::Unlink(const char *path)
    TUrl url(path);
 
    struct stat finfo;
-   if (rfio_stat(url.GetFile(), &finfo) < 0)
+   if (rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
       return -1;
 
    if (R_ISDIR(finfo.st_mode))
-      return rfio_rmdir(url.GetFile());
+      return rfio_rmdir(url.GetFileAndOptions());
    else
-      return rfio_unlink(url.GetFile());
+      return rfio_unlink(url.GetFileAndOptions());
 }
 
