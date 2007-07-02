@@ -52,10 +52,10 @@ sys.modules[ 'libPyROOT' ].Template = Template
 
 #--- LoadDictionary function and aliases -----------------------------
 def loadDictionary(name) :
-  if sys.platform == 'win32' :
-    sc = libPyROOT.gSystem.Load(name)
-  else :
-    sc = libPyROOT.gSystem.Load(name)
+  # prepend "lib" 
+  if sys.platform != 'win32' and name[:3] != 'lib' :
+     name = 'lib' + name
+  sc = libPyROOT.gSystem.Load(name)
   if sc == -1 : raise "Error Loading dictionary" 
 loadDict = loadDictionary
 
