@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.2 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.3 2007/03/16 15:25:55 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #ifndef ROOT_TClassRef
 #include "TClassRef.h"
 #endif
+#include <string>
+#include <set>
 
 class TClass;
 
@@ -99,5 +101,28 @@ private:
 
    ClassDef(TModuleDocInfo,0); // documentation for a group of classes
 };
+
+//__________________________________________________________________________
+//
+// A library's documentation database:
+// dependencies and sub-modules
+//
+class TLibraryDocInfo: public TNamed {
+ public:
+   TLibraryDocInfo() {}
+   TLibraryDocInfo(const char* lib): TNamed(lib, "") {}
+
+   std::set<std::string>& GetDependencies() {return fDependencies;}
+   std::set<std::string>& GetModules() {return fModules;}
+   void AddDependency(const std::string& lib) {fDependencies.insert(lib);}
+   void AddModule(const std::string& module) {fModules.insert(module);}
+
+ private:
+   std::set<std::string> fDependencies; // dependencies on other libraries
+   std::set<std::string> fModules; // modules in the library
+
+   ClassDef(TLibraryDocInfo,0); // documentation for a library
+};
+
 
 #endif // ROOT_TDocInfo

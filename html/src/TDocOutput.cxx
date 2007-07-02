@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.9 2007/06/11 14:09:06 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.10 2007/07/02 09:34:36 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -532,17 +532,15 @@ void TDocOutput::CreateModuleIndex()
    gSystem->PrependPathName(fHtml->GetOutputDir(), filename);
 
    std::ofstream libDepDotFile(filename + ".dot");
-   libDepDotFile << "strict digraph G {" << endl
-                 << "ratio=auto;" << endl
-                 << "rankdir=RL;" << endl
-                 << "compound=true;" << endl
-                 << "constraint=false;" << endl
-                 << "ranksep=3;" << endl
-                 << "nodesep=0.1;" << endl
+   libDepDotFile << "digraph G {" << endl
                  << "ratio=compress;" << endl
-                 << "node [fontsize=10];" << endl
-                 << "size=\"16,20\";" << endl;
-
+                 << "node [fontsize=22,labeldistance=0.1];" << endl
+                 << "edge [len=0.01];" << endl
+                 << "fontsize=22;" << endl
+                 << "size=\"16,16\";" << endl
+                 << "overlap=false;" << endl
+                 << "splines=true;" << endl
+                 << "K=0.1;" << endl;
 
    TModuleDocInfo* module = 0;
    TIter iModule(fHtml->GetListOfModules());
@@ -605,8 +603,13 @@ void TDocOutput::CreateModuleIndex()
                continue;
 
             // allocate entry, even if no dependencies
-            std::set<std::string>& setDep = fHtml->GetLibraryDependencies()[thisLib.Data()][module->GetName()];
-
+            TLibraryDocInfo *libdeps = 
+               (TLibraryDocInfo*)fHtml->GetLibraryDependencies()->FindObject(thisLib);
+            if (!libdeps) {
+               libdeps = new TLibraryDocInfo(thisLib);
+               fHtml->GetLibraryDependencies()->Add(libdeps);
+            }
+            libdeps->AddModule(module->GetName());
             if (posDepLibs != kNPOS) {
                std::string lib;
                for(Ssiz_t pos = posDepLibs + 1; libs[pos]; ++pos) {
@@ -615,7 +618,7 @@ void TDocOutput::CreateModuleIndex()
                         size_t posExt = lib.find('.');
                         if (posExt != std::string::npos)
                            lib.erase(posExt);
-                        setDep.insert(lib);
+                        libdeps->AddDependency(lib);
                      }
                      lib.erase();
                   } else 
@@ -625,7 +628,7 @@ void TDocOutput::CreateModuleIndex()
                   size_t posExt = lib.find('.');
                   if (posExt != std::string::npos)
                      lib.erase(posExt);
-                  setDep.insert(lib);
+                  libdeps->AddDependency(lib);
                }
             } // if dependencies
          } // while next class in module
@@ -704,44 +707,85 @@ void TDocOutput::CreateModuleIndex()
       << "}" << endl;
    */
 
-   for (THtml::LibDep_t::iterator iLibDep = fHtml->GetLibraryDependencies().begin();
-      iLibDep != fHtml->GetLibraryDependencies().end(); ++iLibDep) {
-      if (!iLibDep->first.length()) 
-         continue;
-      sstrCluster << "subgraph cluster" << iLibDep->first << " {" << endl
-         << "style=filled;" << endl
-         << "color=lightgray;" << endl
-         << "label=\"";
-      if (iLibDep->first == "libCore")
-         sstrCluster << "Everything depends on ";
-      sstrCluster << iLibDep->first << "\";" << endl;
+   // simplify the library dependencies, by removing direct links
+   // that are equivalent to indriect ones, e.g. instead of having both
+   // A->C, A->B->C, keep only A->B->C.
 
-      for (std::map<std::string, std::set<std::string> >::iterator iModule = iLibDep->second.begin();
-         iModule != iLibDep->second.end(); ++iModule) {
-         sstrCluster << "\"" << iModule->first << "\" [style=filled,color=white,URL=\"" 
-            << iModule->first << "_Index.html\",fontsize=10];" << endl;
+   TIter iLib(fHtml->GetLibraryDependencies());
+   TLibraryDocInfo* libinfo = 0;
+   while ((libinfo = (TLibraryDocInfo*)iLib())) {
+      if (!libinfo->GetName() || !libinfo->GetName()[0]) continue;
 
-         // GetSharedLib doesn't mention libCore or libCint; add them by hand
-         /*
-         if (iLibDep->first != "libCore")
-            sstrDeps << "\"" << iModule->first << "\" -> \"BASE\" [lhead=clusterlibCore];" << endl;
-         sstrDeps << "\"" << iModule->first << "\" -> \"CINT\" [lhead=clusterlibCint];" << endl;
-         */
-
-         for (std::set<std::string>::iterator iLib = iModule->second.begin();
-            iLib != iModule->second.end(); ++iLib) {
-            const THtml::TMapModuleDepMap& modDep = fHtml->GetLibraryDependencies()[*iLib];
-            if (modDep.size()) {
-               THtml::TMapModuleDepMap::const_iterator iModDep = modDep.begin();
-               const std::string& mod = iModDep->first;
-               sstrDeps << "\"" << iModule->first << "\" -> \"" << mod << "\" [lhead=cluster" << *iLib << "];" << endl;
-            }
-            // make sure libCore ends up at the bottom
-            sstrDeps << "\"" << iModule->first <<  "\" -> \"CONT\" [style=invis];" << endl;
+      std::set<std::string>& deps = libinfo->GetDependencies();
+      for (std::set<std::string>::iterator iDep = deps.begin();
+           iDep != deps.end(); ++iDep) {
+         Bool_t already_indirect = kFALSE;
+         for (std::set<std::string>::const_iterator iDep2 = deps.begin();
+              !already_indirect && iDep2 != deps.end(); ++iDep2) {
+            if (iDep == iDep2) continue;
+            TLibraryDocInfo* libinfo2 = (TLibraryDocInfo*) 
+               fHtml->GetLibraryDependencies()->FindObject(iDep2->c_str());
+            if (!libinfo2) continue;
+            const std::set<std::string>& deps2 = libinfo2->GetDependencies();
+            already_indirect |= deps2.find(*iDep) != deps2.end();
          }
-      } // for modules in lib
-      sstrCluster << endl 
-         << "}" << endl;
+         if (already_indirect)
+            deps.erase(*iDep);
+      } // for library dependencies of module in library
+   } // for libaries
+
+   iLib.Reset();
+   while ((libinfo = (TLibraryDocInfo*)iLib())) {
+      if (!libinfo->GetName() || !libinfo->GetName()[0]) continue;
+
+      const std::set<std::string>& modules = libinfo->GetModules();
+      if (modules.size() > 1) {
+         sstrCluster << "subgraph cluster" << libinfo->GetName() << " {" << endl
+                     << "style=filled;" << endl
+                     << "color=lightgray;" << endl
+                     << "label=\"";
+         if (!strcmp(libinfo->GetName(), "libCore"))
+            sstrCluster << "Everything depends on ";
+         sstrCluster << libinfo->GetName() << "\";" << endl;
+
+         const std::set<std::string>& modules = libinfo->GetModules();
+         for (std::set<std::string>::const_iterator iModule = modules.begin();
+              iModule != modules.end(); ++iModule) {
+            sstrCluster << "\"" << *iModule << "\" [style=filled,color=white,URL=\"" 
+                        << *iModule << "_Index.html\"];" << endl;
+         }
+         sstrCluster << endl 
+                     << "}" << endl;
+      } else {
+         // only one module
+         sstrCluster << "\"" << *modules.begin() 
+                     << "\" [label=\"" << libinfo->GetName() 
+                     << "\",style=filled,color=lightgray,shape=box,URL=\""
+                     << *modules.begin() << "_Index.html\"];" << endl;
+      }
+
+      // GetSharedLib doesn't mention libCore or libCint; add them by hand
+      /*
+        if (iLibDep->first != "libCore")
+        sstrDeps << "\"" << iModule->first << "\" -> \"BASE\" [lhead=clusterlibCore];" << endl;
+        sstrDeps << "\"" << iModule->first << "\" -> \"CINT\" [lhead=clusterlibCint];" << endl;
+      */
+
+      const std::string& mod = *(modules.begin());
+      const std::set<std::string>& deps = libinfo->GetDependencies();
+      for (std::set<std::string>::const_iterator iDep = deps.begin();
+            iDep != deps.end(); ++iDep) {
+         // cannot create dependency on iDep directly, use its first module instead.
+         TLibraryDocInfo* depLibInfo = (TLibraryDocInfo*)
+            fHtml->GetLibraryDependencies()->FindObject(iDep->c_str());
+         if (!depLibInfo || depLibInfo->GetModules().empty())
+            continue; // ouch!
+
+         const std::string& moddep = *(depLibInfo->GetModules().begin());
+         sstrDeps << "\"" << mod << "\" -> \"" << moddep << "\";" << endl;
+      }
+      // make sure libCore ends up at the bottom
+      sstrDeps << "\"" << mod <<  "\" -> \"CONT\" [style=invis];" << endl;
    } // for libs
 
    libDepDotFile << sstrCluster.str() << endl
@@ -763,9 +807,9 @@ void TDocOutput::CreateModuleIndex()
 
    WriteSearch(out);
 
-   RunDot(filename, &out);
+   RunDot(filename, &out, kFdp);
 
-   out << "<img alt=\"Library Dependencies\" class=\"formatsel\" usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
+   out << "<img alt=\"Library Dependencies\" class=\"classcharts\" usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
 
    // write out footer
    WriteHtmlFooter(out);
@@ -1456,14 +1500,21 @@ void TDocOutput::ReplaceSpecialChars(std::ostream& out, const char *string)
 }
 
 //______________________________________________________________________________
-Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */) {
+Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */, 
+                          EGraphvizTool gvwhat /*= kDot*/) {
 // Run filename".dot", creating filename".gif", and - if outMap is !=0,
 // filename".map", which gets then included literally into outMap.
 
    if (!fHtml->HaveDot()) 
       return kFALSE;
 
-   TString runDot("dot");
+   TString runDot;
+   switch (gvwhat) {
+   case kNeato: runDot = "neato"; break;
+   case kFdp: runDot = "fdp"; break;
+   case kCirco: runDot = "circo"; break;
+   default: runDot = "dot";
+   };
    if (fHtml->GetDotDir() && *fHtml->GetDotDir())
       gSystem->PrependPathName(fHtml->GetDotDir(), runDot);
    runDot += " -q1 -Tgif -o";

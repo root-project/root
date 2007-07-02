@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.1 2007/02/07 20:40:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.2 2007/02/15 17:32:32 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -41,12 +41,19 @@ class TVirtualPad;
 
 class TDocOutput: public TObject {
 protected:
+   enum EGraphvizTool {
+      kDot,
+      kNeato,
+      kFdp,
+      kCirco
+   };
+
    THtml*         fHtml; // THtml object we belong to
 
    int            CaseInsensitiveSort(const void *name1, const void *name2);
    void           AddLink(TSubString& str, TString& link, const char* comment);
    void           ProcessDocInDir(std::ostream& out, const char* indir, const char* outdir, const char* linkdir);
-   Bool_t         RunDot(const char* filename, std::ostream* outMap = 0);
+   Bool_t         RunDot(const char* filename, std::ostream* outMap = 0, EGraphvizTool gvwhat = kDot);
    void           WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial, 
                                   const char* dir /*=""*/, TClass *cls /*=0*/,
                                   const char* header);

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.35 2007/03/28 15:12:35 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.36 2007/05/09 17:01:45 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -27,7 +27,6 @@
 #endif
 
 #include <map>
-#include <set>
 
 class TClass;
 
@@ -36,17 +35,6 @@ protected:
    enum ETraverse {
       kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
    };
-
-public:
-
-   //__________________________________________________________________________
-   // map of lib name to map of module names contained in lib,
-   // and their library dependencies. Wraps a long STL name.
-   class TMapModuleDepMap: public std::map<std::string, std::set<std::string> > {
-   public:
-      TMapModuleDepMap() {}
-   };
-   typedef std::map<std::string, TMapModuleDepMap > LibDep_t;
 
 protected:
    TString        fXwho;            // URL for name lookup
@@ -83,7 +71,7 @@ protected:
    THashList      fModules;         // known modules
    std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
-   LibDep_t       fSetLibDeps;      // Library dependencies
+   THashList      fLibDeps;      // Library dependencies
 
    virtual void    CreateJavascript() const;
    virtual void    CreateStyleSheet() const;
@@ -172,7 +160,7 @@ public:
    virtual void        GetSourceFileName(TString& filename);
    virtual void        GetHtmlFileName(TClass *classPtr, TString& filename);
    virtual const char* GetHtmlFileName(const char* classname);
-   LibDep_t&           GetLibraryDependencies() { return fSetLibDeps; }
+   TCollection*        GetLibraryDependencies() { return &fLibDeps; }
    const TList*        GetListOfModules() const { return &fModules; }
    const TList*        GetListOfClasses() const { return &fClasses; }
    virtual void        GetModuleName(TString& module, const char* filename) const;

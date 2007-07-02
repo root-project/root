@@ -1,4 +1,4 @@
-/* @(#)root/html:$Name:  $:$Id: LinkDef.h,v 1.3 2006/04/25 17:25:33 brun Exp $ */
+/* @(#)root/html:$Name:  $:$Id: LinkDef.h,v 1.4 2007/02/07 20:40:38 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,4 +26,5 @@
 #pragma link C++ class TClassDocOutput;
 #pragma link C++ class TClassDocInfo;
 #pragma link C++ class TModuleDocInfo;
+#pragma link C++ class TLibraryDocInfo;
 #endif
