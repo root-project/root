@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.33 2007/05/08 14:56:19 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.34 2007/07/02 07:52:40 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -317,6 +317,7 @@ TEventIterTree::~TEventIterTree()
 {
    // Destructor
 
+   SafeDelete(fTree);
    ReleaseAllTrees();
    SafeDelete(fAcquiredTrees);
 }
@@ -326,7 +327,6 @@ void TEventIterTree::ReleaseAllTrees()
 {
    // Release all acquired trees.
 
-   TIter nxt(fAcquiredTrees);
    fAcquiredTrees->SetOwner(kFALSE);
    fAcquiredTrees->Clear();
 }
@@ -476,6 +476,7 @@ Long64_t TEventIterTree::GetNextEvent()
          return -1;
       }
       if (newTree != fTree) {
+         SafeDelete(fTree);
          fTree = newTree;
          attach = kTRUE;
          fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
