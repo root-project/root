@@ -5,7 +5,7 @@
 #define CALLBACK
 #endif
 
-#if defined(__APPLE_CC__) && !defined(__INTEL_COMPILER)
+#if defined(__APPLE_CC__) && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
     typedef GLvoid (*GLUTesselatorFunction)(...);
 #elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
     typedef GLvoid (*GLUTesselatorFunction)();
