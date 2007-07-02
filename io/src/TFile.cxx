@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.210 2007/05/04 15:14:11 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.211 2007/05/08 20:16:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -3212,14 +3212,14 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    if (opt == "")
       opt = raw;
    else
-      opt += "&&" + raw;
+      opt += "&" + raw;
    sURL.SetOptions(opt);
 
    opt = dURL.GetOptions();
    if (opt == "")
       opt = raw;
    else
-      opt += "&&" + raw;
+      opt += "&" + raw;
    dURL.SetOptions(opt);
 
    char *copybuffer = 0;
