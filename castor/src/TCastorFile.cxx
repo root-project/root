@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.3 2007/03/05 19:53:13 brun Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.4 2007/03/08 11:43:54 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -29,7 +29,7 @@
 //  castor://stager_host/?path=/castor/cern.ch/user/                    //
 //    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
 //                                                                      //
-//  castor:///?path=/castor/cern.ch/user/                               //
+//  castor:///castor?path=/castor/cern.ch/user/                         //
 //    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
 //                                                                      //
 // path is mandatory as parameter but all the other ones are optional.  //
@@ -37,7 +37,7 @@
 // Use "&rootAuth=<auth_prot_code>" in the option field to force the    //
 // specified authentication protocol when contacting the server, e.g.   //
 //                                                                      //
-//  castor:///?path=/castor/cern.ch/user/r/rdm/bla.root                 //
+//  castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root           //
 //    &svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3      //
 //                                                                      //
 // will try first the globus/GSI protocol; available protocols are      //
@@ -203,26 +203,26 @@ void TCastorFile::FindServerAndPath()
    TString castorturl;
    char *host=0;
    char *name=0;
-   
+
   // to be able to use the turl starting with  castor:
 
    if (!strcmp(fUrl.GetProtocol(),"castor"))
       castorturl=Form("%s://%s","rfio",fUrl.GetFileAndOptions());
    else
-      castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());  
-   
+      castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
+
    // the complete turl in fname
- 
+
    TString fname = castorturl; // for compatibility with rfio_parse interface
    if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
       castorturl = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
       fname = castorturl.Data();
-     
+
    } else {
       Error("FindServerAndPath", "error parsing %s", fUrl.GetUrl());
       return;
    }
-   
+
 
    if (!UseCastor2API()) {
 
@@ -324,7 +324,7 @@ void TCastorFile::FindServerAndPath()
          // Parse orig string to get disk server host
          char *filename;
          char *realhost = 0;
-         
+
          rfio_parse(stcp_output->ipath, &realhost, &filename);
          if (realhost == 0) {
             serrno = SEINTERNAL;

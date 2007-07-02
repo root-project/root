@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.41.2.1 2007/03/09 13:37:37 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.44 2007/06/19 14:11:56 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -29,15 +29,18 @@
 //                                                                       //
 //  rfio://host:port/?path=FILEPATH                                      //
 //  rfio://host/?path=FILEPATH                                           //
-//  rfio:///?path=FILEPATH                                               //
+//  rfio:///castor?path=FILEPATH                                         //
 //  rfio://stager_host:stager_port/?path=/castor/cern.ch/user/r/         //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
 //  rfio://stager_host/?path=/castor/cern.ch/user/r/                     //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
-//  rfio:///?path=/castor/cern.ch/user/r/                                //
+//  rfio:///castor?path=/castor/cern.ch/user/r/                          //
 //    rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION      //
 //                                                                       //
 // path is mandatory as parameter but all the other ones are optional.   //
+//                                                                       //
+// For the ultimate description of supported urls see:                   //
+//    https://twiki.cern.ch/twiki/bin/view/FIOgroup/RfioRootTurl         //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +166,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
       fOption = "READ";
    }
 
-   // to be able to use the turl starting withcastor:
+   // to be able to use the turl starting with castor:
    if (!strcmp(fUrl.GetProtocol(), "castor"))
       fUrl.SetProtocol("rfio");
 

@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.2 2007/03/05 09:01:08 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.3 2007/03/08 11:43:54 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 // remote node (disk server) via the CASTOR API, once the disk server   //
 // and the local file path are determined, the file will be accessed    //
 // via the rootd daemon. File names have to be specified like:          //
-//      castor:/castor/cern.ch/user/r/rdm/bla.root.                     //
+//    castor:/castor/cern.ch/user/r/rdm/bla.root.                       //
 //                                                                      //
 // If Castor 2.1 is used the file names can also be specified           //
 // in the following ways:                                               //
@@ -31,10 +31,20 @@
 //  castor://stager_host/?path=/castor/cern.ch/user/                    //
 //    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
 //                                                                      //
-//  castor:///?path=/castor/cern.ch/user/                               //
+//  castor:///castor?path=/castor/cern.ch/user/                         //
 //    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
 //                                                                      //
 // path is mandatory as parameter but all the other ones are optional.  //
+//                                                                      //
+// Use "&rootAuth=<auth_prot_code>" in the option field to force the    //
+// specified authentication protocol when contacting the server, e.g.   //
+//                                                                      //
+//  castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root           //
+//    &svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3      //
+//                                                                      //
+// will try first the globus/GSI protocol; available protocols are      //
+//  0: passwd, 1: srp, 2: krb5, 3: globus, 4: ssh, 5 uidgid             //
+// The defaul is taken from the env ROOTCASTORAUTH.                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
