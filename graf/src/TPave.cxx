@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.22 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.23 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -49,6 +49,7 @@ TPave::TPave(): TBox()
    SetFillStyle(gStyle->GetFillStyle());
    SetLineColor(gStyle->GetLineColor());
    SetLineStyle(gStyle->GetLineStyle());
+   fShadowColor  = GetLineColor();
 }
 
 
@@ -86,6 +87,7 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    SetLineColor(gStyle->GetLineColor());
    SetLineStyle(gStyle->GetLineStyle());
    SetName((char*)ClassName());
+   fShadowColor  = GetLineColor();
 }
 
 
@@ -167,6 +169,7 @@ void TPave::Copy(TObject &obj) const
    ((TPave&)obj).fOption      = fOption;
    ((TPave&)obj).fName        = fName;
    ((TPave&)obj).fCornerRadius= fCornerRadius;
+   ((TPave&)obj).fShadowColor = fShadowColor;
 }
 
 //______________________________________________________________________________
@@ -318,7 +321,7 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    if (opt.Length() == 0) opt ="br";
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
-   Int_t linecolor = GetLineColor();
+   Int_t shadowcolor = GetShadowColor();
 
    // Draw first pave as a normal filled box
    if (fBorderSize <= 0 && fillstyle <= 0) return;
@@ -384,7 +387,7 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    }
    x[6] = x[0];   y[6] = y[0];
    SetFillStyle(1001);
-   SetFillColor(linecolor);
+   SetFillColor(shadowcolor);
    TAttFill::Modify();
    gPad->PaintFillArea(6,x,y);
    x[0] = x1;  y[0] = y1;
@@ -413,7 +416,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    if (opt.Length() == 0) opt ="br";
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
-   Int_t linecolor = GetLineColor();
+   Int_t shadowcolor = GetShadowColor();
 
    static Double_t cosa[kNPARC], sina[kNPARC];
    static Bool_t done = kFALSE;
@@ -588,7 +591,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       np += 3;
    }
    SetFillStyle(1001);
-   SetFillColor(linecolor);
+   SetFillColor(shadowcolor);
    TAttFill::Modify();
    for (i=0;i<=np;i++) {
       x[i] = gPad->AbsPixeltoX(Int_t(px[i]));
