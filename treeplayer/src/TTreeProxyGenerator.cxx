@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.29 2007/04/19 17:23:37 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.30 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -789,6 +789,7 @@ namespace ROOT {
             TStreamerElement* branchStreamerElem = 0;
 
             TVirtualStreamerInfo *momInfo = topdesc ? topdesc->GetInfo() : ((TBranchElement*)branch->GetMother())->GetInfo();
+ 
             if (cname != momInfo->GetName()) {
                // We do not have the correct TVirtualStreamerInfo, this is
                // because there is no proper 'branch' holding this sub-object
@@ -842,10 +843,10 @@ namespace ROOT {
 
             }
 
-
             if (branchStreamerElem==0) {
-               Error("AnalyzeBranch","We did not find %s when looking into %s.",
-                     name.Data(),mom->GetName());
+               Error("AnalyzeBranch","We did not find %s (for %s) when looking into %s.",
+                     name.Data(),branch->GetName(),mom->GetName());
+               //mom->Print();
                //             mom->GetInfo()->Print();
                return extraLookedAt;
             } else {
@@ -1972,7 +1973,7 @@ namespace ROOT {
       fprintf(hf,"      if (drawflag) htemp->Draw(fOption);\n");
       fprintf(hf,"   }\n");
       fprintf(hf,"   if (fTerminateMethod.IsValid()) fTerminateMethod.Execute(this);\n");
-      fprintf(hf,"\n");
+      fprintf(hf,"   delete fHelper; fHelper = 0;\n");
       fprintf(hf,"}\n");
 
       fclose(hf);
