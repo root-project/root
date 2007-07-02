@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.h,v 1.1 2007/06/21 08:00:01 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 class XrdClientMessage;
 class XrdProofWorker;
 class XrdProofdResponse;
+class XrdProofServProxy;
 
 class XrdProofdManager {
 
@@ -50,6 +51,14 @@ class XrdProofdManager {
    std::list<XrdProofWorker *> *GetActiveWorkers();
    // Type of resource from which the info is taken
    int               ResourceType() const { return fResourceType; }
+
+   // Keping track of active sessions
+   std::list<XrdProofServProxy *> *GetActiveSessions() { XrdOucMutexHelper mhp(&fMutex);
+                                                         return &fActiveSessions; }
+   void              AddActiveSession(XrdProofServProxy *p) { XrdOucMutexHelper mhp(&fMutex);
+                                                              fActiveSessions.push_back(p); }
+   void              RemoveActiveSession(XrdProofServProxy *p) { XrdOucMutexHelper mhp(&fMutex);
+                                                                 fActiveSessions.remove(p); }
 
    // Node properties
    int               SrvType() const { return fSrvType; }
@@ -86,6 +95,8 @@ class XrdProofdManager {
    XrdProofdFile     fPROOFcfg;     // PROOF static configuration
 
    std::list<XrdProofWorker *> fWorkers;  // vector of possible workers
+
+   std::list<XrdProofServProxy *> fActiveSessions; // List of active sessions (non-idle)
 
    XrdOucError      *fEDest;        // Error message handler
 
