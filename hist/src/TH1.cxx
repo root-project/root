@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.347 2007/06/11 10:00:36 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.348 2007/06/25 17:25:19 moneta Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5377,39 +5377,51 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 void TH1::SetTitle(const char *title)
 {
    // Change (i.e. set) the title
-   //   if title is of the form "stringt;stringx;stringy;stringz"
-   //   the histogram title is set to stringt,
-   //   the x axis title to stringx, the y axis title to stringy,etc
-
+   //
+   //   if title is in the form "stringt;stringx;stringy;stringz"
+   //   the histogram title is set to stringt, the x axis title to stringx,
+   //   the y axis title to stringy, and the z axis title to stringz.
+   //   To insert the character ";" in one of the titles, one should use "#;"
+   //   or "#semicolon".
+   
    fTitle = title;
+   fTitle.ReplaceAll("#;",2,"#semicolon",10);
 
    // Decode fTitle. It may contain X, Y and Z titles
    TString str1 = fTitle, str2;
    Int_t isc = str1.Index(";");
    Int_t lns = str1.Length();
+
    if (isc >=0 ) {
       fTitle = str1(0,isc);
       str1   = str1(isc+1, lns);
       isc    = str1.Index(";");
       if (isc >=0 ) {
          str2 = str1(0,isc);
+         str2.ReplaceAll("#semicolon",10,";",1);
          fXaxis.SetTitle(str2.Data());
          lns  = str1.Length();
          str1 = str1(isc+1, lns);
          isc  = str1.Index(";");
          if (isc >=0 ) {
             str2 = str1(0,isc);
+            str2.ReplaceAll("#semicolon",10,";",1);
             fYaxis.SetTitle(str2.Data());
             lns  = str1.Length();
             str1 = str1(isc+1, lns);
+            str1.ReplaceAll("#semicolon",10,";",1);
             fZaxis.SetTitle(str1.Data());
          } else {
+            str1.ReplaceAll("#semicolon",10,";",1);
             fYaxis.SetTitle(str1.Data());
          }
       } else {
+         str1.ReplaceAll("#semicolon",10,";",1);
          fXaxis.SetTitle(str1.Data());
       }
    }
+
+   fTitle.ReplaceAll("#semicolon",10,";",1);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
