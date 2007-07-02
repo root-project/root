@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.26 2007/06/21 10:33:39 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.27 2007/06/22 16:33:23 ganis Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -183,9 +183,6 @@ public:
    //
    static XrdOucSemWait          fgForkSem;   // To serialize fork requests
    //
-   static int                    fgMaxSessions; // max number of sessions per client
-   static int                    fgWorkerMax; // max number or workers per user
-   static EStaticSelOpt          fgWorkerSel; // selection option
    static std::list<XrdOucString *> fgMastersAllowed;  // list of master (domains) allowed
    static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
    static char                  *fgSuperUsers;  // ':' separated list of privileged users
