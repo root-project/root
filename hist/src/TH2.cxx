@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.110 2007/05/14 12:26:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.111 2007/06/05 10:46:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -957,20 +957,20 @@ void TH2::GetStats(Double_t *stats) const
    Double_t x,y;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<7;bin++) stats[bin] = 0;
-      
-      Int_t firstBinX = fXaxis.GetFirst(); 
+
+      Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
-      Int_t firstBinY = fYaxis.GetFirst(); 
+      Int_t firstBinY = fYaxis.GetFirst();
       Int_t lastBinY  = fYaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) { 
-        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) { 
-            if (firstBinX == 1) firstBinX = 0; 
-            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+      if (fgStatOverflows) {
+        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
          }
-         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) { 
-            if (firstBinY == 1) firstBinY = 0; 
-            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1; 
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
       for (biny = firstBinY; biny <= lastBinY; biny++) {
@@ -1836,7 +1836,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   The projection is made from the channels along the Y axis
    //   ranging from firstybin to lastybin included.
    //   By default, bins 1 to ny are included
-   //   The number of entries in the projection is estimated from the 
+   //   The number of entries in the projection is estimated from the
    //   number of effective entries for all the cells included in the projection
    //
    //   To make the projection in X of the underflow bin in Y, use firstybin=lastybin=0;
@@ -1911,7 +1911,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
          i++;
       }
    }
-      
+
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -1922,23 +1922,23 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    Double_t entries = 0;
    for (Int_t binx =0;binx<=nx+1;binx++) {
       err2 = 0;
-      cont = 0; 
+      cont = 0;
       for (Int_t biny=firstybin;biny<=lastybin;biny++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          Double_t cxy = GetCellContent(binx,biny);
          Double_t exy = GetCellError(binx,biny);
-         Double_t exy2 = exy*exy; 
+         Double_t exy2 = exy*exy;
          cont  += cxy;
          err2 += exy2;
-         // count all effective entries bin by bin   
+         // count all effective entries bin by bin
          if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
       }
       h1->SetBinContent(binx,cont);
       if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
    }
-   h1->SetEntries( Int_t( entries + 0.5 ) );
+   h1->SetEntries(Long64_t(entries + 0.5));
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
@@ -1969,7 +1969,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   The projection is made from the channels along the X axis
    //   ranging from firstxbin to lastxbin included.
    //   By default, bins 1 to nx are included
-   //   The number of entries in the projection is estimated from the 
+   //   The number of entries in the projection is estimated from the
    //   number of effective entries for all the cells included in the projection
    //
    //   To make the projection in Y of the underflow bin in X, use firstxbin=lastxbin=0;
@@ -2044,7 +2044,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
          i++;
       }
    }
-      
+
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -2055,23 +2055,23 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    Double_t entries  = 0;
    for (Int_t biny =0;biny<=ny+1;biny++) {
       err2 = 0;
-      cont = 0; 
+      cont = 0;
       for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          Double_t cxy = GetCellContent(binx,biny);
          Double_t exy = GetCellError(binx,biny);
-         Double_t exy2 = exy*exy; 
+         Double_t exy2 = exy*exy;
          cont  += cxy;
          err2 += exy2;
-         // count all effective entries bin by bin   
+         // count all effective entries bin by bin
          if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
       }
       h1->SetBinContent(biny,cont);
       if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
    }
-   h1->SetEntries( Int_t( entries + 0.5 ));
+   h1->SetEntries(Long64_t(entries + 0.5));
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
@@ -2151,10 +2151,10 @@ void TH2::SetShowProjectionY(Int_t nbins)
 TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 {
 //   This function calculates the background spectrum in this histogram.
-//   The background is returned as a histogram. 
+//   The background is returned as a histogram.
 //   to be implemented (may be)
-   
-   
+
+
    return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%x,%d,\"%s\")",this,niter,option));
 }
 
@@ -2167,11 +2167,11 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    //for more detauils see TSpectrum::Search.
    //note the difference in the default value for option compared to TSpectrum2::Search
    //option="" by default (instead of "goff")
-   
-   
+
+
    return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%x,%g,\"%s\",%g)",this,sigma,option,threshold));
 }
-   
+
 
 //______________________________________________________________________________
 void TH2::Streamer(TBuffer &R__b)
@@ -2562,7 +2562,7 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
 void TH2S::Copy(TObject &newth2) const
 {
    // Copy.
-   
+
    TH2::Copy((TH2S&)newth2);
 }
 

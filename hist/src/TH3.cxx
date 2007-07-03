@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.95 2007/05/14 12:26:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.96 2007/06/05 10:46:00 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -968,25 +968,25 @@ void TH3::GetStats(Double_t *stats) const
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<9;bin++) stats[bin] = 0;
 
-      Int_t firstBinX = fXaxis.GetFirst(); 
+      Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
-      Int_t firstBinY = fYaxis.GetFirst(); 
+      Int_t firstBinY = fYaxis.GetFirst();
       Int_t lastBinY  = fYaxis.GetLast();
-      Int_t firstBinZ = fZaxis.GetFirst(); 
+      Int_t firstBinZ = fZaxis.GetFirst();
       Int_t lastBinZ  = fZaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) { 
-         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) { 
-            if (firstBinX == 1) firstBinX = 0; 
-            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+      if (fgStatOverflows) {
+         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
          }
-         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) { 
-            if (firstBinY == 1) firstBinY = 0; 
-            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1; 
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
-         if ( !fZaxis.TestBit(TAxis::kAxisRange) ) { 
-            if (firstBinZ == 1) firstBinZ = 0; 
-            if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1; 
+         if ( !fZaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinZ == 1) firstBinZ = 0;
+            if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1;
          }
       }
       for (binz = firstBinZ; binz <= lastBinZ; binz++) {
@@ -1488,7 +1488,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    GetXaxis()->SetRange(ixmin,ixmax);
    GetYaxis()->SetRange(iymin,iymax);
    opt.Append("z");
-   TH1D * h1 = (TH1D* ) Project3D(opt.Data()); 
+   TH1D * h1 = (TH1D* ) Project3D(opt.Data());
 
    // rename the histogram to the given name
    char *pname = (char*)name;
@@ -2022,18 +2022,18 @@ TH1 *TH3::Project3D(Option_t *option) const
                   break;
             }
             if (cont) {
-               if (computeErrors) { 
+               if (computeErrors) {
                   e   = GetBinError(bin);
-                  Double_t e2 = e * e; 
+                  Double_t e2 = e * e;
                   if (e2 > 0) entries += cont*cont/e2;
                }
-               else 
+               else
                   entries += cont;
             }
          }
       }
    }
-   h->SetEntries(Int_t(entries + 0.5) );
+   h->SetEntries(Long64_t(entries + 0.5));
    return h;
 }
 
@@ -2268,13 +2268,13 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
             }
             if (cont) {
                // count total effective entries of the profile
-               Double_t err = GetBinError(bin);  
+               Double_t err = GetBinError(bin);
                entries += cont*cont/(err*err);
             }
          }
       }
    }
-   p2->SetEntries( Int_t(entries + 0.5) );
+   p2->SetEntries(Long64_t(entries + 0.5));
    return p2;
 }
 
@@ -2665,7 +2665,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 {
    // Copy Constructor.
-   
+
    ((TH3S&)h3s).Copy(*this);
 }
 
@@ -3155,7 +3155,7 @@ TH1 *TH3F::DrawCopy(Option_t *option) const
 Double_t TH3F::GetBinContent(Int_t bin) const
 {
    // Get bin content.
-   
+
    if (fBuffer) ((TH3F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
