@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.74 2007/06/19 15:12:58 pcanal Exp $
+# $Id: Rules.mk,v 1.75 2007/06/28 21:43:22 pcanal Exp $
 #
 
 all: tests
@@ -36,7 +36,7 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest rootmap_*
+ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
 
@@ -99,7 +99,7 @@ else
 endif
 
 clean:  $(CLEAN_TARGETS_DIR)
-	$(CMDECHO) rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS)
+	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
 
 cleantest: test
 
