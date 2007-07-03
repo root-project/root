@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.8 2007/06/06 10:51:56 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.9 2007/06/08 09:45:02 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -341,19 +341,19 @@ TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
 
    PGSQL_STMT *stmt = new PGSQL_STMT;
    if (!stmt){
-      SetError(-1, "cannot allocate PGSQL_STMT" , "Statement");
+      SetError(-1, "cannot allocate PGSQL_STMT", "Statement");
       return 0;
    }
-   stmt->conn=fPgSQL;
-   stmt->res=PQprepare(fPgSQL,"", sql,0,(const Oid*)0);
+   stmt->fConn = fPgSQL;
+   stmt->fRes  = PQprepare(fPgSQL, "", sql, 0, (const Oid*)0);
 
-   ExecStatusType stat = PQresultStatus(stmt->res);
+   ExecStatusType stat = PQresultStatus(stmt->fRes);
    if (pgsql_success(stat)) {
-      fErrorOut=stat;
+      fErrorOut = stat;
       return new TPgSQLStatement(stmt, fErrorOut);
    } else {
-      SetError(stat, PQresultErrorMessage(stmt->res), "Statement");
-      stmt->conn = 0;
+      SetError(stat, PQresultErrorMessage(stmt->fRes), "Statement");
+      stmt->fConn = 0;
       delete stmt;
       return 0;
    }
