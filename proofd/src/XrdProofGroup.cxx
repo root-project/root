@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.3 2007/06/21 10:46:09 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofGroup.cxx,v 1.4 2007/06/21 17:30:21 brun Exp $
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************
@@ -285,7 +285,7 @@ XrdProofGroup *XrdProofGroupMgr::GetUserGroup(const char *usr, const char *grp)
    // If the group is defined and exists, check it 
    if (grp && strlen(grp) > 0) {
       g = fGroups.Find(grp);
-      if (g && g->HasMember(usr))
+      if (g && (!strncmp(g->Name(),"default",7) || g->HasMember(usr)))
          return g;
       else
          return (XrdProofGroup *)0;
