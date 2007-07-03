@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.75 2007/01/23 14:22:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.76 2007/06/07 08:42:55 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -82,7 +82,6 @@
 #include "TImage.h"
 #include "TEnv.h"
 #include "TClass.h"
-
 
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;
@@ -397,9 +396,11 @@ void TGTextButton::Init()
 
    int hotchar, max_ascent, max_descent;
 
-   fTMode      = kTextCenterX | kTextCenterY;
-   fHKeycode   = 0;
-   fHasOwnFont = kFALSE;
+   fTMode       = kTextCenterX | kTextCenterY;
+   fHKeycode    = 0;
+   fHasOwnFont  = kFALSE;
+   fPrevStateOn =
+   fStateOn     = kFALSE;
 
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -941,12 +942,26 @@ TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, const char *cmd,
 //______________________________________________________________________________
 void TGCheckButton::Init()
 {
-   // Common initialization.
+   // Common check button initialization.
 
    fPrevState =
    fState     = kButtonUp;
    fHKeycode = 0;
 
+   fOn  = fClient->GetPicture("checked_t.xpm");
+   fOff = fClient->GetPicture("unchecked_t.xpm");
+   fDisOn  = fClient->GetPicture("checked_dis_t.xpm");
+   fDisOff = fClient->GetPicture("unchecked_dis_t.xpm");
+
+   if (!fOn) {
+      Error("TGCheckButton", "checked_t.xpm not found");
+   } else if (!fOff) {     
+      Error("TGCheckButton", "unchecked_t.xpm not found");
+   } else if (!fDisOn) {     
+      Error("TGCheckButton", "checked_dis_t.xpm not found");
+   } else if (!fDisOff) {     
+      Error("TGCheckButton", "unchecked_dis_t.xpm not found");
+   }
    int hotchar, max_ascent, max_descent;
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -975,7 +990,10 @@ void TGCheckButton::Init()
 TGCheckButton::~TGCheckButton()
 {
    // Delete a check button.
-
+   if (fOn)  fClient->FreePicture(fOn);
+   if (fOff) fClient->FreePicture(fOff);
+   if (fDisOn)  fClient->FreePicture(fDisOn);
+   if (fDisOff) fClient->FreePicture(fDisOff);
 }
 
 //______________________________________________________________________________
@@ -983,7 +1001,7 @@ void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set check button state.
 
-   PSetState(fPrevState = state, emit);
+   PSetState(state, emit);
 }
 
 //______________________________________________________________________________
@@ -994,7 +1012,7 @@ void TGCheckButton::EmitSignals(Bool_t /*wasUp*/)
    if (fState == kButtonUp)   Released();            // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
    Clicked();                                        // emit Clicked
-   Toggled(fState == kButtonDown);                   // emit Toggled
+   Toggled(fStateOn);                                // emit Toggled
 }
 
 //______________________________________________________________________________
@@ -1003,8 +1021,28 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
    // Set check button state.
 
    if (state != fState) {
-      fState = state;
-
+      if (state == kButtonUp) {
+         if (fPrevState == kButtonDisabled) {
+            if (fStateOn) {
+               fState = kButtonDown;
+               fPrevState = kButtonDown;
+            } else {
+               fState = state;
+               fPrevState = state;
+            }
+         } else if (fPrevState == kButtonDown) {
+            fStateOn = kFALSE;
+            fState = state;
+            fPrevState = state;
+         }
+      } else if (state == kButtonDown) {
+         fStateOn = kTRUE;
+         fState = state;
+         fPrevState = state;
+      } else {
+         fState = state;
+         fPrevState = state;
+      }
       if (emit) {
          // button signals
          EmitSignals();
@@ -1012,6 +1050,28 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
       DoRedraw();
    }
 }
+
+//______________________________________________________________________________
+void TGCheckButton::SetDisabledAndSelected(Bool_t enable) 
+{
+   // Set the state of a check button to disabled and either on or
+   // off.
+
+   if (!enable) {
+      if (fState == kButtonDisabled && fStateOn) {
+         PSetState(kButtonUp, kFALSE);         // enable button
+         PSetState(kButtonUp, kFALSE);         // set button up
+         PSetState(kButtonDisabled, kFALSE);   // disable button
+      } else {
+         PSetState(kButtonUp, kFALSE);
+         PSetState(kButtonDisabled, kFALSE);
+      }
+   } else {
+      PSetState(kButtonDown, kFALSE);          // set button down
+      PSetState(kButtonDisabled, kFALSE);      // disable button
+   }
+}
+
 
 //______________________________________________________________________________
 Bool_t TGCheckButton::HandleButton(Event_t *event)
@@ -1038,8 +1098,8 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    } else { // ButtonRelease
       if (in) {
          PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kFALSE);
-         click = (fState != fPrevState);
-         fPrevState = fState;
+         click = kTRUE;
+         fPrevStateOn = fStateOn;
          Released();
       }
       fgReleaseBtn = fId;
@@ -1047,13 +1107,12 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    }
    if (click) {
       Clicked();
-      Toggled(fState == kButtonDown);
+      Toggled(fStateOn);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
                            fWidgetId, (Long_t) fUserData);
    }
-
    DoRedraw();
    return kTRUE;
 }
@@ -1131,48 +1190,32 @@ void TGCheckButton::DoRedraw()
    TGFrame::DoRedraw();
 
    cw = 13;
-   y0 = (fHeight - cw) >> 1;
+   y0 = (fTHeight - cw) >> 1;
 
-   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, y0, cw-2, y0);
-   gVirtualX->DrawLine(fId, GetShadowGC()(), 0, y0, 0, y0+cw-2);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), 1, y0+1, cw-3, y0+1);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), 1, y0+1, 1, y0+cw-3);
-
-   gVirtualX->DrawLine(fId, GetHilightGC()(), 0, y0+cw-1, cw-1, y0+cw-1);
-   gVirtualX->DrawLine(fId, GetHilightGC()(), cw-1, y0+cw-1, cw-1, y0);
-   gVirtualX->DrawLine(fId, GetBckgndGC()(),  2, y0+cw-2, cw-2, y0+cw-2);
-   gVirtualX->DrawLine(fId, GetBckgndGC()(),  cw-2, y0+2, cw-2, y0+cw-2);
+   if (fStateOn) {
+      if (fOn) fOn->Draw(fId, fNormGC, 0, y0);
+   } else {
+      if (fOff) fOff->Draw(fId, fNormGC, 0, y0);
+   }
 
    x = 20;
    y = y0;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   y += max_ascent;
+
    if (fState == kButtonDisabled) {
-      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
-      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
-      gVirtualX->FillRectangle(fId, GetBckgndGC()(), 2, y0+2, cw-4, cw-4);
+      if (fStateOn == kTRUE) {
+         if (fDisOn) fDisOn->Draw(fId, fNormGC, 0, y0);
+      } else {
+         if (fDisOff) fDisOff->Draw(fId, fNormGC, 0, y0);
+      }
+      fLabel->DrawWrapped(fId, GetHilightGC()(), x+1, y+1, fWidth-x-1, fFontStruct);
+      fLabel->DrawWrapped(fId, GetShadowGC()(), x, y, fWidth-x-1, fFontStruct);
    } else {
-      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
-      gVirtualX->FillRectangle(fId, GetWhiteGC()(), 2, y0+2, cw-4, cw-4);
+      fLabel->DrawWrapped(fId, fNormGC, x, y, fWidth-x-1, fFontStruct);
    }
-
-   if (fState == kButtonDown) {
-      Segment_t seg[6];
-
-      int l = 2;
-      int t = y0+2;
-
-      seg[0].fX1 = 1+l; seg[0].fY1 = 3+t; seg[0].fX2 = 3+l; seg[0].fY2 = 5+t;
-      seg[1].fX1 = 1+l; seg[1].fY1 = 4+t; seg[1].fX2 = 3+l; seg[1].fY2 = 6+t;
-      seg[2].fX1 = 1+l; seg[2].fY1 = 5+t; seg[2].fX2 = 3+l; seg[2].fY2 = 7+t;
-      seg[3].fX1 = 3+l; seg[3].fY1 = 5+t; seg[3].fX2 = 7+l; seg[3].fY2 = 1+t;
-      seg[4].fX1 = 3+l; seg[4].fY1 = 6+t; seg[4].fX2 = 7+l; seg[4].fY2 = 2+t;
-      seg[5].fX1 = 3+l; seg[5].fY1 = 7+t; seg[5].fX2 = 7+l; seg[5].fY2 = 3+t;
-
-      gVirtualX->DrawSegments(fId, GetBlackGC()(), seg, 6);
-   }
-
 }
 
 //______________________________________________________________________________
@@ -1238,8 +1281,10 @@ void TGRadioButton::Init()
 
    fOn  = fClient->GetPicture("rbutton_on.xpm");
    fOff = fClient->GetPicture("rbutton_off.xpm");
+   fDisOn  = fClient->GetPicture("rbutton_dis_on.xpm");
+   fDisOff = fClient->GetPicture("rbutton_dis_off.xpm");
 
-   if (!fOn || !fOff)
+   if (!fOn || !fOff || !fDisOn || !fDisOff)
       Error("TGRadioButton", "rbutton_*.xpm not found");
 
    int hotchar, max_ascent, max_descent;
@@ -1277,6 +1322,8 @@ TGRadioButton::~TGRadioButton()
 
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
+   if (fDisOn)  fClient->FreePicture(fDisOn);
+   if (fDisOff) fClient->FreePicture(fDisOff);
 }
 
 //______________________________________________________________________________
@@ -1284,7 +1331,28 @@ void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set radio button state.
 
-   PSetState(fPrevState = state, emit);
+   PSetState(state, emit);
+}
+
+//______________________________________________________________________________
+void TGRadioButton::SetDisabledAndSelected(Bool_t enable) 
+{
+   // Set the state of a radio button to disabled and either on or
+   // off.
+
+   if (!enable) {
+      if (fState == kButtonDisabled && fStateOn) {
+         PSetState(kButtonUp, kFALSE);         // enable button
+         PSetState(kButtonUp, kFALSE);         // set button up
+         PSetState(kButtonDisabled, kFALSE);   // disable button
+      } else {
+         PSetState(kButtonUp, kFALSE);
+         PSetState(kButtonDisabled, kFALSE);
+      }
+   } else {
+      PSetState(kButtonDown, kFALSE);          // set button down
+      PSetState(kButtonDisabled, kFALSE);      // disable button
+   }
 }
 
 //______________________________________________________________________________
@@ -1292,10 +1360,10 @@ void TGRadioButton::EmitSignals(Bool_t /*wasUp*/)
 {
    // emit signals
 
-   if (fState == kButtonUp)   Released();            // emit Released
+   if (fState == kButtonUp) Released();              // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
    Clicked();                                        // emit Clicked
-   Toggled(fState == kButtonDown);                   // emit Toggled
+   Toggled(fStateOn);                                // emit Toggled
 }
 
 //______________________________________________________________________________
@@ -1304,8 +1372,29 @@ void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
    // Set radio button state.
 
    if (state != fState) {
-      fPrevState = fState = state;
-
+      //      fPrevState = fState = state;
+      if (state == kButtonUp) {
+         if (fPrevState == kButtonDisabled) {
+            if (fStateOn) {
+               fState = kButtonDown;
+               fPrevState = kButtonDown;
+            } else {
+               fState = state;
+               fPrevState = state;
+            }
+         } else if (fPrevState == kButtonDown) {
+            fStateOn = kFALSE;
+            fState = state;
+            fPrevState = state;
+         }
+      } else if (state == kButtonDown) {
+         fStateOn = kTRUE;
+         fState = state;
+         fPrevState = state;
+      } else {
+         fState = state;
+         fPrevState = state;
+      }
       if (emit) {
          // button signals
          EmitSignals();
@@ -1319,6 +1408,9 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
 {
    // Handle mouse button event.
 
+   Bool_t click = kFALSE;
+   Bool_t toggled = kFALSE;
+
    if (fTip) fTip->Hide();
 
    if (fState == kButtonDisabled) return kFALSE;
@@ -1327,28 +1419,34 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
    Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
                (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
 
-   if (event->fType == kButtonRelease) {
-      if (in) {
-         fState = kButtonDown;
-         Released();
-         SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                     fWidgetId, (Long_t) fUserData);
-         fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                              fWidgetId, (Long_t) fUserData);
-         if (fState != fPrevState) {
-            Clicked();
-            Toggled(fState == kButtonDown);
-            fPrevState = fState;
-         }
-      }
-      fOptions &= ~kSunkenFrame;
-      fgReleaseBtn = fId;
-   } else if (event->fType == kButtonPress) { // button pressed
+   if (event->fType == kButtonPress) { // button pressed
       fgReleaseBtn = 0;
       if (in) {
          fOptions |= kSunkenFrame;
          Pressed();
       }
+   } else { // ButtonRelease
+     if (in) {
+        if (!fStateOn) {
+           PSetState(kButtonDown, kFALSE);
+           toggled = kTRUE;
+        }
+        fPrevStateOn = fStateOn;
+        Released();
+        click = kTRUE;
+     }
+      fOptions &= ~kSunkenFrame;
+      fgReleaseBtn = fId;
+   }
+   if (click) {
+      Clicked();
+      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
+                  fWidgetId, (Long_t) fUserData);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
+                           fWidgetId, (Long_t) fUserData);
+   }
+   if (toggled) {
+      Toggled(fStateOn);
    }
    DoRedraw();
    return kTRUE;
@@ -1418,7 +1516,7 @@ void TGRadioButton::DoRedraw()
 {
    // Draw a radio button.
 
-   int nlines, tx, ty, y0, pw;
+   Int_t nlines, tx, ty, y0, pw;
 
    TGFrame::DoRedraw();
 
@@ -1429,7 +1527,7 @@ void TGRadioButton::DoRedraw()
    pw = 12;
    y0 = ty + ((fTHeight - pw) >> 1);
 
-   if (fState == kButtonDown) {
+   if (fStateOn) {
       if (fOn) fOn->Draw(fId, fNormGC, 0, y0);
    } else {
       if (fOff) fOff->Draw(fId, fNormGC, 0, y0);
@@ -1443,6 +1541,11 @@ void TGRadioButton::DoRedraw()
 
    //  fLabel->Draw(fId, fNormGC, tx, ty);
    if (fState == kButtonDisabled) {
+      if (fStateOn == kTRUE) {
+         if (fDisOn) fDisOn->Draw(fId, fNormGC, 0, y0);
+      } else {
+         if (fDisOff) fDisOff->Draw(fId, fNormGC, 0, y0);
+      }
       fLabel->DrawWrapped(fId, GetHilightGC()(), tx+1, ty+1, fWidth-tx-1, fFontStruct);
       fLabel->DrawWrapped(fId, GetShadowGC()(), tx, ty, fWidth-tx-1, fFontStruct);
    } else {

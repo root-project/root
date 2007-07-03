@@ -1,19 +1,20 @@
 /* XPM */
-const char * radiobutton_xpm[] = {
-"12 12 4 1",
-" 	c None s None", /* #c0c0c0 */
-".	c #808080",
-"X	c black",
-"o	c white",
-"    ....    ",
-"  ..XXXX..  ",
-" .XXooooXXo ",
-" .Xoooooo o ",
-".Xoooooooo o",
-".Xoooooooo o",
-".Xoooooooo o",
-".Xoooooooo o",
-" .Xoooooo o ",
-" .  oooo  o ",
-"  oo    oo  ",
-"    oooo    "};
+static char *rbutton_off_new[]={
+"12 12 5 1",
+". c None",
+"a c #000000",
+"# c #808080",
+"c c #c0c0c0",
+"b c #ffffff",
+"....####....",
+"..##aaaa##..",
+".#aabbbbaab.",
+".#abbbbbbcb.",
+"#abbbbbbbbcb",
+"#abbbbbbbbcb",
+"#abbbbbbbbcb",
+"#abbbbbbbbcb",
+".#abbbbbbcb.",
+".#ccbbbbccb.",
+"..bbccccbb..",
+"....bbbb...."};

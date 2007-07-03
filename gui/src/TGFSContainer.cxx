@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.42 2007/06/12 08:16:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.43 2007/06/19 12:55:18 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -378,8 +378,8 @@ void TGFileItem::DoRedraw()
 
    int ix, iy;
 
-   TGLVEntry::DoRedraw();
    if (!fLcurrent) return;
+   TGLVEntry::DoRedraw();
 
    if (fViewMode == kLVLargeIcons) {
       ix = (fWidth - fLcurrent->GetWidth()) >> 1;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.44 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.45 2007/06/07 08:42:55 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -144,6 +144,8 @@ protected:
    Int_t          fHKeycode;      // hotkey
    FontStruct_t   fFontStruct;    // font to draw text
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
+   Bool_t         fStateOn;      // bit to save the state across disable/enable
+   Bool_t         fPrevStateOn;  // bit to save previos state On/Off
 
    static const TGFont *fgDefaultFont;
 
@@ -238,7 +240,12 @@ public:
 class TGCheckButton : public TGTextButton {
 
 protected:
-   EButtonState    fPrevState;     // previous check button state
+   EButtonState       fPrevState;     // previous check button state
+   const TGPicture   *fOn;            // button ON picture
+   const TGPicture   *fOff;           // button OFF picture
+   const TGPicture   *fDisOn;         // button disabled and was ON picture
+   const TGPicture   *fDisOff;        // button disabled and was OFF picture
+
 
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
@@ -275,6 +282,7 @@ public:
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsOn() const { return fState == kButtonDown; }
    virtual Bool_t IsDown() const { return fState == kButtonDown; }
+   virtual void   SetDisabledAndSelected(Bool_t);
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
@@ -289,9 +297,11 @@ private:
    TGRadioButton& operator=(const TGRadioButton&);
 
 protected:
-   EButtonState       fPrevState;   // radio button state
+   EButtonState       fPrevState;   // previous radio button state
    const TGPicture   *fOn;          // button ON picture
    const TGPicture   *fOff;         // button OFF picture
+   const TGPicture   *fDisOn;       // button disabled and was ON picture
+   const TGPicture   *fDisOff;      // button disabled and was OFF picture
 
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
@@ -326,10 +336,11 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
+   virtual void   SetDisabledAndSelected(Bool_t);
    virtual Bool_t IsToggleButton() const { return kTRUE; }
    virtual Bool_t IsExclusiveToggle() const { return kTRUE; }
-   virtual Bool_t IsOn() const { return fState == kButtonDown; }
-   virtual Bool_t IsDown() const { return fState == kButtonDown; }
+   virtual Bool_t IsOn() const { return fStateOn; }
+   virtual Bool_t IsDown() const { return fStateOn; }
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGRadioButton,0)  // A radio button widget

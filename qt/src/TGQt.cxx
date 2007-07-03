@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.42 2007/06/22 07:27:50 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.43 2007/06/22 15:02:00 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -346,7 +346,7 @@ QWidget      *TGQt::wid(Window_t id)
 {
    // method to restore (dynamic cast) the QWidget object pointer (if any) from  ROOT windows "id"
    QPaintDevice *dev = 0;
-   if (id == (Window_t)kNone || id == (unsigned int)(-1) ) return (QWidget *)dev;
+   if (id == (Window_t)kNone || id == (Window_t)(-1) ) return (QWidget *)dev;
    if ( id <= fWidgetArray->MaxId() )
       dev = (*fWidgetArray)[id];
    else
@@ -729,7 +729,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.42 2007/06/22 07:27:50 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.43 2007/06/22 15:02:00 antcheva Exp $ this=%p\n",this);
 #if QT_VERSION >= 0x40000
 #ifndef R__QTWIN32
    extern void qt_x11_set_global_double_buffer(bool);
