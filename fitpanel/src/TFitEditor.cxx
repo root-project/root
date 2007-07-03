@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.31 2007/05/25 15:55:54 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.32 2007/06/22 15:50:27 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -2309,7 +2309,7 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit2->SetState(kButtonUp);
                fLibFumili->SetState(kButtonUp);
                if (fFumili->GetState() != kButtonDisabled) {
-                  fFumili->SetState(kButtonDisabled);
+                  fFumili->SetDisabledAndSelected(kFALSE);
                }
                fMigrad->SetState(kButtonDown);
                fStatusBar->SetText("MIGRAD", 1);
@@ -2356,7 +2356,7 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit2->SetState(kButtonUp);
                fLibFumili->SetState(kButtonDown);
                TVirtualFitter::SetDefaultFitter("Fumili");
-               fMigrad->SetState(kButtonDisabled);
+               fMigrad->SetDisabledAndSelected(kFALSE);
                // Simplex functionality will come with the new fitter design    
                //fSimplex->SetState(kButtonDisabled);
                fStatusBar->SetText("LIB Fumili", 0);
