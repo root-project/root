@@ -1,7 +1,8 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += testFormulaFuncCall.log prova.root *.log $(ALL_LIBRARIES)
+CLEAN_TARGETS += testFormulaFuncCall.log prova.root *.log $(ALL_LIBRARIES) \
+        test.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += fullload staticFunc testFormulaFuncCall nestedFunc nestedHists

@@ -1,5 +1,5 @@
 TEST_TARGETS = Simple 
-CLEAN_TARGETS += main *Dict* Event.root *~ $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS += main *Dict* Event.root *~ $(ALL_LIBRARIES) *.log simple.root
 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
