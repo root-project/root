@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.12 2007/06/12 18:03:24 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.13 2007/06/20 07:40:45 brun Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -415,6 +415,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fInitTime = 0;
    fProcTime = 0;
    fTimeUpdt = -1.;
+   SetBit(TVirtualPacketizer::kIsInitializing);
 
    fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
    fCircN = 10;

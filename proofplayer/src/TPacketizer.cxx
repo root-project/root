@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.48 2007/05/21 00:22:51 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.49 2007/05/29 16:06:55 ganis Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -261,6 +261,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    TTime tnow = gSystem->Now();
    fStartTime = Long_t(tnow);
+   SetBit(TVirtualPacketizer::kIsInitializing);
    fInitTime = 0;
    fProcTime = 0;
    fTimeUpdt = -1.;

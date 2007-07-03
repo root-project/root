@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.2 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.3 2007/03/19 01:36:56 rdm Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************
@@ -105,6 +105,7 @@ public:
    virtual void      SetDispatchTimer(Bool_t on = kTRUE) = 0;
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
+   virtual void      SetInitTime() = 0;
 
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
 

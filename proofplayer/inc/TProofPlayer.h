@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.45 2007/05/21 00:22:51 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.46 2007/06/05 05:47:25 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -97,7 +97,7 @@ protected:
    };
 
 public:
-   enum EStatusBits { kDispatchOneEvent = BIT(15) };
+   enum EStatusBits { kDispatchOneEvent = BIT(15), kIsProcessing = BIT(16) };
 
    TProofPlayer(TProof *proof = 0);
    virtual ~TProofPlayer();
@@ -162,6 +162,9 @@ public:
    void      SetDispatchTimer(Bool_t on = kTRUE);
    void      SetStopTimer(Bool_t on = kTRUE,
                           Bool_t abort = kFALSE, Int_t timeout = 0);
+
+   virtual void      SetInitTime() { }
+   void              SetProcessing(Bool_t on = kTRUE);
 
    ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
@@ -240,6 +243,8 @@ public:
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
 
    Bool_t         IsClient() const;
+
+   void           SetInitTime();
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };

@@ -2276,6 +2276,17 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          }
          break;
 
+      case kPROOF_ENDINIT:
+         {
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_ENDINIT: enter");
+
+            if (IsMaster()) {
+               if (fPlayer)
+                  fPlayer->SetInitTime();
+            }
+         }
+         break;
+
       case kPROOF_SETIDLE:
          {
             PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SETIDLE: enter");

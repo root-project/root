@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.9 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.10 2007/05/29 16:06:55 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TMessage.h"
 #include "TObjString.h"
 
+#include "TProofDebug.h"
 #include "TProofPlayer.h"
 #include "TProofServ.h"
 #include "TSlave.h"
@@ -59,6 +60,7 @@ TVirtualPacketizer::TVirtualPacketizer()
 
    fValid = kTRUE;
    fStop = kFALSE;
+   ResetBit(TVirtualPacketizer::kIsInitializing);
 }
 
 //______________________________________________________________________________
@@ -228,7 +230,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
 
       // Times and counters
       Float_t evtrti = -1., mbrti = -1.;
-      if (evts <= 0) {
+      if (TestBit(TVirtualPacketizer::kIsInitializing)) {
          // Initialization
          fInitTime = now;
       } else {
@@ -272,4 +274,17 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    gProofServ->GetSocket()->Send(m);
 
    return kFALSE; // ignored?
+}
+
+//______________________________________________________________________________
+void TVirtualPacketizer::SetInitTime()
+{
+   // Set the initialization time
+
+   if (TestBit(TVirtualPacketizer::kIsInitializing)) {
+      fInitTime = (Float_t) (Long_t(gSystem->Now()) - fStartTime) / (Double_t)1000.;
+      ResetBit(TVirtualPacketizer::kIsInitializing);
+   }
+   PDB(kPacketizer,2)
+      Info("SetInitTime","fInitTime: %f s", fInitTime);
 }

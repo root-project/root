@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.109 2007/06/05 05:47:25 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.110 2007/06/07 09:23:21 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -189,6 +189,7 @@ TProofPlayer::TProofPlayer(TProof *)
 
    fInput         = new TList;
    fExitStatus    = kFinished;
+   SetProcessing(kFALSE);
 
    static Bool_t initLimitsFinder = kFALSE;
    if (!initLimitsFinder && gProofServ && !gProofServ->IsMaster()) {
@@ -209,6 +210,17 @@ TProofPlayer::~TProofPlayer()
    SafeDelete(fQueryResults);
    SafeDelete(fDispatchTimer);
    SafeDelete(fStopTimer);
+}
+
+//______________________________________________________________________________
+void TProofPlayer::SetProcessing(Bool_t on)
+{
+   // Set processing bit according to 'on'
+
+   if (on)
+      SetBit(TProofPlayer::kIsProcessing);
+   else
+      ResetBit(TProofPlayer::kIsProcessing);
 }
 
 //______________________________________________________________________________
@@ -755,6 +767,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
    } CATCH(excode) {
+      SetProcessing(kFALSE);
       Error("Process","exception %d caught", excode);
       return -1;
    } ENDTRY;
@@ -780,9 +793,16 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Long64_t entry;
    fEventsProcessed = 0;
 
+   // Signal the master that we start processing
+   gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
+
    TRY {
 
       while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
+
+         // This is needed by the inflate infrastructure to calculate
+         // sleeping times
+         SetProcessing(kTRUE);
 
          Bool_t ok = kTRUE;
          if (version == 0) {
@@ -812,6 +832,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             ResetBit(TProofPlayer::kDispatchOneEvent);
          }
          if (!ok || gROOT->IsInterrupted()) break;
+         SetProcessing(kFALSE);
      }
 
    } CATCH(excode) {
@@ -828,6 +849,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          gAbort = kTRUE;
          fExitStatus = kAborted;
       }
+      SetProcessing(kFALSE);
    } ENDTRY;
 
    PDB(kGlobal,2)
@@ -2133,6 +2155,14 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    return r;
 }
 
+//______________________________________________________________________________
+void TProofPlayerRemote::SetInitTime()
+{
+   // Set init time
+
+   if (fPacketizer)
+      fPacketizer->SetInitTime();
+}
 
 //------------------------------------------------------------------------------
 

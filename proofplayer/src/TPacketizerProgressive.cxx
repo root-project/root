@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.10 2007/04/19 09:33:40 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.11 2007/05/29 16:06:55 ganis Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TProofDebug.h"
 #include "TProofServ.h"
 #include "TSocket.h"
+#include "TSystem.h"
 #include "Riostream.h"
 #include "TClass.h"
 
@@ -238,6 +239,13 @@ TPacketizerProgressive::TPacketizerProgressive(TDSet* dset,
       Error("TPacketizerProgressive",
             "this packetizer does not handle TDSet regions");
    }
+
+   TTime tnow = gSystem->Now();
+   fStartTime = Long_t(tnow);
+   SetBit(TVirtualPacketizer::kIsInitializing);
+   fInitTime = 0;
+   fProcTime = 0;
+   fTimeUpdt = -1.;
 
    fSlavesRemaining = new TList;
    fSlaveStats = new TMap;

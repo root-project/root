@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.7 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.8 2007/05/29 16:06:55 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -82,12 +82,14 @@ protected:
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
+   enum EStatusBits { kIsInitializing = BIT(16) };
    virtual ~TVirtualPacketizer() { }
 
    Bool_t                  IsValid() const { return fValid; }
    Long64_t                GetEntriesProcessed() const { return fProcessed; }
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
+   virtual void            SetInitTime();
    virtual void            StopProcess(Bool_t abort);
 
    Long64_t      GetBytesRead() const { return fBytesRead; }
