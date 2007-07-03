@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.26 2007/05/21 00:45:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.27 2007/06/12 10:06:00 ganis Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -105,6 +105,7 @@ protected:
    virtual void  Interrupt(Int_t type);
    virtual Int_t Ping();
    virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0);
+   virtual Int_t SendGroupPriority(const char */*grp*/, Int_t /*priority*/) { return 0; }
    virtual void  SetAlias(const char *alias);
    virtual void  SetStatus(Int_t st) { fStatus = st; }
    virtual void  StopProcess(Bool_t abort, Int_t timeout);

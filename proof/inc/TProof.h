@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.115 2007/06/21 08:44:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.116 2007/06/22 17:16:35 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -456,6 +456,8 @@ private:
    Int_t    Broadcast(const char *mess, Int_t kind = kMESS_STRING, ESlaves list = kActive);
    Int_t    Broadcast(Int_t kind, TList *slaves) { return Broadcast(0, kind, slaves); }
    Int_t    Broadcast(Int_t kind, ESlaves list = kActive) { return Broadcast(0, kind, list); }
+   Int_t    BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves list = kActive);
+   Int_t    BroadcastGroupPriority(const char *grp, Int_t priority, TList *workers);
    Int_t    BroadcastObject(const TObject *obj, Int_t kind, TList *slaves);
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);

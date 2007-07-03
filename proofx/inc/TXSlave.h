@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.6 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.7 2006/12/03 23:34:04 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -52,6 +52,7 @@ protected:
    void     Interrupt(Int_t type);
    Int_t    Ping();
    TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0);
+   Int_t    SendGroupPriority(const char *grp, Int_t priority);
    void     SetAlias(const char *alias);
    void     SetReady();
    void     StopProcess(Bool_t abort, Int_t timeout);

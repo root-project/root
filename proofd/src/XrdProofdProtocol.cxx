@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.58 2007/06/22 16:33:23 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.59 2007/07/02 17:04:37 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2541,7 +2541,8 @@ int XrdProofdProtocol::MapClient(bool all)
       // No existing session: create a new one
       if (pmgr && (pmgr->CreateUNIXSock(&fgEDest, fgTMPdir) == 0)) {
 
-         TRACEI(DBG,"MapClient: NEW client: "<<pmgr<<", "<<pmgr->ID());
+         TRACEI(DBG,"MapClient: NEW client: "<<pmgr<<
+                    ", group: "<<((pmgr->Group()) ? pmgr->Group()->Name() : "???"));
 
          // The index of the next free slot will be the unique ID
          fCID = pmgr->GetClientID(this);
@@ -4940,6 +4941,46 @@ int XrdProofdProtocol::Admin()
          xps->SetAlias(msg, len);
          TRACEP(DBG, "Admin: session alias set to: "<<xps->Alias());
       }
+
+      // Acknowledge user
+      fResponse.Send();
+
+   } else if (type == kGroupProperties) {
+      //
+      // Specific info about a session
+      XrdProofServProxy *xps = 0;
+      if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
+          !(xps = fPClient->ProofServs()->at(psid))) {
+         TRACEP(XERR, "Admin: session ID not found");
+         fResponse.Send(kXR_InvalidRequest,"Admin: session ID not found");
+         return rc;
+      }
+
+      // User's group
+      int   len = fRequest.header.dlen;
+      char *grp = new char[len+1];
+      memcpy(grp, fArgp->buff, len);
+      grp[len] = 0;
+
+      // Make sure is the current one of the user
+      XrdProofGroup *g = xps->Group();
+      if (g && strcmp(grp, g->Name())) {
+         TRACEP(XERR, "Admin: received group does not match the user's one");
+         fResponse.Send(kXR_InvalidRequest,
+                      "Admin: received group does not match the user's one");
+         return rc;
+      }
+
+      // Set the priority
+      int priority = ntohl(fRequest.proof.int2);
+      g->SetPriority(priority);
+
+      // Make sure scheduling is ON
+      fgSchedOpt = kXPD_sched_priority;
+      fgOverallInflate = 1.05;
+
+      // Notify
+      TRACEP(DBG, "Admin: priority for group '"<< grp<<"' has been set to "<<priority);
 
       // Acknowledge user
       fResponse.Send();

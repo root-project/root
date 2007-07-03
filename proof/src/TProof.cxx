@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.207 2007/06/22 17:16:35 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.208 2007/06/22 21:59:43 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1523,6 +1523,49 @@ void TProof::Activate(TList *slaves)
       if (sl->IsValid())
          mon->Activate(sl->GetSocket());
    }
+}
+
+//______________________________________________________________________________
+Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, TList *workers)
+{
+   // Broadcast the group priority to all workers in the specified list. Returns
+   // the number of workers the message was successfully sent to.
+   // Returns -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (workers->GetSize() == 0) return 0;
+
+   int   nsent = 0;
+   TIter next(workers);
+
+   TSlave *wrk;
+   while ((wrk = (TSlave *)next())) {
+      if (wrk->IsValid()) {
+         if (wrk->SendGroupPriority(grp, priority) == -1)
+            MarkBad(wrk);
+         else
+            nsent++;
+      }
+   }
+
+   return nsent;
+}
+
+//______________________________________________________________________________
+Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves list)
+{
+   // Broadcast the group priority to all workers in the specified list. Returns
+   // the number of workers the message was successfully sent to.
+   // Returns -1 in case of error.
+
+   TList *workers = 0;
+   if (list == kAll)       workers = fSlaves;
+   if (list == kActive)    workers = fActiveSlaves;
+   if (list == kUnique)    workers = fUniqueSlaves;
+   if (list == kAllUnique) workers = fAllUniqueSlaves;
+
+   return BroadcastGroupPriority(grp, priority, workers);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.27 2007/06/15 11:38:28 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.28 2007/06/21 07:06:36 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1437,6 +1437,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind,
          break;
       case kQueryLogPaths:
          vout = (void **)&bout;
+      case kGroupProperties:
       case kSessionTag:
       case kSessionAlias:
          reqhdr.proof.sid = fSessionID;

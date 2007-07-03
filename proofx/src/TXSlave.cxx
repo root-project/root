@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.22 2007/06/05 05:40:11 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.23 2007/06/12 10:30:35 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -486,6 +486,21 @@ void TXSlave::SetAlias(const char *alias)
    ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kSessionAlias, alias);
 
    return;
+}
+
+//______________________________________________________________________________
+Int_t TXSlave::SendGroupPriority(const char *grp, Int_t priority)
+{
+   // Communicate to the coordinator the priprity of the group to which the
+   // user belongs
+   // Return 0 on success
+
+   // Nothing to do if not in contact with coordinator
+   if (!IsValid()) return -1;
+
+   ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kGroupProperties, grp, priority);
+
+   return 0;
 }
 
 //_____________________________________________________________________________

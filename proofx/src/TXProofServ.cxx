@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.38 2007/06/21 08:47:42 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.39 2007/06/22 17:16:35 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -228,6 +228,9 @@ Int_t TXProofServ::CreateServer()
          Error("CreateServer", "Socket setup by xpd undefined");
          return -1;
       }
+      TString entity = gEnv->GetValue("ProofServ.Entity", "");
+      if (entity.Length() > 0)
+         fSockPath.Insert(0,Form("%s/", entity.Data()));
    }
 
    // Get the sessions ID
@@ -349,7 +352,7 @@ Int_t TXProofServ::CreateServer()
 
    // if master, start slave servers
    if (IsMaster()) {
-      TString master = "proof://__master__";
+      TString master = Form("proof://%s@__master__", fUser.Data());
 
       // Add port, if defined
       Int_t port = gEnv->GetValue("ProofServ.XpdPort", -1);
@@ -589,10 +592,18 @@ Int_t TXProofServ::Setup()
    }
 
    // The local user
-   UserGroup_t *pw = gSystem->GetUserInfo();
-   if (pw) {
-      fUser = pw->fUser;
-      delete pw;
+   fUser = gEnv->GetValue("ProofServ.Entity", "");
+   if (fUser.Length() >= 0) {
+      if (fUser.Contains(":"))
+         fUser.Remove(fUser.Index(":"));
+      if (fUser.Contains("@"))
+         fUser.Remove(fUser.Index("@"));
+   } else {
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         fUser = pw->fUser;
+         delete pw;
+      }
    }
 
    // Work dir and ...
@@ -1032,11 +1043,19 @@ Bool_t TXProofServ::HandleInput(const void *in)
       // Inflate factor
       Int_t factor = (hin->fInt2 >= 1000) ? hin->fInt2 : fInflateFactor;
 
-      // Set inflate factor
-      fInflateFactor = factor;
-      // Notify
-      Info("HandleInput",
-           "kXPD_inflate: inflate factor set to %f", (Float_t) factor / 1000.);
+      if (IsMaster()) {
+         // The factor is the priority to be propagated
+         fGroupPriority = factor;
+         if (fProof)
+            fProof->BroadcastGroupPriority(fGroup, fGroupPriority);
+
+      } else {
+         // Set inflate factor
+         fInflateFactor = factor;
+         // Notify
+         Info("HandleInput",
+              "kXPD_inflate: inflate factor set to %f", (Float_t) factor / 1000.);
+      }
 
    } else {
       // Standard socket input
