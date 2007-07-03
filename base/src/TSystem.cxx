@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.170 2007/06/15 14:44:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.171 2007/06/25 21:51:14 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1502,35 +1502,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       }
    }
 
-   // check whether classes that are supposed to be in l
-   // are already loaded. Just test the first one we find.
-   const char* clname = 0;
-   int clidx = 0;
-   libs.Remove(0, libs.Length());
-   while (!libs.Length() && (clname = TClassTable::At(clidx++))) {
-      // we don't want to create TClass objects here, so use 
-      // TInterpreter and TClassTable to find the lib the class 
-      // is in
-
-      // is clname's lib loaded?
-      if (!TClassTable::GetDict(clname)) continue;
-
-      const char* cllibs = gInterpreter->GetClassSharedLibs(clname);
-      if (!cllibs) continue;
-
-      libs = cllibs;
-      Ssiz_t posSpace = libs.Index(' ');
-      if (posSpace != kNPOS)
-         libs.Remove(posSpace, libs.Length());
-      if (libs == moduleBasename) {
-         // clname was expected to be in libs.
-         // It's already loaded so we assume that module has already
-         // been loaded, e.g. by explicit linking or because we have
-         // a static build of module's object files.
-         return 1;
-      }
-      libs.Remove(0, libs.Length());
-   }
+   // check whether lib l is in the fLinkedLibs list
+   // TO BE DONE
 
    char *path = DynamicPathName(module);
 
