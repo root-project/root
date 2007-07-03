@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.45 2007/06/07 08:42:55 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.46 2007/07/03 06:56:05 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -139,13 +139,13 @@ public:
 class TGTextButton : public TGButton {
 
 protected:
-   TGHotString   *fLabel;         // button text
+   TGHotString   *fLabel;         // button text 
    Int_t          fTMode;         // text justify mode
    Int_t          fHKeycode;      // hotkey
    FontStruct_t   fFontStruct;    // font to draw text
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
-   Bool_t         fStateOn;      // bit to save the state across disable/enable
-   Bool_t         fPrevStateOn;  // bit to save previos state On/Off
+   Bool_t         fStateOn;       // bit to save the state across disable/enable
+   Bool_t         fPrevStateOn;   // bit to save previos state On/Off
 
    static const TGFont *fgDefaultFont;
 
