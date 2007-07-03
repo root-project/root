@@ -378,8 +378,8 @@ void TGFileItem::DoRedraw()
 
    int ix, iy;
 
-   if (!fLcurrent) return;
    TGLVEntry::DoRedraw();
+   if (!fLcurrent) return;
 
    if (fViewMode == kLVLargeIcons) {
       ix = (fWidth - fLcurrent->GetWidth()) >> 1;

@@ -312,7 +312,7 @@ void TGLVEntry::DoRedraw()
    // Redraw list view item.
    // List view item is placed and layouted in the container frame,
    // but is drawn in viewport.
-printf("TGLVEntry::DoRedraw %s\n", GetTitle());
+
    DrawCopy(fId, 0, 0);
 }
 
@@ -322,7 +322,6 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    // Draw list view item in other window.
    // List view item is placed and layout in the container frame,
    // but is drawn in viewport.
-printf("TGLVEntry::DrawCopy %s\n", GetTitle());
 
    Int_t ix, iy, lx, ly;
    Int_t max_ascent, max_descent;
@@ -443,7 +442,6 @@ printf("TGLVEntry::DrawCopy %s\n", GetTitle());
 TGDimension TGLVEntry::GetDefaultSize() const
 {
    // Get default size of list item.
-printf("TGLVEntry::GetDefaultSize %s\n", GetTitle());
 
    TGDimension size;
    TGDimension isize(fCurrent ? fCurrent->GetWidth() : 0,
