@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.13 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.14 2006/11/22 14:16:55 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -35,10 +35,7 @@ protected:
    enum { kWarn = BIT(12) };
 
    TTree         *fTree;           //  Pointer to current Tree
-   TTreeFormula  *fVar1;           //  Pointer to first variable formula
-   TTreeFormula  *fVar2;           //  Pointer to second variable formula
-   TTreeFormula  *fVar3;           //  Pointer to third variable formula
-   TTreeFormula  *fVar4;           //  Pointer to fourth variable formula
+   TTreeFormula **fVar;            //![fDimension] Array of pointers to variables formula
    TTreeFormula  *fSelect;         //  Pointer to selection formula
    TTreeFormulaManager *fManager;  //  Pointer to the formula manager
    TObject       *fObject;         //! Pointer to object being filled (histogram, event list)
@@ -52,19 +49,14 @@ protected:
    Long64_t       fSelectedRows;   //  Number of selected entries
    Long64_t       fOldEstimate;    //  value of Tree fEstimate when selector is called
    Int_t          fForceRead;      //  Force Read flag
-   Int_t          fNbins[4];       //  Number of bins per dimension
-   Double_t       fVmin[4];        //  Minima of varexp columns
-   Double_t       fVmax[4];        //  Maxima of varexp columns
+   Int_t         *fNbins;          //![fDimension] Number of bins per dimension
+   Double_t      *fVmin;           //![fDimension] Minima of varexp columns
+   Double_t      *fVmax;           //![fDimension] Maxima of varexp columns
    Double_t       fWeight;         //  Tree weight (see TTree::SetWeight)
-   Double_t      *fV1;             //![fSelectedRows]Local buffer for variable 1
-   Double_t      *fV2;             //![fSelectedRows]Local buffer for variable 2
-   Double_t      *fV3;             //![fSelectedRows]Local buffer for variable 3
-   Double_t      *fV4;             //![fSelectedRows]Local buffer for variable 4
+   Double_t     **fVal;            //![fSelectedRows][fDimension] Local buffer for the variables
+   Int_t          fValSize;
    Double_t      *fW;              //![fSelectedRows]Local buffer for weights
-   Bool_t         fVar1Multiple;   //  true if var1 has a variable index
-   Bool_t         fVar2Multiple;   //  true if var2 has a variable index
-   Bool_t         fVar3Multiple;   //  true if var3 has a variable index
-   Bool_t         fVar4Multiple;   //  true if var4 has a variable index
+   Bool_t        *fVarMultiple;    //![fDimension] true if fVar[i] has a variable index
    Bool_t         fSelectMultiple; //  true if selection has a variable index
    Bool_t         fCleanElist;     //  true if original Tree elist must be saved
    Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
@@ -72,6 +64,7 @@ protected:
 protected:
    virtual void      ClearFormula();
    virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");
+   virtual void      InitArrays(Int_t newsize);
 
 private:
    TSelectorDraw(const TSelectorDraw&);             // not implemented
@@ -93,14 +86,16 @@ public:
    TH1              *GetOldHistogram() const {return fOldHistogram;}
    TTreeFormula     *GetSelect() const    {return fSelect;}
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
-   TTreeFormula     *GetVar1() const {return fVar1;}
-   TTreeFormula     *GetVar2() const {return fVar2;}
-   TTreeFormula     *GetVar3() const {return fVar3;}
-   TTreeFormula     *GetVar4() const {return fVar4;}
-   virtual Double_t *GetV1() const   {return fV1;}
-   virtual Double_t *GetV2() const   {return fV2;}
-   virtual Double_t *GetV3() const   {return fV3;}
-   virtual Double_t *GetV4() const   {return fV4;}
+   TTreeFormula     *GetVar(Int_t i) const;
+   TTreeFormula     *GetVar1() const {return GetVar(0);}
+   TTreeFormula     *GetVar2() const {return GetVar(1);}
+   TTreeFormula     *GetVar3() const {return GetVar(2);}
+   TTreeFormula     *GetVar4() const {return GetVar(3);}
+   virtual Double_t *GetVal(Int_t i) const;
+   virtual Double_t *GetV1() const   {return GetVal(0);}
+   virtual Double_t *GetV2() const   {return GetVal(1);}
+   virtual Double_t *GetV3() const   {return GetVal(2);}
+   virtual Double_t *GetV4() const   {return GetVal(3);}
    virtual Double_t *GetW() const    {return fW;}
    virtual void      MakeIndex(TString &varexp, Int_t *index);
    virtual Bool_t    Notify();

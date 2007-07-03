@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.68 2007/03/19 16:02:36 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.69 2007/06/22 16:44:19 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -47,15 +47,18 @@ TSelectorDraw::TSelectorDraw()
    // Default selector constructor.
 
    fTree           = 0;
-   fV1             = 0;
-   fV2             = 0;
-   fV3             = 0;
-   fV4             = 0;
    fW              = 0;
-   fVar1           = 0;
-   fVar2           = 0;
-   fVar3           = 0;
-   fVar4           = 0;
+   fValSize        = 4;
+   fVal            = new Double_t*[fValSize];
+   fVmin           = new Double_t[fValSize];
+   fVmax           = new Double_t[fValSize];
+   fNbins          = new Int_t[fValSize];
+   fVarMultiple    = new Bool_t[fValSize];
+   fVar            = new TTreeFormula*[fValSize];
+   for(Int_t i=0;i<fValSize;++i){
+      fVal[i] = 0;
+      fVar[i] = 0;
+   }
    fManager        = 0;
    fMultiplicity   = 0;
    fSelect         = 0;
@@ -64,10 +67,6 @@ TSelectorDraw::TSelectorDraw()
    fObject         = 0;
    fOldHistogram   = 0;
    fObjEval        = kFALSE;
-   fVar1Multiple   = kFALSE;
-   fVar2Multiple   = kFALSE;
-   fVar3Multiple   = kFALSE;
-   fVar4Multiple   = kFALSE;
    fSelectMultiple = kFALSE;
    fCleanElist     = kFALSE;
    fTreeElist      = 0;
@@ -77,7 +76,6 @@ TSelectorDraw::TSelectorDraw()
    fOldEstimate    = 0;
    fForceRead      = 0;
    fWeight         = 1;
-   for (Int_t i=0;i<4;i++) {fNbins[i]=0; fVmin[i] = fVmax[i]= 0;}
 }
 
 //______________________________________________________________________________
@@ -86,10 +84,16 @@ TSelectorDraw::~TSelectorDraw()
    // Selector destructor.
 
    ClearFormula();
-   if (fV1)    delete [] fV1;
-   if (fV2)    delete [] fV2;
-   if (fV3)    delete [] fV3;
-   if (fV4)    delete [] fV4;
+   delete [] fVar;
+   if(fVal){
+      for(Int_t i=0;i<fValSize;++i)
+         delete [] fVal[i];
+      delete [] fVal;
+   }
+   if(fVmin) delete [] fVmin;
+   if(fVmax) delete [] fVmax;
+   if(fNbins) delete [] fNbins;
+   if(fVarMultiple) delete [] fVarMultiple;
    if (fW)     delete [] fW;
 }
 
@@ -514,13 +518,13 @@ void TSelectorDraw::Begin(TTree *tree)
          hist->SetMarkerSize(fTree->GetMarkerSize());
          if (canRebin)hist->SetBit(TH1::kCanRebin);
          if (!hkeep) {
-            hist->GetXaxis()->SetTitle(fVar1->GetTitle());
+            hist->GetXaxis()->SetTitle(fVar[0]->GetTitle());
             hist->SetBit(kCanDelete);
             if (!opt.Contains("goff")) hist->SetDirectory(0);
          }
          if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       }
-      fVar1->SetAxis(hist->GetXaxis());
+      fVar[0]->SetAxis(hist->GetXaxis());
       fObject = hist;
 
       // 2-D distribution
@@ -601,7 +605,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)hp->SetBit(TH1::kCanRebin);
          }
-         fVar2->SetAxis(hp->GetXaxis());
+         fVar[1]->SetAxis(hp->GetXaxis());
          fObject = hp;
 
       } else {
@@ -618,15 +622,15 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
-               h2->GetXaxis()->SetTitle(fVar2->GetTitle());
-               h2->GetYaxis()->SetTitle(fVar1->GetTitle());
+               h2->GetXaxis()->SetTitle(fVar[1]->GetTitle());
+               h2->GetYaxis()->SetTitle(fVar[0]->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
             }
          }
-         fVar1->SetAxis(h2->GetYaxis());
-         fVar2->SetAxis(h2->GetXaxis());
+         fVar[0]->SetAxis(h2->GetYaxis());
+         fVar[1]->SetAxis(h2->GetXaxis());
          Bool_t graph = kFALSE;
          Int_t l = opt.Length();
          if (l == 0 || optSame) graph = kTRUE;
@@ -642,7 +646,7 @@ void TSelectorDraw::Begin(TTree *tree)
       }
 
       // 3-D distribution
-   } else if (fDimension == 3 || fDimension == 4) {
+   } else if ((fDimension == 3 || fDimension == 4)) {
       fAction = 3;
       if (fDimension == 4) fAction = 40;
       if (!fOldHistogram || !optSame) {
@@ -727,8 +731,8 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)hp->SetBit(TH1::kCanRebin);
          }
-         fVar2->SetAxis(hp->GetYaxis());
-         fVar3->SetAxis(hp->GetXaxis());
+         fVar[1]->SetAxis(hp->GetYaxis());
+         fVar[2]->SetAxis(hp->GetXaxis());
          fObject = hp;
       } else if (fDimension == 3 && opt.Contains("col")) {
          TH2F *h2;
@@ -744,15 +748,15 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h2->SetBit(TH1::kCanRebin);
             if (!hkeep) {
-               h2->GetXaxis()->SetTitle(fVar2->GetTitle());
-               h2->GetZaxis()->SetTitle(fVar1->GetTitle());
+               h2->GetXaxis()->SetTitle(fVar[1]->GetTitle());
+               h2->GetZaxis()->SetTitle(fVar[0]->GetTitle());
                h2->SetBit(TH1::kNoStats);
                h2->SetBit(kCanDelete);
                if (!opt.Contains("goff")) h2->SetDirectory(0);
             }
          }
-         fVar1->SetAxis(h2->GetYaxis());
-         fVar2->SetAxis(h2->GetXaxis());
+         fVar[0]->SetAxis(h2->GetYaxis());
+         fVar[1]->SetAxis(h2->GetXaxis());
          fObject = h2;
          fAction = 33;
       } else {
@@ -771,17 +775,17 @@ void TSelectorDraw::Begin(TTree *tree)
             if (!hkeep) {
                h3->GetXaxis()->SetTitleOffset(1.5);
                h3->GetYaxis()->SetTitleOffset(1.5);
-               h3->GetXaxis()->SetTitle(fVar3->GetTitle());
-               h3->GetYaxis()->SetTitle(fVar2->GetTitle());
-               h3->GetZaxis()->SetTitle(fVar1->GetTitle());
+               h3->GetXaxis()->SetTitle(fVar[2]->GetTitle());
+               h3->GetYaxis()->SetTitle(fVar[1]->GetTitle());
+               h3->GetZaxis()->SetTitle(fVar[0]->GetTitle());
                h3->SetBit(kCanDelete);
                h3->SetBit(TH1::kNoStats);
                if (!opt.Contains("goff")) h3->SetDirectory(0);
             }
          }
-         fVar1->SetAxis(h3->GetZaxis());
-         fVar2->SetAxis(h3->GetYaxis());
-         fVar3->SetAxis(h3->GetXaxis());
+         fVar[0]->SetAxis(h3->GetZaxis());
+         fVar[1]->SetAxis(h3->GetYaxis());
+         fVar[2]->SetAxis(h3->GetXaxis());
          fObject = h3;
          Int_t noscat = strlen(option);
          if (optSame) noscat -= 4;
@@ -804,28 +808,31 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
-   fVar1Multiple = kFALSE;
-   fVar2Multiple = kFALSE;
-   fVar3Multiple = kFALSE;
-   fVar4Multiple = kFALSE;
+   for(Int_t i=0;i<fValSize;++i)
+      fVarMultiple[i] = kFALSE;
    fSelectMultiple = kFALSE;
-   if (fVar1 && fVar1->GetMultiplicity()) fVar1Multiple = kTRUE;
-   if (fVar2 && fVar2->GetMultiplicity()) fVar2Multiple = kTRUE;
-   if (fVar3 && fVar3->GetMultiplicity()) fVar3Multiple = kTRUE;
-   if (fVar4 && fVar4->GetMultiplicity()) fVar4Multiple = kTRUE;
+   for(Int_t i=0;i<fDimension;++i){
+      if(fVar[i] && fVar[i]->GetMultiplicity()) fVarMultiple[i] = kTRUE;
+   }
+   
    if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
 
    fForceRead = fTree->TestBit(TTree::kForceRead);
    fWeight  = fTree->GetWeight();
    fNfill   = 0;
-   if (!fV1 && fVar1)   fV1 = new Double_t[(Int_t)fTree->GetEstimate()];
-   if (!fV2 && fVar2)   fV2 = new Double_t[(Int_t)fTree->GetEstimate()];
-   if (!fV3 && fVar3)   fV3 = new Double_t[(Int_t)fTree->GetEstimate()];
-   if (!fV4 && fVar4)   fV4 = new Double_t[(Int_t)fTree->GetEstimate()];
+   
+   for(Int_t i=0;i<fDimension;++i){
+      if(!fVal[i] && fVar[i]){
+         fVal[i] = new Double_t[(Int_t)fTree->GetEstimate()];
+      }
+   }
+   
    if (!fW)             fW  = new Double_t[(Int_t)fTree->GetEstimate()];
-
-   fVmin[0] = fVmin[1] = fVmin[2] = fVmin[3] =  FLT_MAX; //in float.h
-   fVmax[0] = fVmax[1] = fVmax[2] = fVmax[3] = -fVmin[0];
+   
+   for(Int_t i=0;i<fValSize;++i){
+      fVmin[i] = FLT_MAX;
+      fVmax[i] = -FLT_MAX;
+   }
 }
 
 //______________________________________________________________________________
@@ -834,10 +841,10 @@ void TSelectorDraw::ClearFormula()
    // Delete internal buffers.
 
    ResetBit(kWarn);
-   delete fVar1;   fVar1 = 0;
-   delete fVar2;   fVar2 = 0;
-   delete fVar3;   fVar3 = 0;
-   delete fVar4;   fVar4 = 0;
+   for (Int_t i=0;i<fValSize;++i){
+      delete fVar[i];
+      fVar[i] = 0;
+   }
    delete fSelect; fSelect = 0;
    fManager = 0;
    fMultiplicity = 0;
@@ -863,10 +870,8 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    //
    //  Return kFALSE if any of the variable is not compilable.
 
-   const Int_t nMAXCOL = 4;
    TString title;
    Int_t i,nch,ncols;
-   Int_t index[nMAXCOL];
 
    // Compile selection expression if there is one
    fDimension = 0;
@@ -901,34 +906,19 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    ncols  = 1;
    for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
    if (ncols > 4 ) return kFALSE;
+   Int_t index[ncols];
    MakeIndex(title,index);
+   
+   InitArrays(ncols);
 
    fManager = new TTreeFormulaManager();
    if (fSelect) fManager->Add(fSelect);
    fTree->ResetBit(TTree::kForceRead);
-   if (ncols >= 1) {
-      fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
-      fVar1->SetQuickLoad(kTRUE);
-      if (!fVar1->GetNdim()) { ClearFormula(); return kFALSE;}
-      fManager->Add(fVar1);
-   }
-   if (ncols >= 2) {
-      fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
-      fVar2->SetQuickLoad(kTRUE);
-      if (!fVar2->GetNdim()) { ClearFormula(); return kFALSE;}
-      fManager->Add(fVar2);
-   }
-   if (ncols >= 3) {
-      fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
-      fVar3->SetQuickLoad(kTRUE);
-      if (!fVar3->GetNdim()) { ClearFormula(); return kFALSE;}
-      fManager->Add(fVar3);
-   }
-   if (ncols >= 4) {
-      fVar4 = new TTreeFormula("Var4",GetNameByIndex(title,index,3),fTree);
-      fVar4->SetQuickLoad(kTRUE);
-      if (!fVar4->GetNdim()) { ClearFormula(); return kFALSE;}
-      fManager->Add(fVar4);
+   for(i=0; i<ncols;++i){
+      fVar[i] = new TTreeFormula(Form("Var%i",i+1),GetNameByIndex(title,index,i),fTree);
+      fVar[i]->SetQuickLoad(kTRUE);
+      if(!fVar[i]->GetNdim()) { ClearFormula(); return kFALSE; }
+      fManager->Add(fVar[i]);
    }
    fManager->Sync();
 
@@ -938,7 +928,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    fDimension    = ncols;
 
    if (ncols==1) {
-      TClass *cl = fVar1->EvalClass();
+      TClass *cl = fVar[0]->EvalClass();
       if (cl) {
          fObjEval = kTRUE;
       }
@@ -961,6 +951,60 @@ const char *TSelectorDraw::GetNameByIndex(TString &varexp, Int_t *index,Int_t co
    n  = index[colindex+1] - i1;
    column = varexp(i1,n);
    return column.Data();
+}
+
+//______________________________________________________________________________
+Double_t* TSelectorDraw::GetVal(Int_t i) const
+{
+   //Get variable buffer.
+   
+   if(i<0 || i >= fDimension)
+      return 0;
+   else
+      return fVal[i];
+}
+
+//______________________________________________________________________________
+TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
+{
+   //Get variable formula.
+   
+   if(i<0 || i>=fDimension)
+      return 0;
+   else
+      return fVar[i];
+}
+
+//______________________________________________________________________________
+void TSelectorDraw::InitArrays(Int_t newsize)
+{
+   // Initialization of the primitive type arrays if the new size is bigger than the available space.
+   
+   if(newsize>fValSize){
+      Int_t oldsize = fValSize;
+      while(fValSize<newsize)
+         fValSize*=2;            // Double the available space until it matches the new size.
+      if(fNbins) delete [] fNbins;
+      if(fVmin) delete [] fVmin;
+      if(fVmax) delete [] fVmax;
+      if(fVarMultiple) delete [] fVarMultiple;
+      
+      fNbins = new Int_t[fValSize];
+      fVmin = new Double_t[fValSize];
+      fVmax = new Double_t[fValSize];
+      fVarMultiple = new Bool_t[fValSize];
+      
+      for(Int_t i=0;i<oldsize;++i)
+         delete [] fVal[i];
+      delete [] fVal;
+      delete [] fVar;
+      fVal = new Double_t*[fValSize];
+      fVar = new TTreeFormula*[fValSize];
+      for(Int_t i=0;i<fValSize;++i){
+         fVal[i] = 0;
+         fVar[i] = 0;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -988,10 +1032,11 @@ Bool_t TSelectorDraw::Notify()
    // This function is called at the first entry of a new tree in a chain.
 
    if (fTree) fWeight  = fTree->GetWeight();
-   if (fVar1) fVar1->UpdateFormulaLeaves();
-   if (fVar2) fVar2->UpdateFormulaLeaves();
-   if (fVar3) fVar3->UpdateFormulaLeaves();
-   if (fVar4) fVar4->UpdateFormulaLeaves();
+   if(fVar){
+      for(Int_t i=0;i<fDimension;++i){
+         if(fVar[i]) fVar[i]->UpdateFormulaLeaves();
+      }
+   }
    if (fSelect) fSelect->UpdateFormulaLeaves();
    return kTRUE;
 }
@@ -1018,16 +1063,9 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
       fW[fNfill] = fWeight*fSelect->EvalInstance(0);
       if (!fW[fNfill]) return;
    } else fW[fNfill] = fWeight;
-   if (fVar1) {
-      fV1[fNfill] = fVar1->EvalInstance(0);
-   }
-   if (fVar2) {
-      fV2[fNfill] = fVar2->EvalInstance(0);
-      if (fVar3) {
-         fV3[fNfill] = fVar3->EvalInstance(0);
-         if (fVar4) {
-            fV4[fNfill] = fVar4->EvalInstance(0);
-         }
+   if(fVal){
+      for(Int_t i=0;i<fDimension;++i){
+         if(fVar[i]) fVal[i][fNfill] = fVar[i]->EvalInstance(0);
       }
    }
    fNfill++;
@@ -1060,17 +1098,8 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
    // Always call EvalInstance(0) to insure the loading
    // of the branches.
    if (fW[fNfill]) {
-      if (fVar1) {
-         fV1[fNfill] = fVar1->EvalInstance(0);
-         if (fVar2) {
-            fV2[fNfill] = fVar2->EvalInstance(0);
-            if (fVar3) {
-               fV3[fNfill] = fVar3->EvalInstance(0);
-               if (fVar4) {
-                  fV4[fNfill] = fVar4->EvalInstance(0);
-               }
-            }
-         }
+      for(Int_t i=0;i<fDimension;++i){
+         if(fVar[i]) fVal[i][fNfill] = fVar[i]->EvalInstance(0);
       }
       fNfill++;
       if (fNfill >= fTree->GetEstimate()) {
@@ -1078,17 +1107,8 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
          fNfill = 0;
       }
    } else {
-      if (fVar1) {
-         fVar1->ResetLoading();
-         if (fVar2) {
-            fVar2->ResetLoading();
-            if (fVar3) {
-               fVar3->ResetLoading();
-               if (fVar4) {
-                  fVar4->ResetLoading();
-               }
-            }
-         }
+      for(Int_t i=0;i<fDimension;++i){
+         if(fVar[i]) fVar[i]->ResetLoading();
       }
    }
    Double_t ww = fW[nfill0];
@@ -1098,35 +1118,14 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
          ww = fWeight*fSelect->EvalInstance(i);
          if (ww == 0) continue;
          if (fNfill == nfill0) {
-            if (fVar1) {
-               if (!fVar1Multiple) fV1[nfill0] = fVar1->EvalInstance(0);
-               if (fVar2) {
-                  if (!fVar2Multiple) fV2[nfill0] = fVar2->EvalInstance(0);
-                  if (fVar3) {
-                     if (!fVar3Multiple) fV3[nfill0] = fVar3->EvalInstance(0);
-                     if (fVar4) {
-                        if (!fVar4Multiple) fV4[nfill0] = fVar4->EvalInstance(0);
-                     }
-                  }
-               }
+            for(Int_t k=0;k<fDimension;++k){
+               if(!fVarMultiple[k]) fVal[k][fNfill] = fVar[k]->EvalInstance(0);
             }
          }
       }
-      if (fVar1) {
-         if (fVar1Multiple) fV1[fNfill] = fVar1->EvalInstance(i);
-         else               fV1[fNfill] = fV1[nfill0];
-         if (fVar2) {
-            if (fVar2Multiple) fV2[fNfill] = fVar2->EvalInstance(i);
-            else               fV2[fNfill] = fV2[nfill0];
-            if (fVar3) {
-               if (fVar3Multiple) fV3[fNfill] = fVar3->EvalInstance(i);
-               else               fV3[fNfill] = fV3[nfill0];
-               if (fVar4) {
-                  if (fVar4Multiple) fV4[fNfill] = fVar4->EvalInstance(i);
-                  else               fV4[fNfill] = fV4[nfill0];
-               }
-            }
-         }
+      for(Int_t k=0;k<fDimension;++k){
+         if(fVarMultiple[k]) fVal[k][fNfill] = fVar[k]->EvalInstance(i);
+         else                fVal[k][fNfill] = fVal[k][nfill0];
       }
       fW[fNfill] = ww;
 
@@ -1166,11 +1165,11 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
          ww = fWeight*fSelect->EvalInstance(i);
          if (ww == 0) continue;
       }
-      if (fVar1) {
-         TClass *cl = fVar1->EvalClass();
+      if (fDimension >= 1 && fVar[0]) {
+         TClass *cl = fVar[0]->EvalClass();
          if (cl==TBits::Class()) {
 
-            void *obj = fVar1->EvalObject(i);
+            void *obj = fVar[0]->EvalObject(i);
 
             TBits *bits = (TBits*)obj;
             Int_t nbits = bits->GetNbits();
@@ -1179,7 +1178,7 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
             while(1) {
                nextbit = bits->FirstSetBit(nextbit+1);
                if (nextbit >= nbits) break;
-               fV1[fNfill] = nextbit;
+               fVal[0][fNfill] = nextbit;
                fW[fNfill] =  ww;
                fNfill++;
             }
@@ -1208,10 +1207,12 @@ void TSelectorDraw::SetEstimate(Long64_t)
 {
    // Set number of entries to estimate variable limits.
 
-   delete [] fV1;  fV1 = 0;
-   delete [] fV2;  fV2 = 0;
-   delete [] fV3;  fV3 = 0;
-   delete [] fV4;  fV4 = 0;
+   if(fVal){
+      for(Int_t i=0;i<fValSize;++i){
+         delete [] fVal[i];
+         fVal[i] = 0;
+      }
+   }
    delete [] fW;   fW  = 0;
 }
 
@@ -1222,14 +1223,14 @@ void TSelectorDraw::TakeAction()
 
    Int_t i;
    //__________________________1-D histogram_______________________
-   if      (fAction ==  1) ((TH1*)fObject)->FillN(fNfill,fV1,fW);
+   if      (fAction ==  1) ((TH1*)fObject)->FillN(fNfill,fVal[0],fW);
    //__________________________2-D histogram_______________________
    else if (fAction ==  2) {
       TH2 *h2 = (TH2*)fObject;
-      for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+      for(i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);
    }
    //__________________________Profile histogram_______________________
-   else if (fAction ==  4) ((TProfile*)fObject)->FillN(fNfill,fV2,fV1,fW);
+   else if (fAction ==  4) ((TProfile*)fObject)->FillN(fNfill,fVal[1],fVal[0],fW);
    //__________________________Event List______________________________
    else if (fAction ==  5) {
       if (fObject->InheritsFrom("TEntryList")){
@@ -1248,14 +1249,14 @@ void TSelectorDraw::TakeAction()
       TH2 *h2 = (TH2*)fObject;
       if (h2->TestBit(TH1::kCanRebin) && h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
-      TGraph *pm = new TGraph(fNfill,fV2,fV1);
+      TGraph *pm = new TGraph(fNfill,fVal[1],fVal[0]);
       pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -1271,23 +1272,23 @@ void TSelectorDraw::TakeAction()
          else                                             pm->Draw(fOption.Data());
       }
       if (!h2->TestBit(kCanDelete)) {
-         for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+         for (i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);
       }
    }
    //__________________________3D scatter plot_______________________
    else if (fAction ==  3) {
       TH3 *h3 =(TH3*)fObject;
-      for(i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+      for(i=0;i<fNfill;i++) h3->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
    }
    else if (fAction == 13) {
       TPolyMarker3D *pm3d = new TPolyMarker3D(fNfill);
       pm3d->SetMarkerStyle(fTree->GetMarkerStyle());
       pm3d->SetMarkerColor(fTree->GetMarkerColor());
       pm3d->SetMarkerSize(fTree->GetMarkerSize());
-      for (i=0;i<fNfill;i++) { pm3d->SetPoint(i,fV3[i],fV2[i],fV1[i]);}
+      for (i=0;i<fNfill;i++) { pm3d->SetPoint(i,fVal[2][i],fVal[1][i],fVal[0][i]);}
       pm3d->Draw();
       TH3 *h3 =(TH3*)fObject;
-      for(i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+      for(i=0;i<fNfill;i++) h3->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
    }
    //__________________________3D scatter plot (3rd variable = col)__
    else if (fAction == 33) {
@@ -1315,11 +1316,11 @@ void TSelectorDraw::TakeAction()
       h2->SetMaximum(fVmax[2]);
       // Fill the graphs acording to the color
       for (i=0;i<fNfill;i++) {
-         col = Int_t(ncolors*((fV3[i]-fVmin[2])/(fVmax[2]-fVmin[2])));
+         col = Int_t(ncolors*((fVal[2][i]-fVmin[2])/(fVmax[2]-fVmin[2])));
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          gr = (TGraph*)grs->UncheckedAt(col);
-         if (gr) gr->SetPoint(gr->GetN(),fV2[i],fV1[i]);
+         if (gr) gr->SetPoint(gr->GetN(),fVal[1][i],fVal[0][i]);
       }
       // Remove potential empty graphs
       for (col=0;col<ncolors;col++) {
@@ -1330,7 +1331,7 @@ void TSelectorDraw::TakeAction()
    //__________________________2D Profile Histogram__________________
    else if (fAction == 23) {
       TProfile2D *hp2 =(TProfile2D*)fObject;
-      for(i=0;i<fNfill;i++) hp2->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+      for(i=0;i<fNfill;i++) hp2->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
    }
    //__________________________4D scatter plot_______________________
    else if (fAction ==  40) {
@@ -1357,11 +1358,11 @@ void TSelectorDraw::TakeAction()
       h3->SetMinimum(fVmin[3]);
       h3->SetMaximum(fVmax[3]);
       for (i=0;i<fNfill;i++) {
-         col = Int_t(ncolors*((fV4[i]-fVmin[3])/(fVmax[3]-fVmin[3])));
+         col = Int_t(ncolors*((fVal[3][i]-fVmin[3])/(fVmax[3]-fVmin[3])));
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
-         pm3d->SetPoint(pm3d->GetLastPoint()+1,fV3[i],fV2[i],fV1[i]);
+         pm3d->SetPoint(pm3d->GetLastPoint()+1,fVal[2][i],fVal[1][i],fVal[0][i]);
       }
    }
    //__________________________something else_______________________
@@ -1389,58 +1390,60 @@ void TSelectorDraw::TakeEstimate()
    Int_t i;
    Double_t rmin[3],rmax[3];
    Double_t vminOld[4], vmaxOld[4];
-   for (i = 0; i < 4; i++) {
+   for (i = 0; i < fValSize && i < 4; i++) {
       vminOld[i] = fVmin[i];
       vmaxOld[i] = fVmax[i];
    }
-   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
-   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
+   for(i=0;i<fValSize;++i){
+      fVmin[i] = FLT_MAX;
+      fVmax[i] = - FLT_MAX;
+   }
    //__________________________1-D histogram_______________________
    if      (fAction ==  1) {
       TH1 *h1 = (TH1*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h1,fVmin[0],fVmax[0]);
       }
-      h1->FillN(fNfill, fV1, fW);
+      h1->FillN(fNfill, fVal[0], fW);
    //__________________________2-D histogram_______________________
    } else if (fAction ==  2) {
       TH2 *h2 = (TH2*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
-      for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+      for(i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);
    //__________________________Profile histogram_______________________
    } else if (fAction ==  4) {
       TProfile *hp = (TProfile*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp,fVmin[1],fVmax[1]);
       }
-      hp->FillN(fNfill, fV2, fV1, fW);
+      hp->FillN(fNfill, fVal[1], fVal[0], fW);
    //__________________________2D scatter plot_______________________
    } else if (fAction == 12) {
       TH2 *h2 = (TH2*)fObject;
       if (h2->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
@@ -1461,7 +1464,7 @@ void TSelectorDraw::TakeEstimate()
          }
          gPad->Update();
       }
-      TGraph *pm = new TGraph(fNfill,fV2,fV1);
+      TGraph *pm = new TGraph(fNfill,fVal[1],fVal[0]);
       pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -1476,7 +1479,7 @@ void TSelectorDraw::TakeEstimate()
          else                                             pm->Draw(fOption.Data());
       }
       if (!h2->TestBit(kCanDelete)) {
-         for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+         for (i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);
       }
    //__________________________3D scatter plot with option col_______________________
    } else if (fAction == 33) {
@@ -1485,18 +1488,18 @@ void TSelectorDraw::TakeEstimate()
       if (h2->TestBit(TH1::kCanRebin)) {
          if (vminOld[2] == FLT_MAX)
             process2 = kTRUE;
-         for (i = 0; i < 4; i++) {
+         for (i = 0; i < fValSize && i < 4; i++) {
             fVmin[i] = vminOld[i];
             fVmax[i] = vmaxOld[i];
          }
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
             if (process2) {
-               if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
-               if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+               if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
+               if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
             }
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
@@ -1506,17 +1509,17 @@ void TSelectorDraw::TakeEstimate()
       TH3 *h3 = (TH3*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
-            if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
-            if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
+            if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
+            if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
       if (fAction == 3) {
-         for (i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+         for (i=0;i<fNfill;i++) h3->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
          return;
       }
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
@@ -1545,10 +1548,10 @@ void TSelectorDraw::TakeEstimate()
       pm3d->SetMarkerStyle(fTree->GetMarkerStyle());
       pm3d->SetMarkerColor(fTree->GetMarkerColor());
       pm3d->SetMarkerSize(fTree->GetMarkerSize());
-      for (i=0;i<fNfill;i++) { pm3d->SetPoint(i,fV3[i],fV2[i],fV1[i]);}
+      for (i=0;i<fNfill;i++) { pm3d->SetPoint(i,fVal[2][i],fVal[1][i],fVal[0][i]);}
       if (!fDraw && !strstr(fOption.Data(),"goff")) pm3d->Draw();
       if (!h3->TestBit(kCanDelete)) {
-         for (i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+         for (i=0;i<fNfill;i++) h3->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
       }
 
    //__________________________2D Profile Histogram__________________
@@ -1556,33 +1559,33 @@ void TSelectorDraw::TakeEstimate()
       TProfile2D *hp = (TProfile2D*)fObject;
       if (hp->TestBit(TH1::kCanRebin)) {
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
-            if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
-            if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
+            if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
+            if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp,fVmin[2],fVmax[2],fVmin[1],fVmax[1]);
       }
-      for (i=0;i<fNfill;i++) hp->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
+      for (i=0;i<fNfill;i++) hp->Fill(fVal[2][i],fVal[1][i],fVal[0][i],fW[i]);
    //__________________________4D scatter plot_______________________
    } else if (fAction == 40) {
       TH3 *h3 = (TH3*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
-         for (i = 0; i < 4; i++) {
+         for (i = 0; i < fValSize && i < 4; i++) {
             fVmin[i] = vminOld[i];
             fVmax[i] = vmaxOld[i];
          }
          for (i=0;i<fNfill;i++) {
-            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
-            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
-            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
-            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
-            if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
-            if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
-            if (fVmin[3] > fV4[i]) fVmin[3] = fV4[i];
-            if (fVmax[3] < fV4[i]) fVmax[3] = fV4[i];
+            if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
+            if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
+            if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
+            if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
+            if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
+            if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
+            if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];
+            if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
