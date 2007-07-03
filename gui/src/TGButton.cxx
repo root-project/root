@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.76 2007/06/07 08:42:55 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.77 2007/07/03 06:56:05 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
     : TGFrame(p, 1, 1, options)
 {
    // Create button base class part.
-
+ 
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
@@ -812,7 +812,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
 //______________________________________________________________________________
 TGPictureButton::~TGPictureButton()
 {
-   // destructor
+   // Destructor.
 
    if (fOwnDisabledPic) fClient->FreePicture(fPicD);
 }
@@ -875,7 +875,7 @@ void TGPictureButton::DoRedraw()
 //______________________________________________________________________________
 void TGPictureButton::CreateDisabledPicture()
 {
-   // creates disabled picture
+   // Creates disabled picture.
 
    TImage *img = TImage::Create();
    TImage *img2 = TImage::Create();
@@ -898,7 +898,7 @@ void TGPictureButton::CreateDisabledPicture()
 //______________________________________________________________________________
 void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
 {
-   // changes disabled picture
+   // Changes disabled picture.
 
    if (!pic) return;
 
@@ -990,6 +990,7 @@ void TGCheckButton::Init()
 TGCheckButton::~TGCheckButton()
 {
    // Delete a check button.
+   
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
    if (fDisOn)  fClient->FreePicture(fDisOn);
@@ -1007,7 +1008,7 @@ void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 //______________________________________________________________________________
 void TGCheckButton::EmitSignals(Bool_t /*wasUp*/)
 {
-   // emit signals
+   // Emit signals.
 
    if (fState == kButtonUp)   Released();            // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
@@ -1358,7 +1359,7 @@ void TGRadioButton::SetDisabledAndSelected(Bool_t enable)
 //______________________________________________________________________________
 void TGRadioButton::EmitSignals(Bool_t /*wasUp*/)
 {
-   // emit signals
+   // Emit signals.
 
    if (fState == kButtonUp) Released();              // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
@@ -1576,7 +1577,7 @@ const TGGC &TGRadioButton::GetDefaultGC()
 //______________________________________________________________________________
 void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a button widget as a C++ statement(s) on output stream out
+   // Save a button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
@@ -1608,7 +1609,7 @@ void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a text button widget as a C++ statement(s) on output stream out
+   // Save a text button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
    const char *text = fLabel->GetString();
@@ -1685,7 +1686,7 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a picture button widget as a C++ statement(s) on output stream out
+   // Save a picture button widget as a C++ statement(s) on output stream out.
 
    if (!fPic) {
       Error("SavePrimitive()", "pixmap not found for picture button %d ", fWidgetId);
@@ -1735,7 +1736,7 @@ void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a check button widget as a C++ statement(s) on output stream out
+   // Save a check button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
@@ -1808,7 +1809,7 @@ void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a radio button widget as a C++ statement(s) on output stream out
+   // Save a radio button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
