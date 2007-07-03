@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.181 2007/02/05 16:07:00 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.182 2007/06/08 09:21:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -270,6 +270,10 @@ enum {
   FE_ENABLE_INVALID    = 0x00000080,
   FE_ENABLE_ALL_EXCEPT = 0x000000F8
 };
+#endif
+
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+#include <fenv.h>
 #endif
 // End FPE handling includes
 
@@ -658,6 +662,19 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+   fenv_t oldenv;
+   fegetenv(&oldenv);
+   fesetenv(&oldenv);
+   Int_t oldmask = ~oldenv.__control;
+
+   if (oldmask & FE_INVALID  )   mask |= kInvalid;
+   if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
+   if (oldmask & FE_OVERFLOW )   mask |= kOverflow;
+   if (oldmask & FE_UNDERFLOW)   mask |= kUnderflow;
+   if (oldmask & FE_INEXACT  )   mask |= kInexact;
+#endif
+
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
    !defined(__x86_64__)
    Long64_t oldmask;
@@ -712,6 +729,20 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
 #endif
 #endif
+#endif
+
+#if defined(R__MACOSX) && (defined(__i386__) || defined(__x86_64__))
+   Int_t newm = 0;
+   if (mask & kInvalid  )   newm |= FE_INVALID;
+   if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
+   if (mask & kOverflow )   newm |= FE_OVERFLOW;
+   if (mask & kUnderflow)   newm |= FE_UNDERFLOW;
+   if (mask & kInexact  )   newm |= FE_INEXACT;
+
+   fenv_t cur;
+   fegetenv(&cur);
+   cur.__control &= ~newm;
+   fesetenv(&cur);
 #endif
 
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
