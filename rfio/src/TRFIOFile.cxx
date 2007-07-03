@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.45 2007/07/02 17:39:13 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.46 2007/07/02 18:02:36 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -170,9 +170,18 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    if (!strcmp(fUrl.GetProtocol(), "castor"))
       fUrl.SetProtocol("rfio");
 
+   // old RFIO client lib does not support :///, need to change to :////
+   Bool_t addSlash = kFALSE;
+   if ((strstr(url, ":/")   && !strstr(url, "://")) ||
+       (strstr(url, ":///") && !strstr(url, ":////")))
+      addSlash = kTRUE;
+
    // the complete turl in fname
    TString fname;
-   fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+   if (!addSlash)
+      fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+   else
+      fname.Form("%s:///%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
 
    if (recreate) {
       if (::rfio_access(fname.Data(), kFileExists) == 0)
