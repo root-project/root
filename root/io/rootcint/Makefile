@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  MidadCint*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  MidadCint* cltest.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest

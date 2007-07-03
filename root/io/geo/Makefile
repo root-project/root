@@ -15,6 +15,7 @@ aleph_all.C alice_itsv.C atlas_sctt.C brahms.C brahms_all.C \
 cdf_all.C cdf_svxc.C cms_calo.C d0.C d0_all.C e907.C e907_all.C \
 phobos.C phobos_all.C star_all.C star_svtt.C tesla.C tesla_all.C \
 lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root \
+babar.root lhcb_mag.root phenix.root \
 aleph.root  brahms.root  cdf.root  e907.root  star.root \
 ams.root    btev.root    d0.root   gem.root   phobos.root  tesla.root \
 babar_all.C babar_emca.C babar_ssvd.C lhcb_mag.C

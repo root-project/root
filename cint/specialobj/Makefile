@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log problem.root $(ALL_LIBRARIES)
+CLEAN_TARGETS += *.log problem.root $(ALL_LIBRARIES) tmp.root
 TEST_TARGETS += stlProxies argtwice
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
