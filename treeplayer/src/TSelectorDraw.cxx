@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.69 2007/06/22 16:44:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.70 2007/07/03 10:00:15 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -906,7 +906,8 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    ncols  = 1;
    for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
    if (ncols > 4 ) return kFALSE;
-   Int_t index[ncols];
+   Int_t *index;
+   index = new Int_t[ncols+1];
    MakeIndex(title,index);
    
    InitArrays(ncols);
@@ -917,7 +918,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    for(i=0; i<ncols;++i){
       fVar[i] = new TTreeFormula(Form("Var%i",i+1),GetNameByIndex(title,index,i),fTree);
       fVar[i]->SetQuickLoad(kTRUE);
-      if(!fVar[i]->GetNdim()) { ClearFormula(); return kFALSE; }
+      if(!fVar[i]->GetNdim()) { ClearFormula(); delete [] index; return kFALSE; }
       fManager->Add(fVar[i]);
    }
    fManager->Sync();
@@ -933,6 +934,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
          fObjEval = kTRUE;
       }
    }
+   delete [] index;
    return kTRUE;
 }
 
