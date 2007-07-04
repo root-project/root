@@ -31,6 +31,11 @@ class TView;
 
 class TGraphDelaunay : public TNamed {
 
+private:
+
+   TGraphDelaunay(const TGraphDelaunay&); // Not implemented
+   TGraphDelaunay& operator=(const TGraphDelaunay&); // Not implemented
+
 protected:
 
    Int_t       fNdt;         //!Number of Delaunay triangles found

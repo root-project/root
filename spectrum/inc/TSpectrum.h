@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.h,v 1.3 2006/10/03 10:05:02 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.h,v 1.4 2007/01/23 11:09:42 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -18,6 +18,11 @@
 class TH1;
 
 class TSpectrum : public TNamed {
+private:
+
+   TSpectrum(const TSpectrum&); // Not implemented
+   TSpectrum& operator=(const TSpectrum&); // Not implemented
+
 protected:
    Int_t         fMaxPeaks;       //Maximum number of peaks to be found
    Int_t         fNPeaks;         //number of peaks found

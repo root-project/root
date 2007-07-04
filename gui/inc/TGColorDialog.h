@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.7 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.8 2007/03/17 12:03:00 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -54,6 +54,11 @@ class TGTextButton;
 //----------------------------------------------------------------------
 
 class TGColorPalette : public TGFrame, public TGWidget {
+
+private:
+   
+   TGColorPalette(const TGColorPalette&); // Not implemented
+   TGColorPalette& operator=(const TGColorPalette&); // Not implemented
 
 protected:
    Int_t    fCx;           // x coordinate of currently selected color cell
@@ -153,6 +158,11 @@ public:
 //----------------------------------------------------------------------
 
 class TGColorDialog : public TGTransientFrame {
+
+private:
+
+   TGColorDialog(const TGColorDialog&); // Not implemented
+   TGColorDialog& operator=(const TGColorDialog&); // Not implemented
 
 protected:
    Pixel_t         fCurrentColor;   // currently selected color

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.9 2007/05/04 15:18:08 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.10 2007/05/04 15:47:14 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -97,7 +97,7 @@ protected:
    LayoutChunk_t *fChunks;    // Array of chunks. The actual size will be maxChunks.
 
 public:
-   TGTextLayout() { fNumChunks = 0; fChunks = 0; }
+   TGTextLayout(): fFont(NULL), fString(""), fWidth(0), fNumChunks(0), fChunks(NULL) {}
    virtual ~TGTextLayout();
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
@@ -140,7 +140,8 @@ private:
 
 protected:
    TGFont(const char *name)
-      : TNamed(name,""), TRefCnt(), fFontStruct(0), fFontH(0), fFM()
+     : TNamed(name,""), TRefCnt(), fFontStruct(0), fFontH(0), fFM(),
+     fFA(), fNamedHash(NULL), fTabWidth(0), fUnderlinePos(0), fUnderlineHeight(0), fBarHeight(0)
    {
       SetRefCount(1);
    }

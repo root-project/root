@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.4 2004/07/08 10:02:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.5 2004/09/08 08:13:11 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -109,6 +109,11 @@ public:
 
 
 class TGImageMap : public TGPictureButton {
+
+private:
+  
+   TGImageMap(const TGImageMap&); // Not implemented
+   TGImageMap& operator=(const TGImageMap&); // Not implemented
 
 public:
    enum ENavMode { kNavRegions, kNavGrid };

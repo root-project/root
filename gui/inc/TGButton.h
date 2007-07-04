@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.46 2007/07/03 06:56:05 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.47 2007/07/03 10:03:57 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -238,6 +238,11 @@ public:
 
 
 class TGCheckButton : public TGTextButton {
+
+private:
+ 
+   TGCheckButton(const TGCheckButton&); // Not implemented
+   TGCheckButton& operator=(const TGCheckButton&); // Not implemented
 
 protected:
    EButtonState       fPrevState;     // previous check button state
