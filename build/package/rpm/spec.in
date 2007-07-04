@@ -76,7 +76,6 @@ sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 	    --disable-srp				\
 	    --disable-builtin-freetype			\
 	    --disable-builtin-pcre			\
-	    --disable-builtin-gsl			\
 	    --prefix=%_prefix 				\
 	    --libdir=%_prefix/lib/root/${sovers}	\
 	    --mandir=%_prefix/share/man/man1		\
