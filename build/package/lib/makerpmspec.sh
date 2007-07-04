@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.14 2006/04/21 16:29:33 rdm Exp $
+# $Id: makerpmspec.sh,v 1.15 2006/08/24 13:49:53 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -17,7 +17,6 @@ confargs="--enable-cintex				\
           --enable-mathcore                          	\
           --enable-minuit2                           	\
 	  --enable-odbc					\
-	  --enable-pythia				\
 	  --enable-pythia6				\
 	  --enable-qt					\
 	  --enable-qtgsi				\
