@@ -86,7 +86,6 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --disable-globus				\
 		  --disable-monalisa				\
 		  --disable-oracle				\
-		  --disable-pythia				\
 		  --disable-pythia6				\
 		  --disable-rfio				\
 		  --disable-venus				\
