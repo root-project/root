@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.27 2006/11/10 10:47:38 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.28 2007/01/23 14:22:45 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -139,10 +139,12 @@ void TGButtonGroup::Init()
 {
    // Default init.
 
+   fState        = kTRUE;
    fMapOfButtons = new TMap();  // map of button/id pairs
    fExclGroup    = kFALSE;
    fRadioExcl    = kFALSE;
    fDrawBorder   = kTRUE;
+   
    SetWindowName();
 }
 
@@ -159,6 +161,106 @@ TGButtonGroup::~TGButtonGroup()
    }
 
    SafeDelete(fMapOfButtons);
+}
+
+//______________________________________________________________________________
+void TGButtonGroup::DoRedraw()
+{
+   // Redraw the group frame. Need special DoRedraw() since we need to
+   // redraw with fBorderWidth=0.
+
+   gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
+
+   DrawBorder();
+}
+
+//______________________________________________________________________________
+void TGButtonGroup::DrawBorder()
+{
+   // Draw border of around the group frame.
+   //
+   // if frame is kRaisedFrame  - a frame border is of "wall style",
+   // otherwise of "groove style".
+   
+   if (!fDrawBorder) return;
+
+   Int_t x, y, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
+
+   UInt_t tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+
+   l = 0;
+   t = (max_ascent + max_descent + 2) >> 1;
+   r = fWidth - 1;
+   // next three lines are for backward compatibility in case of horizontal layout
+   TGLayoutManager * lm = GetLayoutManager();
+   if ((lm->InheritsFrom(TGHorizontalLayout::Class())) ||
+       (lm->InheritsFrom(TGMatrixLayout::Class())))
+      b = fHeight - 1;
+   else
+      b = fHeight - t;
+
+   sep = 3;
+   UInt_t rr = 5 + (sep << 1) + tw;
+
+   switch (fTitlePos) {
+      case kRight:
+         gl = fWidth>rr ? fWidth - rr : 5 + sep;
+         break;
+      case kCenter:
+         gl = fWidth>tw ? ((fWidth - tw)>>1) - sep : 5 + sep;
+         break;
+      case kLeft:
+      default:
+         gl = 5 + sep;
+   }
+   gr = gl + tw + (sep << 1);
+
+   switch (fOptions & (kSunkenFrame | kRaisedFrame)) {
+      case kRaisedFrame:
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), l+1, t+1, gl,  t+1);
+
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), gr,  t+1, r-2, t+1);
+
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), r,   t,   r,   b);
+
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), r,   b,   l,   b);
+
+         gVirtualX->DrawLine(fId, GetHilightGC()(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, GetShadowGC()(), l+1, b-2, l+1, t+1);
+         break;
+      case kSunkenFrame:
+      default:
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), l+1, t+1, gl,  t+1);
+
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), gr,  t+1, r-2, t+1);
+
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), r,   t,   r,   b);
+
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), r,   b,   l,   b);
+
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), l+1, b-2, l+1, t+1);
+         break;
+   }
+
+   x = gl + sep;
+   y = 1;
+
+   if (fState) {
+      fText->Draw(fId, fNormGC, x, y + max_ascent);
+   } else {
+      fText->Draw(fId, GetHilightGC()(), x, y + 1 + max_ascent);
+      fText->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+   }
 }
 
 //______________________________________________________________________________
@@ -202,6 +304,25 @@ void TGButtonGroup::SetRadioButtonExclusive(Bool_t enable)
    }
 }
 
+//______________________________________________________________________________
+void TGButtonGroup::SetState(Bool_t state) 
+{
+   // Sets the state of all the buttons in the group to enable or disable.
+
+   fState = state;
+
+   TIter next(fMapOfButtons);
+   register TGButton *item = 0;
+
+   while ((item = (TGButton*)next())) {    // loop over all buttons
+      if (state) {
+         item->SetState(kButtonUp);
+      } else {
+         item->SetState(kButtonDisabled);
+      }
+   }
+   DoRedraw();
+}
 //______________________________________________________________________________
 void TGButtonGroup::SetButton(Int_t id, Bool_t down)
 {
@@ -467,7 +588,7 @@ void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
 //______________________________________________________________________________
 void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a button group widget as a C++ statement(s) on output stream out
+   // Save a button group widget as a C++ statement(s) on output stream out.
 
    char quote ='"';
 
@@ -547,13 +668,16 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() << "->Resize(" << GetWidth()
        << "," << GetHeight() << ");" << endl;
 
+   if (!IsEnabled())
+      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+   
    out << "   " << GetName() << "->Show();" << endl;
 }
 
 //______________________________________________________________________________
 void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a button group widget as a C++ statement(s) on output stream out
+   // Save a button group widget as a C++ statement(s) on output stream out.
 
    char quote ='"';
 
@@ -617,6 +741,9 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
    }
 
+   if (!IsEnabled())
+      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+
    if (IsExclusive())
       out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
 
@@ -635,7 +762,7 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a button group widget as a C++ statement(s) on output stream out
+   // Save a button group widget as a C++ statement(s) on output stream out.
 
    char quote ='"';
 
@@ -692,6 +819,9 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          out << ");"<< endl;
       }
    }
+
+   if (!IsEnabled())
+      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
 
    if (IsExclusive())
       out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;

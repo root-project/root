@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.12 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.13 2007/05/14 13:28:06 antcheva Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -41,12 +41,14 @@ private:
    TGButtonGroup& operator=(const TGButtonGroup&); // Not implemented
 
 protected:
+   Bool_t  fState;           // kTRUE if group is enabled
    Bool_t  fExclGroup;       // kTRUE if group is exclusive
    Bool_t  fRadioExcl;       // kTRUE if radio buttons are exclusive
    Bool_t  fDrawBorder;      // kTRUE if border and title are drawn
    TMap   *fMapOfButtons;    // map of button/id pairs in this group
 
    void Init();
+   virtual void DoRedraw();
 
 public:
    TGButtonGroup(const TGWindow *parent = 0,
@@ -74,6 +76,7 @@ public:
    virtual void ButtonClicked();
    virtual void ReleaseButtons();
 
+   Bool_t IsEnabled() const { return fState; }
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
@@ -82,6 +85,7 @@ public:
 
    virtual void SetExclusive(Bool_t flag = kTRUE);
    virtual void SetRadioButtonExclusive(Bool_t flag = kTRUE);
+   virtual void SetState(const Bool_t state = kTRUE);
    virtual void SetBorderDrawn(Bool_t enable = kTRUE);
    virtual void SetButton(Int_t id, Bool_t down = kTRUE);
    virtual void SetTitle(TGString *title);
@@ -93,9 +97,9 @@ public:
    virtual TGButton *GetButton(Int_t id) const { return Find(id); }
    virtual void      Show();
    virtual void      Hide();
-   virtual void      DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
+   virtual void      DrawBorder();
    virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
 };
