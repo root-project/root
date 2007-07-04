@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.183 2007/06/08 15:46:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.184 2007/06/11 12:04:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1372,6 +1372,16 @@ void TGeoManager::CloseGeometry(Option_t *option)
             nav->BuildCache(dummy,nodeid);
          }   
       }
+      if (!fHashVolumes) {
+         Int_t nvol = fVolumes->GetEntriesFast();
+         Int_t ngvol = fGVolumes->GetEntriesFast();
+         fHashVolumes = new THashList(nvol+1);
+         fHashGVolumes = new THashList(ngvol+1);
+         Int_t i;
+         for (i=0; i<ngvol; i++) fHashGVolumes->AddAt(fGVolumes->At(i),i);
+         for (i=0; i<nvol; i++) fHashVolumes->AddAt(fVolumes->At(i),i);
+      }   
+      
       Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       Info("CloseGeometry","----------------modeler ready----------------");
       fClosed = kTRUE;

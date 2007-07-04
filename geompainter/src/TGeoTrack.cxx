@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.7 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.8 2007/05/14 13:25:22 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -91,7 +91,7 @@ TGeoTrack::~TGeoTrack()
 {
 // Destructor.
    if (fPoints) delete [] fPoints;
-   if (gPad) gPad->GetListOfPrimitives()->Remove(this);
+//   if (gPad) gPad->GetListOfPrimitives()->Remove(this);
 }
 
 //______________________________________________________________________________
