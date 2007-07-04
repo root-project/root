@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.266 2007/04/16 08:35:03 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.267 2007/06/23 21:22:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2661,6 +2661,12 @@ void TPad::Paint(Option_t * /*option*/)
    if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
       fViewer3D->PadPaint(this);
       Modified(kFALSE);
+      if (GetGLDevice()!=-1 && gVirtualPS) {
+         TPad *padsav = (TPad*)gPad;
+         gPad = this;
+         gGLManager->PrintViewer(GetViewer3D());
+         gPad = padsav;
+      }
       return;
    }
 
