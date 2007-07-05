@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.110 2007/06/07 09:23:21 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.111 2007/07/03 16:26:44 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1434,6 +1434,9 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    TString arguments;
    TString io;
    selec = gSystem->SplitAclicMode(selec, aclicMode, arguments, io);
+
+   // Expand possible envs or '~'
+   gSystem->ExpandPathName(selec);
 
    // Header file
    TString header = selec;
