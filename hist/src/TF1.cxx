@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.138 2007/05/28 14:35:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.139 2007/06/12 15:29:23 moneta Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -109,7 +109,7 @@ The parameters must be initialized via:
 Parameters may be given a name:
 <pre>
    fa->SetParName(0,"Constant");
-</pre> 
+</pre>
 </li>
 <li> Example b:
 <div class="code"><pre>
@@ -181,7 +181,7 @@ In an interactive session you can do:
 End_Html
 Begin_Html
 
-<tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John 
+<tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John
 Odonnell) of type A or B defined above. This excludes CINT interpreted functions
 and compiled functions. However, there is a restriction. A function cannot
 reference a basic function if the basic function is a polynomial polN.
@@ -191,13 +191,13 @@ reference a basic function if the basic function is a polynomial polN.
       TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
       fcos->SetParNames( "cos");
       fcos->SetParameter( 0, 1.1);
-   
+
       TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
       fsin->SetParNames( "sin");
       fsin->SetParameter( 0, 2.1);
-   
+
       TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
-   
+
       TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
    }
 </pre></div><div class="clear" />
@@ -207,57 +207,57 @@ Begin_Html
 
 
 <a name="F4"></a><h3>D - A general C++ function object (functor) with parameters</h3>
-A TF1 can be created from any C++ class implementing the operator()(double *x, double *p).  
-The advantage of the function object is that he can have a state and reference therefore what-ever other object. 
-In this way the user can customize his function. 
-<p>Example: 
+A TF1 can be created from any C++ class implementing the operator()(double *x, double *p).
+The advantage of the function object is that he can have a state and reference therefore what-ever other object.
+In this way the user can customize his function.
+<p>Example:
 <div class="code"><pre>
-class  MyFunctionObject { 
- public: 
-   // use constructor to customize your function object 
-   
-   double operator() (double *x, double *p) { 
+class  MyFunctionObject {
+ public:
+   // use constructor to customize your function object
+
+   double operator() (double *x, double *p) {
       // function implementation using class data members
-   } 
+   }
 };
-{ 
+{
     ....
-   MyFunctionObject * fobj = new MyFunctionObject(....);       // create the function object 
-   TF1 * f = new TF1("f",fobj,0,1,npar,"MyFunctionObject");    // create TF1 class.  
+   MyFunctionObject * fobj = new MyFunctionObject(....);       // create the function object
+   TF1 * f = new TF1("f",fobj,0,1,npar,"MyFunctionObject");    // create TF1 class.
    .....
 }
 </pre></div><div class="clear" />
-When constructing the TF1 class, the name of the function object class is required only if running in CINT 
-and it is not needed in compiled C++ mode. In addition in compiled mode the cfnution object can be passed to TF1 
-by value. 
-See also the tutorial math/exampleFunctor.C for a running example.  
+When constructing the TF1 class, the name of the function object class is required only if running in CINT
+and it is not needed in compiled C++ mode. In addition in compiled mode the cfnution object can be passed to TF1
+by value.
+See also the tutorial math/exampleFunctor.C for a running example.
 
 End_Html
 Begin_Html
 
 <a name="F5"></a><h3>E - A member function with parameters of a general C++ class</h3>
-A TF1 can be created in this case from any member function of a class which has the signature of 
-(double * , double *) and returning a double. 
-<p>Example: 
+A TF1 can be created in this case from any member function of a class which has the signature of
+(double * , double *) and returning a double.
+<p>Example:
 <div class="code"><pre>
-class  MyFunction { 
- public: 
+class  MyFunction {
+ public:
    ...
-   double Evaluate() (double *x, double *p) { 
-      // function implementation 
-   } 
+   double Evaluate() (double *x, double *p) {
+      // function implementation
+   }
 };
-{ 
+{
     ....
-   MyFunction * fptr = new MyFunction(....);  // create the user function class  
-   TF1 * f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class. 
+   MyFunction * fptr = new MyFunction(....);  // create the user function class
+   TF1 * f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
 
    .....
 }
 </pre></div><div class="clear" />
-When constructing the TF1 class, the name of the function class and of the member function are required only 
+When constructing the TF1 class, the name of the function class and of the member function are required only
 if running in CINT and they are not need in compiled C++ mode.
-See also the tutorial math/exampleFunctor.C for a running example.  
+See also the tutorial math/exampleFunctor.C for a running example.
 
 End_Html */
 
@@ -350,7 +350,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fMaximum    = -1111;
    fMethodCall = 0;
    fCintFunc   = 0;
-   
+
    if (fNdim != 1 && xmin < xmax) {
       Error("TF1","function: %s/%s has %d parameters instead of 1",name,formula,fNdim);
       MakeZombie();
@@ -379,7 +379,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    //  This constructor is called for functions of type C by CINT.
    //
    // WARNING! A function created with this constructor cannot be Cloned.
-   
+
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
@@ -684,11 +684,11 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar ) : 
-   TFormula(), 
-   TAttLine(), 
-   TAttFill(), 
-   TAttMarker(), 
+TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar ) :
+   TFormula(),
+   TAttLine(),
+   TAttFill(),
+   TAttMarker(),
    fXmin      ( xmin ),
    fXmax      ( xmax ),
    fNpx       ( 100 ),
@@ -709,22 +709,19 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fHistogram ( 0 ),
    fMaximum   ( -1111 ),
    fMinimum   ( -1111 ),
-   fMethodCall( 0 ), 
+   fMethodCall( 0 ),
    fCintFunc  ( 0 ),
    fFunctor   ( ROOT::Math::ParamFunctor(f) )
 {
-//*-*-*-*-*-*-*F1 constructor using the Functor class *-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-* 
-//*-*   xmin and xmax define the plotting range of the function 
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*   This constructor can be used only in compiled code 
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // F1 constructor using the Functor class.
+   //
+   //   xmin and xmax define the plotting range of the function
+   //   npar is the number of free parameters used by the function
+   //
+   //   This constructor can be used only in compiled code
+   //
+   // WARNING! A function created with this constructor cannot be Cloned.
+
    CreateFromFunctor(name, npar);
 }
 
@@ -732,11 +729,9 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 //______________________________________________________________________________
 void TF1::CreateFromFunctor(const char *name, Int_t npar)
 {
-//*-*-*-*-*-*-*Internal Function to Create a TF1  using a Functor*-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-*
-//*-*          Used by the template constructors 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Internal Function to Create a TF1  using a Functor.
+   //
+   //          Used by the template constructors
 
    fNdim       = 1;
 
@@ -777,21 +772,21 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar)
 TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className )
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-   // F1 constructor from an interpreted class defining the operator() or Eval().  
-   // This constructor emulate the syntax of the template constructor using a C++ callable object (functor) 
-   // which can be used only in C++ compiled mode. 
-   // The class name is required to get the type of class given the void pointer ptr. 
-   // For the method name is used the operator() (double *, double * ). 
-   // Use the other constructor taking the method name for different method names. 
+   // F1 constructor from an interpreted class defining the operator() or Eval().
+   // This constructor emulate the syntax of the template constructor using a C++ callable object (functor)
+   // which can be used only in C++ compiled mode.
+   // The class name is required to get the type of class given the void pointer ptr.
+   // For the method name is used the operator() (double *, double * ).
+   // Use the other constructor taking the method name for different method names.
    //
-   //  xmin and xmax specify the function plotting range 
+   //  xmin and xmax specify the function plotting range
    //  npar are the number of function parameters
    //
-   //  see tutorial  math.exampleFunctor.C for an example of using this constructor 
+   //  see tutorial  math.exampleFunctor.C for an example of using this constructor
    //
    //  This constructor is used only when using CINT.
-   //  In compiled mode the template constructor is used and in that case className is not needed 
-   
+   //  In compiled mode the template constructor is used and in that case className is not needed
+
    CreateFromCintClass(name, ptr, xmin, xmax, npar, className, 0 );
 }
 
@@ -800,30 +795,30 @@ TF1::TF1(const char *name,void *ptr, void * , Double_t xmin, Double_t xmax, Int_
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
    // F1 constructor from an interpreter class using a specidied member function.
-   // This constructor emulate the syntax of the template constructor using a C++ class and a given 
-   // member function pointer, which can be used only in C++ compiled mode. 
-   // The class name is required to get the type of class given the void pointer ptr. 
-   // The second void * is not needed for the CINT case, but is kept for emulating the API of the 
-   // template constructor. 
-   // The method name is optional. By default is looked for operator() (double *, double *) or 
-   // Eval(double *, double*)  
+   // This constructor emulate the syntax of the template constructor using a C++ class and a given
+   // member function pointer, which can be used only in C++ compiled mode.
+   // The class name is required to get the type of class given the void pointer ptr.
+   // The second void * is not needed for the CINT case, but is kept for emulating the API of the
+   // template constructor.
+   // The method name is optional. By default is looked for operator() (double *, double *) or
+   // Eval(double *, double*)
    //
-   //  xmin and xmax specify the function plotting range 
+   //  xmin and xmax specify the function plotting range
    //  npar are the number of function parameters.
    //
    //
-   //  see tutorial  math.exampleFunctor.C for an example of using this constructor 
+   //  see tutorial  math.exampleFunctor.C for an example of using this constructor
    //
    //  This constructor is used only when using CINT.
-   //  In compiled mode the template constructor is used and in that case className is not needed 
-   
+   //  In compiled mode the template constructor is used and in that case className is not needed
+
    CreateFromCintClass(name, ptr, xmin, xmax, npar, className, methodName);
 }
 
 //______________________________________________________________________________
 void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className, char * methodName)
 {
-   // Internal function used to create from TF1 from an interpreter CINT class 
+   // Internal function used to create from TF1 from an interpreter CINT class
    // with the specified type (className) and member function name (methodName).
    //
 
@@ -881,18 +876,18 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
    fCintFunc = ptr;
 
    if (!className) return;
-   
+
    TClass *cl = TClass::GetClass(className);
 
    if (cl) {
       fMethodCall = new TMethodCall();
 
 
-      if (methodName) 
+      if (methodName)
          fMethodCall->InitWithPrototype(cl,methodName,"Double_t*,Double_t*");
-      else { 
+      else {
          fMethodCall->InitWithPrototype(cl,"operator()","Double_t*,Double_t*");
-         if (! fMethodCall->IsValid() ) 
+         if (! fMethodCall->IsValid() )
             // try with Eval if operator() is not found
             fMethodCall->InitWithPrototype(cl,"Eval","Double_t*,Double_t*");
       }
@@ -915,7 +910,7 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
 
 
 //______________________________________________________________________________
-TF1& TF1::operator=(const TF1 &rhs) 
+TF1& TF1::operator=(const TF1 &rhs)
 {
    // Operator =
 
@@ -986,7 +981,7 @@ void TF1::AbsValue(Bool_t flag)
    // By default TF1::Integral uses the original function value to compute the integral
    // However, TF1::Moment, CentralMoment require to compute the integral
    // using the absolute value of the function.
-   
+
    fgAbsValue = flag;
 }
 
@@ -1069,8 +1064,8 @@ void TF1::Copy(TObject &obj) const
 //______________________________________________________________________________
 Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 {
-   // Returns the first derivative of the function at point x, 
-   // computed by Richardson's extrapolation method (use 2 derivative estimates 
+   // Returns the first derivative of the function at point x,
+   // computed by Richardson's extrapolation method (use 2 derivative estimates
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
    //Begin_Latex
@@ -1099,7 +1094,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    // interpolation error is decreased by making the step size h smaller.
    //
    // Author: Anna Kreshuk
-  
+
    const Double_t kC1 = 1e-15;
 
    if(eps< 1e-10 || eps > 1e-2) {
@@ -1125,7 +1120,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    Double_t d0    = f1 - f2;
    Double_t d2    = 2*(g1 - g2);
    gErrorTF1       = kC1*h2*fx;  //compute the error
-   Double_t deriv = h2*(4*d2 - d0)/3.;  
+   Double_t deriv = h2*(4*d2 - d0)/3.;
    return deriv;
 }
 
@@ -1133,8 +1128,8 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 {
-   // Returns the second derivative of the function at point x, 
-   // computed by Richardson's extrapolation method (use 2 derivative estimates 
+   // Returns the second derivative of the function at point x,
+   // computed by Richardson's extrapolation method (use 2 derivative estimates
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
    //Begin_Latex
@@ -1197,8 +1192,8 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 {
-   // Returns the third derivative of the function at point x, 
-   // computed by Richardson's extrapolation method (use 2 derivative estimates 
+   // Returns the third derivative of the function at point x,
+   // computed by Richardson's extrapolation method (use 2 derivative estimates
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
    //Begin_Latex
@@ -1265,7 +1260,7 @@ Double_t TF1::DerivativeError()
 {
    // Static function returning the error of the last call to the Derivative
    // functions
-   
+
    return gErrorTF1;
 }
 
@@ -1362,7 +1357,7 @@ void TF1::DrawDerivative(Option_t *option)
    // The resulting graph will be drawn into the current pad.
    // If this function is used via the context menu, it recommended
    // to create a new canvas/pad before invoking this function.
-   
+
    TVirtualPad *pad = gROOT->GetSelectedPad();
    TVirtualPad *padsav = gPad;
    if (pad) pad->cd();
@@ -1454,7 +1449,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    // InitArgs should be called everytime these addresses change.
 
    fgCurrent = this;
-   
+
    if (fType == 0) return TFormula::EvalPar(x,params);
    Double_t result = 0;
    if (fType == 1)  {
@@ -1474,7 +1469,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
    if (fType == 3) {
-      //std::cout << "Eval interp function object  " << fCintFunc << " result = " << result << std::endl; 
+      //std::cout << "Eval interp function object  " << fCintFunc << " result = " << result << std::endl;
       if (fMethodCall) fMethodCall->Execute(fCintFunc,result);
       else             result = GetSave(x);
       return result;
@@ -1538,11 +1533,11 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
 {
    // Return the maximum value of the function
    // Method:
-   //  First, the grid search is used to bracket the maximum 
+   //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx.
    //  This way, the step size can be controlled via the SetNpx() function.
    //  If the function is unimodal or if its extrema are far apart, setting
-   //  the fNpx to a small value speeds the algorithm up many times.  
+   //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1569,11 +1564,11 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
 {
    // Return the X value corresponding to the maximum value of the function
    // Method:
-   //  First, the grid search is used to bracket the maximum 
+   //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx.
    //  This way, the step size can be controlled via the SetNpx() function.
    //  If the function is unimodal or if its extrema are far apart, setting
-   //  the fNpx to a small value speeds the algorithm up many times.  
+   //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1600,11 +1595,11 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
 {
    // Returns the minimum value of the function on the (xmin, xmax) interval
    // Method:
-   //  First, the grid search is used to bracket the maximum 
+   //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx. This way, the step size
    //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to 
-   //  a small value speeds the algorithm up many times.  
+   //  unimodal or if its extrema are far apart, setting the fNpx to
+   //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1632,11 +1627,11 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    // Returns the X value corresponding to the minimum value of the function
    // on the (xmin, xmax) interval
    // Method:
-   //  First, the grid search is used to bracket the maximum 
+   //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx. This way, the step size
    //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to 
-   //  a small value speeds the algorithm up many times.  
+   //  unimodal or if its extrema are far apart, setting the fNpx to
+   //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1664,11 +1659,11 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
 {
    // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
    // Method:
-   //  First, the grid search is used to bracket the maximum 
+   //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx. This way, the step size
    //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to 
-   //  a small value speeds the algorithm up many times.  
+   //  unimodal or if its extrema are far apart, setting the fNpx to
+   //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1790,7 +1785,7 @@ Double_t TF1::MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xm
          else q=-q;
          r=e;
          e=d;
-           
+
          if (TMath::Abs(p) < TMath::Abs(0.5*q*r) || p < q*(a-x) || p < q*(b-x)) {
             //a parabolic interpolation step
             d = p/q;
@@ -1853,7 +1848,7 @@ Int_t TF1::GetNDF() const
 Int_t TF1::GetNumberFreeParameters() const
 {
    // Return the number of free parameters
-   
+
    Int_t nfree = fNpar;
    Double_t al,bl;
    for (Int_t i=0;i<fNpar;i++) {
@@ -1905,11 +1900,11 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const
 Double_t TF1::GetProb() const
 {
    // Return the fit probability
-   
+
    if (fNDF <= 0) return 0;
    return TMath::Prob(fChisquare,fNDF);
 }
-   
+
 
 //______________________________________________________________________________
 Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
@@ -2085,7 +2080,7 @@ Double_t TF1::GetRandom()
    Double_t xx;
    if(fGamma[bin] != 0)
       xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
-   else 
+   else
       xx = rr/fBeta[bin];
    Double_t x = fAlpha[bin] + xx;
    return x;
@@ -2164,7 +2159,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
    Int_t nbinmin = (Int_t)((xmin-fXmin)/dx);
    Int_t nbinmax = (Int_t)((xmax-fXmin)/dx)+2;
    if(nbinmax>fNpx) nbinmax=fNpx;
-   
+
    Double_t pmin=fIntegral[nbinmin];
    Double_t pmax=fIntegral[nbinmax];
 
@@ -2176,7 +2171,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       rr = r - fIntegral[bin];
 
       if(fGamma[bin] != 0)
-         xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin]; 
+         xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
       else
          xx = rr/fBeta[bin];
       x = fAlpha[bin] + xx;
@@ -2313,13 +2308,13 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    ((TF1*)this)->GetParLimits(ipar,al,bl);
    if (al*bl != 0 && al >= bl) {
       //this parameter is fixed
-      return 0; 
+      return 0;
    }
 
-   // check if error has been computer (is not zero) 
+   // check if error has been computer (is not zero)
    if (func->GetParError(ipar)!=0)
       h = eps*func->GetParError(ipar);
-   else 
+   else
       h=eps;
 
 
@@ -2328,18 +2323,18 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    fParams[ipar] = par0 - h;     f2 = func->EvalPar(x,fParams);
    fParams[ipar] = par0 + h/2;   g1 = func->EvalPar(x,fParams);
    fParams[ipar] = par0 - h/2;   g2 = func->EvalPar(x,fParams);
-   
+
    //compute the central differences
    h2    = 1/(2.*h);
    d0    = f1 - f2;
    d2    = 2*(g1 - g2);
-      
+
    Double_t  grad = h2*(4*d2 - d0)/3.;
 
    // restore original value
-   fParams[ipar] = par0;  
+   fParams[ipar] = par0;
 
-   return grad; 
+   return grad;
 }
 
 //______________________________________________________________________________
@@ -2492,7 +2487,7 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      //not suitable to integrate on a large domain
    //      double r1 = g->Integral(0,5);
    //      double r2 = g->Integral(0,1000);
-   //      
+   //
    //      //try with user directives computing more points
    //      Int_t np = 1000;
    //      double *x=new double[np];
@@ -2510,7 +2505,7 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
    //      delete [] x;
    //      delete [] w;
-   //   }   
+   //   }
    //
    //   This example produces the following results:
    //
@@ -2611,12 +2606,12 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Double_t a, Double_t b, Double_t epsilon)
 {
-   // Return Error on Integral of a parameteric function between a and b due to the parameters uncertainties 
-   // It is assumed the parameters are estimated from a fit and the covariance matrix resulting from the fit is used in 
-   // estimating this error.  
-   // IMPORTANT NOTE: The calculation is valid assuming the parameters are resulting from the latest fit. If in the meantime 
-   // a fit is done using another function, the routine will signal  an error and return zero.   
-   
+   // Return Error on Integral of a parameteric function between a and b due to the parameters uncertainties
+   // It is assumed the parameters are estimated from a fit and the covariance matrix resulting from the fit is used in
+   // estimating this error.
+   // IMPORTANT NOTE: The calculation is valid assuming the parameters are resulting from the latest fit. If in the meantime
+   // a fit is done using another function, the routine will signal  an error and return zero.
+
    return ROOT::TF1Helper::IntegralError(this,a,b,epsilon);
 }
 
@@ -2662,9 +2657,9 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 {
    //  See more general prototype below.
    //  This interface kept for back compatibility
-   
+
    Int_t nfnevl,ifail;
-   Int_t minpts = 2+2*n*(n+1)+1; //ie 7 for n=1   
+   Int_t minpts = 2+2*n*(n+1)+1; //ie 7 for n=1
    Int_t maxpts = 1000;
    Double_t result = IntegralMultiple(n,a,b,minpts, maxpts,eps,relerr,nfnevl,ifail);
    if (ifail > 0) {
@@ -2698,7 +2693,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //    n     : Number of dimensions [2,15]
    //    a,b   : One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
    //            contain the lower and upper limits of integration, respectively.
-   //    minpts: Minimum number of function evaluations requested. Must not exceed maxpts. 
+   //    minpts: Minimum number of function evaluations requested. Must not exceed maxpts.
    //            if minpts < 1 minpts is set to 2^n +2*n*(n+1) +1
    //    maxpts: Maximum number of function evaluations to be allowed.
    //            maxpts >= 2^n +2*n*(n+1) +1
@@ -2711,8 +2706,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //    nfnevl : number of function evaluations performed.
    //    ifail  :
    //        0 Normal exit.  . At least minpts and at most maxpts calls to the function were performed.
-   //        1 maxpts is too small for the specified accuracy eps. 
-   //          The result and relerr contain the values obtainable for the 
+   //        1 maxpts is too small for the specified accuracy eps.
+   //          The result and relerr contain the values obtainable for the
    //          specified value of maxpts.
    //        3 n<2 or n>15
    //
@@ -2887,10 +2882,10 @@ L90:
    rgncmp  = rgnvol*(wpn1[n-2]*sum1+wp2*sum2+wpn3[n-2]*sum3+wp4*sum4);
    rgnval  = wn1[n-2]*sum1+w2*sum2+wn3[n-2]*sum3+w4*sum4+wn5[n-2]*sum5;
    rgnval *= rgnvol;
-   // avoid difference of too small numbers 
+   // avoid difference of too small numbers
    //rgnval = 1.0E-30;
    //rgnerr  = TMath::Max( TMath::Abs(rgnval-rgncmp), TMath::Max(TMath::Abs(rgncmp), TMath::Abs(rgnval) )*4.0E-16 );
-   rgnerr  = TMath::Abs(rgnval-rgncmp); 
+   rgnerr  = TMath::Abs(rgnval-rgncmp);
 
    result += rgnval;
    abserr += rgnerr;
@@ -3001,16 +2996,19 @@ void TF1::Paint(Option_t *option)
    Double_t xv[1];
 
    fgCurrent = this;
-   
+
    TString opt = option;
    opt.ToLower();
+   Bool_t optSAME = kFALSE;
+   if (opt.Contains("same")) optSAME = kTRUE;
+
    Double_t xmin=fXmin, xmax=fXmax, pmin=fXmin, pmax=fXmax;
    if (gPad) {
       pmin = gPad->PadtoX(gPad->GetUxmin());
       pmax = gPad->PadtoX(gPad->GetUxmax());
    }
-   if (opt.Contains("same")) {
-      if (xmax < pmin) return;  // Otto: completely outside
+   if (optSAME) {
+      if (xmax < pmin) return;  // Completely outside.
       if (xmin > pmax) return;
       if (xmin < pmin) xmin = pmin;
       if (xmax > pmax) xmax = pmax;
@@ -3043,8 +3041,8 @@ void TF1::Paint(Option_t *option)
    if (fHistogram) {
       fHistogram->GetXaxis()->SetLimits(xmin,xmax);
    } else {
-   //      if logx, we must bin in logx and not in x !!!
-   //      otherwise if several decades, one gets crazy results
+      // If logx, we must bin in logx and not in x
+      // otherwise in case of several decades, one gets wrong results.
       if (xmin > 0 && gPad && gPad->GetLogx()) {
          Double_t *xbins    = new Double_t[fNpx+1];
          Double_t xlogmin = TMath::Log10(xmin);
@@ -3064,29 +3062,33 @@ void TF1::Paint(Option_t *option)
       if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
       fHistogram->SetDirectory(0);
    }
-   //restore axis titles
+   // Restore axis titles.
    fHistogram->GetXaxis()->SetTitle(xtitle.Data());
    fHistogram->GetYaxis()->SetTitle(ytitle.Data());
-   
+
    InitArgs(xv,fParams);
    for (i=1;i<=fNpx;i++) {
       xv[0] = fHistogram->GetBinCenter(i);
       fHistogram->SetBinContent(i,EvalPar(xv,fParams));
    }
 
-   // Copy Function attributes to histogram attributes
+   // Copy Function attributes to histogram attributes.
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
-   if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; //this can happen when switching from lin to log scale
-   if (minimum == -1111) { //this can happen after unzooming
+   if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; // This can happen when switching from lin to log scale.
+   if (minimum == -1111) { // This can happen after unzooming.
       if (fHistogram->TestBit(TH1::kIsZoomed)) {
          minimum = fHistogram->GetYaxis()->GetXmin();
       } else {
          minimum = fMinimum;
          if (minimum == -1111) {
-            Double_t hmin = fHistogram->GetMinimum();
+            Double_t hmin;
+            if (optSAME) hmin = gPad->GetUymin();
+            else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
-               Double_t hmax = fHistogram->GetMaximum();
+               Double_t hmax;
+               if (optSAME) hmax = gPad->GetUymax();
+               else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05*(hmax-hmin);
                if (hmin < 0) hmin = 0;
                if (hmin <= 0 && gPad && gPad->GetLogy()) hmin = 0.001*hmax;
@@ -3114,12 +3116,11 @@ void TF1::Paint(Option_t *option)
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
 
-   // Draw the histogram
+   // Draw the histogram.
    if (!gPad) return;
-   if (opt.Length() == 0)  fHistogram->Paint("lf");
-   else if (opt == "same") fHistogram->Paint("lfsame");
-   else                    fHistogram->Paint(option);
-
+   if (opt.Length() == 0) fHistogram->Paint("lf");
+   else if (optSAME)      fHistogram->Paint("lfsame");
+   else                   fHistogram->Paint(option);
 }
 
 
@@ -3214,7 +3215,7 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
          out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
@@ -3224,7 +3225,7 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetMarkerColor() > 228) {
          TColor::SaveColor(out, GetMarkerColor());
          out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
    }
    if (GetMarkerStyle() != 1) {
@@ -3237,7 +3238,7 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetLineColor() > 228) {
          TColor::SaveColor(out, GetLineColor());
          out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (GetLineWidth() != 4) {
@@ -3268,12 +3269,12 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
 
 //______________________________________________________________________________
-void TF1::SetCurrent(TF1 *f1) 
+void TF1::SetCurrent(TF1 *f1)
 {
    // Static function setting the current function.
    // the current function may be accessed in static C-like functions
    // when fitting or painting a function.
-   
+
    fgCurrent = f1;
 }
 
@@ -3321,7 +3322,7 @@ void TF1::SetNpx(Int_t npx)
    //
    // The default number of points along x is 100 for 1-d functions and 30 for 2-d/3-d functions
    // You can increase this value to get a better resolution when drawing
-   // pictures with sharp peaks or to get a better result when using TF1::GetRandom   
+   // pictures with sharp peaks or to get a better result when using TF1::GetRandom
    // the minimum number of points is 4, the maximum is 100000 for 1-d and 10000 for 2-d/3-d functions
 
    if (npx < 4) {
@@ -3577,7 +3578,7 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    //
    // See TF1::Integral() for parameter definitions
    //   Author: Gene Van Buren <gene@bnl.gov>
-   
+
    fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
