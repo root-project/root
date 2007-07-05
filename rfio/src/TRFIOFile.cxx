@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.46 2007/07/02 18:02:36 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.47 2007/07/03 11:09:57 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -169,6 +169,16 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    // to be able to use the turl starting with castor:
    if (!strcmp(fUrl.GetProtocol(), "castor"))
       fUrl.SetProtocol("rfio");
+
+   // old RFIO client does not ignore ?filetpye=raw, remove it
+   TString opt = fUrl.GetOptions();
+   if (opt.Contains("&filetype=raw")) {
+      opt.ReplaceAll("&filetype=raw", "");
+      fUrl.SetOptions(opt);
+   } else if (opt.Contains("filetype=raw")) {
+      opt.ReplaceAll("filetype=raw", "");
+      fUrl.SetOptions(opt);
+   }
 
    // old RFIO client lib does not support :///, need to change to :////
    Bool_t addSlash = kFALSE;
