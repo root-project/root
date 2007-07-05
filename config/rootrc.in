@@ -1,4 +1,4 @@
-# @(#)root/config:$Name: v5-14-00-patches $:$Id: rootrc.in,v 1.156 2006/11/28 12:10:52 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.156.2.1 2007/01/16 14:40:27 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -443,6 +443,7 @@ Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Opti
 +Plugin.TFile:       ^castor:  TCastorFile   RCastor "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^dcap:    TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
++Plugin.TFile:       ^gsidcap: TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^gfal:    TGFALFile     GFAL    "TGFALFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^chirp:   TChirpFile    Chirp   "TChirpFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^alien:   TAlienFile    RAliEn  "Open(const char*,Option_t*,const char*,Int_t,Bool_t)"
