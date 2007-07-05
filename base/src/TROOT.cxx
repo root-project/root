@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-12-00-patches $:$Id: TROOT.cxx,v 1.184 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name: v5-12-00-patches $:$Id: TROOT.cxx,v 1.184.2.1 2006/08/10 21:58:00 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
