@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.11 2007/05/04 20:41:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.12 2007/05/06 08:04:39 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -122,6 +122,14 @@ struct XLFDAttributes_t {
    Int_t fSetwidth;      // The proportionate width
    Int_t fCharset;       // The character set encoding (the glyph family).
    Int_t fEncoding;      // Variations within a charset for the glyphs above character 127.
+
+   XLFDAttributes_t() :  // default constructor
+      fFA(),
+      fFoundry(0),
+      fSlant(0),
+      fSetwidth(0),
+      fCharset(0),
+      fEncoding(0) { }
 };
 
 
@@ -131,8 +139,8 @@ struct XLFDAttributes_t {
 
 class TNamedFont : public TObjString, public TRefCnt {
 public:
-   Int_t fDeletePending;   // Non-zero if font should be deleted when last reference goes away.
-   FontAttributes_t fFA;   // Desired attributes for named font.
+   Int_t            fDeletePending; // Non-zero if font should be deleted when last reference goes away.
+   FontAttributes_t fFA;            // Desired attributes for named font.
 };
 
 // enums
@@ -247,19 +255,6 @@ static char gMapChars[] = {
 
 static int GetControlCharSubst(int c, char buf[4]);
 
-
-//______________________________________________________________________________
-void FontAttributes_t::Init()
-{
-   // Initialize font attribute struct.
-
-   fFamily = 0;
-   fPointsize = 0;
-   fWeight = kFontWeightNormal;
-   fSlant = kFontSlantRoman;
-   fUnderline = 0;
-   fOverstrike = 0;
-}
 
 //______________________________________________________________________________
 TGFont::~TGFont()
@@ -1840,7 +1835,7 @@ char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
 //______________________________________________________________________________
 void TGFontPool::FreeAttributeInfo(char **info)
 {
-   // Free attributes info
+   // Free attributes info.
 
    Int_t i;
 
@@ -1865,7 +1860,7 @@ void TGFontPool::Print(Option_t *opt) const
 //______________________________________________________________________________
 void TGFont::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
-    // Save the used font as a C++ statement(s) on output stream out
+    // Save the used font as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
@@ -2580,9 +2575,7 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
       newFont = new TGFont(fontName);
    }
 
-   xa.fFA.Init();
    if (!ParseXLFD(fontName, &xa)) {
-      newFont->fFA.Init();
       newFont->fFA.fFamily = GetUid(fontName);
    } else {
       newFont->fFA = xa.fFA;
