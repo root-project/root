@@ -48,7 +48,7 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint metautils pcre utils base cont meta io net math \
-                zip clib matrix newdelete hist tree freetype ftgl graf gpad \
+                zip clib matrix newdelete hist tree freetype graf gpad \
                 g3d gui minuit histpainter treeplayer treeviewer physics \
                 postscript rint html eg geom geompainter vmc fumili mlp ged \
                 quadp auth guibuilder xml foam splot smatrix sql tmva \
@@ -74,7 +74,7 @@ SYSTEMDO      = $(UNIXDO)
 endif
 endif
 ifeq ($(BUILDGL),yes)
-MODULES      += gl
+MODULES      += ftgl gl
 endif
 ifeq ($(BUILDMYSQL),yes)
 MODULES      += mysql
@@ -210,7 +210,7 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor \
+MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 pythia6 table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
