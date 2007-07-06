@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.29 2006/04/10 13:48:39 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.30 2006/06/27 14:36:27 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -624,4 +624,57 @@ int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
       return 0;
    }
    return 1;
+}
+
+//______________________________________________________________________________
+Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read the nbuf blocks described in arrays pos and len,
+   // where pos[i] is the seek position of block i of length len[i].
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
+   // This function is overloaded by TNetFile, TWebFile, etc.
+   // Returns kTRUE in case of failure.
+
+   Int_t k = 0;
+   Bool_t result = kTRUE;
+   TFileCacheRead *old = fCacheRead;
+   fCacheRead = 0;
+
+   Long64_t low  = pos[0];
+   Long64_t high = pos[nbuf-1] + len[nbuf-1] - pos[0];
+
+   Long64_t total = 0;
+   for(Int_t j=0; j < nbuf; j++) {
+      total += len[j];
+   }
+   
+   if ( high / total < 10 ) {
+
+      char *temp = new char[high];
+      Seek(low);
+      result = ReadBuffer(temp,high);
+    
+      if (result==0) {
+         for (Int_t i = 0; i < nbuf; i++) {
+            memcpy(&buf[k], &(temp[pos[i]-pos[0]]), len[i]);
+            k += len[i];
+         }
+      }
+
+      delete [] temp;
+
+   } else {
+
+      for (Int_t i = 0; i < nbuf; i++) {
+         Seek(pos[i]);
+         result = ReadBuffer(&buf[k], len[i]);
+         if (result) break;
+         k += len[i];
+      }
+
+   }
+
+   fCacheRead = old;
+   return result;
+
 }
