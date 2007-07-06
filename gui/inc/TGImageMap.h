@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.5 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.6 2007/07/04 09:05:40 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -81,6 +81,10 @@ public:
 
 
 class TGRegionWithId : public TGRegion {
+
+private:
+
+   TGRegionWithId& operator=(const TGRegionWithId&); // Not implemented
 
 protected:
    Int_t         fId;      // region id
