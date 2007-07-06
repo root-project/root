@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.77 2007/07/03 06:56:05 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.78 2007/07/03 10:05:23 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1804,6 +1804,12 @@ void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
 
    TGButton::SavePrimitive(out,option);
+   if (fState == kButtonDisabled) {
+      if (IsDisabledAndSelected())
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << endl;
+      else
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
+   }
 }
 
 //______________________________________________________________________________
@@ -1873,4 +1879,10 @@ void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
 
    TGButton::SavePrimitive(out,option);
+   if (fState == kButtonDisabled) {
+      if (IsDisabledAndSelected())
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << endl;
+      else
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
+   }
 }
