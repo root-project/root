@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.116 2007/06/22 17:16:35 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.117 2007/07/03 16:01:32 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -540,6 +540,10 @@ public:
                        Option_t *option = "", Long64_t nentries = -1,
                        Long64_t firstentry = 0, TEventList *evl = 0);
    Long64_t    DrawSelect(TDSet *dset, const char *varexp,
+                          const char *selection = "",
+                          Option_t *option = "", Long64_t nentries = -1,
+                          Long64_t firstentry = 0);
+   Long64_t    DrawSelect(const char *dsetname, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);

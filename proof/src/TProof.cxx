@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.208 2007/06/22 21:59:43 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.210 2007/07/03 16:26:43 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3120,7 +3120,7 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
                             const char *selection, Option_t *option,
                             Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector (.C) file.
+   // Execute the specified drawing action on a data set (TDSet).
    // Returns -1 in case of error or number of selected events otherwise.
 
    if (!IsValid()) return -1;
@@ -3136,6 +3136,62 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
       opt.Replace(idx,4,"");
 
    return fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
+}
+
+//______________________________________________________________________________
+Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
+                            const char *selection, Option_t *option,
+                            Long64_t nentries, Long64_t first)
+{
+   // Execute the specified drawing action on a data set which is stored on the
+   // master with name 'dsetname'.
+   // The syntax for dsetname is name[#[dir/]objname], e.g.
+   //   "mydset"       analysis of the first tree in the top dir of the dataset
+   //                  named "mydset"
+   //   "mydset#T"     analysis tree "T" in the top dir of the dataset
+   //                  named "mydset"
+   //   "mydset#adir/T" analysis tree "T" in the dir "adir" of the dataset
+   //                  named "mydset"
+   //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
+   //                  dataset named "mydset"
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (fProtocol < 13) {
+      Info("Process", "processing 'by name' not supported by the server");
+      return -1;
+   }
+
+   TString name(dsetname);
+   TString obj;
+   TString dir = "/";
+   Int_t idxc = name.Index("#");
+   if (idxc != kNPOS) {
+      Int_t idxs = name.Index("/", 1, idxc, TString::kExact);
+      if (idxs != kNPOS && idxc != kNPOS) {
+         obj = name(idxs+1, name.Length());
+         dir = name(idxc+1, name.Length());
+         dir.Remove(dir.Index("/") + 1);
+         name.Remove(idxc);
+      } else if (idxc != kNPOS && idxs == kNPOS) {
+         obj = name(idxc+1, name.Length());
+         name.Remove(idxc);
+      } else if (idxs != kNPOS && idxc == kNPOS) {
+         Error("DrawSelect", "bad name syntax (%s): specification of additional"
+                          " attributes needs a '#' after the dataset name", dsetname);
+         return -1;
+      }
+   } else if (name.Index(":") != kNPOS && name.Index("://") == kNPOS) {
+      // protection against using ':' instead of '#'
+      Error("DrawSelect", "bad name syntax (%s): please use"
+                       " a '#' after the dataset name", dsetname);
+      return -1;
+   }
+
+   TDSet *dset = new TDSet(name, obj, dir);
+   Long64_t retval = DrawSelect(dset, varexp, selection, option, nentries, first);
+   delete dset;
+   return retval;
 }
 
 //______________________________________________________________________________
