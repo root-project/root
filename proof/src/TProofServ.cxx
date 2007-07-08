@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.181 2007/06/21 08:47:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.182 2007/06/22 17:16:35 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3967,6 +3967,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   v.Gets(f);
                   fclose(f);
                   if (v != gROOT->GetVersion()) {
+                     SendAsynMessage(Form("%s: %s: version change (current: %s, build: %s): cleaning ... ",
+                                          noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
                      if (gSystem->Exec("PROOF-INF/BUILD.sh clean"))
                         status = -1;
                   }
