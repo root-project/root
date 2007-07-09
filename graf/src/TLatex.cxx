@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.72 2007/05/14 14:32:36 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.73 2007/05/15 12:48:53 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -142,12 +142,14 @@ End_Html
 
 Begin_Html
 <a name="L9"></a><h3>Changing Style</h3>
-One can change the font and the text color at any time using :
-<tt>#font[font-number]{...}</tt> and <tt>#color[color-number]{...}</tt>
+One can change the font, the text color, or the text size at any time using :
+<tt>#font[font-number]{...}</tt>, <tt>#color[color-number]{...}</tt>
+and <tt>#scale[scale-factor]{...}</tt>
 <p>Examples:
 End_Html
    #font[12]{Times Italic} and #font[22]{Times bold} : Begin_Latex #font[12]{Times Italic} and #font[22]{Times bold} End_Latex
    #color[2]{Red} and #color[4]{Blue} : Begin_Latex #color[2]{Red} and #color[4]{Blue} End_Latex
+   #scale[1.2]{Bigger} and #scale[0.8]{Smaller} : Begin_Latex #scale[1.2]{Bigger} and #scale[0.8]{Smaller} End_Latex
 
 Begin_Html
 <a name="L10"></a><h3>Alignment Rules</h3>
@@ -461,6 +463,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opCloseCurly    = -2;   // Position of first }
    Int_t opColor         = -1;   // Position of first \color
    Int_t opFont          = -1;   // Position of first \font
+   Int_t opScale         = -1;   // Position of first \scale
    Int_t opGreek         = -1;   // Position of a Greek letter
    Int_t opSpec          = -1;   // position of a special character
    Int_t opAbove         = -1;   // position of a vector/overline
@@ -565,6 +568,15 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                opParallel=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
+            }
+         }
+         if (length>i+6) {
+            Char_t buf[6];
+            strncpy(buf,&text[i+1],6);
+            if (strncmp(buf,"scale[",6)==0 || strncmp(buf,"scale{",6)==0) {
+               opScale=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
             }
          }
          if (length>i+6) {
@@ -1391,7 +1403,32 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       } else {
          Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
-   } else { // no operators found, it is a character string
+   }
+   else if (opScale>-1) { // \scale found
+      if (opSquareCurly==-1) {
+         // scale factor is not specified
+         fError = "Missing scale factor. Syntax is #scale[(Double_t)nb]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      TextSpec_t newSpec = spec;
+      Char_t *nb = new Char_t[opSquareCurly-opScale-6];
+      strncpy(nb,text+opScale+7,opSquareCurly-opScale-7);
+      nb[opSquareCurly-opScale-7] = 0;
+      if (sscanf(nb,"%lf",&newSpec.fSize) < 1) {
+         delete[] nb;
+         // scale factor is invalid
+         fError = "Invalid scale factor. Syntax is #factor[(Double_t)nb]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      newSpec.fSize *= spec.fSize;
+      delete[] nb;
+      if (!fShow) {
+         result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+      } else {
+         Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+      }
+   } 
+   else { // no operators found, it is a character string
       SetTextSize(spec.fSize);
       SetTextAngle(spec.fAngle);
       SetTextColor(spec.fColor);
@@ -1670,20 +1707,20 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 {
    // Check if the Latex syntax is correct
 
-   const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
+   const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
                        "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{",
-                       "\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
+                       "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
-   const Char_t *kWord2[] = {"#color[","#font[","#sqrt[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
+   const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","\\scale[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
    const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"} ; // check for }{ then }
    const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("} ;
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
-   Int_t lkWord1[] = {4,4,2,2,7,6,6,4,4,4,
+   Int_t lkWord1[] = {4,4,2,2,7,7,6,6,4,4,4,
                       5,5,5,5,6,7,7,7,7,7,
-                      7,6,6,4,4,4,4,4,
+                      7,7,6,6,4,4,4,4,4,
                       5,5,5,5,6,7,7,7} ;
-   Int_t lkWord2[] = {7,6,6,7,6,6} ;
+   Int_t lkWord2[] = {7,7,6,6,7,7,6,6} ;
    Int_t lkWord3[] = {6,6,11,11} ;
    Int_t nkWord1 = 36, nkWord2 = 6, nkWord3 = 4 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
