@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.8 2007/05/29 16:06:55 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.9 2007/07/03 16:26:43 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 //                                                                      //
 // TVirtualPacketizer                                                   //
 //                                                                      //
-// XXX update Comment XXX                                               //
-// Packetizer generates packets to be processed on PROOF worker servers.//
+// Packetizer is a load balancing object created for each query.        //
+// It generates packets to be processed on PROOF worker servers.        //
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
 // (entries) or a directory (objects) in a file.                        //
@@ -27,6 +27,9 @@
 //                                                                      //
 // TVirtualPacketizer includes common parts of PROOF packetizers.       //
 // Look in subclasses for details.                                      //
+// The default packetizer is TAdaptivePacketizer.                       //
+// To use an alternative one, for instance - the TPacketizer, call:     //
+// proof->SetParameter("PROOF_Packetizer", "TPacketizer");              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

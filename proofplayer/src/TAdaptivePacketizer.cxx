@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.13 2007/06/20 07:40:45 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.14 2007/07/03 16:26:44 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 // - The other improvement is the use of time-based packet size. We     //
 //   measure the processing rate of all the nodes and calculate the     //
 //   packet size, so that it takes certain amount of time. In this way  //
-//   packetizer prevents the situation where the query can’t finish     //
+//   packetizer prevents the situation where the query can't finish     //
 //   because of one slow node.                                          //
 //                                                                      //
 // The data structures: TFileStat, TFileNode and TSlaveStat are         //
