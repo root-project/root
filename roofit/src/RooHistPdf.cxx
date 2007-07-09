@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofit:$Name:  $:$Id: RooHistPdf.cxx,v 1.1 2007/05/11 10:42:36 verkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooHistPdf.cxx,v 1.2 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,6 +61,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
       assert(0) ;
     }
   }
+  delete iter ;
 }
 
 
