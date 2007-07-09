@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.5 2006/06/25 18:43:24 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStatement.h,v 1.6 2006/09/05 13:37:08 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    virtual Bool_t      StoreResult() = 0;
    virtual Int_t       GetNumFields() = 0;
    virtual const char *GetFieldName(Int_t) = 0;
+   virtual Bool_t      SetMaxFieldSize(Int_t, Long_t) { return kFALSE; }
    virtual Bool_t      NextResultRow() = 0;
 
    virtual Bool_t      IsNull(Int_t) { return kTRUE; }

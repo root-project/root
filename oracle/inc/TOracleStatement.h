@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.4 2006/06/25 18:43:24 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.h,v 1.5 2006/09/05 13:37:08 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    virtual Bool_t      StoreResult();
    virtual Int_t       GetNumFields();
    virtual const char *GetFieldName(Int_t nfield);
+   virtual Bool_t      SetMaxFieldSize(Int_t nfield, Long_t maxsize);
    virtual Bool_t      NextResultRow();
 
    virtual Bool_t      IsNull(Int_t);

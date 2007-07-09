@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.5 2006/06/25 18:43:24 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleStatement.cxx,v 1.6 2006/09/05 13:37:08 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 
@@ -509,6 +509,28 @@ Bool_t TOracleStatement::StoreResult()
 }
 
 //______________________________________________________________________________
+Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
+{
+   // Defines maximum size for field which must be used for read or write operation
+   // Some Oracle types as LONG (long binary continer) requires this call
+   // before any data can be read from database. Call it once before first call to NextResultRow()
+   
+   CheckStatement("SetMaxFieldSize", kFALSE);
+
+   try {
+      if (fResult)
+         fResult->setMaxColumnSize(nfield+1, maxsize);
+      else
+         fStmt->setMaxParamSize(nfield+1, maxsize);
+      return kTRUE;
+   } catch (SQLException &oraex) {
+      SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetMaxFieldSize");
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Int_t TOracleStatement::GetNumFields()
 {
    // Returns number of fields in result set 
@@ -568,6 +590,10 @@ Bool_t TOracleStatement::NextResultRow()
       return kTRUE;
    } catch (SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextResultRow");
+      
+      if (oraex.getErrorCode()==32108) 
+         Info("NextResultRow", "Use TSQLStatement::SetMaxFieldSize() to solve a problem");
+      
    }
 
    return kFALSE;
@@ -775,6 +801,9 @@ const char* TOracleStatement::GetString(Int_t npar)
 Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
    // Return field value as binary array 
+   // Supports LONG, BLOB, CLOB, BFILE, CFILE types of columns
+   // Reads complete content of the column, therefore not suitable for
+   // big structures
 
    mem = 0;
    size = 0;
@@ -789,30 +818,89 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
    try {
       if (fResult->isNull(npar+1)) return kTRUE;
+
+      int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
       
-      Blob parblob = fResult->getBlob(npar+1);
+      switch (datatype) {
+         case SQLT_LNG: {
+            Bytes parbytes = fResult->getBytes(npar+1);
+            
+            size = parbytes.length();
       
-      parblob.open(OCCI_LOB_READONLY);
-      
-      size = parblob.length();
-      
-      fBuffer[npar].strbufsize = size;
-      
-      if (size>0) {
-         mem = malloc(size); 
+            fBuffer[npar].strbufsize = size;
+            
+            if (size>0) {
+               mem = malloc(size); 
+               
+               fBuffer[npar].strbuf = (char*) mem;
+               
+               parbytes.getBytes((unsigned char*) mem, size);
+            }
+            
+            break;
+         }
+
+         case SQLT_BLOB: {
+            Blob parblob = fResult->getBlob(npar+1);
+            
+            size = parblob.length();
+            
+            fBuffer[npar].strbufsize = size;
+            
+            if (size>0) {
+               mem = malloc(size); 
+               
+               fBuffer[npar].strbuf = (char*) mem;
+               
+               parblob.read(size, (unsigned char*) mem, size);
+            }
+            
+            break;
+         }
          
-         fBuffer[npar].strbuf = (char*) mem;
-      
-         Stream* parstream = parblob.getStream();
+         case SQLT_CLOB: {
+            Clob parclob = fResult->getClob(npar+1);
+            
+            size = parclob.length();
+            
+            fBuffer[npar].strbufsize = size;
+            
+            if (size>0) {
+               mem = malloc(size); 
+               
+               fBuffer[npar].strbuf = (char*) mem;
+               
+               parclob.read(size, (unsigned char*) mem, size);
+            }
+
+            break;
+         }
+
+         case SQLT_BFILEE: 
+         case SQLT_CFILEE: {
+
+            Bfile parbfile = fResult->getBfile(npar+1);
+            
+            size = parbfile.length();
+            
+            fBuffer[npar].strbufsize = size;
+            
+            if (size>0) {
+               mem = malloc(size); 
+               
+               fBuffer[npar].strbuf = (char*) mem;
+               
+               parbfile.read(size, (unsigned char*) mem, size);
+            }
+            
+            break;
+         }
          
-         char* buf = (char*) mem;
-         
-         /*int len = */ parstream->readBuffer(buf, size);
-         
-         parblob.closeStream(parstream);
+         default: 
+           Error("GetBinary", "Oracle data type %d not supported", datatype);
+           SetError(-1, "Unsupported type for binary convertion", "GetBinary");
+           return false;
       }
-      
-      parblob.close();
       
       return kTRUE;
          
@@ -822,6 +910,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    
    return kFALSE;
 }
+
 
 //______________________________________________________________________________
 Bool_t TOracleStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
