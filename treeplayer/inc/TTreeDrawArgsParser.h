@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.2 2005/03/21 16:14:32 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -36,6 +36,7 @@ public:
    enum EOutputType {
       kUNKNOWN,
       kEVENTLIST,
+      kENTRYLIST,
       kPROFILE,
       kPROFILE2D,
       kGRAPH,
@@ -68,6 +69,7 @@ protected:
 
    Bool_t         fShouldDraw;        // if to draw the plot
    Bool_t         fOptionSame;        // if option contained "same"
+   Bool_t         fEntryList;         // if fill a TEntryList
    TObject       *fOriginal;          // original plot (if it is to be reused)
    Bool_t         fDrawProfile;       // true if the options contain :"prof"
    EOutputType    fOutputType;        // type of the output

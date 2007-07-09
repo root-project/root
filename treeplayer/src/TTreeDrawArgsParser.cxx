@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.4 2005/09/22 23:29:30 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -74,6 +74,7 @@ void TTreeDrawArgsParser::ClearPrevious()
    fOriginal = 0;
    fDrawProfile = kFALSE;
    fOptionSame = kFALSE;
+   fEntryList = kFALSE;
    fOutputType = kUNKNOWN;
 }
 
@@ -218,6 +219,9 @@ Bool_t TTreeDrawArgsParser::ParseOption()
    if (fOption.Contains("same")) {
       fOptionSame = kTRUE;
    }
+   if (fOption.Contains("entrylist")){
+      fEntryList = kTRUE;
+   }
    return true;
 }
 
@@ -258,8 +262,12 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 {
    // Put the type of the draw result into fOutputType and return it.
 
-   if (fDimension == 0)
-      return fOutputType = kEVENTLIST;
+   if (fDimension == 0){
+      if (fEntryList)
+         return fOutputType = kENTRYLIST;
+      else
+         return fOutputType = kEVENTLIST;
+   }
    if (fDimension == 2 && fDrawProfile)
       return fOutputType = kPROFILE;
    if (fDimension == 3 && fDrawProfile)
@@ -302,6 +310,8 @@ TString TTreeDrawArgsParser::GetProofSelectorName() const
          return "";
       case kEVENTLIST:
          return "TProofDrawEventList";
+      case kENTRYLIST:
+         return "TProofDrawEntryList";
       case kPROFILE:
          return "TProofDrawProfile";
       case kPROFILE2D:

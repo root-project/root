@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.168 2007/06/21 19:14:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.169 2007/07/02 14:28:39 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -837,7 +837,7 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
    // -- Return entry number corresponding to entry.
    //
    // if no TEntryList set returns entry
-   // else returns entry #entry from this entry list and 
+   // else returns entry #entry from this entry list and
    // also computes the global entry number (loads all tree headers)
 
 
@@ -2070,13 +2070,13 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
    //limited to the entries in the list)
    //This function finds correspondance between the sub-lists of the TEntryList
    //and the trees of the TChain
-   //By default (opt=""), both the file names of the chain elements and 
-   //the file names of the TEntryList sublists are expanded to full path name.  
-   //If opt = "ne", the file names are taken as they are and not expanded 
+   //By default (opt=""), both the file names of the chain elements and
+   //the file names of the TEntryList sublists are expanded to full path name.
+   //If opt = "ne", the file names are taken as they are and not expanded
    //(this is useful in case of TUrls)
 
    if (fEntryList){
-      //check, if the chain is the owner of the previous entry list 
+      //check, if the chain is the owner of the previous entry list
       //(it happens, if the previous entry list was created from a user-defined
       //TEventList in SetEventList() function)
       if (fEntryList->TestBit(kCanDelete)){
@@ -2099,7 +2099,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
    }
    if (fProofChain){
       //for processing on proof, event list and entry list can't be
-      //set at the same time. 
+      //set at the same time.
       fEventList = 0;
       fEntryList = elist;
       return;
@@ -2149,7 +2149,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
                   gSystem->PrependPathName(gSystem->pwd(), filename);
                filename = gSystem->UnixPathName(filename);
             }
-            if (!(strcmp(elist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
+            if (!(strcmp(elist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) &&
                 !(strcmp(elist->GetFileName(),filename.Data()))) {
                break;
             }
@@ -2185,7 +2185,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
                   gSystem->PrependPathName(gSystem->pwd(), filename);
                filename = gSystem->UnixPathName(filename);
             }
-            if (!(strcmp(templist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
+            if (!(strcmp(templist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) &&
                 !(strcmp(templist->GetFileName(),filename.Data()))) {
                break;
             }
@@ -2238,12 +2238,12 @@ void TChain::SetEntryListFile(const char *filename, Option_t * /*opt*/)
 // the TChain::SetEntryList() function, the first object of class TEntryList
 // in the file is taken.
 //
-// It is assumed, that there are as many list files, as there are elements in 
+// It is assumed, that there are as many list files, as there are elements in
 // the chain and they are in the same order
 
 
    if (fEntryList){
-      //check, if the chain is the owner of the previous entry list 
+      //check, if the chain is the owner of the previous entry list
       //(it happens, if the previous entry list was created from a user-defined
       //TEventList in SetEventList() function)
       if (fEntryList->TestBit(kCanDelete)){
@@ -2277,11 +2277,11 @@ void TChain::SetEventList(TEventList *evlist)
 //
 //NOTE, that this function loads all tree headers, because the entry numbers
 //in the TEventList are global and have to be recomputed, taking into account
-//the number of entries in each tree. 
+//the number of entries in each tree.
 //
 //The new TEntryList is owned by the TChain and gets deleted when the chain
 //is deleted. This TEntryList is returned by GetEntryList() function, and after
-//GetEntryList() function is called, the TEntryList is not owned by the chain 
+//GetEntryList() function is called, the TEntryList is not owned by the chain
 //any more and will not be deleted with it.
 
    fEventList = evlist;
@@ -2299,7 +2299,7 @@ void TChain::SetEventList(TEventList *evlist)
    if(fProofChain) {
       //on proof, fEventList and fEntryList shouldn't be set at the same time
       if (fEntryList){
-         //check, if the chain is the owner of the previous entry list 
+         //check, if the chain is the owner of the previous entry list
          //(it happens, if the previous entry list was created from a user-defined
          //TEventList in SetEventList() function)
          if (fEntryList->TestBit(kCanDelete)){
@@ -2310,9 +2310,23 @@ void TChain::SetEventList(TEventList *evlist)
       return;
    }
 
-   char enlistname[50];
-   sprintf(enlistname, "%s_%s", evlist->GetName(), "entrylist");
-   TEntryList *enlist = new TEntryList(enlistname, evlist->GetTitle());
+   fEventList = evlist;
+   if(fProofChain) {
+      //on proof, fEventList and fEntryList shouldn't be set at the same time
+      if (fEntryList){
+         //check, if the chain is the owner of the previous entry list
+         //(it happens, if the previous entry list was created from a user-defined
+         //TEventList in SetEventList() function)
+         if (fEntryList->TestBit(kCanDelete)){
+            delete fEntryList;
+         }
+         fEntryList = 0;
+      }
+      return;
+   }
+
+   TEntryList *enlist = new TEntryList(evlist->GetName(), evlist->GetTitle());
+
    Int_t nsel = evlist->GetN();
    Long64_t globalentry, localentry;
    for (Int_t i=0; i<nsel; i++){
@@ -2371,7 +2385,7 @@ void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
          if (h->LoadPlugin() == -1)
            return;
          if (!(fProofChain = reinterpret_cast<TChain *>(h->ExecPlugin(1, this))))
-            Error("SetProof", "creation of TChainProof failed");
+            Error("SetProof", "creation of TProofChain failed");
          // Set related bits
          SetBit(kProofUptodate);
       }
