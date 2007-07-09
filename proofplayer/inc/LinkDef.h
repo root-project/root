@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.6 2007/05/08 14:56:19 rdm Exp $ */
+/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.7 2007/07/09 18:32:17 ganis Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -55,7 +55,5 @@
 #pragma link C++ class TDrawFeedback+;
 #pragma link C++ class TStatus+;
 #pragma link C++ class TFileMerger+;
-
-#pragma link C++ class TSQLWriter+;
 
 #endif

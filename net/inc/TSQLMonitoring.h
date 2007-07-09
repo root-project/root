@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id:$
+// @(#)root/net:$Name:  $:$Id: TSQLWriter.h,v 1.1 2007/07/09 15:24:14 rdm Exp $
 // Author: J.F. Grosse-Oetringhaus, G.Ganis
 
 /*************************************************************************
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TSQLWriter
-#define ROOT_TSQLWriter
+#ifndef ROOT_TSQLMonitoring
+#define ROOT_TSQLMonitoring
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSQLWriter                                                           //
+// TSQLMonitoringWriter                                                 //
 //                                                                      //
 // SQL implementation of TVirtualMonitoringWriter.                      //
 //                                                                      //
@@ -31,22 +31,22 @@
 class TSQLServer;
 
 
-class TSQLWriter : public TVirtualMonitoringWriter {
+class TSQLMonitoringWriter : public TVirtualMonitoringWriter {
 
 private:
    TSQLServer  *fDB;              // SQL database where to write
    TString      fTable;           // SQL table name
 
-   TSQLWriter(const TSQLWriter&);            // not implemented
-   TSQLWriter& operator=(const TSQLWriter&); // not implemented
+   TSQLMonitoringWriter(const TSQLMonitoringWriter&);            // not implemented
+   TSQLMonitoringWriter& operator=(const TSQLMonitoringWriter&); // not implemented
 
 public:
-   TSQLWriter(const char *serv, const char *user, const char *pass, const char *table);
-   virtual ~TSQLWriter();
+   TSQLMonitoringWriter(const char *serv, const char *user, const char *pass, const char *table);
+   virtual ~TSQLMonitoringWriter();
 
    Bool_t SendParameters(TList *values, const char * /*identifier*/);
 
-   ClassDef(TSQLWriter, 0)   // Interface to SQL Monitoring
+   ClassDef(TSQLMonitoringWriter, 0)   // Sending monitoring data to a SQL DB
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id:$
+// @(#)root/proofplayer:$Name:  $:$Id: TSQLWriter.cxx,v 1.1 2007/07/09 15:24:14 rdm Exp $
 // Author: J.F. Grosse-Oetringhaus, G.Ganis
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSQLWriter                                                           //
+// TSQLMonitoringWriter                                                 //
 //                                                                      //
 // SQL implementation of TVirtualMonitoringWriter.                      //
 //                                                                      //
@@ -19,15 +19,15 @@
 
 #include "TList.h"
 #include "TParameter.h"
-#include "TSQLWriter.h"
 #include "TEnv.h"
+#include "TSQLMonitoring.h"
 #include "TSQLServer.h"
 #include "TSQLResult.h"
 
 //______________________________________________________________________________
-TSQLWriter::TSQLWriter(const char *serv, const char *user, const char *pass,
-                       const char *table)
-           : TVirtualMonitoringWriter("SQL", 0.0), fTable(table)
+TSQLMonitoringWriter::TSQLMonitoringWriter(const char *serv, const char *user,
+                                           const char *pass, const char *table)
+   : TVirtualMonitoringWriter("SQL", 0.0), fTable(table)
 {
    // Constructor.
 
@@ -41,7 +41,7 @@ TSQLWriter::TSQLWriter(const char *serv, const char *user, const char *pass,
 }
 
 //______________________________________________________________________________
-TSQLWriter::~TSQLWriter()
+TSQLMonitoringWriter::~TSQLMonitoringWriter()
 {
    // Destructor
 
@@ -49,7 +49,7 @@ TSQLWriter::~TSQLWriter()
 }
 
 //______________________________________________________________________________
-Bool_t TSQLWriter::SendParameters(TList *values, const char *)
+Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *)
 {
    // Register query log using the information in the list which is in the form
    // TParameter(<par>,<value>) or TNamed(<name>,<string>).
