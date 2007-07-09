@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.12 2007/05/09 12:51:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.13 2007/07/09 15:26:24 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -48,7 +48,6 @@ TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
    SetName(fUUID->AsString());
    SetTitle("TFileInfo");
 
-   fCurrentUrl = 0;
    if (url) {
       fUrlList = new TList();
       fUrlList->SetOwner();
