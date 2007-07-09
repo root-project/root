@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.171 2007/06/25 21:51:14 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.172 2007/07/03 12:43:31 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1466,6 +1466,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    AbstractMethod("Load");
    return 0;
 #else
+   static int recCall = 0;
+
    // don't load libraries that have already been loaded
    TString libs = GetLibraries();
    TString moduleBasename = BaseName(module);
@@ -1505,6 +1507,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // check whether lib l is in the fLinkedLibs list
    // TO BE DONE
 
+   recCall++;
+
    char *path = DynamicPathName(module);
 
    // load any dependent libraries
@@ -1522,7 +1526,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       }
       if (gSystem->GetPathInfo( libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
          if (gDebug >0) Info("Load","loading %s",libmapfilename.Data());
-         gInterpreter->LoadLibraryMap( libmapfilename );
+         gInterpreter->LoadLibraryMap(libmapfilename);
          deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
       }
    }
@@ -1536,12 +1540,12 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
                  deplib, ((TObjString*)tokens->At(0))->GetName());
          if ((ret = Load(deplib, "", system)) < 0) {
             delete tokens;
+            recCall--;
             return ret;
          }
       }
       delete tokens;
    }
-
 
    ret = -1;
    if (path) {
@@ -1565,10 +1569,14 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
+   recCall--;
+
    // will load and initialize graphics libraries if
    // TApplication::NeedGraphicsLibs() has been called by a
-   // library static initializer
-   if (gApplication) gApplication->InitializeGraphics();
+   // library static initializer, only do this when Load() is
+   // not called recursively
+   if (recCall == 0 && gApplication)
+      gApplication->InitializeGraphics();
 
    if (!entry || !entry[0] || ret < 0) return ret;
 
