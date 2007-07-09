@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.267 2007/06/23 21:22:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.268 2007/07/04 12:22:43 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -367,7 +367,7 @@ void TPad::Browse(TBrowser *b)
    // Browse pad.
 
    cd();
-   fPrimitives->Browse(b);
+   if (fPrimitives) fPrimitives->Browse(b);
 }
 
 
@@ -384,6 +384,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    // title is the legend title. By default it is " ".
 
    TList *lop=GetListOfPrimitives();
+   if (!lop) return 0;
    TLegend *leg=0;
    TIter next(lop);
    TObject *o=0;
@@ -439,7 +440,8 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
    }
 
    TObject *obj;
-   TIter    next(GetListOfPrimitives());
+   if (!fPrimitives) fPrimitives = new TList;
+   TIter    next(fPrimitives);
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
          Int_t n = ((TPad*)obj)->GetNumber();
@@ -901,6 +903,7 @@ void TPad::CopyPixmaps()
    // Copy the sub-pixmaps of the pad to the canvas.
 
    TObject *obj;
+   if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
@@ -1127,6 +1130,7 @@ void TPad::Draw(Option_t *option)
    }
 
    // pad cannot be in itself and it can only be in one other pad at a time
+   if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
       if (fMother) fMother->GetListOfPrimitives()->Remove(this);
       TPad *oldMother = fMother;
@@ -2462,6 +2466,7 @@ TFrame *TPad::GetFrame()
 {
    // Get frame.
 
+   if (!fPrimitives) fPrimitives = new TList;
    TFrame     *frame = (TFrame*)GetListOfPrimitives()->FindObject(fFrame);
    if (!frame) frame = (TFrame*)GetListOfPrimitives()->FindObject("TFrame");
    fFrame = frame;
@@ -2509,6 +2514,7 @@ TVirtualPad *TPad::GetPad(Int_t subpadnumber) const
    }
 
    TObject *obj;
+   if (!fPrimitives) return 0;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TVirtualPad::Class())) {
@@ -2602,6 +2608,7 @@ void TPad::ls(Option_t *option) const
    cout <<IsA()->GetName()<<" fXlowNDC=" <<fXlowNDC<<" fYlowNDC="<<fYlowNDC<<" fWNDC="<<GetWNDC()<<" fHNDC="<<GetHNDC()
         <<" Name= "<<GetName()<<" Title= "<<GetTitle()<<" Option="<<option<<endl;
    TROOT::IncreaseDirLevel();
+   if (!fPrimitives) return;
    fPrimitives->ls(option);
    TROOT::DecreaseDirLevel();
 }
@@ -2658,6 +2665,7 @@ void TPad::Paint(Option_t * /*option*/)
 {
    // Paint all primitives in pad.
 
+   if (!fPrimitives) fPrimitives = new TList;
    if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
       fViewer3D->PadPaint(this);
       Modified(kFALSE);
@@ -2856,6 +2864,7 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
 {
    // Paint histogram/graph frame.
 
+   if (!fPrimitives) fPrimitives = new TList;
    TList *glist  = GetListOfPrimitives();
    TFrame *frame = GetFrame();
    frame->SetX1(xmin);
@@ -3059,6 +3068,7 @@ void TPad::CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y)
    // gives the effect of pad "stop" being transparent.
 
    TObject *obj;
+   if (!fPrimitives) fPrimitives = new TList;
    TIter next(start->GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
@@ -4008,6 +4018,7 @@ void TPad::Pop()
 {
    // Pop pad to the top of the stack.
 
+   if (!fPrimitives) fPrimitives = new TList;
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 
    TListIter next(fMother->GetListOfPrimitives());
@@ -4499,6 +4510,7 @@ void TPad::RecursiveRemove(TObject *obj)
    if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
    if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
    if (obj == fView) fView = 0;
+   if (!fPrimitives) fPrimitives = new TList;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
    while (fPrimitives->IndexOf(obj) >= 0) fPrimitives->Remove(obj);
@@ -4524,6 +4536,7 @@ void TPad::RedrawAxis(Option_t *option)
    // get first histogram in the list of primitives
    TString opt = option;
    opt.ToLower();
+   if (!fPrimitives) fPrimitives = new TList;
    TIter next(fPrimitives);
    TObject *obj;
    while ((obj = next())) {
@@ -4698,6 +4711,7 @@ void TPad::ResizePad(Option_t *option)
 
    // Resize all subpads
    TObject *obj;
+   if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class()))
@@ -5047,6 +5061,7 @@ void TPad::SetEditable(Bool_t mode)
    fEditable = mode;
 
    TObject *obj;
+   if (!fPrimitives) fPrimitives = new TList;
    TIter    next(GetListOfPrimitives());
    while ((obj = next())) {
       if (obj->InheritsFrom(TPad::Class())) {
@@ -5550,6 +5565,7 @@ void TPad::UseCurrentStyle()
       gStyle->SetOptLogz (fLogz);
    }
 
+   if (!fPrimitives) fPrimitives = new TList;
    TIter next(GetListOfPrimitives());
    TObject *obj;
 
@@ -5629,6 +5645,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    if (strlen(emode)) gROOT->SetEditorMode(emode);
    if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
+   if (!fPrimitives) fPrimitives = new TList;
    TObject *oldlast = gPad->GetListOfPrimitives()->Last();
    TObject *obj = 0;
    Bool_t testlast = kFALSE;
