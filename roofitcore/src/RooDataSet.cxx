@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooDataSet.cxx,v 1.94 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooDataSet.cxx,v 1.95 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -237,7 +237,19 @@ RooAbsData* RooDataSet::cacheClone(const RooArgSet* newCacheVars, const char* ne
 
 RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars) const 
 {
-  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()) ; 
+
+  // If variables are given, be sure to include weight variable if it exists and is not included
+  RooArgSet vars2 ;
+  if (vars) {
+    vars2.add(*vars) ;
+    if (_wgtVar && !vars2.find(_wgtVar->GetName())) {
+      vars2.add(*_wgtVar) ;
+    }
+  } else {
+    vars2.add(_vars) ;
+  }
+
+  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars2) ; 
   if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
   return dset ;
 }
