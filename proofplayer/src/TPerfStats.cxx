@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.13 2007/06/12 18:01:23 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.cxx,v 1.14 2007/06/21 08:50:47 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -35,6 +35,10 @@
 #include "TTree.h"
 #include "TSQLServer.h"
 #include "TSQLResult.h"
+#include "TParameter.h"
+#include "TPluginManager.h"
+#include "TROOT.h"
+#include "TVirtualMonitoring.h"
 
 
 ClassImp(TPerfEvent)
@@ -109,9 +113,10 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
       fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fSlaves(0), fDoHist(kFALSE),
-      fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE)
+      fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE),
+      fMonitoringWriter(0)
 {
-   // Normal Constructor.
+   // Normal constructor.
 
    TProof *proof = gProofServ->GetProof();
    TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
@@ -199,16 +204,51 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    }
 
    if (gProofServ->IsMaster()) {
-      TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
-      if (sqlserv != "")
+      // Monitoring for query performances using SQL DB
+      TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB", "");
+      if (sqlserv != "") {
+         PDB(kGlobal,1) Info("TPerfStats", "store monitoring data in SQL DB: %s", sqlserv.Data());
          fDoQuota = kTRUE;
+      }
+
+      // Monitoring for query performances using monitoring system (e.g. Monalisa)
+      TString mon = gEnv->GetValue("ProofServ.Monitoring", "");
+      if (mon != "") {
+         // Extract arguments (up to 9 'const char *')
+         TString a[10];
+         Int_t from = 0;
+         TString tok;
+         Int_t na = 0;
+         while (mon.Tokenize(tok, from, " "))
+            a[na++] = tok;
+         na--;
+         // Get monitor object from the plugin manager
+         TPluginHandler *h = 0;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualMonitoringWriter", a[0]))) {
+            if (h->LoadPlugin() != -1) {
+               fMonitoringWriter =
+                  (TVirtualMonitoringWriter *) h->ExecPlugin(na, a[1].Data(), a[2].Data(), a[3].Data(),
+                                                                 a[4].Data(), a[5].Data(), a[6].Data(),
+                                                                 a[7].Data(), a[8].Data(), a[9].Data());
+               if (fMonitoringWriter && fMonitoringWriter->IsZombie()) {
+                  delete fMonitoringWriter;
+                  fMonitoringWriter = 0;
+               }
+            }
+         }
+      }
+
+      if (fMonitoringWriter) {
+         PDB(kGlobal,1) Info("TPerfStats", "created monitoring object: %s", mon.Data());
+         fDoQuota = kTRUE;
+      }
    }
 }
 
 //______________________________________________________________________________
 void TPerfStats::SimpleEvent(EEventType type)
 {
-   // Simple event
+   // Simple event.
 
    if (type == kStop && fPacketsHist != 0) {
       fNodeHist->LabelsDeflate("X");
@@ -234,7 +274,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
                              Long64_t eventsprocessed, Double_t latency, Double_t proctime,
                              Double_t cputime, Long64_t bytesRead)
 {
-   // Packet event
+   // Packet event.
 
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
@@ -274,7 +314,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
 void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
                             const char *filename, Bool_t isStart)
 {
-   // File event
+   // File event.
 
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
@@ -300,7 +340,7 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
 //______________________________________________________________________________
 void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proctime)
 {
-   // Open file event
+   // Open file event.
 
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
@@ -321,7 +361,7 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
 //______________________________________________________________________________
 void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
 {
-   // Read file event
+   // Read file event.
 
    if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
@@ -343,7 +383,7 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
 void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
                            Long64_t eventsprocessed, Long64_t bytesRead)
 {
-   // Rate event
+   // Rate event.
 
    if ((fDoTrace || fDoTraceRate) && fTrace != 0) {
       TPerfEvent pe(&fTzero);
@@ -364,7 +404,7 @@ void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
 //______________________________________________________________________________
 void TPerfStats::SetBytesRead(Long64_t num)
 {
-   // Set number of bytes read
+   // Set number of bytes read.
 
    fBytesRead = num;
 }
@@ -372,7 +412,7 @@ void TPerfStats::SetBytesRead(Long64_t num)
 //______________________________________________________________________________
 Long64_t TPerfStats::GetBytesRead() const
 {
-   // Get number of bytes read
+   // Get number of bytes read.
 
    return fBytesRead;
 }
@@ -394,38 +434,72 @@ void TPerfStats::WriteQueryLog()
    //   events        BIGINT,
    //   workers       INT
    //)
+   // The same info is send to Monalisa (or other monitoring systems) in the
+   // form of a list of name,value pairs.
 
    TTimeStamp stop;
-   TString sql;
 
-   sql.Form("INSERT INTO proofquerylog VALUES (0, '%s', '%s', "
-            "'%s', '%s', %d, %.2f, %lld, %lld, %d)",
-            gProofServ->GetUser(), gProofServ->GetGroup(),
-            fTzero.AsString("s"), stop.AsString("s"),
-            stop.GetSec()-fTzero.GetSec(), fTotCpuTime,
-            fTotBytesRead, fTotEvents, fSlaves);
-
-   // open connection to SQL server
    TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
    TString sqluser = gEnv->GetValue("ProofServ.QueryLogUser","");
    TString sqlpass = gEnv->GetValue("ProofServ.QueryLogPasswd","");
 
-   TSQLServer *db =  TSQLServer::Connect(sqlserv, sqluser, sqlpass);
+   // write to SQL DB
+   if (sqlserv != "" && sqluser != "" && sqlpass != "" && gProofServ) {
+      TString sql;
+      sql.Form("INSERT INTO proofquerylog VALUES (0, '%s', '%s', "
+               "'%s', '%s', %d, %.2f, %lld, %lld, %d)",
+               gProofServ->GetUser(), gProofServ->GetGroup(),
+               fTzero.AsString("s"), stop.AsString("s"),
+               stop.GetSec()-fTzero.GetSec(), fTotCpuTime,
+               fTotBytesRead, fTotEvents, fSlaves);
 
-   if (!db || db->IsZombie()) {
-      Error("WriteQueryLog", "failed to connect to SQL server %s as %s %s",
-            sqlserv.Data(), sqluser.Data(), sqlpass.Data());
-      printf("%s\n", sql.Data());
-   } else {
-      TSQLResult *res = db->Query(sql);
+      // open connection to SQL server
+      TSQLServer *db =  TSQLServer::Connect(sqlserv, sqluser, sqlpass);
 
-      if (!res) {
-         Error("WriteQueryLog", "insert into proofquerylog failed");
+      if (!db || db->IsZombie()) {
+         Error("WriteQueryLog", "failed to connect to SQL server %s as %s %s",
+               sqlserv.Data(), sqluser.Data(), sqlpass.Data());
          printf("%s\n", sql.Data());
+      } else {
+         TSQLResult *res = db->Query(sql);
+
+         if (!res) {
+            Error("WriteQueryLog", "insert into proofquerylog failed");
+            printf("%s\n", sql.Data());
+         }
+         delete res;
       }
-      delete res;
+      delete db;
    }
-   delete db;
+
+   // write to monitoring system
+   if (fMonitoringWriter) {
+      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
+          !gProofServ->GetProof()->GetQueryResult()) {
+         Error("WriteQueryLog", "some require object are 0 (0x%x 0x%x 0x%x 0x%x)",
+               gProofServ, gProofServ->GetSessionTag(), gProofServ->GetProof(),
+               gProofServ->GetProof()->GetQueryResult());
+         return;
+      }
+
+      TString identifier;
+      identifier.Form("%s-%d", gProofServ->GetSessionTag(),
+                      gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
+
+      TList values;
+      values.SetOwner();
+      values.Add(new TParameter<int>("id", 0));
+      values.Add(new TNamed("user", gProofServ->GetUser()));
+      values.Add(new TNamed("group", gProofServ->GetGroup()));
+      values.Add(new TNamed("begin", fTzero.AsString("s")));
+      values.Add(new TNamed("end", stop.AsString("s")));
+      values.Add(new TParameter<int>("walltime", stop.GetSec()-fTzero.GetSec()));
+      values.Add(new TParameter<float>("cputime", fTotCpuTime));
+      values.Add(new TParameter<Long64_t>("bytesread", fTotBytesRead));
+      values.Add(new TParameter<Long64_t>("events", fTotEvents));
+      if (!fMonitoringWriter->SendParameters(&values, identifier))
+         Error("WriteQueryLog", "sending of monitoring info failed");
+   }
 }
 
 //______________________________________________________________________________

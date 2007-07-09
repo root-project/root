@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMonitoring.h,v 1.2 2006/06/26 16:17:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMonitoring.h,v 1.3 2007/02/22 11:51:50 brun Exp $
 // Author: Andreas-Joachim Peters   15/05/2006
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual ~TVirtualMonitoringWriter() { }
    virtual Bool_t SendFileReadProgress(TFile * /*file*/, Bool_t /*force*/ =kFALSE)
       { MayNotUse("SendFileReadProgress"); return kFALSE; }
-   virtual Bool_t SendParameters(TList * /*valuelist*/)
+   virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = 0)
       { MayNotUse("SendParameters"); return kFALSE; }
    virtual Bool_t SendInfoTime() { MayNotUse("SendInfoTime"); return kFALSE; }
    virtual Bool_t SendInfoUser(const char * /*user*/ = 0) { MayNotUse("SendInfoUser"); return kFALSE; }

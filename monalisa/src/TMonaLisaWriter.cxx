@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.4 2006/10/24 15:29:58 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.5 2006/10/24 15:40:22 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -35,22 +35,24 @@
 #include "TUrl.h"
 #include "TStopwatch.h"
 #include "Riostream.h"
+#include "TParameter.h"
 
 
 ClassImp(TMonaLisaWriter)
 
 //______________________________________________________________________________
-TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *monsubid,
-                                 const char *montag, const char *monserver)
+TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
+                                 const char *monid, const char *monsubid,
+                                 const char *option)
 {
    // Create MonaLisa write object.
 
-   Init(monid,monsubid,montag,monserver);
+   Init(monserver, montag, monid, monsubid, option);
 }
 
 //______________________________________________________________________________
-void TMonaLisaWriter::Init(const char *monid, const char* monsubid,
-                           const char *montag, const char *monserver)
+void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char *monid,
+                           const char *monsubid, const char *option)
 {
    // Creates a TMonaLisaWriter object to send monitoring information to a
    // MonaLisa server using the MonaLisa ApMon package (libapmoncpp.so/UDP
@@ -140,6 +142,9 @@ void TMonaLisaWriter::Init(const char *monid, const char* monsubid,
    //   valuelist->Add(valdouble);
    //   Bool_t success = SendParameters(valuelist);
    //   delete valuelist;
+   //
+   // option:
+   // "global": gMonitoringWriter is initialized with this instance
 
    SetName(montag);
    SetTitle(montag);
@@ -238,16 +243,9 @@ void TMonaLisaWriter::Init(const char *monid, const char* monsubid,
 
    fInitialized = kTRUE;
 
-   gMonitoringWriter = this;
-}
-
-//______________________________________________________________________________
-TMonaLisaWriter::TMonaLisaWriter(const char *monid, const char *montag,
-				                     const char *monserver)
-{
-   // Create a MonaLisa writer object.
-
-   Init(monid,monid,montag,monserver);
+   TString optionStr(option);
+   if (optionStr.Contains("global"))
+      gMonitoringWriter = this;
 }
 
 //______________________________________________________________________________
@@ -516,7 +514,7 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
 }
 
 //______________________________________________________________________________
-Bool_t TMonaLisaWriter::SendFileReadProgress(TFile* file, Bool_t force)
+Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file, Bool_t force)
 {
    // Send the fileread progress to MonaLisa.
 
@@ -566,7 +564,7 @@ Bool_t TMonaLisaWriter::SendFileReadProgress(TFile* file, Bool_t force)
 }
 
 //______________________________________________________________________________
-Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
+Bool_t TMonaLisaWriter::SendParameters(TList *valuelist, const char *identifier)
 {
    // Send the parameters to MonaLisa.
 
@@ -580,6 +578,9 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
       return kFALSE;
    }
 
+   if (identifier == 0)
+      identifier = fJobId;
+
    TIter nextvalue(valuelist);
 
    TMonaLisaValue *objval;
@@ -587,15 +588,17 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
    TObject *monobj;
 
    Int_t apmon_nparams = valuelist->GetSize();
-   char **apmon_params;
-   Int_t *apmon_types;
-   char **apmon_values;
+   char **apmon_params = 0;
+   Int_t *apmon_types = 0;
+   char **apmon_values = 0;
+   Double_t *bufDouble = 0; // buffer for int, long, etc. that is to be sent as double
 
    if (apmon_nparams) {
 
       apmon_params = (char **) malloc(apmon_nparams * sizeof(char *));
       apmon_values = (char **) malloc(apmon_nparams * sizeof(char *));
       apmon_types = (int *) malloc(apmon_nparams * sizeof(int));
+      bufDouble = new Double_t[apmon_nparams];
 
       Int_t looper = 0;
       while ((monobj = nextvalue())) {
@@ -603,7 +606,7 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
             objval = (TMonaLisaValue *) monobj;
 
             if (fVerbose)
-               Info("SendParameters", "Adding Tag %s with val %f\n",
+               Info("SendParameters", "adding tag %s with val %f",
                     objval->GetName(), objval->GetValue());
 
             apmon_params[looper] = (char *) objval->GetName();
@@ -615,7 +618,7 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
             objtext = (TMonaLisaText *) monobj;
 
             if (fVerbose)
-               Info("SendParameters", "Adding Tag %s with Text %s\n",
+               Info("SendParameters", "adding tag %s with text %s",
                     objtext->GetName(), objtext->GetText());
 
             apmon_params[looper] = (char *) objtext->GetName();
@@ -623,19 +626,100 @@ Bool_t TMonaLisaWriter::SendParameters(TList *valuelist)
             apmon_values[looper] = (char *) (objtext->GetText());
             looper++;
          }
+         if (!strcmp(monobj->ClassName(), "TNamed")) {
+            TNamed* objNamed = (TNamed *) monobj;
+
+            if (fVerbose)
+              Info("SendParameters", "adding tag %s with text %s",
+                   objNamed->GetName(), objNamed->GetTitle());
+
+            apmon_params[looper] = (char *) objNamed->GetName();
+            apmon_types[looper] = XDR_STRING;
+            apmon_values[looper] = (char *) (objNamed->GetTitle());
+            looper++;
+         }
+         // unfortunately ClassName() converts Double_t to double, etc.
+         if (!strcmp(monobj->ClassName(), "TParameter<double>")) {
+            TParameter<double>* objParam = (TParameter<double> *) monobj;
+
+            if (fVerbose)
+               Info("SendParameters", "adding tag %s with val %f",
+                    objParam->GetName(), objParam->GetVal());
+
+            apmon_params[looper] = (char *) objParam->GetName();
+            apmon_types[looper] = XDR_REAL64;
+            apmon_values[looper] = (char *) &(objParam->GetVal());
+            looper++;
+         }
+         if (!strcmp(monobj->ClassName(), "TParameter<Long64_t>")) {
+            TParameter<Long64_t>* objParam = (TParameter<Long64_t> *) monobj;
+
+            if (fVerbose)
+               Info("SendParameters", "adding tag %s with val %lld",
+                    objParam->GetName(), objParam->GetVal());
+
+            apmon_params[looper] = (char *) objParam->GetName();
+            apmon_types[looper] = XDR_REAL64;
+            bufDouble[looper] = objParam->GetVal();
+            apmon_values[looper] = (char *) (bufDouble + looper);
+            looper++;
+         }
+         if (!strcmp(monobj->ClassName(), "TParameter<long>")) {
+            TParameter<long>* objParam = (TParameter<long> *) monobj;
+
+            if (fVerbose)
+               Info("SendParameters", "adding tag %s with val %ld",
+                    objParam->GetName(), objParam->GetVal());
+
+            apmon_params[looper] = (char *) objParam->GetName();
+            apmon_types[looper] = XDR_REAL64;
+            bufDouble[looper] = objParam->GetVal();
+            apmon_values[looper] = (char *) (bufDouble + looper);
+            looper++;
+         }
+         if (!strcmp(monobj->ClassName(), "TParameter<float>")) {
+            TParameter<float>* objParam = (TParameter<float> *) monobj;
+
+            if (fVerbose)
+               Info("SendParameters", "adding tag %s with val %f",
+                    objParam->GetName(), objParam->GetVal());
+
+            apmon_params[looper] = (char *) objParam->GetName();
+            apmon_types[looper] = XDR_REAL64;
+            bufDouble[looper] = objParam->GetVal();
+            apmon_values[looper] = (char *) (bufDouble + looper);
+            looper++;
+         }
+         if (!strcmp(monobj->ClassName(), "TParameter<int>")) {
+            TParameter<int>* objParam = (TParameter<int> *) monobj;
+
+            if (fVerbose)
+               Info("SendParameters", "adding tag %s with val %d",
+                    objParam->GetName(), objParam->GetVal());
+
+            apmon_params[looper] = (char *) objParam->GetName();
+            apmon_types[looper] = XDR_REAL64;
+            bufDouble[looper] = objParam->GetVal();
+            apmon_values[looper] = (char *) (bufDouble + looper);
+            looper++;
+         }
       }
+
+      // change number of parameters to the actual found value
+      apmon_nparams = looper;
 
       if (fVerbose)
          Info("SendParameters", "n: %d name: %s identifier %s ...,",
-              apmon_nparams, GetName(), fJobId.Data());
+              apmon_nparams, GetName(), identifier);
 
-      ((ApMon *) fApmon)->sendParameters((char *) GetName(), (char*)fJobId.Data(),
+      ((ApMon *) fApmon)->sendParameters((char *) GetName(), (char*)identifier,
                                          apmon_nparams, apmon_params,
                                          apmon_types, apmon_values);
 
       free(apmon_params);
       free(apmon_values);
       free(apmon_types);
+      delete[] bufDouble;
    }
    return kTRUE;
 }

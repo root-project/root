@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.6 2007/06/06 10:03:48 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.7 2007/06/21 08:50:47 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TTree;
 class TH1D;
 class TH2D;
 class TList;
+class TVirtualMonitoringWriter;
 
 
 class TPerfEvent : public TObject {
@@ -96,6 +97,8 @@ private:
    Bool_t         fDoTraceRate;  //!Trace processing rate in master
    Bool_t         fDoSlaveTrace; //!Full tracing in workers
    Bool_t         fDoQuota;      //!Save stats on SQL server for quota management
+
+   TVirtualMonitoringWriter *fMonitoringWriter; //!Monitoring engine
 
    TPerfStats(TList *input, TList *output);
    void WriteQueryLog();

@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.3 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.4 2007/02/22 11:51:50 brun Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -96,21 +96,18 @@ private:
    TMonaLisaWriter(const TMonaLisaWriter&); // Not implemented
    TMonaLisaWriter& operator=(const TMonaLisaWriter&); // Not implemented
 
+   void Init(const char *monserver, const char *montag, const char *monid,
+             const char *monsubid, const char *option);
+
 public:
-   TMonaLisaWriter(const char *monid = 0, const char *montag = 0,
-                   const char *monserver = 0);
-
-   TMonaLisaWriter(const char *monid , const char* monsubid , const char *montag,
-                   const char *monserver );
-
-   void Init(const char *monid , const char* monsubid , const char *montag,
-                   const char *monserver );
+   TMonaLisaWriter(const char *monserver, const char *montag, const char *monid = 0,
+                   const char *monsubid = 0, const char *option = "");
 
    virtual ~TMonaLisaWriter();
 
    ApMon *GetApMon() const { return fApmon; }
 
-   Bool_t SendParameters(TList *valuelist);
+   Bool_t SendParameters(TList *valuelist, const char *identifier = 0);
    Bool_t SendInfoTime();
    Bool_t SendInfoUser(const char *user = 0);
    Bool_t SendInfoDescription(const char *jobtag);
