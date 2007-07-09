@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.78 2007/07/03 10:05:23 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.79 2007/07/06 15:38:44 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1427,15 +1427,15 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
          Pressed();
       }
    } else { // ButtonRelease
-     if (in) {
-        if (!fStateOn) {
-           PSetState(kButtonDown, kFALSE);
-           toggled = kTRUE;
-        }
-        fPrevStateOn = fStateOn;
-        Released();
-        click = kTRUE;
-     }
+      if (in) {
+         if (!fStateOn) {
+            PSetState(kButtonDown, kFALSE);
+            toggled = kTRUE;
+         }
+         fPrevStateOn = fStateOn;
+         Released();
+         click = kTRUE;
+      }
       fOptions &= ~kSunkenFrame;
       fgReleaseBtn = fId;
    }
