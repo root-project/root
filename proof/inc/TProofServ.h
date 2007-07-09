@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.56 2007/06/21 08:47:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.57 2007/06/22 17:16:35 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -193,6 +193,7 @@ public:
    const char    *GetGroup()      const { return fGroup; }
    const char    *GetWorkDir()    const { return fWorkDir; }
    const char    *GetImage()      const { return fImage; }
+   const char    *GetSessionTag() const { return fSessionTag; }
    const char    *GetSessionDir() const { return fSessionDir; }
    Int_t          GetProtocol()   const { return fProtocol; }
    const char    *GetOrdinal()    const { return fOrdinal; }
