@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.28 2007/01/23 14:22:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.29 2007/07/04 15:10:49 antcheva Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -509,7 +509,8 @@ void TGButtonGroup::ReleaseButtons()
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       if (btn != item && item->IsToggleButton() && item->IsOn() &&
-          (fExclGroup || item->IsA()->InheritsFrom(TGRadioButton::Class()))) {
+          (fExclGroup || (item->IsA()->InheritsFrom(TGRadioButton::Class())
+                          && btn->IsA()->InheritsFrom(TGRadioButton::Class())))) {
          item->SetOn(kFALSE);
       }
    }
