@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.7 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.8 2007/04/30 10:44:33 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -64,6 +64,10 @@ private:
    TFileInfo& operator=(const TFileInfo&);  // not implemented
 
 public:
+   enum EStatusBits {
+      kStaged = BIT(15)
+   };
+
    TFileInfo(const char *url=0, Long64_t size=-1, const char *uuid=0,
              const char *md5=0, Long64_t entries=-1, Long64_t first=-1,
              Long64_t last=-1, TObject *meta=0);
@@ -83,6 +87,7 @@ public:
    TMD5           *GetMD5() const        { return fMD5; }
    TObject        *GetMetaObject() const { return fMetaDataObject; }
 
+   void            SetSize(Long64_t size)       { fSize = size; }
    void            SetFirst(Long64_t first)     { fFirst = first; }
    void            SetLast(Long64_t last)       { fLast = last; }
    void            SetEntries(Long64_t entries) { fEntries = entries; }
