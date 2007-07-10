@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.99 2007/02/21 17:35:25 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.100 2007/06/22 07:17:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1161,11 +1161,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (!optionLog) {
       if (ndiv) {
          if (fFunction) {
-            if (optionNoopt && !optionInt) {
-               dxtick=(binHigh-binLow)/Double_t(nticks-1);
-            } else {
-               dxtick=(binHigh-binLow)/Double_t(nticks-1);
-            }
+            dxtick=(binHigh-binLow)/Double_t(nticks-1);
          } else {
             if (optionNoopt && !optionInt) dxtick=axis_length/Double_t(nticks-1);
             else                           dxtick=axis_lengthN/Double_t(nticks-1);
