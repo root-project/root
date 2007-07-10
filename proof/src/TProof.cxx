@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.211 2007/07/08 22:06:52 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.212 2007/07/10 08:37:15 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -7115,9 +7115,6 @@ void TProof::SaveWorkerInfo()
       Error("SaveWorkerInfo","gProofServ undefined");
       return;
    }
-
-   // Update info
-   const_cast<TProof*>(this)->AskStatistics();
 
    // The relevant lists must be defined
    if (!fSlaves && !fBadSlaves) {
