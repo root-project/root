@@ -1606,6 +1606,10 @@ if test ! "x$enable_mysql" = "xno"; then
           mysqllib=`mysql_config --libs | sed -e s/\'//g`
           mysqlincdir=`mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,' -e s/\'//g`
           mysqllibdir=""
+          check_header "mysql.h" "" $mysqlincdir
+          if test "x$found_hdr" = "x"; then
+             enable_mysql="no"
+          fi
        fi
     else
        result "not found"
