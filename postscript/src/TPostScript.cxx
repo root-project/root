@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.71 2007/03/05 12:37:17 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.72 2007/03/07 09:51:03 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1680,7 +1680,7 @@ void TPostScript::Initialize()
    PrintFast(15," .25 .25 scale ");
    if (fMode != 3) SaveRestore(1);
 
-   if (fMode != 3) PrintStr("%%Page: number 1@");
+   if (fMode != 3) PrintStr("%%Page: (number 1)@");
    if (fMode != 3) SaveRestore(1);  //required
 
    //Check is user has defined a special header in the current style
@@ -2561,8 +2561,9 @@ void TPostScript::Zone()
          PrintStr("@showpage");
          SaveRestore(-1);
          fNpages++;
-         PrintStr("@%%Page: number ");
+         PrintStr("@%%Page: (number");
          WriteInteger(fNpages);
+         PrintStr(")");
          PrintStr("@");
       } else {
          PrintFast(9," showpage");
