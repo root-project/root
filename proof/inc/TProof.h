@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.117 2007/07/03 16:01:32 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.118 2007/07/08 22:06:52 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -654,6 +654,7 @@ public:
 
    void        AddInput(TObject *obj);
    void        ClearInput();
+   TList      *GetInputList();
    TObject    *GetOutput(const char *name);
    TList      *GetOutputList();
 

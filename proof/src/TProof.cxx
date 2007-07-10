@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.210 2007/07/03 16:26:43 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.211 2007/07/08 22:06:52 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -5424,6 +5424,14 @@ void TProof::ClearInput()
 
    // the system feedback list is always in the input list
    AddInput(fFeedback);
+}
+
+//______________________________________________________________________________
+TList *TProof::GetInputList()
+{
+   // Get input list.
+
+   return fPlayer->GetInputList();
 }
 
 //______________________________________________________________________________
