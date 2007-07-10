@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.171 2007/05/17 15:04:52 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.172 2007/05/21 12:40:50 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -459,7 +459,7 @@ namespace {
    //______________________________________________________________________________
    static DWORD WINAPI GUIThreadMessageProcessingLoop(void *p)
    {
-      // Message processing loop for the TGWin32 related GUI 
+      // Message processing loop for the TGWin32 related GUI
       // thread for processing windows messages (aka Main/Server thread).
       // We need to start the thread outside the TGWin32 / GUI related
       // dll, because starting threads at DLL init time does not work.
@@ -5095,8 +5095,8 @@ static void GetWinNTProcInfo(ProcInfo_t *procinfo)
    }
 
    if ( pGetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) ) {
-      procinfo->fMemResident = pmc.WorkingSetSize;
-      procinfo->fMemVirtual  = pmc.PagefileUsage;
+      procinfo->fMemResident = pmc.WorkingSetSize / 1024;
+      procinfo->fMemVirtual  = pmc.PagefileUsage / 1024;
    }
    if ( GetProcessTimes(GetCurrentProcess(), &starttime, &exittime,
       &kerneltime, &usertime)) {
