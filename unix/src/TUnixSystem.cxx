@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.182 2007/06/08 09:21:13 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.183 2007/07/03 16:40:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4481,10 +4481,10 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
    if (getrusage(RUSAGE_SELF, &ru) < 0) {
       ::SysError("TUnixSystem::GetDarwinProcInfo", "getrusage failed");
    } else {
-      procinfo->fCpuUser     = (Float_t)(ru.ru_utime.tv_sec) +
-                               ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
-      procinfo->fCpuSys      = (Float_t)(ru.ru_stime.tv_sec) +
-                               ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
+      procinfo->fCpuUser = (Float_t)(ru.ru_utime.tv_sec) +
+                           ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
+      procinfo->fCpuSys  = (Float_t)(ru.ru_stime.tv_sec) +
+                           ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
    }
 
    task_basic_info_data_t ti;
@@ -4688,10 +4688,10 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
    if (getrusage(RUSAGE_SELF, &ru) < 0) {
       ::SysError("TUnixSystem::GetLinuxProcInfo", "getrusage failed");
    } else {
-      procinfo->fCpuUser     = (Float_t)(ru.ru_utime.tv_sec) +
-                               ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
-      procinfo->fCpuSys      = (Float_t)(ru.ru_stime.tv_sec) +
-                               ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
+      procinfo->fCpuUser = (Float_t)(ru.ru_utime.tv_sec) +
+                           ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
+      procinfo->fCpuSys  = (Float_t)(ru.ru_stime.tv_sec) +
+                           ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
    }
 
    TString s;

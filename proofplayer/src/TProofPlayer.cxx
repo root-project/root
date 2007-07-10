@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.111 2007/07/03 16:26:44 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.112 2007/07/05 15:59:35 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -420,11 +420,9 @@ TObject *TProofPlayer::GetOutput(const char *name) const
 {
    // Get output object by name.
 
-   if (fOutput != 0) {
+   if (fOutput)
       return fOutput->FindObject(name);
-   } else {
-      return 0;
-   }
+   return 0;
 }
 
 //______________________________________________________________________________
