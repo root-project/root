@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.25 2006/08/10 06:33:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.h,v 1.26 2006/08/22 14:12:05 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -46,8 +46,8 @@ protected:
    EAbort         fAbort;   //abort status
    TString        fOption;  //option given to TTree::Process
    TObject       *fObject;  //current object if processing object (vs. TTree)
-   TList         *fInput;   //list of objects available during processing (on PROOF)
-   TSelectorList *fOutput;  //list of objects created during processing (on PROOF)
+   TList         *fInput;   //list of objects available during processing
+   TSelectorList *fOutput;  //list of objects created during processing
 
 private:
    TSelector(const TSelector&);            // not implemented

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.29 2006/08/22 14:12:05 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.30 2006/09/16 02:29:07 pcanal Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -73,6 +73,8 @@
 #include "TSelectorCint.h"
 #include "Api.h"
 #include "TClass.h"
+#include "TInterpreter.h"
+
 
 ClassImp(TSelector)
 
@@ -157,6 +159,12 @@ TSelector *TSelector::GetSelector(const char *filename)
    if (localname.Index(".") != kNPOS)
       localname.Remove(localname.Index("."));
 
+   // make sure the class is loaded
+   if (!fromFile && gInterpreter->AutoLoad(localname) != 1) {
+      ::Error("TSelector::GetSelector", "class %s could not be loaded", filename);
+      return 0;
+   }
+
    G__ClassInfo cl;
    Bool_t ok = kFALSE;
    while (cl.Next()) {
@@ -166,7 +174,7 @@ TSelector *TSelector::GetSelector(const char *filename)
       }
    }
    if (!ok) {
-      if ( fromFile ) {
+      if (fromFile) {
          ::Error("TSelector::GetSelector",
          "file %s does not have a valid class deriving from TSelector", filename);
       } else {
