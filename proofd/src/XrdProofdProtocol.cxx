@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.59 2007/07/02 17:04:37 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.60 2007/07/03 16:01:32 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -3725,6 +3725,12 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
 
    // TMPDIR
    fprintf(fenv, "TMPDIR=%s\n", fgTMPdir);
+
+   // ROOT version tag (needed in building packages)
+   ev = new char[strlen("ROOTVERSIONTAG=")+strlen(fPClient->ROOT()->Tag())+2];
+   sprintf(ev, "ROOTVERSIONTAG=%s", fPClient->ROOT()->Tag());
+   putenv(ev);
+   fprintf(fenv, "%s\n", ev);
 
    // Log file in the log dir
    XrdOucString logfile = swrkdir;
