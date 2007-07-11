@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.cxx,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.cxx,v 1.2 2007/06/21 07:41:06 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -274,10 +274,11 @@ int XrdProofdAux::Write(int fd, const void *buf, size_t nb)
 }
 
 //_____________________________________________________________________________
-int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui)
+int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
 {
    // Make sure that 'path' exists and is owned by the entity
-   // described by 'ui'
+   // described by 'ui'.
+   // If changeown is TRUE it tries to acquire the privileges before.
    // Return 0 in case of success, -1 in case of error
 
    MTRACE(ACT, MHEAD, "AssertDir: enter");
@@ -290,7 +291,7 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui)
       if (errno == ENOENT) {
 
          {  XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-            if (XpdBadPGuard(pGuard, ui.fUid)) {
+            if (XpdBadPGuard(pGuard, ui.fUid) && changeown) {
                MERROR(MHEAD, "AsserDir: could not get privileges");
                return -1;
             }
@@ -315,7 +316,8 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui)
    }
 
    // Make sure the ownership is right
-   if ((int) st.st_uid != ui.fUid || (int) st.st_gid != ui.fGid) {
+   if (changeown &&
+      ((int) st.st_uid != ui.fUid || (int) st.st_gid != ui.fGid)) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (XpdBadPGuard(pGuard, ui.fUid)) {
@@ -336,9 +338,10 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui)
 }
 
 //_____________________________________________________________________________
-int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui)
+int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
 {
    // Change current directory to 'dir'.
+   // If changeown is TRUE it tries to acquire the privileges before.
    // Return 0 in case of success, -1 in case of error
 
    MTRACE(ACT, MHEAD, "ChangeToDir: enter: changing to " << ((dir) ? dir : "**undef***"));
@@ -346,7 +349,7 @@ int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui)
    if (!dir || strlen(dir) <= 0)
       return -1;
 
-   if ((int) geteuid() != ui.fUid) {
+   if (changeown && (int) geteuid() != ui.fUid) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (XpdBadPGuard(pGuard, ui.fUid)) {

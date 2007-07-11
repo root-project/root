@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.h,v 1.1 2007/06/12 13:51:03 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.h,v 1.2 2007/06/21 07:41:05 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************
@@ -86,8 +86,8 @@ class XrdProofdAux {
 public:
    XrdProofdAux() { }
 
-   static int AssertDir(const char *path, XrdProofUI ui);
-   static int ChangeToDir(const char *dir, XrdProofUI ui);
+   static int AssertDir(const char *path, XrdProofUI ui, bool changeown);
+   static int ChangeToDir(const char *dir, XrdProofUI ui, bool changeown);
    static int CheckIf(XrdOucStream *s, const char *h);
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);

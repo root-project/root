@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.27 2007/06/22 16:33:23 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.28 2007/07/02 17:04:37 ganis Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -200,6 +200,8 @@ public:
    //
    static int                    fgOperationMode; // Operation mode
    static XrdOucString           fgAllowedUsers; // Users allowed in controlled mode
+   static bool                   fgMultiUser;    // Allow/disallow multi-user mode
+   static bool                   fgChangeOwn;    // TRUE is ownership has to be changed
    //
    static XrdOucString           fgProofServEnvs; // Additional envs to be exported before proofserv
    static XrdOucString           fgProofServRCs; // Additional rcs to be passed to proofserv
@@ -218,7 +220,6 @@ public:
    //
    static std::list<XrdProofdClient *> fgProofdClients;  // keeps track of all users
    static std::list<XrdProofdPInfo *> fgTerminatedProcess; // List of pids of processes terminating
-   static std::list<XrdProofServProxy *> fgActiveSessions; // List of active sessions (non-idle)
 
    //
    // Static area: methods

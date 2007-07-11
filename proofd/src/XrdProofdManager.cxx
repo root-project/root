@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.1 2007/06/21 08:00:01 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.2 2007/06/22 16:33:23 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -238,7 +238,7 @@ int XrdProofdManager::Config(const char *fn, XrdOucError *e)
    // Work directory, if specified
    if (fWorkDir.length() > 0) {
       // Make sure it exists
-      if (XrdProofdAux::AssertDir(fWorkDir.c_str(), ui) != 0) {
+      if (XrdProofdAux::AssertDir(fWorkDir.c_str(), ui, 1) != 0) {
          fEDest->Say(0, "ProofdManager: Config: unable to assert working dir: ",
                         fWorkDir.c_str());
          return -1;
@@ -250,7 +250,7 @@ int XrdProofdManager::Config(const char *fn, XrdOucError *e)
    // Dataset directory, if specified
    if (fDataSetDir.length() > 0) {
       // Make sure it exists
-      if (XrdProofdAux::AssertDir(fDataSetDir.c_str(), ui) != 0) {
+      if (XrdProofdAux::AssertDir(fDataSetDir.c_str(), ui, 1) != 0) {
          fEDest->Say(0, "ProofdManager: Config: unable to assert dataset dir: ",
                         fDataSetDir.c_str());
          return -1;

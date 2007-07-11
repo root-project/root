@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.11 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.12 2007/03/20 16:16:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -70,36 +70,30 @@ bool XrdProofPhyConn::Init(const char *url)
    // Save url
    fUrl.TakeUrl(XrdOucString(url));
 
-   if (!fTcp) {
-      // Set some variables
+   // Get user
+   fUser = fUrl.User.c_str();
+   if (fUser.length() <= 0) {
+      // Use local username, if not specified
 #ifndef WIN32
       struct passwd *pw = getpwuid(getuid());
-      fUser = (pw) ? pw->pw_name : "";
+      fUser = pw ? pw->pw_name : "";
 #else
-      char  name[256];
-      DWORD length = sizeof (name);
-      ::GetUserName(name, &length);
-      fUser = name;
+      char  lname[256];
+      DWORD length = sizeof (lname);
+      ::GetUserName(lname, &length);
+      fUser = lname;
 #endif
-      fHost = XrdNetDNS::getHostName("localhost");
-      fPort = -1;
+   }
 
+   // Host and Port
+   if (!fTcp) {
+      fHost = XrdNetDNS::getHostName(((fUrl.Host.length() > 0) ?
+                                       fUrl.Host.c_str() : "localhost"));
+      fPort = -1;
+      fUrl.Host = "";
+      fUrl.User = "";
    } else {
 
-      // Parse Url
-      fUser = fUrl.User.c_str();
-      if (fUser.length() <= 0) {
-         // Use local username, if not specified
-#ifndef WIN32
-         struct passwd *pw = getpwuid(getuid());
-         fUser = pw ? pw->pw_name : "";
-#else
-         char  lname[256];
-         DWORD length = sizeof (lname);
-         ::GetUserName(lname, &length);
-         fUser = lname;
-#endif
-      }
       fHost = fUrl.Host.c_str();
       fPort = fUrl.Port;
       // Check port

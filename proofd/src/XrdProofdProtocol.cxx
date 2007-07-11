@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.60 2007/07/03 16:01:32 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.61 2007/07/10 08:02:26 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -110,6 +110,8 @@ int                   XrdProofdProtocol::fgCronFrequency = 60; // Default: run c
 // Access control
 int                   XrdProofdProtocol::fgOperationMode = kXPD_OpModeOpen; // Operation mode
 XrdOucString          XrdProofdProtocol::fgAllowedUsers; // Users allowed in controlled mode
+bool                  XrdProofdProtocol::fgMultiUser = 0; // Allow/disallow multi-user mode
+bool                  XrdProofdProtocol::fgChangeOwn = 0; // TRUE is ownership has to be changed
 // Proofserv configuration
 XrdOucString          XrdProofdProtocol::fgProofServEnvs; // Additional envs to be exported before proofserv
 XrdOucString          XrdProofdProtocol::fgProofServRCs; // Additional rcs to be passed to proofserv
@@ -277,7 +279,7 @@ static int CreateGroupDataSetDir(const char *, XrdProofGroup *g, void *rd)
    XrdProofUI ui;
    XrdProofdAux::GetUserInfo(geteuid(), ui);
 
-   if (XrdProofdAux::AssertDir(gdsetdir.c_str(), ui) != 0) {
+   if (XrdProofdAux::AssertDir(gdsetdir.c_str(), ui, 1) != 0) {
       MERROR(MHEAD, "CreateGroupDataSetDir: could not assert " << gdsetdir);
    }
 
@@ -455,7 +457,7 @@ XrdSecService *XrdProofdProtocol::LoadSecurity(const char *seclib, const char *c
    fgEDest.Emsg("LoadSecurity", "strong authentication enabled");
 
    // Unlink the temporary file and cleanup its path
-   unlink(rcfn);
+//   unlink(rcfn);
    delete[] rcfn;
 
    // All done
@@ -516,8 +518,9 @@ XrdProofdProtocol::XrdProofdProtocol()
 int XrdProofdProtocol::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
 {
    // Resolve special keywords in 's' for client 'pcl'. Recognized keywords
-   //     <workdir>          fgWorkDir;
-   //     <user>             username
+   //     <workdir>          root for working dirs
+   //     <host>             local host name
+   //     <user>             user name
    // Return the number of keywords resolved.
 
    int nk = 0;
@@ -529,6 +532,12 @@ int XrdProofdProtocol::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
       nk++;
 
    TRACE(HDBG,"ResolveKeywords: after <workdir>: "<<s);
+
+   // Parse <host>
+   if (s.replace("<host>",(const char *)fgMgr.Host()))
+      nk++;
+
+   TRACE(HDBG,"ResolveKeywords: after <host>: "<<s);
 
    // Parse <user>
    if (pcl)
@@ -677,6 +686,9 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    TRACESET(XERR, 1);
    if (pi->DebugON)
       XrdProofdTrace->What |= (TRACE_REQ | TRACE_LOGIN | TRACE_FORK);
+
+   // Multi-user option (default ON if superuser)
+   fgMultiUser = (!getuid()) ? 1 : 0;
 
    // Process the config file for directives meaningful to us
    if (pi->ConfigFN) {
@@ -1138,6 +1150,11 @@ int XrdProofdProtocol::Config(const char *cfn)
                // Defines file with the group info
                fgGroupsMgr.Config(val);
 
+            } else if (!strcmp("multiuser",var)) {
+               // Multi-user option
+               int mu = strtol(val,0,10);
+               fgMultiUser = (mu == 1) ? 1 : fgMultiUser;
+
             } else if (!strcmp("priority",var)) {
                // Priority change directive: get delta_priority
                int dp = strtol(val,0,10);
@@ -1276,6 +1293,10 @@ int XrdProofdProtocol::Config(const char *cfn)
          }
       }
    }
+
+   // Change/DonotChange ownership when logging clients 
+   fgChangeOwn = (fgMultiUser && getuid()) ? 0 : 1;
+
    return NoGo;
 }
 
@@ -1401,6 +1422,11 @@ int XrdProofdProtocol::Reconfig()
 
                // Defines file with the group info
                fgGroupsMgr.Config(val);
+
+            } else if (!strcmp("multiuser",var)) {
+               // Multi-user option
+               int mu = strtol(val,0,10);
+               fgMultiUser = (mu == 1) ? 1 : fgMultiUser;
 
             } else if (!strcmp("priority",var)) {
                // Priority change directive: get delta_priority
@@ -1641,6 +1667,9 @@ int XrdProofdProtocol::Reconfig()
             (*pci)->SetGroup(fgGroupsMgr.GetUserGroup(c->fClientID, c->fGroupID));
       }
    }
+
+   // Change/DonotChange ownership when logging clients 
+   fgChangeOwn = (fgMultiUser && getuid()) ? 0 : 1;
 
    // Done
    return 0;
@@ -1985,13 +2014,13 @@ char *XrdProofdProtocol::FilterSecConfig(const char *cfn, int &nd)
                return rcfn;
             }
          }
-
-         // Starting char
-         int ns = (!strncmp(lin, pfx[0], strlen(pfx[0]))) ? 4 : 0 ;
-         // Write the line to the output file, stripping the prefix "xpd."
-         while (write(fd, &lin[ns], strlen(lin)-ns) < 0 && errno == EINTR)
-            errno = 0;
-
+         XrdOucString slin = lin;
+         // Strip the prefix "xpd."
+         slin.replace("xpd.","");
+         // Make keyword substitution
+         XrdProofdProtocol::ResolveKeywords(slin, 0);
+         // Write the line to the output file
+         XrdProofdAux::Write(fd, slin.c_str(), slin.length());
       }
    }
 
@@ -2019,6 +2048,7 @@ int XrdProofdProtocol::GetWorkers(XrdOucString &lw, XrdProofServProxy *xps)
    // Query the scheduler for the list of workers
    std::list<XrdProofWorker *> wrks;
    fgProofSched->GetWorkers(xps, &wrks);
+   TRACE(DBG, "GetWorkers: list size: " << wrks.size());
 
    // The full list
    std::list<XrdProofWorker *>::iterator iw;
@@ -2184,7 +2214,7 @@ int XrdProofdProtocol::Login()
       TRACEP(DBG,"Login: requested group: "<<gname);
    }
 
-   // Here we check if the user is allowed to use th system
+   // Here we check if the user is allowed to use the system
    // If not, we fail.
    XrdOucString emsg;
    if (CheckUser(uname.c_str(), fUI, emsg) != 0) {
@@ -2235,16 +2265,16 @@ int XrdProofdProtocol::Login()
    // Establish the ID for this client
    fClientID = new char[uname.length()+4];
    strcpy(fClientID, uname.c_str());
-   TRACEI(LOGIN,"Login: ClientID =" << fClientID);
+   TRACEI(LOGIN,"Login: ClientID = " << fClientID);
 
    // Establish the group ID for this client
    fGroupID = new char[gname.length()+4];
    strcpy(fGroupID, gname.c_str());
-   TRACEI(LOGIN,"Login: GroupID =" << fGroupID);
+   TRACEI(LOGIN,"Login: GroupID = " << fGroupID);
 
    // Assert the workdir directory ...
    fUI.fWorkDir = fUI.fHomeDir;
-   if (fgMgr.WorkDir()) {
+   if (fgMgr.WorkDir() && strlen(fgMgr.WorkDir()) > 0) {
       // The user directory path will be <workdir>/<user>
       fUI.fWorkDir = fgMgr.WorkDir();
       if (!fUI.fWorkDir.endswith('/'))
@@ -2255,9 +2285,15 @@ int XrdProofdProtocol::Login()
       if (!fUI.fWorkDir.endswith('/'))
          fUI.fWorkDir += "/";
       fUI.fWorkDir += "proof";
+      if (fUI.fUser != fClientID) {
+         fUI.fWorkDir += "/";
+         fUI.fWorkDir += fClientID;
+      }
    }
+   TRACEI(LOGIN,"Login: work dir = " << fUI.fWorkDir);
+
    // Make sure the directory exists
-   if (XrdProofdAux::AssertDir(fUI.fWorkDir.c_str(), fUI) == -1) {
+   if (XrdProofdAux::AssertDir(fUI.fWorkDir.c_str(), fUI, fgChangeOwn) == -1) {
       XrdOucString emsg("Login: unable to create work dir: ");
       emsg += fUI.fWorkDir;
       TRACEP(XERR, emsg);
@@ -2272,7 +2308,7 @@ int XrdProofdProtocol::Login()
       dsetdir += fGroupID;
       dsetdir += "/";
       dsetdir += fClientID;
-      if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI) == -1) {
+      if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgChangeOwn) == -1) {
          XrdOucString emsg("Login: unable to assert dataset dir: ");
          emsg += dsetdir;
          TRACEP(XERR, emsg);
@@ -2295,7 +2331,7 @@ int XrdProofdProtocol::Login()
          fResponse.Send(kXP_ServerError, emsg.c_str());
          return rc;
       }
-      if (XrdProofdAux::AssertDir(credsdir.c_str(), fUI) == -1) {
+      if (XrdProofdAux::AssertDir(credsdir.c_str(), fUI, fgChangeOwn) == -1) {
          XrdOucString emsg("Login: unable to create credential dir: ");
          emsg += credsdir;
          TRACEP(XERR, emsg);
@@ -2437,6 +2473,8 @@ int XrdProofdProtocol::MapClient(bool all)
          for (i = fgProofdClients.begin(); i != fgProofdClients.end(); ++i) {
             if ((pmgr = *i) && pmgr->Match(fClientID, fGroupID))
                break;
+            TRACEI(HDBG, "MapClient: client: "<<pmgr->ID()<< ", group: "<<
+                         ((pmgr->Group()) ? pmgr->Group()->Name() : "---"));
             pmgr = 0;
          }
       }
@@ -2476,7 +2514,7 @@ int XrdProofdProtocol::MapClient(bool all)
             tid += " ";
             psrv->ProofSrv()->Set(tid.c_str());
             TRACEI(DBG,"MapClient: proofsrv callback:"
-                       " link assigned to target session "<<psid<<" ("<<psrv<<")");
+                       " link assigned to target session "<<psid);
          }
       } else {
 
@@ -2601,7 +2639,7 @@ int XrdProofdProtocol::MapClient(bool all)
          TRACEI(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-         if (XpdBadPGuard(pGuard, fUI.fUid)) {
+         if (XpdBadPGuard(pGuard, fUI.fUid) && fgChangeOwn) {
             TRACEI(XERR, "MapClient: could not get privileges");
             return -1;
          }
@@ -2618,7 +2656,7 @@ int XrdProofdProtocol::MapClient(bool all)
          }
 
          // Set ownership of the socket file to the client
-         if (chown(pmgr->UNIXSockPath(), fUI.fUid, fUI.fGid) == -1) {
+         if (fgChangeOwn && chown(pmgr->UNIXSockPath(), fUI.fUid, fUI.fGid) == -1) {
             TRACEI(XERR, "MapClient: cannot set user ownership"
                                " on UNIX socket (errno: "<<errno<<")");
             return -1;
@@ -2670,10 +2708,18 @@ int XrdProofdProtocol::CheckUser(const char *usr,
    // Here we check if the user is known locally.
    // If not, we fail for now.
    // In the future we may try to get a temporary account
-   if (XrdProofdAux::GetUserInfo(usr, ui) != 0) {
-      e = "Login: unknown ClientID: ";
-      e += usr;
-      return -1;
+   if (fgChangeOwn) {
+      if (XrdProofdAux::GetUserInfo(usr, ui) != 0) {
+         e = "Login: unknown ClientID: ";
+         e += usr;
+         return -1;
+      }
+   } else {
+      if (XrdProofdAux::GetUserInfo(geteuid(), ui) != 0) {
+         e = "Login: problems getting user info for id: ";
+         e += (int)geteuid();
+         return -1;
+      }
    }
 
    // If we are in controlled mode we have to check if the user in the
@@ -3164,7 +3210,7 @@ int XrdProofdProtocol::SetProofServEnvOld(int psid, int loglevel, const char *cf
    }
    MTRACE(DBG, "xpd:child: ", "SetProofServEnvOld: log dir "<<logdir);
    // Make sure the directory exists
-   if (XrdProofdAux::AssertDir(logdir.c_str(), fUI) == -1) {
+   if (XrdProofdAux::AssertDir(logdir.c_str(), fUI, fgChangeOwn) == -1) {
       MTRACE(XERR, "xpd:child: ",
                    "SetProofServEnvOld: unable to create log dir: "<<logdir);
       return -1;
@@ -3252,7 +3298,7 @@ int XrdProofdProtocol::SetProofServEnvOld(int psid, int loglevel, const char *cf
             XrdOucString credsdir = udir;
             credsdir += "/.creds";
             // Make sure the directory exists
-            if (!XrdProofdAux::AssertDir(credsdir.c_str(), fUI)) {
+            if (!XrdProofdAux::AssertDir(credsdir.c_str(), fUI, fgChangeOwn)) {
                if (SaveAFSkey(creds, credsdir.c_str()) == 0) {
                   ev = new char[strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2];
                   sprintf(ev, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
@@ -3498,13 +3544,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    }
    MTRACE(DBG, "xpd:child: ", "SetProofServEnv: session dir "<<sessiondir);
    // Make sure the directory exists ...
-   if (XrdProofdAux::AssertDir(sessiondir.c_str(), fUI) == -1) {
+   if (XrdProofdAux::AssertDir(sessiondir.c_str(), fUI, fgChangeOwn) == -1) {
       MTRACE(XERR, "xpd:child: ",
                    "SetProofServEnv: unable to create log dir: "<<sessiondir);
       return -1;
    }
    // ... and log into it
-   if (XrdProofdAux::ChangeToDir(sessiondir.c_str(), fUI) != 0) {
+   if (XrdProofdAux::ChangeToDir(sessiondir.c_str(), fUI, fgChangeOwn) != 0) {
       MTRACE(XERR, "xpd:child: ", "SetProofServEnv: couldn't change directory to "<<
                    sessiondir);
       return -1;
@@ -3580,7 +3626,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
          dsetdir += fPClient->Group()->Name();
          dsetdir += '/';
          dsetdir += fPClient->ID();
-         if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI) == -1) {
+         if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgChangeOwn) == -1) {
             MTRACE(XERR, "xpd:child: ",
                          "SetProofServEnv: unable to assert dataset dir: "<<dsetdir);
             return -1;
@@ -3609,10 +3655,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    // Set Open socket
    fprintf(frc,"# Open socket\n");
    fprintf(frc, "ProofServ.OpenSock: %s\n", fPClient->UNIXSockPath());
-
    // Entity
    fprintf(frc,"# Entity\n");
-   fprintf(frc, "ProofServ.Entity: %s@%s\n", fClientID, fLink->Host());
+   if (fGroupID && strlen(fGroupID) > 0)
+      fprintf(frc, "ProofServ.Entity: %s:%s@%s\n", fClientID, fGroupID, fLink->Host());
+   else
+      fprintf(frc, "ProofServ.Entity: %s@%s\n", fClientID, fLink->Host());
+
 
    // Session ID
    fprintf(frc,"# Session ID\n");
@@ -3695,7 +3744,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
             XrdOucString credsdir = udir;
             credsdir += "/.creds";
             // Make sure the directory exists
-            if (!XrdProofdAux::AssertDir(credsdir.c_str(), fUI)) {
+            if (!XrdProofdAux::AssertDir(credsdir.c_str(), fUI, fgChangeOwn)) {
                if (SaveAFSkey(creds, credsdir.c_str()) == 0) {
                   ev = new char[strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2];
                   sprintf(ev, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
@@ -5298,7 +5347,7 @@ int XrdProofdProtocol::SetUserEnvironment()
 
    MTRACE(ACT, "xpd:child: ", "SetUserEnvironment: enter");
 
-   if (XrdProofdAux::ChangeToDir(fPClient->Workdir(), fUI) != 0) {
+   if (XrdProofdAux::ChangeToDir(fPClient->Workdir(), fUI, fgChangeOwn) != 0) {
       MTRACE(XERR, "xpd:child: ", "SetUserEnvironment: couldn't change directory to "<<
                    fPClient->Workdir());
       return -1;
@@ -5313,7 +5362,7 @@ int XrdProofdProtocol::SetUserEnvironment()
    // Set access control list from /etc/initgroup
    // (super-user privileges required)
    MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: setting ACLs");
-   if ((int) geteuid() != fUI.fUid) {
+   if (fgChangeOwn && (int) geteuid() != fUI.fUid) {
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (XpdBadPGuard(pGuard, fUI.fUid)) {
@@ -5324,12 +5373,14 @@ int XrdProofdProtocol::SetUserEnvironment()
       initgroups(fUI.fUser.c_str(), fUI.fGid);
    }
 
-   // acquire permanently target user privileges
-   MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: acquire target user identity");
-   if (XrdSysPriv::ChangePerm((uid_t)fUI.fUid, (gid_t)fUI.fGid) != 0) {
-      MTRACE(XERR, "xpd:child: ",
-                   "SetUserEnvironment: can't acquire "<< fUI.fUser <<" identity");
-      return -1;
+   if (fgChangeOwn) {
+      // acquire permanently target user privileges
+      MTRACE(DBG, "xpd:child: ", "SetUserEnvironment: acquire target user identity");
+      if (XrdSysPriv::ChangePerm((uid_t)fUI.fUid, (gid_t)fUI.fGid) != 0) {
+         MTRACE(XERR, "xpd:child: ",
+                      "SetUserEnvironment: can't acquire "<< fUI.fUser <<" identity");
+         return -1;
+      }
    }
 
    // Save UNIX path in the sandbox for later cleaning
@@ -5830,7 +5881,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill)
       // We need the right privileges to do this
       XrdOucMutexHelper mtxh(&gSysPrivMutex);
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (XpdBadPGuard(pGuard, fUI.fUid)) {
+      if (XpdBadPGuard(pGuard, fUI.fUid) && fgChangeOwn) {
          XrdOucString msg = "KillProofServ: could not get privileges";
          TRACE(XERR, msg.c_str());
          return -1;
