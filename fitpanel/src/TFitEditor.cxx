@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.32 2007/06/22 15:50:27 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.33 2007/07/03 08:10:56 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -268,9 +268,9 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    TGDimension size = GetDefaultSize();
    SetWMSize(size.fWidth, size.fHeight);
    SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
-   SetWindowName("New Fit Panel");
-   SetIconName("New Fit Panel");
-   SetClassHints("New Fit Panel", "New Fit Panel");
+   SetWindowName("Fit Panel");
+   SetIconName("Fit Panel");
+   SetClassHints("Fit Panel", "Fit Panel");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
