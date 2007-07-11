@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.112 2007/07/05 15:59:35 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.113 2007/07/10 08:34:57 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -46,9 +46,7 @@
 #include "TSortedList.h"
 #include "TTree.h"
 #include "TDSet.h"
-#include "TTreeDrawArgsParser.h"
 #include "TDrawFeedback.h"
-#include "TCanvas.h"
 #include "TNamed.h"
 #include "TObjString.h"
 #include "TQueryResult.h"
@@ -887,8 +885,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
       if (gProofServ && !gProofServ->IsParallel()) {  // put all the canvases onto the output list
          TIter next(gROOT->GetListOfCanvases());
-         while (TCanvas* c = dynamic_cast<TCanvas*> (next()))
-            fOutput->Add(c);
+         while (TObject *o = next())
+            fOutput->Add(o);
       }
    }
 
@@ -1002,6 +1000,77 @@ void TProofPlayer::HandleRecvHisto(TMessage *mess)
       else
          h->SetDirectory(gDirectory);
    }
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayer::DrawCanvas(TObject *obj)
+{
+   // Draw the object if it is a canvas.
+   // Return 0 in case of success, 1 if it is not a canvas or libProofDraw
+   // is not available.
+
+   static Int_t (*gDrawCanvasHook)(TObject *) = 0;
+
+   // Load the library the first time
+   if (!gDrawCanvasHook) {
+      // Load library needed for graphics ...
+      TString drawlib = "libProofDraw";
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(drawlib) != -1) {
+            // Locate DrawCanvas
+            Func_t f = 0;
+            if ((f = gSystem->DynFindSymbol(drawlib,"DrawCanvas")))
+               gDrawCanvasHook = (Int_t (*)(TObject *))(f);
+            else
+               Warning("DrawCanvas", "can't find DrawCanvas");
+         } else
+            Warning("DrawCanvas", "can't load %s", drawlib.Data());
+      } else
+         Warning("DrawCanvas", "can't locate %s", drawlib.Data());
+   }
+   if (gDrawCanvasHook && obj)
+      return (*gDrawCanvasHook)(obj);
+   // No drawing hook or object undefined
+   return 1;
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
+                                TString &selector, TString &objname)
+{
+   // Parse the arguments from var, sel and opt and fill the selector and
+   // object name accordingly.
+   // Return 0 in case of success, 1 if libProofDraw is not available.
+
+   static Int_t (*gGetDrawArgsHook)(const char *, const char *, Option_t *,
+                                    TString &, TString &) = 0;
+
+   // Load the library the first time
+   if (!gGetDrawArgsHook) {
+      // Load library needed for graphics ...
+      TString drawlib = "libProofDraw";
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(drawlib) != -1) {
+            // Locate GetDrawArgs
+            Func_t f = 0;
+            if ((f = gSystem->DynFindSymbol(drawlib,"GetDrawArgs")))
+               gGetDrawArgsHook = (Int_t (*)(const char *, const char *, Option_t *,
+                                             TString &, TString &))(f);
+            else
+               Warning("GetDrawArgs", "can't find GetDrawArgs");
+         } else
+            Warning("GetDrawArgs", "can't load %s", drawlib.Data());
+      } else
+         Warning("GetDrawArgs", "can't locate %s", drawlib.Data());
+   }
+   if (gGetDrawArgsHook)
+      return (*gGetDrawArgsHook)(var, sel, opt, selector, objname);
+   // No parser hook or object undefined
+   return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -1280,13 +1349,9 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          TIter next(fOutput);
          TList *output = fSelector->GetOutputList();
          while(TObject* obj = next()) {
-            if (!fProof->IsParallel()) {
-               if (TCanvas* c = dynamic_cast<TCanvas *> (obj))
-                  c->Draw();
-               else
-                  output->Add(obj);
-            }
-            else
+            if (fProof->IsParallel() || DrawCanvas(obj) == 1)
+               // Either parallel or not a canvas or not able to display it:
+               // just add to the list
                output->Add(obj);
          }
 
@@ -2116,9 +2181,11 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    // Draw (support for TChain::Draw()).
    // Returns -1 in case of error or number of selected events in case of success.
 
-   TTreeDrawArgsParser info;
-   info.Parse(varexp, selection, option);
-   TString selector = info.GetProofSelectorName();
+   TString selector, objname;
+   if (GetDrawArgs(varexp, selection, option, selector, objname) != 0) {
+      Error("DrawSelect", "parsing arguments");
+      return -1;
+   }
 
    TNamed *varexpobj = new TNamed("varexp", varexp);
    TNamed *selectionobj = new TNamed("selection", selection);
@@ -2137,11 +2204,11 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
 
-   if (info.GetObjectName() == "")
-      info.SetObjectName("htemp");
-   fProof->AddFeedback(info.GetObjectName());
+   if (objname == "")
+      objname = "htemp";
+   fProof->AddFeedback(objname);
    Long64_t r = Process(set, selector, option, nentries, firstentry);
-   fProof->RemoveFeedback(info.GetObjectName());
+   fProof->RemoveFeedback(objname);
 
    fInput->Remove(varexpobj);
    fInput->Remove(selectionobj);

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.46 2007/06/05 05:47:25 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.47 2007/07/03 16:26:43 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -81,6 +81,10 @@ protected:
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
    void         *GetSender() { return this; }  //used to set gTQSender
+
+   virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
+   virtual Int_t GetDrawArgs(const char *var, const char *sel, Option_t *opt,
+                             TString &selector, TString &objname);
 
    virtual void SetupFeedback();  // specialized setup
 

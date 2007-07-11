@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.7 2007/07/09 18:32:17 ganis Exp $ */
+/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.8 2007/07/09 20:59:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,22 +34,6 @@
 
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
-
-#pragma link C++ class TProofDraw+;
-#pragma link C++ class TProofDrawEventList+;
-#pragma link C++ class TProofDrawHist+;
-#pragma link C++ class TProofDrawProfile+;
-#pragma link C++ class TProofDrawProfile2D+;
-#pragma link C++ class TProofDrawGraph+;
-#pragma link C++ class TProofDrawPolyMarker3D+;
-#pragma link C++ class TProofDrawListOfGraphs+;
-#pragma link C++ class TProofDrawListOfPolyMarkers3D+;
-#pragma link C++ class TProofDrawListOfGraphs::Point3D_t+;
-#pragma link C++ class TProofDrawListOfPolyMarkers3D::Point4D_t+;
-#pragma link C++ class std::vector<TProofDrawListOfGraphs::Point3D_t>+;
-#pragma link C++ class std::vector<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
-#pragma link C++ class TProofVectorContainer<TProofDrawListOfGraphs::Point3D_t>+;
-#pragma link C++ class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
 
 #pragma link C++ class TProofLimitsFinder;
 #pragma link C++ class TDrawFeedback+;

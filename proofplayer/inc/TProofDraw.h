@@ -1,5 +1,13 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.h,v 1.16 2006/10/26 09:48:31 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.h,v 1.17 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TProofDraw
 #define ROOT_TProofDraw
@@ -12,7 +20,6 @@
 // Implement Tree drawing using PROOF.                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 
 #ifndef ROOT_TSelector
 #include "TSelector.h"

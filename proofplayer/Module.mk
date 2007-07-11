@@ -18,7 +18,9 @@ PROOFPLAYERDO := $(PROOFPLAYERDS:.cxx=.o)
 PROOFPLAYERDH := $(PROOFPLAYERDS:.cxx=.h)
 
 PROOFPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+PROOFPLAYERH  := $(filter-out $(MODDIRI)/TProofDraw%,$(PROOFPLAYERH))
 PROOFPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+PROOFPLAYERS  := $(filter-out $(MODDIRS)/TProofDraw%,$(PROOFPLAYERS))
 PROOFPLAYERO  := $(PROOFPLAYERS:.cxx=.o)
 
 PROOFPLAYERDEP := $(PROOFPLAYERO:.o=.d) $(PROOFPLAYERDO:.o=.d)
@@ -26,13 +28,29 @@ PROOFPLAYERDEP := $(PROOFPLAYERO:.o=.d) $(PROOFPLAYERDO:.o=.d)
 PROOFPLAYERLIB := $(LPATH)/libProofPlayer.$(SOEXT)
 PROOFPLAYERMAP := $(PROOFPLAYERLIB:.$(SOEXT)=.rootmap)
 
+##### libProofDraw #####
+PROOFDRAWL   := $(MODDIRI)/LinkDefDraw.h
+PROOFDRAWDS  := $(MODDIRS)/G__ProofDraw.cxx
+PROOFDRAWDO  := $(PROOFDRAWDS:.cxx=.o)
+PROOFDRAWDH  := $(PROOFDRAWDS:.cxx=.h)
+
+PROOFDRAWH   := $(MODDIRI)/TProofDraw.h
+PROOFDRAWS   := $(MODDIRS)/TProofDraw.cxx
+PROOFDRAWO   := $(PROOFDRAWS:.cxx=.o)
+
+PROOFDRAWDEP := $(PROOFDRAWO:.o=.d) $(PROOFDRAWDO:.o=.d)
+
+PROOFDRAWLIB := $(LPATH)/libProofDraw.$(SOEXT)
+PROOFDRAWMAP := $(PROOFDRAWLIB:.$(SOEXT)=.rootmap)
+
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFPLAYERH))
-ALLLIBS       += $(PROOFPLAYERLIB)
-ALLMAPS       += $(PROOFPLAYERMAP)
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDRAWH))
+ALLLIBS       += $(PROOFPLAYERLIB) $(PROOFDRAWLIB)
+ALLMAPS       += $(PROOFPLAYERMAP) $(PROOFDRAWMAP)
 
 # include all dependency files
-INCLUDEFILES += $(PROOFPLAYERDEP)
+INCLUDEFILES += $(PROOFPLAYERDEP) $(PROOFDRAWDEP)
 
 ##### local rules #####
 include/%.h:    $(PROOFPLAYERDIRI)/%.h
@@ -53,16 +71,33 @@ $(PROOFPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFPLAYERL)
 		$(RLIBMAP) -o $(PROOFPLAYERMAP) -l $(PROOFPLAYERLIB) \
 		   -d $(PROOFPLAYERLIBDEPM) -c $(PROOFPLAYERL)
 
-all-proofplayer: $(PROOFPLAYERLIB) $(PROOFPLAYERMAP)
+$(PROOFDRAWLIB): $(PROOFDRAWO) $(PROOFDRAWDO) $(ORDER_) $(MAINLIBS) \
+                   $(PROOFDRAWLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libProofDraw.$(SOEXT) $@ \
+		   "$(PROOFDRAWO) $(PROOFDRAWDO)" \
+		   "$(PROOFDRAWLIBEXTRA)"
+
+$(PROOFDRAWDS): $(PROOFDRAWH) $(PROOFDRAWL) $(ROOTCINTTMPEXE)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(PROOFDRAWH) $(PROOFDRAWL)
+
+$(PROOFDRAWMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFDRAWL)
+		$(RLIBMAP) -o $(PROOFDRAWMAP) -l $(PROOFDRAWLIB) \
+		   -d $(PROOFDRAWLIBDEPM) -c $(PROOFDRAWL)
+
+all-proofplayer: $(PROOFPLAYERLIB) $(PROOFPLAYERMAP) $(PROOFDRAWLIB) $(PROOFDRAWMAP)
 
 clean-proofplayer:
-		@rm -f $(PROOFPLAYERO) $(PROOFPLAYERDO)
+		@rm -f $(PROOFPLAYERO) $(PROOFPLAYERDO) $(PROOFDRAWO) $(PROOFDRAWDO)
 
 clean::         clean-proofplayer
 
 distclean-proofplayer: clean-proofplayer
 		@rm -f $(PROOFPLAYERDEP) $(PROOFPLAYERDS) $(PROOFPLAYERDH) \
-		   $(PROOFPLAYERLIB) $(PROOFPLAYERMAP)
+		   $(PROOFPLAYERLIB) $(PROOFPLAYERMAP) \
+		   $(PROOFDRAWDEP) $(PROOFDRAWDS) $(PROOFDRAWDH) \
+		   $(PROOFDRAWLIB) $(PROOFDRAWMAP) \
 
 distclean::     distclean-proofplayer
 

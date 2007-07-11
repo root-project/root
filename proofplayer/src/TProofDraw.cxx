@@ -1,5 +1,13 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.28 2007/02/18 14:58:56 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.29 2007/03/19 10:46:10 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -11,6 +19,7 @@
 
 
 #include "TProofDraw.h"
+#include "TCanvas.h"
 #include "TClass.h"
 #include "TError.h"
 #include "TH1F.h"
@@ -18,6 +27,7 @@
 #include "TH3F.h"
 #include "TProofDebug.h"
 #include "TStatus.h"
+#include "TTreeDrawArgsParser.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
 #include "TTree.h"
@@ -37,6 +47,40 @@
 #include <algorithm>
 using namespace std;
 
+
+// Simple call to draw a canvas on the fly from applications loading
+// this plug-in dynamically
+extern "C" {
+   Int_t DrawCanvas(TObject *obj)
+   {
+      // Draw the object if deriving from a canvas
+
+      if (TCanvas* c = dynamic_cast<TCanvas *> (obj)) {
+         c->Draw();
+         return 0;
+      }
+      // Not a TCanvas
+      return 1;
+   }
+}
+
+// Simple call to parse arguments on the fly from applications loading
+// this plug-in dynamically
+extern "C" {
+   Int_t GetDrawArgs(const char *var, const char *sel, Option_t *opt,
+                     TString &selector, TString &objname)
+   {
+      // Parse arguments with the help of TTreeDrawArgsParser
+
+      TTreeDrawArgsParser info;
+      info.Parse(var, sel, opt);
+      selector = info.GetProofSelectorName();
+      objname = info.GetObjectName();
+
+      // Done
+      return 0;
+   }
+}
 
 ClassImp(TProofDraw)
 
