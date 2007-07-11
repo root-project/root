@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.34 2007/07/02 07:52:40 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.35 2007/07/02 16:22:08 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -309,7 +309,6 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 
    fTreeName = dset->GetObjName();
    fTree = 0;
-   fAcquiredTrees = new TList;
 }
 
 //______________________________________________________________________________
@@ -318,17 +317,6 @@ TEventIterTree::~TEventIterTree()
    // Destructor
 
    SafeDelete(fTree);
-   ReleaseAllTrees();
-   SafeDelete(fAcquiredTrees);
-}
-
-//______________________________________________________________________________
-void TEventIterTree::ReleaseAllTrees()
-{
-   // Release all acquired trees.
-
-   fAcquiredTrees->SetOwner(kFALSE);
-   fAcquiredTrees->Clear();
 }
 
 //______________________________________________________________________________
@@ -341,8 +329,6 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    if (!main)
       return 0;
 
-   fAcquiredTrees->AddFirst(main);
-
    TList *friends = elem->GetListOfFriends();
    if (friends) {
       TIter nxf(friends);
@@ -352,7 +338,6 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
          TObjString *str = (TObjString *) p->Value();
          TTree* friendTree = Load(dse);
          if (friendTree) {
-            fAcquiredTrees->AddFirst(friendTree);
             main->AddFriend(friendTree, str->GetName());
          } else {
             return 0;
@@ -467,7 +452,6 @@ Long64_t TEventIterTree::GetNextEvent()
          fNum = 0;
          return -1;
       }
-      ReleaseAllTrees();
 
       TTree *newTree = GetTrees(fElem);
       if (!newTree) {

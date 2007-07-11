@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.18 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.19 2007/05/08 14:56:19 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -105,11 +105,9 @@ class TEventIterTree : public TEventIter {
 private:
    TString     fTreeName;    // name of the tree object to iterate over
    TTree      *fTree;        // tree we are iterating over
-   TList      *fAcquiredTrees;   // a list of acquired trees.
 
    TTree* Load(TDSetElement *elem);
    TTree* GetTrees(TDSetElement *elem);
-   void   ReleaseAllTrees();
 public:
    TEventIterTree();
    TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
