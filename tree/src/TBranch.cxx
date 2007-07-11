@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.130 2007/06/26 08:44:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.131 2007/06/26 08:52:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -301,8 +301,8 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
    char* nameBegin = const_cast<char*>(leaflist);
    Int_t offset = 0;
    // FIXME: Make these string streams instead.
-   char* leafname = new char[64];
-   char* leaftype = new char[32];
+   char* leafname = new char[640];
+   char* leaftype = new char[320];
    // Note: The default leaf type is a float.
    strcpy(leaftype, "F");
    char* pos = const_cast<char*>(leaflist);
