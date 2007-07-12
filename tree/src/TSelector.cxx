@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.30 2006/09/16 02:29:07 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.31 2007/07/10 08:40:12 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -159,11 +159,13 @@ TSelector *TSelector::GetSelector(const char *filename)
    if (localname.Index(".") != kNPOS)
       localname.Remove(localname.Index("."));
 
-   // make sure the class is loaded
-   if (!fromFile && gInterpreter->AutoLoad(localname) != 1) {
-      ::Error("TSelector::GetSelector", "class %s could not be loaded", filename);
-      return 0;
-   }
+   // if a file was not specified, try to load the class via the interpreter;
+   // this returns 0 (== failure) in the case the class is already in memory
+   // but does not have a dictionary, so we just raise a flag for better
+   // diagnostic in the case the class is not found in the G__ClassInfo table.
+   Bool_t autoloaderr = kFALSE;
+   if (!fromFile && gInterpreter->AutoLoad(localname) != 1)
+      autoloaderr = kTRUE;
 
    G__ClassInfo cl;
    Bool_t ok = kFALSE;
@@ -178,8 +180,11 @@ TSelector *TSelector::GetSelector(const char *filename)
          ::Error("TSelector::GetSelector",
          "file %s does not have a valid class deriving from TSelector", filename);
       } else {
-         ::Error("TSelector::GetSelector",
-         "class %s does not exist or does not derive from TSelector", filename);
+         if (autoloaderr)
+            ::Error("TSelector::GetSelector", "class %s could not be loaded", filename);
+         else
+            ::Error("TSelector::GetSelector",
+                    "class %s does not exist or does not derive from TSelector", filename);
       }
       return 0;
    }
