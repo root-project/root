@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.211 2007/05/08 20:16:41 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.212 2007/07/02 17:40:19 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -238,6 +238,14 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    //       cout << "Error opening file" << endl;
    //       exit(-1);
    //    }
+   //
+   //  When opening the file, the system checks the validity of this directory.
+   //  If something wrong is detected, an automatic Recovery is performed. In
+   //  this case, the file is scanned sequentially reading all logical blocks 
+   //  and attempting to rebuild a correct directory (see TFile::Recover).
+   //  One can disable the automatic recovery procedure when reading one
+   //  or more files by setting the environment variable "TFile::Recover 0"
+   //  in the system.rootrc file.
    //
 
    if (!gROOT)
@@ -629,12 +637,23 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 
+      //*-* -------------Check if, in case of inconsistencies, we are requested to
+      //*-* -------------attempt recovering the file
+      Bool_t tryrecover = (gEnv->GetValue("TFile.Recover", 1) == 1) ? kTRUE : kFALSE;
+
       //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          //normal case. Recover only if file has no keys
          TDirectoryFile::ReadKeys();
          gDirectory = this;
-         if (!GetNkeys()) Recover();
+         if (!GetNkeys()) {
+            if (tryrecover) {
+               Recover();
+            } else {
+               Error("Init", "file %s has no keys", GetName());
+               goto zombie;
+            }
+         }
       } else if ((fBEGIN+nbytes == fEND) && (fEND == size)) {
          //the file might be open by another process and nothing written to the file yet
          Warning("Init","file %s has no keys", GetName());
@@ -642,11 +661,22 @@ void TFile::Init(Bool_t create)
       } else {
          //something had been written to the file. Trailer is missing, must recover
          if (fEND > size) {
-            Error("Init","file %s is truncated at %lld bytes: should be %lld, trying to recover",
-                  GetName(), size, fEND);
+            if (tryrecover) {
+               Error("Init","file %s is truncated at %lld bytes: should be %lld, "
+                     "trying to recover", GetName(), size, fEND);
+            } else {
+               Error("Init","file %s is truncated at %lld bytes: should be %lld",
+                     GetName(), size, fEND);
+               goto zombie;
+            }
          } else {
-            Warning("Init","file %s probably not closed, trying to recover",
-                    GetName());
+            if (tryrecover) {
+               Warning("Init","file %s probably not closed, "
+                       "trying to recover", GetName());
+            } else {
+               Warning("Init","file %s probably not closed", GetName());
+               goto zombie;
+            }
          }
          Int_t nrecov = Recover();
          if (nrecov) {
@@ -1446,6 +1476,10 @@ Int_t TFile::Recover()
    // is recovered, the last Tree header written to the file will be used.
    // In this case all the entries in all the branches written before writing
    // the header are valid entries.
+   //
+   // One can disable the automatic recovery procedure by setting
+   // TFile.Recover 0
+   // in the system.rootrc file.
 
    Short_t  keylen,cycle;
    UInt_t   datime;
