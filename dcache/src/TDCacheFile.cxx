@@ -1,8 +1,8 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.30 2006/06/27 14:36:27 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.32 2007/07/11 15:28:44 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
-
+// Modified: Tigran Mkrtchyan 06/07/2007
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -173,7 +173,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
 
    // Disable dCache read-ahead buffer, as it doesn't cooperate well
    // with usually non-sequential file access pattern typical for
-   // TFile. The ROOT caches (TFileCacheRead and TFileCacheWrite) perform 
+   // TFile. The ROOT caches (TFileCacheRead and TFileCacheWrite) perform
    // much better.
 
    dc_noBuffering(fD);
@@ -210,6 +210,85 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
    }
 
    return TFile::ReadBuffer(buf, len);
+}
+
+//______________________________________________________________________________
+Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read the nbuf blocks described in arrays pos and len,
+   // where pos[i] is the seek position of block i of length len[i].
+   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
+   // This function is overloaded by TNetFile, TWebFile, etc.
+   // Returns kTRUE in case of failure.
+
+#ifdef _IOVEC2_
+
+   iovec2 *vector;
+
+   vector = (iovec2 *)malloc(sizeof(iovec2)*nbuf);
+
+   Int_t total_len = 0;
+   for (Int_t i = 0; i < nbuf; i++) {
+	   vector[i].buf    = &buf[total_len];
+	   vector[i].offset = pos[i];
+	   vector[i].len    = len[i];
+	   total_len       += len[i];
+   }
+
+   Int_t rc = dc_readv2(fD, vector, nbuf);
+   free(vector);
+
+   if (rc == 0) {
+      fBytesRead += total_len;
+      SetFileBytesRead(GetFileBytesRead() + total_len);
+	   return kFALSE;
+   }
+
+#endif
+
+   // if we failed to get with dc_readv2 (old server), try to loop over
+
+   Int_t k = 0;
+   Bool_t result = kTRUE;
+   TFileCacheRead *old = fCacheRead;
+   fCacheRead = 0;
+
+   Long64_t low  = pos[0];
+   Long64_t high = pos[nbuf-1] + len[nbuf-1] - pos[0];
+
+   Long64_t total = 0;
+   for(Int_t j=0; j < nbuf; j++) {
+      total += len[j];
+   }
+
+   if ( high / total < 10 ) {
+
+      char *temp = new char[high];
+      Seek(low);
+      result = ReadBuffer(temp,high);
+
+      if (result==0) {
+         for (Int_t i = 0; i < nbuf; i++) {
+            memcpy(&buf[k], &(temp[pos[i]-pos[0]]), len[i]);
+            k += len[i];
+         }
+      }
+
+      delete [] temp;
+
+   } else {
+
+      for (Int_t i = 0; i < nbuf; i++) {
+         Seek(pos[i]);
+         result = ReadBuffer(&buf[k], len[i]);
+         if (result) break;
+         k += len[i];
+      }
+
+   }
+
+   fCacheRead = old;
+   return result;
 }
 
 //______________________________________________________________________________
@@ -624,57 +703,4 @@ int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
       return 0;
    }
    return 1;
-}
-
-//______________________________________________________________________________
-Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
-{
-   // Read the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-
-   Int_t k = 0;
-   Bool_t result = kTRUE;
-   TFileCacheRead *old = fCacheRead;
-   fCacheRead = 0;
-
-   Long64_t low  = pos[0];
-   Long64_t high = pos[nbuf-1] + len[nbuf-1] - pos[0];
-
-   Long64_t total = 0;
-   for(Int_t j=0; j < nbuf; j++) {
-      total += len[j];
-   }
-   
-   if ( high / total < 10 ) {
-
-      char *temp = new char[high];
-      Seek(low);
-      result = ReadBuffer(temp,high);
-    
-      if (result==0) {
-         for (Int_t i = 0; i < nbuf; i++) {
-            memcpy(&buf[k], &(temp[pos[i]-pos[0]]), len[i]);
-            k += len[i];
-         }
-      }
-
-      delete [] temp;
-
-   } else {
-
-      for (Int_t i = 0; i < nbuf; i++) {
-         Seek(pos[i]);
-         result = ReadBuffer(&buf[k], len[i]);
-         if (result) break;
-         k += len[i];
-      }
-
-   }
-
-   fCacheRead = old;
-   return result;
-
 }

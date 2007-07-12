@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name: v4-04-02b $:$Id: TDCacheFile.h,v 1.9 2005/01/14 10:21:05 rdm Exp $
+// @(#)root/dcache:$Name: v5-14-00-patches $:$Id: TDCacheFile.h,v 1.9.14.1 2007/07/06 10:48:31 pcanal Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004
@@ -64,7 +64,7 @@ public:
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
 
-   Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   Bool_t  ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
    void    ResetErrno() const;
 
