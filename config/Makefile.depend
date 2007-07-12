@@ -27,9 +27,10 @@ TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
                          $(IOLIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
-PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB)
-PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) \
-                         $(GPADLIB) $(PROOFPLAYERLIB)
+PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB) $(IOLIB) $(TREELIB) $(NETLIB) \
+                         $(THREADLIB)
+PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
+                         $(PROOFPLAYERLIB) $(HISTLIB) $(TREELIB) $(PROOFLIB) 
 PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 PEACLIBDEPM            = $(PROOFLIB) $(CLARENSLIB)
@@ -202,9 +203,11 @@ TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGui.lib
 PROOFLIBEXTRA           = lib/libNet.lib lib/libTree.lib lib/libRIO.lib \
                           lib/libThread.lib
-PROOFPLAYERLIBEXTRA     = lib/libProof.lib lib/libHist.lib
+PROOFPLAYERLIBEXTRA     = lib/libProof.lib lib/libHist.lib lib/libTree.lib \
+                          lib/libRIO.lib lib/libNet.lib lib/libThread.lib
 PROOFDRAWLIBEXTRA       = lib/libTreePlayer.lib lib/libGraf3d.lib \
-                          lib/libGraf.lib lib/libGpad.lib lib/libProofPlayer.lib
+                          lib/libGraf.lib lib/libGpad.lib lib/libProofPlayer.lib \
+                          lib/libHist.lib lib/libTree.lib lib/libProof.lib
 PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib
 SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libTree.lib
@@ -293,8 +296,9 @@ TREELIBEXTRA            = -Llib -lNet -lRIO
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui
 PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO
-PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist
-PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad -lProofPlayer
+PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread
+PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad -lProofPlayer \
+                          -lHist -lTree -lProof
 PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread
 SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBEXTRA            = -Llib -lProof -lClarens
