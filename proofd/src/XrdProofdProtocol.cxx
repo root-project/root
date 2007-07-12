@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.61 2007/07/10 08:02:26 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.62 2007/07/11 22:13:30 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2302,7 +2302,8 @@ int XrdProofdProtocol::Login()
    }
 
    // On masters assert the dataset directory ...
-   if (fgMgr.SrvType() == kXPD_TopMaster && fgMgr.DataSetDir()) {
+   if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
+       fgMgr.DataSetDir()) {
       XrdOucString dsetdir = fgMgr.DataSetDir();
       dsetdir += "/";
       dsetdir += fGroupID;
@@ -3620,7 +3621,8 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
       // Make sure that the related dataset dir exists
       // The disk quota manager requires that dataset metadata info under
       // <user_datasetdir> = <global_datasetdir>/<group>/<user>
-      if (fgMgr.SrvType() == kXPD_TopMaster && fgMgr.DataSetDir()) {
+      if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
+         fgMgr.DataSetDir()) {
          XrdOucString dsetdir = fgMgr.DataSetDir();
          dsetdir += '/';
          dsetdir += fPClient->Group()->Name();
