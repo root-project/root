@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.117 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.118 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1672,7 +1672,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   // may contain variables that we do not depend on. If 'silent' is cleared,
   // warnings about inconsistent input parameters will be printed.
 
-  coutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << *allVars << endl ;
+  cxcoutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
 
   projectedVars.removeAll() ;
   if (!allVars) return ;
