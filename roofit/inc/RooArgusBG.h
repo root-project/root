@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooArgusBG.rdl,v 1.11 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooArgusBG.h,v 1.12 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooAbsReal;
 
 class RooArgusBG : public RooAbsPdf {
 public:
+  RooArgusBG() {} ;
   RooArgusBG(const char *name, const char *title, 
 	     RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c);
   RooArgusBG(const char *name, const char *title, 
@@ -45,7 +46,7 @@ protected:
 //   void initGenerator();
 
 private:
-  ClassDef(RooArgusBG,0) // Argus background shape PDF
+  ClassDef(RooArgusBG,1) // Argus background shape PDF
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussian.rdl,v 1.14 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooGaussian.h,v 1.15 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@ class RooRealVar;
 
 class RooGaussian : public RooAbsPdf {
 public:
+  RooGaussian() {} ;
   RooGaussian(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooGaussian(const RooGaussian& other, const char* name=0) ;
@@ -45,7 +46,7 @@ protected:
 
 private:
 
-  ClassDef(RooGaussian,0) // Gaussian PDF
+  ClassDef(RooGaussian,1) // Gaussian PDF
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooLandau.rdl,v 1.3 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooLandau.h,v 1.4 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@ class RooRealVar;
 
 class RooLandau : public RooAbsPdf {
 public:
+  RooLandau() {} ;
   RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooLandau(const RooLandau& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooLandau(*this,newname); }
@@ -41,7 +42,7 @@ protected:
   
 private:
   
-  ClassDef(RooLandau,0) // Landau Distribution PDF
+  ClassDef(RooLandau,1) // Landau Distribution PDF
 };
 
 #endif

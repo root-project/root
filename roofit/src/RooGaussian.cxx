@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooGaussian.cxx,v 1.27 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooGaussian.cxx,v 1.28 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,7 @@ RooGaussian::RooGaussian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
 			 RooAbsReal& _sigma) :
   RooAbsPdf(name,title),
-  x("x","Dependent",this,_x),
+  x("x","Observable",this,_x),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma)
 {

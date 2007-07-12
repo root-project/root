@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHistPdf.h,v 1.2 2007/05/11 10:42:36 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,7 @@ class RooDataHist ;
 
 class RooHistPdf : public RooAbsPdf {
 public:
+  RooHistPdf() {} ;
   RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooHistPdf(*this,newname); }
@@ -41,10 +42,10 @@ protected:
 
   RooSetProxy  _depList ;   // List of dependents defining dimensions of histogram
   RooDataHist* _dataHist ;  // Unowned pointer to underlying histogram
-  mutable RooAICRegistry _codeReg ; // Auxiliary class keeping tracking of analytical integration code
+  mutable RooAICRegistry _codeReg ; //! Auxiliary class keeping tracking of analytical integration code
   Int_t        _intOrder ; // Interpolation order
 
-  ClassDef(RooHistPdf,0) // Histogram based PDF
+  ClassDef(RooHistPdf,1) // Histogram based PDF
 };
 
 #endif

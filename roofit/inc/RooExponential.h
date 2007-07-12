@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooExponential.rdl,v 1.8 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooExponential.h,v 1.9 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooAbsReal;
 
 class RooExponential : public RooAbsPdf {
 public:
+  RooExponential() {} ;
   RooExponential(const char *name, const char *title,
 		 RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=0);
@@ -40,7 +41,7 @@ protected:
   Double_t evaluate() const;
 
 private:
-  ClassDef(RooExponential,0) // Exponential PDF
+  ClassDef(RooExponential,1) // Exponential PDF
 };
 
 #endif

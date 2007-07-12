@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.rdl,v 1.7 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBreitWigner.h,v 1.8 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -24,6 +24,7 @@ class RooRealVar;
 
 class RooBreitWigner : public RooAbsPdf {
 public:
+  RooBreitWigner() {} ;
   RooBreitWigner(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _width);
   RooBreitWigner(const RooBreitWigner& other, const char* name=0) ;
@@ -46,7 +47,7 @@ protected:
 
 private:
 
-  ClassDef(RooBreitWigner,0) // Breit Wigner PDF
+  ClassDef(RooBreitWigner,1) // Breit Wigner PDF
 };
 
 #endif

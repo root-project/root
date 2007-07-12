@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.rdl,v 1.5 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.h,v 1.6 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -28,6 +28,7 @@ public:
   // dependent variables and parameters used by this PDF. Use an
   // underscore in the variable names to distinguish them from your
   // own local versions.
+  RooNovosibirsk() {} ;
   RooNovosibirsk(const char *name, const char *title,
 		 RooAbsReal& _x,     RooAbsReal& _peak,
 		 RooAbsReal& _width, RooAbsReal& _tail);
@@ -47,7 +48,7 @@ protected:
   Double_t evaluate() const;
 
 private:
-  ClassDef(RooNovosibirsk,0) // Novosibirsk PDF
+  ClassDef(RooNovosibirsk,1) // Novosibirsk PDF
 };
 
 #endif

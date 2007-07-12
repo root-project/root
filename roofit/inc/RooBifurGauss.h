@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.rdl,v 1.10 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.h,v 1.11 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -23,6 +23,7 @@ class RooRealVar;
 
 class RooBifurGauss : public RooAbsPdf {
 public:
+  RooBifurGauss() {} ;
   RooBifurGauss(const char *name, const char *title, RooAbsReal& _x, 
 		RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
 
@@ -45,7 +46,7 @@ protected:
 
 private:
 
-  ClassDef(RooBifurGauss,0) // Bifurcated Gaussian PDF
+  ClassDef(RooBifurGauss,1) // Bifurcated Gaussian PDF
 };
 
 #endif

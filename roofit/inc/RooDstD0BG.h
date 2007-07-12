@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.rdl,v 1.10 2005/06/21 16:46:33 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.h,v 1.11 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -25,6 +25,7 @@ class RooRealVar;
 
 class RooDstD0BG : public RooAbsPdf {
 public:
+  RooDstD0BG() {} ;
   RooDstD0BG(const char *name, const char *title,
 	     RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
 	     RooAbsReal& _a, RooAbsReal& _b);
@@ -47,7 +48,7 @@ protected:
   
 private:
   
-  ClassDef(RooDstD0BG,0) // D*-D0 mass difference bg PDF
+  ClassDef(RooDstD0BG,1) // D*-D0 mass difference bg PDF
 };
 
 #endif

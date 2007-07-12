@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.rdl,v 1.5 2005/02/25 14:25:10 wverkerke Exp $
+ *    File: $Id: RooVoigtian.h,v 1.6 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,          schieti@slac.stanford.edu        *
  *                                                                           *
@@ -23,6 +23,7 @@ class RooRealVar;
 
 class RooVoigtian : public RooAbsPdf {
 public:
+  RooVoigtian() {} ;
   RooVoigtian(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _mean, 
               RooAbsReal& _width, RooAbsReal& _sigma,
@@ -51,7 +52,7 @@ private:
 
   Double_t _invRootPi;
   Bool_t _doFast;
-  ClassDef(RooVoigtian,0) // Voigtian PDF
+  ClassDef(RooVoigtian,1) // Voigtian PDF
 };
 
 #endif

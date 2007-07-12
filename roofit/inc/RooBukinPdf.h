@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.rdl,v 1.3 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.h,v 1.4 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -45,6 +45,7 @@ class RooAbsReal;
 class RooBukinPdf : public RooAbsPdf {
 public:
 
+  RooBukinPdf() {} ;
   RooBukinPdf(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _Xp,
 	      RooAbsReal& _sigp, RooAbsReal& _xi,
@@ -66,7 +67,7 @@ protected:
 
 private:
 
-  ClassDef(RooBukinPdf,0) // Variation of Novosibirsk PDF
+  ClassDef(RooBukinPdf,1) // Variation of Novosibirsk PDF
   double consts;
 };
 

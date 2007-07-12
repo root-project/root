@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooChebychev.cxx,v 1.12 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Name:  $:$Id: RooChebychev.cxx,v 1.13 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -37,7 +37,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList): 
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefList","List of coefficients",this)
+  _coefList("coefficients","List of coefficients",this)
 {
   // Constructor
   TIterator* coefIter = coefList.createIterator() ;
