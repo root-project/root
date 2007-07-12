@@ -1,7 +1,4 @@
-# Source this script in the top of the ROOT directory that you want to
-# make active, e.g.:
-#   cd ~/root-test
-#   . bin/thisroot.sh
+# Source this script to set up the ROOT build that this script is part of.
 #
 # Conveniently an alias like this can be defined in .bashrc:
 #   alias thisroot=". bin/thisroot.sh"
@@ -10,7 +7,18 @@
 #
 # Author: Fons Rademakers, 18/8/2006
 
-ROOTSYS=`pwd`; export ROOTSYS
+if [ "x${BASH_ARGV[0]}" = "x" ]; then
+    if [ ! -f bin/thisroot.sh ]; then
+        echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
+        ROOTSYS=; export ROOTSYS
+        return
+    fi
+    ROOTSYS="$PWD"; export ROOTSYS
+else
+    # get param to "."
+    THIS=$(dirname ${BASH_ARGV[0]})
+    ROOTSYS=$(cd ${THIS}/..;pwd); export ROOTSYS
+fi
 
 if [ -z "${PATH}" ]; then
    PATH=$ROOTSYS/bin; export PATH
@@ -46,4 +54,8 @@ if [ -z "${MANPATH}" ]; then
    MANPATH=$ROOTSYS/man; export MANPATH
 else
    MANPATH=$ROOTSYS/man:$MANPATH; export MANPATH
+fi
+
+if [ "x`uname | grep -i cygwin`" != "x" ]; then
+  ROOTSYS="`cygpath -w $ROOTSYS`"
 fi

@@ -774,6 +774,8 @@ THISROOTSHIN=config/thisroot.sh
 THISROOTSHOUT=bin/thisroot.sh
 THISROOTCSHIN=config/thisroot.csh
 THISROOTCSHOUT=bin/thisroot.csh
+THISROOTBATIN=config/thisroot.bat
+THISROOTBATOUT=bin/thisroot.bat
 
 ######################################################################
 #
@@ -4669,6 +4671,9 @@ cp -f $THISROOTSHIN $THISROOTSHOUT
 result "done"
 message "Writing $THISROOTCSHOUT"
 cp -f $THISROOTCSHIN $THISROOTCSHOUT
+result "done"
+message "Writing $THISROOTBATOUT"
+cp -f $THISROOTBATIN $THISROOTBATOUT
 result "done"
 
 #---------------------------------------------------------------------

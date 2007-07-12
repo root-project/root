@@ -1,7 +1,4 @@
-# Source this script in the top of the ROOT directory that you want to
-# make active, e.g.:
-#   cd ~/root-test
-#   source bin/thisroot.csh
+# Source this script to set up the ROOT build that this script is part of.
 #
 # Conveniently an alias like this can be defined in ~/.cshrc:
 #   alias thisroot "source bin/thisroot.sh"
@@ -10,7 +7,10 @@
 #
 # Author: Fons Rademakers, 18/8/2006
 
-setenv ROOTSYS `pwd`
+# $_ should be source .../thisroot.csh
+set ARGS=($_)
+set THIS="`dirname ${ARGS[2]}`"
+setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
 set path = ($ROOTSYS/bin $path)
 
