@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.9 2006/05/11 10:35:08 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.10 2006/09/25 13:45:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -174,7 +174,7 @@ const Mask_t kColormapChangeMask  = BIT(12);
 
 // Event structure
 struct Event_t {
-   EGEventType fType;              // of event (see EGEventTypes)
+   EGEventType fType;              // of event (see EGEventType)
    Window_t    fWindow;            // window reported event is relative to
    Time_t      fTime;              // time event event occured in ms
    Int_t       fX, fY;             // pointer x, y coordinates in event window
