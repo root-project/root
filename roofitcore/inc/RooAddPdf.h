@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.44 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooAddPdf.h,v 1.45 2007/05/11 10:14:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf(const char *name, const char *title);
+  RooAddPdf(const char *name=0, const char *title=0);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) ;
@@ -59,20 +59,20 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
-  mutable RooSetProxy _refCoefNorm ;
-  mutable TNamed* _refCoefRangeName ;
+  mutable RooSetProxy _refCoefNorm ;   //!
+  mutable TNamed* _refCoefRangeName ;  //!
 
   Bool_t _projectCoefs ;
   void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
-  mutable RooNormListManager _projListMgr ;
-  mutable RooArgList* _pdfProjList ;
+  mutable RooNormListManager _projListMgr ; //!
+  mutable RooArgList* _pdfProjList ;        //!
 
   void syncSuppNormList(const RooArgSet* nset, const char* rangeName) const ;
-  mutable RooNormListManager _suppListMgr ;
-  mutable RooArgSet* _lastSupNormSet ;
+  mutable RooNormListManager _suppListMgr ; //!
+  mutable RooArgSet* _lastSupNormSet ;      //!
 
   void updateCoefCache(const RooArgSet* nset, const RooArgSet* snset, const char* rangeName) const ;
-  mutable Double_t* _coefCache ;
+  mutable Double_t* _coefCache ; //!
   
   friend class RooAddGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
@@ -82,22 +82,22 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
 				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-  mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
+  mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
-  mutable RooArgList* _snormList ;  //  List of supplemental normalization factors
+  mutable RooArgList* _snormList ;  //!  List of supplemental normalization factors
   TIterator* _pdfIter ;     //! Iterator over PDF list
   TIterator* _coefIter ;    //! Iterator over coefficient list
   
-  Bool_t _haveLastCoef ;   //  Flag indicating if last PDFs coefficient was supplied in the ctor
+  Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
   Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
 
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
 private:
 
-  ClassDef(RooAddPdf,0) // PDF representing a sum of PDFs
+  ClassDef(RooAddPdf,1) // PDF representing a sum of PDFs
 };
 
 #endif

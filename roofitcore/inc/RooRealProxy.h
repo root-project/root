@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealProxy.rdl,v 1.21 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooRealProxy.h,v 1.22 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,7 +55,7 @@ public:
   Double_t max(const char* name=0) const { return lvptr()->getMax(name) ; }
 
 
-  ClassDef(RooRealProxy,0) // Proxy for a RooAbsReal object
+  ClassDef(RooRealProxy,1) // Proxy for a RooAbsReal object
 };
 
 #endif

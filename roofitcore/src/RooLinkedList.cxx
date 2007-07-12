@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooLinkedList.cxx,v 1.19 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooLinkedList.cxx,v 1.20 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -421,30 +421,44 @@ void RooLinkedList::swapWithNext(RooLinkedListElem* elemB)
 }
 
 
-void RooLinkedList::Streamer(TBuffer &b)
+
+// void Roo1DTable::Streamer(TBuffer &R__b)
+// {
+//    // Stream an object of class Roo1DTable.
+
+//    if (R__b.IsReading()) {
+//       R__b.ReadClassBuffer(Roo1DTable::Class(),this);
+//    } else {
+//       R__b.WriteClassBuffer(Roo1DTable::Class(),this);
+//    }
+// }
+
+
+
+void RooLinkedList::Streamer(TBuffer &R__b)
 {
-  if (b.IsReading()) {
-    //Version_t v = b.ReadVersion();
-    b.ReadVersion();
-    TObject::Streamer(b);
+  if (R__b.IsReading()) {
+    //Version_t v = R__b.ReadVersion();
+    R__b.ReadVersion();
+    TObject::Streamer(R__b);
 
     Int_t size ;
     TObject* arg ;
 
-    b >> size ;
+    R__b >> size ;
     while(size--) {
-      b >> arg ;
+      R__b >> arg ;
       Add(arg) ;      
     }
 
   } else {
-    b.WriteVersion(RooLinkedList::IsA());
-    TObject::Streamer(b);
-    b << _size ;
+    R__b.WriteVersion(RooLinkedList::IsA());
+    TObject::Streamer(R__b);
+    R__b << _size ;
 
     RooLinkedListElem* ptr = _first;
     while(ptr) {
-      b << ptr->_arg ;
+      R__b << ptr->_arg ;
       ptr = ptr->_next ;
     } 
   }

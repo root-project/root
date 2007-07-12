@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.95 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.96 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -377,9 +377,11 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
       
       // Skip non-value server nodes if requested
       Bool_t isValueServer = server->_clientListValue.FindObject((TObject*)arg)?kTRUE:kFALSE ;
-      if (valueOnly && !isValueServer) continue ;
+      if (valueOnly && !isValueServer) {
+	continue ;
+      }
 
-      treeNodeServerList(list,server,doBranch,doLeaf) ;
+      treeNodeServerList(list,server,doBranch,doLeaf,valueOnly) ;
     }  
     delete sIter ;
   }
@@ -542,7 +544,7 @@ Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg) const
+Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg, Bool_t valueOnly) const
 {
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
@@ -551,7 +553,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
   TIterator* sIter = serverList.createIterator();
   RooAbsArg* server ;
   while ((!result && (server=(RooAbsArg*)sIter->Next()))) {
-    if (dependsOn(*server,ignoreArg)) {
+    if (dependsOn(*server,ignoreArg,valueOnly)) {
       result= kTRUE;
     }
   }
@@ -560,7 +562,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg) const
+Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg, Bool_t valueOnly) const
 {
   // Test whether we depend on (ie, are served by) the specified object.
   // Note that RooAbsArg objects are considered equivalent if they have
@@ -571,14 +573,21 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
   // First check if testArg is self 
   if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
 
+
   // Next test direct dependence
-  if (_serverList.FindObject(testArg.GetName())) return kTRUE ;
+  RooAbsArg* server = findServer(testArg.GetName()) ;
+  if (server!=0) {
+
+    // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
+    if ( !valueOnly || server->isValueServer(GetName())) {
+      return kTRUE ;
+    }
+  }
 
   // If not, recurse
   TIterator* sIter = serverIterator() ;
-  RooAbsArg* server = 0 ;
   while ((server=(RooAbsArg*)sIter->Next())) {
-    if (server->dependsOn(testArg)) {
+    if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
       delete sIter ;
       return kTRUE ;
     }

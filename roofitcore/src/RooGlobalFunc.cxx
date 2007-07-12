@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooGlobalFunc.cxx,v 1.13 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooGlobalFunc.cxx,v 1.14 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -173,6 +173,16 @@ namespace RooFit {
   RooCmdArg LatexStyle(Bool_t flag)       { return RooCmdArg("LatexStyle",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg LatexTableStyle(Bool_t flag)  { return RooCmdArg("LatexTableStyle",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg VerbatimName(Bool_t flag)     { return RooCmdArg("VerbatimName",flag,0,0,0,0,0,0,0) ; }
+
+  // RooMsgService::addReportingStream arguments
+  RooCmdArg Topic(const char* name)         { return RooCmdArg("Topic",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg ObjectName(const char* name)    { return RooCmdArg("ObjectName",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg ClassName(const char* name)     { return RooCmdArg("ClassName",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg BaseClassName(const char* name) { return RooCmdArg("BaseClassName",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg TagName(const char* name)     { return RooCmdArg("LabelName",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("FitModel",0,0,0,0,0,0,reinterpret_cast<TObject*>(&os),0) ; }
+  RooCmdArg Prefix(Bool_t flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg Color(Color_t color)         { return RooCmdArg("Color",color,0,0,0,0,0,0,0) ; }
 
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
  

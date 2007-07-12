@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.41 2005/07/12 11:29:38 wverkerke Exp $
+ *    File: $Id: RooProdPdf.h,v 1.42 2007/05/11 10:14:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,13 +29,21 @@ typedef RooLinkedList* pRooLinkedList ;
 
 class RooProdPdf : public RooAbsPdf {
 public:
+  RooProdPdf() {} ;
   RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
   RooProdPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) ;
+
   RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
    	     const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+             const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+             const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+             const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
+
+  RooProdPdf(const char* name, const char* title, 
+             const RooCmdArg& arg1,             const RooCmdArg& arg2=RooCmdArg(),
              const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
              const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
              const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
@@ -87,9 +95,9 @@ protected:
                                  Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
   void clearCache() ;  
-  mutable RooNormListManager _partListMgr ; // Partial integral list manager
-  mutable RooNormListManager _partOwnedListMgr ; // Partial integral list manager for owned components
-  mutable RooLinkedList _partNormListCache[10] ; // Cache of normalization lists
+  mutable RooNormListManager _partListMgr ; //! Partial integral list manager
+  mutable RooNormListManager _partOwnedListMgr ; //! Partial integral list manager for owned components
+  mutable RooLinkedList _partNormListCache[10] ; //! Cache of normalization lists
   
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
@@ -103,7 +111,7 @@ protected:
 
   RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
 
-  mutable RooAICRegistry _genCode ; // Registry of composite direct generator codes
+  mutable RooAICRegistry _genCode ; //! Registry of composite direct generator codes
 
   mutable RooArgSet* _curNormSet ; //!
   Double_t _cutOff ;       //  Cutoff parameter for running product
@@ -117,7 +125,7 @@ protected:
 
 private:
 
-  ClassDef(RooProdPdf,0) // PDF representing a product of PDFs
+  ClassDef(RooProdPdf,1) // PDF representing a product of PDFs
 };
 
 

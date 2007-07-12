@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.116 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.117 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 // as a plot range and number of plot bins and plot creation methods.
 
 #include "RooFit.h"
+#include "RooMsgService.h"
 
 #include "RooAbsReal.h"
 #include "RooAbsReal.h"
@@ -1000,6 +1001,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   
   RooArgSet projectedVars ;
   if (sliceSet) {
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have slice " << *sliceSet << endl ;
+
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
     
     // Take out the sliced variables
@@ -1016,11 +1019,16 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     }
     delete iter ;
   } else if (projSet) {
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have projSet " << *projSet << endl ;
     makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
   } else {
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have neither sliceSet nor projSet " << endl ;
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
   o.projSet = &projectedVars ;
+
+  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: projectedVars = " << projectedVars << endl ;
+
 
   RooPlot* ret ;
   if (!asymCat) {
@@ -1073,24 +1081,34 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // ProjDataVars is either all projData observables, or the user indicated subset of it
   RooArgSet projDataVars ;
   if (o.projData) {
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have ProjData with observables = " << *o.projData->get() << endl ;
     if (o.projDataSet) {
       RooArgSet* tmp = (RooArgSet*) o.projData->get()->selectCommon(*o.projDataSet) ;
       projDataVars.add(*tmp) ;
+      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have ProjDataSet = " << *o.projDataSet << " will only use this subset of projData" << endl ;
       delete tmp ;
     } else {
+      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") using full ProjData" << endl ;
       projDataVars.add(*o.projData->get()) ;
     }
   }
+
+  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") ProjDataVars = " << projDataVars << endl ;
 
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   RooArgSet sliceSet ;
   if (o.projSet) {
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have input projSet = " << *o.projSet << endl ;
     makeProjectionSet(frame->getPlotVar(),o.projSet,projectedVars,kFALSE) ;
+    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") calculated projectedVars = " << *o.projSet << endl ;
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
       RooArgSet *sliceSetTmp = getObservables(*frame->getNormVars()) ;
+
+      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") frame->getNormVars() that are also observables = " << *sliceSetTmp << endl ;
+
       sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
       sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
@@ -1111,6 +1129,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   } else {
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
+
+  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") projectedVars = " << projectedVars << " sliceSet = " << sliceSet << endl ;
+
 
   RooArgSet* projDataNeededVars = 0 ;
   // Take out data-projected dependents from projectedVars
@@ -1651,6 +1672,8 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   // may contain variables that we do not depend on. If 'silent' is cleared,
   // warnings about inconsistent input parameters will be printed.
 
+  coutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << *allVars << endl ;
+
   projectedVars.removeAll() ;
   if (!allVars) return ;
 
@@ -1668,7 +1691,11 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     RooAbsArg* ps ;
     while((ps=(RooAbsArg*)psIter->Next())) {
       RooAbsArg* tmp = projectedVars.find(ps->GetName()) ;
-      if (tmp) projectedVars.remove(*tmp) ;
+      if (tmp) {
+	coutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") removing " << tmp->GetName() 
+			  << " from projection set because it a server of " << plotVar->GetName() << endl ;
+	projectedVars.remove(*tmp) ;
+      }
     }
     delete psIter ;
     delete plotServers ;
@@ -1684,13 +1711,12 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   TIterator* iter = allVars->createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    if (!dependsOn(*arg)) {
+    if (!dependsOnValue(*arg)) {
       projectedVars.remove(*arg,kTRUE) ;
-      if (!silent) {
-	cout << "RooAbsReal::plotOn(" << GetName() 
-	     << ") WARNING: function doesn't depend on projection variable " 
-	     << arg->GetName() << ", ignoring" << endl ;
-      }
+
+      coutW("Plotting") << "RooAbsReal::plotOn(" << GetName() 
+			<< ") WARNING: function doesn't depend on projection variable " 
+			<< arg->GetName() << ", ignoring" << endl ;
     }
   }
   delete iter ;

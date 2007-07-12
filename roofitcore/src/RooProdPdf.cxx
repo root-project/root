@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooProdPdf.cxx,v 1.63 2007/05/11 10:14:56 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooProdPdf.cxx,v 1.64 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,7 +58,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("_pdfList","List of PDFs",this),
+  _pdfList("pdfs","List of PDFs",this),
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
 {
@@ -73,7 +73,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("_pdfList","List of PDFs",this),
+  _pdfList("pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -126,7 +126,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
-  _pdfList("_pdfList","List of PDFs",this),
+  _pdfList("pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -190,7 +190,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(0),
-  _pdfList("_pdfList","List of PDFs",this),
+  _pdfList("pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -231,13 +231,64 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 }
 
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
+RooProdPdf::RooProdPdf(const char* name, const char* title,
+		       const RooCmdArg& arg1, const RooCmdArg& arg2,
+		       const RooCmdArg& arg3, const RooCmdArg& arg4,
+		       const RooCmdArg& arg5, const RooCmdArg& arg6,
+		       const RooCmdArg& arg7, const RooCmdArg& arg8) :
   RooAbsPdf(name,title), 
   _partListMgr(10),
   _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(0),
   _pdfList("_pdfList","List of PDFs",this),
+  _pdfIter(_pdfList.createIterator()), 
+  _extendedIndex(-1),
+  _useDefaultGen(kFALSE)
+{
+  // Constructor from named argument list
+  //
+  // fullPdf -- Set of 'regular' PDFS that are normalized over all their observables
+  // ConditionalPdf(pdfSet,depSet) -- Add PDF to product with condition that it
+  //                                  only be normalized over specified observables
+  //                                  any remaining observables will be conditional
+  //                                  observables
+  //                               
+  //
+  // For example, given a PDF F(x,y) and G(y)
+  //
+  // RooProdPdf("P","P",G,Partial(F,x)) will construct a 2-dimensional PDF as follows:
+  // 
+  //   P(x,y) = G(y)/Int[y]G(y) * F(x,y)/Int[x]G(x,y)
+  //
+  // which is a well normalized and properly defined PDF, but different from the
+  //  
+  //  P'(x,y) = F(x,y)*G(y) / Int[x,y] F(x,y)*G(y)
+  //
+  // In the former case the y distribution of P is identical to that of G, while
+  // F only is used to determine the correlation between X and Y. In the latter
+  // case the Y distribution is defined by the product of F and G.
+  //
+  // This P(x,y) construction is analoguous to generating events from F(x,y) with
+  // a prototype dataset sampled from G(y)
+  
+  RooLinkedList l ;
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+
+  initializeFromCmdArgList(RooArgSet(),l) ;
+}
+
+
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
+  RooAbsPdf(name,title), 
+  _partListMgr(10),
+  _partOwnedListMgr(10),
+  _genCode(10),
+  _cutOff(0),
+  _pdfList("pdfs","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(-1),
   _useDefaultGen(kFALSE)
@@ -254,7 +305,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   _partOwnedListMgr(other._partOwnedListMgr,kTRUE),
   _genCode(other._genCode),
   _cutOff(other._cutOff),
-  _pdfList("_pdfList",this,other._pdfList),
+  _pdfList("pdfs",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
   _extendedIndex(other._extendedIndex),
   _useDefaultGen(other._useDefaultGen) 

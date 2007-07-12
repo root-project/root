@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.11 2006/07/04 15:07:58 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.h,v 1.12 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -160,6 +160,17 @@ RooCmdArg TLatexStyle(Bool_t flag=kTRUE) ;
 RooCmdArg LatexStyle(Bool_t flag=kTRUE) ;
 RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
 RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
+
+// RooMsgService::addReportingStream arguments
+RooCmdArg Topic(const char* name) ;
+RooCmdArg ObjectName(const char* name) ;
+RooCmdArg ClassName(const char* name) ;
+RooCmdArg BaseClassName(const char* name) ;
+RooCmdArg TagName(const char* name) ;
+RooCmdArg OutputStream(ostream& os) ;
+RooCmdArg Prefix(Bool_t flag) ;
+RooCmdArg Color(Color_t color) ;
+
 
 RooConstVar& RooConst(Double_t val) ; 
 

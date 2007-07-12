@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooProdGenContext.cxx,v 1.25 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooProdGenContext.cxx,v 1.26 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 // for each component PDF sequentially. 
 
 #include "RooFit.h"
+#include "RooMsgService.h"
 
 #include "RooProdGenContext.h"
 #include "RooProdGenContext.h"
@@ -38,6 +39,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 {
 
   // Constructor. Build an array of generator contexts for each product component PDF
+  cxcoutI("Generation") << "RooProdGenContext::ctor() setting up event special generator context for product p.d.f. " << model.GetName() 
+			<< " for generation of observable(s) " << vars ;
+  if (prototype) ccxcoutI("Generation") << " with prototype data for " << *prototype->get() ;
+  if (auxProto && auxProto->getSize()>0)  ccxcoutI("Generation") << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI("Generation") << endl ;
 
   // Make full list of dependents (generated & proto)
   RooArgSet deps(vars) ;
@@ -53,14 +59,21 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   TIterator* termIter = termList.MakeIterator() ;
   TIterator* normIter = depsList.MakeIterator() ;
   TIterator* impIter = impDepList.MakeIterator() ;
+  
+  if (dologD("Generation")) {
+    coutD("Generation") << "RooProdGenContext::ctor() factorizing product expression in irriducible terms " ;    
+    while(RooArgSet* t=(RooArgSet*)termIter->Next()) {
+      ccxcoutD("Generation") << *t ;
+    }
+    ccxcoutD("Generation") << endl ;
+  }
 
   RooArgSet genDeps ;
   // First add terms that do not import observables
   
-  Bool_t working = kTRUE ;
-  Int_t nSkip=0 ;
-  while(working) {
-    working = kFALSE ;
+  Bool_t anyAction = kTRUE ;
+  Bool_t go=kTRUE ; 
+  while(go) {
 
     RooAbsPdf* pdf ;
     RooArgSet* term ;
@@ -71,46 +84,52 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     impIter->Reset() ;
     normIter->Reset() ;
 
+    Bool_t anyPrevAction=anyAction ;
+    anyAction=kFALSE ;
+
+    if (termList.GetSize()==0) {
+      break ;
+    }
+
     while((term=(RooArgSet*)termIter->Next())) {
+
       impDeps = (RooArgSet*)impIter->Next() ;
       termDeps = (RooArgSet*)normIter->Next() ;
 
-//        cout << "considering term " ; term->Print("1") ;
-//        cout << "deps to be generated: " ; termDeps->Print("1") ;
-//        cout << "imported dependents are " ; impDeps->Print("1") ;
+      cxcoutD("Generation") << "RooProdGenContext::ctor() analyzing product term " << *term << " with observable(s) " << *termDeps ;
+      if (impDeps->getSize()>0) {
+	ccxcoutD("Generation") << " which has dependence of external observable(s) " << *impDeps << " that to be generated first by other terms" ;
+      }
+      ccxcoutD("Generation") << endl ;
 
-      // Add this term if we have no imported dependents, or imported dependents are
-      // already generated
+      // Add this term if we have no imported dependents, or imported dependents are already generated
       RooArgSet neededDeps(*impDeps) ;
       neededDeps.remove(genDeps,kTRUE,kTRUE) ;
 
-//    cout << "needed imported dependents are " ; neededDeps.Print("1") ;
       if (neededDeps.getSize()>0) {
-//   	cout << "skipping this term for now because it needs imported dependents that are not generated yet" << endl ;
-	if (++nSkip<100) {
-	  working = kTRUE ;
-	} else {
-	  cout << "RooProdGenContext ERROR: Generations is requested of observables that are conditional observables of the entire product expression: " ; neededDeps.Print("1") ;
-	  _isValid = kFALSE ;
-	  return ;
+	if (!anyPrevAction) {
+	  cxcoutD("Generation") << "RooProdGenContext::ctor() no convergence in single term analysis loop, terminating loop and process remainder of terms as single unit " << endl ;
+	  go=kFALSE ;
+	  break ;
 	}
+	cxcoutD("Generation") << "RooProdGenContext::ctor() skipping this term for now because it needs imported dependents that are not generated yet" << endl ;	
 	continue ;
       }
 
       // Check if this component has any dependents that need to be generated
       // e.g. it can happen that there are none if all dependents of this component are prototyped
       if (termDeps->getSize()==0) {
-//   	cout << "no dependents to be generated for this term, removing it from list" << endl ;
+	cxcoutD("Generation") << "RooProdGenContext::ctor() term has no observables requested to be generated, removing it" << endl ;
 	termList.Remove(term) ;
 	depsList.Remove(termDeps) ;
 	impDepList.Remove(impDeps) ;
 	delete term ;
 	delete termDeps ;
 	delete impDeps ;
+	anyAction=kTRUE ;
 	continue ;
       }
 
-      working = kTRUE ;	
       TIterator* pdfIter = term->createIterator() ;      
       if (term->getSize()==1) {
 	// Simple term
@@ -118,7 +137,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	pdf = (RooAbsPdf*) pdfIter->Next() ;
 	RooArgSet* pdfDep = pdf->getObservables(termDeps) ;
 	if (pdfDep->getSize()>0) {
-// 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
+ 	  coutI("Generation") << "RooProdGenContext::ctor() creating subcontext for generation of observables " << *pdfDep << " from model " << pdf->GetName() << endl ;
 	  RooArgSet* auxProto = impDeps ? pdf->getObservables(impDeps) : 0 ;
 	  RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto,verbose) ;
 	  _gcList.Add(cx) ;
@@ -163,11 +182,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	  multiPdf->useDefaultGen(kTRUE) ;
 	  _ownedMultiProds.addOwned(*multiPdf) ;
 	  
-//   	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for composite " << multiPdf->GetName() << " with depSet " ; termDeps->Print("1") ;
+   	  coutI("Generation") << "RooProdGenContext()::ctor creating subcontext for generation of observables " << *termDeps 
+			      << "for irriducuble composite term using sub-product object " << multiPdf->GetName() ;
 	  RooAbsGenContext* cx = multiPdf->genContext(*termDeps,prototype,auxProto,verbose) ;
 	  _gcList.Add(cx) ;
 
-//   	  cout << "adding following dependents to list of generated observables: " ; termDeps->Print("1") ;
 	  genDeps.add(*termDeps) ;
 
 	}
@@ -177,22 +196,22 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
 //        cout << "added generator for this term, removing from list" << endl ;
 
-
       termList.Remove(term) ;
       depsList.Remove(termDeps) ;
       impDepList.Remove(impDeps) ;
       delete term ;
       delete termDeps ;
       delete impDeps ;
-      
+      anyAction=kTRUE ;
     }
   }
 
   // Check if there are any left over terms that cannot be generated 
   // separately due to cross dependency of observables
   if (termList.GetSize()>0) {
-//      cout << "there are left-over terms that need to be generated separately" << endl ;
 
+    coutD("Generation") << "RooProdGenContext::ctor() there are left-over terms that need to be generated separately" << endl ;
+ 
     RooAbsPdf* pdf ;
     RooArgSet* term ;
 
@@ -238,7 +257,8 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     multiPdf->useDefaultGen(kTRUE) ;
     _ownedMultiProds.addOwned(*multiPdf) ;
     
-//     cout << "RooProdGenContext(" << model.GetName() << "): creating context for trailer composite " << multiPdf->GetName() << " with depSet " ; trailerTermDeps.Print("1") ;
+    cxcoutD("Generation") << "RooProdGenContext(" << model.GetName() << "): creating context for irreducible composite trailer term " 
+	 << multiPdf->GetName() << " that generates observables " << trailerTermDeps << endl ;
     RooAbsGenContext* cx = multiPdf->genContext(trailerTermDeps,prototype,auxProto,verbose) ;
     _gcList.Add(cx) ;    
   }
@@ -257,6 +277,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   impDepList.Delete() ;
   crossDepList.Delete() ;
   intList.Delete() ;
+
 }
 
 
@@ -309,7 +330,6 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     gc->generateEvent(theEvent,remaining) ;
 //     cout << "theEvent is after this generation call is" << endl ;
 //     theEvent.Print("v") ;
-// //     theEvent.Print("v") ;
   }
 }
 

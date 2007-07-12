@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.73 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.74 2007/05/14 14:37:32 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -373,9 +373,11 @@ void RooTreeData::createTree(const char* name, const char* title)
   gDirectory->cd(memDir) ;
   if (!_tree) {
     _tree = new TTree(name,title) ;
+    _tree->SetDirectory(0) ;
   }
   if (!_cacheTree) {
     _cacheTree = new TTree(name,title) ;
+    _cacheTree->SetDirectory(0) ;
   }
   gDirectory->RecursiveRemove(_tree) ;
   gDirectory->RecursiveRemove(_cacheTree) ;

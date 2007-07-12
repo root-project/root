@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.73 2007/05/11 10:14:56 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.74 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,6 +40,7 @@
 // 
 
 #include "RooFit.h"
+#include "RooMsgService.h"
 
 #include "TIterator.h"
 #include "TIterator.h"
@@ -59,7 +60,7 @@ ClassImp(RooAddPdf)
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
-  _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
@@ -67,10 +68,10 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _suppListMgr(10),
   _lastSupNormSet(0),
   _codeReg(10),
-  _pdfList("pdfList","List of PDFs",this),
-  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfs","List of PDFs",this),
+  _coefList("coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
-  _allExtendable(kTRUE)
+  _allExtendable(kFALSE)
 {
   // Dummy constructor 
   _pdfIter   = _pdfList.createIterator() ;
@@ -84,7 +85,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title),
-  _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
@@ -92,8 +93,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _suppListMgr(10),
   _lastSupNormSet(0),
   _codeReg(10),
-  _pdfList("pdfProxyList","List of PDFs",this),
-  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfs","List of PDFs",this),
+  _coefList("coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 {
@@ -113,7 +114,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList) :
   RooAbsPdf(name,title),
-  _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
@@ -121,8 +122,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _suppListMgr(10),
   _lastSupNormSet(0),
   _codeReg(10),
-  _pdfList("pdfProxyList","List of PDFs",this),
-  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfs","List of PDFs",this),
+  _coefList("coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 { 
@@ -189,7 +190,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
 
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) :
   RooAbsPdf(name,title),
-  _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
@@ -197,8 +198,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _suppListMgr(10),
   _lastSupNormSet(0),
   _codeReg(10),
-  _pdfList("pdfProxyList","List of PDFs",this),
-  _coefList("coefList","List of coefficients",this),
+  _pdfList("pdfs","List of PDFs",this),
+  _coefList("coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE)
 { 
@@ -236,7 +237,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
 
 RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
-  _refCoefNorm("refCoefNorm",this,other._refCoefNorm),
+  _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
   _refCoefRangeName((TNamed*)other._refCoefRangeName),
   _projectCoefs(other._projectCoefs),
   _projListMgr(other._projListMgr),
@@ -244,8 +245,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _suppListMgr(other._projListMgr),
   _lastSupNormSet(0),
   _codeReg(other._codeReg),
-  _pdfList("pdfProxyList",this,other._pdfList),
-  _coefList("coefList",this,other._coefList),
+  _pdfList("pdfs",this,other._pdfList),
+  _coefList("coefficients",this,other._coefList),
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
@@ -463,7 +464,7 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* /*rangeName*
     
   if (_verboseEval>1) {
     cout << "RooAddPdf::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" ;
-    nset->Print("1") ;
+    if (nset) { nset->Print("1") ; } else { cout << "(null)" << endl ; }
     _snormList->Print("v") ;
   }
 
@@ -572,7 +573,6 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset, const RooArgSet* snset, c
 Double_t RooAddPdf::evaluate() const 
 {
   // Calculate the current value
-
   const RooArgSet* nset = _normSet ; 
   
   syncSuppNormList(nset,0) ;
@@ -580,28 +580,25 @@ Double_t RooAddPdf::evaluate() const
 
   Double_t value(0) ;
 
+  // Calculate all coefficients
+  updateCoefCache(nset,0,0) ;
+
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   _pdfIter->Reset() ;
   _coefIter->Reset() ;
   RooAbsPdf* pdf ;
   Double_t snormVal ;
 
-  // Calculate all coefficients
-  updateCoefCache(nset,0,0) ;
-
   Int_t i(0) ;
   while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)_snormList->at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
-      pdf->getNorm(nset) ;
-//       Double_t pdfNorm = pdf->getNorm(nset) ;
+      Double_t pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
- 	if (_verboseEval<0) {
-//  	  cout << "RAP::e(" << GetName() << ") v += [" 
-//  	       << pdf->GetName() << "] " << pdfVal << " [N= " << pdfNorm << "] * " << _coefCache[i] << " / " << snormVal << endl ;
- 	}
+	cxcoutD("Eval") << "RooAddPdf::evaluate(" << GetName() << ")  value += [" 
+			<< pdf->GetName() << "] " << pdfVal << " [N= " << pdfNorm << "] * " << _coefCache[i] << " / " << snormVal << endl ;
       }
     }
     i++ ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgProxy.rdl,v 1.19 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooArgProxy.h,v 1.20 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,6 +33,7 @@ public:
   inline RooAbsArg* absArg() const { return _arg ; }
 
   virtual const char* name() const { return GetName() ; }
+  virtual void print(ostream& os=std::cout) const { os << name() << "=" << (_arg?_arg->GetName():"NULL") ; }
 
 protected:
 
@@ -53,7 +54,7 @@ protected:
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;
 
-  ClassDef(RooArgProxy,0) // Abstract proxy for RooAbsArg objects
+  ClassDef(RooArgProxy,1) // Abstract proxy for RooAbsArg objects
 };
 
 #endif

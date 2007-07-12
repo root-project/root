@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooMinuit.cxx,v 1.24 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooMinuit.cxx,v 1.25 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -221,7 +221,7 @@ Int_t RooMinuit::migrad()
   arglist[0]= 500*_nPar; // maximum iterations
   arglist[1]= 1.0;       // tolerance
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
   profileStop() ;
@@ -238,7 +238,7 @@ Int_t RooMinuit::hesse()
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("HESSE",arglist,1);
   profileStop() ;
@@ -254,7 +254,7 @@ Int_t RooMinuit::minos()
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
   profileStop() ;
@@ -284,7 +284,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   }
   arglist[0]= 500*_nPar; // maximum iterations
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
   profileStop() ;
@@ -301,7 +301,7 @@ Int_t RooMinuit::seek()
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("SEEK",arglist,1);
   profileStop() ;
@@ -317,7 +317,7 @@ Int_t RooMinuit::simplex()
   arglist[0]= 500*_nPar; // maximum iterations
   arglist[1]= 1.0;       // tolerance
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("SIMPLEX",arglist,2);
   profileStop() ;
@@ -332,7 +332,7 @@ Int_t RooMinuit::improve()
   Double_t arglist[2];
   arglist[0]= 500*_nPar; // maximum iterations
 
-  synchronize(kTRUE) ;
+  synchronize(_verbose) ;
   profileStart() ;
   _status= _theFitter->ExecuteCommand("IMPROVE",arglist,1);
   profileStop() ;
@@ -349,6 +349,13 @@ Int_t RooMinuit::setPrintLevel(Int_t newLevel)
   _theFitter->ExecuteCommand("SET PRINT",&arg,1);
   _printLevel = newLevel ;
   return ret ;
+}
+
+
+void RooMinuit::setNoWarn() 
+{
+  Double_t arg(0) ;
+  _theFitter->ExecuteCommand("SET NOWARNINGS",&arg,1);
 }
 
 

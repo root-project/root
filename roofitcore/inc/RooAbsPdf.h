@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.h,v 1.86 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsPdf.h,v 1.87 2007/05/14 18:37:46 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,8 +40,7 @@ class RooAbsPdf : public RooAbsReal {
 public:
 
   // Constructors, assignment etc
-  inline RooAbsPdf() { }
-  RooAbsPdf(const char *name, const char *title) ;
+  RooAbsPdf(const char *name=0, const char *title=0) ;
   RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal) ;
   // RooAbsPdf(const RooAbsPdf& other, const char* name=0);
   virtual ~RooAbsPdf();
@@ -220,9 +219,9 @@ protected:
 
   friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
-  mutable RooAbsReal* _norm   ;      // Normalization integral (owned by _normMgr)
-  mutable RooArgSet* _normSet ;      // Normalization set with for above integral
-  mutable RooNormManager _normMgr ;  // Normalization manager
+  mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
+  mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
+  mutable RooNormManager _normMgr ;  //! Normalization manager
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print

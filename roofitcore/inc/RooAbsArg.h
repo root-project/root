@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.90 2005/12/08 13:19:54 wverkerke Exp $
+ *    File: $Id: RooAbsArg.h,v 1.91 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,8 +50,10 @@ public:
   // Accessors to client-server relation information 
   virtual Bool_t isDerived() const { return _serverList.GetSize()?kTRUE:kFALSE; }
   Bool_t isCloneOf(const RooAbsArg& other) const ; 
-  Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const ;
-  Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const ;
+  Bool_t dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const { return dependsOn(serverList,ignoreArg,kTRUE) ; }
+  Bool_t dependsOnValue(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const { return dependsOn(server,ignoreArg,kTRUE) ; }
+  Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
+  Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* valueClientIterator() const { return _clientListValue.MakeIterator() ; }
@@ -170,6 +172,7 @@ protected:
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;
   friend class RooAbsReal ;
+  friend class RooProjectedPdf ;
 
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
@@ -209,15 +212,16 @@ protected:
   friend class RooArgSet ;
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
-  RooRefCountList _serverList       ; //! list of server objects
-  RooRefCountList _clientList       ; //! list of client objects
-  RooRefCountList _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
-  RooRefCountList _clientListValue  ; //! subset of clients that requested value dirty flag propagation
-  TList _proxyList        ; //! list of proxies
+  RooRefCountList _serverList       ; // list of server objects
+  RooRefCountList _clientList       ; // list of client objects
+  RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
+  RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
+  TList _proxyList        ; // list of proxies
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
 
   // Server redirection interface
+  friend class RooWorkspace ;
   friend class RooAcceptReject;
   friend class RooGenContext;
   friend class RooResolutionModel ;

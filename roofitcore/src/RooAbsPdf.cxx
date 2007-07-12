@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.103 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.104 2007/05/14 18:37:46 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -108,6 +108,7 @@
 
 
 #include "RooFit.h"
+#include "RooMsgService.h" 
 
 #include "TClass.h"
 #include "Riostream.h"
@@ -216,6 +217,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if ((isValueDirty() || nsetChanged || _norm->isValueDirty()) && operMode()!=AClean) {
 
+    
     // Evaluate numerator
     Double_t rawVal = evaluate() ;
     Bool_t error = traceEvalPdf(rawVal) ; // Error checking and printing
@@ -230,8 +232,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     _value = normError ? 0 : (rawVal / normVal) ;
 
-    if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " 
-			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
+    cxcoutD("ChangeTracking") << "RooAbsPdf::getVal(" << GetName() << ") recalculating, new value = " << rawVal << "/" << normVal << " = " << _value << endl ;
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
     clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
@@ -902,26 +903,16 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 
   if (opt == Standard) {
-    os << ClassName() << "::" << GetName() << "(" ;
-    
-    RooArgSet* paramList = getParameters((RooArgSet*)0) ;
-    TIterator* pIter = paramList->createIterator() ;
+    os << ClassName() << "::" << GetName() << "[ " ;
 
-    Bool_t first=kTRUE ;
-    RooAbsArg* var ;
-    while((var=(RooAbsArg*)pIter->Next())) {
-      if (!first) {
-	os << "," ;
-      } else {
-	first=kFALSE ;
+    for (Int_t i=0 ; i<numProxies() ; i++) {
+      RooAbsProxy* p = getProxy(i) ;
+      if (!TString(p->name()).BeginsWith("!")) {
+	p->print(os) ;
+	os << " " ;
       }
-      os << var->GetName() ;
-    }
-    //os << ") = " << getVal(_lastNormSet) << endl ;
-    os << ") = " << getVal(0) << endl ;
-
-    delete pIter ;
-    delete paramList ;
+    }    
+    os << "] = " << _value << endl ;
   }
 
   if(opt >= Verbose) {

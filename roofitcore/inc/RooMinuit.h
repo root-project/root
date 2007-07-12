@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.13 2005/06/23 07:37:30 wverkerke Exp $
+ *    File: $Id: RooMinuit.h,v 1.14 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,6 +57,7 @@ public:
   TH2F* contour(RooRealVar& var1, RooRealVar& var2, Double_t n1=1, Double_t n2=2, Double_t n3=0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ; 
+  void setNoWarn() ;
   Int_t setWarnLevel(Int_t newLevel) ;
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }

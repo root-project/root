@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetProxy.rdl,v 1.18 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooSetProxy.h,v 1.19 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,7 @@
 #include "RooAbsProxy.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
+#include <iostream> 
 
 class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
@@ -44,6 +45,8 @@ public:
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
+
+  virtual void print(ostream& os=std::cout) const { os << name() << "=" ; printToStream(os,InLine) ; }
 
   RooSetProxy& operator=(const RooArgSet& other) ;
   

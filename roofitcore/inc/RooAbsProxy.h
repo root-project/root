@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsProxy.rdl,v 1.13 2005/06/16 09:31:24 wverkerke Exp $
+ *    File: $Id: RooAbsProxy.h,v 1.14 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "TObject.h"
 #include "RooAbsArg.h"
+#include <iostream>
 
 #ifdef _WIN32
 // Turn off 'warning C4355: 'this' : used in base member initializer list'
@@ -38,10 +39,11 @@ public:
 
   virtual const char* name() const { return "dummy" ; } ;  
   inline const RooArgSet* nset() const { return _nset ; }
+  virtual void print(ostream& os=std::cout) const { os << name() << std::endl ; }
 
 protected:
 
-  RooArgSet* _nset ;
+  RooArgSet* _nset ; //! do not persist
 
   friend class RooAbsArg ;
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) = 0 ;
@@ -49,7 +51,7 @@ protected:
   friend class RooAbsPdf ;
   virtual void changeNormSet(const RooArgSet* newNormSet) ;
 
-  ClassDef(RooAbsProxy,0) // Abstract proxy interface
+  ClassDef(RooAbsProxy,1) // Abstract proxy interface
 } ;
 
 #endif
