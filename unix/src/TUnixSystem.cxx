@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.183 2007/07/03 16:40:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.184 2007/07/10 08:34:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1892,7 +1892,10 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
-   cerr.flush ();
+   cout.flush();
+   fflush(stdout);
+
+   cerr.flush();
    fflush(stderr);
 
    int fd = STDERR_FILENO;
