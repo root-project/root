@@ -90,6 +90,12 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Number of workers for local sessions [number of CPUs]
 # xpd.localwrks 2
 ###
+### Multiuser option
+### Default 1 (==ON) when running as superuser, 0 (==OFF) when running as normal.
+### user. In the case the daemon has normal privileges, all users run under the
+### effective user starting the daemon and privacy of sandboxes is not ensured
+# xpd.multiuser 1
+###
 ### Defines what to do when no client sessions are attached to a client area.
 # Format:
 #          xpd.shutdown <opt> <delay>
