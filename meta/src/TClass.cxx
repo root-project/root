@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.223 2007/02/13 14:21:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.224 2007/06/25 15:37:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -3748,8 +3748,6 @@ Long_t TClass::Property() const
 
    return fProperty;
 }
-
-#include "TGenCollectionProxy.h"
 
 //_____________________________________________________________________________
 void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
