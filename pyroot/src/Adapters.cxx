@@ -166,12 +166,21 @@ std::string PyROOT::TMemberAdapter::FunctionParameterNameAt( size_t nth ) const
 std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) const
 {
 // get the default value, if available, of the function parameter at position nth
-   const char* def =
-      ((TMethodArg*)((TFunction*)fMember)->GetListOfMethodArgs()->At( nth ))->GetDefault();
+   TMethodArg* arg = (TMethodArg*)((TFunction*)fMember)->GetListOfMethodArgs()->At( nth );
+   const char* def = arg->GetDefault();
 
-   if ( def )
-      return def;
-   return "";
+   if ( ! def )
+      return "";
+
+// special case for strings: "some value" -> ""some value"
+   if ( strstr( TClassEdit::ResolveTypedef( arg->GetTypeName(), true ).c_str(), "char*" ) ) {
+      std::string sdef = "\"";
+      sdef += def;
+      sdef += "\"";
+      return sdef;
+   }
+
+   return def;
 }
 
 //____________________________________________________________________________

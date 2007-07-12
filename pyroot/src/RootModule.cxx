@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.30 2007/01/09 05:31:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.31 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -19,6 +19,7 @@
 
 // ROOT
 #include "TROOT.h"
+#include "TClass.h"
 #include "TObject.h"
 
 // Standard
@@ -142,7 +143,7 @@ namespace {
    PyObject* MakeRootTemplateClass( PyObject*, PyObject* args )
    {
    // args is class name + template arguments, build full instantiation
-      int nArgs = (int)PyTuple_GET_SIZE( args );
+      Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
       if ( nArgs < 2 ) {
          PyErr_Format( PyExc_TypeError, "too few arguments for template instantiation" );
          return 0;
@@ -199,8 +200,9 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* AddressOf( PyObject*, PyObject* args )
+   void* GetObjectProxyAddress( PyObject*, PyObject* args )
    {
+   // helper to get the address (address-of-address) of various object proxy types
       ObjectProxy* pyobj = 0;
       PyObject* pyname = 0;
       if ( PyArg_ParseTuple( args, const_cast< char* >( "O|S" ), &pyobj, &pyname ) &&
@@ -222,10 +224,9 @@ namespace {
 
             if ( PropertyProxy_Check( pyprop ) ) {
             // this is an address of a value (i.e. &myobj->prop)
-               PyObject* pybuf = BufFac_t::Instance()->PyBuffer_FromMemory(
-                  (Long_t*)pyprop->GetAddress( pyobj ), 1 );
+               void* addr = (void*)pyprop->GetAddress( pyobj ); 
                Py_DECREF( pyprop );
-               return pybuf;
+               return addr;
             }
 
             Py_XDECREF( pyprop );
@@ -236,34 +237,41 @@ namespace {
          }
 
       // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
-         return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&pyobj->fObject, 1 );
+         return (void*)&pyobj->fObject;
       }
 
       PyErr_SetString( PyExc_ValueError, "invalid argument for AddressOf()" );
       return 0;
    }
 
-//____________________________________________________________________________
-   PyObject* MakeNullPointer( PyObject*, PyObject* args )
+   PyObject* AddressOf( PyObject* dummy, PyObject* args )
    {
-      int argc = PyTuple_GET_SIZE( args );
-      if ( argc != 0 && argc != 1 ) {
-         PyErr_Format( PyExc_TypeError,
-            "MakeNullPointer takes at most 1 argument (%d given)", argc );
-         return 0;
-      }
+   // return object proxy address as an indexable buffer
+      void* addr = GetObjectProxyAddress( dummy, args );
+      if ( addr )
+         return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)addr, 1 );
 
-   // no class given, use None as generic
-      if ( argc == 0 ) {
-         Py_INCREF( Py_None );
-         return Py_None;
-      }
+      return 0;
+   }
 
-   // check argument for either string name, or named python object
-      PyObject* pyname = PyTuple_GET_ITEM( args, 0 );
-      if ( ! PyString_Check( pyname ) ) {
+   PyObject* AsCObject( PyObject* dummy, PyObject* args )
+   {
+   // return object proxy as an opaque CObject
+      void* addr = GetObjectProxyAddress( dummy, args );
+      if ( addr )
+         return PyCObject_FromVoidPtr( (void*)(*(long*)addr), 0 );
+
+      return 0;
+   }
+
+//____________________________________________________________________________
+   PyObject* BindObject_( void* addr, PyObject* pyname )
+   {
+   // helper to catch common code between MakeNullPointer and BindObject
+
+      if ( ! PyString_Check( pyname ) ) {    // name given as string
          PyObject* nattr = PyObject_GetAttrString( pyname, "__name__" );
-         if ( nattr )
+         if ( nattr )                        // object is actually a class
             pyname = nattr;
          pyname = PyObject_Str( pyname );
          Py_XDECREF( nattr );
@@ -276,11 +284,62 @@ namespace {
 
       if ( ! klass ) {
          PyErr_SetString( PyExc_TypeError,
-            "MakeNullPointer expects a valid class or class name as an argument" );
+            "BindObject expects a valid class or class name as an argument" );
          return 0;
       }
 
-      return BindRootObjectNoCast( 0, klass, kFALSE );
+      return BindRootObjectNoCast( addr, klass, kFALSE );
+   }
+
+//____________________________________________________________________________
+   PyObject* BindObject( PyObject*, PyObject* args )
+   {
+   // from a long representing an address or a CObject, bind to a class
+      Py_ssize_t argc = PyTuple_GET_SIZE( args );
+      if ( argc != 2 ) {
+         PyErr_Format( PyExc_TypeError,
+           "BindObject takes exactly 2 argumenst ("PY_SSIZE_T_FORMAT" given)", argc );
+         return 0;
+      }
+
+   // try to convert first argument: either CObject or long integer
+      PyObject* pyaddr = PyTuple_GET_ITEM( args, 0 );
+      void* addr = PyCObject_AsVoidPtr( pyaddr );
+      if ( PyErr_Occurred() ) {
+         PyErr_Clear();
+
+         addr = PyLong_AsVoidPtr( pyaddr );
+
+         if ( PyErr_Occurred() ) {
+            PyErr_Clear();
+            PyErr_SetString( PyExc_TypeError,
+               "BindObject requires a CObject or long integer as first argument" );
+            return 0;
+         }
+      }
+
+      return BindObject_( addr, PyTuple_GET_ITEM( args, 1 ) );
+   }
+
+//____________________________________________________________________________
+   PyObject* MakeNullPointer( PyObject*, PyObject* args )
+   {
+   // create an object of the given type point to NULL (historic note: this
+   // function is older than BindObject(), which can be used instead)
+      Py_ssize_t argc = PyTuple_GET_SIZE( args );
+      if ( argc != 0 && argc != 1 ) {
+         PyErr_Format( PyExc_TypeError,
+            "MakeNullPointer takes at most 1 argument ("PY_SSIZE_T_FORMAT" given)", argc );
+         return 0;
+      }
+
+   // no class given, use None as generic
+      if ( argc == 0 ) {
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      return BindObject_( 0, PyTuple_GET_ITEM( args, 0 ) );
    }
 
 //____________________________________________________________________________
@@ -347,7 +406,11 @@ static PyMethodDef gPyROOTMethods[] = {
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
-     METH_VARARGS, (char*) "Retrieve address of held object" },
+     METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
+   { (char*) "AsCObject", (PyCFunction)AsCObject,
+     METH_VARARGS, (char*) "Retrieve held object in a CObject" },
+   { (char*) "BindObject", (PyCFunction)BindObject,
+     METH_VARARGS, (char*) "Create an object of given type, from given address" },
    { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,

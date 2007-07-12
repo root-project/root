@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.52 2007/04/05 21:00:18 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.53 2007/06/14 05:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -154,22 +154,25 @@ namespace {
                sub = sub.substr( 5, std::string::npos );
 
          // attempt to load file (may not be built and therefore unavailable)
-            int result = G__loadfile( (sub+".dll").c_str() );
-            if ( 0 <= result ) {
+            int loadOk = G__loadfile( (sub+".dll").c_str() );
+            if ( 0 <= loadOk ) {
             // special case for map and multimap, which are spread over 2 files
                if ( sub == "map" || sub == "multimap" ) {
-                  result = G__loadfile( (sub+"2.dll").c_str() );
+                  loadOk = G__loadfile( (sub+"2.dll").c_str() );
                }
 
             // success; prevent second attempt to load by erasing name
                gLoadedSTLTypes.insert( sub );
                gLoadedSTLTypes.insert( "std::" + sub );
+            }
 
-               if ( result < 0 ) {
-                  PyErr_Warn( PyExc_RuntimeWarning,
-                     const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
-                  result = kFALSE;
-               }
+         // on success, synchronize gROOT and CINT, otherwise warn user of doom
+            if ( 0 <= loadOk ) {
+               gInterpreter->UpdateListOfTypes();
+            } else {
+               PyErr_Warn( PyExc_RuntimeWarning,
+                  const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
+               result = kFALSE;
             }
 
          }

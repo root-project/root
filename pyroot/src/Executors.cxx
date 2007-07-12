@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.24 2007/01/30 10:09:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.25 2007/02/09 18:04:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -153,7 +153,7 @@ PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 PyObject* PyROOT::TVoidArrayExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execute <func> with argument <self>, construct python long return value
-   return PyLong_FromVoidPtr( (void*)func->ExecInt( self ) );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)func->ExecInt( self ), 1 );
 }
 
 //____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.56 2007/02/07 06:08:13 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.57 2007/06/14 05:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -238,10 +238,7 @@ void PyROOT::TMethodHolder< T, M >::CreateSignature_()
       std::string defvalue = fMethod.FunctionParameterDefaultAt( iarg );
       if ( ! defvalue.empty() ) {
          fSignature += " = ";
-      //            const char* charstar = strstr(arg.Type()->TrueName(),"char*");
-      //            if (charstar) fSignature += "\"";
          fSignature += defvalue;
-      //            if (charstar) fSignature += "\"";
       }
       ifirst++;
    }

@@ -1,8 +1,8 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.45 2006/12/08 07:42:31 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.46 2007/02/07 06:08:13 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 02/06/07
+# Last: 07/02/07
 
 """PyROOT user module.
 
@@ -14,7 +14,7 @@ from __future__ import generators
 
 """
 
-__version__ = '5.0.0'
+__version__ = '5.0.1'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -24,7 +24,7 @@ import string as pystring
 
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
-    raise ImportError, 'Python Version 2.2 or above is required.'
+   raise ImportError, 'Python Version 2.2 or above is required.'
 
 ## 2.2 has 10 instructions as default, > 2.3 has 100 ... make same
 sys.setcheckinterval( 100 )
@@ -267,7 +267,7 @@ def _processRootEvents( controller ):
 ### allow loading ROOT classes as attributes ------------------------------------
 class ModuleFacade( object ):
    def __init__( self, module ):
-      self.__dict__[ 'module' ]    = module
+      self.__dict__[ 'module' ]   = module
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
@@ -293,15 +293,20 @@ class ModuleFacade( object ):
 
     # begin with startup gettattr/setattr
       self.__class__.__getattr__ = self.__class__.__getattr1
+      del self.__class__.__getattr1
       self.__class__.__setattr__ = self.__class__.__setattr1
+      del self.__class__.__setattr1
 
    def __setattr1( self, name, value ):      # "start-up" setattr
     # switch to running gettattr/setattr
       self.__class__.__getattr__ = self.__class__.__getattr2
+      del self.__class__.__getattr2
       self.__class__.__setattr__ = self.__class__.__setattr2
+      del self.__class__.__setattr2
 
     # create application, thread etc.
       self.__finalSetup()
+      del self.__class__.__finalSetup
 
     # let "running" setattr handle setting
       return setattr( self, name, value )
@@ -335,10 +340,13 @@ class ModuleFacade( object ):
 
     # switch to running gettattr/setattr
       self.__class__.__getattr__ = self.__class__.__getattr2
+      del self.__class__.__getattr2
       self.__class__.__setattr__ = self.__class__.__setattr2
+      del self.__class__.__setattr2
 
     # create application, thread etc.
       self.__finalSetup()
+      del self.__class__.__finalSetup
 
     # let "running" getattr handle lookup
       return getattr( self, name )
@@ -433,14 +441,11 @@ def cleanup():
       facade.keeppolling = 0
       facade.thread.join( 3. )                         # arbitrary
 
- # destroy ROOT module
-   del facade.module._root
-   del sys.modules[ 'libPyROOT' ]
-   del facade.module
-
  # destroy facade
-   del sys.modules[ facade.__name__ ]
-   del facade
+   del sys.modules[ __name__ ], facade
+
+ # destroy ROOT extension module
+   del sys.modules[ 'libPyROOT' ]
 
 atexit.register( cleanup )
 del cleanup, atexit
