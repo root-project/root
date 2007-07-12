@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.186 2007/07/09 21:10:37 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.187 2007/07/12 07:01:51 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -381,8 +381,8 @@ RSA.KeyType:  1
 
 # Control the action to be taken when opening an existing ROOT file which
 # looks corrupted; by default an attempt to recover the file is made; if
-# this variable is set to 0 the file is just flagged as zombie.
-#TFile.Recover 0
+# this variable is set to no the file is just flagged as zombie.
+#TFile.Recover:      no
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/path/file.root,
