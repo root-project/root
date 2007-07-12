@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.26 2007/03/22 13:07:57 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.27 2007/04/16 14:47:40 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -1428,7 +1428,8 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                   case kCDLG_CANCEL:
                      if (!fClient->IsEditable()) {
                         TGColorPopup *p = (TGColorPopup *)GetMain();
-                        p->PreviewColor(fSampleOld->GetBackground());
+                        if (p && p->InheritsFrom("TGColorPopup"))
+                           p->PreviewColor(fSampleOld->GetBackground());
                      }
                      CloseWindow();
                      break;
@@ -1557,6 +1558,7 @@ void TGColorDialog::DoPreview()
       return;
    }
    TGColorPopup *p = (TGColorPopup *)GetMain();
-   p->PreviewColor(fSample->GetBackground());
+   if (p && p->InheritsFrom("TGColorPopup"))
+      p->PreviewColor(fSample->GetBackground());
 }
 
