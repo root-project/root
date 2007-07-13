@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.19 2007/02/05 18:11:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.20 2007/02/14 16:42:27 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -184,6 +184,7 @@ namespace ROOT {
 
       delete fCollectionProxyInfo;
       delete fCollectionStreamerInfo;
+      delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
       if (!gROOT) return;
@@ -304,16 +305,20 @@ namespace ROOT {
 
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)
    {
-      // Set the info for the CollectionProxy
+      // Set the info for the CollectionProxy and take ownership of the object
+      // being passed
 
+      delete fCollectionProxyInfo;;
       fCollectionProxyInfo = info;
    }
 
    void TGenericClassInfo::AdoptCollectionStreamerInfo(TCollectionProxyInfo *info)
    {
-      // Set the info for the Collection Streamer
+      // Set the info for the Collection Streamer and take ownership of the object
+      // being passed
 
-      fCollectionProxyInfo = info;
+      delete fCollectionStreamerInfo;
+      fCollectionStreamerInfo = info;
    }
 
    Short_t TGenericClassInfo::AdoptStreamer(TClassStreamer *streamer)
