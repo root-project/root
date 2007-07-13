@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.44 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.45 2007/03/16 16:02:23 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -205,6 +205,14 @@ TTabCom::TTabCom()
 //
 // ----------------------------------------------------------------------------
 
+TTabCom::~TTabCom()
+{
+   // Destructor.
+
+   ClearAll();
+   ClearSysIncFiles(); // this one stays cached
+   ClearUsers();       // this one stays cached
+}
 
 // ----------------------------------------------------------------------------
 //

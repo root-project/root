@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.9 2005/09/29 09:16:23 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.10 2006/05/19 07:40:18 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -58,7 +58,7 @@ class TTabCom {
 
 public: // constructors
    TTabCom();
-   virtual ~TTabCom() { }
+   virtual ~TTabCom();
 
 public: // typedefs
    typedef TList     TContainer;
@@ -192,7 +192,8 @@ public: // enums
    };
 
 private: // member functions
-   TTabCom(const TTabCom &);  //private and not implemented
+   TTabCom(const TTabCom &);           //private and not implemented
+   TTabCom& operator=(const TTabCom&); //private and not implemented
 
    Int_t      Complete( const TRegexp& re, const TSeqCollection* pListOfCandidates, const char appendage[] );
    void       CopyMatch( char dest[], const char localName[], const char appendage[]=0, const char fullName[]=0 ) const;
