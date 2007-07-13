@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.74 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.75 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,7 +57,6 @@
 ClassImp(RooAddPdf)
 ;
 
-
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
@@ -70,6 +69,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _codeReg(10),
   _pdfList("pdfs","List of PDFs",this),
   _coefList("coefficients","List of coefficients",this),
+  _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 {
@@ -79,6 +79,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 
   _coefCache = new Double_t[10] ;
   _coefErrCount = _errorCount ;
+
 }
 
 
@@ -95,6 +96,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _codeReg(10),
   _pdfList("pdfs","List of PDFs",this),
   _coefList("coefficients","List of coefficients",this),
+  _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 {
@@ -124,6 +126,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _codeReg(10),
   _pdfList("pdfs","List of PDFs",this),
   _coefList("coefficients","List of coefficients",this),
+  _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)
 { 
@@ -200,6 +203,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _codeReg(10),
   _pdfList("pdfs","List of PDFs",this),
   _coefList("coefficients","List of coefficients",this),
+  _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE)
 { 
@@ -247,6 +251,7 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _codeReg(other._codeReg),
   _pdfList("pdfs",this,other._pdfList),
   _coefList("coefficients",this,other._coefList),
+  _snormList(0),
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
@@ -265,7 +270,7 @@ RooAddPdf::~RooAddPdf()
   delete _pdfIter ;
   delete _coefIter ;
 
-  delete[] _coefCache ;
+  if (_coefCache) delete[] _coefCache ;
 }
 
 
