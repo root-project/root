@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.14 2007/04/27 09:27:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.15 2007/05/22 13:47:43 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -697,8 +697,16 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
 {
    //return the entry list, correspoding to treename and filename
 
+   if (gDebug > 1)
+      Info("GetEntryList","tree: %s, file: %s",
+                          (treename ? treename : "-"), (filename ? filename : "-"));
+
+   TString fn;
+   TUrl u(filename);
+   fn = (!strcmp(u.GetProtocol(),"file")) ? u.GetFile() : filename;
+
    if (!fLists){
-      if (!strcmp(treename, fTreeName.Data()) && !(strcmp(filename, fFileName.Data()))){
+      if (!strcmp(treename, fTreeName.Data()) && !(strcmp(fn.Data(), fFileName.Data()))){
          return this;
       } else {
          return 0;
@@ -706,7 +714,7 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    }
 
    TString stotal = treename;
-   stotal.Append(filename);
+   stotal.Append(fn);
    ULong_t newhash = stotal.Hash();
 
    TIter next(fLists);
@@ -717,14 +725,14 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
          templist->fStringHash = stotal.Hash();
       }
       if (newhash == templist->fStringHash){
-         if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), filename)){
+         if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), fn.Data())){
             return templist;
          }
       }
    }
 
    //didn't find anything for this filename, try the full name too
-   TString longname = filename;
+   TString longname = fn;
    gSystem->ExpandPathName(longname);
    if (!gSystem->IsAbsoluteFileName(longname))
       gSystem->PrependPathName(gSystem->pwd(), longname);
