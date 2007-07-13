@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooSetProxy.cxx,v 1.28 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooSetProxy.cxx,v 1.29 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,7 +61,7 @@ RooSetProxy::RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& 
 
 RooSetProxy::~RooSetProxy()
 {
-  _owner->unRegisterProxy(*this) ;
+  if (_owner) _owner->unRegisterProxy(*this) ;
   delete _iter ;
 }
 
@@ -125,6 +125,26 @@ Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNa
   }
   return ret ;
 }
+
+
+Bool_t RooSetProxy::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) 
+{
+  // Remove each argument in the input list from our list using remove(const RooAbsArg&).
+  // Return kFALSE in case of problems.
+
+  Bool_t result(false) ;
+
+  TIterator* iter = list.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    result |= remove(*arg,silent,matchByNameOnly) ;
+  }
+  delete iter ;
+
+  return result;  
+}
+
+
 
 
 void RooSetProxy::removeAll() 

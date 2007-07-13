@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooListProxy.cxx,v 1.16 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooListProxy.cxx,v 1.17 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,7 +61,7 @@ RooListProxy::RooListProxy(const char* name, RooAbsArg* owner, const RooListProx
 
 RooListProxy::~RooListProxy()
 {
-  _owner->unRegisterProxy(*this) ;
+  if (_owner) _owner->unRegisterProxy(*this) ;
   delete _iter ;
 }
 

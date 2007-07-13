@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooListProxy.h,v 1.9 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooListProxy.h,v 1.10 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@ class RooListProxy : public RooArgList, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooListProxy() { _iter = createIterator() ; } ;
+  RooListProxy() { _iter = createIterator() ; _owner=0 ; } ;
   RooListProxy(const char* name, const char* desc, RooAbsArg* owner, 
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) ;
