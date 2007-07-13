@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.118 2007/07/12 20:30:28 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsReal.cxx,v 1.119 2007/07/12 20:54:35 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -457,23 +457,23 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
 
 
 
-const RooAbsReal* RooAbsReal::createProjection(const RooArgSet& depVars, const RooArgSet& projVars, 
+const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, 
                                                RooArgSet*& cloneSet) const 
 {
-  return createProjection(depVars,&projVars,cloneSet) ; 
+  return createPlotProjection(depVars,&projVars,cloneSet) ; 
 }
 
 
 
-const RooAbsReal* RooAbsReal::createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const 
+const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const 
 {
   RooArgSet* cloneSet = new RooArgSet() ;
-  return createProjection(depVars,&projVars,cloneSet) ; 
+  return createPlotProjection(depVars,&projVars,cloneSet) ; 
 }
 
 
 
-const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
+const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 					       RooArgSet *&cloneSet, const char* rangeName) const {
   // Create a new object G that represents the normalized projection:
   //
@@ -498,7 +498,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   leafNodeServerList(&leafNodes,this);
   treeNodeServerList(&treeNodes,this) ;
 
-//   cout << "RooAbsReal::createProjection(" << GetName() << ")" << endl 
+//   cout << "RooAbsReal::createPlotProjection(" << GetName() << ")" << endl 
 //        << "   depVars " ; dependentVars.Print("1") ;
 //   cout << "   projVars " ; if (projectedVars) projectedVars->Print("1") ; else cout << "<none>" << endl ;
 
@@ -512,7 +512,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   const RooAbsArg *arg = 0;
   while((arg= (const RooAbsArg*)dependentIterator->Next())) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
-      cout << ClassName() << "::" << GetName() << ":createProjection: variable \"" << arg->GetName()
+      cout << ClassName() << "::" << GetName() << ":createPlotProjection: variable \"" << arg->GetName()
 	   << "\" of wrong type: " << arg->ClassName() << endl;
       delete dependentIterator;
       return 0;
@@ -520,7 +520,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
     //RooAbsArg *found= leafNodes.find(arg->GetName()); 
     RooAbsArg *found= treeNodes.find(arg->GetName()); 
     if(!found) {
-      cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
+      cout << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
 	   << "\" is not a dependent and will be ignored." << endl;
       continue;
     }
@@ -551,7 +551,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 
     // check if this arg is also in the projection set
     if(0 != projectedVars && projectedVars->find(arg->GetName())) {
-      cout << ClassName() << "::" << GetName() << ":createProjection: \"" << arg->GetName()
+      cout << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
 	   << "\" cannot be both a dependent and a projected variable." << endl;
       delete dependentIterator;
       return 0;
@@ -561,17 +561,17 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // Remove the projected variables from the list of leaf nodes, if necessary.
   if(0 != projectedVars) leafNodes.remove(*projectedVars,kTRUE);
 
-//   cout << "createProjection: final leafNodes: " ; leafNodes.Print("1") ;
+//   cout << "createPlotProjection: final leafNodes: " ; leafNodes.Print("1") ;
 //   cout << "@@@@@@@@@ Before any manipulation" << endl ;
 //   printCompactTree("","cp_orig_before.tree") ;
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
-  //cout << "RooAbsReal::createProjection(" << GetName() << ") making snapshot" << endl ;
+  //cout << "RooAbsReal::createPlotProjection(" << GetName() << ") making snapshot" << endl ;
   cloneSet= (RooArgSet*)RooArgSet(*this).snapshot(kTRUE);
-  //cout << "RooAbsReal::createProjection(" << GetName() << ") finished snapshot" << endl ;
+  //cout << "RooAbsReal::createPlotProjection(" << GetName() << ") finished snapshot" << endl ;
 
   if (!cloneSet) {
-    cout << "RooAbsPdf::createProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    cout << "RooAbsPdf::createPlotProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     return 0 ;
   }
   RooAbsReal *clone= (RooAbsReal*)cloneSet->find(GetName());
@@ -588,9 +588,9 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 //    clone->printCompactTree("","cp_clone.tree") ;
 
 
-  //cout << "RooAbsReal::createProjection(" << GetName() << ") making rRS on leaf nodes" << endl ;
+  //cout << "RooAbsReal::createPlotProjection(" << GetName() << ") making rRS on leaf nodes" << endl ;
   clone->recursiveRedirectServers(leafNodes);
-  //cout << "RooAbsReal::createProjection(" << GetName() << ") finished rRS" << endl ;
+  //cout << "RooAbsReal::createPlotProjection(" << GetName() << ") finished rRS" << endl ;
 
 //   cout << "@@@@@@@@@@ Original after leaf node redirect" << endl ;
 //   printCompactTree("","cp_orig_afterLNR.tree") ;
@@ -620,7 +620,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet,0,rangeName);
   if(0 == projected || !projected->isValid()) {
-    cout << ClassName() << "::" << GetName() << ":createProjection: cannot integrate out ";
+    cout << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
     projectedVars->printToStream(cout,OneLine);
     // cleanup and exit
     if(0 != projected) delete projected;
@@ -692,7 +692,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   // Create a standalone projection object to use for calculating bin contents
   RooArgSet *cloneSet = 0;
-  const RooAbsReal *projected= createProjection(plotClones,projectedVars,cloneSet);
+  const RooAbsReal *projected= createPlotProjection(plotClones,projectedVars,cloneSet);
 
   // Prepare to loop over the histogram bins
   Int_t xbins(0),ybins(1),zbins(1);
@@ -1180,9 +1180,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     return frame ;
   }
 
-  //cout << "RooAbsReal::plotOn(" << GetName() << ") begin createProjection" << endl ;
-  RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList, o.projectionRangeName) ;
-  //cout << "RooAbsReal::plotOn(" << GetName() << ") end createProjection" << endl ;
+  //cout << "RooAbsReal::plotOn(" << GetName() << ") begin createPlotProjection" << endl ;
+  RooAbsReal *projection = (RooAbsReal*) createPlotProjection(*deps, &projectedVars, projectionCompList, o.projectionRangeName) ;
+  //cout << "RooAbsReal::plotOn(" << GetName() << ") end createPlotProjection" << endl ;
 
   // Always fix RooAddPdf normalizations
   RooArgSet fullNormSet(*deps) ;
@@ -1515,8 +1515,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   depPos.add(projDataVars) ;
   depNeg.add(projDataVars) ;
 
-  const RooAbsReal *posProj = funcPos->createProjection(depPos, &projectedVars, posProjCompList) ;
-  const RooAbsReal *negProj = funcNeg->createProjection(depNeg, &projectedVars, negProjCompList) ;
+  const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList) ;
+  const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList) ;
   if (!posProj || !negProj) {
     cout << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
     return frame ; 

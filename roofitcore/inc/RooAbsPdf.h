@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.h,v 1.87 2007/05/14 18:37:46 wouter Exp $
+ *    File: $Id: RooAbsPdf.h,v 1.88 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -123,6 +123,11 @@ public:
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
 			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
   virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
+
+  
+  // Project p.d.f into lower dimensional p.d.f
+  virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
+
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  

@@ -41,6 +41,7 @@
 #pragma link C++ class RooMsgService ;
 #pragma link C++ class RooProjectedPdf ;
 #pragma link C++ class RooWorkspace ;
+#pragma link C++ class RooProfileLL ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

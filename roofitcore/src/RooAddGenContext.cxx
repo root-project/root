@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAddGenContext.cxx,v 1.19 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAddGenContext.cxx,v 1.20 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 
 #include "RooFit.h"
 
+#include "RooMsgService.h"
 #include "RooAddGenContext.h"
 #include "RooAddGenContext.h"
 #include "RooAddPdf.h"
@@ -37,10 +38,15 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 				   Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
+  cxcoutI("Generation") << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
+			<< " for generation of observable(s) " << vars ;
+  if (prototype) ccxcoutI("Generation") << " with prototype data for " << *prototype->get() ;
+  if (auxProto && auxProto->getSize()>0)  ccxcoutI("Generation") << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI("Generation") << endl ;
+
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
-
 
   // Fix normalization set of this RooAddPdf
   if (prototype) 

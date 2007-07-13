@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.h,v 1.16 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooMsgService.h,v 1.1 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,10 +34,10 @@ class RooAbsArg ;
 #define coutF(a) RooMsgService::instance().log(this,RooMsgService::FATAL,a) 
 
 #define dologD(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
-#define dologI(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
-#define dologW(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
-#define dologE(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
-#define dologF(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
+#define dologI(a) (RooMsgService::instance().isActive(this,a,RooMsgService::INFO))
+#define dologW(a) (RooMsgService::instance().isActive(this,a,RooMsgService::WARNING))
+#define dologE(a) (RooMsgService::instance().isActive(this,a,RooMsgService::ERROR))
+#define dologF(a) (RooMsgService::instance().isActive(this,a,RooMsgService::FATAL))
 
 // Shortcuts definitions with conditional execution of print expression -- USE WITH CAUTION 
 #define cxcoutD(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG)) RooMsgService::instance().log(this,RooMsgService::DEBUG,a) 

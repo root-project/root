@@ -77,7 +77,7 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooTObjWrap.h RooTrace.h RooTreeData.h RooUniformBinning.h \
                   RooSimultaneous.h RooRealSumPdf.h RooResolutionModel.h \
                   RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h \
-                  RooProjectedPdf.h RooWorkspace.h 
+                  RooProjectedPdf.h RooWorkspace.h RooProfileLL.h
 
 ROOFITCOREH1   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH1))
 ROOFITCOREH2   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH2))

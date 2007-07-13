@@ -10,28 +10,38 @@
   *****************************************************************************/ 
 
  // -- CLASS DESCRIPTION [PDF] -- 
- // Your description goes here... 
+ // Class RooProjectedPdf represent a projection of a given input p.d.f
+ // The actual projection integral for it value and normalization are
+ // calculated on the fly
 
- #include <iostream> 
+#include <iostream> 
 
- #include "RooProjectedPdf.h" 
- #include "RooAbsReal.h" 
+#include "RooProjectedPdf.h" 
+#include "RooMsgService.h"
+#include "RooAbsReal.h" 
 
  ClassImp(RooProjectedPdf) 
 
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title), 
-   intpdf("intpdf","intpdf",this,_intpdf),
-   intobs("intobs","intobs",this,kFALSE,kFALSE)
+   intpdf("IntegratedPdf","intpdf",this,_intpdf,kFALSE,kFALSE),
+   intobs("IntegrationObservables","intobs",this,kFALSE,kFALSE),
+   deps("!Dependents","deps",this,kTRUE,kTRUE)
  { 
    intobs.add(intObs) ;
+
+   // Add all other dependens of projected p.d.f. directly
+   RooArgSet* tmpdeps = _intpdf.getParameters(intObs) ;
+   deps.add(*tmpdeps) ;
+   delete tmpdeps ;
  } 
 
 
  RooProjectedPdf::RooProjectedPdf(const RooProjectedPdf& other, const char* name) :  
    RooAbsPdf(other,name), 
-   intpdf("intpdf",this,other.intpdf),
-   intobs("intobs",this,other.intobs)
+   intpdf("IntegratedPdf",this,other.intpdf),
+   intobs("IntegrarionObservable",this,other.intobs),
+   deps("!Dependents",this,other.deps)
  { 
  } 
 
@@ -65,10 +75,17 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   projList = new RooArgList(*proj) ;
 
   code = _projListMgr.setNormList(this,nset,iset,projList,0) ;
-  cout << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
-
+  coutI("Integration") << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
   
   return proj ;
+}
+
+
+RooAbsPdf* RooProjectedPdf::createProjection(const RooArgSet& iset) 
+{
+  RooArgSet combiset(iset) ;
+  combiset.add(intobs) ;
+  return static_cast<RooAbsPdf&>( const_cast<RooAbsReal&>(intpdf.arg()) ).createProjection(combiset) ;
 }
 
 
@@ -125,11 +142,35 @@ void RooProjectedPdf::clearCache()
 
 
 
-Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
+Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, 
 				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
+  // Redetermine explicit list of dependents if intPdf is being replaced
+  RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName()) ;
+  if (newPdf) {
+
+    // Determine if set of dependens of new p.d.f is different from old p.d.f.
+    RooArgSet olddeps(deps) ;
+    RooArgSet* newdeps = newPdf->getParameters(intobs) ;
+    RooArgSet* common = (RooArgSet*) newdeps->selectCommon(deps) ;    
+    newdeps->remove(*common,kTRUE,kTRUE) ;
+    olddeps.remove(*common,kTRUE,kTRUE) ;
+
+    // If so, adjust composition of deps Listproxy
+    if (newdeps->getSize()>0) {
+      deps.add(*newdeps) ;
+    }
+    if (olddeps.getSize()>0) {
+      deps.remove(olddeps,kTRUE,kTRUE) ;
+    }
+
+    delete common ;
+    delete newdeps ;
+  }
+
   // Throw away cache, as figuring out redirections on the cache is an unsolvable problem. 
   clearCache() ;
+
   return kFALSE ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.104 2007/05/14 18:37:46 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.105 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -135,6 +135,8 @@
 #include "RooGlobalFunc.h"
 #include "RooAddition.h"
 #include "RooRandom.h"
+#include "RooNumIntConfig.h"
+#include "RooProjectedPdf.h"
 #include "RooInt.h"
 
 ClassImp(RooAbsPdf) 
@@ -1978,4 +1980,30 @@ Int_t RooAbsPdf::verboseEval()
 { 
   // Return global level of verbosity for p.d.f. evaluations
   return _verboseEval ;
+}
+
+
+RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset) 
+{
+  // Construct name for new object
+  TString name(GetName()) ;
+  name.Append("_Proj[") ;
+  if (iset.getSize()>0) {
+    TIterator* iter = iset.createIterator() ;
+    RooAbsArg* arg ;
+    Bool_t first(kTRUE) ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	name.Append(",") ;
+      }
+      name.Append(arg->GetName()) ;
+    }
+    delete iter ;
+  }
+  name.Append("]") ;
+  
+  // Return projected p.d.f.
+  return new RooProjectedPdf(name.Data(),name.Data(),*this,iset) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id: RooMsgService.cxx,v 1.1 2007/07/12 20:30:29 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,6 +42,9 @@ RooMsgService::RooMsgService()
   _devnull = new ofstream("/dev/null") ;
   addStream(WARNING) ;
   addStream(INFO,Topic("Generation")) ;
+  addStream(INFO,Topic("Plotting")) ;
+  addStream(INFO,Topic("Integration")) ;
+  addStream(INFO,Topic("Minimization")) ;
 }
 
 RooMsgService::~RooMsgService() 

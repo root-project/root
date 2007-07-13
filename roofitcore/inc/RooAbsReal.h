@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.73 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooAbsReal.h,v 1.74 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -83,6 +83,7 @@ public:
               { return createIntegral(iset,0,&cfg,rangeName) ; }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
+  
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
   virtual Double_t maxVal(Int_t code) ;
@@ -143,8 +144,6 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
-  const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
-  const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
 
   static void setCacheCheck(Bool_t flag) { _cacheCheck = flag ; }
 
@@ -164,8 +163,10 @@ protected:
 
   TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0) const ;
 
-  const RooAbsReal *createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-				     RooArgSet *&cloneSet, const char* rangeName=0) const;
+  const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
+  const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
+  const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
+				         RooArgSet *&cloneSet, const char* rangeName=0) const;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analticalIntegral() and generateEvent()

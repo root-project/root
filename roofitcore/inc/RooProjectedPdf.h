@@ -39,10 +39,15 @@ public:
 
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
+  // Handle projection of projection explicitly
+  virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
+
+
 protected:
 
-  RooRealProxy intpdf ;
-  RooSetProxy intobs ;
+  RooRealProxy intpdf ; // p.d.f that is integrated
+  RooSetProxy intobs ;  // observables that p.d.f is integrated over
+  RooSetProxy deps ;    // dependents of this p.d.f
 
   mutable RooNormListManager _projListMgr ; // Partial integral list manager
   mutable RooArgSet* _curNormSet ; //!

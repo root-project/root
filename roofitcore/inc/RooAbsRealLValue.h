@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.35 2005/06/23 15:08:55 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.h,v 1.36 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -79,7 +79,7 @@ public:
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ; 
 
   // Constant and Projected flags 
-  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
+  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); setValueDirty() ; setShapeDirty() ; }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
