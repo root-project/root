@@ -10,11 +10,14 @@ CONFIG += create_prl
 
 DEPENDPATH += inc src
 
+QTROOTSYSPATHINSTALL = $(QTROOTSYSDIR)
+
 QT_VERSION=$$[QT_VERSION]
 contains( QT_VERSION, "^4.*" ) {
 #  DEFINES += QT_VERSION=0x40000
 #   INCLUDEPATH +=$(QTDIR)/include  $(QTDIR)/include/ActiveQt  $(QTDIR)/include/Qt  $(QTDIR)/include/Qt3Support $(QTDIR)/include/QtAssistant  $(QTDIR)/include/QtCore  $(QTDIR)/include/QtGui  $(QTDIR)/include/QtNetwork   $(QTDIR)/include/QtOpenGL   $(QTDIR)/include/QtXml
 #   LIBS += -L$(QTDIR)/lib 
+QTROOTSYSPATHINSTALL = $$(QTROOTSYSDIR)
 }
 win32 {
   DEFINES +=  GDK_WIN32
@@ -27,8 +30,6 @@ exists ($(ROOTSYS)/include){
 
 unix:  TARGET = GQt
 win32: TARGET = libGQt
-
-QTROOTSYSPATHINSTALL = $(QTROOTSYSDIR)
 
 isEmpty(DESTDIR) {
   DESTDIR=..
@@ -55,7 +56,8 @@ INCLUDEPATH += $$GQTDIRS $$GQTDIRI $(ROOTSYS)/include
 #
 GQTH1  =  $$GQTDIRI/TGQt.h            $$GQTDIRI/TQtApplication.h  $$GQTDIRI/TQtTimer.h    \
           $$GQTDIRI/TQtBrush.h        $$GQTDIRI/TQMimeTypes.h $$GQTDIRI/TQtClientFilter.h \
-          $$GQTDIRI/TQtClientWidget.h $$GQTDIRI/TQtWidget.h   $$GQTDIRI/TQtMarker.h       
+          $$GQTDIRI/TQtClientWidget.h $$GQTDIRI/TQtWidget.h   $$GQTDIRI/TQtMarker.h       \
+          $$GQTDIRI/TQtRootSlot.h
           
 
 CREATE_ROOT_DICT_FOR_CLASSES  = $$GQTH1 $$GQTDIRI/LinkDef.h
@@ -86,7 +88,7 @@ win32 {
     LIBS+=comctl32.lib
 }
 unix {
-   LIBS += -L$(ROOTSYS)/lib -lGpad -lRint
+   LIBS += -L$(ROOTSYS)/lib -lGui  -lGpad -lRint
 }
 mac {
     !exists ($$GQTDIRI/rootlibs.pri){
@@ -95,11 +97,14 @@ mac {
     exists ($$GQTDIRI/rootlibs.pri){
        include ($$GQTDIRI/rootlibs.pri)
     }
-    LIBS -= -lGQt
 #   LIBS += -L$(ROOTSYS)/lib -lGpad -lRint
 }
+unix {
+    LIBS -= -lGQt
+    LIBS -= -lQtRootGui
+}
     
-headerfiles.path  = $$QTROOTSYSPATHINSTALL/include
+headerfiles.path  = $$QTROOTSYSPATHINSTALL/include/
 headerfiles.files = $$GQTDIRI/*.h $$GQTDIRI/*.cw $$GQTDIRI/*.pri  $$GQTDIRI/TVirtualX.interface.h
 headerfiles.files -= $$GQTDIRI/LinkDef.h
 unix:  target.path = $$QTROOTSYSPATHINSTALL/lib
@@ -138,7 +143,8 @@ HEADERS += $$GQTDIRI/TGQt.h \
            $$GQTDIRI/TWaitCondition.h       \
            $$GQTDIRI/TQtLock.h              \
            $$GQTDIRI/TQtEmitter.h           \
-           $$GQTDIRI//TQtLockGuard.h
+           $$GQTDIRI/TQtLockGuard.h         \
+           $$GQTDIRI/TQtRootSlot.h
            
 SOURCES += $$GQTDIRS/GQtGUI.cxx \
            $$GQTDIRS/TGQt.cxx \
@@ -155,7 +161,8 @@ SOURCES += $$GQTDIRS/GQtGUI.cxx \
            $$GQTDIRS/TQtRootApplication.cxx \
            $$GQTDIRS/TQtSymbolCodec.cxx \
            $$GQTDIRS/TQtTimer.cxx \
-           $$GQTDIRS/TQtWidget.cxx
+           $$GQTDIRS/TQtWidget.cxx          \
+           $$GQTDIRS/TQtRootSlot.cxx
            
 DISTFILES += LICENSE.QPL  Module.mk  Module.mk.unix  Module.mk.win32
 
