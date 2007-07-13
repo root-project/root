@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.4 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.5 2007/02/26 15:01:24 brun Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************
@@ -76,6 +76,7 @@ public:
                                 Long64_t nentries=1000000000, Long64_t firstentry=0);
    virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
    virtual void         SetEventList(TEventList *evlist) { fEventList = evlist; }
+   virtual void         SetEntryList(TEntryList *enlist, const Option_t *) { fEntryList = enlist; }
    virtual void         SetName(const char *name); // *MENU*
    virtual void         ConnectProof();
    virtual void         ReleaseProof();

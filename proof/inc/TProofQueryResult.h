@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.h,v 1.2 2006/08/05 11:14:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.h,v 1.3 2006/11/27 14:14:23 rdm Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 #endif
 
 class TDSet;
-class TEventList;
 class TProofServ;
 
 class TProofQueryResult : public TQueryResult {
@@ -38,7 +37,7 @@ private:
 
    TProofQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                      Long64_t entries, Long64_t first, TDSet *dset,
-                     const char *selec, TEventList *elist = 0);
+                     const char *selec, TObject *elist = 0);
 
    void  SetFinalized() { TQueryResult::SetFinalized(); }
    void  SetRunning(Int_t startlog, const char *par);

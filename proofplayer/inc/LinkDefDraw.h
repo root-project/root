@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.6 2007/05/08 14:56:19 rdm Exp $ */
+/* @(#)root/proofplayer:$Name:  $:$Id: LinkDefDraw.h,v 1.1 2007/07/11 15:35:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ class TProofDraw+;
+#pragma link C++ class TProofDrawEntryList+;
 #pragma link C++ class TProofDrawEventList+;
 #pragma link C++ class TProofDrawHist+;
 #pragma link C++ class TProofDrawProfile+;

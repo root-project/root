@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.6 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.7 2007/05/08 14:57:02 rdm Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -23,7 +23,8 @@
 #include "TList.h"
 #include "TProof.h"
 #include "TROOT.h"
-
+#include "TEventList.h"
+#include "TEntryList.h"
 
 ClassImp(TProofChain)
 
@@ -111,7 +112,13 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
    if (fDrawFeedback)
       gProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
-   fSet->SetEventList(fEventList);
+
+   // Set either the entry-list (priority) or the event-list
+   if (fEntryList) {
+      fSet->SetEntryList(fEntryList);
+   } else if (fEventList) {
+      fSet->SetEntryList(fEventList);
+   }
 
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
@@ -134,7 +141,14 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
    if (fDrawFeedback)
       gProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
-   fSet->SetEventList(fEventList);
+
+   // Set either the entry-list (priority) or the event-list
+   if (fEntryList) {
+      fSet->SetEntryList(fEntryList);
+   } else if (fEventList) {
+      fSet->SetEntryList(fEventList);
+   }
+
    Long64_t rv = fSet->Draw(varexp, selection, option, nentries, firstentry);
    return rv;
 }
@@ -199,7 +213,13 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
    // in case of success.
    // See TDSet::Process().
 
-   fSet->SetEventList(fEventList);
+   // Set either the entry-list (priority) or the event-list
+   if (fEntryList) {
+      fSet->SetEntryList(fEntryList);
+   } else if (fEventList) {
+      fSet->SetEntryList(fEventList);
+   }
+
    return fSet->Process(filename, option, nentries, firstentry);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.49 2007/05/29 16:06:55 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.50 2007/07/03 16:26:44 ganis Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TDSet.h"
 #include "TError.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"
@@ -353,7 +354,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
-      if (!e->GetEventList()) {
+      if (!e->GetEntryList()){
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
@@ -386,7 +387,15 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
          cur += eNum;
       } else {
-         if (e->GetEventList()->GetN() == 0)
+         Long64_t n = 0;
+         TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
+         if (enl) {
+            n = enl->GetN();
+         } else {
+            TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
+            n = evl ? evl->GetN() : n;
+         }
+         if (!n)
             continue;
       }
       PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
@@ -413,13 +422,25 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       node->Add( e );
       PDB(kPacketizer,2) e->Print("a");
    }
-   if (dset->GetEventList())
-      fTotalEntries = dset->GetEventList()->GetN();
+   TEntryList *enl = dynamic_cast<TEntryList *>(dset->GetEntryList());
+   if (enl) {
+      fTotalEntries = enl->GetN();
+   } else {
+      TEventList *evl = dynamic_cast<TEventList *>(dset->GetEntryList());
+      fTotalEntries = evl ? evl->GetN() : fTotalEntries;
+   }
 
    PDB(kGlobal,1) Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
                        fTotalEntries, files, fFileNodes->GetSize());
 
    Reset();
+
+   if (fFileNodes->GetSize() == 0) {
+      Info("TPacketizer", "no valid or non-empty file found: setting invalid");
+      // No valid files: set invalid and return
+      fValid = kFALSE;
+      return;
+   }
 
    // Below we provide a possibility to change the way packet size is
    // calculated or define the packet size directly.
@@ -783,10 +804,18 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       (*reply) >> entries;
 
+      // Extract object name, if there
+      if ((reply->BufferSize() > reply->Length())) {
+         TString objname;
+         (*reply) >> objname;
+         e->SetTitle(objname);
+      }
+
       e->SetTDSetOffset(entries);
       if ( entries > 0 ) {
 
-         if (!e->GetEventList()) {
+         //if (!e->GetEventList()) {
+         if (!e->GetEntryList()){
             if ( e->GetFirst() > entries ) {
                Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
@@ -852,9 +881,6 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       newOffset = offset + el->GetTDSetOffset();
       el->SetTDSetOffset(offset);
       offset = newOffset;
-   }
-   if (dset->GetEventList()) {
-      SplitEventList(dset);
    }
 }
 
@@ -999,14 +1025,8 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
 
    slstat->fCurElem = CreateNewPacket(base, first, num);
-
-   if (base->GetEventList()) {
-      // take a part of the event list.
-      TEventList *evl = new TEventList();
-      for (; num > 0; num--, first++)
-         evl->Enter(base->GetEventList()->GetEntry((Int_t)first));
-      slstat->fCurElem->SetEventList(evl);
-   }
+   if (base->GetEntryList())
+      slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
    return slstat->fCurElem;
 }

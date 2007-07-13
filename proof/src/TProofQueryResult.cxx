@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.cxx,v 1.2 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.cxx,v 1.3 2007/02/12 13:05:32 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 
 #include "TDSet.h"
 #include "TError.h"
-#include "TEventList.h"
 #include "TList.h"
 #include "TProofQueryResult.h"
 #include "TSystem.h"
@@ -30,7 +29,7 @@ ClassImp(TProofQueryResult)
 //______________________________________________________________________________
 TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
                                      Long64_t ent, Long64_t fst, TDSet *dset,
-                                     const char *sel, TEventList *elist)
+                                     const char *sel, TObject *elist)
                   : TQueryResult(sn, opt, inlist, ent, fst, sel)
 {
    // Main constructor.

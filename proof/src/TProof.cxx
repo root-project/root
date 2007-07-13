@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.212 2007/07/10 08:37:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.213 2007/07/10 14:24:33 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2741,9 +2741,11 @@ void TProof::Print(Option_t *option) const
 
 //______________________________________________________________________________
 Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
-                         Long64_t nentries, Long64_t first, TEventList *evl)
+                         Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
+   // Entry- or event-lists should be set in the data set object using
+   // TDSet::SetEntryList.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -2765,7 +2767,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
-   Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first, evl);
+   Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
 
 //   // Clear input list
 //   fPlayer->ClearInput();
@@ -2782,7 +2784,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 //______________________________________________________________________________
 Long64_t TProof::Process(const char *dsetname, const char *selector,
                          Option_t *option, Long64_t nentries,
-                         Long64_t first, TEventList *evl)
+                         Long64_t first, TObject *enl)
 {
    // Process a dataset which is stored on the master with name 'dsetname'.
    // The syntax for dsetname is name[#[dir/]objname], e.g.
@@ -2794,6 +2796,8 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    //                  named "mydset"
    //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
    //                  dataset named "mydset"
+   // The last argument 'enl' specifies an entry- or event-list to be used as
+   // event selection.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -2829,7 +2833,9 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    }
 
    TDSet *dset = new TDSet(name, obj, dir);
-   Long64_t retval = Process(dset, selector, option, nentries, first, evl);
+   // Set entry list
+   dset->SetEntryList(enl);
+   Long64_t retval = Process(dset, selector, option, nentries, first);
    delete dset;
    return retval;
 }
@@ -3121,6 +3127,8 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
                             Long64_t nentries, Long64_t first)
 {
    // Execute the specified drawing action on a data set (TDSet).
+   // Event- or Entry-lists should be set in the data set object using
+   // TDSet::SetEntryList.
    // Returns -1 in case of error or number of selected events otherwise.
 
    if (!IsValid()) return -1;
@@ -3141,7 +3149,7 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
 //______________________________________________________________________________
 Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
                             const char *selection, Option_t *option,
-                            Long64_t nentries, Long64_t first)
+                            Long64_t nentries, Long64_t first, TObject *enl)
 {
    // Execute the specified drawing action on a data set which is stored on the
    // master with name 'dsetname'.
@@ -3154,6 +3162,8 @@ Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
    //                  named "mydset"
    //   "mydset#adir/" analysis of the first tree in the dir "adir" of the
    //                  dataset named "mydset"
+   // The last argument 'enl' specifies an entry- or event-list to be used as
+   // event selection.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -3189,6 +3199,8 @@ Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
    }
 
    TDSet *dset = new TDSet(name, obj, dir);
+   // Set entry-list, if required
+   dset->SetEntryList(enl);
    Long64_t retval = DrawSelect(dset, varexp, selection, option, nentries, first);
    delete dset;
    return retval;

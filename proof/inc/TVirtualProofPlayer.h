@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.3 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.4 2007/07/03 16:26:43 ganis Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************
@@ -48,8 +48,7 @@ public:
 
    virtual Long64_t  Process(TDSet *set,
                              const char *selector, Option_t *option = "",
-                             Long64_t nentries = -1, Long64_t firstentry = 0,
-                             TEventList *evl = 0) = 0;
+                             Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
    virtual Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) = 0;
    virtual Long64_t  Finalize(TQueryResult *qr) = 0;
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.29 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.30 2007/07/11 15:35:05 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TTreeFormulaManager.h"
 #include "TTree.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TEnv.h"
@@ -303,7 +304,7 @@ Bool_t TProofDraw::CompileVariables()
       }
       fManager->Add(fVar[i]);
    }
-
+   
    fManager->Sync();
    if (fManager->GetMultiplicity()==-1) fTree->SetBit(TTree::kForceRead);
    if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
@@ -836,9 +837,96 @@ void TProofDrawEventList::Terminate(void)
 
 }
 
+ClassImp(TProofDrawEntryList)
+
+//______________________________________________________________________________
+TProofDrawEntryList::~TProofDrawEntryList()
+{
+   SafeDelete(fElist);
+}
+
+//______________________________________________________________________________
+void TProofDrawEntryList::Init(TTree *tree)
+{
+   // See TProofDraw::Init().
+
+   PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
+
+   fTree = tree;
+   CompileVariables();
+}
+
+//______________________________________________________________________________
+void TProofDrawEntryList::SlaveBegin(TTree *tree)
+{
+   // See TProofDraw::SlaveBegin().
+
+   PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
+
+   fSelection = fInput->FindObject("selection")->GetTitle();
+   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+
+   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+
+   SafeDelete(fElist);
+
+   fDimension = 0;
+   fTree = 0;
+   fElist = new TEntryList("PROOF_EntryList", "PROOF_EntryList");
+   fOutput->Add(fElist);
+
+   PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
+   PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
+}
+
+//______________________________________________________________________________
+void TProofDrawEntryList::DoFill(Long64_t entry, Double_t , const Double_t *)
+{
+   // Fills the eventlist with given values.
+
+   fElist->Enter(entry);
+}
+
+//______________________________________________________________________________
+void TProofDrawEntryList::SlaveTerminate(void)
+{
+   // See TProofDraw::SlaveTerminate().
+
+   PDB(kDraw,1) Info("SlaveTerminate","Enter");
+   fElist->OptimizeStorage();
+   fElist = 0;
+}
+
+//______________________________________________________________________________
+void TProofDrawEntryList::Terminate(void)
+{
+   // See TProofDraw::Terminate().
+
+   TProofDraw::Terminate();   // take care of fStatus
+   if (!fStatus)
+      return;
+
+   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+
+   TEntryList *el = dynamic_cast<TEntryList*> (fOutput->FindObject("PROOF_EntryList"));
+
+   if (el) {
+      el->SetName(fInitialExp.Data()+2);
+      SetStatus(el->GetN());
+      if (TEntryList* old = dynamic_cast<TEntryList*> (fTreeDrawArgsParser.GetOriginal())) {
+         if (!fTreeDrawArgsParser.GetAdd())
+            old->Reset();
+         old->Add(el);
+         fOutput->Remove(el);
+         delete el;
+      }
+   }
+   else
+      Error("Terminate", "Cannot find output EventList");
+
+}
 
 ClassImp(TProofDrawProfile)
-
 
 //______________________________________________________________________________
 void TProofDrawProfile::Init(TTree *tree)

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.113 2007/07/10 08:34:57 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.114 2007/07/11 15:35:05 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TProofLimitsFinder.h"
 #include "TSortedList.h"
 #include "TTree.h"
+#include "TEntryList.h"
 #include "TDSet.h"
 #include "TDrawFeedback.h"
 #include "TNamed.h"
@@ -690,7 +691,7 @@ void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
 //______________________________________________________________________________
 Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
-                               Long64_t first, TEventList * /*evl*/)
+                               Long64_t first)
 {
    // Process specified TDSet on PROOF worker.
    // The return value is -1 in case of error and TSelector::GetStatus() in
@@ -1104,7 +1105,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
 //______________________________________________________________________________
 Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                      Option_t *option, Long64_t nentries,
-                                     Long64_t first, TEventList * /*evl*/)
+                                     Long64_t first)
 {
    // Process specified TDSet on PROOF.
    // This method is called on client and on the PROOF master.
@@ -1182,6 +1183,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       }
 
       if (!fPacketizer->IsValid()) {
+         Error("Process", "instantiated packetizer object '%s' is invalid", cl->GetName());
          fExitStatus = kAborted;
          return -1;
       }
@@ -1227,20 +1229,27 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    SetupFeedback();
 
    TString opt = option;
-   TEventList* elist = 0;
-   if (!fProof->IsMaster() && set->GetEventList()) {
-      elist = set->GetEventList();
-   }
 
    // Old servers need a dedicated streamer
    if (fProof->fProtocol < 13)
       dset->SetWriteV3(kTRUE);
 
-   if (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) {
-      // Slaves will get the entry ranges from the packetizer
-      mesg << set << fn << fInput << opt << (Long64_t)-1 << (Long64_t)0 << elist << sync;
+   // Workers will get the entry ranges from the packetizer
+   Long64_t num = (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) ? -1 : nentries;
+   Long64_t fst = (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) ? -1 : first;
+
+   // Entry- or Event- list ?
+   TEntryList *enl = (!fProof->IsMaster()) ? dynamic_cast<TEntryList *>(set->GetEntryList())
+                                           : (TEntryList *)0;
+   TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
+                                           : (TEventList *)0;
+   if (fProof->fProtocol > 14) {
+      mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
    } else {
-      mesg << set << fn << fInput << opt << nentries << first << elist << sync;
+      mesg << set << fn << fInput << opt << num << fst << evl << sync;
+      if (enl)
+         // Not supported remotely
+         Warning("Process","entry lists not supported by the server");
    }
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
@@ -2382,7 +2391,7 @@ ClassImp(TProofPlayerSuperMaster)
 //______________________________________________________________________________
 Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file,
                                           Option_t *option, Long64_t nentries,
-                                          Long64_t first, TEventList * /*evl*/)
+                                          Long64_t first)
 {
    // Process specified TDSet on PROOF. Runs on super master.
    // The return value is -1 in case of error and TSelector::GetStatus() in

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.10 2007/05/25 13:36:46 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.11 2007/06/07 09:23:21 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -51,6 +51,7 @@ class TCollection;
 class TCut;
 class TDSet;
 class TEventList;
+class TEntryList;
 class TFileInfo;
 class THashList;
 class TIter;
@@ -69,7 +70,7 @@ public:
    // TDSetElement status bits
    enum EStatusBits {
       kHasBeenLookedUp = BIT(15),
-      kWriteV3 = BIT(16)
+      kWriteV3         = BIT(16)
    };
 
 private:
@@ -79,7 +80,7 @@ private:
    TString          fMsd;        // mass storage domain name
    Long64_t         fTDSetOffset;// the global offset in the TDSet of the first
                                  // entry in this element
-   TEventList      *fEventList;  // event list to be used in processing
+   TObject         *fEntryList;  // entry (or event) list to be used in processing
    Bool_t           fValid;      // whether or not the input values are valid
    Long64_t         fEntries;    // total number of possible entries in file
    TList           *fFriends;    // friend elements
@@ -113,8 +114,8 @@ public:
    void             Print(Option_t *options="") const;
    Long64_t         GetTDSetOffset() const { return fTDSetOffset; }
    void             SetTDSetOffset(Long64_t offset) { fTDSetOffset = offset; }
-   TEventList      *GetEventList() const { return fEventList; }
-   void             SetEventList(TEventList *aList) { fEventList = aList; }
+   void             SetEntryList(TObject *aList, Long64_t first = -1, Long64_t num = -1);
+   TObject         *GetEntryList() const { return fEntryList; }
    void             Validate(Bool_t isTree);
    void             Validate(TDSetElement *elem);
    void             Invalidate() { fValid = kFALSE; }
@@ -123,7 +124,7 @@ public:
    void             Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
 
-   ClassDef(TDSetElement,5)  // A TDSet element
+   ClassDef(TDSetElement,6)  // A TDSet element
 };
 
 
@@ -132,7 +133,7 @@ class TDSet : public TNamed {
 public:
    // TDSet status bits
    enum EStatusBits {
-      kWriteV3 = BIT(16)
+      kWriteV3         = BIT(16)
    };
 
 private:
@@ -143,8 +144,10 @@ private:
    THashList     *fElements;    //-> list of TDSetElements
    Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
    TIter         *fIterator;    //! iterator on fElements
-   TEventList    *fEventList;   //! event list for processing
+   TObject       *fEntryList;   //! entry (or event) list for processing
    TProofChain   *fProofChain;  //! for browsing purposes
+
+   void           SplitEntryList(); //Split entry list between elements
 
    TDSet(const TDSet &);           // not implemented
    void operator=(const TDSet &);  // not implemented
@@ -169,7 +172,7 @@ public:
    virtual Long64_t      Process(const char *selector, Option_t *option = "",
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,
-                                 TEventList *evl = 0); // *MENU*
+                                 TObject *enl = 0); // *MENU*
    virtual Long64_t      Draw(const char *varexp, const char *selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
@@ -200,7 +203,7 @@ public:
    TDSetElement         *Current() const { return fCurrent; };
 
    static Long64_t       GetEntries(Bool_t isTree, const char *filename,
-                                    const char *path, const char *objname);
+                                    const char *path, TString &objname);
 
    void                  AddInput(TObject *obj);
    void                  ClearInput();
@@ -209,8 +212,8 @@ public:
    virtual void          StartViewer(); // *MENU*
 
    virtual TTree        *GetTreeHeader(TProof *proof);
-   virtual void          SetEventList(TEventList *evl) { fEventList = evl;}
-   TEventList           *GetEventList() const {return fEventList; }
+   virtual void          SetEntryList(TObject *aList);
+   TObject              *GetEntryList() const { return fEntryList; }
    void                  Validate();
    void                  Validate(TDSet *dset);
 
@@ -219,7 +222,7 @@ public:
 
    void                  SetWriteV3(Bool_t on = kTRUE);
 
-   ClassDef(TDSet,5)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,6)  // Data set for remote processing (PROOF)
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.19 2007/05/08 14:56:19 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.20 2007/07/11 14:23:10 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TList;
 class TIter;
 class TTree;
 class TEventList;
+class TEntryList;
 
 //------------------------------------------------------------------------
 
@@ -60,6 +61,8 @@ protected:
    Bool_t         fStop;         // termination of run requested
    TEventList    *fEventList;    //! eventList for processing
    Int_t          fEventListPos; //! current position in the eventList
+   TEntryList    *fEntryList;    //! entry list for processing
+   Long64_t       fEntryListPos; //! current position in the entrylist
 
    Int_t          LoadDir();     // Load the directory pointed to by fElem
 

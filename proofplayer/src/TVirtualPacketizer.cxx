@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.11 2007/07/03 16:26:44 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.12 2007/07/09 15:43:58 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TVirtualPacketizer                                                   //
 //                                                                      //
-// Packetizer is a load balancing object created for each query.        //
+// The packetizer is a load balancing object created for each query.    //
 // It generates packets to be processed on PROOF worker servers.        //
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
@@ -38,6 +38,7 @@
 #include "TDSet.h"
 #include "TError.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TObjString.h"
@@ -140,50 +141,6 @@ void TVirtualPacketizer::StopProcess(Bool_t /*abort*/)
    // Stop process.
 
    fStop = kTRUE;
-}
-
-//______________________________________________________________________________
-void TVirtualPacketizer::SplitEventList(TDSet *dset)
-{
-   // Splits the eventlist into parts for each file.
-   // Each part is assigned to the apropriate TDSetElement.
-
-   TEventList *mainList = dset->GetEventList();
-   R__ASSERT(mainList);
-
-   TIter next(dset->GetListOfElements());
-   TDSetElement *el, *prev;
-
-   prev = dynamic_cast<TDSetElement*> (next());
-   if (!prev)
-      return;
-   Long64_t low = prev->GetTDSetOffset();
-   Long64_t high = low;
-   Long64_t currPos = 0;
-   do {
-      el = dynamic_cast<TDSetElement*> (next());
-      if (el == 0)
-         high = kMaxLong64;         // infinity
-      else
-         high = el->GetTDSetOffset();
-
-#ifdef DEBUG
-      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < low) {
-         Error("SplitEventList", "event outside of the range of any of the TDSetElements");
-         currPos++;        // unnecessary check
-      }
-#endif
-
-      TEventList* newEventList = new TEventList();
-      while (currPos < mainList->GetN() && mainList->GetEntry((Int_t)currPos) < high) {
-         newEventList->Enter(mainList->GetEntry((Int_t)currPos) - low);
-         currPos++;
-      }
-      prev->SetEventList(newEventList);
-      prev->SetNum(newEventList->GetN());
-      low = high;
-      prev = el;
-   } while (el);
 }
 
 //______________________________________________________________________________

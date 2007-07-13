@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.9 2007/07/03 16:26:43 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.10 2007/07/09 15:43:58 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -74,7 +74,6 @@ private:
 
    virtual Bool_t HandleTimer(TTimer *timer);
 
-   void           SplitEventList(TDSet *dset);
    TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
 
 protected:

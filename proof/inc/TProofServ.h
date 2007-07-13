@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.57 2007/06/22 17:16:35 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.58 2007/07/09 15:56:43 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -145,7 +145,7 @@ private:
 
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
                                       TList *inl, Long64_t first, TDSet *dset,
-                                      const char *selec, TEventList *evl);
+                                      const char *selec, TObject *elist);
    TProofQueryResult *LocateQuery(TString queryref, Int_t &qry, TString &qdir);
    void          RemoveQuery(TQueryResult *qr, Bool_t soft = kFALSE);
    void          RemoveQuery(const char *queryref);

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.35 2007/07/02 16:22:08 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.36 2007/07/11 14:23:10 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TTree.h"
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TMap.h"
 #include "TObjString.h"
 #include "TRegexp.h"
@@ -50,6 +51,8 @@ TEventIter::TEventIter()
    fNum   = 0;
    fStop  = kFALSE;
    fOldBytesRead = 0;
+   fEventList = 0;
+   fEntryList = 0;
 }
 
 //______________________________________________________________________________
@@ -67,6 +70,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fStop  = kFALSE;
    fEventList = 0;
    fEventListPos = 0;
+   fEntryList = 0;
    fOldBytesRead = 0;
 }
 
@@ -213,8 +217,8 @@ Long64_t TEventIterObj::GetNextEvent()
       }
 
       fElem = fDSet->Next(fKeys->GetSize());
-      if (fElem->GetEventList()) {
-         Error("GetNextEvent", "EventLists not implemented");
+      if (fElem->GetEntryList()) {
+         Error("GetNextEvent", "Entry- or event-list not available");
          return -1;
       }
 
@@ -241,11 +245,12 @@ Long64_t TEventIterObj::GetNextEvent()
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
-      fEventList = fElem->GetEventList();
+      fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList());
+      fEventList = (fEntryList) ? (TEventList *)0
+                                : dynamic_cast<TEventList *>(fElem->GetEntryList());
       fEventListPos = 0;
-      if (fEventList) {
+      if (fEventList)
          fElemNum = fEventList->GetN();
-      }
 
       Long64_t num = fKeys->GetSize();
 
@@ -469,14 +474,19 @@ Long64_t TEventIterTree::GetNextEvent()
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
-      fEventList = fElem->GetEventList();
+      fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList());
+      fEventList = (fEntryList) ? (TEventList *)0
+                                : dynamic_cast<TEventList *>(fElem->GetEntryList());
+      fEntryListPos = fElemFirst;
       fEventListPos = 0;
-      if (fEventList)
+      if (fEntryList)
+         fElemNum = fEntryList->GetEntriesToProcess();
+      else if (fEventList)
          fElemNum = fEventList->GetN();
 
       Long64_t num = (Long64_t) fTree->GetEntries();
 
-      if (!fEventList) {
+      if (!fEntryList && !fEventList) {
          if ( fElemFirst > num ) {
             Error("GetNextEvent","First (%d) higher then number of entries (%d) in %s",
                fElemFirst, num, fElem->GetObjName() );
@@ -505,23 +515,35 @@ Long64_t TEventIterTree::GetNextEvent()
       PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
       fSel->Init(fTree);
       fSel->Notify();
+      TIter next(fSel->GetOutputList());
+      TEntryList *elist=0;
+      while ((elist=(TEntryList*)next())){
+         if (elist->InheritsFrom(TEntryList::Class()))
+            elist->SetTree(fTree->GetName(), fElem->GetFileName());
+      }
       if (fSel->GetAbort() == TSelector::kAbortProcess) {
          // the error has been reported
          return -1;
       }
       attach = kFALSE;
    }
-   if (!fEventList) {
+   Long64_t rv;
+
+   if (fEntryList){
+      --fElemNum;
+      rv = fEntryList->GetEntry(fEntryListPos);
+      fEntryListPos++;
+      return rv;
+   } else if (fEventList) {
+      --fElemNum;
+      rv = fEventList->GetEntry(fEventListPos);
+      fEventListPos++;
+      return rv;
+   } else {
       --fElemNum;
       ++fElemCur;
       --fNum;
       ++fCur;
       return fElemCur;
-   }
-   else {
-      --fElemNum;
-      Long64_t rv = fEventList->GetEntry(fEventListPos);
-      fEventListPos++;
-      return rv;
    }
 }

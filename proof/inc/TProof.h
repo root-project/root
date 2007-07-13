@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.118 2007/07/08 22:06:52 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.119 2007/07/10 08:37:15 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -103,9 +103,10 @@ class TVirtualMutex;
 // 11 -> 12: new progress message
 // 12 -> 13: exchange version/architecture/compiler info
 // 13 -> 14: new proofserv environment setting
+// 14 -> 15: add support for entry lists
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 14;            // protocol version number
+const Int_t       kPROOF_Protocol        = 15;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -535,10 +536,10 @@ public:
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
    Long64_t    Process(TDSet *dset, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0, TEventList *evl = 0);
+                       Long64_t firstentry = 0);
    Long64_t    Process(const char *dsetname, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0, TEventList *evl = 0);
+                       Long64_t firstentry = 0, TObject *enl = 0);
    Long64_t    DrawSelect(TDSet *dset, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
@@ -546,7 +547,7 @@ public:
    Long64_t    DrawSelect(const char *dsetname, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
-                          Long64_t firstentry = 0);
+                          Long64_t firstentry = 0, TObject *enl = 0);
    Int_t       Archive(Int_t query, const char *url);
    Int_t       Archive(const char *queryref, const char *url = 0);
    Int_t       CleanupSession(const char *sessiontag);

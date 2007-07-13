@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.14 2007/05/25 13:36:46 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.15 2007/06/07 09:23:21 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TClassTable.h"
 #include "TCut.h"
 #include "TError.h"
+#include "TEntryList.h"
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
@@ -61,6 +62,7 @@
 #include "TVirtualPerfStats.h"
 #include "TProof.h"
 #include "TProofChain.h"
+#include "TProofServ.h"
 #include "TPluginManager.h"
 #include "TChain.h"
 #include "TChainElement.h"
@@ -74,15 +76,15 @@ ClassImp(TDSet)
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement() : TNamed("",""),
-   fDirectory(),
-   fFirst(0),
-   fNum(0),
-   fMsd(),
-   fTDSetOffset(0),
-   fEventList(0),
-   fValid(kFALSE),
-   fEntries(0),
-   fFriends(0)
+                               fDirectory(),
+                               fFirst(0),
+                               fNum(0),
+                               fMsd(),
+                               fTDSetOffset(0),
+                               fEntryList(0),
+                               fValid(kFALSE),
+                               fEntries(0),
+                               fFriends(0)
 {
    // Default constructor
    ResetBit(kWriteV3);
@@ -109,7 +111,7 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    }
    fMsd         = msd;
    fTDSetOffset = 0;
-   fEventList   = 0;
+   fEntryList   = 0;
    fFriends     = 0;
    fValid       = kFALSE;
    fEntries     = -1;
@@ -130,7 +132,7 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fNum = elem.fNum;
    fMsd = elem.fMsd;
    fTDSetOffset = elem.fTDSetOffset;
-   fEventList = 0;
+   fEntryList = 0;
    fValid = elem.fValid;
    fEntries = elem.fEntries;
    fFriends = 0;
@@ -483,6 +485,38 @@ void TDSetElement::Lookup(Bool_t force)
 }
 
 //______________________________________________________________________________
+void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
+{
+   // Set entry (or event) list for this element
+
+   if (!aList)
+      return;
+
+   // Link the proper object
+   TEventList *evl = 0;
+   TEntryList *enl = dynamic_cast<TEntryList *>(aList);
+   if (!enl)
+      evl = dynamic_cast<TEventList *>(aList);
+   if (!enl && !evl) {
+      Error("SetEntryList", "type of input object must be either TEntryList "
+                            "or TEventList (found: '%s' - do nothing", aList->ClassName());
+      return;
+   }
+
+   // Action depends on the type
+   if (enl) {
+      enl->SetEntriesToProcess(num);
+   } else {
+      for (; num > 0; num--, first++)
+         evl->Enter(evl->GetEntry((Int_t)first));
+   }
+   fEntryList = aList;
+
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
 TDSet::TDSet()
 {
    // Default ctor.
@@ -492,7 +526,7 @@ TDSet::TDSet()
    fIsTree    = kFALSE;
    fIterator  = 0;
    fCurrent   = 0;
-   fEventList = 0;
+   fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
 
@@ -523,7 +557,7 @@ TDSet::TDSet(const char *name,
    fElements->SetOwner();
    fIterator = 0;
    fCurrent  = 0;
-   fEventList = 0;
+   fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
 
@@ -584,7 +618,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    fElements->SetOwner();
    fIterator = 0;
    fCurrent  = 0;
-   fEventList = 0;
+   fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
 
@@ -661,9 +695,11 @@ TDSet::~TDSet()
 
 //______________________________________________________________________________
 Long64_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentries,
-                        Long64_t first, TEventList *evl)
+                        Long64_t first, TObject *enl)
 {
    // Process TDSet on currently active PROOF session.
+   // The last argument 'enl' specifies an entry- or event-list to be used as
+   // event selection.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -672,8 +708,11 @@ Long64_t TDSet::Process(const char *selector, Option_t *option, Long64_t nentrie
       return -1;
    }
 
+   // Set entry list
+   SetEntryList(enl);
+
    if (gProof)
-      return gProof->Process(this, selector, option, nentries, first, evl);
+      return gProof->Process(this, selector, option, nentries, first);
 
    Error("Process", "no active PROOF session");
    return -1;
@@ -952,7 +991,7 @@ void TDSet::Reset()
 
 //______________________________________________________________________________
 Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path,
-                           const char *objname)
+                           TString &objname)
 {
    // Returns number of entries in tree or objects in file. Returns -1 in
    // case of error.
@@ -982,6 +1021,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    dirsave->cd();
 
    Long64_t entries;
+   Bool_t fillname = kFALSE;
    if (isTree) {
 
       TString on(objname);
@@ -989,6 +1029,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       // If a wild card we will use the first object of the type
       // requested compatible with the reg expression we got
       if (sreg.Length() <= 0 || sreg == "" || sreg.Contains("*")) {
+         fillname = kTRUE;
          if (sreg.Contains("*"))
             sreg.ReplaceAll("*", ".*");
          else
@@ -1018,7 +1059,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       TKey *key = dir->GetKey(on);
       if (key == 0) {
          ::Error("TDSet::GetEntries", "cannot find tree \"%s\" in %s",
-                 objname, filename);
+                 objname.Data(), filename);
          delete file;
          return -1;
       }
@@ -1030,6 +1071,9 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       }
       entries = tree->GetEntries();
       delete tree;
+
+      // Return full name in case of wildcards
+      objname = (fillname) ? on : objname;
 
    } else {
       TList *keys = dir->GetListOfKeys();
@@ -1152,20 +1196,39 @@ void TDSet::Validate()
 void TDSet::Lookup()
 {
    // Resolve the end-point URL for the current elements of this data set
+   // If an entry- or event- list has been given, assign the relevant portions
+   // to each element; this also allows to look-up only for the elements which
+   // have something to be processed, so it is better to do it before Lookup()
+
+   // If an entry- or event- list has been given, assign the relevant portions
+   // to each element; this allows to look-up only for the elements which have
+   // something to be processed, so it is better to do it before the real look-up
+   // operations.
+   SplitEntryList();
 
    TString msg("Looking up for exact location of files");
    UInt_t n = 0;
+   UInt_t ng = 0;
    UInt_t tot = GetListOfElements()->GetSize();
    UInt_t n2 = (tot > 50) ? (UInt_t) tot / 50 : 1;
    Bool_t st = kTRUE;
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
-      if (!elem->GetValid())
-         elem->Lookup();
+      if (elem->GetNum() != 0) { // -1 means "all entries"
+         ng++;
+         if (!elem->GetValid())
+            elem->Lookup();
+      }
       n++;
       // Notify the client
       if (gProof && (n > 0 && !(n % n2)))
          gProof->SendDataSetStatus(msg, n, tot, st);
+   }
+   // Notify the client if not all the files have entries to be processed
+   // (which may happen if an entry-list is used)
+   if (ng < tot && gProofServ) {
+      msg = Form("Files with entries to be processed: %d (out of %d)", ng, tot);
+      gProofServ->SendAsynMessage(msg);
    }
 }
 
@@ -1263,7 +1326,8 @@ void TDSetElement::Streamer(TBuffer &R__b)
          R__b >> fNum;
          R__b >> fMsd;
          R__b >> fTDSetOffset;
-         R__b >> fEventList;
+         TEventList *evl;
+         R__b >> evl;
          R__b >> fValid;
          R__b >> fEntries;
 
@@ -1298,7 +1362,7 @@ void TDSetElement::Streamer(TBuffer &R__b)
          R__b << fNum;
          R__b << fMsd;
          R__b << fTDSetOffset;
-         R__b << fEventList;
+         R__b << (TEventList *)0;
          R__b << fValid;
          R__b << fEntries;
 
@@ -1401,4 +1465,98 @@ void TDSet::SetWriteV3(Bool_t on)
          o->SetBit(TDSetElement::kWriteV3);
       else
          o->ResetBit(TDSetElement::kWriteV3);
+}
+
+//______________________________________________________________________________
+void TDSet::SetEntryList(TObject *aList)
+{
+   // Set entry (or event) list for this data set
+
+   if (!aList)
+      return;
+
+   // Link the proper object
+   TEventList *evl = 0;
+   TEntryList *enl = dynamic_cast<TEntryList *>(aList);
+   if (!enl)
+      evl = dynamic_cast<TEventList *>(aList);
+   if (!enl && !evl) {
+      Error("SetEntryList", "type of input object must be either TEntryList "
+                            "or TEventList (found: '%s' - do nothing", aList->ClassName());
+      return;
+   }
+
+   // Action depends on the type
+   fEntryList = (enl) ? enl : (TEntryList *)evl;
+
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+void TDSet::SplitEntryList()
+{
+   // Splits the main entry (or event) list into sub-lists for the elements of
+   // thet data set
+
+   if (!fEntryList) {
+      if (gDebug > 0)
+         Info("SplitEntryList", "no entry- (or event-) list to split - do nothing");
+      return;
+   }
+
+   // Action depend on type of list
+   TEntryList *enl = dynamic_cast<TEntryList *>(fEntryList);
+   if (enl) {
+      // TEntryList
+      TIter next(fElements);
+      TDSetElement *el=0;
+      TEntryList *sublist = 0;
+      while ((el=(TDSetElement*)next())){
+         sublist = enl->GetEntryList(el->GetObjName(), el->GetFileName());
+         if (sublist){
+            el->SetEntryList(sublist);
+            el->SetNum(sublist->GetN());
+         } else {
+            sublist = new TEntryList("", "");
+            el->SetEntryList(sublist);
+            el->SetNum(0);
+         }
+      }
+   } else {
+      TEventList *evl = dynamic_cast<TEventList *>(fEntryList);
+      if (evl) {
+         // TEventList
+         TIter next(fElements);
+         TDSetElement *el, *prev;
+
+         prev = dynamic_cast<TDSetElement*> (next());
+         if (!prev)
+            return;
+         Long64_t low = prev->GetTDSetOffset();
+         Long64_t high = low;
+         Long64_t currPos = 0;
+         do {
+            el = dynamic_cast<TDSetElement*> (next());
+            // kMaxLong64 means infinity
+            high = (el == 0) ? kMaxLong64 : el->GetTDSetOffset();
+#ifdef DEBUG
+            while (currPos < evl->GetN() && evl->GetEntry(currPos) < low) {
+               Error("SplitEntryList",
+                     "TEventList: event outside of the range of any of the TDSetElements");
+               currPos++;        // unnecessary check
+            }
+#endif
+            TEventList* nevl = new TEventList();
+            while (currPos < evl->GetN() && evl->GetEntry((Int_t)currPos) < high) {
+               nevl->Enter(evl->GetEntry((Int_t)currPos) - low);
+               currPos++;
+            }
+            prev->SetEntryList(nevl);
+            prev->SetNum(nevl->GetN());
+            low = high;
+            prev = el;
+         } while (el);
+      }
+   }
 }

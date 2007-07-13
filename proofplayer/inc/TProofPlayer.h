@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.47 2007/07/03 16:26:43 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.48 2007/07/11 15:35:04 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -108,8 +108,7 @@ public:
 
    Long64_t  Process(TDSet *set,
                      const char *selector, Option_t *option = "",
-                     Long64_t nentries = -1, Long64_t firstentry = 0,
-                     TEventList *evl = 0);
+                     Long64_t nentries = -1, Long64_t firstentry = 0);
    Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
    Long64_t  Finalize(TQueryResult *qr);
    Long64_t  DrawSelect(TDSet *set, const char *varexp,
@@ -223,7 +222,7 @@ public:
 
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
-                          Long64_t firstentry = 0, TEventList *evl = 0);
+                          Long64_t firstentry = 0);
    Long64_t       Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
    Long64_t       Finalize(TQueryResult *qr);
    Long64_t       DrawSelect(TDSet *set, const char *varexp,
@@ -298,7 +297,7 @@ public:
 
    Long64_t Process(TDSet *set, const char *selector,
                     Option_t *option = "", Long64_t nentries = -1,
-                    Long64_t firstentry = 0, TEventList *evl = 0);
+                    Long64_t firstentry = 0);
    void  Progress(Long64_t total, Long64_t processed)
                     { TProofPlayerRemote::Progress(total, processed); }
    void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.182 2007/06/22 17:16:35 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.183 2007/07/08 22:21:04 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TException.h"
 #include "TFile.h"
 #include "THashList.h"
@@ -1046,7 +1047,7 @@ void TProofServ::HandleSocketInput()
                                  "Found %lld %s", entries, isTree ? "entries" : "objects");
 
             TMessage answ(kPROOF_GETENTRIES);
-            answ << entries;
+            answ << entries << objname;
             SendLogFile(); // in case of error messages
             fSocket->Send(answ);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETENTRIES", "Done");
@@ -2327,7 +2328,7 @@ R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
                                                          const char *opt,
                                                          TList *inlist, Long64_t fst,
                                                          TDSet *dset, const char *selec,
-                                                         TEventList *evl)
+                                                         TObject *elist)
 {
    // Create a TProofQueryResult instance for this query.
 
@@ -2340,9 +2341,8 @@ R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
       dset->SetWriteV3(kFALSE);
 
    // Create the instance and add it to the list
-   TProofQueryResult *pqr =
-      new TProofQueryResult(fSeqNum, opt, inlist, nent, fst, dset, selec, evl);
-
+   TProofQueryResult *pqr = new TProofQueryResult(fSeqNum, opt, inlist, nent,
+                                                  fst, dset, selec, elist);
    // Title is the session identifier
    pqr->SetTitle(gSystem->BaseName(fQueryDir));
 
@@ -3021,13 +3021,22 @@ void TProofServ::HandleProcess(TMessage *mess)
    TString filename, opt;
    TList *input;
    Long64_t nentries, first;
-   TEventList *evl;
+   TEventList *evl = 0;
+   TEntryList *enl = 0;
    Bool_t sync;
 
    (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl >> sync;
+   // Get entry list information, if any (support started with fProtocol == 15)
+   if ((mess->BufferSize() > mess->Length()) && fProtocol > 14)
+      (*mess) >> enl;
 
-   if (evl)
-      dset->SetEventList(evl);
+   // Priority to the entry list
+   TObject *elist = (enl) ? (TObject *)enl : (TObject *)evl;
+   if (enl && evl)
+      // Cannot spcify both at the same time
+      SafeDelete(evl);
+   if (elist)
+      dset->SetEntryList(elist);
 
    if (IsTopMaster()) {
 
@@ -3058,8 +3067,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       TProofQueryResult *pq = 0;
 
       // Create instance of query results
-      pq = MakeQueryResult(nentries, opt, input, first, dset, filename, evl);
-
+      pq = MakeQueryResult(nentries, opt, input, first, dset, filename, elist);
       // Make sure that cleanup is done when required
       input->SetOwner();
       SafeDelete(input);
@@ -3083,7 +3091,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->Send(m);
       }
 
-      // Nothing more to do if we are not idle
+      // Nothing more to do if we are not idle  
       if (!fIdle) {
          // Notify submission
          Info("HandleProcess",
@@ -3104,12 +3112,15 @@ void TProofServ::HandleProcess(TMessage *mess)
             input    = pq->GetInputList();
             nentries = pq->GetEntries();
             first    = pq->GetFirst();
-            // Attach to data set and event list (if any)
+            // Attach to data set and entry- (or event-) list (if any)
             TObject *o = 0;
             if ((o = pq->GetInputObject("TDSet")))
                dset = (TDSet *) o;
-            if ((o = pq->GetInputObject("TEventList")))
-               evl = (TEventList *) o;
+            elist = 0;
+            if ((o = pq->GetInputObject("TEntryList")))
+               elist = o;
+            else if ((o = pq->GetInputObject("TEventList")))
+               elist = o;
             //
             // Expand selector files
             if (pq->GetSelecImp()) {

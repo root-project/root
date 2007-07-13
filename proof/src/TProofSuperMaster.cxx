@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.16 2007/01/17 17:20:42 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.17 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -302,9 +302,11 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
 
 //______________________________________________________________________________
 Long64_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
-                                    Long64_t nentries, Long64_t first, TEventList *evl)
+                                    Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
+   // Entry- or event-lists should be set in the data set object using
+   // TDSet::SetEntryList.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -316,7 +318,7 @@ Long64_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *
       GetProgressDialog()->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
                                   first, nentries);
 
-   return GetPlayer()->Process(set, selector, option, nentries, first, evl);
+   return GetPlayer()->Process(set, selector, option, nentries, first);
 }
 
 //______________________________________________________________________________

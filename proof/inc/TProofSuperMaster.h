@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.5 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.6 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,7 +42,7 @@ protected:
    Bool_t    StartSlaves(Bool_t, Bool_t);
    Long64_t  Process(TDSet *set, const char *selector,
                      Option_t *option = "", Long64_t nentries = -1,
-                     Long64_t firstentry = 0, TEventList *evl = 0);
+                     Long64_t firstentry = 0);
    void      ValidateDSet(TDSet *dset);
    virtual   TVirtualProofPlayer *MakePlayer(const char *player = 0, TSocket *s = 0);
 

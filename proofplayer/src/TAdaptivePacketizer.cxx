@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.14 2007/07/03 16:26:44 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.15 2007/07/09 15:43:58 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TDSet.h"
 #include "TError.h"
 #include "TEnv.h"
+#include "TEntryList.h"
 #include "TEventList.h"
 #include "TMap.h"
 #include "TMessage.h"
@@ -518,7 +519,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          Info("TAdaptivePacketizer",
               "processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
-      if (!e->GetEventList()) {
+      if (!e->GetEntryList()) {
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
@@ -559,7 +560,15 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
 
          cur += eNum;
       } else {
-         if (e->GetEventList()->GetN() == 0)
+         Long64_t n = 0;
+         TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
+         if (enl) {
+            n = enl->GetN();
+         } else {
+            TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
+            n = evl ? evl->GetN() : n;
+         }
+         if (!n)
             continue;
       }
       PDB(kPacketizer,2)
@@ -590,9 +599,13 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       PDB(kPacketizer,2) e->Print("a");
    }
    // it overwrites previous value!!
-   if (dset->GetEventList())
-      fTotalEntries = dset->GetEventList()->GetN();
-
+   TEntryList *enl = dynamic_cast<TEntryList *>(dset->GetEntryList());
+   if (enl) {
+      fTotalEntries = enl->GetN();
+   } else {
+      TEventList *evl = dynamic_cast<TEventList *>(dset->GetEntryList());
+      fTotalEntries = evl ? evl->GetN() : fTotalEntries;
+   }
    PDB(kGlobal,1)
       Info("TAdaptivePacketizer", "processing %lld entries in %d files on %d hosts",
                                   fTotalEntries, files, fFileNodes->GetSize());
@@ -613,6 +626,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    }
 
    if (totalNumberOfFiles == 0) {
+      Info("TAdaptivePacketizer", "no valid or non-empty file found: setting invalid");
       // No valid files: set invalid and return
       fValid = kFALSE;
       return;
@@ -947,10 +961,17 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       (*reply) >> entries;
 
+      // Extract object name, if there
+      if ((reply->BufferSize() > reply->Length())) {
+         TString objname;
+         (*reply) >> objname;
+         e->SetTitle(objname);
+      }
+
       e->SetTDSetOffset(entries);
       if ( entries > 0 ) {
 
-         if (!e->GetEventList()) {
+         if (!e->GetEntryList()) {
             if ( e->GetFirst() > entries ) {
                Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
@@ -1016,9 +1037,6 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       newOffset = offset + el->GetTDSetOffset();
       el->SetTDSetOffset(offset);
       offset = newOffset;
-   }
-   if (dset->GetEventList()) {
-      SplitEventList(dset);
    }
 }
 
@@ -1262,13 +1280,8 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    slstat->fCurElem = CreateNewPacket(base, first, num);
 
-   if (base->GetEventList()) {
-      // take a part of the event list.
-      TEventList *evl = new TEventList();
-      for (; num > 0; num--, first++)
-         evl->Enter(base->GetEventList()->GetEntry((Int_t)first));
-      slstat->fCurElem->SetEventList(evl);
-   }
+   if (base->GetEntryList())
+      slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
    return slstat->fCurElem;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.h,v 1.17 2007/03/19 10:46:10 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.h,v 1.18 2007/07/11 15:35:04 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 /*************************************************************************
@@ -46,6 +46,7 @@ class TTreeFormula;
 class TStatus;
 class TH1;
 class TEventList;
+class TEntryList;
 class TProfile;
 class TProfile2D;
 class TGraph;
@@ -143,6 +144,25 @@ public:
    virtual void        Terminate();
 
    ClassDef(TProofDrawEventList,0)  //Tree drawing selector for PROOF
+};
+
+class TProofDrawEntryList : public TProofDraw {
+ protected:
+   TEntryList *fElist;
+
+   virtual void DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   virtual void DefVar() {}
+
+ public:
+   TProofDrawEntryList() : fElist(0) {};
+   ~TProofDrawEntryList();
+
+   virtual void Init(TTree *);
+   virtual void SlaveBegin(TTree *);
+   virtual void SlaveTerminate();
+   virtual void Terminate();
+
+   ClassDef(TProofDrawEntryList, 0)  //A Selectoor to fill a TEntryList from TTree::Draw
 };
 
 
