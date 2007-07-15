@@ -35,7 +35,7 @@ PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 PEACLIBDEPM            = $(PROOFLIB) $(CLARENSLIB)
 PEACGUILIBDEPM         = $(GUILIB)
-EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB) $(FTGLLIB)
+EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB)
 VMCLIBDEPM             = $(EGLIB) $(GEOMLIB)
 PHYSICSLIBDEPM         = $(MATRIXLIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
@@ -213,8 +213,7 @@ SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libTree.lib
 PEACLIBEXTRA            = lib/libProof.lib lib/libClarens.lib
 PEACGUILIBEXTRA         = lib/libGui.lib
-EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libFTGL.lib
+EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib
 VMCLIBEXTRA             = lib/libEG.lib lib/libGeom.lib
 PHYSICSLIBEXTRA         = lib/libMatrix.lib
 PYTHIA6LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
@@ -304,7 +303,7 @@ SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBEXTRA            = -Llib -lProof -lClarens
 PEACGUILIBEXTRA         = -Llib -lGui
 X3DLIBEXTRA             = -Llib -lGraf3d -lGui
-EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad -lFTGL
+EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad
 VMCLIBEXTRA             = -Llib -lEG -lGeom
 PHYSICSLIBEXTRA         = -Llib -lMatrix
 PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
