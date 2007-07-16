@@ -5523,7 +5523,12 @@ void TTree::SetBranchStyle(Int_t style)
 void TTree::SetCacheSize(Long64_t cacheSize)
 {
    // -- Set maximum size of the file cache (default is 10000000, i.e., 10 MB).
-   //if cachesize <= 0 the existing cache (if any) is deleted
+   // if cachesize <= 0 the existing cache (if any) is deleted
+   // WARNING: Currently only ONE TTree object can be 'cached' per TFile object.
+   // This call disable the cache for the other TTree objects read from the same
+   // TFile object as this TTree (The SetCacheSize called __last__ wins).
+   // To cache multiple TTree objects in the same ROOT file, you must create 
+   // one TFile object per TTree object.
 
    TFile* file = GetCurrentFile();
    if (!file) {
