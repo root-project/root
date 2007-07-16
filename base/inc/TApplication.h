@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.31 2007/05/16 11:14:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.32 2007/06/19 12:55:18 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ class TApplication : public TObject, public TQObject {
 public:
    // TApplication specific bits
    enum EStatusBits {
-      kProcessRemotely = BIT(15)   // TRUE if this line has to be processed remotely 
+      kProcessRemotely = BIT(15)   // TRUE if this line has to be processed remotely
    };
 
 private:
@@ -115,12 +115,12 @@ public:
    virtual const char *ApplicationName() const { return fAppImp->ApplicationName(); }
    virtual void    Show()    { fAppImp->Show(); }
    virtual void    Hide()    { fAppImp->Hide(); }
-   virtual TApplicationImp *GetApplicationImp(){ return fAppImp;}
    virtual void    Iconify() { fAppImp->Iconify(); }
-   virtual Bool_t  IsCmdThread(){ return fAppImp->IsCmdThread(); }
    virtual void    Open()    { fAppImp->Open(); }
    virtual void    Raise()   { fAppImp->Raise(); }
    virtual void    Lower()   { fAppImp->Lower(); }
+   virtual Bool_t  IsCmdThread() { return fAppImp ? fAppImp->IsCmdThread() : kTRUE; }
+   virtual TApplicationImp *GetApplicationImp() { return fAppImp;}
 
    virtual void    ls(Option_t *option="") const;
 

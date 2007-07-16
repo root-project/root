@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.97 2007/06/19 12:55:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.98 2007/07/01 16:02:53 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -152,6 +152,7 @@ TApplication::TApplication(const char *appClassName,
    fNoLog         = kFALSE;
    fNoLogo        = kFALSE;
    fQuit          = kFALSE;
+   fAppImp        = 0;
 
    if (numOptions >= 0)
       GetOptions(argc, argv);
