@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.97 2007/07/12 20:30:28 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.98 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,7 +62,6 @@ Int_t  RooAbsArg::_nameLength(0) ;
 
 RooAbsArg::RooAbsArg() : 
   TNamed(), 
-  _attribList(), 
   _deleteWatch(kFALSE),
   _operMode(Auto)
 {
@@ -98,8 +97,11 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   : TNamed(other.GetName(),other.GetTitle()), 
     RooPrintable(other),
+    _boolAttrib(other._boolAttrib),
+    _stringAttrib(other._stringAttrib),
     _deleteWatch(other._deleteWatch),
     _operMode(Auto)
+  
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created 
@@ -108,14 +110,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 
   // Use name in argument, if supplied
   if (name) SetName(name) ;
-
-  // take attributes from target
-  TObject* obj ;
-  TIterator* aIter = other._attribList.MakeIterator() ;
-  while ((obj=aIter->Next())) {
-    _attribList.Add(new TObjString(obj->GetName())) ;
-  }
-  delete aIter ;
 
   // Copy server list by hand
   TIterator* sIter = other._serverList.MakeIterator() ;
@@ -178,9 +172,6 @@ RooAbsArg::~RooAbsArg()
   }
   delete clientIter ;
 
-  _attribList.Delete() ;
-  
-
   delete _clientShapeIter ;
   delete _clientValueIter ;
 
@@ -199,23 +190,22 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 
 
 void RooAbsArg::setAttribute(const Text_t* name, Bool_t value) 
-{
+{  
   // Set (default) or clear a named boolean attribute of this object.
-
-  TObject* oldAttrib = _attribList.FindObject(name) ;
-
+  
   if (value) {
-    // Add string to attribute list, if not already there
-    if (!oldAttrib) {
-      TObjString* nameObj = new TObjString(name) ;
-      _attribList.Add(nameObj) ;
-    }
+
+    _boolAttrib.insert(name) ;
+
   } else {
-    // Remove string from attribute list, if found
-    if (oldAttrib) {
-      _attribList.Remove(oldAttrib) ;
+
+    set<string>::iterator iter = _boolAttrib.find(name) ;
+    if (iter != _boolAttrib.end()) {
+      _boolAttrib.erase(iter) ;
     }
+
   }
+  
 }
 
 
@@ -223,7 +213,29 @@ Bool_t RooAbsArg::getAttribute(const Text_t* name) const
 {
   // Check if a named attribute is set. By default, all attributes
   // are unset.
-  return _attribList.FindObject(name)?kTRUE:kFALSE ;
+  return (_boolAttrib.find(name) != _boolAttrib.end()) ;
+}
+
+
+void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value) 
+{
+  if (value) {
+    _stringAttrib[key] = value ;
+  } else {
+    if (_stringAttrib.find(key)!=_stringAttrib.end()) {
+      _stringAttrib.erase(key) ;
+    }
+  }  
+}
+
+const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const 
+{
+  map<string,string>::const_iterator iter = _stringAttrib.find(key) ;
+  if (iter!=_stringAttrib.end()) {
+    return iter->second.c_str() ;
+  } else {
+    return 0 ;
+  }
 }
 
 
@@ -1140,15 +1152,14 @@ void RooAbsArg::printAttribList(ostream& os) const
 {
   // Print the attribute list 
 
-  TIterator *attribIter= _attribList.MakeIterator();
-  TObjString* attrib ;
+  set<string>::const_iterator iter = _boolAttrib.begin() ;
   Bool_t first(kTRUE) ;
-  while ((attrib=(TObjString*)attribIter->Next())) {
-    os << (first?" [":",") << attrib->String() ;
+  while (iter != _boolAttrib.end()) {
+    os << (first?" [":",") << *iter ;
     first=kFALSE ;
+    ++iter ;
   }
   if (!first) os << "] " ;
-  delete attribIter ;
 }
 
 void RooAbsArg::attachDataSet(const RooAbsData &data) 
@@ -1285,7 +1296,13 @@ TString RooAbsArg::cleanBranchName() const
   // Construct a mangled name from the actual name that
   // is free of any math symbols that might be interpreted by TTree
 
-  TString cleanName(GetName()) ;
+  // Check for optional alternate name of branch for this argument
+  TString rawBranchName = GetName() ;
+  if (getStringAttribute("BranchName")) {
+    rawBranchName = getStringAttribute("BranchName") ;
+  }
+
+  TString cleanName(rawBranchName) ;
   cleanName.ReplaceAll("/","D") ;
   cleanName.ReplaceAll("-","M") ;
   cleanName.ReplaceAll("+","P") ;
@@ -1376,19 +1393,17 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
 
   RooLinkedList retVal ;
 
-  TIterator* iter = attribIterator() ;
-  TObjString* attrib ;
-  while((attrib=(TObjString*)iter->Next())) {
-    if (attrib->String().BeginsWith("CloneOf(")) {
+  set<string>::iterator iter= _boolAttrib.begin() ;
+  while(iter != _boolAttrib.end()) {
+    if (TString(*iter).BeginsWith("CloneOf(")) {
       char buf[128] ;
-      strcpy(buf,attrib->String().Data()) ;
+      strcpy(buf,iter->c_str()) ;
       strtok(buf,"(") ;
       char* ptrToken = strtok(0,")") ;
       RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,0,16) ;
       retVal.Add(ptr) ;
     }
   }
-  delete iter ;
-
+  
   return retVal ;
 }

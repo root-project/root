@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooExtendPdf.cxx,v 1.21 2007/05/11 10:14:56 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooExtendPdf.cxx,v 1.22 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,6 +48,10 @@
 ClassImp(RooExtendPdf)
 ;
 
+
+RooExtendPdf::RooExtendPdf()
+{
+}
 
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,
 			   const RooAbsReal& norm, const char* rangeName) :

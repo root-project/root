@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.105 2007/07/12 20:30:28 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsPdf.cxx,v 1.106 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -980,6 +980,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   //
   // The following named arguments are supported
   //
+  // Name(const char* name)             -- Name of the output dataset
   // Verbose(Bool_t flag)               -- Print informational messages during event generation
   // NumEvent(int nevt)                 -- Generate specified number of events
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
@@ -1002,6 +1003,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::generate(%s)",GetName())) ;
   pc.defineObject("proto","PrototypeData",0,0) ;
+  pc.defineString("dsetName","Name",0,"") ;
   pc.defineInt("randProto","PrototypeData",0,0) ;
   pc.defineInt("resampleProto","PrototypeData",1,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -1017,6 +1019,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
   // Decode command line arguments
   RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
+  const char* dsetName = pc.getString("dsetName") ;
   Int_t  nEvents = pc.getInt("nEvents") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Bool_t randProto = pc.getInt("randProto") ;
@@ -1036,13 +1039,21 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
 
   // Forward to appropiate implementation
+  RooDataSet* data ;
   if (protoData) {
-    return generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
+    data = generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
   } else {
-    return generate(whatVars,nEvents,verbose) ;
+    data = generate(whatVars,nEvents,verbose) ;
   }
-  
+
+  // Rename dataset to given name if supplied
+  if (dsetName && strlen(dsetName)>0) {
+    data->SetName(dsetName) ;
+  }
+
+  return data ;
 }
+
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.31 2005/12/08 15:26:16 wverkerke Exp $
+ *    File: $Id: RooAbsData.h,v 1.32 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,6 +47,9 @@ public:
   RooAbsData* reduce(const RooFormulaVar& cutVar) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
+
+  // Change name of observable
+  virtual Bool_t changeObservableName(const char* from, const char* to) = 0 ;
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1) = 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.74 2007/05/14 14:37:32 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.75 2007/07/12 20:30:29 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 // use a TTree as internal storage mechanism
 
 #include "RooFit.h"
+#include "RooMsgService.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -635,6 +636,30 @@ void RooTreeData::resetCache()
   return ;
 }
 
+
+
+Bool_t RooTreeData::changeObservableName(const char* from, const char* to) 
+{
+  // Find observable to be changed
+  RooAbsArg* var = _vars.find(from) ;
+
+  // Check that we found it
+  if (!var) {
+    coutE("Dataset") << "RooTreeData::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
+    return kTRUE ;
+  }
+
+  // Process name change
+  var->SetName(to) ;
+  
+  // If variable have default tree branch association (varName=vranchName) now make
+  // branch association explicit as default will no longer hold
+  if (!var->getStringAttribute("BranchName")) {
+    var->setStringAttribute("BranchName",from) ;
+  }
+
+  return kFALSE ;
+}
 
 
 

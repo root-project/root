@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.39 2005/06/21 19:59:52 wverkerke Exp $
+ *    File: $Id: RooTreeData.h,v 1.40 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,6 +51,8 @@ public:
 	     const RooArgSet& vars, const char *cuts);  
   RooTreeData(RooTreeData const & other, const char* newname=0) ;
   virtual ~RooTreeData() ;
+
+  virtual Bool_t changeObservableName(const char* from, const char* to) ;
 
   // Load a given row of data
   virtual void fill() { Fill() ; } ;

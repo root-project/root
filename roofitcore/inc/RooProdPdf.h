@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.h,v 1.42 2007/05/11 10:14:56 verkerke Exp $
+ *    File: $Id: RooProdPdf.h,v 1.43 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@ typedef RooLinkedList* pRooLinkedList ;
 
 class RooProdPdf : public RooAbsPdf {
 public:
-  RooProdPdf() {} ;
+  RooProdPdf() ;
   RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
   RooProdPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;

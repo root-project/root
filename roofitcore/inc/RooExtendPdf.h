@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.rdl,v 1.10 2005/07/12 11:29:37 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.h,v 1.11 2007/05/11 10:14:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,7 @@
 class RooExtendPdf : public RooAbsPdf {
 public:
 
+  RooExtendPdf() ;
   RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf, 
 	       const RooAbsReal& norm, const char* rangeName=0) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=0) ;
@@ -50,7 +51,7 @@ protected:
   const TNamed* _rangeName ; // Name of subset range
 
 
-  ClassDef(RooExtendPdf,0) // Flat PDF introducing an extended likelihood term
+  ClassDef(RooExtendPdf,1) // Flat PDF introducing an extended likelihood term
 };
 
 #endif

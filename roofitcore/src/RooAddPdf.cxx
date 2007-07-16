@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.75 2007/07/12 20:30:28 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAddPdf.cxx,v 1.76 2007/07/13 21:32:08 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,7 @@ ClassImp(RooAddPdf)
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
+  //_refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
   _projListMgr(10),
@@ -67,8 +67,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _suppListMgr(10),
   _lastSupNormSet(0),
   _codeReg(10),
-  _pdfList("pdfs","List of PDFs",this),
-  _coefList("coefficients","List of coefficients",this),
+  //_pdfList("pdfs","List of PDFs",this),
+  //_coefList("coefficients","List of coefficients",this),
   _snormList(0),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE)

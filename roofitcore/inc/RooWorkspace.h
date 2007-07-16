@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooWorkspace.h,v 1.1 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooWorkspace.h,v 1.2 2007/07/13 13:30:20 pcanal Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 #include "RooPrintable.h"
 #include "RooArgSet.h"
 #include "RooLinkedList.h"
+#include "RooCmdArg.h"
 
 class RooAbsPdf ;
 class RooAbsData ;
@@ -38,8 +39,8 @@ public:
   ~RooWorkspace() ;
 
   // Import functions for dataset, functions
-  Bool_t import(const RooAbsArg& arg) ;
-  Bool_t import(RooAbsData& data) ;
+  Bool_t import(const RooAbsArg& arg, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  Bool_t import(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
 
   // Import other workspaces
   Bool_t merge(const RooWorkspace& other) ;

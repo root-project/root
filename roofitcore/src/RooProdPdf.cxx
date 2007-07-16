@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooProdPdf.cxx,v 1.64 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooProdPdf.cxx,v 1.65 2007/07/12 20:30:29 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,6 +52,17 @@ ClassImp(RooProdPdf)
 ;
 
 
+RooProdPdf::RooProdPdf() :
+  _curNormSet(0),
+  _cutOff(0),
+  _extendedIndex(-1),
+  _useDefaultGen(kFALSE)
+{
+  _pdfIter = _pdfList.createIterator() ;
+  
+}
+
+
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _partListMgr(10),
@@ -63,6 +74,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   _useDefaultGen(kFALSE)
 {
   // Dummy constructor
+  _pdfIter = _pdfList.createIterator() ;
 }
 
 

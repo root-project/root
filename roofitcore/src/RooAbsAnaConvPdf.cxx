@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsAnaConvPdf.cxx,v 1.12 2007/05/11 10:14:56 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsAnaConvPdf.cxx,v 1.13 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,6 +71,16 @@
 
 ClassImp(RooAbsAnaConvPdf) 
 ;
+
+
+RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
+  _isCopy(kFALSE),
+  _model(0),
+  _convVar(0),
+  _convNormSet(0),
+  _convSetIter(_convSet.createIterator())
+{
+}
 
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 

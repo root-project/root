@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.h,v 1.91 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsArg.h,v 1.92 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,8 @@
 #include "THashList.h"
 #include "RooPrintable.h"
 #include "RooRefCountList.h"
+#include <map>
+#include <set>
 
 class TTree ;
 class RooArgSet ;
@@ -129,7 +131,12 @@ public:
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
   Bool_t getAttribute(const Text_t* name) const ;
-  inline TIterator* attribIterator() const { return _attribList.MakeIterator() ; }
+  inline const std::set<string>& attributes() const { return _boolAttrib ; }
+
+  void setStringAttribute(const Text_t* key, const Text_t* value) ;
+  const Text_t* getStringAttribute(const Text_t* key) const ;
+  inline const std::map<string,string>& stringAttributes() const { return _stringAttrib ; }
+
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
   RooLinkedList getCloningAncestors() const ;
 
@@ -262,7 +269,8 @@ protected:
   Int_t numProxies() const ;
 	
   // Attribute list
-  THashList _attribList ; // List of string attributes
+  std::set<string> _boolAttrib ; // Boolean attributes
+  std::map<string,string> _stringAttrib ; // String attributes
   void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
@@ -297,7 +305,7 @@ private:
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
   mutable OperMode _operMode ; // Dirty state propagation mode
 
-  ClassDef(RooAbsArg,1) // Abstract variable
+  ClassDef(RooAbsArg,2) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  

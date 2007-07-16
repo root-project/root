@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooGlobalFunc.cxx,v 1.14 2007/05/14 14:37:31 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooGlobalFunc.cxx,v 1.15 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -183,6 +183,15 @@ namespace RooFit {
   RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("FitModel",0,0,0,0,0,0,reinterpret_cast<TObject*>(&os),0) ; }
   RooCmdArg Prefix(Bool_t flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Color(Color_t color)         { return RooCmdArg("Color",color,0,0,0,0,0,0,0) ; }
+
+
+  // RooWorkspace::import() arguments
+  RooCmdArg RenameConflictNodes(const char* suffix)         { return RooCmdArg("RenameConflictNodes",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RenameAllNodes(const char* suffix)              { return RooCmdArg("RenameAllNodes",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
+  RooCmdArg RenameDataset(const char* suffix)               { return RooCmdArg("RenameDataset",0,0,0,0,suffix,0,0,0) ; }
+
+
 
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
  

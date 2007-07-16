@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.h,v 1.12 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooGlobalFunc.h,v 1.13 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -170,6 +170,13 @@ RooCmdArg TagName(const char* name) ;
 RooCmdArg OutputStream(ostream& os) ;
 RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
+
+
+// RooWorkspace::import() arguments
+RooCmdArg RenameConflictNodes(const char* suffix) ;
+RooCmdArg RenameAllNodes(const char* suffix) ; 
+RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
+RooCmdArg RenameDataset(const char* suffix) ;
 
 
 RooConstVar& RooConst(Double_t val) ; 

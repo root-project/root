@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.6 2005/12/01 16:10:18 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.h,v 1.7 2007/05/11 10:14:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,7 @@ class RooAbsAnaConvPdf : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooAbsAnaConvPdf() { }
+  RooAbsAnaConvPdf() ;
   RooAbsAnaConvPdf(const char *name, const char *title, 
 		   const RooResolutionModel& model, 
 		   RooRealVar& convVar) ;
@@ -79,8 +79,8 @@ protected:
 
   // Following pointers are only used during 
   // construction and need not to be proxied
-  RooResolutionModel* _model   ; // Original resolution model
-  RooRealVar* _convVar ;         // Convolution variable
+  RooResolutionModel* _model   ; //! Original resolution model
+  RooRealVar* _convVar ;         //! Convolution variable
 
   RooArgSet* parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars=0) const ;
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const ;
@@ -90,13 +90,13 @@ protected:
 
   RooListProxy _convSet  ;             //  Set of (resModel (x) basisFunc) convolution objects
   RooArgList _basisList ;              //  List of created basis functions
-  mutable RooArgSet* _convNormSet ;    //  Subset of last normalization that applies to convolutions
+  mutable RooArgSet* _convNormSet ;    //!  Subset of last normalization that applies to convolutions
   mutable TIterator* _convSetIter ;    //! Iterator over _convNormSet
 
-  mutable RooArgList _coefVarList;           
+  mutable RooArgList _coefVarList;               
   mutable RooNormListManager _coefNormMgr ; //! Coefficient normalization manager
 
-  mutable RooAICRegistry _codeReg ; 
+  mutable RooAICRegistry _codeReg ;   //!
 
   ClassDef(RooAbsAnaConvPdf,1) // Abstract Composite Convoluted PDF
 };
