@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.62 2007/07/11 22:13:30 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.63 2007/07/12 17:12:14 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2305,10 +2305,15 @@ int XrdProofdProtocol::Login()
    if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
        fgMgr.DataSetDir()) {
       XrdOucString dsetdir = fgMgr.DataSetDir();
-      dsetdir += "/";
-      dsetdir += fGroupID;
-      dsetdir += "/";
-      dsetdir += fClientID;
+      if (dsetdir.length() > 0) {
+         dsetdir += "/";
+         dsetdir += fGroupID;
+         dsetdir += "/";
+         dsetdir += fClientID;
+      } else {
+         dsetdir += fUI.fWorkDir;
+         dsetdir += "/datasets";
+      }
       if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgChangeOwn) == -1) {
          XrdOucString emsg("Login: unable to assert dataset dir: ");
          emsg += dsetdir;
@@ -3624,10 +3629,15 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
       if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
          fgMgr.DataSetDir()) {
          XrdOucString dsetdir = fgMgr.DataSetDir();
-         dsetdir += '/';
-         dsetdir += fPClient->Group()->Name();
-         dsetdir += '/';
-         dsetdir += fPClient->ID();
+         if (dsetdir.length() > 0) {
+            dsetdir += "/";
+            dsetdir += fGroupID;
+            dsetdir += "/";
+            dsetdir += fClientID;
+         } else {
+            dsetdir += fUI.fWorkDir;
+            dsetdir += "/datasets";
+         }
          if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgChangeOwn) == -1) {
             MTRACE(XERR, "xpd:child: ",
                          "SetProofServEnv: unable to assert dataset dir: "<<dsetdir);
