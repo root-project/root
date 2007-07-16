@@ -1,13 +1,12 @@
-// $Id: Run_Simple_Test.C,v 1.4 2005/02/08 22:38:23 rdm Exp $
+// $Id: Run_Simple_Test.C,v 1.5 2005/02/12 02:14:54 rdm Exp $
 //
 //
 
 // Preparation:
 // - configure authentication
-// - configure $ROOTSYS/proof/etc/proof.conf
+// - configure $ROOTSYS/proof/etc/proof.conf (use full domain name)
 // - optional: change the data directory below (needs 350 Mb)
-// - start rootd
-// - start proofd
+// - start xrootd with proof
 
 #include "TSystem.h"
 #include "TEnv.h"
@@ -26,7 +25,7 @@ const int  files_per_node = 2;
 const int  max_files_per_slave = 1;
 
 
-void Run_Simple_Test()
+void Run_Simple_Test(char *host)
 {
 
    gSystem->Exec("cd $ROOTSYS/test; make libEvent.so");
@@ -34,7 +33,8 @@ void Run_Simple_Test()
    gSystem->Exec("ln -s ../Event.h");
    gSystem->Load("../libEvent.so");
 
-   gROOT->Proof();
+   TProof::Reset(host);
+   TProof::Open(host);
 //   gProof->SetLogLevel(2);
 
    gProof->UploadPackage("event.par");

@@ -1,4 +1,4 @@
-// $Id: make_tdset.C,v 1.7 2006/08/01 01:10:21 rdm Exp $
+// $Id: make_tdset.C,v 1.8 2007/03/14 15:55:35 rdm Exp $
 //
 //
 
@@ -41,7 +41,7 @@ TDSet *make_tdset(const char *basedir, Int_t files_per_slave, Int_t max_per_node
    nodelist.SetOwner();
    TList msdlist;
    msdlist.SetOwner();
-   TList* l = gProof->GetSlaveInfo();
+   TList* l = gProof->GetListOfSlaveInfos();
    for(Int_t i=0 ; i < l->GetSize() ; i++){
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
       if (si->fStatus != TSlaveInfo::kActive) continue;

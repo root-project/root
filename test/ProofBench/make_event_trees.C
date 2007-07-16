@@ -1,4 +1,4 @@
-// $Id: make_event_trees.C,v 1.8 2006/06/21 16:20:37 rdm Exp $
+// $Id: make_event_trees.C,v 1.9 2006/10/18 14:37:53 rdm Exp $
 //
 //
 
@@ -56,7 +56,7 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
       slavemacro << "   TString hn = gSystem->HostName();"                                << endl;
    slavemacro << "   TString ord = gProofServ->GetOrdinal();"                             << endl;
    slavemacro <<                                                                             endl;
-   TList* l = gProof->GetSlaveInfo();
+   TList* l = gProof->GetListOfSlaveInfos();
    for (Int_t i=0; i<l->GetSize(); i++) {
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
       if (si->fStatus != TSlaveInfo::kActive) continue;
