@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.154 2007/06/28 19:52:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.155 2007/07/04 08:48:04 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -296,11 +296,41 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
                *error = (EErrorCode)local_error;
          }
 
-         if (ret==0) ret = G__int_cast(local_res);
+         if (ret == 0) ret = G__int_cast(local_res);
 
          gROOT->SetLineHasBeenProcessed();
-      } else
+      } else {
          ret = ProcessLineAsynch(line, error);
+      }
+   } else {
+      if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+         gGlobalMutex->Lock();
+         if (!gCINTMutex)
+            gCINTMutex = gGlobalMutex->Factory(kTRUE);
+         gGlobalMutex->UnLock();
+      }
+      R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
+      gROOT->SetLineIsProcessing();
+
+      G__value local_res;
+      G__setnull(&local_res);
+
+      int local_error = 0;
+
+      int prerun = G__getPrerun();
+      G__setPrerun(0);
+      ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, &local_res);
+      G__setPrerun(prerun);
+      if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
+         ResetGlobals();
+         exit(fExitCode);
+      }
+      if (error)
+         *error = (EErrorCode)local_error;
+
+      if (ret == 0) ret = G__int_cast(local_res);
+
+      gROOT->SetLineHasBeenProcessed();
    }
    return ret;
 }
@@ -319,9 +349,12 @@ Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
 
-   if (gApplication && gApplication->IsCmdThread())
-      return ProcessLine(line, error);
-   return 0;
+   if (gApplication) {
+      if (gApplication->IsCmdThread())
+         return ProcessLine(line, error);
+      return 0;
+   }
+   return ProcessLine(line, error);
 }
 
 //______________________________________________________________________________
@@ -924,13 +957,8 @@ Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
-   if (gApplication)
-      return gApplication->ProcessFile(filename, (int*)error);
-   else
-      /*G__value result =*/ G__exec_tempfile((char*)filename);
-   return 0;  // could get return value from result, but what about return type?
+   return TApplication::ExecuteFile(filename, (int*)error);
 }
-
 
 //______________________________________________________________________________
 const char *TCint::GetTopLevelMacroName()
