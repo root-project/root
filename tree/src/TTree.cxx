@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.331 2007/06/21 19:14:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.332 2007/07/02 14:28:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5060,6 +5060,9 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    Long64_t nlines = 0;
    while(status > 0) {
 
+      while (isspace(in.peek())) {
+         in.get();
+      }
       if ( in.peek() != '#' ) {
          //loop on branches and read the branch values into their buffer
          for (Int_t i=0;i<nbranches;i++) {
@@ -5434,6 +5437,14 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
          bcount = leafcount->GetBranch();
          if (status) bcount->ResetBit(kDoNotProcess);
          else        bcount->SetBit(kDoNotProcess);
+      }
+   }
+   if (nb==0 && strchr(bname,'*')==0) {
+      branch = GetBranch(bname);
+      if (branch) {
+         if (status) branch->ResetBit(kDoNotProcess);
+         else        branch->SetBit(kDoNotProcess);
+         ++nb;
       }
    }
 
