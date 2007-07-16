@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.98 2007/07/01 16:02:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.99 2007/07/16 07:54:10 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -765,30 +765,39 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 }
 
 //______________________________________________________________________________
-Long_t TApplication::ProcessFile(const char *name, int *error)
+Long_t TApplication::ProcessFile(const char *file, Int_t *error)
 {
    // Process a file containing a C++ macro.
 
+   return ExecuteFile(file, error);
+}
+
+//______________________________________________________________________________
+Long_t TApplication::ExecuteFile(const char *file, Int_t *error)
+{
+   // Execute a file containing a C++ macro (static method). Can be used
+   // while TApplication is not yet created.
+
    const Int_t kBufSize = 1024;
 
-   if (!name || !*name) return 0;
+   if (!file || !*file) return 0;
 
    TString aclicMode;
    TString arguments;
    TString io;
-   TString fname = gSystem->SplitAclicMode(name, aclicMode, arguments, io);
+   TString fname = gSystem->SplitAclicMode(file, aclicMode, arguments, io);
 
    char *exnam = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
    if (!exnam) {
-      Error("ProcessFile", "macro %s not found in path %s", fname.Data(),
-            TROOT::GetMacroPath());
+      ::Error("TApplication::ExecuteFile", "macro %s not found in path %s", fname.Data(),
+              TROOT::GetMacroPath());
       delete [] exnam;
       return 0;
    }
 
-   ::ifstream file(exnam, ios::in);
-   if (!file.good()) {
-      Error("ProcessFile", "%s no such file", exnam);
+   ::ifstream macro(exnam, ios::in);
+   if (!macro.good()) {
+      ::Error("TApplication::ExecuteFile", "%s no such file", exnam);
       delete [] exnam;
       return 0;
    }
@@ -803,8 +812,8 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
    Long_t retval = 0;
 
    while (1) {
-      file.getline(currentline, kBufSize);
-      if (file.eof()) break;
+      macro.getline(currentline, kBufSize);
+      if (macro.eof()) break;
       s = currentline;
       while (s && (*s == ' ' || *s == '\t')) s++;   // strip-off leading blanks
 
@@ -831,7 +840,7 @@ Long_t TApplication::ProcessFile(const char *name, int *error)
       if (!*s || *s == '#' || ifndefc || !strncmp(s, "//", 2)) continue;
 
       if (!strncmp(s, ".X", 2) || !strncmp(s, ".x", 2)) {
-         retval = ProcessFile(s+3);
+         retval = ExecuteFile(s+3);
          execute = kTRUE;
          continue;
       }
@@ -857,7 +866,7 @@ again:
       if (!comment && *s == '{') tempfile = 1;
       if (!comment) break;
    }
-   file.close();
+   macro.close();
 
    if (!execute) {
       TString exname = exnam;

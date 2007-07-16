@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.32 2007/06/19 12:55:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.33 2007/07/16 07:54:10 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
    virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Long_t  ProcessFile(const char *line, Int_t *error = 0);
+   virtual Long_t  ProcessFile(const char *file, Int_t *error = 0);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -134,18 +134,19 @@ public:
    void            ClearInputFiles();
 
    TApplication   *GetAppRemote() const { return fAppRemote; }
-   static TList   *GetApplications();
 
    Bool_t          IsRunning() const { return fIsRunning; }
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
-   static void     CreateApplication();
-   static void     NeedGraphicsLibs();
-
    virtual void    Terminate(Int_t status = 0);   //*SIGNAL*
    virtual void    KeyPressed(Int_t key);         //*SIGNAL*
    virtual void    ReturnPressed(char *text );    //*SIGNAL*
+
+   static Long_t   ExecuteFile(const char *file, Int_t *error = 0);
+   static TList   *GetApplications();
+   static void     CreateApplication();
+   static void     NeedGraphicsLibs();
 
    ClassDef(TApplication,0)  //GUI application singleton
 };
