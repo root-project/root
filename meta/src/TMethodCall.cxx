@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.28 2006/11/24 14:24:54 rdm Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.29 2007/01/29 16:09:47 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -87,6 +87,7 @@ TMethodCall::TMethodCall(const TMethodCall &orig) : TObject(orig)
    // Copy ctor.
 
    fFunc     = orig.fFunc ? new G__CallFunc(*orig.fFunc) : 0;
+   fOffset   = orig.fOffset;
    fClass    = orig.fClass;
    fMethod   = orig.fMethod;
    fParams   = orig.fParams;
@@ -105,6 +106,7 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
    if (this != &rhs) {
       delete fFunc;
       fFunc     = rhs.fFunc ? new G__CallFunc(*rhs.fFunc) : 0;
+      fOffset   = rhs.fOffset;
       fClass    = rhs.fClass;
       fMethod   = rhs.fMethod;
       fParams   = rhs.fParams;
