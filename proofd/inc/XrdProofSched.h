@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.h,v 1.1 2007/06/21 08:00:01 ganis Exp $
 // Author: G. Ganis  Jun 2007
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 //                                    XrdOucError *edest);              //
 // }                                                                    //
 // Here 'cfg' is the xrootd config file where directives to configure   //
-// the scheduler an be specified, 'mgr' is the instance of the cluster  //
+// the scheduler are specified, 'mgr' is the instance of the cluster    //
 // manager from where the scheduler can get info about the available    //
 // workers and their status, 'grpmgr' is the instance of the group      //
 // bringing the definition of the groups for this run, and 'edest' is   //
@@ -82,7 +82,11 @@ protected:
    int               fMaxSessions; // max number of sessions per client
    int               fWorkerMax;   // max number or workers per user
    int               fWorkerSel;   // selection option
-   int               fNextWrk;     // Reference index for RR sel option 
+   int               fNextWrk;     // Reference index for RR sel option
+   int               fOptWrksPerUnit; // optimal # of workers per CPU/HD
+   int               fMinForQuery; // Minimal number of workers for a query
+   double            fNodesFraction; // the fraction of free units to assign
+                                     // to a query.
 
    XrdOucError      *fEDest;      // Error message handler
 

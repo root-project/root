@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.2 2007/06/22 16:33:23 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.3 2007/07/11 22:13:30 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -476,8 +476,7 @@ std::list<XrdProofWorker *> *XrdProofdManager::GetActiveWorkers()
 //__________________________________________________________________________
 int XrdProofdManager::ReadPROOFcfg()
 {
-   // Read PROOF config file and load the information in memory in 
-   // fWorkers.
+   // Read PROOF config file and load the information in fWorkers.
    // NB: 'master' information here is ignored, because it is passed
    //     via the 'xpd.workdir' and 'xpd.image' config directives
 

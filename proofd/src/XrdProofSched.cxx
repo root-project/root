@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.2 2007/06/22 12:21:27 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.3 2007/06/26 10:38:09 ganis Exp $
 // Author: G. Ganis  September 2007
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 //                                    XrdOucError *edest);              //
 // }                                                                    //
 // Here 'cfg' is the xrootd config file where directives to configure   //
-// the scheduler an be specified, 'mgr' is the instance of the cluster  //
+// the scheduler are specified, 'mgr' is the instance of the cluster    //
 // manager from where the scheduler can get info about the available    //
 // workers and their status, 'grpmgr' is the instance of the group      //
 // bringing the definition of the groups for this run, and 'edest' is   //
@@ -55,7 +55,7 @@ extern XrdOucTrace *XrdProofdTrace;
 #define TRACEID gTraceID
 
 //
-// Example of scheduler loader for a schedulr implementation called XrdProofSchedDyn
+// Example of scheduler loader for an implementation called XrdProofSchedDyn
 //
 // extern "C" {
 // //______________________________________________________________________________
@@ -98,6 +98,10 @@ XrdProofSched::XrdProofSched(const char *name,
    fWorkerSel = kSSORoundRobin;
    fNextWrk = 1;
    fEDest = e;
+   fOptWrksPerUnit = 2;
+   fMinForQuery = 2;
+   fNodesFraction = 0.5;
+
    memset(fName, 0, kXPSMXNMLEN);
    if (name)
       memcpy(fName, name, kXPSMXNMLEN-1);
@@ -160,6 +164,15 @@ int XrdProofSched::Config(const char *cfg)
                   fWorkerSel = kSSOLoadBased;
                else
                   fWorkerSel = kSSORoundRobin;
+            } else if (s.beginswith("fraction:")) {
+               s.replace("fraction:","");
+               fNodesFraction = strtod(s.c_str(), (char **)0);
+            } else if (s.beginswith("optnwrks:")) {
+               s.replace("mxwrksunit:","");
+               fOptWrksPerUnit = strtol(s.c_str(), (char **)0, 10);
+            } else if (s.beginswith("minforquery:")) {
+               s.replace("minforquery:","");
+               fMinForQuery = strtol(s.c_str(), (char **)0, 10);
             }
          }
       } else if (!(strncmp("xpd.resource", var, 12))) {
@@ -213,11 +226,12 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy */*xps*/)
    for (iter = wrks->begin(); iter != wrks->end(); ++iter) {
       TRACE(DBG, "GetNumWorkers: "<< (*iter)->fImage<<
                  " : # act: "<<(*iter)->GetNActiveSessions());
-      if ((*iter)->fType != 'M' && (*iter)->GetNActiveSessions() <= 2)
+      if ((*iter)->fType != 'M'
+         && (*iter)->GetNActiveSessions() < fOptWrksPerUnit)
          nFreeCPUs++;
    }
 
-   int nWrks = nFreeCPUs / 2 + 2;
+   int nWrks = (int)(nFreeCPUs * fNodesFraction) + fMinForQuery;
    nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
    TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< nWrks);
 
@@ -250,9 +264,8 @@ int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
    wrks->push_back(mst);
 
    if (fWorkerSel == kSSOLoadBased) {
-      // New option in the dyn scheduler
-      // determines the #workers to be used given current load and
-      // assigns least loaded workers
+      // Dynamic scheduling: the scheduler will determine the #workers
+      // to be used based on the current load and assign the least loaded ones
 
       // Sort the workers by the load
       XrdProofWorker::Sort(acws, XpdWrkComp);
