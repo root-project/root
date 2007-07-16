@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.12 2007/01/03 18:50:36 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.13 2007/02/01 15:26:19 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -112,13 +112,16 @@ void TTreeCache::AddBranch(TBranch *b)
 
    if (!fIsLearning) return;
 
+   // Reject branch that are not from the cached tree.
+   if (!b || fTree != b->GetTree()) return;
+
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
    for (int i=0;i<fNbranches;i++) {
       if (fBranches[i] == b) {isNew = kFALSE; break;}
    }
    if (isNew) {
-      fTree = b->GetTree();
+      // fTree = b->GetTree();
       fBranches[fNbranches] = b;
       fBrNames->Add(new TObjString(b->GetName()));
       fZipBytes += b->GetZipBytes();
