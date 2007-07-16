@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.32 2007/03/05 10:42:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.33 2007/06/25 15:34:00 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -74,7 +74,7 @@
 #include "TError.h"
 
 
-TEnv *gEnv;
+TEnv *gEnv;  // main environment created in TROOT
 
 
 static struct BoolNameTable_t {
