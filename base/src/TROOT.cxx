@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.215 2007/05/14 10:18:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.216 2007/06/06 22:41:23 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -815,6 +815,7 @@ TColor *TROOT::GetColor(Int_t color) const
 {
    // Return address of color with index color.
 
+   TColor::InitializeColors();
    TObjArray *lcolors = (TObjArray*) GetListOfColors();
    if (color < 0 || color >= lcolors->GetSize()) return 0;
    TColor *col = (TColor*)lcolors->At(color);
