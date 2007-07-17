@@ -109,7 +109,7 @@ RFLX_GENMAPX   = bin/genmap$(EXEEXT)
 ALLEXECS += $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(RFLX_GENMAPX)
 
 ##### local rules #####
-postbin: $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
+POSTBIN += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		@(if [ ! -d "include/Reflex" ]; then          \
