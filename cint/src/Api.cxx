@@ -124,8 +124,10 @@ extern "C" G__value G__APIGetSpecialObject_layer1(char *item,void** pptr
 void Cint::G__InitGetSpecialObject(G__pMethodSpecialObject pmethod) 
 {
   G__LockCriticalSection();
-  G__GetSpecialObject
-	=(G__value (*)(char*,void**,void**))G__APIGetSpecialObject_layer1;
+  if (pmethod) {
+     G__GetSpecialObject
+        =(G__value (*)(char*,void**,void**))G__APIGetSpecialObject_layer1;
+  } else G__GetSpecialObject = 0;
   G__UserSpecificGetSpecialObject = pmethod;
   G__UnlockCriticalSection();
 }

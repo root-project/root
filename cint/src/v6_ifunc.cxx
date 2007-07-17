@@ -1027,7 +1027,47 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
         /* This is the normal case. This block is skipped only when 
          * compicated template instantiation is done during reading 
          * argument list 'f(vector<int> &x) { }' */
-        --G__p_ifunc->allifunc;
+         // Or we we autoloaded a library while reading this func prototype.
+         // In that case we might have added tons of ifunc tables - a simple
+         //--G__p_ifunc->allifunc;
+         // is not sufficient.
+         // Instead, switch store_ifunc_tmp with the last one of its chain.
+
+         G__ifunc_table_internal* ifunc_last = store_ifunc_tmp;
+         while (ifunc_last->next && ifunc_last->next->next)
+            ifunc_last = ifunc_last->next;
+         if (ifunc_last != store_ifunc_tmp) {
+            // only supported for G__MAX_IFUNC==1 for now.
+            G__ASSERT(G__MAXIFUNC==1);
+
+            // different, so switch
+            G__ifunc_table_internal tmp = *store_ifunc_tmp;
+            *store_ifunc_tmp = *ifunc_last;
+            *ifunc_last = tmp;
+
+            // fix link
+            ifunc_last->next = store_ifunc_tmp->next;
+            store_ifunc_tmp->next = tmp.next;
+
+            // fix pageno
+            ifunc_last->page = store_ifunc_tmp->page;
+            store_ifunc_tmp->page = tmp.page;
+
+            // fix pentry
+            if (ifunc_last->pentry[0] == &store_ifunc_tmp->entry[0])
+               ifunc_last->pentry[0] = &ifunc_last->entry[0];
+            if (store_ifunc_tmp->pentry[0] == &ifunc_last->entry[0])
+               store_ifunc_tmp->pentry[0] = &store_ifunc_tmp->entry[0];
+
+            // for matching ++allifunc below:
+            store_ifunc_tmp = ifunc_last;
+
+            // prevent overzealous d'tor from destroying 
+            // our precious default parameters:
+            tmp.param[0].fparams = 0;
+         }
+         G__p_ifunc = ifunc_last;
+         --G__p_ifunc->allifunc;
       }
       cin=')';
       if(G__dispsource) G__disp_mask=0;
@@ -1348,6 +1388,8 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
    * else if body exists or ansi header    increment ifunc
    ****************************************************************/
   ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist,0xffff);
+  if (ifunc == G__p_ifunc)
+     ifunc = 0;
 
   if(G__ifile.filenum<G__nfile) {
 

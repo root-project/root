@@ -207,9 +207,9 @@ char *G__valuemonitor(G__value buf,char *temp)
   case 'c':
     G__charaddquote(temp2,G__convertT<char>(&buf));
     if(G__in_pause)
-      sprintf(temp,"(char %ld)%s",buf.obj.i,temp2);
+      sprintf(temp,"(char %d)%s",G__convertT<char>(&buf),temp2);
     else
-      sprintf(temp,"(char)%ld",buf.obj.i);
+      sprintf(temp,"(char)%d",G__convertT<char>(&buf));
     break;
   case 'r':
     if(G__in_pause)
@@ -1507,7 +1507,7 @@ int G__isfloat(char *string,int *type)
      else if (len == lenmax) {
         long l = atol(string);
         if (!unsign && (l > INT_MAX || l < INT_MIN)
-            || unsign && l > UINT_MAX)
+            || unsign && l > (long)UINT_MAX)
            *type = 'l';
      } else if (len == lenmaxl) {
         if (unsign) {

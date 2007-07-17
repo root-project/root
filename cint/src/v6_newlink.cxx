@@ -2075,7 +2075,7 @@ void G__add_macro(const char *macroin)
   if (macroin[0] == '!')
      goto end_add_macro;
 
-  sprintf(temp,"-D%s ",macro);
+  sprintf(temp,"\"-D%s\" ",macro);
   p = strstr(G__macros,temp);
   /*   " -Dxxx -Dyyy -Dzzz"
    *       p  ^              */
@@ -2088,7 +2088,7 @@ void G__add_macro(const char *macroin)
     }
   }
   else {
-    sprintf(G__macros,"%s-D%s ",temp,macro);
+    sprintf(G__macros,"%s\"-D%s\" ",temp,macro);
   }
 
   switch(G__globalcomp) {
@@ -6928,9 +6928,24 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 #endif
    
   if (G__p_ifunc->allifunc == G__MAXIFUNC) {
-     G__fprinterr(G__serr, "Attempt to add function %s failed - ifunc_table overflow!\n",
-         funcname);
-     return 0;
+    G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
+    G__p_ifunc->next->allifunc=0;
+    G__p_ifunc->next->next=(struct G__ifunc_table_internal *)NULL;
+    G__p_ifunc->next->page = G__p_ifunc->page+1;
+    G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
+    G__p_ifunc = G__p_ifunc->next;
+    {
+      int ix;
+      for(ix=0;ix<G__MAXIFUNC;ix++) {
+        G__p_ifunc->funcname[ix] = (char*)NULL;
+        G__p_ifunc->userparam[ix] = 0;
+      }
+    }
+     
+    //G__fprinterr(G__serr, "Attempt to add function %s failed - ifunc_table overflow!\n",
+    //     funcname);
+    // return 0;
   }
   G__func_now=G__p_ifunc->allifunc;
 

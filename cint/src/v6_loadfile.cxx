@@ -1853,27 +1853,35 @@ int G__loadfile(const char *filenamein)
       G__UnlockCriticalSection();
       return(G__LOADFILE_SUCCESS);
     }
-    G__srcfile[G__nfile].dictpos
-      = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
-    G__srcfile[G__nfile].dictpos->ptype = (char*)NULL;
-    G__store_dictposition(G__srcfile[G__nfile].dictpos);
-    /***************************************************
-     * set
-     *  char  G__filenameary[][]
-     *  FILE *G__filearray
-     *  int  G__nfile
-     ***************************************************/
+
     /********************************************
      * if there is null_entry which has been
      * unloaded, use that index.
      ********************************************/
     if(null_entry == -1) {
       fentry = G__nfile;
-      G__nfile++;
+      // G__nfile++; after we've stored the dict pos!
     }
     else {
       fentry=null_entry;
     }
+    // G__ignoreinclude might have loaded some more libs,
+    // so update G__ifile to point to fentry:
+    G__ifile.filenum = fentry;
+    G__srcfile[fentry].dictpos
+      = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+    G__srcfile[fentry].dictpos->ptype = (char*)NULL;
+    G__store_dictposition(G__srcfile[fentry].dictpos);
+    if(null_entry == -1) {
+      G__nfile++;
+    }
+
+    /***************************************************
+     * set
+     *  char  G__filenameary[][]
+     *  FILE *G__filearray
+     *  int  G__nfile
+     ***************************************************/
 
     G__srcfile[fentry].hdrprop = hdrprop;
 

@@ -4929,6 +4929,20 @@
 * - remove configure and Makefile routines for internal readline, now that 
 *   it's not part of the CINT distribution anymore.
 * - test suite now uses external diff
+*
+* 5.16.22 July 17, 2007
+* 6.1.22 July 17, 2007
+* - Revert changes to val2a.cxx that got lost in previous release
+* - Fix issue of "ifunc_table overflow" caused by auto-loading while 
+*   reading function parameters in a macro.
+*   !!! Requires (an unchanged) MAX_IFUNC==1 !!!
+* - When autoloading a lib work on a copy of the libname
+* - Fix #if defined (FOO) (space in front of opening paranthesis).
+* - Don't call the d'tor on a static member if we didn't allocate it
+*   (e.g. when parsing only)
+* - Remove several warnings (comparison signed/unsigned, unused var)
+* - Allow resetting of G__UserSpecificGetSpecialObject
+* - Surround command line macro definitions for external preprocessor by "".
 
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion
