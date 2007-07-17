@@ -470,7 +470,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild \
-                static map debian redhat skip $(POSTBIN) \
+                static map debian redhat skip postbin \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,map-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
@@ -480,7 +480,7 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-all:            rootexecs $(POSTBIN)
+all:            rootexecs postbin
 
 fast:           rootexecs
 
@@ -512,6 +512,8 @@ rootcint:       all-cint all-utils
 rootlibs:       rootcint compiledata $(ALLLIBS) $(ALLMAPS)
 
 rootexecs:      rootlibs $(ALLEXECS)
+
+postbin:        $(POSTBIN)
 
 compiledata:    $(COMPILEDATA)
 
@@ -776,19 +778,7 @@ install: all
 	else \
 	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(CINT)                   $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(MAKECINT)               $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(ROOTCINTEXE)            $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(RLIBMAP)                $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(RMKDEP)                 $(DESTDIR)$(BINDIR); \
-	   if [ "x$(BINDEXP)" != "x" ] ; then \
-	      $(INSTALL) $(BINDEXP)             $(DESTDIR)$(BINDIR); \
-           fi; \
-	   $(INSTALL) bin/root-config           $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) bin/memprobe              $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) bin/thisroot.sh           $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) bin/thisroot.csh          $(DESTDIR)$(BINDIR); \
-	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
+	   $(INSTALLDATA) bin/*                 $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
 	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
@@ -803,20 +793,6 @@ install: all
 	      $(INSTALLDATA) $(GDKDLL)             $(DESTDIR)$(BINDIR); \
 	      $(INSTALLDATA) $(GDKDLLS)            $(DESTDIR)$(BINDIR); \
 	   fi; \
-	   if [ -d lib/python ]; then \
-	      echo "Installing python files in $(DESTDIR)$(LIBDIR)/python"; \
-	      $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR)/python; \
-	      (cd lib; for entry in python/*; do \
-	         if [ -d $${entry} -a "x`ls $${entry}/*.py $${entry}/*.pyc 2>/dev/null`" != "x" ]; then \
-	            $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR)/$${entry}; \
-	            $(INSTALLDATA) $${entry}/*.py $${entry}/*.pyc $(DESTDIR)$(LIBDIR)/$${entry}; \
-	         fi; \
-	      done;); \
-	      if [ "x`ls *.py *.pyc 2>/dev/null`" != "x" ]; then \
-	         $(INSTALLDATA) *.py *.pyc    $(DESTDIR)$(LIBDIR)/python/; \
-	      fi; \
-	   fi; \
-	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
