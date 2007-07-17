@@ -27,6 +27,7 @@ class genDictionary(object) :
     self.vtables    = {}
     self.hfile      = os.path.normpath(hfile).replace(os.sep,'/')
     self.pool       = opts.get('pool',False)
+    self.interpreter= opts.get('interpreter',False)
     self.quiet      = opts.get('quiet',False)
     self.resolvettd = opts.get('resolvettd',True)
     self.xref       = {}
@@ -386,7 +387,7 @@ class genDictionary(object) :
         varname = self.genTypeName(v['id'])
         if self.selector.selvariable( varname ) and not self.selector.excvariable( varname ) :
           selec.append(v)
-        if 'extra' in v and v['extra'].get('autoselect') and v not in selec:
+        elif 'extra' in v and v['extra'].get('autoselect') and v not in selec:
           selec.append(v)
     return selec
 #----------------------------------------------------------------------------------
@@ -501,7 +502,7 @@ class genDictionary(object) :
     args  = self.xref[id]['subelems']
     if 'name' in attrs :
        if attrs['name'] in self.ignoremeth : return 0
-    #----Filter any method and operator for POOL -----
+    #----Filter any method and operator for minimal POOL dict -----
     if self.pool :
       if elem in ('OperatorMethod','Converter') : return 0
       elif elem in ('Method',) :
@@ -510,6 +511,9 @@ class genDictionary(object) :
         if len(args) > 1 : return 0
         elif len(args) == 1 :
           if self.genTypeName(args[0]['type']) != 'const '+self.genTypeName(attrs['context'])+'&' : return 0
+    #----Filter any non-public data members for minimal interpreter dict -----
+    if self.interpreter and elem in ('Field') and 'access' in attrs : # assumes that the default is "public"
+      return 0
     #----Filter any non public method
     if 'access' in attrs :  # assumes that the default is "public"
       if elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') : return 0
