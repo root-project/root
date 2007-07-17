@@ -163,13 +163,13 @@ $(XPDO):       PCHCXXFLAGS =
 $(XPDO): $(XRDPLUGINS)
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
+$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 else
 ifneq ($(GCC_MAJOR),2)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
+$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 else
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA)
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
 endif
 endif
 

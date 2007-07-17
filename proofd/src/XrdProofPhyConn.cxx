@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.13 2007/07/11 22:13:30 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.14 2007/07/16 10:27:57 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 
 #include "XrdProofPhyConn.h"
 
+#include "XrdVersion.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientConst.hh"
@@ -178,7 +179,11 @@ int XrdProofPhyConn::Connect()
    char *ctype[2] = {"UNIX", "TCP"};
 
    // Create physical connection
+#ifdef OLDXRCPHYCONN
+   fPhyConn = new XrdClientPhyConnection(this);
+#else
    fPhyConn = new XrdClientPhyConnection(this, 0);
+#endif
 
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;

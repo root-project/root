@@ -2798,10 +2798,34 @@ xrdcomm=""
 
 # If we are required to use an external XROOTD distribution
 # we just define the pointers
+extraxrdflags=""
 if test ! "x$xrootddir" = "x"; then
 
    # We do not need to build, just the paths for includes and libs
    xrdcomm="no, using xrootd at $xrootddir"
+
+   # Check version
+   verh=$xrootddir/src/XrdVersion.hh
+   xrdver=`grep XrdVERSION $verh`
+   if test $? -eq 0 ; then
+      set $xrdver
+      xrdver=$3
+   else
+      xrdver="unknown"
+   fi
+   decref=20070628
+   decver=0
+   if test ! "x$xrdver" = "xunknown"; then
+      tmpver=`echo $xrdver | cut -c2-9`
+      decver=`expr 1 \* 0"$tmpver"`
+   fi
+   if [ $decver -gt $decref ] ; then
+      xrdcomm="$xrdcomm (version is > 20070628)"
+      extraxrdflags=""
+   else
+      xrdcomm="$xrdcomm (version is <= 20070628: setting the appropriate compilation flag)"
+      extraxrdflags="-DOLDXRCPHYCONN"
+   fi
 
 else
 
@@ -4422,7 +4446,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildpython@|$enable_python|"        \
     -e "s|@buildruby@|$enable_ruby|"            \
     -e "s|@buildxml@|$enable_xml|"              \
-    -e "s|@buildxrd@|$enable_xrd|"              \
+    -e "s|@extraxrdflags@|$extraxrdflags|"      \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
