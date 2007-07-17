@@ -1,0 +1,2 @@
+#!/bin/sh
+python @libdir@/python/genreflex/genreflex.py "$@"

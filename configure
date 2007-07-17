@@ -776,6 +776,14 @@ THISROOTCSHIN=config/thisroot.csh
 THISROOTCSHOUT=bin/thisroot.csh
 THISROOTBATIN=config/thisroot.bat
 THISROOTBATOUT=bin/thisroot.bat
+GENREFLEXSHIN=config/genreflex.in
+GENREFLEXSHOUT=bin/genreflex
+GENREFLEXBATIN=config/genreflex.bat.in
+GENREFLEXBATOUT=bin/genreflex.bat
+GENREFLEXROOTCINTSHIN=config/genreflex-rootcint.in
+GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
+GENREFLEXROOTCINTBATIN=config/genreflex-rootcint.bat.in
+GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
 
 ######################################################################
 #
@@ -4673,9 +4681,58 @@ result "done"
 message "Writing $THISROOTCSHOUT"
 cp -f $THISROOTCSHIN $THISROOTCSHOUT
 result "done"
-message "Writing $THISROOTBATOUT"
-cp -f $THISROOTBATIN $THISROOTBATOUT
-result "done"
+if test "$platform" = "win32"; then
+    message "Writing $THISROOTBATOUT"
+    cp -f $THISROOTBATIN $THISROOTBATOUT
+    result "done"
+fi
+
+#---------------------------------------------------------------------
+# bin/genreflex(.bat), bin/genreflex-rootcint(.bat)
+#
+if test "x$enable_reflex" = "xyes"; then
+    message "Writing $GENREFLEXSHOUT"
+    libdirreflex=$libdir
+    if test "$prefix" = "\$(ROOTSYS)" ; then
+        libdirreflex='`dirname $0`/../lib'
+    fi
+    cat $GENREFLEXSHIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXSHOUT
+    chmod a+x $GENREFLEXSHOUT
+    result "done"
+
+    if test "$platform" = "win32"; then
+        message "Writing $GENREFLEXBATOUT"
+        if test "$prefix" = "\$(ROOTSYS)" ; then
+            libdirreflex='%~d0%~p0\\..\\lib'
+        else
+            libdirreflex=`cygpath -m $libdir`
+        fi
+        cat $GENREFLEXBATIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXBATOUT
+        chmod a+x $GENREFLEXBATOUT
+        result "done"
+    fi
+
+    message "Writing $GENREFLEXROOTCINTSHOUT"
+    libdirreflex=$libdir
+    if test "$prefix" = "\$(ROOTSYS)" ; then
+        libdirreflex='`dirname $0`/../lib'
+    fi
+    cat $GENREFLEXROOTCINTSHIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTSHOUT
+    chmod a+x $GENREFLEXROOTCINTSHOUT
+    result "done"
+
+    if test "$platform" = "win32"; then
+        message "Writing $GENREFLEXROOTCINTBATOUT"
+        if test "$prefix" = "\$(ROOTSYS)" ; then
+            libdirreflex='%~d0%~p0\\..\\lib'
+        else
+            libdirreflex=`cygpath -m $libdir`
+        fi
+        cat $GENREFLEXROOTCINTBATIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTBATOUT
+        chmod a+x $GENREFLEXROOTCINTBATOUT
+        result "done"
+    fi
+fi
 
 #---------------------------------------------------------------------
 # config.status
