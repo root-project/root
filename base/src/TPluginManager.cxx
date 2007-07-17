@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.38 2007/04/18 14:29:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.39 2007/07/17 14:43:18 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -561,7 +561,7 @@ void TPluginManager::Print(Option_t *opt) const
 
    TIter next(fHandlers);
    TPluginHandler *h;
-   Int_t cnt = 0;
+   Int_t cnt = 0, cntmiss = 0;
 
    Printf("=====================================================================");
    Printf("Base                 Regexp        Class              Plugin");
@@ -570,8 +570,10 @@ void TPluginManager::Print(Option_t *opt) const
    while ((h = (TPluginHandler*) next())) {
       cnt++;
       const char *exist = "";
-      if (h->CheckPlugin() == -1)
+      if (h->CheckPlugin() == -1) {
          exist = " [*]";
+         cntmiss++;
+      }
       Printf("%-20s %-13s %-18s %s%s", h->fBase.Data(), h->fRegexp.Data(),
              h->fClass.Data(), h->fPlugin.Data(), exist);
       if (strchr(opt, 'a')) {
@@ -589,7 +591,7 @@ void TPluginManager::Print(Option_t *opt) const
    }
    Printf("=====================================================================");
    Printf("%d plugin handlers registered", cnt);
-   Printf("[*] plugin not available");
+   Printf("[*] %d %s not available", cntmiss, cntmiss==1 ? "plugin" : "plugins");
    Printf("=====================================================================\n");
 }
 
