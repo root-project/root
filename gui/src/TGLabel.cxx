@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.33 2007/05/22 11:45:27 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.34 2007/06/07 08:43:59 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -491,6 +491,10 @@ void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->Disable();" << endl;
 
    out << "   " << GetName() << "->SetTextJustify(" <<  GetTextJustify() << ");" << endl;
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
+   out << fMTop << "," << fMBottom << ");" << endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+
 }
 
 //______________________________________________________________________________
