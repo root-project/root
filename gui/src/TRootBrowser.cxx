@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.124 2007/06/26 10:34:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.125 2007/06/26 13:17:38 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1563,20 +1563,22 @@ void TRootBrowser::DisplayDirectory()
    while (*p && *(p+1) == '/') ++p;
    fFSComboBox->Update(p);
 
-   // disable/enable up level navigation
-   TGButton *btn = fToolBar->GetButton(kOneLevelUp);
-   const char *dirname = gSystem->DirName(p);
+   if (fListLevel) {
+      // disable/enable up level navigation
+      TGButton *btn = fToolBar->GetButton(kOneLevelUp);
+      const char *dirname = gSystem->DirName(p);
+      Bool_t disableUp;
 
-   TObject *obj = (TObject*)fListLevel->GetUserData();
-   Bool_t disableUp = (strlen(dirname) == 1) && (*dirname == '/');
+      TObject *obj = (TObject*)fListLevel->GetUserData();
+      disableUp = (strlen(dirname) == 1) && (*dirname == '/');
 
-   // normal file directory
-   if (disableUp && (obj->IsA() == TSystemDirectory::Class())) {
-      disableUp = strlen(p) == 1;
-   }
-   btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
-   if (fListLevel)
+      // normal file directory
+      if (disableUp && (obj->IsA() == TSystemDirectory::Class())) {
+         disableUp = strlen(p) == 1;
+      }
+      btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
       AddToHistory(fListLevel);
+   }
 }
 
 //____________________________________________________________________________
