@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.48 2007/07/04 09:05:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.49 2007/07/06 15:38:44 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -66,7 +66,7 @@ class TGHotString;
 class TGPicture;
 class TGToolTip;
 class TGButtonGroup;
-
+class TGTextLayout;
 
 class TGButton : public TGFrame, public TGWidget {
 
@@ -139,9 +139,15 @@ public:
 class TGTextButton : public TGButton {
 
 protected:
-   TGHotString   *fLabel;         // button text 
+   TGHotString   *fLabel;         // button text
+   Int_t          fMLeft;         // margin left
+   Int_t          fMRight;        // margin right
+   Int_t          fMTop;          // margin top
+   Int_t          fMBottom;       // margin bottom
    Int_t          fTMode;         // text justify mode
+   Int_t          fWrapLength;    // wrap length
    Int_t          fHKeycode;      // hotkey
+   TGTextLayout  *fTLayout;       // text layout
    FontStruct_t   fFontStruct;    // font to draw text
    Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fStateOn;       // bit to save the state across disable/enable
@@ -174,8 +180,7 @@ public:
 
    virtual ~TGTextButton();
 
-   virtual TGDimension GetDefaultSize() const
-                        { return TGDimension(fTWidth+8, fTHeight+7); }
+   virtual TGDimension GetDefaultSize() const;
 
    virtual Bool_t     HandleKey(Event_t *event);
    const TGHotString *GetText() const { return fLabel; }
@@ -191,10 +196,26 @@ public:
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
    Bool_t             HasOwnFont() const;
+   void               SetWrapLength(Int_t wl) { fWrapLength = wl; Layout(); }
+   Int_t              GetWrapLength() const { return fWrapLength; }
+   void               SetMargins(Int_t left=0, Int_t right=0, Int_t top=0, Int_t bottom=0)
+                        { fMLeft = left; fMRight = right; fMTop = top; fMBottom = bottom; }
+
+   virtual void       SetLeftMargin(Int_t val)   { fMLeft = val; }
+   virtual void       SetRightMargin(Int_t val)  { fMRight = val; }
+   virtual void       SetTopMargin(Int_t val)    { fMTop = val; }
+   virtual void       SetBottomMargin(Int_t val) { fMBottom = val; }
+
+   Int_t              GetLeftMargin() const { return fMLeft; }
+   Int_t              GetRightMargin() const { return fMRight; }
+   Int_t              GetTopMargin() const { return fMTop; }
+   Int_t              GetBottomMargin() const { return fMBottom; }
+
    void               ChangeText(const char *title)  { SetTitle(title); } //*MENU*icon=bld_rename.png*
 
    FontStruct_t GetFontStruct() const { return fFontStruct; }
 
+   virtual void       Layout();
    virtual void       SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGTextButton,0)  // A text button widget
@@ -278,8 +299,7 @@ public:
                  UInt_t option = 0);
    virtual ~TGCheckButton();
 
-   virtual TGDimension GetDefaultSize() const
-                  { return TGDimension(fTWidth+22, fTHeight+2); }
+   virtual TGDimension GetDefaultSize() const;
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
@@ -335,8 +355,7 @@ public:
                  UInt_t option = 0);
    virtual ~TGRadioButton();
 
-   virtual TGDimension GetDefaultSize() const
-                  { return TGDimension(fTWidth+22, fTHeight+2); }
+   virtual TGDimension GetDefaultSize() const;
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);

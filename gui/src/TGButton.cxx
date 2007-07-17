@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.79 2007/07/06 15:38:44 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.80 2007/07/09 14:59:58 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -394,19 +394,27 @@ void TGTextButton::Init()
 {
    // Common initialization used by the different ctors.
 
-   int hotchar, max_ascent, max_descent;
+   int hotchar;
 
    fTMode       = kTextCenterX | kTextCenterY;
    fHKeycode    = 0;
    fHasOwnFont  = kFALSE;
    fPrevStateOn =
    fStateOn     = kFALSE;
+   fWrapLength  = -1;
+   fMLeft = fMRight = fMTop = fMBottom = 0;
 
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
+   TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
+   if (!font) {
+      font = fClient->GetFontPool()->GetFont(fgDefaultFont);
+      fFontStruct = font->GetFontStruct();
+   }
 
-   Resize(fTWidth + 8, fTHeight + 7);
+   fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
+                                      fWrapLength, kTextLeft, 0,
+                                      &fTWidth, &fTHeight);
+
+   Resize();
 
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
@@ -454,6 +462,27 @@ TGTextButton::~TGTextButton()
       TGGC *gc = pool->FindGC(fNormGC);
       pool->FreeGC(gc);
    }
+
+   delete fTLayout;
+}
+
+//______________________________________________________________________________
+void TGTextButton::Layout()
+{
+   // layout text button
+
+   delete fTLayout;
+
+   TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
+   if (!font) {
+      font = fClient->GetFontPool()->GetFont(fgDefaultFont);
+      fFontStruct = font->GetFontStruct();
+   }
+
+   fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
+                                      fWrapLength, kTextLeft, 0,
+                                      &fTWidth, &fTHeight);
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -493,12 +522,7 @@ void TGTextButton::SetText(TGHotString *new_label)
          main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
    }
 
-   int max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
-
-   fClient->NeedRedraw(this);
+   Layout();
 }
 
 //______________________________________________________________________________
@@ -508,6 +532,7 @@ void TGTextButton::SetText(const TString &new_label)
 
    SetText(new TGHotString(new_label));
 }
+
 //______________________________________________________________________________
 void TGTextButton::SetTextJustify(Int_t mode)
 {
@@ -559,7 +584,7 @@ void TGTextButton::SetTextJustify(Int_t mode)
    }
 
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
-   fClient->NeedRedraw(this);
+   Layout();
 }
 
 //______________________________________________________________________________
@@ -568,35 +593,51 @@ void TGTextButton::DoRedraw()
    // Draw the text button.
 
    int x, y;
-   int max_ascent, max_descent;
 
    TGFrame::DoRedraw();
 
-   if (fTMode & kTextLeft)
-      x = 4;
-   else if (fTMode & kTextRight)
-      x = fWidth - fTWidth - 4;
-   else
-      x = (fWidth - fTWidth) >> 1;
+   if (fTMode & kTextLeft) {
+      x = fMLeft + 4;
+   } else if (fTMode & kTextRight) {
+      x = fWidth - fTWidth - fMRight - 4;
+   } else {
+      x = (fWidth - fTWidth + fMLeft - fMRight) >> 1;
+   }
 
-   if (fTMode & kTextTop)
-      y = 3;
-   else if (fTMode & kTextBottom)
-      y = fHeight - fTHeight - 3;
-   else
-      y = (fHeight - fTHeight) >> 1;
+   if (fTMode & kTextTop) {
+      y = fMTop + 3;
+   } else if (fTMode & kTextBottom) {
+      y = fHeight - fTHeight - fMBottom - 3;
+   } else {
+      y = (fHeight - fTHeight + fMTop - fMBottom) >> 1;
+   }
 
    if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
    if (fState == kButtonEngaged) {
       gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
       gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
    }
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+
+   Int_t hotpos = fLabel->GetHotPos();
+
    if (fState == kButtonDisabled) {
-      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
-      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      Pixel_t fore = gc->GetForeground();
+      Pixel_t hi = GetHilightGC().GetForeground();
+      Pixel_t sh = GetShadowGC().GetForeground();
+
+      gc->SetForeground(hi);
+      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
+
+      gc->SetForeground(sh);
+      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+      gc->SetForeground(fore);
    } else {
-      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
+      fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
    }
 }
 
@@ -645,6 +686,17 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
+TGDimension TGTextButton::GetDefaultSize() const
+{
+   // returns default size
+
+   UInt_t w = GetOptions() & kFixedWidth ? fWidth : fTWidth + fMLeft + fMRight + 8;
+   UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 7;
+   return TGDimension(w, h);
+}
+
+
+//______________________________________________________________________________
 FontStruct_t TGTextButton::GetDefaultFontStruct()
 {
    // Return default font structure.
@@ -676,12 +728,7 @@ void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
       gc->SetFont(v);
 
       fNormGC = gc->GetGC();
-      int max_ascent, max_descent;
-
-      fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fTHeight = max_ascent + max_descent;
-      fClient->NeedRedraw(this);
+      Layout();
    }
 }
 
@@ -953,6 +1000,8 @@ void TGCheckButton::Init()
    fDisOn  = fClient->GetPicture("checked_dis_t.xpm");
    fDisOff = fClient->GetPicture("unchecked_dis_t.xpm");
 
+   Resize();
+
    if (!fOn) {
       Error("TGCheckButton", "checked_t.xpm not found");
    } else if (!fOff) {     
@@ -962,12 +1011,7 @@ void TGCheckButton::Init()
    } else if (!fDisOff) {     
       Error("TGCheckButton", "unchecked_dis_t.xpm not found");
    }
-   int hotchar, max_ascent, max_descent;
-   fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
-
-   Resize(fTWidth + 22, fTHeight + 2);
+   int hotchar;
 
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
@@ -995,6 +1039,20 @@ TGCheckButton::~TGCheckButton()
    if (fOff) fClient->FreePicture(fOff);
    if (fDisOn)  fClient->FreePicture(fDisOn);
    if (fDisOff) fClient->FreePicture(fDisOff);
+}
+
+//______________________________________________________________________________
+TGDimension TGCheckButton::GetDefaultSize() const
+{
+   // default size
+
+   UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 9;
+   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;                      
+
+   w = GetOptions() & kFixedWidth ? fWidth : w;
+   h = GetOptions() & kFixedHeight ? fHeight : h;
+
+   return TGDimension(w, h);           
 }
 
 //______________________________________________________________________________
@@ -1072,7 +1130,6 @@ void TGCheckButton::SetDisabledAndSelected(Bool_t enable)
       PSetState(kButtonDisabled, kFALSE);      // disable button
    }
 }
-
 
 //______________________________________________________________________________
 Bool_t TGCheckButton::HandleButton(Event_t *event)
@@ -1190,8 +1247,11 @@ void TGCheckButton::DoRedraw()
 
    TGFrame::DoRedraw();
 
+   x = 20;
+   y = (fHeight - fTHeight) >> 1;
+
    cw = 13;
-   y0 = (fTHeight - cw) >> 1;
+   y0 = !fTHeight ? 0 : y + 1;
 
    if (fStateOn) {
       if (fOn) fOn->Draw(fId, fNormGC, 0, y0);
@@ -1199,12 +1259,7 @@ void TGCheckButton::DoRedraw()
       if (fOff) fOff->Draw(fId, fNormGC, 0, y0);
    }
 
-   x = 20;
-   y = y0;
-
-   int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   y += max_ascent;
+   Int_t hotpos = fLabel->GetHotPos();
 
    if (fState == kButtonDisabled) {
       if (fStateOn == kTRUE) {
@@ -1212,10 +1267,25 @@ void TGCheckButton::DoRedraw()
       } else {
          if (fDisOff) fDisOff->Draw(fId, fNormGC, 0, y0);
       }
-      fLabel->DrawWrapped(fId, GetHilightGC()(), x+1, y+1, fWidth-x-1, fFontStruct);
-      fLabel->DrawWrapped(fId, GetShadowGC()(), x, y, fWidth-x-1, fFontStruct);
+
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      Pixel_t fore = gc->GetForeground();
+      Pixel_t hi = GetHilightGC().GetForeground();
+      Pixel_t sh = GetShadowGC().GetForeground();
+
+      gc->SetForeground(hi);
+      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+
+      gc->SetForeground(sh);
+      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+
+      gc->SetForeground(fore);
    } else {
-      fLabel->DrawWrapped(fId, fNormGC, x, y, fWidth-x-1, fFontStruct);
+      fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
    }
 }
 
@@ -1288,12 +1358,9 @@ void TGRadioButton::Init()
    if (!fOn || !fOff || !fDisOn || !fDisOff)
       Error("TGRadioButton", "rbutton_*.xpm not found");
 
-   int hotchar, max_ascent, max_descent;
-   fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fTHeight = max_ascent + max_descent;
+   Resize();
 
-   Resize(fTWidth + 22, fTHeight + 2);
+   int hotchar;
 
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
@@ -1327,6 +1394,19 @@ TGRadioButton::~TGRadioButton()
    if (fDisOff) fClient->FreePicture(fDisOff);
 }
 
+//______________________________________________________________________________
+TGDimension TGRadioButton::GetDefaultSize() const
+{
+   // default size
+
+   UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 10;
+   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
+
+   w = GetOptions() & kFixedWidth ? fWidth : w;
+   h = GetOptions() & kFixedHeight ? fHeight : h;
+                      
+   return TGDimension(w, h);           
+}
 //______________________________________________________________________________
 void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 {
@@ -1517,16 +1597,15 @@ void TGRadioButton::DoRedraw()
 {
    // Draw a radio button.
 
-   Int_t nlines, tx, ty, y0, pw;
+   Int_t tx, ty, y0;
 
    TGFrame::DoRedraw();
 
    tx = 20;
-   nlines = fLabel->GetLines(fFontStruct, fWidth-tx-1);
-   ty = (fHeight - fTHeight*nlines) >> 1;
+   ty = (fHeight - fTHeight) >> 1;
 
-   pw = 12;
-   y0 = ty + ((fTHeight - pw) >> 1);
+//   pw = 12;
+   y0 = !fTHeight ? 0 : ty + 1;
 
    if (fStateOn) {
       if (fOn) fOn->Draw(fId, fNormGC, 0, y0);
@@ -1534,23 +1613,33 @@ void TGRadioButton::DoRedraw()
       if (fOff) fOff->Draw(fId, fNormGC, 0, y0);
    }
 
-   int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   Int_t hotpos = fLabel->GetHotPos();
 
-   // ty = max_ascent + 1;
-   ty += max_ascent;
-
-   //  fLabel->Draw(fId, fNormGC, tx, ty);
    if (fState == kButtonDisabled) {
       if (fStateOn == kTRUE) {
          if (fDisOn) fDisOn->Draw(fId, fNormGC, 0, y0);
       } else {
          if (fDisOff) fDisOff->Draw(fId, fNormGC, 0, y0);
       }
-      fLabel->DrawWrapped(fId, GetHilightGC()(), tx+1, ty+1, fWidth-tx-1, fFontStruct);
-      fLabel->DrawWrapped(fId, GetShadowGC()(), tx, ty, fWidth-tx-1, fFontStruct);
+
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      Pixel_t fore = gc->GetForeground();
+      Pixel_t hi = GetHilightGC().GetForeground();
+      Pixel_t sh = GetShadowGC().GetForeground();
+
+      gc->SetForeground(hi);
+      fTLayout->DrawText(fId, gc->GetGC(), tx + 1, ty + 1, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
+
+      gc->SetForeground(sh);
+      fTLayout->DrawText(fId, gc->GetGC(), tx, ty, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
+
+      gc->SetForeground(fore);
    } else {
-      fLabel->DrawWrapped(fId, fNormGC, tx, ty, fWidth-tx-1, fFontStruct);
+      fTLayout->DrawText(fId, fNormGC, tx, ty, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, tx, ty, hotpos-1);
    }
 }
 
@@ -1676,6 +1765,9 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    delete [] outext;
 
    out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
+   out << fMTop << "," << fMBottom << ");" << endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
 
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
        << ");" << endl;
@@ -1810,6 +1902,10 @@ void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       else
          out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
    }
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
+   out << fMTop << "," << fMBottom << ");" << endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
 }
 
 //______________________________________________________________________________
@@ -1885,4 +1981,8 @@ void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       else
          out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
    }
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
+   out << fMTop << "," << fMBottom << ");" << endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
 }
