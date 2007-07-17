@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.217 2007/07/17 12:05:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.218 2007/07/17 14:43:18 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1266,9 +1266,14 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
       delete [] path;
    } else {
       if (check) {
-         if (!gSystem->AccessPathName(libname, kReadPermission))
-            err = 0;
-         else
+         FileStat_t stat;
+         if (!gSystem->GetPathInfo(libname, stat)) {
+            if (R_ISREG(stat.fMode) &&
+                !gSystem->AccessPathName(libname, kReadPermission))
+               err = 0;
+            else
+               err = -1;
+         } else
             err = -1;
       } else
          err = gSystem->Load(libname, 0, kTRUE);
