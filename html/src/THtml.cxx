@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.136 2007/05/29 11:04:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.137 2007/07/02 09:34:36 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -501,7 +501,7 @@ ClassImp(THtml)
 //______________________________________________________________________________
 THtml::THtml(): fFoundDot(-1), fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"), fProductDocDir("doc"),
-   fMacroPath("../doc/macros"), fModuleDocPath("../doc")
+   fMacroPath("../doc/macros:."), fModuleDocPath("../doc")
 {
    // Create a THtml object.
    // In case output directory does not exist an error
@@ -936,7 +936,7 @@ void THtml::CreateListOfClasses(const char* filter)
       && fModules.FindObject("BASE") 
       && fModules.FindObject("CONT") 
       && fModules.FindObject("RINT")
-      && strstr(gProgName, "root"))
+      && gProgName && strstr(gProgName, "root"))
       // if we have these modules we're probably building the root doc
       fProductName = "ROOT";
 
