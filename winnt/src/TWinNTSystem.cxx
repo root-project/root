@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.172 2007/05/21 12:40:50 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.173 2007/07/10 07:55:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2075,6 +2075,7 @@ const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
          name.Prepend('\\');
       }
       name.Prepend(dir);
+      name.ReplaceAll("/", "\\");
    }
    return name.Data();
 }
