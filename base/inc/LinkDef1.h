@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.51 2007/02/18 16:50:27 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.52 2007/06/11 19:56:33 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,6 +48,7 @@
 #pragma link C++ global gROOT;
 #pragma link C++ global gEnv;
 #pragma link C++ global gSystem;
+#pragma link C++ global gPluginMgr;
 #pragma link C++ global gApplication;
 #pragma link C++ global gBenchmark;
 #pragma link C++ global gDirectory;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.37 2007/04/17 15:48:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.38 2007/04/18 14:29:22 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -21,8 +21,24 @@
 // able to read RFIO files one needs to load the plugin library         //
 // libRFIO.so which defines the TRFIOFile class. This loading should    //
 // be triggered when a given URI contains a regular expression defined  //
-// by the handler. Handlers can be defined for example as resources     //
-// in the .rootrc file, e.g.:                                           //
+// by the handler.                                                      //
+// Plugin handlers can be defined via macros in a list of plugin        //
+// directories. With $ROOTSYS/etc/plugins the default top plugin        //
+// directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
+// have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
+//    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
+// to allow easy sorting and grouping. Macros not beginning with 'P'    //
+// and ending with ".C" are ignored. These macros typically look like:  //
+//                                                                      //
+//   void P10_TDCacheFile()                                             //
+//   {                                                                  //
+//       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",      //
+//          "DCache", "TDCacheFile(const char*,Option_t*)");            //
+//   }                                                                  //
+//                                                                      //
+// Plugin handlers can also be defined via resources in the .rootrc     //
+// file. Although now deprecated this method still works for backward   //
+// compatibility, e.g.:                                                 //
 //                                                                      //
 //   Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"   //
 //   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"   //
@@ -30,7 +46,7 @@
 //   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"  //
 //                                                                      //
 // Where the + in front of Plugin.TSQLServer says that it extends the   //
-// existing definition of TSQLServer, usefull when there is more than   //
+// existing definition of TSQLServer, useful when there is more than    //
 // one plugin that can extend the same base class. The "<constructor>"  //
 // should be the constructor or a static method that generates an       //
 // instance of the specified class. Global methods should start with    //
@@ -64,7 +80,7 @@
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "THashList.h"
-#include "TOrdCollection.h"
+#include "THashTable.h"
 #include "Varargs.h"
 #include "TClass.h"
 #include "TCint.h"
@@ -74,13 +90,18 @@
 #include "TMethodCall.h"
 #include "TVirtualMutex.h"
 #include "TSystem.h"
+#include "TObjString.h"
+
+
+TPluginManager *gPluginMgr;   // main plugin mamager created in TROOT
+
 
 ClassImp(TPluginHandler)
 
 //______________________________________________________________________________
 TPluginHandler::TPluginHandler(const char *base, const char *regexp,
                                const char *className, const char *pluginName,
-                               const char *ctor)
+                               const char *ctor, const char *origin)
 {
    // Create a plugin handler. Called by TPluginManager.
 
@@ -89,6 +110,7 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
    fClass    = className;
    fPlugin   = pluginName;
    fCtor     = ctor;
+   fOrigin   = origin;
    fCallEnv  = 0;
    fCanCall  = 0;
    fIsMacro  = kFALSE;
@@ -288,6 +310,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
    return ret;
 }
 
+
 ClassImp(TPluginManager)
 
 //______________________________________________________________________________
@@ -296,6 +319,7 @@ TPluginManager::~TPluginManager()
    // Clean up the plugin manager.
 
    delete fHandlers;
+   delete fBasesLoaded;
 }
 
 //______________________________________________________________________________
@@ -333,7 +357,7 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
                TString ctor = strtok(0, ";\"");
                if (!ctor.Contains("("))
                   ctor = strtok(0, ";\"");
-               AddHandler(s, regexp, clss, plugin, ctor);
+               AddHandler(s, regexp, clss, plugin, ctor, "TEnv");
                cnt++;
             }
             delete [] v;
@@ -343,9 +367,119 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
 }
 
 //______________________________________________________________________________
+void TPluginManager::LoadHandlerMacros(const char *path)
+{
+   // Load all plugin macros from the specified path/base directory.
+
+   void *dirp = gSystem->OpenDirectory(path);
+   if (dirp) {
+      if (gDebug > 0)
+         Info("LoadHandlerMacros", "%s", path);
+      const char *f1;
+      while ((f1 = gSystem->GetDirEntry(dirp))) {
+         TString f = f1;
+         if (f[0] == 'P' && f.EndsWith(".C")) {
+            const char *p = gSystem->ConcatFileName(path, f);
+            if (!gSystem->AccessPathName(p, kReadPermission)) {
+               if (gDebug > 1)
+                  Info("LoadHandlerMacros", "   plugin macro: %s", p);
+               Long_t res;
+               if ((res = gROOT->Macro(p)) < 0) {
+                  Error("LoadHandlerMacros", "pluging macro %s returned %ld",
+                        p, res);
+               }
+            }
+            delete [] p;
+         }
+      }
+   }
+   gSystem->FreeDirectory(dirp);
+}
+
+//______________________________________________________________________________
+void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
+{
+   // Load plugin handlers specified via macros in a list of plugin
+   // directories. The $ROOTSYS/etc/plugins is the default top plugin directory
+   // specified in $ROOTSYS/etc/system.rootrc. The macros must have names
+   // like <BaseClass>/PX0_<PluginClass>.C, e.g.:
+   //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
+   // to allow easy sorting and grouping. Macros not beginning with 'P' and
+   // ending with ".C" are ignored. If base is specified only plugin macros for
+   // that base class are loaded. The macros typically should look like:
+   //   void P10_TDCacheFile()
+   //   {
+   //       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
+   //          "DCache", "TDCacheFile(const char*,Option_t*,const char*,Int_t)");
+   //   }
+   // In general these macros should not cause side effects, by changing global
+   // ROOT state via, e.g. gSystem calls, etc. However, in specific cases
+   // this might be useful, e.g. adding a library search path, adding a specific
+   // dependency, check on some OS or ROOT capability or downloading
+   // of the plugin.
+
+   if (!fBasesLoaded) {
+      fBasesLoaded = new THashTable();
+      fBasesLoaded->IsOwner();
+   }
+   if (base) {
+      if (fBasesLoaded->FindObject(base))
+         return;
+      fBasesLoaded->Add(new TObjString(base));
+   }
+
+   fReadingDirs = kTRUE;
+
+   TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
+#ifdef WIN32
+   TObjArray *dirs = plugindirs.Tokenize(";");
+#else
+   TObjArray *dirs = plugindirs.Tokenize(":");
+#endif
+   TString d;
+   for (Int_t i = 0; i < dirs->GetEntriesFast(); i++) {
+      d = ((TObjString*)dirs->At(i))->GetString();
+      // check if directory already scanned
+      Int_t skip = 0;
+      for (Int_t j = 0; j < i; j++) {
+         TString pd = ((TObjString*)dirs->At(j))->GetString();
+         if (pd == d) {
+            skip++;
+            break;
+         }
+      }
+      if (!skip) {
+         if (base) {
+            const char *p = gSystem->ConcatFileName(d, base);
+            LoadHandlerMacros(p);
+            delete [] p;
+         } else {
+            void *dirp = gSystem->OpenDirectory(d);
+            if (dirp) {
+               if (gDebug > 0)
+                  Info("LoadHandlersFromPluginDirs", "%s", d.Data());
+               const char *f1;
+               while ((f1 = gSystem->GetDirEntry(dirp))) {
+                  TString f = f1;
+                  const char *p = gSystem->ConcatFileName(d, f);
+                  LoadHandlerMacros(p);
+                  fBasesLoaded->Add(new TObjString(f));
+                  delete [] p;
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
+      }
+   }
+
+   delete dirs;
+   fReadingDirs = kFALSE;
+}
+
+//______________________________________________________________________________
 void TPluginManager::AddHandler(const char *base, const char *regexp,
                                 const char *className, const char *pluginName,
-                                const char *ctor)
+                                const char *ctor, const char *origin)
 {
    // Add plugin handler to the list of handlers. If there is already a
    // handler defined for the same base and regexp it will be replaced.
@@ -358,8 +492,11 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    // make sure there is no previous handler for the same case
    RemoveHandler(base, regexp);
 
+   if (fReadingDirs)
+      origin = TCint::GetCurrentMacroName();
+
    TPluginHandler *h = new TPluginHandler(base, regexp, className,
-                                          pluginName, ctor);
+                                          pluginName, ctor, origin);
    fHandlers->Add(h);
 }
 
@@ -391,7 +528,7 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
    // The uri can be 0 in which case the first matching plugin handler
    // will be returned. Returns 0 in case handler is not found.
 
-   if (!fHandlers) return 0;
+   LoadHandlersFromPluginDirs(base);
 
    TIter next(fHandlers);
    TPluginHandler *h;
@@ -424,12 +561,14 @@ void TPluginManager::Print(Option_t *opt) const
 
    TIter next(fHandlers);
    TPluginHandler *h;
+   Int_t cnt = 0;
 
    Printf("=====================================================================");
    Printf("Base                 Regexp        Class              Plugin");
    Printf("=====================================================================");
 
    while ((h = (TPluginHandler*) next())) {
+      cnt++;
       const char *exist = "";
       if (h->CheckPlugin() == -1)
          exist = " [*]";
@@ -445,9 +584,89 @@ void TPluginManager::Print(Option_t *opt) const
             delete [] path;
          }
          Printf("  [Ctor: %s]", h->fCtor.Data());
+         Printf("  [origin: %s]", h->fOrigin.Data());
       }
    }
    Printf("=====================================================================");
+   Printf("%d plugin handlers registered", cnt);
    Printf("[*] plugin not available");
    Printf("=====================================================================\n");
+}
+
+//______________________________________________________________________________
+Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) const
+{
+   // Write in the specified directory the plugin macros. If plugin is specified
+   // and if it is a base class all macros for that base will be written. If it
+   // is a plugin class name, only that one macro will be written. If plugin
+   // is 0 all macros are written. Returns -1 if dir does not exist, 0 otherwise.
+
+   const_cast<TPluginManager*>(this)->LoadHandlersFromPluginDirs();
+
+   if (!fHandlers) return 0;
+
+   TString d;
+   if (!dir || !dir[0])
+      d = ".";
+   else
+      d = dir;
+
+   if (gSystem->AccessPathName(d, kWritePermission)) {
+      Error("WritePluginMacros", "cannot write in directory %s", d.Data());
+      return -1;
+   }
+
+   TString base;
+   Int_t   idx;
+
+   TObjLink *lnk = fHandlers->FirstLink();
+   while (lnk) {
+      TPluginHandler *h = (TPluginHandler *) lnk->GetObject();
+      if (plugin && strcmp(plugin, h->fBase) && strcmp(plugin, h->fClass)) {
+         lnk = lnk->Next();
+         continue;
+      }
+      if (base != h->fBase) {
+         idx = 10;
+         base = h->fBase;
+      } else
+         idx += 10;
+      const char *dd = gSystem->ConcatFileName(d, h->fBase);
+      if (gSystem->AccessPathName(dd, kWritePermission)) {
+         if (gSystem->MakeDirectory(dd) < 0) {
+            Error("WritePluginMacros", "cannot creaqte directory %s", dd);
+            return -1;
+         }
+      }
+      TString fn;
+      fn.Form("P%03d_%s.C", idx, h->fClass.Data());
+      const char *fd = gSystem->ConcatFileName(dd, fn);
+      FILE *f = fopen(fd, "w");
+      fprintf(f, "void P%03d_%s()\n{\n", idx, h->fClass.Data());
+      fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
+              h->fBase.Data(), h->fRegexp.Data(), h->fClass.Data());
+      fprintf(f, "      \"%s\", \"%s\");\n", h->fPlugin.Data(), h->fCtor.Data());
+
+      // check for different regexps cases for the same base + class and
+      // put them all in the same macro
+      TObjLink *lnk2 = lnk->Next();
+      while (lnk2) {
+         TPluginHandler *h2 = (TPluginHandler *) lnk2->GetObject();
+         if (h->fBase != h2->fBase || h->fClass != h2->fClass)
+            break;
+
+         fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
+                 h2->fBase.Data(), h2->fRegexp.Data(), h2->fClass.Data());
+         fprintf(f, "      \"%s\", \"%s\");\n", h2->fPlugin.Data(), h2->fCtor.Data());
+
+         lnk  = lnk2;
+         lnk2 = lnk2->Next();
+      }
+      fprintf(f, "}\n");
+      fclose(f);
+      delete [] fd;
+      delete [] dd;
+      lnk = lnk->Next();
+   }
+   return 0;
 }

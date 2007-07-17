@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.8 2006/05/30 15:27:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.9 2006/12/06 10:21:02 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -25,8 +25,24 @@
 // able to read RFIO files one needs to load the plugin library         //
 // libRFIO.so which defines the TRFIOFile class. This loading should    //
 // be triggered when a given URI contains a regular expression defined  //
-// by the handler. Handlers can be defined for example as resources     //
-// in the .rootrc file, e.g.:                                           //
+// by the handler.                                                      //
+// Plugin handlers can be defined via macros in a list of plugin        //
+// directories. With $ROOTSYS/etc/plugins the default top plugin        //
+// directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
+// have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
+//    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
+// to allow easy sorting and grouping. Macros not beginning with 'P'    //
+// and ending with ".C" are ignored. These macros typically look like:  //
+//                                                                      //
+//   void P10_TDCacheFile()                                             //
+//   {                                                                  //
+//       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",      //
+//          "DCache", "TDCacheFile(const char*,Option_t*)");            //
+//   }                                                                  //
+//                                                                      //
+// Plugin handlers can also be defined via resources in the .rootrc     //
+// file. Although now deprecated this method still works for backward   //
+// compatibility, e.g.:                                                 //
 //                                                                      //
 //   Plugin.TFile:       ^rfio:   TRFIOFile    RFIO   "<constructor>"   //
 //   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"   //
@@ -34,7 +50,7 @@
 //   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"  //
 //                                                                      //
 // Where the + in front of Plugin.TSQLServer says that it extends the   //
-// existing definition of TSQLServer, usefull when there is more than   //
+// existing definition of TSQLServer, useful when there is more than    //
 // one plugin that can extend the same base class. The "<constructor>"  //
 // should be the constructor or a static method that generates an       //
 // instance of the specified class. Global methods should start with    //
@@ -71,6 +87,7 @@
 
 class TEnv;
 class TList;
+class THashTable;
 class TFunction;
 class TMethodCall;
 class TPluginManager;
@@ -86,6 +103,7 @@ private:
    TString      fClass;     // class to be loaded from plugin library
    TString      fPlugin;    // plugin library which should contain fClass
    TString      fCtor;      // ctor used to instantiate object of fClass
+   TString      fOrigin;    // origin of plugin handler definition
    TMethodCall *fCallEnv;   //!ctor method call environment
    TFunction   *fMethod;    //!ctor method or global function
    Int_t        fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok
@@ -93,11 +111,11 @@ private:
    Bool_t       fIsGlobal;  // plugin ctor is a global function
 
    TPluginHandler() :
-      fBase(), fRegexp(), fClass(), fPlugin(), fCtor(),
+      fBase(), fRegexp(), fClass(), fPlugin(), fCtor(), fOrigin(),
       fCallEnv(0), fMethod(0), fCanCall(0), fIsMacro(kTRUE), fIsGlobal(kTRUE) { }
    TPluginHandler(const char *base, const char *regexp,
                   const char *className, const char *pluginName,
-                  const char *ctor);
+                  const char *ctor, const char *origin);
    TPluginHandler(const TPluginHandler&);            // not implemented
    TPluginHandler& operator=(const TPluginHandler&); // not implemented
 
@@ -107,6 +125,7 @@ private:
    const char *GetRegexp() const { return fRegexp; }
    const char *GetPlugin() const { return fPlugin; }
    const char *GetCtor() const { return fCtor; }
+   const char *GetOrigin() const { return fOrigin; }
 
    Bool_t CanHandle(const char *base, const char *uri);
    void   SetupCallEnv();
@@ -117,33 +136,40 @@ public:
    Int_t       LoadPlugin();
    Long_t      ExecPlugin(Int_t nargs, ...);
 
-   ClassDef(TPluginHandler,2)  // Handler for plugin libraries
+   ClassDef(TPluginHandler,3)  // Handler for plugin libraries
 };
 
 
 class TPluginManager : public TObject {
 
 private:
-   TList  *fHandlers;    // list of plugin handlers
+   TList      *fHandlers;     // list of plugin handlers
+   THashTable *fBasesLoaded;  //! table of base classes already checked or loaded
+   Bool_t      fReadingDirs;  //! true if we are running LoadHandlersFromPluginDirs
 
    TPluginManager(const TPluginManager& pm);              // not implemented
    TPluginManager& operator=(const TPluginManager& pm);   // not implemented
+   void   LoadHandlerMacros(const char *path);
 
 public:
-   TPluginManager() : fHandlers(0) { }
+   TPluginManager() : fHandlers(0), fBasesLoaded(0), fReadingDirs(kFALSE) { }
    ~TPluginManager();
 
    void   LoadHandlersFromEnv(TEnv *env);
+   void   LoadHandlersFromPluginDirs(const char *base = 0);
    void   AddHandler(const char *base, const char *regexp,
                      const char *className, const char *pluginName,
-                     const char *ctor = 0);
+                     const char *ctor = 0, const char *origin = 0);
    void   RemoveHandler(const char *base, const char *regexp = 0);
 
    TPluginHandler *FindHandler(const char *base, const char *uri = 0);
 
    void   Print(Option_t *opt = "") const;
+   Int_t  WritePluginMacros(const char *dir, const char *plugin = 0) const;
 
    ClassDef(TPluginManager,1)  // Manager for plugin handlers
 };
+
+R__EXTERN TPluginManager *gPluginMgr;
 
 #endif

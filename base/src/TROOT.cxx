@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.216 2007/06/06 22:41:23 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.217 2007/07/17 12:05:45 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -258,7 +258,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fMappedFiles = 0;
 
    // create already here, but only initialize it after gEnv has been created
-   fPluginManager = new TPluginManager;
+   gPluginMgr = fPluginManager = new TPluginManager;
 
    // Initialize Operating System interface
    InitSystem();
@@ -295,7 +295,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fInterpreter->AddIncludePath(ROOTINCDIR);
 #endif
 
-   TSystemDirectory *workdir = new TSystemDirectory("workdir",gSystem->WorkingDirectory());
+   TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
    fTimer       = 0;
    fApplication = 0;
@@ -834,7 +834,6 @@ TCanvas *TROOT::MakeDefCanvas() const
 
    return (TCanvas*)gROOT->ProcessLine("TCanvas::MakeDefCanvas();");
 }
-
 
 //______________________________________________________________________________
 TDataType *TROOT::GetType(const char *name, Bool_t load) const

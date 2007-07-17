@@ -1832,7 +1832,7 @@ if test ! "x$enable_qt" = "xno" || \
         qtincdir=$qtmainincdir
         qtdirlist=`ls $qtmainincdir`
         for i in $qtdirlist ; do
-          if test -r $qtmainincdir/$i ; then 
+          if test -r $qtmainincdir/$i ; then
            qtincdir="$qtincdir  $qtmainincdir/$i"
           fi
         done
@@ -1865,7 +1865,7 @@ if test ! "x$enable_qt" = "xno" || \
      check_library "libQtXml QtXml" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
-   fi    
+   fi
 
     message "Checking for moc or moc.exe"
 #  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
@@ -2978,7 +2978,7 @@ if test "x$enable_globus" = "xyes"; then
               libglobus_gssapi_gsi_$flavour libglobus_gsi_callback_$flavour
               libglobus_oldgaa_$flavour libglobus_gsi_cert_utils_$flavour
               libglobus_openssl_$flavour  libglobus_gsi_proxy_core_$flavour
-              libglobus_callout_$flavour  libltdl_$flavour 
+              libglobus_callout_$flavour  libltdl_$flavour
               libssl_$flavour libcrypto_$flavour"
 
    for i in $globuslibs ; do
@@ -4519,6 +4519,7 @@ result "done"
 message "Writing $ROOTRCOUT"
 sed -e "s|@libdir@|$libdir|"               \
     -e "s|@macrodir@|$macrodir|"           \
+    -e "s|@plugindir@|$etcdir/plugins|"    \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
