@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.98 2007/07/13 21:50:24 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsArg.cxx,v 1.99 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1393,7 +1393,7 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
 
   RooLinkedList retVal ;
 
-  set<string>::iterator iter= _boolAttrib.begin() ;
+  set<string>::const_iterator iter= _boolAttrib.begin() ;
   while(iter != _boolAttrib.end()) {
     if (TString(*iter).BeginsWith("CloneOf(")) {
       char buf[128] ;
