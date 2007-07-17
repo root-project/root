@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.172 2007/07/03 12:43:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.173 2007/07/09 20:38:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -907,7 +907,7 @@ const char *TSystem::PrependPathName(const char *, TString&)
 {
    // Concatenate a directory and a file name.
 
-   AbstractMethod("ConcatFileName");
+   AbstractMethod("PrependPathName");
    return 0;
 }
 
