@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.63 2007/07/12 17:12:14 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.64 2007/07/16 11:23:19 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -5889,7 +5889,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill)
 
    TRACE(ACT, "KillProofServ: enter: pid: "<<pid<< ", forcekill: "<< forcekill);
 
-   if (pid > -1) {
+   if (pid > 0) {
       // We need the right privileges to do this
       XrdOucMutexHelper mtxh(&gSysPrivMutex);
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
