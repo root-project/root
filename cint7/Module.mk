@@ -288,6 +288,9 @@ $(IOSENUM7) : $(IOSENUM7A)
 $(IOSENUM7A) : $(CINT7TMP) $(CINT7_STDIOH)
 	@(if test ! -r $@ ; \
 	  then \
+	    PATH=$PWD/bin:$$PATH \
+	    LD_LIBRARY_PATH=$$PWD/lib:$$LD_LIBRARY_PATH \
+	    DYLD_LIBRARY_PATH=$$PWD/lib:$$DYLD_LIBRARY_PATH \
 	    $(CINT7TMP) $(CINT7TMPINC) $(IOSENUM7C) > /dev/null ; \
 	    mv iosenum.h $@ ; \
 	  else \
