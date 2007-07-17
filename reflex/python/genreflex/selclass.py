@@ -82,9 +82,13 @@ class selClass :
     elif name in ('selection',) :
       self.classes   = self.sel_classes
       self.functions = self.sel_functions
+      self.vars      = self.sel_vars
+      self.enums     = self.sel_enums
     elif name in ('exclusion',) :
       self.classes   = self.exc_classes
       self.functions = self.exc_functions
+      self.vars      = self.exc_vars
+      self.enums     = self.exc_enums
     if 'pattern' in attrs :
       attrs['n_pattern'] = self.genNName(attrs['pattern'])
 #----------------------------------------------------------------------------------
@@ -92,6 +96,8 @@ class selClass :
     if name in ('exclusion',) :
       self.classes   = self.sel_classes
       self.functions = self.sel_functions
+      self.vars      = self.sel_vars
+      self.enums     = self.sel_enums
 #----------------------------------------------------------------------------------
   def matchclassTD(self, clname, fname, sltor) :
     clname = clname.replace(' ','')
