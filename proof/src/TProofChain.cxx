@@ -1,4 +1,5 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.7 2007/05/08 14:57:02 rdm Exp $
+
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.8 2007/07/13 13:22:57 ganis Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -61,12 +62,21 @@ TProofChain::~TProofChain()
 
    if (fChain) {
       SafeDelete(fSet);
+      // Remove the chain from the private lists in the TProof objects
+      TIter nxp(gROOT->GetListOfSockets());
+      TObject *o = 0;
+      TProof *p = 0;
+      while ((o = nxp()))
+         if ((p = dynamic_cast<TProof *>(o)))
+            p->RemoveChain(fChain);
+      fChain->SetProof(0);
    } else {
       // Not owner
       fSet = 0;
    }
    SafeDelete(fTree);
    fDirectory    = 0;
+
 }
 
 //______________________________________________________________________________
