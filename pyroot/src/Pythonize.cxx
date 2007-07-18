@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.52 2007/03/14 10:23:30 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.53 2007/06/14 05:12:03 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -174,7 +174,9 @@ namespace {
       if ( ! pyptr )
          return 0;
 
-      return PyObject_GetAttr( pyptr, name );
+      PyObject* result = PyObject_GetAttr( pyptr, name );
+      Py_DECREF( pyptr );
+      return result;
    }
 
 //____________________________________________________________________________
@@ -188,7 +190,9 @@ namespace {
       if ( ! pyptr )
          return 0;
 
-      return PyObject_GetAttr( pyptr, name );
+      PyObject* result = PyObject_GetAttr( pyptr, name );
+      Py_DECREF( pyptr );
+      return result;
    }
 
 //- TObject behaviour ----------------------------------------------------------
