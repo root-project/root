@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.268 2007/07/04 12:22:43 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.269 2007/07/09 09:22:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5748,25 +5748,15 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    Bool_t validType = kFALSE;
 
-   if ( (!type || !type[0] || (strstr(type, "gl") && !strstr(type, "ogl"))) && ! fCanvas->UseGL())
+   if ( (!type || !type[0] || (strstr(type, "gl") && !strstr(type, "ogl"))) && !fCanvas->UseGL())
       type = "pad";
 
    if (type && type[0]) {
-      // Extract plugins types supporting TVirtualViewer3D - cannot be done
-      // directly with plugin manager at present
-      TString pluginStr = gEnv->GetValue("Plugin.TVirtualViewer3D","");
-      TObjArray *pluginTypes = pluginStr.Tokenize(" ");
 
-      // Each plugin has 4 entries, 'type' (URI in plugin manager terminology) is zeroth
-      Int_t i = 0;
-      while (i < pluginTypes->GetSize() && !validType) {
-         TObjString * entry = dynamic_cast<TObjString *>(pluginTypes->At(i));
-         if (entry && entry->String().CompareTo(type) == 0) {
-            validType = kTRUE;
-         }
-         i += 4;
-      }
-      delete pluginTypes;
+      TPluginHandler *h;
+      if ((h = gPluginMgr->FindHandler("TVirtualViewer3D", type)))
+         validType = kTRUE;
+
    }
 
    // Invalid/null type requested?
@@ -5831,7 +5821,6 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    return fViewer3D;
 }
-
 
 //______________________________________________________________________________
 void TPad::ReleaseViewer3D(Option_t * /*type*/ )
