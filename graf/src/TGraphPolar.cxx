@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.12 2007/02/28 09:54:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.13 2007/06/13 16:27:06 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -159,12 +159,19 @@ void TGraphPolar::Paint(Option_t* options)
    //    - "E" Paint error bars.
    //    - "F" Paint fill area (closed polygon).
    //    - "A" Force axis redrawing even if a polargram already exists.
+   //    - "N" Disable the display of the polar labels.
 
    Int_t ipt, i;
    Double_t rwrmin, rwrmax, rwtmin, rwtmax;
    if (fNpoints<1) return;
    TString opt = options;
    opt.ToUpper();
+
+   Bool_t nolabel = kFALSE;
+   if(opt.Contains("N")){
+      nolabel = kTRUE;
+      opt.ReplaceAll("N","");
+   }
 
    // Check for existing TGraphPolargram in the Pad
    if (gPad) {
@@ -229,7 +236,8 @@ void TGraphPolar::Paint(Option_t* options)
       fPolargram = new TGraphPolargram("Polargram",rwrmin,rwrmax,rwtmin,rwtmax);
       if (opt.Contains("O")) fPolargram->SetBit(TGraphPolargram::kLabelOrtho);
       else fPolargram->ResetBit(TGraphPolargram::kLabelOrtho);
-      fPolargram->Draw("");
+      if(nolabel) fPolargram->Draw("N");
+      else fPolargram->Draw("");
       fOptionAxis = kFALSE;   //Prevent redrawing
    }
 
@@ -785,19 +793,21 @@ void TGraphPolargram::Paint(Option_t * chopt)
    // Paint TGraphPolargram.
 
    Int_t optionpoldiv, optionraddiv;
+   Bool_t optionLabels = kTRUE;
 
    TString opt = chopt;
    opt.ToUpper();
 
-   if(opt.Contains('P')) optionpoldiv=1; else optionpoldiv=0; //probleme de conflit!
+   if(opt.Contains('P')) optionpoldiv=1; else optionpoldiv=0;
    if(opt.Contains('R')) optionraddiv=1; else optionraddiv=0;
    if(opt.Contains('O')) SetBit(TGraphPolargram::kLabelOrtho);
    else ResetBit(TGraphPolargram::kLabelOrtho);
    if(!opt.Contains('P') && !opt.Contains('R')) optionpoldiv=optionraddiv=1;
+   if(opt.Contains('N')) optionLabels = kFALSE;
 
    if(optionraddiv) PaintRadialDivisions(kTRUE);
    else PaintRadialDivisions(kFALSE);
-   if(optionpoldiv) PaintPolarDivisions();
+   if(optionpoldiv) PaintPolarDivisions(optionLabels);
 }
 
 
@@ -836,7 +846,7 @@ void TGraphPolargram::PaintCircle(Double_t x1, Double_t y1, Double_t r,
 
 
 //______________________________________________________________________________
-void TGraphPolargram::PaintPolarDivisions()
+void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 {
    // Draw Polar divisions.
    // Check for editable pad or create default.
@@ -869,7 +879,7 @@ void TGraphPolargram::PaintPolarDivisions()
          TGaxis axis;
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
             // Polar numbers are aligned with their axis.
-            if(fPolarLabels == NULL){;
+            if(fPolarLabels == NULL && optionLabels){;
                if (fRadian) {
                   // Radian case.
                   ReduceFraction(2*i, ndivMajor, rnum, rden); // Reduces the fraction.
@@ -893,7 +903,7 @@ void TGraphPolargram::PaintPolarDivisions()
                                           sinthetas, FindTextAngle(theta),
                                           GetPolarLabelSize(), s);
                }
-            } else {
+            } else if (fPolarLabels){
                // print the specified polar labels
                TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
@@ -902,7 +912,7 @@ void TGraphPolargram::PaintPolarDivisions()
             }
          } else {
             // Polar numbers are shown horizontaly.
-            if(fPolarLabels == NULL){
+            if(fPolarLabels == NULL && optionLabels){
                if (fRadian) {
                // Radian case
                   ReduceFraction(2*i, ndivMajor, rnum, rden);
@@ -926,7 +936,7 @@ void TGraphPolargram::PaintPolarDivisions()
                   textangular->PaintLatex(costhetas, //j'ai efface des offset la
                                           corr+sinthetas,0,GetPolarLabelSize(),s);
                }
-            } else {
+            } else if (fPolarLabels) {
                // print the specified polar labels
                TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
@@ -987,7 +997,7 @@ void TGraphPolargram::PaintPolarDivisions()
          TGaxis axis;
 
          if (TestBit(TGraphPolargram::kLabelOrtho)) {
-            if(fPolarLabels==NULL){
+            if(fPolarLabels==NULL && optionLabels){
             // Polar numbers are aligned with their axis.
                form = Form("%5.3g",txtval);
                axis.LabelsLimits(form,first,last);
@@ -997,7 +1007,7 @@ void TGraphPolargram::PaintPolarDivisions()
                textangular->PaintLatex(costhetas,
                                        sinthetas, FindTextAngle(theta), GetPolarLabelSize(), s);
             }
-            else{
+            else if (fPolarLabels){
                // print the specified polar labels
                TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
@@ -1005,7 +1015,7 @@ void TGraphPolargram::PaintPolarDivisions()
             }
 
          } else {
-            if(fPolarLabels==NULL){
+            if(fPolarLabels==NULL && optionLabels){
             // Polar numbers are shown horizontaly.
                cout<<"ici"<<endl;
                form = Form("%5.3g",txtval);
@@ -1016,7 +1026,7 @@ void TGraphPolargram::PaintPolarDivisions()
                textangular->SetTextAlign(FindAlign(theta));
                textangular->PaintLatex(costhetas,
                                        corr+sinthetas,0,GetPolarLabelSize(),s);
-            } else {
+            } else if (fPolarLabels){
                // print the specified polar labels
                TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
