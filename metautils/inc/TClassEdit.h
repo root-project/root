@@ -1,6 +1,14 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.11 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.12 2005/09/03 02:23:03 pcanal Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TClassEdit
 #define ROOT_TClassEdit
