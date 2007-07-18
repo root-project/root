@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx,v 1.9 2007/01/29 15:10:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx,v 1.10 2007/06/11 19:56:33 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -256,7 +256,6 @@ indicating if children (contained within the one just sent) are worth adding.</p
 #include "TVirtualPad.h"
 #include "TPluginManager.h"
 #include "TError.h"
-#include "TROOT.h"
 #include "TClass.h"
 
 ClassImp(TVirtualViewer3D)
@@ -264,11 +263,13 @@ ClassImp(TVirtualViewer3D)
 //______________________________________________________________________________
 TVirtualViewer3D* TVirtualViewer3D::Viewer3D(TVirtualPad *pad, Option_t *type)
 {
-   // Create a Viewer 3D of specified type
+   // Create a Viewer 3D of specified type.
+
    TVirtualViewer3D *viewer = 0;
    TPluginHandler *h;
-   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualViewer3D", type))) {
-      if (h->LoadPlugin() == -1) return 0;
+   if ((h = gPluginMgr->FindHandler("TVirtualViewer3D", type))) {
+      if (h->LoadPlugin() == -1)
+         return 0;
 
       if (!pad) {
          viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad);
