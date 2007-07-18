@@ -298,6 +298,14 @@ class genDictionary(object) :
         # this check fixes a bug in gccxml 0.6.0_patch3 which sometimes generates incomplete definitions 
         # of classes (without members). Every version after 0.6.0_patch3 is tested and fixes this bug
         if not c.has_key('members') : continue
+
+        # Filter any non-public data members for minimal interpreter dict
+        if self.interpreter:
+          cxref = self.xref[c['id']]
+          # assumes that the default is "public"
+          if cxref.has_key('attrs') and 'access' in cxref['attrs'] :
+            continue
+
         match = self.selector.matchclass( self.genTypeName(c['id']), self.files[c['file']]['name'])
         if match[0] and not match[1] :
           c['extra'] = match[0]
@@ -363,7 +371,7 @@ class genDictionary(object) :
         funcname = self.genTypeName(f['id'])
         if self.selector.selfunction( funcname ) and not self.selector.excfunction( funcname ) :
           selec.append(f)
-        if 'extra' in f and f['extra'].get('autoselect') and f not in selec:
+        elif 'extra' in f and f['extra'].get('autoselect') and f not in selec:
           selec.append(f)
     return selec
 #----------------------------------------------------------------------------------
@@ -372,10 +380,17 @@ class genDictionary(object) :
     self.selector = sel  # remember the selector
     if self.selector :
       for e in self.enums :
+        # Filter any non-public data members for minimal interpreter dict
+        if self.interpreter:
+          exref = self.xref[e['id']]
+          # assumes that the default is "public"
+          if exref.has_key('attrs') and 'access' in exref['attrs'] :
+            continue
+
         ename = self.genTypeName(e['id'])
         if self.selector.selenum( ename ) and not self.selector.excenum( ename ) :
           selec.append(e)
-        if 'extra' in e and e['extra'].get('autoselect') and e not in selec:
+        elif 'extra' in e and e['extra'].get('autoselect') and e not in selec:
           selec.append(e)
     return selec
 #---------------------------------------------------------------------------------
@@ -797,6 +812,8 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genTypedefBuild(self, attrs, childs) :
     if self.no_membertypedefs : return ''
+    # access selection doesn't work with gccxml0.6 - typedefs don't have it
+    if self.interpreter and 'access' in attrs : return ''
     s = ''
     s += '  .AddTypedef(%s, "%s::%s")' % ( self.genTypeID(attrs['type']), self.genTypeName(attrs['context']), attrs['name']) 
     return s  
@@ -812,7 +829,8 @@ class genDictionary(object) :
       s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum), %s)' % (name[name.rfind('::')+3:], values, mod) 
     else :
       if attrs.get('access') in ('protected','private'):
-        s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType), %s)' % (name, values, mod)        
+        if not self.interpreter:
+          s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType), %s)' % (name, values, mod)        
       else:
         s += '  .AddEnum("%s", "%s", &typeid(%s), %s)' % (name, values, name, mod)
     return s 
