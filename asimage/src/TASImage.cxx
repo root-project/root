@@ -495,7 +495,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
       TImagePlugin *plug = (TImagePlugin*)fgPlugList->FindObject(ext.Data());
 
       if (!plug) {
-         TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TImagePlugin", ext.Data());
+         TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TImagePlugin", ext);
          if (!handler || ((handler->LoadPlugin() == -1))) {
             return;
          }
@@ -4131,13 +4131,169 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
             }
             if (iDash >= nDash) {
                iDash = 0;
-
                i = 0;
             }
          }
       }
    }
    delete [] pDash;
+}
+
+//______________________________________________________________________________
+void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
+                             UInt_t nDash, const char *tDash, UInt_t color, UInt_t thick)
+{
+   // draw dashed line with thick pixel width
+
+   int dx, dy;
+   int i;
+   double x, y, xend, yend, x0, y0;
+   int xdir, ydir;
+   int q;
+   UInt_t iDash = 0;    // index of current dash
+
+   dx = TMath::Abs(Int_t(x2) - Int_t(x1));
+   dy = TMath::Abs(Int_t(y2) - Int_t(y1));
+
+   double *xDash = new double[nDash];
+   double *yDash = new double[nDash];
+   double a = TMath::ATan2(dy, dx);
+   double ac = TMath::Cos(a);
+   double as = TMath::Sin(a);
+
+   for (i = 0; i < (int)nDash; i++) {
+      xDash[i] = tDash[i] * ac;
+      yDash[i] = tDash[i] * as;
+
+      // dirty trick (must be fixed)
+      if ((i%2) == 0) {
+         xDash[i] = xDash[i]/2;
+         yDash[i] = yDash[i]/2;
+      } else {
+         xDash[i] = xDash[i]*2;
+         yDash[i] = yDash[i]*2;
+      }
+   }
+
+   if (dy <= dx) {
+      if (x1 > x2) {
+         x = x2;
+         y = y2;
+         ydir = -1;
+         xend = x1;
+      } else {
+         x = x1;
+         y = y1;
+         ydir = 1;
+         xend = x2;
+      }
+
+      q = (y2 - y1) * ydir;
+      x0 = x;
+      y0 = y;
+      iDash = 0;
+      yend = y + q;
+
+      if (q > 0) {
+         while ((x < xend) && (y < yend)) {
+            x += xDash[iDash];
+            y += yDash[iDash];
+
+            if ((iDash%2) == 0) {
+              DrawWideLine(TMath::Nint(x0), TMath::Nint(y0),
+                           TMath::Nint(x), TMath::Nint(y), color, thick);
+            } else {
+               x0 = x;
+               y0 = y;
+            }
+
+            iDash++;
+
+            if (iDash >= nDash) {
+               iDash = 0;
+            }
+        }
+      } else {
+         while ((x < xend) && (y > yend)) {
+            x += xDash[iDash];
+            y -= yDash[iDash];
+
+            if ((iDash%2) == 0) {
+               DrawWideLine(TMath::Nint(x0), TMath::Nint(y0),
+                            TMath::Nint(x), TMath::Nint(y), color, thick);
+            } else {
+               x0 = x;
+               y0 = y;
+            }
+
+            iDash++;
+
+            if (iDash >= nDash) {
+               iDash = 0;
+            }
+         }
+      }
+   } else {
+
+      if (y1 > y2) {
+         y = y2;
+         x = x2;
+         yend = y1;
+         xdir = -1;
+      } else {
+         y = y1;
+         x = x1;
+         yend = y2;
+         xdir = 1;
+      }
+
+      q = (x2 - x1) * xdir;
+      x0 = x;
+      y0 = y;
+      iDash = 0;
+
+      if (q > 0) {
+         while ((x < xend) && (y < yend)) {
+            x += xDash[iDash];
+            y += yDash[iDash];
+
+            if ((iDash%2) == 0) {
+               DrawWideLine(TMath::Nint(x0), TMath::Nint(y0),
+                            TMath::Nint(x), TMath::Nint(y), color, thick);
+            } else {
+               x0 = x;
+               y0 = y;
+            }
+
+            iDash++;
+
+            if (iDash >= nDash) {
+               iDash = 0;
+            }
+         }
+      } else {
+         while ((x > xend) && (y < yend)) {
+            x -= xDash[iDash];
+            y += yDash[iDash];
+
+            if ((iDash%2) == 0) {
+               DrawWideLine(TMath::Nint(x0), TMath::Nint(y0),
+                            TMath::Nint(x), TMath::Nint(y), color, thick);
+            } else {
+               x0 = x;
+               y0 = y;
+            }
+
+            iDash++;
+
+            if (iDash >= nDash) {
+               iDash = 0;
+            }
+         }
+      }
+   }
+   delete [] xDash;
+   delete [] yDash;
 }
 
 //______________________________________________________________________________
@@ -4179,7 +4335,8 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
    } else if (y1 == y2) {
       DrawDashHLine(y1, x1, x2, nDash, pDash, (UInt_t)color, thick);
    } else {
-      DrawDashZLine(x1, y1, x2, y2, nDash, pDash, (UInt_t)color);
+      if (thick < 2) DrawDashZLine(x1, y1, x2, y2, nDash, pDash, (UInt_t)color);
+      else DrawDashZTLine(x1, y1, x2, y2, nDash, pDash, (UInt_t)color, thick);
    }
 }
 

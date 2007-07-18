@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.29 2007/05/16 10:04:01 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.30 2007/05/17 14:15:26 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -57,6 +57,7 @@ private:
    void DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col);
+   void DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    Bool_t GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
