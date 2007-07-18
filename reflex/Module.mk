@@ -59,15 +59,11 @@ endif
 RFLX_LIBDIR = $(LIBDIR)
 
 ifeq ($(PLATFORM),win32)
-RFLX_GENREFLEX = bin/genreflex.bat
-RFLX_GENRFLXRC = bin/genreflex-rootcint.bat
 # test suite
 RFLX_CPPUNITI   = "$(shell cygpath -w '$(CPPUNIT)/include')"
 RFLX_CPPUNITLL  = "$(shell cygpath -w '$(CPPUNIT)/lib/cppunit.lib')"
 RFLX_REFLEXLL   = lib/libReflex.lib
 else
-RFLX_GENREFLEX = bin/genreflex
-RFLX_GENRFLXRC = bin/genreflex-rootcint
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
@@ -106,7 +102,7 @@ RFLX_GENMAPS   = $(REFLEXDIRS)/genmap/genmap.cxx
 RFLX_GENMAPO   = $(RFLX_GENMAPS:.cxx=.o)
 RFLX_GENMAPX   = bin/genmap$(EXEEXT)
 
-ALLEXECS += $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(RFLX_GENMAPX)
+ALLEXECS += $(RFLX_GENMAPX)
 
 ##### local rules #####
 POSTBIN += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
