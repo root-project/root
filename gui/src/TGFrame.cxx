@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.155 2007/06/04 09:23:11 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.156 2007/06/15 13:46:24 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1368,9 +1368,9 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    fBindList = new TList;
 
-   fMWMValue    = kMWMDecorAll;
-   fMWMFuncs    = kMWMFuncAll;
-   fMWMInput    = kMWMInputModeless;
+   fMWMValue    = 0;
+   fMWMFuncs    = 0;
+   fMWMInput    = 0;
    fWMX         = -1;
    fWMY         = -1;
    fWMWidth     = (UInt_t) -1;
@@ -1385,15 +1385,18 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
                       kKeyControlMask, kTRUE);
-   gVirtualX->SetMWMHints(fId, fMWMValue, fMWMFuncs, fMWMInput);
-   
-   // if parent is editting/embeddable add this frame to the parent
+   if (p == fClient->GetDefaultRoot()) {
+      fMWMValue    = kMWMDecorAll;
+      fMWMFuncs    = kMWMFuncAll;
+      fMWMInput    = kMWMInputModeless;
+      gVirtualX->SetMWMHints(fId, fMWMValue, fMWMFuncs, fMWMInput);
+   }
+   // if parent is editing/embedable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
       if (p->InheritsFrom(TGCompositeFrame::Class())) {
-         static TGLayoutHints expandLH(kLHintsExpandX | kLHintsExpandY);
          frame = (TGCompositeFrame*)p;
-         frame->AddFrame(this, &expandLH);
+         frame->AddFrame(this, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
          // used during paste operation
          if (gDragManager && gDragManager->IsPasting()) {
@@ -1754,7 +1757,7 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
    // dialog boxes.
 
    fMain = main;
-   if (!fMain && gClient) 
+   if (!fMain && gClient)
       fMain = gClient->GetRoot();
 
    if (fMain) {
@@ -2767,7 +2770,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
    else
       out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
-      
+
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
 
    GetWMPosition(fWMX, fWMY);
