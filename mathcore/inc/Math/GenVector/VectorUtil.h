@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.9 2006/08/22 09:45:32 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.10 2006/08/29 12:42:27 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -18,14 +18,10 @@
 #ifndef ROOT_Math_GenVector_VectorUtil 
 #define ROOT_Math_GenVector_VectorUtil  1
 
+#ifndef ROOT_Math_Math
+#include "Math/Math.h"
+#endif
 
-#ifdef _WIN32
-#define _USE_MATH_DEFINES 
-#endif
-#include <cmath>
-#ifndef M_PI
-#define M_PI        3.14159265358979323846   /* pi */
-#endif
 
 #include "Math/GenVector/Boost.h"
 
@@ -62,7 +58,7 @@ namespace ROOT {
 	 \f[ \Delta \phi = \phi_2 - \phi_1 \f]
       */
       template <class Vector1, class Vector2> 
-      double DeltaPhi( const Vector1 & v1, const Vector2 & v2) { 
+      inline double DeltaPhi( const Vector1 & v1, const Vector2 & v2) { 
 	double dphi = v2.Phi() - v1.Phi(); 
 	if ( dphi > M_PI ) {
 	  dphi -= 2.0*M_PI;
@@ -75,6 +71,21 @@ namespace ROOT {
       
       
     /**
+       Find square of the difference in pseudorapidity (Eta) and Phi betwen two generic vectors
+       The only requirements on the Vector classes is that they implement the Phi() and Eta() method
+       \param v1  Vector 1  
+       \param v2  Vector 2
+       \return   Angle between the two vectors
+       \f[ \Delta R2 = ( \Delta \phi )^2 + ( \Delta \eta )^2  \f]
+    */ 
+      template <class Vector1, class Vector2> 
+      inline double DeltaR2( const Vector1 & v1, const Vector2 & v2) { 
+	double dphi = DeltaPhi(v1,v2); 
+	double deta = v2.Eta() - v1.Eta(); 
+	return dphi*dphi + deta*deta; 
+      }
+
+    /**
        Find difference in pseudorapidity (Eta) and Phi betwen two generic vectors
        The only requirements on the Vector classes is that they implement the Phi() and Eta() method
        \param v1  Vector 1  
@@ -83,10 +94,8 @@ namespace ROOT {
        \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta \eta )^2 } \f]
     */ 
       template <class Vector1, class Vector2> 
-      double DeltaR( const Vector1 & v1, const Vector2 & v2) { 
-	double dphi = DeltaPhi(v1,v2); 
-	double deta = v2.Eta() - v1.Eta(); 
-	return std::sqrt( dphi*dphi + deta*deta ); 
+      inline double DeltaR( const Vector1 & v1, const Vector2 & v2) { 
+	return std::sqrt( DeltaR2(v1,v2) ); 
       }
 
 
@@ -128,7 +137,7 @@ namespace ROOT {
 	 \f[ \theta = \cos ^{-1} \frac { \vec{v1} \cdot \vec{v2} }{ | \vec{v1} | | \vec{v2} | } \f]
       */ 
       template <class Vector1, class Vector2> 
-      double Angle( const  Vector1 & v1, const Vector2 & v2) { 
+      inline double Angle( const  Vector1 & v1, const Vector2 & v2) { 
 	return std::acos( CosTheta(v1, v2) ); 
       }
 
@@ -157,7 +166,7 @@ namespace ROOT {
          Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
       */ 
       template <class Vector1, class Vector2> 
-      Vector1 PerpVector( const  Vector1 & v, const Vector2 & u) { 
+      inline Vector1 PerpVector( const  Vector1 & v, const Vector2 & u) { 
          return v - ProjVector(v,u);
       }
 
@@ -170,7 +179,7 @@ namespace ROOT {
          Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
       */ 
       template <class Vector1, class Vector2> 
-      double Perp2( const  Vector1 & v, const Vector2 & u) { 
+      inline double Perp2( const  Vector1 & v, const Vector2 & u) { 
          double magU2 = u.X()*u.X() + u.Y()*u.Y() + u.Z()*u.Z();
          double prjvu = v.Dot(u);
          double magV2 = v.Dot(v);
@@ -186,7 +195,7 @@ namespace ROOT {
          Precondition is that Vector1 implements Dot function and Vector2 implements X(),Y() and Z()
       */ 
       template <class Vector1, class Vector2> 
-      double Perp( const  Vector1 & v, const Vector2 & u) { 
+      inline double Perp( const  Vector1 & v, const Vector2 & u) { 
          return std::sqrt(Perp2(v,u) );
       }
 
@@ -205,7 +214,7 @@ namespace ROOT {
        \f[ M_{12} = \sqrt{ (\vec{v1} + \vec{v2} ) \cdot (\vec{v1} + \vec{v2} ) } \f]
     */ 
       template <class Vector1, class Vector2> 
-      double InvariantMass( const Vector1 & v1, const Vector2 & v2) { 
+      inline double InvariantMass( const Vector1 & v1, const Vector2 & v2) { 
 	double ee = (v1.E() + v2.E() );
 	double xx = (v1.X() + v2.X() );
 	double yy = (v1.Y() + v2.Y() );
