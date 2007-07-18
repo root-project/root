@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.39 2007/06/20 14:41:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.40 2007/06/23 21:21:05 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -66,7 +66,7 @@ class TVirtualGLManip {
 public:
    virtual ~TVirtualGLManip(){}
    virtual Bool_t Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox) = 0;
-      
+
    ClassDef(TVirtualGLManip, 0); //Interface for GL manipulator
 };
 
@@ -83,7 +83,7 @@ public:
    virtual Int_t    CreateGLContext(Int_t winInd) = 0;
 
    //[            Off-screen rendering part
-   //create DIB section/pixmap to read GL buffer into it, 
+   //create DIB section/pixmap to read GL buffer into it,
    //ctxInd is the index, returned by CreateGLContext
    virtual Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
    virtual Bool_t   ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
@@ -97,8 +97,8 @@ public:
    virtual void     ExtractViewport(Int_t ctxInd, Int_t *vp) = 0;
    //Read GL buffer into off-screen device
    virtual void     ReadGLBuffer(Int_t ctxInd) = 0;
-   //]            
-   
+   //]
+
    //Make the gl context current
    virtual Bool_t   MakeCurrent(Int_t ctxInd) = 0;
    //Swap buffers or copies DIB/pixmap (via BitBlt/XCopyArea)
@@ -145,7 +145,7 @@ private:
    virtual void AddContext(TGLContext *ctx) = 0;
    virtual void RemoveContext(TGLContext *ctx) = 0;
 
-   ClassDef(TGLPaintDevice, 0)
+   ClassDef(TGLPaintDevice, 0) // Base class for GL widgets and GL off-screen rendering
 };
 
 #ifndef __CINT__
