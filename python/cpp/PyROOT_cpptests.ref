@@ -7,6 +7,7 @@ Test call to static function. ... ok
 Test access to namespaces and inner classes ... ok
 Test passing of variants of void pointer arguments ... ok
 Test access to cpp macro's ... ok
+Test passing around of opaque pointers ... ok
 
 ----------------------------------------------------------------------
 

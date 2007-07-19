@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 07/03/06
+# Last: 07/03/07
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -10,10 +10,15 @@ from math import exp
 from ROOT import *
 
 __all__ = [
-   'CallFunctionTestCase',
-   'FitFunctionTestCase',
-   'GlobalCppFunctionTestCase'
+   'Func1CallFunctionTestCase',
+   'Func2FitFunctionTestCase',
+   'Func3GlobalCppFunctionTestCase',
+   'Func4GlobalCppFunctionAsMethodTestCase'
 ]
+
+# needs to be early to prevent "ifunc_table overflow!"
+gROOT.LoadMacro( "InstallableFunction.C+" )
+
 
 
 ### helpers ------------------------------------------------------------------
@@ -41,7 +46,7 @@ def pygaus( x, par ):
 
 
 ### basic function test cases ================================================
-class CallFunctionTestCase( unittest.TestCase ):
+class Func1CallFunctionTestCase( unittest.TestCase ):
    def test1GlobalFunction( self ):
       """Test calling of a python global function"""
 
@@ -67,7 +72,7 @@ class CallFunctionTestCase( unittest.TestCase ):
 
 
 ### fitting with functions ===================================================
-class FitFunctionTestCase( unittest.TestCase ):
+class Func2FitFunctionTestCase( unittest.TestCase ):
    def test1FitGaussian( self ):
       """Test fitting with a python global function"""
 
@@ -85,7 +90,7 @@ class FitFunctionTestCase( unittest.TestCase ):
 
 
 ### calling a global function ================================================
-class GlobalCppFunctionTestCase( unittest.TestCase ):
+class Func3GlobalCppFunctionTestCase( unittest.TestCase ):
    def test1CallGlobalCppFunction( self ):
       """Test calling of a C++ global function."""
 
@@ -93,6 +98,17 @@ class GlobalCppFunctionTestCase( unittest.TestCase ):
 
       self.assertEqual( round( Divide( 4. ) - 4./2., 8), 0 )
       self.assertEqual( round( Divide( 7. ) - 7./2., 8), 0 )
+
+
+### using a global function as python class member ===========================
+class Func4GlobalCppFunctionAsMethodTestCase( unittest.TestCase ):
+   def test1InstallAndCallGlobalCppFunctionAsPythonMethod( self ):
+      """Test installing and calling global C++ function as python method"""
+
+      FuncLess.InstallableFunc = InstallableFunc
+
+      a = FuncLess( 1234 )
+      self.assertEqual( a.m_int, a.InstallableFunc().m_int );
 
 
 ## actual test run

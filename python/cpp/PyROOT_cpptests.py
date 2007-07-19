@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 03/09/07
+# Last: 07/03/07
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -15,7 +15,7 @@ __all__ = [
 
 ### C++ language constructs test cases =======================================
 class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
-   def test1ClassEnum( self ):
+   def test01ClassEnum( self ):
       """Test class enum access and values"""
 
       self.assertEqual( TObject.kBitMask,    gROOT.ProcessLine( "return TObject::kBitMask;" ) )
@@ -30,14 +30,14 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assertEqual( TObject.kNotDeleted, t.kNotDeleted )
       self.assertEqual( TObject.kZombie,     t.kZombie )
 
-   def test2Globalenum( self ):
+   def test02Globalenum( self ):
       """Test global enums access and values"""
 
       self.assertEqual( kRed,   gROOT.ProcessLine( "return kRed;" ) )
       self.assertEqual( kGreen, gROOT.ProcessLine( "return kGreen;" ) )
       self.assertEqual( kBlue,  gROOT.ProcessLine( "return kBlue;" ) )
 
-   def test3CopyContructor( self ):
+   def test03CopyContructor( self ):
       """Test copy constructor"""
 
       t1 = TLorentzVector( 1., 2., 3., -4. )
@@ -50,7 +50,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       for i in range(4):
          self.assertEqual( t1[i], t3[i] )
 
-   def test4ObjectValidity( self ):
+   def test04ObjectValidity( self ):
       """Test object validity checking"""
 
       t1 = TObject()
@@ -62,7 +62,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
 
       self.assert_( not t2 )
 
-   def test5ElementAccess( self ):
+   def test05ElementAccess( self ):
       """Test access to elements in matrix and array objects."""
 
       n = 3
@@ -75,7 +75,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
          for j in range(n):
              self.assertEqual( m[i][j], 0.0 )
 
-   def test6StaticFunctionCall( self ):
+   def test06StaticFunctionCall( self ):
       """Test call to static function."""
 
       c1 = TString.Class()
@@ -92,7 +92,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       old = TString.InitialCapacity( 20 )
       self.assertEqual( 20, s.InitialCapacity( old ) )
 
-   def test7Namespaces( self ):
+   def test07Namespaces( self ):
       """Test access to namespaces and inner classes"""
 
       gROOT.LoadMacro( "Namespace.C+" )
@@ -108,7 +108,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assertEqual( A.D.E.F.sf,    6 )
       self.assertEqual( A.D.E.F().ff, -6 )
 
-   def test8VoidPointerPassing( self ):
+   def test08VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""
 
       gROOT.LoadMacro( "PointerPassing.C+" )
@@ -119,7 +119,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
 
       import array
       if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
-         addressofo = array.array( 'l', [o.IsA()._TClass__DynamicCast( o.IsA(), o )] )
+         addressofo = array.array( 'l', [o.IsA()._TClass__DynamicCast( o.IsA(), o )[0]] )
          self.assertEqual( addressofo.buffer_info()[0], Z.GimeAddressPtrPtr( addressofo ) )
 
       self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
@@ -134,7 +134,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       Z.SetAddressPtrPtr( ptr )
       self.assertEqual( AddressOf( ptr )[0], 0x4321 )
 
-   def test9Macro( self ):
+   def test09Macro( self ):
       """Test access to cpp macro's"""
 
       self.assertEqual( NULL, 0 );
@@ -146,6 +146,21 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assertEqual( aap, "aap" )
       self.assertEqual( noot, 1 )
       self.assertEqual( mies, 2.0 )
+
+   def test10OpaquePointerPassing( self ):
+      """Test passing around of opaque pointers"""
+
+      import ROOT
+
+      s = TString( "Hello World!" )
+      co = ROOT.AsCObject( s )
+      ad = ROOT.AddressOf( s )[ 0 ]
+
+      self.assert_( s == ROOT.BindObject( co, s.__class__ ) )
+      self.assert_( s == ROOT.BindObject( co, "TString" ) )
+      self.assert_( s == ROOT.BindObject( ad, s.__class__ ) )
+      self.assert_( s == ROOT.BindObject( ad, "TString" ) )
+
 
 ## actual test run
 if __name__ == '__main__':
