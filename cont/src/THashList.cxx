@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.6 2002/08/07 10:58:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.7 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -174,11 +174,11 @@ void THashList::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
+   fTable->Clear("nodelete");  // any kCanDelete objects will be deleted
    if (IsOwner())
       TList::Delete(option);
    else
       TList::Clear(option);
-   fTable->Clear("nodelete");  // any kCanDelete objects have already been deleted
 }
 
 //______________________________________________________________________________
@@ -186,8 +186,8 @@ void THashList::Delete(Option_t *option)
 {
    // Remove all objects from the list AND delete all heap based objects.
 
+   fTable->Clear("nodelete");  // all objects will be deleted
    TList::Delete(option);      // this deletes the objects
-   fTable->Clear("nodelete");  // all objects have already been deleted
 }
 
 //______________________________________________________________________________
