@@ -714,7 +714,8 @@ class genDictionary(object) :
     return sc, ss
 #----------------------------------------------------------------------------------
   def checkAccessibleType( self, type ):
-    while type['elem'] in ('PointerType','Typedef') : type = self.xref[type['attrs']['type']]
+    while type['elem'] in ('PointerType','Typedef','ArrayType') :
+      type = self.xref[type['attrs']['type']]
     attrs = type['attrs']
     if 'access' in attrs and attrs['access'] in ('private','protected') : return attrs['id']
     if 'context' in attrs and self.checkAccessibleType(self.xref[attrs['context']]) : return attrs['id']
@@ -776,19 +777,35 @@ class genDictionary(object) :
         member = self.xref[m]
         if member['elem'] in ('Field',) :
           a = member['attrs']
+          axref = self.xref[a['type']]
           t = self.genTypeName(a['type'],colon=True,const=True)
+          arraytype = ""
+          if t[-1] == ']' : arraytype = t[t.find('['):]
+
+          fundtype = axref
+          while fundtype['elem'] in ('ArrayType', 'Typedef'):
+            fundtype = self.xref[fundtype['attrs']['type']]
+          mTypeElem = fundtype['elem']
+
+          #---- Check if pointer of reference - exact type irrelevant
+          if mTypeElem == 'PointerType' :
+            c += indent + '  void* %s;\n' % (a['name'] + arraytype)
+            continue
+          elif mTypeElem ==  'ReferenceType' :
+            c += indent + '  int& %s;\n' % (a['name'] + arraytype)
+            continue
+
           #---- Check if a type and a member with the same name exist in the same scope
-          mTypeElem = self.xref[a['type']]['elem']
           if mTypeElem in ('Class','Struct'):
-            mTypeName = self.xref[a['type']]['attrs']['name']
-            mTypeId = a['type']
-            for el in self.xref[self.xref[a['type']]['attrs']['context']]['attrs'].get('members').split():
+            mTypeName = fundtype['attrs']['name']
+            mTypeId = fundtype['attrs']['id']
+            for el in self.xref[fundtype['attrs']['context']]['attrs'].get('members').split():
               if self.xref[el]['attrs'].get('name') == mTypeName and mTypeId != el :
                 t = mTypeElem.lower() + ' ' + t[2:]
                 break
           #---- Check for non public types------------------------
-          noPublicType = self.checkAccessibleType(self.xref[a['type']])
-          if ( noPublicType and not self.isUnnamedType(self.xref[a['type']]['attrs'].get('name'))):
+          noPublicType = self.checkAccessibleType(axref)
+          if ( noPublicType and not self.isUnnamedType(axref['attrs'].get('name'))):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
             cmem = self.genTypeName(noPubTypeAttrs['id'],const=True,colon=True)
             if cmem != cls and cmem not in inner_shadows :
@@ -800,11 +817,11 @@ class genDictionary(object) :
           for ikey in ikeys :      
             if   t.find(ikey) == 0      : t = t.replace(ikey, inner_shadows[ikey])     # change current class by shadow name 
             elif t.find(ikey[2:]) != -1 : t = t.replace(ikey[2:], inner_shadows[ikey]) # idem without leading ::
-          mType = self.xref[a.get('type')]
+          mType = axref
           if mType and self.isUnnamedType(mType['attrs'].get('name')) :
             t = self.genClassShadow(mType['attrs'], inner+1)[:-2]
           fPPos = self.funPtrPos(t)
-          if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
+          if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name'] + arraytype )
           elif fPPos              : c += indent + '  %s;\n'    % ( t[:fPPos] + a['name'] + t[fPPos:] )
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
       c += indent + '};\n'
