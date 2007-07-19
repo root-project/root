@@ -99,6 +99,13 @@ gobble(filep, file, file_red)
 	return(-1);
 }
 
+/* copy from to to, where from and to might overlap */
+static void inplace_strcpy(char* to, const char* from) {
+   while (*from)
+      *to++ = *from++;
+   *to = *from;
+}
+
 /*
  * Decide what type of # directive this line is.
  */
@@ -226,7 +233,7 @@ int deftype (line, filep, file_red, file, parse_it)
 		/*
 		 * copy the definition back to the beginning of the line.
 		 */
-		strcpy (line, p);
+		inplace_strcpy (line, p);
 		break;
 	case ELSE:
 	case ENDIF:
