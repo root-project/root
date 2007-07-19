@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.23 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.24 2007/05/04 15:17:13 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -83,8 +83,7 @@ public:
 
    virtual ~TGLabel();
 
-   virtual TGDimension GetDefaultSize() const 
-      { return TGDimension(fTWidth+fMLeft+fMRight, fTHeight+fMTop+fMBottom+1); }
+   virtual TGDimension GetDefaultSize() const; 
 
    const TGString *GetText() const { return fText; }
    virtual const char *GetTitle() const { return fText->Data(); }

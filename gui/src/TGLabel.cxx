@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.34 2007/06/07 08:43:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.35 2007/07/17 12:55:52 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -150,13 +150,23 @@ TGLabel::~TGLabel()
 //______________________________________________________________________________
 void TGLabel::Layout()
 {
-   // layout label
+   // Layout label.
 
    delete fTLayout;
    fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
                                        fWrapLength, kTextLeft, fTFlags,
                                        &fTWidth, &fTHeight);
    fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+TGDimension TGLabel::GetDefaultSize() const
+{
+   // Return default size.
+
+   UInt_t w = GetOptions() & kFixedWidth ? fWidth : fTWidth + fMLeft + fMRight;
+   UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 1;
+   return TGDimension(w, h);
 }
 
 //______________________________________________________________________________
@@ -176,7 +186,7 @@ void TGLabel::SetText(TGString *new_text)
 //______________________________________________________________________________
 void TGLabel::DrawText(GContext_t gc, Int_t x, Int_t y)
 {
-   // draw text at position (x, y)
+   // Draw text at position (x, y).
 
    fTLayout->DrawText(fId, gc, x, y, 0, -1);
    //fTLayout->UnderlineChar(fId, gc, x, y, fText->GetHotPos());
