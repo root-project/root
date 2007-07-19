@@ -3,6 +3,7 @@
 //
 // author, Roel Aaij 13/07/2007
 
+#include <iostream>
 #include <TApplication.h>
 #include <TGClient.h>
 #include <TGButton.h>
@@ -133,16 +134,17 @@ void SplitButtonTest::HandleMenu(Int_t id)
 
    switch (id) {
    case ID_1:
-      cout << "Button 1 was activated" << endl;
+      std::cout << "Button 1 was activated" << std::endl;
       break;
    case ID_2:
-      cout << "Button 2 was activated" << endl;
+      std::cout << "Button 2 was activated" << std::endl;
       break;
    case ID_3:
-      cout << "Button 3 was activated" << endl;
+      std::cout << "Button 3 was activated" << std::endl;
       break;
    case ID_4:
-      cout << "Button with a really really long name was activated" << endl;
+      std::cout << "Button with a really really long name was activated" 
+                << std::endl;
       break;
    case ID_5:
       DoExit();
@@ -151,6 +153,6 @@ void SplitButtonTest::HandleMenu(Int_t id)
 }
 void splitbuttonTest() 
 {
-   new SplitButtonTest(0,100,100) ;
+   new SplitButtonTest(0,100,100);
 }
 
