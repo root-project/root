@@ -4147,7 +4147,7 @@ void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
    int dx, dy;
    int i;
-   double x, y, xend, yend, x0, y0;
+   double x, y, xend=0, yend=0, x0, y0;
    int xdir, ydir;
    int q;
    UInt_t iDash = 0;    // index of current dash
