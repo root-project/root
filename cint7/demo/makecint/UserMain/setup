@@ -1,5 +1,0 @@
-makecint -mk Makefile -m -I$CINTSYSDIR -o UserMain -H UserMain.h -C++ UserMain.cxx
-make -f Makefile
-UserMain
-make -f Makefile clean
-rm Makefile
