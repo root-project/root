@@ -1,5 +1,0 @@
-for i in *.cxx
-do
-  echo $i
-  cint $* $i
-done
