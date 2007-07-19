@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.71 2006/08/31 09:08:39 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.72 2007/06/15 10:03:32 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -68,7 +68,7 @@
 #include "TList.h"
 #include "Riostream.h"
 #include "KeySymbols.h"
-
+#include "TGButton.h"
 #include "TQConnection.h"
 #include "TParameter.h"
 
@@ -939,6 +939,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fHasGrab     = kFALSE;
    fPoppedUp    = kFALSE;
    fMenuBar     = 0;
+   fSplitButton = 0;
    fEntrySep    = 3;
 
    SetWindowAttributes_t wattr;
@@ -1331,6 +1332,7 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
       Activate((TGMenuEntry*)0);
    }
    if (fMenuBar) fMenuBar->fKeyNavigate = kFALSE;
+   if (fSplitButton) fSplitButton->fKeyNavigate = kFALSE;
 
    return kTRUE;
 }

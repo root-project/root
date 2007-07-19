@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.39 2006/08/18 15:54:05 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.40 2006/08/31 09:08:39 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ class TGPopupMenu;
 class TGMenuBar;
 class TGMenuTitle;
 class TTimer;
-
+class TGSplitButton;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -129,6 +129,7 @@ class TGPopupMenu : public TGFrame {
 
 friend class TGMenuTitle;
 friend class TGMenuBar;
+friend class TGSplitButton;
 
 protected:
    TList             *fEntryList;     // list of menu entries
@@ -148,6 +149,7 @@ protected:
    Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
    TGMenuBar         *fMenuBar;       // menu bar (if any)
+   TGSplitButton     *fSplitButton;   // split button (if any)
    UInt_t             fEntrySep;      // separation distance between ebtris
 
    static const TGFont *fgDefaultFont;
@@ -220,17 +222,17 @@ public:
    virtual void    Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void    SetMenuBar(TGMenuBar *bar) { fMenuBar = bar; }
    TGMenuBar      *GetMenuBar() const { return fMenuBar; }
-
-   virtual void PoppedUp() { Emit("PoppedUp()"); }  //*SIGNAL
-   virtual void PoppedDown() { Emit("PoppedDown()"); }  //*SIGNAL
-   virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
-   virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
-   virtual void Activate(Bool_t) { }
-   virtual void Activate(TGMenuEntry *entry);
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    Activate(Bool_t) { }
+   virtual void    Activate(TGMenuEntry *entry);
+   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
 
    UInt_t GetEntrySep()  const { return fEntrySep; }
    virtual void SetEntrySep(UInt_t sep)  { fEntrySep = sep; }
+
+   virtual void PoppedUp() { Emit("PoppedUp()"); }                        // *SIGNAL*
+   virtual void PoppedDown() { Emit("PoppedDown()"); }                    // *SIGNAL*
+   virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); } // *SIGNAL*
+   virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }     // *SIGNAL*
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };
