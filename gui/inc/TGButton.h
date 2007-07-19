@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.49 2007/07/06 15:38:44 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.50 2007/07/17 12:55:25 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -66,6 +66,7 @@ class TGHotString;
 class TGPicture;
 class TGToolTip;
 class TGButtonGroup;
+class TGPopupMenu;
 class TGTextLayout;
 
 class TGButton : public TGFrame, public TGWidget {
@@ -370,6 +371,73 @@ public:
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGRadioButton,0)  // A radio button widget
+};
+
+
+class TGSplitButton : public TGTextButton {
+
+friend class TGPopupMenu;
+
+private:
+   void CalcSize();
+   void DrawTriangle(const GContext_t gc, Int_t x, Int_t y);
+   Bool_t HandleSButton(Event_t *event);
+   Bool_t HandleSCrossing(Event_t *event);
+   Bool_t HandleSKey(Event_t *event);
+   void SetMenuState(Bool_t state) ;
+
+protected:
+   // Data members for menu functionality
+   Bool_t       fSplit;         // kTRUE if menu is in split mode
+   EButtonState fMBState;       // state for menu button in split mode
+   UInt_t       fTBWidth;       // width of text button
+   UInt_t       fMBWidth;       // width of menu button
+   TGPopupMenu *fPopMenu;       // pointer to popup menu
+   Int_t        fEntryId;       // Id of the currently active menu entry
+   TGHotString *fMenuLabel;     // Label of the menu;
+   Cursor_t     fDefaultCursor; // Default Cursor
+   Bool_t       fKeyNavigate;   // kTRUE is keynavigation is being used
+   TGString     fWidestLabel;  // Longest label that can be on the button
+   TGString     fHeighestLabel; // Heighest label that can be on the button
+
+   virtual void DoRedraw();
+   void Init();
+   void BindKeys(Bool_t on = kTRUE);
+   void BindMenuKeys(Bool_t on = kTRUE);
+
+public:
+   TGSplitButton(const TGWindow *p, TGHotString *menulabel,
+                TGPopupMenu *popmenu, Bool_t split = kTRUE, 
+                Int_t id = -1, GContext_t norm = GetDefaultGC()(),
+                FontStruct_t fontstruct = GetDefaultFontStruct(),
+                UInt_t option = kRaisedFrame | kDoubleBorder);
+   
+   virtual ~TGSplitButton();
+   
+   virtual TGDimension GetDefaultSize() const ;
+   
+   virtual void   SetText(TGHotString *new_label);
+   virtual void   SetText(const TString &new_label);
+   virtual void   SetFont(FontStruct_t font, Bool_t global = kFALSE);
+   virtual void   SetFont(const char *fontName, Bool_t global = kFALSE);
+   virtual void   SetMBState(EButtonState state);
+   virtual void   SetSplit(Bool_t split);
+   Bool_t         IsSplit() { return fSplit; }
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t HandleKey(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
+   virtual void   Layout();
+
+   virtual void MBPressed()  { Emit("MBPressed()"); }   // *SIGNAL*
+   virtual void MBReleased() { Emit("MBReleased()"); }  // *SIGNAL*
+   virtual void MBClicked()  { Emit("MBClicked()"); }   // *SIGNAL*
+   virtual void ItemClicked(Int_t id) { Emit("ItemClicked(Int_t)", id); } // *SIGNAL*
+
+   // Slots
+   void HandleMenu(Int_t id) ;
+   
+   ClassDef(TGSplitButton, 0)
 };
 
 #endif

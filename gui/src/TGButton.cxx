@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.80 2007/07/09 14:59:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.81 2007/07/17 12:55:25 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -22,8 +22,8 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGButton, TGTextButton, TGPictureButton, TGCheckButton and           //
-// TGRadioButton                                                        //
+// TGButton, TGTextButton, TGPictureButton, TGCheckButton,              //
+// TGRadioButton and TGSplitButton                                      //
 //                                                                      //
 // This header defines all GUI button widgets.                          //
 //                                                                      //
@@ -69,6 +69,23 @@
 // Before executing these macros are expanded into the respective       //
 // Long_t's                                                             //
 //                                                                      //
+// TGSplitButton implements a button with added menu functionality.     //
+// There are 2 modes of operation available.                            //
+//                                                                      //
+// If the button is split, a menu will popup when the menu area of the  //
+// button is clicked. Activating a menu item changes the functionality  //
+// of the button by having it emit a additional signal when it is       //
+// clicked. The signal emitted when the button is clicked, is the       //
+// ItemClicked(Int_t) signal with a different fixed value for the       //
+// Int_t that corresponds to the id of the activated menu entry.        //
+//                                                                      //
+// If the button is not split, clicking it will popup the menu and the  //
+// ItemClicked(Int_t) signal will be emitted when a menu entry is       //
+// acitvated. The value of the Int_t is again equal to the value of     //
+// the id of the activated menu entry.                                  //
+//                                                                      //
+// The mode of operation of a SplitButton can be changed on the fly     //
+// by calling the SetSplit(Bool_t) method.                              //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
@@ -82,6 +99,8 @@
 #include "TImage.h"
 #include "TEnv.h"
 #include "TClass.h"
+#include "TGMenu.h"
+#include "KeySymbols.h"
 
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;
@@ -101,7 +120,7 @@ ClassImp(TGTextButton)
 ClassImp(TGPictureButton)
 ClassImp(TGCheckButton)
 ClassImp(TGRadioButton)
-
+ClassImp(TGSplitButton)
 
 //______________________________________________________________________________
 TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
@@ -145,7 +164,7 @@ TGButton::~TGButton()
       fGroup = 0;
    }
 
-   delete fTip;
+   if (fTip) delete fTip;
 }
 
 //______________________________________________________________________________
@@ -507,7 +526,7 @@ void TGTextButton::SetText(TGHotString *new_label)
       }
       delete fLabel;
    }
-
+   
    fLabel = new_label;
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0)
@@ -694,7 +713,6 @@ TGDimension TGTextButton::GetDefaultSize() const
    UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 7;
    return TGDimension(w, h);
 }
-
 
 //______________________________________________________________________________
 FontStruct_t TGTextButton::GetDefaultFontStruct()
@@ -1985,4 +2003,1064 @@ void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
    out << fMTop << "," << fMBottom << ");" << endl;
    out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+}
+
+//______________________________________________________________________________
+TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel, 
+                           TGPopupMenu *popmenu, Bool_t split, Int_t id, 
+                           GContext_t norm, FontStruct_t fontstruct, UInt_t options)
+                           : TGTextButton(p, menulabel, id, norm, fontstruct, options)
+{
+   // Create a menu button widget. The hotstring will be adopted and
+   // deleted by the menu button. This constructior creates a
+   // menubutton with a popup menu attached that appears when the
+   // button for it is clicked. The popup menu is adopted.
+
+   fFontStruct = fontstruct;
+   fMBWidth = 16;
+   fMenuLabel = new TGHotString(*menulabel);
+   fPopMenu = popmenu;
+   fPopMenu->fSplitButton = this;
+   fSplit = split;
+   fTMode = 0;
+   fHKeycode = 0;
+   fMBState = kButtonUp; fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
+   fKeyNavigate = kFALSE;
+   fWidestLabel = "";
+   fHeighestLabel = "";
+
+   // Find and set the correct size for the menu and the button.
+   TGMenuEntry *entry = 0;
+   TGHotString lstring(*fMenuLabel);
+   TGHotString hstring(*fMenuLabel);
+   const TList *list = fPopMenu->GetListOfEntries();
+   UInt_t lwidth = 0, lheight = 0;
+   UInt_t twidth = 0, theight = 0;
+   
+   TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
+   if (!font) {
+      font = fClient->GetFontPool()->GetFont(fgDefaultFont);
+      fFontStruct = font->GetFontStruct();
+   }
+
+   font->ComputeTextLayout(lstring, lstring.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &lwidth, &lheight);
+
+   TIter iter(list);
+   entry = (TGMenuEntry *)iter.Next();
+   while (entry != 0) {
+      if (entry->GetType() == kMenuEntry) {
+         const TGHotString string(*(entry->GetLabel()));
+         font->ComputeTextLayout(string, string.GetLength(),
+                                 fWrapLength, kTextLeft, 0,
+                                 &twidth, &theight);
+         if(twidth > lwidth) {
+            lstring = string;
+         }
+         if(theight > lheight) {
+            hstring = string;
+         }
+      }
+      entry = (TGMenuEntry *)iter.Next();
+   }
+   fWidestLabel = lstring;
+   fHeighestLabel =  hstring;
+
+   UInt_t dummy = 0;
+   font->ComputeTextLayout(lstring, lstring.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &fTWidth, &dummy);
+   font->ComputeTextLayout(hstring, hstring.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &dummy, &fTHeight);
+
+   fTBWidth = fTWidth + 8;
+   fHeight = fTHeight + 7;      
+   Resize(fTBWidth + fMBWidth, fHeight);
+
+   ChangeOptions(GetOptions() | kFixedSize);
+
+   // Save the id of the 1st item on the menu.
+   TIter iter1(list);
+   do {
+      entry = (TGMenuEntry *)iter1.Next();
+      if ((entry->GetStatus() & kMenuEnableMask) &&
+          !(entry->GetStatus() & kMenuHideMask) &&
+          (entry->GetType() != kMenuSeparator) &&
+          (entry->GetType() != kMenuLabel)) break;
+      entry = (TGMenuEntry *)iter1.Next();
+   } while (entry);
+   if (entry) fEntryId = entry->GetEntryId();
+
+   // An additional connection that is needed.
+   fPopMenu->Connect("Activated(Int_t)", "TGSplitButton", this, "HandleMenu(Int_t)");
+   SetSplit(fSplit);
+
+   Init();
+}
+
+
+//______________________________________________________________________________
+void TGSplitButton::Init()
+{
+   // Common initialization used by the different ctors.
+   Int_t hotchar;
+
+   fTMode       = kTextCenterX | kTextCenterY;
+   fHKeycode    = 0;
+   fHasOwnFont  = kFALSE;
+   fPrevStateOn =
+   fStateOn     = kFALSE;
+   fMBState     = kButtonUp;
+
+   SetSize(TGDimension(fWidth, fHeight));
+
+   if ((hotchar = fLabel->GetHotChar()) != 0) {
+      if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
+         const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
+         main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
+      }
+   }
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 5; // center
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
+   // Make sure motion is detected too.
+   AddInput(kPointerMotionMask | kEnterWindowMask | kLeaveWindowMask);
+
+   SetWindowName();
+}
+
+//______________________________________________________________________________
+TGSplitButton::~TGSplitButton()
+{
+   // Delete a split button widget.
+
+   if (fPopMenu) delete fPopMenu;
+   if (fMenuLabel) delete fMenuLabel;
+}
+
+//________________________________________________________________________________
+void TGSplitButton::DrawTriangle(const GContext_t gc, Int_t x, Int_t y)
+{
+   // Draw triangle (arrow) on which user can click to open Popup.
+
+   Point_t points[3];
+
+   points[0].fX = x;
+   points[0].fY = y;
+   points[1].fX = x + 5;
+   points[1].fY = y;
+   points[2].fX = x + 2;
+   points[2].fY = y + 3;
+
+   gVirtualX->FillPolygon(fId, gc, points, 3);
+}
+
+//______________________________________________________________________________
+void TGSplitButton::CalcSize() 
+{
+   // Calculate the size of the button.
+
+   Int_t max_ascent, max_descent;
+   fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   fTHeight = max_ascent + max_descent;
+   
+   fTBWidth = fTWidth + 8;
+   fHeight = fTHeight + 7;      
+   fWidth = fTBWidth;
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleSButton(Event_t *event)
+{                    
+   //Handle mouse button event in case the button is split.
+
+   Bool_t activate = kFALSE;
+   Bool_t bclick = kFALSE;
+   static Bool_t mbpress = kFALSE;
+   static Bool_t tbpress = kFALSE;
+   static Bool_t outpress = kFALSE;
+
+   Bool_t inTB = (event->fX >= 0) && (event->fY >= 0) &&
+                 (event->fX <= (Int_t)fTBWidth) && (event->fY <= (Int_t)fHeight);
+
+   Bool_t inMB = (event->fX >= (Int_t)(fWidth -fMBWidth)) && (event->fY >= 0) &&
+      (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
+   
+   // We don't need to check the button number as GrabButton will
+   // only allow button1 events
+
+   if (inTB) {
+      if (event->fType == kButtonPress) {
+         mbpress = kFALSE;
+         tbpress = kTRUE;
+         fgReleaseBtn = 0;
+         if (fState == kButtonEngaged) {
+            return kTRUE;
+         }
+         SetState(kButtonDown);
+         Pressed();
+      } else { // ButtonRelease
+         if (fMBState == kButtonDown) {
+            SetMBState(kButtonUp);
+         }
+         if (fState == kButtonEngaged && tbpress) {
+            SetState(kButtonUp);
+            Released();
+            bclick = kTRUE;
+         } else if (fState == kButtonDown && tbpress) {
+            tbpress = kFALSE;
+            if (fStayDown) {
+               bclick = kTRUE;
+               SetState(kButtonEngaged);
+               fgReleaseBtn = 0;
+            } else {
+               bclick = kTRUE;
+               SetState(kButtonUp);
+               Released();
+               fgReleaseBtn = fId;               
+            } 
+         }else {
+            SetState(kButtonUp);
+         }
+      }
+   } else if (inMB) {
+      if (event->fType == kButtonPress) {
+         fgReleaseBtn = 0;
+         mbpress = kTRUE;
+         tbpress = kFALSE;
+         if (fMBState == kButtonEngaged) {
+            return kTRUE;
+         }
+         SetMBState(kButtonDown);
+         MBPressed();
+         gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                                kPointerMotionMask, kNone, fDefaultCursor);
+      } else { // ButtonRelease
+         if (fState == kButtonDown) {
+            SetState(kButtonUp);
+         }                
+         if (fMBState == kButtonEngaged && mbpress) {
+            mbpress = kFALSE;
+            SetMBState(kButtonUp);
+            SetMenuState(kFALSE);
+            MBReleased();
+            MBClicked();
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+         } else if (fMBState == kButtonDown && mbpress) {
+            MBClicked();
+            SetMBState(kButtonEngaged);
+            SetMenuState(kTRUE);            
+            fgReleaseBtn = 0;
+         } else {
+            SetMBState(kButtonUp);
+         }
+      }
+   } else {
+      if (event->fType == kButtonPress) {
+         fgReleaseBtn = 0;
+         outpress = kTRUE;
+      } else { // ButtonRelease
+         if(outpress) {
+            outpress = kFALSE;
+            SetMBState(kButtonUp);
+            SetMenuState(kFALSE);
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+            activate = kTRUE;
+         }
+      }      
+   }
+   if (bclick) {
+      Clicked();
+      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                  (Long_t) fUserData);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                           (Long_t) fUserData);
+   }
+   if (activate) {
+      TGMenuEntry *entry =  fPopMenu->GetCurrent();
+      if (entry) {
+         if ((entry->GetStatus() & kMenuEnableMask) &&
+             !(entry->GetStatus() & kMenuHideMask) &&
+             (entry->GetType() != kMenuSeparator) &&
+             (entry->GetType() != kMenuLabel)) {
+            Int_t id = entry->GetEntryId();
+            fPopMenu->Activated(id);
+         }
+      }
+   }
+   //   if (mbclick) {
+   //      MBClicked();
+   //      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+   //             (Long_t) fUserData);
+   //      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+   //                      (Long_t) fUserData);
+   // }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleSCrossing(Event_t *event)
+{
+   // Handle mouse crossing event in case of split menu.
+
+   if (fTip) {
+      if (event->fType == kEnterNotify)
+         fTip->Reset();
+      else
+         fTip->Hide();
+   }
+
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
+
+   if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
+      return kTRUE;
+
+   if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
+
+   Bool_t inTB = (event->fX <= (Int_t)fTBWidth);
+
+   //   Bool_t inMB = (event->fX >= (Int_t)(fWidth -fMBWidth)) && (event->fY >= 0) &&
+   //      (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
+
+   if (event->fType == kEnterNotify) {
+      if (inTB) {
+         SetState(kButtonDown, kFALSE);
+      } else {
+         if(fMBState == kButtonEngaged)  return kTRUE;
+         SetMBState(kButtonDown);
+      }
+   } else {
+      // kLeaveNotify
+      if(fState == kButtonDown) {
+         SetState(kButtonUp, kFALSE);
+      }
+      if (fMBState == kButtonEngaged) return kTRUE;
+      SetMBState(kButtonUp);
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleSKey(Event_t *event)
+{
+   // Handle key event. This function will be called when the hotkey is hit.
+
+   Bool_t click = kFALSE;
+
+   if (event->fType == kGKeyPress) {
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   } else {
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+   }
+
+   if (fTip && event->fType == kGKeyPress) fTip->Hide();
+
+   // We don't need to check the key number as GrabKey will only
+   // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
+   
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
+      if (fState == kButtonEngaged) return kTRUE;
+      SetState(kButtonDown);
+      Pressed();
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
+      if (fState == kButtonEngaged) {
+         SetState(kButtonUp);
+         Released();
+      }
+      if (fStayDown) {
+         SetState(kButtonEngaged);
+      } else {
+         SetState(kButtonUp);         
+         Released();
+      }
+      click = kTRUE;
+   }
+   if (click) {
+      Clicked();
+      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                  (Long_t) fUserData);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                           (Long_t) fUserData);
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetMenuState(Bool_t state) 
+{
+   // Popup the attached menu and 
+
+   if (state) {
+      Int_t    ax, ay;
+      Window_t wdummy;
+
+      if (fSplit) {
+         Int_t n_entries = 0;
+         TGMenuEntry *entry = 0;
+         TIter next(fPopMenu->GetListOfEntries());
+         
+         while ((entry = (TGMenuEntry *) next())) {
+            if ((entry->GetType() != kMenuSeparator) &&
+                (entry->GetType() != kMenuLabel)) {
+               n_entries++;
+            }
+         }
+         if (n_entries <= 1) {
+            Info("TGSplitButton", "Only one entry in the menu.");
+            return;
+         }
+      }
+
+      gVirtualX->TranslateCoordinates(fId, fPopMenu->GetParent()->GetId(),
+                                      0, 0, ax, ay, wdummy);
+
+      // place the menu just under the window:
+      fPopMenu->PlaceMenu(ax-1, ay+fHeight, kTRUE, kFALSE); //kTRUE);
+      BindKeys(kTRUE);
+      BindMenuKeys(kTRUE);
+   } else {
+      fPopMenu->EndMenu(fUserData);
+      BindKeys(kFALSE);
+      BindMenuKeys(kFALSE);
+      fPopMenu->EndMenu(fUserData);
+   }
+}
+
+//______________________________________________________________________________
+void TGSplitButton::DoRedraw()
+{
+   // Draw the text button.
+
+   int x, y;
+   TGFrame::DoRedraw();
+   
+   if (fTMode & kTextLeft) {
+      x = fMLeft + 4;
+   } else if (fTMode & kTextRight) {
+      x = fWidth - fTWidth -fMBWidth - fMRight - 4;
+   } else {
+      x = (fWidth - fTWidth -fMBWidth + fMLeft - fMRight) >> 1;
+   }
+
+   if (fTMode & kTextTop) {
+      y = fMTop + 3;
+   } else if (fTMode & kTextBottom) {
+      y = fHeight - fTHeight - fMBottom - 3;
+   } else {
+      y = (fHeight - fTHeight + fMTop - fMBottom) >> 1;
+   }
+
+   if (fState == kButtonDown || fState == kButtonEngaged) { ++x; ++y; }
+   if (fState == kButtonEngaged) {
+      gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
+   }
+
+   Int_t hotpos = fLabel->GetHotPos();
+
+   if (fState == kButtonDisabled) {
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+      Pixel_t fore = gc->GetForeground();
+      Pixel_t hi = GetHilightGC().GetForeground();
+      Pixel_t sh = GetShadowGC().GetForeground();
+
+      gc->SetForeground(hi);
+      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
+
+      gc->SetForeground(sh);
+      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+      gc->SetForeground(fore);
+   } else {
+      fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
+      if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
+   }
+
+   // Draw the parts of the button needed when a menu is attached.
+   
+   // triangle position
+   x = fWidth - 11;
+   y = fHeight - 10;
+   
+   if (fSplit) {
+      // separator position
+      Int_t lx = fWidth - fMBWidth;
+      Int_t ly = 2;
+      Int_t lh = fHeight - 2;
+      
+      if(fMBState == kButtonDown || fMBState == kButtonEngaged) {
+         x++;
+         y++;
+      }
+
+      gVirtualX->DrawLine(fId, GetShadowGC()(),  lx, ly + 2, lx, lh - 4);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), lx + 1, ly + 2, lx + 1, lh - 3);
+      gVirtualX->DrawLine(fId, GetHilightGC()(), lx, lh - 3, lx + 1, lh - 3);
+
+      if (fMBState == kButtonEngaged) {
+         gVirtualX->FillRectangle(fId, GetHibckgndGC()(), fTBWidth + 1, 1, fMBWidth - 3, fHeight - 3);
+      }
+
+      if (fMBState == kButtonDisabled) {
+         DrawTriangle(GetHilightGC()(), x + 1, y + 1);
+         DrawTriangle(GetShadowGC()(), x, y);
+      } else {
+         DrawTriangle(fNormGC, x, y);
+      }
+
+   } else {
+      x -= 2;
+      if(fState == kButtonDown || fState == kButtonEngaged) {
+         x++;
+         y++;
+      }
+      if (fState == kButtonDisabled) {
+         DrawTriangle(GetHilightGC()(), x + 1, y + 1);
+         DrawTriangle(GetShadowGC()(), x, y);
+      } else {
+         DrawTriangle(fNormGC, x, y);
+      }
+   }
+   
+}
+
+//______________________________________________________________________________
+void TGSplitButton::BindKeys(Bool_t on)
+{
+   // If on kTRUE bind arrow, popup menu hot keys, otherwise
+   // remove key bindings.
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier, on);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier, on);
+}
+
+//______________________________________________________________________________
+void TGSplitButton::BindMenuKeys(Bool_t on)
+{
+   // If on kTRUE bind Menu hot keys, otherwise remove key bindings.
+
+   TGMenuEntry *e = 0;
+   TIter next(fPopMenu->GetListOfEntries());
+   
+   while ((e = (TGMenuEntry*)next())) {
+      Int_t hot = 0;
+      if (e->GetLabel()) {
+         hot = e->GetLabel()->GetHotChar();
+      }
+      if (!hot) continue;
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), 0, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyLockMask  | kKeyMod2Mask, on);
+      gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(hot), kKeyShiftMask | kKeyLockMask | kKeyMod2Mask, on);
+   }
+}
+
+//______________________________________________________________________________
+TGDimension TGSplitButton::GetDefaultSize() const
+{
+   // returns default size
+
+   UInt_t w = GetOptions() & kFixedWidth ? fWidth + fMBWidth : fTWidth + fMLeft + fMRight + fMBWidth + 8;
+   UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 7;
+   return TGDimension(w, h);
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetText(TGHotString *new_label)
+{
+   // Set new button text.
+
+   Int_t hotchar;
+   static Bool_t longlabeltip = kFALSE;
+   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();   
+
+   TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
+   if (!font) {
+      font = fClient->GetFontPool()->GetFont(fgDefaultFont);
+      fFontStruct = font->GetFontStruct();
+   }
+
+   UInt_t width = 0, bwidth = 0, dummy;
+   font->ComputeTextLayout(new_label->GetString(), new_label->GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &width, &dummy);
+   font->ComputeTextLayout(fWidestLabel.GetString(), fWidestLabel.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &bwidth, &dummy);
+
+   if (width > bwidth) {
+      if (!fTip) {
+         SetToolTipText(new_label->GetString());
+         longlabeltip = kTRUE;
+      }
+      Info("TGSplitbutton", "Length of new label to long, label truncated.");
+      new_label->Resize(fWidestLabel.GetLength());
+   } else if (new_label->GetLength() <= fWidestLabel.GetLength() && longlabeltip) {
+      if (fTip) delete fTip;
+      fTip = 0;
+      longlabeltip = kFALSE;
+   }
+         
+   if (fLabel) {
+      if (fHKeycode) {
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
+      }
+      delete fLabel;
+   }
+
+   fLabel = new_label;
+   if ((hotchar = fLabel->GetHotChar()) != 0) {
+      if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0)
+         main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
+   }
+
+   Layout();
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetText(const TString &new_label)
+{
+   // Set new button text.
+
+   SetText(new TGHotString(new_label));
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetFont(FontStruct_t font, Bool_t global)
+{
+   // Changes text font.
+   // If global is kTRUE font is changed globally, otherwise - locally.
+
+   if (font != fFontStruct) {
+      FontH_t v = gVirtualX->GetFontHandle(font);
+      if (!v) return;
+
+      fFontStruct = font;
+      TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
+      TGGC *gc = pool->FindGC(fNormGC);
+
+      if (!global) {
+         gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
+         fHasOwnFont = kTRUE;
+      }
+
+      gc->SetFont(v);
+
+      fNormGC = gc->GetGC();
+
+      fClient->NeedRedraw(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetFont(const char *fontName, Bool_t global)
+{
+   // Changes text font specified by name.
+   // If global is true color is changed globally, otherwise - locally.
+
+   TGFont *font = fClient->GetFont(fontName);
+   if (font) {
+      SetFont(font->GetFontStruct(), global);
+   }
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetMBState(EButtonState state)
+{
+   // Set the state of the Menu Button part
+   
+   if (state != fMBState) {
+      fMBState = state;
+      DoRedraw();
+   }
+}
+
+//______________________________________________________________________________
+void TGSplitButton::SetSplit(Bool_t split)
+{
+   // Set the split status of a button.
+   
+   if(split) {
+      fStayDown = kFALSE;
+      Disconnect(fPopMenu, "PoppedDown()");
+      fPopMenu->Connect("PoppedDown()", "TGSplitButton", this, "SetMBState(=kButtonUp)");
+      fPopMenu->Connect("PoppedDown()", "TGSplitButton", this, "MBReleased()");
+
+      TGMenuEntry *entry = fPopMenu->GetEntry(fEntryId);
+
+      TGHotString *tmp = new TGHotString(*(entry->GetLabel()));
+      SetText(tmp);
+
+      TString str("ItemClicked(=");
+      str += entry->GetEntryId();
+      str += ")";
+      Connect("Clicked()", "TGSplitButton", this, str);
+      fEntryId = entry->GetEntryId();
+      fPopMenu->HideEntry(fEntryId);
+   } else {
+      fStayDown = kTRUE;
+      Disconnect(fPopMenu, "PoppedDown()");
+      Disconnect(this, "Clicked()", this);
+      fPopMenu->Connect("PoppedDown()", "TGSplitButton", this, "SetState(=kButtonUp)");
+      fPopMenu->Connect("PoppedDown()", "TGSplitButton", this, "Released()");
+      fPopMenu->EnableEntry(fEntryId);
+      TGHotString *tmp = new TGHotString(*fMenuLabel);
+      SetText(tmp);
+   }
+
+   fSplit = split;
+   DoRedraw();
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleButton(Event_t *event)
+{                    
+   // Handle button events.
+   if (fSplit) return HandleSButton(event);
+
+   Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
+               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
+
+   Bool_t activate = kFALSE;
+   Bool_t click = kFALSE;
+
+   if (in) {
+      if (event->fType == kButtonPress) {
+         fgReleaseBtn = 0;
+         if (fState == kButtonEngaged) {
+            return kTRUE;
+         }
+         SetState(kButtonDown);
+         Pressed();
+         gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                                kPointerMotionMask, kNone, fDefaultCursor);
+      } else { // ButtonRelease
+         if (fState == kButtonEngaged) {
+            SetState(kButtonUp);
+            SetMenuState(kFALSE);
+            Released();
+            click = kTRUE;
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+         } else {
+            click = (fState == kButtonDown);
+            if (click && fStayDown) {
+               SetState(kButtonEngaged);
+               SetMenuState(kTRUE);
+               fgReleaseBtn = 0;
+            } else {
+               SetState(kButtonUp);
+               Released();
+               fgReleaseBtn = fId;
+            }
+         }
+         fKeyNavigate = kFALSE;
+      }
+   } else {
+      if (event->fType == kButtonPress) {
+         fgReleaseBtn = 0;
+      } else { // ButtonRelease
+         SetState(kButtonUp);
+         SetMenuState(kFALSE);
+         gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+         activate = kTRUE;
+      }      
+   }
+   if (click) {
+      Clicked();
+      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                  (Long_t) fUserData);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                           (Long_t) fUserData);
+   }
+   if (activate && !fKeyNavigate) {
+      TGMenuEntry *entry =  fPopMenu->GetCurrent();
+      if (entry) {
+         if ((entry->GetStatus() & kMenuEnableMask) &&
+             !(entry->GetStatus() & kMenuHideMask) &&
+             (entry->GetType() != kMenuSeparator) &&
+             (entry->GetType() != kMenuLabel)) {
+            Int_t id = entry->GetEntryId();
+            fPopMenu->Activated(id);
+         }
+      }
+   }
+     
+   return kTRUE;
+
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleCrossing(Event_t *event)
+{
+   // Handle mouse crossing event.
+
+   if (fSplit) { 
+      return HandleSCrossing(event);
+   } else {
+      return TGButton::HandleCrossing(event);
+   }
+   fKeyNavigate = kFALSE;
+
+}
+   
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleKey(Event_t *event)
+{
+   // Handle key event. This function will be called when the hotkey is hit.
+
+   Bool_t click = kFALSE;
+
+   if (fState == kButtonDisabled) return kTRUE;
+
+   if(fSplit) return HandleSKey(event);
+
+   if (event->fType == kGKeyPress) {
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   } else {
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+   }
+
+   if (fTip && event->fType == kGKeyPress) fTip->Hide();
+
+   // We don't need to check the key number as GrabKey will only
+   // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
+   if (event->fState & kKeyMod1Mask) {
+      RequestFocus();
+      fKeyNavigate = kTRUE;
+      if (event->fType == kGKeyPress) {
+         if (fState == kButtonEngaged) return kTRUE;
+         SetState(kButtonDown);
+         Pressed();
+      } else if (event->fType == kKeyRelease) {
+         click = kTRUE;
+         if (fState == kButtonEngaged) {
+            SetState(kButtonUp);
+            SetMenuState(kFALSE);
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+         } else if (fState == kButtonDown && fStayDown) {
+            SetState(kButtonEngaged);
+            SetMenuState(kTRUE);
+            gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                                   kPointerMotionMask, kNone, fDefaultCursor);
+            TGMenuEntry *entry = 0;
+            TIter next(fPopMenu->GetListOfEntries());
+
+            while ((entry = (TGMenuEntry *) next())) {
+               if ((entry->GetStatus() & kMenuEnableMask) &&
+                   !(entry->GetStatus() & kMenuHideMask) &&
+                   (entry->GetType() != kMenuSeparator) &&
+                   (entry->GetType() != kMenuLabel)) break;
+            }
+            if (entry) {
+               fPopMenu->Activate(entry);
+            }
+         } else {
+            Released();
+            SetState(kButtonUp);
+         }
+      }
+   } else {
+      fKeyNavigate = kTRUE;
+      if (event->fType == kGKeyPress) {
+         UInt_t keysym;
+         char tmp[2];
+         
+         gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+
+         TGMenuEntry *ce = 0;
+         TIter next(fPopMenu->GetListOfEntries());
+         
+         while ((ce = (TGMenuEntry*)next())) {
+            UInt_t hot = 0;
+            if (ce->GetLabel()) hot = ce->GetLabel()->GetHotChar();
+            if (!hot || (hot != keysym)) continue;
+         
+            fPopMenu->Activate(ce);
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+            SetMenuState(kFALSE);
+            Event_t ev;
+            ev.fType = kButtonRelease;
+            ev.fWindow = fPopMenu->GetId();
+            fKeyNavigate = kFALSE;
+            return HandleButton(&ev);            
+         }
+
+         ce = fPopMenu->GetCurrent();
+         
+         switch ((EKeySym)keysym) {
+         case kKey_Up:
+            if (ce) ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->Before(ce);
+            while (ce && ((ce->GetType() == kMenuSeparator) ||
+                          (ce->GetType() == kMenuLabel) ||
+                          !(ce->GetStatus() & kMenuEnableMask))) {
+               ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->Before(ce);
+            }
+            if (!ce) ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->Last();
+            break;
+         case kKey_Down:
+            if (ce) ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->After(ce);
+            while (ce && ((ce->GetType() == kMenuSeparator) ||
+                          (ce->GetType() == kMenuLabel) ||
+                          !(ce->GetStatus() & kMenuEnableMask))) {
+               ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->After(ce);
+            }
+            if (!ce) ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->First();
+            break;
+         case kKey_Enter:
+         case kKey_Return:
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+            SetMenuState(kFALSE);
+            Event_t ev;
+            ev.fType = kButtonRelease;
+            ev.fWindow = fPopMenu->GetId();
+            fKeyNavigate = kFALSE;
+            HandleButton(&ev);
+            break;
+         case kKey_Escape:
+            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+            SetMenuState(kFALSE);
+            break;
+         default:
+            break;
+         }
+         if (ce) fPopMenu->Activate(ce);
+      }
+   }
+   if (click) {
+      Clicked();
+      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                  (Long_t) fUserData);
+      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
+                           (Long_t) fUserData);
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitButton::HandleMotion(Event_t *event)
+{
+   // Handle a motion event in a TGSplitButton.
+
+   if (fKeyNavigate) return kTRUE;
+
+   if (fSplit) {
+      if (fMBState == kButtonDown) {
+         if (event->fX < (Int_t)fTBWidth) {
+            SetMBState(kButtonUp);
+            SetState(kButtonDown);
+         }
+      } else if (fState == kButtonDown) {
+         if (event->fX > (Int_t)fTBWidth) {
+            SetState(kButtonUp);
+            SetMBState(kButtonDown);
+         }
+            
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGSplitButton::Layout()
+{
+   // layout text button
+
+   UInt_t dummya = 0, dummyb = 0;
+   delete fTLayout;
+
+   TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
+   if (!font) {
+      font = fClient->GetFontPool()->GetFont(fgDefaultFont);
+      fFontStruct = font->GetFontStruct();
+   }
+
+   fTLayout = font->ComputeTextLayout(fLabel->GetString(), 
+                                      fLabel->GetLength(),
+                                      fWrapLength, kTextLeft, 0,
+                                      &dummya, &dummyb);
+
+   UInt_t dummy = 0;
+   font->ComputeTextLayout(fWidestLabel.GetString(), fWidestLabel.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &fTWidth, &dummy);
+   font->ComputeTextLayout(fHeighestLabel.GetString(), fHeighestLabel.GetLength(),
+                           fWrapLength, kTextLeft, 0,
+                           &dummy, &fTHeight);
+
+   fTBWidth = fTWidth + 8;
+   fWidth = fTBWidth + fMBWidth;
+   fHeight = fTHeight + 7;
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGSplitButton::HandleMenu(Int_t id) 
+{
+   // Handle a menu item activation.
+   
+   SetMenuState(kFALSE);
+
+   if (fSplit) {
+      SetMBState(kButtonUp);
+      Disconnect(this, "Clicked()", this);
+      // connect clicked to the ItemClicked signal with the correct id
+      char str[20];
+      sprintf(str, "ItemClicked(=%d)", id);
+      Connect("Clicked()", "TGSplitButton", this, str);
+
+      // reenable hidden entries
+      const TList *list = fPopMenu->GetListOfEntries();
+      TIter iter(list);
+      fPopMenu->EnableEntry(fEntryId);
+      TGHotString *label = fPopMenu->GetEntry(id)->GetLabel();
+      TGHotString *tmp = new TGHotString(*label);
+      SetText(tmp);
+      fPopMenu->HideEntry(id);
+      fEntryId = fPopMenu->GetEntry(id)->GetEntryId();
+   } else {
+      SetState(kButtonUp);
+      ItemClicked(id);
+   }
+   DoRedraw();
 }
