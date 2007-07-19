@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.39 2007/07/17 14:43:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.40 2007/07/17 16:34:19 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -619,7 +619,7 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
    }
 
    TString base;
-   Int_t   idx;
+   Int_t   idx = 0;
 
    TObjLink *lnk = fHandlers->FirstLink();
    while (lnk) {
