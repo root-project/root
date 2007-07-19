@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.121 2007/05/09 15:04:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.122 2007/06/15 14:13:02 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -518,7 +518,11 @@ void TRootCanvas::CreateCanvas(const char *name)
    if (fCanvas->UseGL()) {
       //first, initialize GL (if not yet)
       if (!gGLManager) {
-         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
+         TString x = "x11";
+         if (!strncasecmp(gVirtualX->GetName(), "win32", 5))
+            x = "win32";
+
+         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager", x);
 
          if (ph && ph->LoadPlugin() != -1) {
             if (!ph->ExecPlugin(0))
