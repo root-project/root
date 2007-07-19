@@ -23,7 +23,7 @@ excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
       hbook newdelete table utils srputils krb5auth chirp dcache x11ttf \
       alien asimage ldap pyroot qt qtroot quadp ruby vmc xml xmlparser gl \
       roofit oracle netx auth rpdutils mathmore minuit2 gfal monalisa \
-      proofx fftw qtgsi odbc castor unuran gdml"
+      proofx fftw qtgsi odbc castor unuran gdml cint7"
 
 objs=""
 gobjs=""
@@ -38,6 +38,7 @@ for i in * ; do
 done
 
 echo "Making $ROOTALIB..."
+echo ar rv $ROOTALIB cint/main/G__setup.o $objs > /dev/null 2>&1
 ar rv $ROOTALIB cint/main/G__setup.o $objs > /dev/null 2>&1
 
 arstat=$?
@@ -54,6 +55,8 @@ if [ $PLATFORM = "alpha" ] && [ $CXX = "cxx" ]; then
 fi
 
 echo "Making $ROOTAEXE..."
+echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
+   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 
@@ -63,6 +66,8 @@ if [ $linkstat -ne 0 ]; then
 fi
 
 echo "Making $PROOFAEXE..."
+echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
+   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 
