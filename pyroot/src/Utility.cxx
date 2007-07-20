@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.30 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.31 2006/10/17 06:09:16 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -74,6 +74,9 @@ namespace {
          gC2POperatorMapping[ "<=" ]  = "__le__";
       }
    } initOperatorMapping_;
+
+// for keeping track of callbacks for CINT-installed methods into python:
+   std::map< int, PyObject* > s_PyObjectCallbacks;
 
 } // unnamed namespace
 
@@ -277,7 +280,8 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
 }
 
 //____________________________________________________________________________
-void PyROOT::Utility::ErrMsgCallback( char* msg ) {
+void PyROOT::Utility::ErrMsgCallback( char* msg )
+{
 // Translate CINT error/warning into python equivalent
 
 // ignore the "*** Interpreter error recovered ***" message
@@ -343,4 +347,40 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
       fprintf( stdout, "Note: (file \"%s\", line %d) %s\n", errFile, errLine, p+6 );
    else   // unknown: printing it to screen is the safest action
       fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 
+         const std::string& mtName, const char* signature, void* func )
+{
+// Install a python callable method so that CINT can call it
+
+   if ( ! ( scope && PyCallable_Check( callback ) ) )
+      return kFALSE;
+
+// create a return type (typically masked/wrapped by a TPyReturn) for the method
+   G__linked_taginfo pti;
+   pti.tagnum = -1;
+   pti.tagtype = 'c';
+   const char* cname = scope->Fullname();
+   if ( ! cname ) cname = "";
+   pti.tagname = ( std::string( cname ) + "::" + mtName ).c_str();
+   int tagnum = G__get_linked_tagnum( &pti );
+
+// add method and store callback
+   scope->AddMethod( pti.tagname, mtName.c_str(), signature, 0, 0, func );
+   Py_INCREF( callback );
+   PyObject* oldp = s_PyObjectCallbacks[ tagnum ];
+      Py_XDECREF( oldp );
+   s_PyObjectCallbacks[ tagnum ] = callback;
+
+// hard to check result ... assume ok
+   return kTRUE;
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::Utility::GetInstalledMethod( int tagnum )
+{
+// Return the CINT-installed python callable, if any
+   return s_PyObjectCallbacks[ tagnum ];
 }

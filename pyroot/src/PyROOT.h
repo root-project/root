@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.9 2007/02/12 17:13:59 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.10 2007/06/14 05:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H
@@ -61,7 +61,5 @@ typedef int Py_ssize_t;
 #  define PY_SSIZE_T_FORMAT "%zd"
 # endif
 #endif
-
-#include <iostream>
 
 #endif // !PYROOT_PYROOT_H

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.53 2007/06/14 05:12:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.54 2007/07/18 06:05:38 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1410,7 +1410,7 @@ namespace {
          // create a new global function
             m = gcl.AddMethod( retcode, name, signature, 0, 0, callback );       // boundary safe
 
-         // offset counter from this that services to associate pyobject with tp2f
+         // offset counter from this that serves to associate pyobject with tp2f
             fgCount += 1;
 
          // setup association for CINT

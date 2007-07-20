@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.23 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.24 2006/12/11 06:01:05 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -6,6 +6,11 @@
 
 // ROOT
 #include "DllImport.h"
+
+// CINT
+namespace Cint {
+   class G__ClassInfo;
+}
 
 // Standard
 #include <map>
@@ -93,6 +98,11 @@ namespace PyROOT {
 
    // CINT integration
       void ErrMsgCallback( char* msg );
+
+      Bool_t InstallMethod( Cint::G__ClassInfo* scope, PyObject* callback,
+         const std::string& mtName, const char* signature, void* func );
+
+      PyObject* GetInstalledMethod( int tagnum );
 
    } // namespace Utility
 

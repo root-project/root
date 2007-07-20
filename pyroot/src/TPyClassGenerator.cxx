@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.12 2007/01/29 15:10:49 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.13 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -23,16 +23,12 @@ namespace {
    //_________________________________________________________________________
    int PyCtorCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
-      G__ifunc_table* ifunc = 0;
-      long index = 0;
-
-      // from cint/src/common.h
-#define G__RECMEMFUNCENV      (long)0x7fff0036
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
-      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
+      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( res->tagnum );
+      if ( ! pyclass )
+         return 0;
 
       PyObject* args = PyTuple_New( 0 );
-      PyObject* result =  PyObject_Call( (PyObject*)mi.GetUserParam(), args, NULL );
+      PyObject* result =  PyObject_Call( pyclass, args, NULL );
       if ( ! result )
          PyErr_Print();
       Py_DECREF( args );
@@ -45,7 +41,7 @@ namespace {
       pti.tagnum = -1;
       pti.tagtype = 'c';
 
-      PyObject* str = PyObject_Str( (PyObject*)mi.GetUserParam() );
+      PyObject* str = PyObject_Str( pyclass );
       std::string clName = PyString_AS_STRING( str );
       Py_DECREF( str );
 
@@ -60,13 +56,12 @@ namespace {
    //_________________________________________________________________________
    int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
+      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( res->tagnum );
+      if ( ! pyfunc )
+         return 0;
+
       PyObject* self = (PyObject*)G__getstructoffset();
       Py_INCREF( self );
-
-      G__ifunc_table* ifunc = 0;
-      long index = 0;
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
-      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
 
       PyObject* args = PyTuple_New( 1 + libp->paran );
       PyTuple_SetItem( args, 0, self );
@@ -124,7 +119,7 @@ namespace {
 
       PyObject* result = 0;
       if ( ! PyErr_Occurred() )
-         result =  PyObject_Call( (PyObject*)mi.GetUserParam(), args, NULL );
+         result =  PyObject_Call( pyfunc, args, NULL );
       Py_DECREF( args );
 
       if ( ! result )
@@ -184,6 +179,14 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
       return 0;
    }
 
+// get a listing of all python-side members
+   PyObject* attrs = PyObject_Dir( pyclass );
+   if ( ! attrs ) {
+      PyErr_Clear();
+      Py_DECREF( pyclass );
+      return 0;
+   }
+
 // build CINT class placeholder
    G__linked_taginfo pti;
    pti.tagnum = -1;
@@ -196,22 +199,12 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    G__tagtable_setup(
       tagnum, sizeof(PyObject), G__CPPLINK, 0x00020000, "", 0, 0 );
 
-// loop over and add member functions
-   PyObject* attrs = PyObject_Dir( pyclass );
-   if ( ! attrs ) {
-      PyErr_Clear();
-      return 0;
-   }
-
-   G__tag_memfunc_setup( tagnum );
    G__ClassInfo gcl( tagnum );
 
-// special case: constructor
-   G__MethodInfo m = gcl.AddMethod( "", clName.c_str(), "ellipsis", 0, 0, (void*)PyCtorCallback);
+// special case: constructor; add method and store callback
+   PyROOT::Utility::InstallMethod( &gcl, pyclass, clName, "ellipsis", (void*)PyCtorCallback );
 
-   Py_INCREF( pyclass );
-   m.SetUserParam( pyclass );
-
+// loop over and add member functions
    for ( int i = 0; i < PyList_GET_SIZE( attrs ); ++i ) {
       PyObject* label = PyList_GET_ITEM( attrs, i );
       Py_INCREF( label );
@@ -221,18 +214,13 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
       if ( PyCallable_Check( attr ) ) {
          std::string mtName = PyString_AS_STRING( label );
 
-         G__MethodInfo m = gcl.AddMethod( "TPyReturn", mtName.c_str(), "ellipsis", 0, 0, (void*)PyMemFuncCallback );
-
-         Py_INCREF( attr );
-         m.SetUserParam(attr);
-
+      // add method and store callback
+         PyROOT::Utility::InstallMethod( &gcl, attr, mtName, "ellipsis", (void*)PyMemFuncCallback );
       }
 
       Py_DECREF( attr );
       Py_DECREF( label );
    }
-
-   G__tag_memfunc_reset();
 
 // done, let ROOT manage the new class
    Py_DECREF( pyclass );
