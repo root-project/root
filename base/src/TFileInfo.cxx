@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.13 2007/07/09 15:26:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.14 2007/07/09 16:02:30 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -48,12 +48,8 @@ TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
    SetName(fUUID->AsString());
    SetTitle("TFileInfo");
 
-   if (url) {
-      fUrlList = new TList();
-      fUrlList->SetOwner();
-      // TFile Info Constructor
+   if (url)
       AddUrl(url);
-   }
 }
 
 //______________________________________________________________________________
@@ -70,25 +66,25 @@ TFileInfo::~TFileInfo()
 //______________________________________________________________________________
 TUrl *TFileInfo::NextUrl()
 {
-   // Iterator Function, init Iteration with ResetUrl().
-   // The first Call to NextUrl() will return the 1st element,
-   // the seconde the 2nd element aso.
+   // Iterator function, start iteration by calling ResetUrl().
+   // The first call to NextUrl() will return the 1st element,
+   // the seconde the 2nd element etc. Returns 0 in case no more urls.
 
-   if (fCurrentUrl && (fCurrentUrl == fUrlList->First())) {
-      TUrl *returl = GetCurrentUrl();
-      fCurrentUrl = (TUrl*)fUrlList->After((TObject*)fCurrentUrl);
-      return returl;
-   }
+   if (!fUrlList)
+      return 0;
+
+   TUrl *returl = fCurrentUrl;
 
    if (fCurrentUrl)
-      fCurrentUrl = (TUrl*)fUrlList->After((TObject*)fCurrentUrl);
-   return GetCurrentUrl();
+      fCurrentUrl = (TUrl*)fUrlList->After(fCurrentUrl);
+
+   return returl;
 }
 
 //______________________________________________________________________________
 TUrl *TFileInfo::FindByUrl(const char *url)
 {
-   // Find an element from a URL.
+   // Find an element from a URL. Returns 0 if not found.
 
    TIter nextUrl(fUrlList);
    TUrl *urlelement;
@@ -104,9 +100,14 @@ TUrl *TFileInfo::FindByUrl(const char *url)
 //______________________________________________________________________________
 Bool_t TFileInfo::AddUrl(const char *url)
 {
-   // Add a new URL
-   if (FindByUrl(url)) {
+   // Add a new URL. Returns kTRUE if successful, kFALSE otherwise.
+
+   if (FindByUrl(url))
       return kFALSE;
+
+   if (!fUrlList) {
+      fUrlList = new TList();
+      fUrlList->SetOwner();
    }
 
    TUrl *newurl = new TUrl(url);
@@ -115,17 +116,18 @@ Bool_t TFileInfo::AddUrl(const char *url)
       fCurrentUrl = newurl;
    }
 
-   fUrlList->Add( newurl );
+   fUrlList->Add(newurl);
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TFileInfo::RemoveUrl(const char *url)
 {
-   // Remove an URL.
+   // Remove an URL. Returns kTRUE is successful, kFALSE otherwise.
+
    TUrl *lurl;
-   if ((lurl=(TUrl*)FindByUrl(url))) {
-      fUrlList->Remove((TObject*) lurl);
+   if ((lurl = FindByUrl(url))) {
+      fUrlList->Remove(lurl);
       return kTRUE;
    }
    return kFALSE;
@@ -134,7 +136,8 @@ Bool_t TFileInfo::RemoveUrl(const char *url)
 //______________________________________________________________________________
 void TFileInfo::AddMetaDataObject(TObject *obj)
 {
-   // Add's a meta data object to the file info object
+   // Add's a meta data object to the file info object. The object will be
+   // adopted by the TFileInfo and should not be deleted by the user.
 
    if (obj) {
       if (fMetaDataObject)
@@ -146,7 +149,7 @@ void TFileInfo::AddMetaDataObject(TObject *obj)
 //______________________________________________________________________________
 void TFileInfo::RemoveMetaDataObject()
 {
-   // Remove all the metadata obejects.
+   // Remove the metadata obeject.
 
    if (fMetaDataObject) {
       delete fMetaDataObject;
@@ -169,18 +172,22 @@ void TFileInfo::Print(Option_t * /* option */) const
 {
    // Print information about this object.
 
-   cout << "UUID: " << GetUUID()->AsString() << " Size: " << GetSize() << " MD5: " << GetMD5()->AsString() << endl;
-   TIter next(fUrlList);
-   TObject* obj;
+   GetMD5()->Final();
+   cout << "UUID: " << GetUUID()->AsString() << "\n"
+        << "MD5: " << GetMD5()->AsString() << "\n"
+        << "Size: " << GetSize() << endl;
 
-   while ( (obj = next() ) ){
+   TIter next(fUrlList);
+   TObject *obj;
+
+   while ((obj = next())) {
       const char *url = ((TUrl*)obj)->GetUrl();
       cout << " URL: " << url << endl;
    }
 }
 
 //______________________________________________________________________________
-TList *TFileInfo::CreateList(const char *file)
+TList *TFileInfo::CreateListFromFile(const char *file)
 {
    // Open the text 'file' and create TList of TFileInfo objects.
    // The 'file' must include one url per line.
@@ -197,7 +204,7 @@ TList *TFileInfo::CreateList(const char *file)
          TString line;
          line.ReadToDelim(f);
          if (!line.IsWhitespace()) {
-            fileList->Add(new TFileInfo(line.Data()));
+            fileList->Add(new TFileInfo(line));
             fileCount++;
          }
       }

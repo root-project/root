@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.9 2007/07/09 15:26:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.10 2007/07/09 16:02:30 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
 
    void            ResetUrl() { fCurrentUrl = (TUrl*)fUrlList->First(); }
    TUrl           *NextUrl();
-   TUrl           *GetCurrentUrl() const { return ((fCurrentUrl)?fCurrentUrl:0) ; };
+   TUrl           *GetCurrentUrl() const { return fCurrentUrl; }
    TUrl           *GetFirstUrl() const { return (TUrl*)fUrlList->First(); }
 
    Long64_t        GetSize() const       { return fSize; }
@@ -104,7 +104,8 @@ public:
 
    void            Print(Option_t *options="") const;
 
-   static TList   *CreateList(const char *file);
+   static TList   *CreateListFromFile(const char *file);
+   static TList   *CreateList(const char *file) { return CreateListFromFile(file); }
    static TList   *CreateListMatching(const char *files);
 
    ClassDef(TFileInfo,1)  // Describes generic file info including meta information
