@@ -45,5 +45,6 @@
 #pragma link C++ class TStyleManager;
 #pragma link C++ class TStylePreview;
 #pragma link C++ class TStyleDialog;
+#pragma link C++ class TSpiderEditor;
 
 #endif
