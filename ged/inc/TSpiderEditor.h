@@ -1,3 +1,14 @@
+// @(#)root/ged:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
+// Author: Bastien Dalla Piazza  20/07/07
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TSpiderEditor
 #define ROOT_TSpiderEditor
 
@@ -27,7 +38,7 @@ class TGLineWidthComboBox;
 class TGColorSelect;
 class TGedPatternSelect;
 
-class TSpiderEditor : public TGedFrame{
+class TSpiderEditor : public TGedFrame {
 protected:
    TSpider              *fSpider; // Pointer to the TSpider.
    TGCheckButton        *fDisplayAverage; // Button for the display of the average.
@@ -53,17 +64,17 @@ protected:
    const TGPicture      *fPicPreceding; // Go to last entry picture.
    TGTextEntry          *fAddVar; // Add variable field.
    TGTextEntry          *fDeleteVar; // Delete variable field.
-   
+
    virtual void         ConnectSignals2Slots();
    void                 MakeBrowse();
-   
+
 public:
-   TSpiderEditor(const TGWindow *p = 0, 
+   TSpiderEditor(const TGWindow *p = 0,
                  Int_t width = 140, Int_t height = 30,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
    ~TSpiderEditor();
-   
+
    virtual void         DoAddVar();
    virtual void         DoDeleteVar();
    virtual void         DoDisplayAverage(Bool_t av);
@@ -81,7 +92,7 @@ public:
    virtual void         DoAvLineColor(Pixel_t);
    virtual void         DoAvFillColor(Pixel_t);
    virtual void         DoAvFillPattern(Style_t);
-   
+
    ClassDef(TSpiderEditor,0) // GUI for editing the spider plot attributes.
 };
 

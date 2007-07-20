@@ -1,3 +1,14 @@
+// @(#)root/treeviewer:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
+// Author: Bastien Dalla Piazza  20/07/07
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TSpider
 #define ROOT_TSpider
 
@@ -38,7 +49,7 @@ class TLatex;
 class TCanvas;
 class TArc;
 
-class TSpider : public TObject, public TAttFill, public TAttLine{
+class TSpider : public TObject, public TAttFill, public TAttLine {
 private:
    UInt_t                  fNx; // Number of horizontal spider plots.
    UInt_t                  fNy; // Number of vertical spider plots.
@@ -68,7 +79,7 @@ private:
    Bool_t                  fForceDim; // Force dimension.
    Bool_t                  fSegmentDisplay; // True if displaying a segment plot.
    Bool_t                  fShowRange; // Show range of variables or not.
-   
+
    Int_t          FindTextAlign(Double_t theta);
    Double_t       FindTextAngle(Double_t theta);
    void           InitVariables(Long64_t firstentry, Long64_t nentries);
@@ -80,10 +91,10 @@ private:
    void           InitArrays(Int_t newsize);
    void           SetCurrentEntries();
    void           UpdateView();
-   
+
 public:
    TSpider();
-   TSpider(TTree* tree, const char *varexp, const char *selection, Option_t *option, 
+   TSpider(TTree* tree, const char *varexp, const char *selection, Option_t *option,
                   Long64_t nentries, Long64_t firstentry);
    ~TSpider();
    void           AddSuperposed(TSpider* sp);
@@ -128,7 +139,7 @@ public:
    void           SetSegmentDisplay(Bool_t seg); // *TOGGLE*
    void           SetShowRange(Bool_t showrange) {fShowRange = showrange;}
    void           SuperposeTo(TSpider* sp) {sp->AddSuperposed(this);}
-      
+
    ClassDef(TSpider,0)  //Helper class to draw spider
 };
 
