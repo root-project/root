@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.32 2007/04/29 07:06:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.33 2007/05/09 15:03:34 antcheva Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -116,7 +116,11 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    if (gStyle->GetCanvasPreferGL()) {
       //first, initialize GL (if not yet)
       if (!gGLManager) {
-         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
+         TString x = "win32";
+         if (gVirtualX->InheritsFrom("TGX11"))
+            x = "x11";
+
+         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager", x);
 
          if (ph && ph->LoadPlugin() != -1) {
             if (!ph->ExecPlugin(0))
