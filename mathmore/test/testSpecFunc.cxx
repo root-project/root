@@ -130,7 +130,7 @@ int testSpecFunc() {
 
    iret |= compare("assoc_laguerre(4,  2, 0.5) ", assoc_laguerre(4, 2, 0.5), 6.752604166666666667,8);
 
-   iret |= compare("assoc_legendre(10, 1, -0.5) ", assoc_legendre(10, 1, -0.5), -2.0066877394361256516);
+   iret |= compare("assoc_legendre(10, 1, -0.5) ", assoc_legendre(10, 1, -0.5), 2.0066877394361256516);
 
    iret |= compare("comp_ellint_1(0.50) ", comp_ellint_1(0.50), 1.6857503548125960429);
 
@@ -160,7 +160,7 @@ int testSpecFunc() {
 
    iret |= compare("hyperg(8, -8, 1, 0.5) ", hyperg(8, -8, 1, 0.5), 0.13671875);
 
-   //std::cout << "Laguerre polynomials: to do!" << std::endl;
+   iret |= compare("laguerre(4, 1.) ", laguerre(4, 1.), -0.6250); // need to find more precise value
 
    iret |= compare("legendre(10, -0.5) ", legendre(10, -0.5), -0.1882286071777345);
 
@@ -168,7 +168,7 @@ int testSpecFunc() {
 
    iret |= compare("sph_bessel(1, 10.0) ", sph_bessel(1, 10.0), 0.07846694179875154709000);
 
-   // std::cout << "Spherical associated Legendre functions: to do!" << std::endl;
+   iret |= compare("sph_legendre(3, 1, PI/2.) ", sph_legendre(3, 1, PI/2.), 0.323180184114150653007);
 
    iret |= compare("sph_neumann(0, 1.0) ", sph_neumann(0, 1.0), -0.54030230586813972);
 

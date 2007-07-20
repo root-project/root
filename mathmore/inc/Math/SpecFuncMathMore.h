@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.4 2006/03/01 12:15:24 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.5 2006/06/12 13:06:48 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -43,10 +43,6 @@ N1687=04-0127, September 10, 2004</A>
 
 
 
-// TODO: 
-// [5.2.1.18] Laguerre polynomials
-// [5.2.1.22] spherical associated Legendre functions
-
 
 
 #ifndef ROOT_Math_SpecFuncMathMore
@@ -63,22 +59,34 @@ namespace Math {
 
   /**
 
-  TO BE CHECKED!!!!!
   
-  The associated Laguerre polynomials...
+  Computes the generalized Laguerre polynomials for 
+  \f$ n \geq 0, m \gt -1 \f$. 
+  They are defined in terms of the confluent hypergeometric function. 
+  For integer values of m they can be defined in terms of the Laguerre polynomials \f$L_n(x)\f$: 
+
+  \f[ L_{n}^{m}(x) = (-1)^{m} \frac{d^m}{dx^m} L_{n+m}(x) \f]
 
 
   For detailed description see 
   <A HREF="">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC126">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Laguerre-Functions.html">GSL</A>.
+
+  This function is an extension of C++0x, also consistent in GSL, 
+  Abramowitz and Stegun 1972 and MatheMathica that uses non-integer values for m.
+  C++0x calls for 'int m', more restrictive than necessary.
+  The definition for was incorrect in 'n1687.pdf', but fixed in
+  <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1836.pdf">,
+  the most recent draft as of 2007-07-01
+
 
   @ingroup SpecFunc
 
   */
   // [5.2.1.1] associated Laguerre polynomials
 
-  double assoc_laguerre(unsigned n, unsigned m, double x);
+  double assoc_laguerre(unsigned n, double m, double x);
 
 
 
@@ -102,9 +110,10 @@ namespace Math {
   to distinguish the two. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LegendrePolynomial.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC129">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Associated-Legendre-Polynomials-and-Spherical-Harmonics.html">GSL</A>.
 
-  CROSSCHECK THAT THE GSL IMPLEMENTATION IS INDEED THE ARFKEN VERSION
+  The definition uses is the one of C++0x, \f$ P_{lm}\f$, while GSL and MatheMatica use the \f$P_{l}^{m}\f$ definition. Note that C++0x and GSL definitions agree instead for the normalized associated Legendre polynomial, 
+  sph_legendre(l,m,theta). 
 
   @ingroup SpecFunc
 
@@ -455,9 +464,26 @@ namespace Math {
 
 
 
+  /**
+
+  Calculates the Laguerre polynomials
+
+  \f[ P_{l}(x) = \frac{ e^x}{n!} \frac{d^n}{dx^n}  (x^n - e^{-x}) \f]
+
+  for \f$x \geq 0 \f$ in the Rodrigues representation. 
+  They corresponds to the associated Laguerre polynomial of order m=0.
+  See Abramowitz and Stegun, (22.5.16)
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/LaguerrePolynomial.html">
+  Mathworld</A>. 
+  The are implemented using the associated Laguerre polynomial of order m=0.
+
+  @ingroup SpecFunc
+
+  */
   // [5.2.1.18] Laguerre polynomials
 
-  //double laguerre(unsigned n, double x)
+  double laguerre(unsigned n, double x);
 
 
   /**
@@ -523,10 +549,27 @@ namespace Math {
   double sph_bessel(unsigned n, double x);
 
 
+  /**
+  
+  Computes the spherical (normalized)  associated Legendre polynomials,
+  or spherical harmonic without azimuthal dependence (e^(im\phi)).
+
+  \f[ Y_l^m(theta,0) = \sqrt{(2l+1)/(4\pi)} \sqrt{(l-m)!/(l+m)!} P_l^m(cos \theta) \f]
+
+  for \$m \geq 0, l \geq 0\f$, 
+  where the Condon-Shortley phase  \f$(-1)^m\f$ is included in P_l^m(x)
+  This function is consistent with both C++0x and GSL,
+  even though there is a discrepancy in where to include the phase.
+  There is no reference in Abramowitz and Stegun.
+    
+
+  @ingroup SpecFunc
+
+  */
 
   // [5.2.1.22] spherical associated Legendre functions
 
-  //double sph_legendre(unsigned m, unsigned l, double theta);
+  double sph_legendre(unsigned l, unsigned m, double theta);
 
 
   /**

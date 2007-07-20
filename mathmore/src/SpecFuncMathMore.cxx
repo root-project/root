@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.3 2006/03/01 12:15:24 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.4 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -10,6 +10,7 @@
  *                                                                    *
  **********************************************************************/
 
+#include <cmath>
 
 #ifndef PI
 #define PI       3.14159265358979323846264338328      /* pi */
@@ -36,7 +37,7 @@ namespace Math {
 // [5.2.1.1] associated Laguerre polynomials
 // (26.x.12)
 
-double assoc_laguerre(unsigned n, unsigned m, double x) {
+double assoc_laguerre(unsigned n, double m, double x) {
    
    return gsl_sf_laguerre_n(n, m, x);
    
@@ -48,8 +49,8 @@ double assoc_laguerre(unsigned n, unsigned m, double x) {
 // (26.x.8)
 
 double assoc_legendre(unsigned l, unsigned m, double x) {
-   
-   return gsl_sf_legendre_Plm(l, m, x);
+   // add  (-1)^m
+   return (m%2 == 0) ? gsl_sf_legendre_Plm(l, m, x) : -gsl_sf_legendre_Plm(l, m, x);
    
 }
 
@@ -296,11 +297,9 @@ double hyperg(double a, double b, double c, double x) {
 // [5.2.1.18] Laguerre polynomials
 // (26.x.11)
 
-//double laguerre(unsigned n, double x) {
-
-//  return gsl_sf_laguerre_n(n, 0, x)/exp(x);
-
-//}
+double laguerre(unsigned n, double x) {
+  return gsl_sf_laguerre_n(n, 0, x);
+}
 
 
 
@@ -341,10 +340,11 @@ double sph_bessel(unsigned n, double x) {
 // [5.2.1.22] spherical associated Legendre functions
 // (26.x.9) ??????????
 
-//double sph_legendre(unsigned m, unsigned l, double theta) {
+double sph_legendre(unsigned l, unsigned m, double theta) {
 
+   return gsl_sf_legendre_sphPlm(l, m, std::cos(theta));
 
-//}
+}
 
 
 
