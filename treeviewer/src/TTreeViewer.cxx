@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.58 2007/02/22 16:45:48 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.59 2007/06/15 14:37:57 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -213,6 +213,7 @@
 #include "TGFileDialog.h"
 #include "TGProgressBar.h"
 #include "TClonesArray.h"
+#include "TSpider.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -821,6 +822,17 @@ void TTreeViewer::BuildInterface()
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);
    fWidgets->Add(lo);
    fHpb->AddFrame(fDRAW, lo);
+   
+   //--- SPIDER button
+   fSPIDER = new TGTextButton(fHpb,"SPIDER");
+   fSPIDER->SetToolTipText("Scan current selection using a spider plot");
+   fSPIDER->Associate(this);
+   
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);
+   fWidgets->Add(lo);
+   fHpb->AddFrame(fSPIDER,lo);
+   //---connect SPIDER button to ExecuteScan() method
+   fSPIDER->Connect("Clicked()","TTreeViewer",this,"ExecuteSpider()");
 
    //--- STOP button (breaks current operation)
 //   fPicStop = gClient->GetPicture("mb_stop_s.xpm");
@@ -1130,6 +1142,7 @@ TTreeViewer::~TTreeViewer()
    delete fHpb;
 
    delete fDRAW;
+   delete fSPIDER;
    delete fSTOP;
    delete fReset;
    delete fBGFirst;
@@ -1464,6 +1477,94 @@ void TTreeViewer::ExecuteDraw()
    if (gPad) gPad->Update();
 }
 
+
+//______________________________________________________________________________
+void TTreeViewer::ExecuteSpider()
+{
+   // Draw a spider plot for the selected entries.
+   
+   char varexp[2000];
+   varexp[0] = 0;
+   char command[2000];
+   command[0] = 0;
+   Int_t dimension = 0;
+   TString alias[3];
+   TTVLVEntry *item;
+   Bool_t previousexp = kFALSE;
+   // fill in expressions
+   if (strlen(Ez())) {
+      previousexp = kTRUE;
+      dimension++;
+      sprintf(varexp, Ez());
+      item = ExpressionItem(2);
+      alias[2] = item->GetAlias();
+      if (alias[2].BeginsWith("~")) alias[2].Remove(0, 1);
+   }
+   if (strlen(Ez()) && (strlen(Ex()) || strlen(Ey()))) strcat(varexp, ":");
+   if (strlen(Ey())) {
+      previousexp = kTRUE;
+      dimension++;
+      strcat(varexp, Ey());
+      item = ExpressionItem(1);
+      alias[1] = item->GetAlias();
+      if (alias[1].BeginsWith("~")) alias[1].Remove(0, 1);
+   }
+   if (strlen(Ey()) && strlen(Ex())) strcat(varexp, ":");
+   if (strlen(Ex())) {
+      previousexp = kTRUE;
+      dimension++;
+      strcat(varexp, Ex());
+      item = ExpressionItem(0);
+      alias[0] = item->GetAlias();
+      if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
+   }
+   for(Int_t i=0;i<10;++i){
+      if(strlen(En(i+5))){
+         ++dimension;
+         if(previousexp){
+            strcat(varexp,":");
+            strcat(varexp,En(i+5));
+         } else sprintf(varexp,En(i+5));
+         previousexp = kTRUE;
+      }
+   }
+   if (dimension<3) {
+      Warning("ExecuteSpider", "Need at least 3 variables");
+      return;
+   }
+   // find ListIn
+   fTree->SetEventList(0);
+   TEventList *elist = 0;
+   if (strlen(fBarListIn->GetText())) {
+      elist = (TEventList *) gROOT->FindObject(fBarListIn->GetText());
+      if (elist) fTree->SetEventList(elist);
+   }
+   // find ListOut
+   if (strlen(fBarListOut->GetText())) sprintf(varexp, ">>%s", fBarListOut->GetText());
+   // find canvas/pad where to draw
+   TPad *pad = (TPad*)gROOT->GetSelectedPad();
+   if (pad) pad->cd();
+   // find graphics option
+   const char* gopt = fBarOption->GetText();
+   // just in case a previous interrupt was posted
+   gROOT->SetInterrupt(kFALSE);
+   // check if cut is enabled
+   const char *cut = "";
+   if (fEnableCut) cut = Cut();
+
+   // get entries to be processed
+   Long64_t nentries = (Long64_t)(fSlider->GetMaxPosition() -
+                            fSlider->GetMinPosition() + 1);
+   Long64_t firstentry =(Long64_t) fSlider->GetMinPosition();
+   
+   // create the spider plot
+   
+   TSpider* spider = new TSpider(fTree,varexp,cut,Form("%s spider average",gopt),nentries,firstentry);
+   spider->Draw();
+   
+   if (gPad) gPad->Update();
+}
+
 //______________________________________________________________________________
 const char* TTreeViewer::Ex()
 {
@@ -1486,6 +1587,15 @@ const char* TTreeViewer::Ez()
    // Get the expression to be drawn on Z axis.
 
    return fLVContainer->Ez();
+}
+
+//______________________________________________________________________________
+const char* TTreeViewer::En(Int_t n)
+{
+   // Get the n'th expression
+   TTVLVEntry *e = fLVContainer->ExpressionItem(n);
+   if(e) return e->ConvertAliases();
+   return "";
 }
 
 //______________________________________________________________________________

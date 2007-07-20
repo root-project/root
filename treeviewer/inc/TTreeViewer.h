@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.16 2004/07/29 10:54:55 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.17 2006/11/14 14:19:15 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -140,6 +140,7 @@ private:
    TGTextEntry          *fBarListIn;    // tree input event list name entry
    TGTextEntry          *fBarListOut;   // tree output event list name entry
    TGPictureButton      *fDRAW;         // DRAW button
+   TGTextButton         *fSPIDER;       // SPIDER button
    TGPictureButton      *fSTOP;         // interrupt current command (not yet)
    TGPictureButton      *fREFR;         // REFRESH button  //ia
    TGStatusBar          *fStatusBar;    // status bar
@@ -168,6 +169,7 @@ private:
    const char   *Ex();
    const char   *Ey();
    const char   *Ez();
+   const char   *En(Int_t n);
    void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
    void          MapOptions(Long_t parm1);
    void          MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
@@ -192,6 +194,7 @@ public:
    void          EmptyAll();                                     // *MENU*
    void          ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
    void          ExecuteDraw();
+   void          ExecuteSpider();
    TTVLVEntry   *ExpressionItem(Int_t index);
    TList        *ExpressionList();
    const char   *GetGrOpt();
