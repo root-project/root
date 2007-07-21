@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooNumIntConfig.cxx,v 1.12 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooNumIntConfig.cxx,v 1.13 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -178,7 +178,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 
 RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
 {
-  return const_cast<RooArgSet&>((const_cast<RooNumIntConfig*>(this)->getConfigSection(name))) ;
+  return const_cast<RooArgSet&>((const_cast<const RooNumIntConfig*>(this)->getConfigSection(name))) ;
 }
 
 const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const

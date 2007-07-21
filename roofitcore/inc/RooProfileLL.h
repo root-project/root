@@ -25,7 +25,7 @@ public:
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
   RooProfileLL(const RooProfileLL& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooProfileLL(*this,newname); }
-  inline virtual ~RooProfileLL() ;
+  virtual ~RooProfileLL() ;
 
 protected:
 

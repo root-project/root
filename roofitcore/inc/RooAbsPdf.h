@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.h,v 1.88 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooAbsPdf.h,v 1.89 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -169,11 +169,6 @@ public:
   static void clearEvalError() { _evalError = kFALSE ; }
   static Bool_t evalError() { return _evalError ; }
   
-private:
-
-  // This forces definition copy ctor in derived classes 
-  RooAbsPdf(const RooAbsPdf& other);
-
 protected:
 
 public:
@@ -205,7 +200,8 @@ protected:
 
 
   friend class RooExtendPdf ;
-  RooAbsPdf(const RooAbsPdf& other, const char* name=0);
+  // This also forces the definition of a copy ctor in derived classes 
+  RooAbsPdf(const RooAbsPdf& other, const char* name = 0);
 
   friend class RooRealIntegral ;
   static Int_t _verboseEval ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.rdl,v 1.8 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooNLLVar.h,v 1.9 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@ class RooNLLVar : public RooAbsOptGoodnessOfFit {
 public:
 
   // Constructors, assignment etc
+  RooNLLVar() {} ;  
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
 	    const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
 	    const RooCmdArg& arg4=RooCmdArg::none, const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none,

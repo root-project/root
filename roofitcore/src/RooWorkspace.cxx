@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooWorkspace.cxx,v 1.1 2007/07/12 20:30:29 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooWorkspace.cxx,v 1.2 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
@@ -450,7 +450,7 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
   if (funcSet.getSize()>0) {
     cout << "functions" << endl ;
     cout << "--------" << endl ;
-    iter = pdfSet.createIterator() ;
+    iter = funcSet.createIterator() ;
     while((arg=(RooAbsArg*)iter->Next())) {
       arg->Print() ;
     }
