@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.52 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.53 2007/06/23 21:23:22 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -13,6 +13,7 @@
 
 #include "TGLScene.h"
 #include "TGLRnrCtx.h"
+#include "TGLObject.h"
 #include "TGLSelectRecord.h"
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
@@ -26,6 +27,7 @@
 #include <TClass.h>
 
 #include <algorithm>
+#include <typeinfo>
 
 //______________________________________________________________________
 // TGLScene::TSceneInfo
@@ -103,7 +105,7 @@ void TGLScene::TSceneInfo::DumpDrawStats()
                   TGLRnrCtx::StyleName(LastStyle()), LastLOD(),
                   fOpaqueCnt + fTranspCnt, fOpaqueCnt, fTranspCnt, fAsPixelCnt);
       out += Form("\tInner phys nums: scene=%d, op=%d, trans=%d",
-                  ((TGLScene*)fScene)->fDrawList.size(),
+                  fDrawList.size(),
                   fOpaqueElements.size(), fTranspElements.size());
 
       // By shape type counts
@@ -153,9 +155,6 @@ ClassImp(TGLScene)
 //______________________________________________________________________________
 TGLScene::TGLScene() :
    TGLSceneBase(),
-
-   fDrawList(1000),
-   fDrawListValid(kFALSE),
    fGLCtxIdentity(0),
    fInSmartRefresh(kFALSE)
 {}
@@ -222,6 +221,69 @@ TGLScene::TSceneInfo* TGLScene::CreateSceneInfo(TGLViewerBase* view)
 }
 
 //______________________________________________________________________________
+Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
+                                         const TGLPhysicalShape* shape2)
+{
+   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
+   // 'shape1' bigger than 'shape2'.
+
+   // TODO: Move this to TGLBoundingBox > operator?
+   // !!! MT: use diagonal instead of volume!
+   return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
+}
+
+//______________________________________________________________________________
+void TGLScene::RebuildSceneInfo(TGLRnrCtx& ctx)
+{
+   // Major change in scene, need to rebuild draw-list.
+   //
+   // Sort the TGLPhysical draw list by shape bounding box volume, from
+   // large to small. This makes dropout of shapes with time limited
+   // Draw() calls must less noticable. As this does not use projected
+   // size it only needs to be done after a scene content change - not
+   // everytime scene drawn (potential camera/projection change).
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(ctx.GetSceneInfo());
+   if (sinfo == 0 || sinfo->GetScene() != this) {
+      Error("TGLScene::RebuildSceneInfo", "Scene mismatch.");
+      return;
+   }
+
+   TGLSceneBase::RebuildSceneInfo(ctx);
+
+   TGLStopwatch stopwatch;
+   if (gDebug>2) {
+      stopwatch.Start();
+   }
+
+   ShapeVec_t new_draw_list;
+   new_draw_list.reserve(fPhysicalShapes.size());
+   sinfo->fDrawList.swap(new_draw_list);
+   {
+      PhysicalShapeMapIt_t pit = fPhysicalShapes.begin();
+      while (pit != fPhysicalShapes.end())
+      {
+         TGLPhysicalShape      * pshp = pit->second;
+         const TGLLogicalShape * lshp = pshp->GetLogical();
+         if (ctx.GetCamera()->OfInterest(pshp->BoundingBox(),
+                                         lshp->IgnoreSizeForOfInterest()))
+         {
+            sinfo->fDrawList.push_back(pit->second);
+         }
+         ++pit;
+      }
+   }
+
+   // Sort by volume of shape bounding box
+   // !!! MT: diagonal better!
+   std::sort(sinfo->fDrawList.begin(), sinfo->fDrawList.end(), TGLScene::ComparePhysicalVolumes);
+
+   if (gDebug>2) {
+      Info("TGLScene::RebuildSceneInfo", "sorting took %f msec", stopwatch.End());
+   }
+}
+
+//______________________________________________________________________________
 void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
 {
    // Fill scene-info with information needed for rendering, take into
@@ -243,21 +305,19 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
    if ( ! sinfo->IsVisible() )
       return;
 
-   if ( ! fDrawListValid )
-      SortDrawList();
-
-   if (sinfo->fOpaqueElements.capacity() > 1.4*fDrawList.size())
+   Int_t drawListSize = (Int_t) sinfo->fDrawList.size();
+   if (sinfo->fOpaqueElements.capacity() > 1.4*drawListSize)
    {
       DrawElementVec_t foo;
-      foo.reserve( (size_t) (1.2*fDrawList.size()));
+      foo.reserve( (size_t) (1.2*drawListSize));
       sinfo->fOpaqueElements.swap(foo);
    } else {
       sinfo->fOpaqueElements.clear();
    }
-   if (sinfo->fTranspElements.capacity() > 1.4*fDrawList.size())
+   if (sinfo->fTranspElements.capacity() > 1.4*drawListSize)
    {
       DrawElementVec_t foo;
-      foo.reserve( (size_t) (1.2*fDrawList.size()));
+      foo.reserve( (size_t) (1.2*drawListSize));
       sinfo->fTranspElements.swap(foo);
    } else {
       sinfo->fTranspElements.clear();
@@ -266,7 +326,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
 
    // Check individual physicals, build DrawElementList.
 
-   for (ShapeVec_i phys=fDrawList.begin(); phys!=fDrawList.end(); ++phys)
+   for (ShapeVec_i phys=sinfo->fDrawList.begin(); phys!=sinfo->fDrawList.end(); ++phys)
    {
       const TGLPhysicalShape * drawShape = *phys;
 
@@ -826,8 +886,8 @@ Bool_t TGLScene::DestroyLogical(TObject* logid)
    assert(logical->Ref() == 0);
    fLogicalShapes.erase(lit);
    delete logical;
-   fBoundingBoxValid = kFALSE;
-   fDrawListValid    = kFALSE;
+   InvalidateBoundingBox();
+   IncTimeStamp();
    return kTRUE;
 }
 
@@ -900,11 +960,9 @@ void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
    assert(fPhysicalShapes.find(shape.ID()) == fPhysicalShapes.end());
 
    fPhysicalShapes.insert(PhysicalShapeMapValueType_t(shape.ID(), &shape));
-   fBoundingBoxValid = kFALSE;
 
-   // Add into draw list and mark for sorting
-   fDrawList.push_back(&shape);
-   fDrawListValid = kFALSE;
+   InvalidateBoundingBox();
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
@@ -937,8 +995,10 @@ Bool_t TGLScene::DestroyPhysical(UInt_t phid)
    }
 
    DestroyPhysicalInternal(pit);
-   fBoundingBoxValid = kFALSE;
-   fDrawListValid    = kFALSE;
+
+   InvalidateBoundingBox();
+   IncTimeStamp();
+
    return kTRUE;
 }
 
@@ -984,8 +1044,8 @@ Int_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera* camera)
    }
 
    if (count > 0) {
-      fBoundingBoxValid = kFALSE;
-      fDrawListValid    = kFALSE;
+      InvalidateBoundingBox();
+      IncTimeStamp();
    }
 
    return count;
@@ -1055,7 +1115,7 @@ void TGLScene::UpdateLogical(TObject* logid)
 
    log->DLCacheClear();
    log->UpdateBoundingBox();
-   fDrawListValid = kFALSE;
+   IncTimeStamp();
 }
 
 void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
@@ -1168,23 +1228,27 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLScene::BeginSmartRefresh()
+UInt_t TGLScene::BeginSmartRefresh()
 {
-   // Moves logicals to refresh-cache.
+   // Moves logicals that support smart-refresh to intermediate cache.
+   // Destroys the others and returns the number of destroyed ones.
 
    fSmartRefreshCache.swap(fLogicalShapes);
    // Remove all logicals that don't survive a refresh.
+   UInt_t count = 0;
    LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
    while (i != fSmartRefreshCache.end()) {
       if (i->second->KeepDuringSmartRefresh() == kFALSE) {
          LogicalShapeMapIt_t j = i++;
          delete j->second;
          fSmartRefreshCache.erase(j);
+         ++count;
       } else {
          ++i;
       }
    }
    fInSmartRefresh = kTRUE;
+   return count;
 }
 
 //______________________________________________________________________________
@@ -1208,74 +1272,28 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
    // Returns 0 if not found.
 
    LogicalShapeMapIt_t it = fSmartRefreshCache.find(ID);
-   if (it != fSmartRefreshCache.end()) {
+   if (it != fSmartRefreshCache.end())
+   {
       TGLLogicalShape* l_shape = it->second;
       fSmartRefreshCache.erase(it);
+      if (typeid(l_shape) != *TGLObject::GetGLRenderer(ID->IsA())->GetTypeInfo())
+      {
+         Warning("TGLScene::FindLogicalSmartRefresh", "Wrong renderer-type found in cache.");
+         return 0;
+      }
       // printf("TGLScene::SmartRefresh found cached: %p '%s' [%s] for %p\n",
       //    l_shape, l_shape->GetExternal()->GetName(),
       //    l_shape->GetExternal()->IsA()->GetName(), (void*) ID);
       LogicalShapeMap_t* lsm = const_cast<LogicalShapeMap_t*>(&fLogicalShapes);
       lsm->insert(LogicalShapeMapValueType_t(l_shape->ID(), l_shape));
-      // !!! MT: Purge-dl-cache was removed from destroyLogicals,
-      // clear it here for every logical.
-      // We still assume SmartRefresh is called between Begin/EndScene().
       l_shape->DLCacheClear();
+      TGLObject* globj = dynamic_cast<TGLObject*>(l_shape);
+      if (globj)
+        globj->SetBBox();
       return l_shape;
    } else {
       return 0;
    }
-}
-
-/**************************************************************************/
-// Draw-list sorting
-/**************************************************************************/
-
-//______________________________________________________________________________
-void TGLScene::SortDrawList()
-{
-   // Sort the TGLPhysical draw list by shape bounding box volume, from
-   // large to small. This makes dropout of shapes with time limited
-   // Draw() calls must less noticable. As this does not use projected
-   // size it only needs to be done after a scene content change - not
-   // everytime scene drawn (potential camera/projection change).
-
-   assert(!fDrawListValid);
-
-   TGLStopwatch stopwatch;
-
-   if (gDebug>2) {
-      stopwatch.Start();
-   }
-
-   fDrawList.resize(fPhysicalShapes.size());
-   {
-      ShapeVec_i           dit = fDrawList.begin();
-      PhysicalShapeMapIt_t pit = fPhysicalShapes.begin();
-      while (dit != fDrawList.end())
-         *(dit++) = (pit++)->second;
-   }
-
-   // Sort by volume of shape bounding box
-   // !!! MT: diagonal better!
-   std::sort(fDrawList.begin(), fDrawList.end(), TGLScene::ComparePhysicalVolumes);
-
-   if (gDebug>2) {
-      Info("TGLScene::SortDrawList", "sorting took %f msec", stopwatch.End());
-   }
-
-   fDrawListValid = kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
-                                         const TGLPhysicalShape* shape2)
-{
-   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
-   // 'shape1' bigger than 'shape2'.
-
-   // TODO: Move this to TGLBoundingBox > operator?
-   // !!! MT: use diagonal instead of volume!
-   return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
 
 

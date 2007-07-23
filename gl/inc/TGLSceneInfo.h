@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -65,8 +65,7 @@ protected:
    TGLPlaneSet_t    fFrustumPlanes; // Clipping planes defined by frustum; only those intersecting the scene volume are kept.
    TGLPlaneSet_t    fClipPlanes;    // Clipping planes from clip-object; which planes are kept depends on inside/outside mode.
 
-   // Additional stuff (scene-class specific) can be added by
-   // via sub-classing.
+   // Additional stuff (scene-class specific) can be added by sub-classing.
    // For TGLScene these data include draw-lists after clipping.
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -61,8 +61,9 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
 //______________________________________________________________________
 void TGLSceneInfo::SetupTransformsAndBBox()
 {
-   // Combine information from scene, scene-info and camera(?) into
-   // transformation matrices.
+   // Combine information from scene, scene-info and camera (should be
+   // optional) into transformation matrices.
+   //
    // Transform scene bounding box using this transformation.
 
    // !!! Transforms not implemented yet, just copy the scene bounding

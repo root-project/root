@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TGLSceneBase.h"
 #include "TGLSceneInfo.h"
+#include "TGLViewerBase.h"
 #include "TGLRnrCtx.h"
 #include "TGLCamera.h"
 #include "TGLClip.h"
@@ -19,6 +20,7 @@
 #include <TMath.h>
 
 #include <string>
+#include <algorithm>
 
 //______________________________________________________________________
 // TGLSceneBase
@@ -55,13 +57,60 @@ TGLSceneBase::TGLSceneBase() :
    fBoundingBox      (),
    fBoundingBoxValid (kFALSE),
    fDoFrustumCheck   (kTRUE),
-   fDoClipCheck      (kTRUE)
+   fDoClipCheck      (kTRUE),
+   fAutoDestruct     (kTRUE)
 {
    // Default constructor.
 
-   fSceneID = ++fgSceneIDSrc;
+   fSceneID = fgSceneIDSrc++;
    fName = Form("unnamed-%d", fSceneID);
 }
+
+//______________________________________________________________________________
+TGLSceneBase::~TGLSceneBase()
+{
+   // Destructor.
+
+   for (ViewerList_i i=fViewers.begin(); i!=fViewers.end(); ++i)
+   {
+      (*i)->SceneDestructing(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::AddViewer(TGLViewerBase* viewer)
+{
+   // Add viewer to the list.
+
+   ViewerList_i i = std::find(fViewers.begin(), fViewers.end(), viewer);
+   if (i == fViewers.end())
+      fViewers.push_back(viewer);
+   else
+      Warning("TGLSceneBase::AddViewer", "viewer already in the list.");
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RemoveViewer(TGLViewerBase* viewer)
+{
+   // Remove viewer from the list.
+   // If auto-destruct is on and the last viewer is removed the scene
+   // destructs itself.
+
+   ViewerList_i i = std::find(fViewers.begin(), fViewers.end(), viewer);
+   if (i != fViewers.end())
+      fViewers.erase(i);
+   else
+      Warning("TGLSceneBase::RemoveViewer", "viewer not found in the list.");
+
+   if (fViewers.empty() && fAutoDestruct)
+   {
+      Info("TGLSceneBase::RemoveViewer", "scene '%s' not used - autodestructing.",
+           GetName());
+      delete this;
+   }
+}
+
+/**************************************************************************/
 
 //______________________________________________________________________________
 const char* TGLSceneBase::LockIdStr() const
@@ -85,12 +134,25 @@ TGLSceneInfo* TGLSceneBase::CreateSceneInfo(TGLViewerBase* view)
 }
 
 //______________________________________________________________________________
+void TGLSceneBase::RebuildSceneInfo(TGLRnrCtx& ctx)
+{
+   // Fill scene-info with very basic information that is practically
+   // view independent. This is called when scene content is changed
+   // or when camera-interest changes.
+
+   TGLSceneInfo* sinfo = ctx.GetSceneInfo();
+
+   sinfo->SetLastClip(0);
+   sinfo->SetLastCamera(0);
+}
+
+//______________________________________________________________________________
 void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
 {
    // Fill scene-info with information needed for rendering, take into
    // account the render-context (viewer state, camera, clipping).
    // Usually called from TGLViewer before rendering a scene if some
-   // significant part of render-context has changed.
+   // moderately significant part of render-context has changed.
    //
    // Here we update the basic state (clear last-LOD, mark the time,
    // set global <-> scene transforamtion matrices) and potentially
@@ -251,6 +313,12 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
 
    // Bounding-box check done elsewhere (in viewer::pre-render)
 
+   if (fTimeStamp > sInfo.SceneStamp())
+   {
+      RebuildSceneInfo(rnrCtx);
+   }
+
+
    Bool_t needUpdate = kFALSE;
 
    if (rnrCtx.GetCamera() != sInfo.LastCamera())
@@ -276,15 +344,13 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
    {
       needUpdate = kTRUE;
    }
-
    rnrCtx.SetClip(clip);
 
-
-   // Check if full update is needed.
-   if (fTimeStamp > sInfo.SceneStamp() || needUpdate)
+   if (needUpdate)
    {
       UpdateSceneInfo(rnrCtx);
    }
+
 
    // Setup LOD ... optionally lodify.
    Short_t lod;

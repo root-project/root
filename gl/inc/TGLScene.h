@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.29 2007/06/12 10:22:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.30 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -47,22 +47,11 @@ protected:
    typedef PhysicalShapeMap_t::const_iterator      PhysicalShapeMapCIt_t;
    PhysicalShapeMap_t                              fPhysicalShapes; //!
 
-   virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
-
-   // ----------------------------------------------------------------
-   // List of physical shapes ordered by volume/diagonal
-   typedef std::vector<const TGLPhysicalShape *>   ShapeVec_t;
-   typedef ShapeVec_t::iterator                    ShapeVec_i;
-   ShapeVec_t                                      fDrawList;       //!
-   Bool_t                                          fDrawListValid;  //!
-
-   // ----------------------------------------------------------------
-   // Draw-list, draw-element
-
-   void   SortDrawList();
+   // Compare physical-shape volumes -- for draw list sorting
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
                                         const TGLPhysicalShape * shape2);
 
+   virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
 
 public:
    struct DrawElement_t
@@ -79,12 +68,19 @@ public:
    typedef std::vector<DrawElement_t>           DrawElementVec_t;
    typedef std::vector<DrawElement_t>::iterator DrawElementVec_i;
 
+   // List of physical shapes ordered by volume/diagonal
+   typedef std::vector<const TGLPhysicalShape *>   ShapeVec_t;
+   typedef ShapeVec_t::iterator                    ShapeVec_i;
+
+
    // ----------------------------------------------------------------
    // SceneInfo ... extended scene context
 
    class TSceneInfo : public TGLSceneInfo
    {
    public:
+      ShapeVec_t       fDrawList;
+
       DrawElementVec_t fOpaqueElements;
       DrawElementVec_t fTranspElements;
 
@@ -122,6 +118,7 @@ public:
    virtual void CalcBoundingBox() const;
 
    virtual TSceneInfo* CreateSceneInfo(TGLViewerBase* view);
+   virtual void        RebuildSceneInfo(TGLRnrCtx& ctx);
    virtual void        UpdateSceneInfo(TGLRnrCtx& ctx);
    virtual void        LodifySceneInfo(TGLRnrCtx& ctx);
 
@@ -179,7 +176,7 @@ public:
    // ----------------------------------------------------------------
    // SmartRefresh
 
-   void              BeginSmartRefresh();
+   UInt_t            BeginSmartRefresh();
    void              EndSmartRefresh();
    TGLLogicalShape*  FindLogicalSmartRefresh(TObject* ID) const;
 

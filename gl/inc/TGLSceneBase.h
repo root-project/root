@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -54,14 +54,21 @@ protected:
    Bool_t  fDoClipCheck;     // Perform global clip-plane-check in UpdateSceneInfo()
 
    // Interface to other components
-   std::list<TGLViewerBase*> fViewers;
+   typedef std::list<TGLViewerBase*>           ViewerList_t;
+   typedef std::list<TGLViewerBase*>::iterator ViewerList_i;
+
+   ViewerList_t       fViewers;
+   Bool_t             fAutoDestruct;
 
    // Possible future extensions
    // TGLMatrix fGlobalTrans;
 
 public:
    TGLSceneBase();
-   virtual ~TGLSceneBase() {}
+   virtual ~TGLSceneBase();
+
+   void AddViewer(TGLViewerBase* viewer);
+   void RemoveViewer(TGLViewerBase* viewer);
 
    virtual const char* LockIdStr() const;
 
@@ -72,6 +79,7 @@ public:
    virtual void  SetNameTitle(const char *name, const char *title) { SetName(name); SetTitle(title); }
 
    virtual TGLSceneInfo* CreateSceneInfo(TGLViewerBase* view);
+   virtual void          RebuildSceneInfo(TGLRnrCtx& ctx);
    virtual void          UpdateSceneInfo(TGLRnrCtx& ctx);
    virtual void          LodifySceneInfo(TGLRnrCtx& ctx);
 
