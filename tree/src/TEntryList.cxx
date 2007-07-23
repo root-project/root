@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.15 2007/05/22 13:47:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.16 2007/07/13 08:56:13 rdm Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -533,7 +533,8 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          //the entry in the current entry list
          if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          if (fCurrent->Enter(entry)) {
-            fN++;
+            if (fLists)
+               fN++;
             return 1;
          }
       }
@@ -542,7 +543,8 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
       SetTree(tree->GetTree());
       if (fCurrent){
          if (fCurrent->Enter(localentry)) {
-            fN++;
+            if (fLists)
+               fN++;
             return 1;
          }
       }
@@ -575,7 +577,8 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
       } else {
          if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          if (fCurrent->Remove(entry)){
-            fN--;
+            if (fLists)
+               fN--;
             return 1;
          }
       }
@@ -584,7 +587,8 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
       SetTree(tree->GetTree());
       if (fCurrent){
          if (fCurrent->Remove(localentry)) {
-            fN--;
+            if (fLists)
+               fN--;
             return 1;
          }
       }
