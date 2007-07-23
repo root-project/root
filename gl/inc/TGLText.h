@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLText.h,v 1.0 Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLText.h,v 1.1 2007/06/21 14:55:35 couet Exp $
 // Author:  Olivier Couet 12/04/2007
 
 /*************************************************************************
@@ -33,10 +33,14 @@ public:
    TGLText(Double_t x, Double_t y, Double_t z, const char *text);
    virtual ~TGLText();
 
+   FTFont* GetFont() { return fGLTextFont; }
+
    void SetGLTextAngles(Double_t a1, Double_t a2, Double_t a3);
    void SetGLTextFont(Font_t fontnumber);
    void PaintGLText(Double_t x, Double_t y, Double_t z, const char *text);
    void PaintBBox(const char *text);
+   void BBox(const char* string, float& llx, float& lly, float& llz,
+                                 float& urx, float& ury, float& urz);
 
    ClassDef(TGLText,0) // a GL text
 };
