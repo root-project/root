@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.5 2007/06/11 19:56:33 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -12,6 +12,9 @@
 
 #include "TGLObject.h"
 #include "TObject.h"
+#include "TClass.h"
+#include "TBaseClass.h"
+#include "TList.h"
 #include "TString.h"
 #include "TAtt3D.h"
 #include "TAttBBox.h"
@@ -29,6 +32,8 @@
 // See TPointSet3D and TPointSet3DGL.
 
 ClassImp(TGLObject)
+
+TMap TGLObject::fgGLClassMap;
 
 //______________________________________________________________________________
 void TGLObject::UpdateBoundingBox()
@@ -75,4 +80,49 @@ void TGLObject::SetAxisAlignedBBox(const Float_t* p)
    // Protected helper for subclasses.
 
    SetAxisAlignedBBox(p[0], p[1], p[2], p[3], p[4], p[5]);
+}
+
+
+//______________________________________________________________________________
+TClass* TGLObject::SearchGLRenderer(TClass* cls)
+{
+   // Recursively search cls and its base classes for a GL-renderer
+   // class.
+
+   TString rnr( cls->GetName() );
+   rnr += "GL";
+   TClass* c = TClass::GetClass(rnr);
+   if (c != 0)
+      return c;
+
+   TList* bases = cls->GetListOfBases();
+   if (bases == 0 || bases->IsEmpty())
+      return 0;
+
+   TIter  next_base(bases);
+   TBaseClass* bc;
+   while ((bc = (TBaseClass*) next_base()) != 0) {
+      cls = bc->GetClassPointer();
+      if ((c = SearchGLRenderer(cls)) != 0) {
+         return c;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TClass* TGLObject::GetGLRenderer(TClass* isa)
+{
+   // Return direct-rendering GL class for class isa.
+   // Zero is a valid response.
+
+   TPair* p = (TPair*) fgGLClassMap.FindObject(isa);
+   TClass* cls;
+   if (p != 0) {
+      cls = (TClass*) p->Value();
+   } else {
+      cls = SearchGLRenderer(isa);
+      fgGLClassMap.Add(isa, cls);
+   }
+   return cls;
 }

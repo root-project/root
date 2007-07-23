@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.5 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.6 2007/06/23 21:23:21 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -12,12 +12,17 @@
 #ifndef ROOT_TGLObject
 #define ROOT_TGLObject
 
-#ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
-#endif
+#include <TMap.h>
+
+class TClass;
 
 class TGLObject : public TGLLogicalShape
 {
+private:
+   static TMap    fgGLClassMap;
+   static TClass* SearchGLRenderer(TClass* cls);
+
 protected:
    // Abstract method from TGLLogicalShape:
    // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;
@@ -44,7 +49,11 @@ public:
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;
    virtual void   SetBBox() = 0;
 
-   ClassDef(TGLObject, 1); // Base-class for direct OpenGL renderers
+
+   // Interface to class .vs. classGL map.
+   static TClass* GetGLRenderer(TClass* isa);
+
+   ClassDef(TGLObject, 0); // Base-class for direct OpenGL renderers
 };
 
 #endif
