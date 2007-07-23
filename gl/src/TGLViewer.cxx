@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.72 2007/06/26 09:59:38 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.73 2007/06/26 12:43:58 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TGLClip.h"
 #include "TGLManipSet.h"
 
+#include "TGLScenePad.h"
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLObject.h"
@@ -25,23 +26,11 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-#include "TGLFaceSet.h"
-#include "TGLPolyLine.h"
-#include "TGLPolyMarker.h"
-#include "TGLCylinder.h"
-#include "TGLSphere.h"
 #include "TGLOutput.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
 #include "TAtt3D.h"      // Remove when PadPaint delegated to PadScene.
 #include "TVirtualX.h"
-
-#include "TH2.h"         // Preliminary support for GL plot painters
-#include "TH2GL.h"
-#include "TF2.h"
-#include "TF2GL.h"
-#include "TGLParametric.h"
-#include "TGLParametricEquationGL.h"
 
 #include "TMath.h"
 #include "TColor.h"
@@ -53,16 +42,14 @@
 #include "Buttons.h"
 #include "GuiTypes.h"
 
-// Remove - replace with TGLManager
 #include "TVirtualGL.h"
-//#include "TGLRenderArea.h"
+
 #include "TGLWidget.h"
 #include "TGLViewerEditor.h"
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
 
-#include <TBaseClass.h>
 
 //______________________________________________________________________
 // TGLViewer
@@ -70,7 +57,7 @@
 // Base GL viewer object - used by both standalone and embedded (in pad)
 // GL. Contains core viewer objects :
 //
-// GL scene (fScene) - collection of main drawn objects - see TGLStdScene
+// GL scene - collection of main drawn objects - see TGLStdScene
 // Cameras (fXXXXCamera) - ortho and perspective cameras - see TGLCamera
 // Clipping (fClipXXXX) - collection of clip objects - see TGLClip
 // Manipulators (fXXXXManip) - collection of manipulators - see TGLManip
@@ -108,13 +95,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
-   fInternalRebuild(kFALSE),
-   fPostSceneBuildSetup(kFALSE),
-   fAcceptedAllPhysicals(kTRUE),
-   fForceAcceptAll(kFALSE),
-   fInternalPIDs(kFALSE),
-   fNextInternalPID(1), // 0 reserved
-   fComposite(0), fCSLevel(0),
    fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
    fRedrawTimer(0),
    fClearColor(1),
@@ -124,8 +104,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
-   fAcceptedPhysicals(0),
-   fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(-1),
@@ -163,13 +141,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
-   fInternalRebuild(kFALSE),
-   fPostSceneBuildSetup(kFALSE),
-   fAcceptedAllPhysicals(kTRUE),
-   fForceAcceptAll(kFALSE),
-   fInternalPIDs(kFALSE),
-   fNextInternalPID(1), // 0 reserved
-   fComposite(0), fCSLevel(0),
    fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
    fRedrawTimer(0),
    fClearColor(1),
@@ -179,8 +150,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
-   fAcceptedPhysicals(0),
-   fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
@@ -214,8 +183,6 @@ void TGLViewer::InitSecondaryObjects()
 {
    // Common initialization.
 
-   AddScene(&fScene);
-
    fLightSet = new TGLLightSet;
    fClipSet  = new TGLClipSet;  fOverlay.push_back(fClipSet);
 
@@ -245,745 +212,34 @@ TGLViewer::~TGLViewer()
       fGLCtxId->Release(0);
 }
 
-//______________________________________________________________________________
-Bool_t TGLViewer::PreferLocalFrame() const
-{
-   // Indicate if viewer prefers to receive logical shape descriptions
-   // in local (kTRUE) or world frame (kFALSE). For GL viewer is kTRUE always
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLViewer::AddHistoPhysical(TGLLogicalShape* log)
-{
-   // Scale and rotate a histo object to mimic placement in canvas.
-
-   Double_t how = ((Double_t) gPad->GetWh()) / gPad->GetWw();
-
-   Double_t lw = gPad->GetAbsWNDC();
-   Double_t lh = gPad->GetAbsHNDC() * how;
-   Double_t lm = TMath::Min(lw, lh);
-
-   const TGLBoundingBox& bb = log->BoundingBox();
-   // Timur always packs histos in a square: let's just take x-diff.
-   Double_t size  = TMath::Sqrt(3) * (bb.XMax() - bb.XMin());
-   Double_t scale = lm / size;
-   TGLVector3 scaleVec(scale, scale, scale);
-
-   Double_t tx = gPad->GetAbsXlowNDC() + lw;
-   Double_t ty = gPad->GetAbsYlowNDC() * how + lh;
-   TGLVector3 transVec(0, ty, tx); // For viewer convention (starts looking along -x).
-
-   TGLMatrix mat;
-   mat.Scale(scaleVec);
-   mat.Translate(transVec);
-   mat.RotateLF(3, 2, TMath::PiOver2());
-   mat.RotateLF(1, 3, TMath::DegToRad()*gPad->GetTheta());
-   mat.RotateLF(1, 2, TMath::DegToRad()*(gPad->GetPhi() - 90));
-   Float_t rgba[4] = { 1, 1, 1, 1};
-   TGLPhysicalShape* phys = new TGLPhysicalShape
-      (fNextInternalPID++, *log, mat, false, rgba);
-   fScene.AdoptPhysical(*phys);
-}
-
-//______________________________________________________________________________
-void TGLViewer::SubPadPaint(TVirtualPad* pad)
-{
-   // Iterate over pad-primitves and import them.
-
-   TVirtualPad      *padsav  = gPad;
-   TVirtualViewer3D *vv3dsav = pad->GetViewer3D();
-   gPad = pad;
-   pad->SetViewer3D(this);
-
-   TList       *prims = pad->GetListOfPrimitives();
-   TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
-   while (lnk)
-   {
-      TObject *obj = lnk->GetObject();
-      if (obj->InheritsFrom(TAtt3D::Class()))
-      {
-         //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
-         obj->Paint(lnk->GetOption());
-      }
-      else if (obj->InheritsFrom(TH2::Class()))
-      {
-         // printf("histo 2d\n");
-         TGLObject* log = new TH2GL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         fScene.AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-      else if (obj->InheritsFrom(TF2::Class()))
-      {
-         // printf("func 2d\n");
-         TGLObject* log = new TF2GL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         fScene.AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-      else if (obj->InheritsFrom(TGLParametricEquation::Class()))
-      {
-         // printf("parametric\n");
-         TGLObject* log = new TGLParametricEquationGL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         fScene.AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-
-      else if (obj->InheritsFrom(TVirtualPad::Class()))
-      {
-         SubPadPaint(dynamic_cast<TVirtualPad*>(obj));
-      }
-      else
-      {
-         // Handle 2D primitives here.
-         // printf("TGLViewer::PadPaint skipping %p, %s, %s.\n",
-         //        obj, obj->GetName(), obj->ClassName());
-         obj->Paint(lnk->GetOption());
-      }
-      lnk = (TObjOptLink*)lnk->Next();
-   }
-
-   pad->SetViewer3D(vv3dsav);
-   gPad = padsav;
-}
 
 //______________________________________________________________________________
 void TGLViewer::PadPaint(TVirtualPad* pad)
 {
    // Entry point for updating viewer contents via VirtualViewer3D
    // interface.
+   // We search and forward the request to appropriate TGLScenePad.
 
-   BeginScene();
-   SubPadPaint(pad);
-   EndScene();
-}
-
-//______________________________________________________________________________
-void TGLViewer::BeginScene()
-{
-   // Start building of viewer scene.
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture.
-
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::BeginScene", "entering.");
-   }
-
-   if (!fScene.TakeLock(kModifyLock)) {
-      Error("TGLViewer::BeginScene", "could not take scene lock.");
-      return;
-   }
-
-   UInt_t destroyedLogicals = 0;
-   UInt_t destroyedPhysicals = 0;
-
-   TGLStopwatch stopwatch;
-   if (gDebug>2 || fDebugMode) {
-      stopwatch.Start();
-   }
-
-   // External rebuild?
-   if (!fInternalRebuild)
+   TGLScenePad* scenepad = 0;
+   for (SceneInfoList_i si = fScenes.begin(); si != fScenes.end(); ++si)
    {
-      // Potentially using external physical IDs
-      fInternalPIDs = kFALSE;
-
-      // Reset force acceptance of all
-      fForceAcceptAll = kFALSE;
-
-      // Reset camera interest to ensure we respond to
-      // new scene range
-      CurrentCamera().ResetInterest();
-      fPostSceneBuildSetup = kTRUE;
-
-      // External rebuilds could potentially invalidate all logical and
-      // physical shapes - including any modified physicals
-      // Physicals must be removed first
-      destroyedPhysicals = fScene.DestroyPhysicals(kTRUE); // include modified
-      if (fSmartRefresh) {
-         fScene.BeginSmartRefresh();
-      } else {
-         destroyedLogicals = fScene.DestroyLogicals();
-      }
-   } else {
-      // Internal rebuilds - destroy all non-modified physicals no longer of
-      // interest to camera - retain logicals
-
-      // MT !!!! this is spooky:
-      // How can we retain physicals if physical id is checked in insert?
-      // destroyedPhysicals = fScene.DestroyPhysicals(kFALSE, &CurrentCamera()); // excluded modified
-      // Let's wipe them all! This will be fixed in two weeks anyhow.
-      destroyedPhysicals = fScene.DestroyPhysicals(kTRUE);
+      scenepad = dynamic_cast<TGLScenePad*>((*si)->GetScene());
+      if (scenepad && scenepad->GetPad() == pad)
+         break;
+      scenepad = 0;
+   }
+   if (scenepad == 0)
+   {
+      scenepad = new TGLScenePad(pad);
+      AddScene(scenepad);
    }
 
-   // Reset internal physical ID counter
-   fNextInternalPID = 1;
+   scenepad->PadPaintFromViewer(this);
 
-   // Potentially accepting all physicals from external client
-   fAcceptedAllPhysicals = kTRUE;
+   PostSceneBuildSetup(fResetCamerasOnNextUpdate || fResetCamerasOnUpdate);
+   fResetCamerasOnNextUpdate = kFALSE;
 
-  // Reset tracing info
-   fAcceptedPhysicals = 0;
-   fRejectedPhysicals = 0;
-
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::BeginScene", "destroyed %d physicals %d logicals in %f msec",
-            destroyedPhysicals, destroyedLogicals, stopwatch.End());
-      fScene.DumpMapSizes();
-   }
-}
-
-//______________________________________________________________________________
-void TGLViewer::EndScene()
-{
-   // End building of viewer scene
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
-   if (!fInternalRebuild) {
-      if (fSmartRefresh) {
-         fScene.EndSmartRefresh();
-      }
-   }
-   fScene.IncTimeStamp();
-   fScene.ReleaseLock(kModifyLock);
-
-   if (fPostSceneBuildSetup) {
-      PostSceneBuildSetup(fResetCamerasOnNextUpdate || fResetCamerasOnUpdate);
-      fResetCamerasOnNextUpdate = kFALSE;
-
-      // We leave fPostSceneBuildSetup set true as we want
-      // another full setup after first internal rebuild
-      // when we have the full scene limits
-   }
-
-   // Externally triggered scene rebuild (first pass) completed
-   if (fInternalRebuild) {
-      fInternalRebuild = kFALSE;
-      // No more setup done after first internal scene rebuild
-      fPostSceneBuildSetup = kFALSE;
-   }
    RequestDraw();
-
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::EndScene",
-           "Added %d, rejected %d physicals, accepted all:%s",
-           fAcceptedPhysicals, fRejectedPhysicals, fAcceptedAllPhysicals ? "Yes":"No");
-      fScene.DumpMapSizes();
-   }
-}
-
-//______________________________________________________________________________
-Int_t TGLViewer::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
-{
-   // Add an object to the viewer, using internal physical IDs
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
-   // If this is called we are generating internal physical IDs
-   fInternalPIDs = kTRUE;
-   Int_t sections = AddObject(fNextInternalPID, buffer, addChildren);
-   return sections;
-}
-
-//______________________________________________________________________________
-// TODO: Cleanup addChildren to UInt_t flag for full termination - how returned?
-Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren)
-{
-   // Add an object to the viewer, using an external physical ID
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
-   // TODO: Break this up and make easier to understand. This is pretty convoluted
-   // due to the large number of cases it has to deal with:
-   // i) Exisiting physical and/or logical
-   // ii) External provider can supply bounding box or not?
-   // iii) Local/global reference frame
-   // iv) Defered filling of some sections of the buffer
-   // v) Internal or external physical IDs
-   // vi) Composite components as special case
-   //
-   // The buffer filling means the function is re-entrant which adds to complication
-
-   if (physicalID == 0) {
-      Error("TGLViewer::AddObject", "0 physical ID reserved");
-      return TBuffer3D::kNone;
-   }
-
-   // Internal and external physical IDs cannot be mixed in a scene build
-   if (fInternalPIDs && physicalID != fNextInternalPID) {
-      Error("TGLViewer::AddObject", "invalid next physical ID - mix of internal + external IDs?");
-      return TBuffer3D::kNone;
-   }
-
-   // Assume children are always sent initially
-   if (addChildren) {
-      *addChildren = kTRUE;
-   }
-
-   // Scene should be modify locked
-   if (fScene.CurrentLock() != kModifyLock) {
-      Error("TGLViewer::AddObject", "expected scene to be modify-locked.");
-      return TBuffer3D::kNone;
-   }
-
-   // Note that 'object' here is really a physical/logical pair described
-   // in buffer + physical ID.
-
-   // If adding component to a current partial composite do this now
-   if (fComposite) {
-      RootCsg::TBaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
-      // Solaris CC can't create stl pair with enumerate type
-      fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
-      return TBuffer3D::kNone;
-   }
-
-   // TODO: Could be static and save possible double lookup?
-   TGLPhysicalShape * physical = fScene.FindPhysical(physicalID);
-   TGLLogicalShape  * logical  = 0;
-
-   // If we have a valid (non-zero) ID in buffer see if the logical is already cached
-   if (buffer.fID) {
-      logical = fScene.FindLogical(buffer.fID);
-      // If not, attempt direct rendering via <ClassName>GL object.
-      if (logical == 0) {
-         logical = AttemptDirectRenderer(buffer.fID);
-      }
-   } else if (!fForceAcceptAll) {
-      // If client is passing zero fID buffers we need to force accepting of all
-      // so scene is never rebuilt (we can't detect cached items). Client
-      // can't mix objects in scene with external or zero ids
-      fForceAcceptAll = kTRUE;
-      if (fNextInternalPID > 1) {
-         Error("TGLViewer::AddObject", "zero fID objects can't be mixed with non-zero ones");
-      }
-   }
-
-   // Function can be called twice if extra buffer filling for logical
-   // is required - record last physical ID to detect
-   static UInt_t lastPID = 0;
-
-   // First attempt to add this physical
-   if (physicalID != lastPID) {
-      // Existing physical
-      if (physical) {
-         // If we have physical we should have logical cached too
-         if (!logical) {
-            Error("TGLViewer::AddObject", "cached physical with no assocaited cached logical");
-         }
-
-         // For external PIDs we check child interest as we may have reject children previously
-         // with a different camera configuration
-         if (addChildren && !fInternalPIDs) {
-            *addChildren = kTRUE;
-         }
-
-         // Always increment the internal physical ID so they
-         // match external object sequence
-         if (fInternalPIDs) {
-            fNextInternalPID++;
-         }
-
-         // We don't need anything more for this object
-         return TBuffer3D::kNone;
-      }
-      // New physical
-      else {
-         if (!fForceAcceptAll) {
-            // First test interest in camera - requires a bounding box
-            TGLBoundingBox box;
-
-            // If already have logical use it's BB
-            if (logical) {
-               box = logical->BoundingBox();
-            }
-            // else if bounding box in buffer valid use this
-            else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
-               box.Set(buffer.fBBVertex);
-
-            // otherwise we need to use raw points to build a bounding box with
-            // If raw sections not set it will be requested by ValidateObjectBuffer
-            // below and we will re-enter here
-            } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
-               box.SetAligned(buffer.NbPnts(), buffer.fPnts);
-            }
-
-            // Box is valid?
-            if (!box.IsEmpty()) {
-               // Test transformed box with camera
-               box.Transform(TGLMatrix(buffer.fLocalMaster));
-               Bool_t ignoreSize = fIgnoreSizesOnUpdate || !logical || logical->IgnoreSizeForOfInterest();
-               Bool_t ofInterest = CurrentCamera().OfInterest(box, ignoreSize);
-
-               // For external PID request children if physical of interest
-               if (addChildren &&!fInternalPIDs) {
-                  *addChildren = ofInterest;
-               }
-
-               // Physical is of interest? If not record rejection
-               if (!ofInterest) {
-                  ++fRejectedPhysicals;
-                  fAcceptedAllPhysicals = kFALSE;
-
-                  // Always increment the internal physical ID so they
-                  // match external object sequence
-                  if (fInternalPIDs) {
-                     fNextInternalPID++;
-                  }
-                  return TBuffer3D::kNone;
-               }
-            }
-         }
-      }
-
-      // Need any extra sections in buffer?
-      // If we have logical already we don't need to check raw sections
-      Int_t extraSections = ValidateObjectBuffer(buffer,
-                                                 logical == 0); // Check raw?
-      if (extraSections != TBuffer3D::kNone) {
-         return extraSections;
-      } else {
-         lastPID = physicalID; // Will not to re-test interest
-      }
-   }
-
-   if(lastPID != physicalID)
-   {
-      Error("TGLViewer::AddObject", "internal physical ID tracking error?");
-   }
-   // By now we should need to add a physical at least
-   if (physical) {
-      Error("TGLViewer::AddObject", "expecting to require physical");
-      return TBuffer3D::kNone;
-   }
-
-   // Create logical if required
-   if (!logical) {
-      logical = CreateNewLogical(buffer);
-      if (!logical) {
-         Error("TGLViewer::AddObject", "failed to create logical");
-         return TBuffer3D::kNone;
-      }
-      // Add logical to scene
-      fScene.AdoptLogical(*logical);
-   }
-
-   // Finally create the physical, binding it to the logical, and add to scene
-   physical = CreateNewPhysical(physicalID, buffer, *logical);
-
-   if (physical) {
-      fScene.AdoptPhysical(*physical);
-      buffer.fPhysicalID = physicalID; // !!! MT: should be in scene ... but so should all add object stuff
-      ++fAcceptedPhysicals;
-      if (gDebug>3 && fAcceptedPhysicals%1000 == 0) {
-         Info("TGLViewer::AddObject", "added %d physicals", fAcceptedPhysicals);
-      }
-   } else {
-      Error("TGLViewer::AddObject", "failed to create physical");
-   }
-
-   // Always increment the internal physical ID so they
-   // match external object sequence
-   if (fInternalPIDs) {
-      fNextInternalPID++;
-   }
-
-   // Reset last physical ID so can detect new one
-   lastPID = 0;
-   return TBuffer3D::kNone;
-}
-
-//______________________________________________________________________________
-Bool_t TGLViewer::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
-{
-   // Open new composite container.
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture.
-
-   if (fComposite) {
-      Error("TGLViewer::OpenComposite", "composite already open");
-      return kFALSE;
-   }
-   UInt_t extraSections = AddObject(buffer, addChildren);
-   if (extraSections != TBuffer3D::kNone) {
-      Error("TGLViewer::OpenComposite", "expected top level composite to not require extra buffer sections");
-   }
-
-   // If composite was created it is of interest - we want the rest of the
-   // child components
-   if (fComposite) {
-      return kTRUE;
-   } else {
-      return kFALSE;
-   }
-}
-
-//______________________________________________________________________________
-void TGLViewer::CloseComposite()
-{
-   // Close composite container
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
-   // If we have a partially complete composite build it now
-   if (fComposite) {
-      // TODO: Why is this member and here - only used in BuildComposite()
-      fCSLevel = 0;
-
-      RootCsg::TBaseMesh *resultMesh = BuildComposite();
-      fComposite->SetFromMesh(resultMesh);
-      delete resultMesh;
-      for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
-      fCSTokens.clear();
-      fComposite = 0;
-   }
-}
-
-//______________________________________________________________________________
-void TGLViewer::AddCompositeOp(UInt_t operation)
-{
-   // Add composite operation used to combine objects added via AddObject
-   // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
-   // for description of viewer architecture
-
-   fCSTokens.push_back(std::make_pair(operation, (RootCsg::TBaseMesh *)0));
-}
-
-
-//______________________________________________________________________________
-Bool_t TGLViewer::RebuildScene()
-{
-   // If we accepted all offered physicals into the scene no point in
-   // rebuilding it.
-
-   if (fAcceptedAllPhysicals) {
-      // For debug mode always force even if not required
-      if (fDebugMode) {
-         Info("TGLViewer::RebuildScene", "not required - all physicals previous accepted (FORCED anyway)");
-      }
-      else {
-         if (gDebug>3) {
-            Info("TGLViewer::RebuildScene", "not required - all physicals previous accepted");
-         }
-         return kFALSE;
-      }
-   }
-   // Update the camera interest (forced in debug mode) - if changed
-   // scene should be rebuilt
-   if (!CurrentCamera().UpdateInterest(fDebugMode)) {
-      if (gDebug>3 || fDebugMode) {
-         Info("TGLViewer::RebuildScene", "not required - no camera interest change");
-      }
-      return kFALSE;
-   }
-
-   // We are going to rebuild the scene - ensure any pending redraw timer cancelled now
-   fRedrawTimer->Stop();
-
-   if (gDebug>3 || fDebugMode) {
-      Info("TGLViewer::RebuildScene", "required");
-   }
-
-   // Internally triggered scene rebuild
-   fInternalRebuild = kTRUE;
-
-   TGLStopwatch timer;
-   if (gDebug>2 || fDebugMode) {
-      timer.Start();
-   }
-
-   // Request a scene fill
-   // TODO: Just marking modified doesn't seem to result in pad repaint - need to check on
-   // MT: This will be obsolete soon.
-   PadPaint(fPad);
-
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Int_t TGLViewer::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const
-{
-   // Validate if the passed 'buffer' contains all sections we require to add object.
-   // Returns Int_t combination of TBuffer::ESection flags still required - or
-   // TBuffer3D::kNone if buffer is valid.
-   // If 'includeRaw' is kTRUE check for kRaw/kRawSizes - skip otherwise.
-   // See base/src/TVirtualViewer3D.cxx for description of viewer architecture
-
-   // kCore: Should always be filled
-   if (!buffer.SectionsValid(TBuffer3D::kCore)) {
-      Error("TGLViewer::ValidateObjectBuffer", "kCore section of buffer should be filled always");
-      return TBuffer3D::kNone;
-   }
-
-   // Need to check raw (kRaw/kRawSizes)?
-   if (!includeRaw) {
-      return TBuffer3D::kNone;
-   }
-
-   // kRawSizes / kRaw: These are on demand based on shape type
-   Bool_t needRaw = kFALSE;
-
-   // We need raw tesselation in these cases:
-   //
-   // 1. Shape type is NOT kSphere / kTube / kTubeSeg / kCutTube / kComposite
-   if (buffer.Type() != TBuffer3DTypes::kSphere  &&
-       buffer.Type() != TBuffer3DTypes::kTube    &&
-       buffer.Type() != TBuffer3DTypes::kTubeSeg &&
-       buffer.Type() != TBuffer3DTypes::kCutTube &&
-       buffer.Type() != TBuffer3DTypes::kComposite) {
-      needRaw = kTRUE;
-   }
-   // 2. Sphere type is kSPHE, but the sphere is hollow and/or cut - we
-   //    do not support native drawing of these currently
-   else if (buffer.Type() == TBuffer3DTypes::kSphere) {
-      const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
-      if (sphereBuffer) {
-         if (!sphereBuffer->IsSolidUncut()) {
-            needRaw = kTRUE;
-         }
-      } else {
-         Error("TGLViewer::ValidateObjectBuffer", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
-         return TBuffer3D::kNone;
-      }
-   }
-   // 3. kBoundingBox is not filled - we generate a bounding box from
-   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
-      needRaw = kTRUE;
-   }
-   // 4. kShapeSpecific is not filled - except in case of top level composite
-   else if (!buffer.SectionsValid(TBuffer3D::kShapeSpecific) &&
-             buffer.Type() != TBuffer3DTypes::kComposite) {
-      needRaw = kTRUE;
-   }
-   // 5. We are a component (not the top level) of a composite shape
-   else if (fComposite) {
-      needRaw = kTRUE;
-   }
-
-   if (needRaw && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
-      return TBuffer3D::kRawSizes|TBuffer3D::kRaw;
-   } else {
-      return TBuffer3D::kNone;
-   }
-}
-
-//______________________________________________________________________________
-TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
-{
-   // Create and return a new TGLLogicalShape from the supplied buffer
-   TGLLogicalShape * newLogical = 0;
-
-   if (buffer.fColor == 1) // black -> light-brown; std behaviour for geom
-      const_cast<TBuffer3D&>(buffer).fColor = 42;
-
-   switch (buffer.Type()) {
-   case TBuffer3DTypes::kLine:
-      newLogical = new TGLPolyLine(buffer);
-      break;
-   case TBuffer3DTypes::kMarker:
-      newLogical = new TGLPolyMarker(buffer);
-      break;
-   case TBuffer3DTypes::kSphere: {
-      const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
-      if (sphereBuffer) {
-         // We can only draw solid uncut spheres natively at present
-         if (sphereBuffer->IsSolidUncut()) {
-            newLogical = new TGLSphere(*sphereBuffer);
-         } else {
-            newLogical = new TGLFaceSet(buffer);
-         }
-      }
-      else {
-         Error("TGLViewer::CreateNewLogical", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
-      }
-      break;
-   }
-   case TBuffer3DTypes::kTube:
-   case TBuffer3DTypes::kTubeSeg:
-   case TBuffer3DTypes::kCutTube: {
-      const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
-      if (tubeBuffer)
-      {
-         newLogical = new TGLCylinder(*tubeBuffer);
-      }
-      else {
-         Error("TGLViewer::CreateNewLogical", "failed to cast buffer of type 'kTube/kTubeSeg/kCutTube' to TBuffer3DTube");
-      }
-      break;
-   }
-   case TBuffer3DTypes::kComposite: {
-      // Create empty faceset and record partial complete composite object
-      // Will be populated with mesh in CloseComposite()
-      if (fComposite) {
-         Error("TGLViewer::CreateNewLogical", "composite already open");
-      }
-      fComposite = new TGLFaceSet(buffer);
-      newLogical = fComposite;
-      break;
-   }
-   default:
-      newLogical = new TGLFaceSet(buffer);
-      break;
-   }
-
-   return newLogical;
-}
-
-//______________________________________________________________________________
-TGLPhysicalShape*
-TGLViewer::CreateNewPhysical(      UInt_t            ID,
-                             const TBuffer3D       & buffer,
-                             const TGLLogicalShape & logical) const
-{
-   // Create and return a new TGLPhysicalShape with id 'ID', using
-   // 'buffer' placement information (translation etc), and bound to
-   // suppled 'logical'
-
-   // Extract indexed color from buffer
-   // TODO: Still required? Better use proper color triplet in buffer?
-   Int_t colorIndex = buffer.fColor;
-   if (colorIndex < 0) colorIndex = 42;
-   Float_t rgba[4];
-   TGLScene::RGBAFromColorIdx(rgba, colorIndex, buffer.fTransparency);
-   return new TGLPhysicalShape(ID, logical, buffer.fLocalMaster,
-                               buffer.fReflection, rgba);
-}
-
-//______________________________________________________________________________
-RootCsg::TBaseMesh *TGLViewer::BuildComposite()
-{
-   // Build and return composite shape mesh
-   const CSPart_t &currToken = fCSTokens[fCSLevel];
-   UInt_t opCode = currToken.first;
-
-   if (opCode != TBuffer3D::kCSNoOp) {
-      ++fCSLevel;
-      RootCsg::TBaseMesh *left = BuildComposite();
-      RootCsg::TBaseMesh *right = BuildComposite();
-      //RootCsg::TBaseMesh *result = 0;
-      switch (opCode) {
-      case TBuffer3D::kCSUnion:
-         return RootCsg::BuildUnion(left, right);
-      case TBuffer3D::kCSIntersection:
-         return RootCsg::BuildIntersection(left, right);
-      case TBuffer3D::kCSDifference:
-         return RootCsg::BuildDifference(left, right);
-      default:
-         Error("BuildComposite", "Wrong operation code %d\n", opCode);
-         return 0;
-      }
-   } else return fCSTokens[fCSLevel++].second;
 }
 
 
@@ -994,13 +250,9 @@ RootCsg::TBaseMesh *TGLViewer::BuildComposite()
 void TGLViewer::UpdateScene()
 {
    // Force a scene update.
-   // Code segments taken from protected RebuildScene().
 
    // We are going to rebuild the scene - ensure any pending redraw timer cancelled now
    fRedrawTimer->Stop();
-
-   // Pretend the update request came from outside.
-   fInternalRebuild = kFALSE;
 
    PadPaint(fPad);
 }
@@ -1038,9 +290,9 @@ void TGLViewer::SetupCameras(Bool_t reset)
 //______________________________________________________________________________
 void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 {
-   // Perform post scene (re)build setup
+   // Perform post scene-build setup.
 
-   fOverallBoundingBox = fScene.BoundingBox();
+   MergeSceneBBoxes(fOverallBoundingBox);
    SetupCameras(resetCameras);
 
    // Set default reference to center
@@ -1165,7 +417,8 @@ void TGLViewer::DoDraw()
    // Setup total scene draw time
    // Unlimted for high quality draws, 200 msec otherwise
    Double_t sceneDrawTime = (fLOD == TGLRnrCtx::kLODHigh) ? 0.0 : 200.0;
-   sceneDrawTime /= fVisScenes.size();
+   if (fVisScenes.size() > 1)
+      sceneDrawTime /= fVisScenes.size();
    fRnrCtx->SetRenderTimeout(sceneDrawTime);
 
    Render();
@@ -1187,18 +440,14 @@ void TGLViewer::DoDraw()
 
    Bool_t redrawReq = kFALSE;
 
-   // Debug mode have forced rebuilds only
-   if (!fDebugMode) {
-      // Final draw pass
-      if (fLOD == TGLRnrCtx::kLODHigh) {
-         RebuildScene();
-      } else {
-         // Final draw pass required
-         redrawReq = kTRUE;
-      }
-   } else {
-      // Final draw pass required?
-      redrawReq = fLOD != TGLRnrCtx::kLODHigh;
+   if (CurrentCamera().UpdateInterest(kFALSE)) {
+      // Reset major view-dependant cache.
+      ResetSceneInfos();
+      redrawReq = kTRUE;
+   }
+   if (fLOD != TGLRnrCtx::kLODHigh) {
+      // Request final draw pass.
+      redrawReq = kTRUE;
    }
 
    // Request final pass high quality redraw via timer
@@ -1607,8 +856,6 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
 
-   // Request redraw via timer as window resize can result in stream of calls
-   // RequestDraw(TGLRnrCtx::kLODMed);
    if (gDebug>2) {
       Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);
    }
@@ -2250,7 +1497,7 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
          case kKey_Space:
             if (fDebugMode) {
                Info("OpenGL viewer FORCED rebuild", "");
-               RebuildScene();
+               UpdateScene();
             }
          default:;
       } // switch
@@ -2347,58 +1594,6 @@ void TGLViewer::Repaint()
    }
 
    fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
-}
-
-//______________________________________________________________________________
-TClass* TGLViewer::FindDirectRendererClass(TClass* cls)
-{
-   TString rnr( cls->GetName() );
-   rnr += "GL";
-   TClass* c = TClass::GetClass(rnr);
-   if (c != 0)
-      return c;
-
-   TList* bases = cls->GetListOfBases();
-   if (bases == 0 || bases->IsEmpty())
-      return 0;
-
-   TIter  next_base(bases);
-   TBaseClass* bc;
-   while ((bc = (TBaseClass*) next_base()) != 0) {
-      cls = bc->GetClassPointer();
-      if ((c = FindDirectRendererClass(cls)) != 0) {
-         return c;
-      }
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-TGLLogicalShape* TGLViewer::AttemptDirectRenderer(TObject* id)
-{
-   TClass* isa = id->IsA();
-   std::map<TClass*, TClass*>::iterator i = fDirectRendererMap.find(isa);
-   TClass* cls;
-   if (i != fDirectRendererMap.end()) {
-      cls = i->second;
-   } else {
-      cls = FindDirectRendererClass(isa);
-      fDirectRendererMap[isa] = cls;
-   }
-   TGLObject* rnr = 0;
-   if (cls != 0) {
-      rnr = reinterpret_cast<TGLObject*>(cls->New());
-      if (rnr) {
-         if (rnr->SetModel(id) == false) {
-            Warning("TGLViewer::AttemptDirectRenderer", "failed initializing direct rendering.");
-            delete rnr;
-            return 0;
-         }
-         rnr->SetBBox();
-         fScene.AdoptLogical(*rnr);
-      }
-   }
-   return rnr;
 }
 
 //______________________________________________________________________________

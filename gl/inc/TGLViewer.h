@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.41 2007/06/23 21:23:21 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.42 2007/06/25 19:25:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -17,25 +17,22 @@
 #include "TGLSelectRecord.h"
 
 #include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
 
-#include "TGLScene.h"
 #include "TGLPerspectiveCamera.h"
 #include "TGLOrthoCamera.h"
 
 #include "TTimer.h"
 #include "TPoint.h"
 
-#include "CsgOps.h"
-
 #include "GuiTypes.h"
 #include "RQ_OBJECT.h"
 
 #include <vector>
 
-class TGLFaceSet;
+class TGLSceneBase;
 class TGLRedrawTimer;
 class TGLViewerEditor;
-//class TGLWindow; // Remove - TGLManager
 class TGLWidget;
 class TGLLightSet;
 class TGLClipSet;
@@ -93,20 +90,6 @@ protected:
    TGLOverlayElement  * fCurrentOvlElm;        //! current overlay element
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
-   // Scene management for fScene
-   Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?
-   Bool_t            fPostSceneBuildSetup;   //! setup viewer after (re)build complete?
-   Bool_t            fAcceptedAllPhysicals;  //! did we take all physicals offered in AddObject()
-   Bool_t            fForceAcceptAll;        //! force taking of all logicals/physicals in AddObject()
-   Bool_t            fInternalPIDs;          //! using internal physical IDs
-   UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
-
-   // Composite shape specific - to TGLPadScene or helper object?
-   typedef std::pair<UInt_t, RootCsg::TBaseMesh *> CSPart_t;
-   mutable TGLFaceSet     *fComposite; //! Paritally created composite
-   UInt_t                  fCSLevel;
-   std::vector<CSPart_t>   fCSTokens;
-
    // Mouse ineraction
    enum EDragAction   { kDragNone,
                         kDragCameraRotate, kDragCameraTruck, kDragCameraDolly,
@@ -119,9 +102,6 @@ protected:
    // Redraw timer
    TGLRedrawTimer     * fRedrawTimer; //!
 
-   // Scene is created/owned internally.
-   // In future it will be shared between multiple viewers
-   TGLScene       fScene;          //! the default GL scene (filled via VirtualViewer3D API)
    TGLRect        fViewport;       //! viewport - drawn area
    Color_t        fClearColor;     //! clear-color
    Int_t          fAxesType;       //! axes type
@@ -134,8 +114,6 @@ protected:
 
    // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
-   UInt_t         fAcceptedPhysicals;     //! number of physicals accepted in last rebuild
-   UInt_t         fRejectedPhysicals;     //! number of physicals rejected in last rebuild
    Bool_t         fIsPrinting;
 
    ///////////////////////////////////////////////////////////////////////
@@ -148,14 +126,6 @@ protected:
    void MakeCurrent() const;
    void SwapBuffers() const;
 
-   // Scene management - to TGLPadScene or helper object?
-   Bool_t             RebuildScene();
-   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const;
-   TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
-   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer,
-                                        const TGLLogicalShape & logical) const;
-   RootCsg::TBaseMesh *BuildComposite();
-
    // Cameras
    void        SetViewport(Int_t x, Int_t y, Int_t width, Int_t height);
    void        SetupCameras(Bool_t reset);
@@ -166,10 +136,6 @@ protected:
    TGLContextIdentity*fGLCtxId;  //!for embedded gl viewer
 
    TGLViewerEditor *fPadEditor;
-
-   std::map<TClass*, TClass*> fDirectRendererMap; //!
-   TClass*          FindDirectRendererClass(TClass* cls);
-   TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
    // Updata/camera-reset behaviour
    Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update
@@ -182,27 +148,25 @@ public:
    TGLViewer(TVirtualPad * pad);
    virtual ~TGLViewer();
 
-   // TRY getting histos in:
-   void AddHistoPhysical(TGLLogicalShape* log);
-   void SubPadPaint(TVirtualPad* pad);
-   // From VV3D:
+   // TVirtualViewer3D interface ... mostly a facade
+
+   // Forward to TGLScenePad
    virtual Bool_t CanLoopOnPrimitives() const { return kTRUE; }
    virtual void   PadPaint(TVirtualPad* pad);
-
-   // TVirtualViewer3D interface
+   // Actually used by GL-in-pad
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual Bool_t PreferLocalFrame() const;
-
-   virtual void   BeginScene();
-   virtual Bool_t BuildingScene() const { return fScene.CurrentLock() == kModifyLock; }
-   virtual void   EndScene();
-
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual void   CloseComposite();
-   virtual void   AddCompositeOp(UInt_t operation);
+   // Only implemented because they're abstract ... should throw an
+   // exception or assert they are not called.
+   virtual Bool_t PreferLocalFrame() const { return kTRUE; }
+   virtual void   BeginScene() {}
+   virtual Bool_t BuildingScene() const { return kFALSE; }
+   virtual void   EndScene() {}
+   virtual Int_t  AddObject(const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
+   virtual Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
+   virtual Bool_t OpenComposite(const TBuffer3D&, Bool_t* = 0) { return kFALSE; }
+   virtual void   CloseComposite() {}
+   virtual void   AddCompositeOp(UInt_t) {}
 
    virtual void   PrintObjects();
    virtual void   ResetCameras()                { SetupCameras(kTRUE); }
