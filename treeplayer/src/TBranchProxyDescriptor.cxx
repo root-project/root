@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.9 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.10 2006/08/31 12:28:44 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -24,8 +24,9 @@ namespace ROOT {
    TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname, 
                                                   const char *type, 
                                                   const char *branchname, 
-                                                  Bool_t split) :
-      TNamed(dataname,type),fBranchName(branchname),fIsSplit(split) 
+                                                  Bool_t split,
+                                                  Bool_t skipped) :
+      TNamed(dataname,type),fBranchName(branchname),fIsSplit(split),fBranchIsSkipped(skipped) 
    {
       // Constructor.
 
@@ -73,6 +74,7 @@ namespace ROOT {
          if ( fBranchName != other->fBranchName ) return false;
       }
       if ( fIsSplit != other->fIsSplit ) return false;
+      if ( fBranchIsSkipped != other->fBranchIsSkipped) return false;
       if ( strcmp(GetName(),other->GetName()) ) return false;
       if ( strcmp(GetTitle(),other->GetTitle()) ) return false;
       return true;
@@ -104,8 +106,13 @@ namespace ROOT {
             above = "ffPrefix, ";
          }
 
-         fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
-                 offset," ", maxVarname, GetDataName(), above, subbranchname);
+         if (fBranchIsSkipped) {
+           fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\", %s\"%s\")",
+                   offset," ", maxVarname, GetDataName(), GetDataName(), above, subbranchname);
+         } else {
+            fprintf(hf,"\n%-*s      %-*s(director, %s\"%s\")",
+                    offset," ", maxVarname, GetDataName(), above, subbranchname);
+         }
       } else {
 
          fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\")",

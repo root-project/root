@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.11 2007/02/05 18:11:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.12 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -286,7 +286,7 @@ namespace ROOT {
 
 
       // Write the 2nd constructor
-      fprintf(hf,"%-*s   %s(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername) :",
+      fprintf(hf,"%-*s   %s(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :",
               offset," ", GetName());
 
       wroteFirst = kFALSE;
@@ -304,7 +304,7 @@ namespace ROOT {
          }
 
       }
-      fprintf(hf,"%s\n%-*s      %-*s(\"\")",wroteFirst?",":"",offset," ",fMaxDatamemberType,"ffPrefix");
+      fprintf(hf,"%s\n%-*s      %-*s(top,mid)",wroteFirst?",":"",offset," ",fMaxDatamemberType,"ffPrefix");
       wroteFirst = true;
 
       if ( true ||  IsLoaded() || IsClones() ) {

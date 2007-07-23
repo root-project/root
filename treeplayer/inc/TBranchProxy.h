@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.9 2007/02/01 15:26:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.10 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -61,7 +61,7 @@ namespace ROOT {
          fName() {
          if (left) {
             fName = left;
-            if (strlen(left)&&right) fName += ".";
+            if (strlen(left)&&right && fName[fName.Length()-1]!='.') fName += ".";
          }
          if (right) {
             fName += right;
@@ -107,7 +107,7 @@ namespace ROOT {
       TBranchProxy();
       TBranchProxy(TBranchProxyDirector* boss, const char* top, const char* name = 0);
       TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
-      TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername);
+      TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
@@ -203,7 +203,6 @@ namespace ROOT {
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in TClonesArray.
 
-         void *tcaloc;
          char *location;
 
          if (fIsClone) {
@@ -219,11 +218,12 @@ namespace ROOT {
 
          } else if (fParent) {
 
-            tcaloc = ((unsigned char*)fParent->GetStart());
+            //tcaloc = ((unsigned char*)fParent->GetStart());
             location = (char*)fParent->GetClaStart(i);
 
          } else {
 
+            void *tcaloc;
             tcaloc = fWhere;
             TClonesArray *tca;
             tca = (TClonesArray*)tcaloc;
@@ -259,7 +259,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TArrayCharProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TArrayCharProxy() {};
 
       unsigned char At(int i) {
@@ -306,7 +307,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TClaProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TClaProxy() {};
 
       const TClonesArray* GetPtr() {
@@ -340,7 +342,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TImpProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TImpProxy() {};
 
       operator T() {
@@ -387,7 +390,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TArrayProxy() {};
 
       typedef typename T::array_t array_t;
@@ -428,7 +432,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TClaImpProxy() {};
 
       const T& At(int i) {
@@ -478,7 +483,8 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : TBranchProxy(director,parent, name) {};
+      TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
       ~TClaArrayProxy() {};
 
       /* const */  array_t *At(int i) {

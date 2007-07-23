@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.5 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.6 2007/06/04 17:07:17 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -37,7 +37,8 @@ namespace ROOT {
          obj(director,top,name) {};
       TObjProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
-      TObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
+      TObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         obj(director,parent, name, top, mid) {};
       ~TObjProxy() {};
 
       void Print() {
@@ -78,7 +79,8 @@ namespace ROOT {
          obj(director,top,name) {};
       TClaObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          obj(director,top,name,data) {};
-      TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name) : obj(director,parent, name) {};
+      TClaObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         obj(director,parent, name, top, mid) {};
       ~TClaObjProxy() {};
 
       const TClonesArray* GetPtr() { return obj.GetPtr(); }

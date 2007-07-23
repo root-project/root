@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.h,v 1.5 2004/07/27 12:21:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.h,v 1.6 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -23,10 +23,11 @@ namespace ROOT {
       TString fDataName;
       TString fBranchName;
       Bool_t fIsSplit;
+      Bool_t fBranchIsSkipped;
 
    public:
       TBranchProxyDescriptor(const char *dataname, const char *type,
-                             const char *branchname, Bool_t split = true);
+                             const char *branchname, Bool_t split = true, Bool_t skipped = false);
       const char *GetDataName();
       const char *GetTypeName();
       const char *GetBranchName();

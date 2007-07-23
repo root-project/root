@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.8 2007/01/30 11:24:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.9 2007/02/01 15:26:19 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -67,8 +67,9 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, co
    boss->Attach(this);
 }
 
-ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername) :
-   fDirector(boss), fInitialized(false),  fBranchName(""), fParent(parent),
+ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top,
+                                 const char* name) :
+   fDirector(boss), fInitialized(false),  fBranchName(top), fParent(parent),
    fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
@@ -76,6 +77,12 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *paren
 {
    // Constructor.
 
+   if (name && strlen(name)) {
+      if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
+         ((TString&)fBranchName).Append(".");
+      }
+      ((TString&)fBranchName).Append(name);
+   }
    boss->Attach(this);
 }
 

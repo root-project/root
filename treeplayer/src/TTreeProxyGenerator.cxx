@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.30 2007/06/04 17:07:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.31 2007/07/02 17:13:47 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -369,8 +369,14 @@ namespace ROOT {
       if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
          // Actually we probably should look for the file ..
          TString header = gSystem->BaseName(cl->GetDeclFileName());
-         fListOfHeaders.Add(new TNamed(cl->GetName(),Form("#include \"%s\"\n",
-                                                          header.Data())));
+         TString directive = Form("#include \"%s\"\n",header.Data());
+         TIter i( &fListOfHeaders );
+         for(TNamed *n = (TNamed*) i(); n; n = (TNamed*)i() ) {
+            if (directive == n->GetTitle()) {
+               return;
+            }
+         }
+         fListOfHeaders.Add(new TNamed(cl->GetName(),directive.Data()));
       }
    }
 
@@ -400,63 +406,193 @@ namespace ROOT {
       }
    }
 
-   UInt_t TTreeProxyGenerator::AnalyzeBranch(TBranch *genbranch, UInt_t level,
-                                             TBranchProxyClassDescriptor *topdesc)
+static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer) 
+{
+   TString cname = branch->GetClonesName();
+   if (cname.Length()==0) {
+      // We may have any unsplit clones array
+      Long64_t i = branch->GetTree()->GetReadEntry();
+      if (i<0) i = 0;
+      branch->GetEntry(i);
+      char *obj = branch->GetObject();
+
+
+      TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
+      const char *pclname = parent->GetClassName();
+
+      TClass *clparent = TClass::GetClass(pclname);
+      // TClass *clm = TClass::GetClass(GetClassName());
+      Int_t lOffset = 0; // offset in the local streamerInfo.
+      if (clparent) {
+         const char *ename = 0;
+         if (element) {
+            ename = element->GetName();
+            lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
+         } else {
+            lOffset = 0;
+         }
+      }
+      else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
+
+      TClonesArray *arr;
+      if (ispointer) {
+         arr = (TClonesArray*)*(void**)(obj+lOffset);
+      } else {
+         arr = (TClonesArray*)(obj+lOffset);
+      }
+      cname = arr->GetClass()->GetName();
+
+   }
+   if (cname.Length()==0) {
+      Error("AnalyzeBranch",
+         "Introspection of TClonesArray in older file not implemented yet.");
+   }
+   return cname;
+}
+
+static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl) 
+{
+   // Return the correct TStreamerInfo of class 'cname' in the list of 
+   // branch (current) [Assuming these branches correspond to a flattened
+   // version of the class.
+
+   TVirtualStreamerInfo *objInfo = 0;
+   TBranchElement *b = 0;
+   TString cname = cl->GetName();
+   while( ( b = (TBranchElement*)current() ) ) {
+      if ( cname == b->GetInfo()->GetName() ) {
+         objInfo = b->GetInfo();
+         break;
+      }
+   }
+   if (objInfo == 0 && branch->GetTree()->GetDirectory()->GetFile()) {
+      TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache()->FindObject(cname);
+      if (i) {
+         // NOTE: Is this correct for Foreigh classes?
+         objInfo = (TVirtualStreamerInfo *)cl->GetStreamerInfo(i->GetClassVersion());
+      }
+   }
+   return objInfo;
+}
+
+static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
+{
+   TStreamerBase *base = dynamic_cast<TStreamerBase*>(element);
+   if (base) {
+      TVirtualStreamerInfo *info = base->GetClassPointer()->GetStreamerInfo(base->GetBaseVersion());
+      if (info) return info;
+   }
+   return 0;
+}
+
+   UInt_t TTreeProxyGenerator::AnalyzeBranches(UInt_t level,TBranchProxyClassDescriptor *topdesc,
+                                               TBranchElement *branch, TVirtualStreamerInfo *info)
    {
-      // Analyze the branch and populate the TTreeProxyGenerator or the topdesc with
-      // its findings.  Sometimes several branch of the mom are also analyzed,
-      // the number of such branches is returned (this happens in the case of
-      // embedded objects inside an object inside a clones array split more than
-      // one level.
-
-      TString proxyTypeName;
-      TString prefix;
-      Bool_t  isBase = false;
-      TString dataMemberName;
-      TString cname;
-      TString middle;
-      UInt_t  extraLookedAt = 0;
-      Bool_t  isclones = false;
-      EContainer container = kNone;
-
-      TBranchElement *branch = dynamic_cast<TBranchElement*>(genbranch);
-      if (branch==0) {
-         Error("AnalyzeBranch",
-               "Non TBranchElement not implemented yet in AnalyzeBranch (this should not happen)");
-         return 0;
-      }
-
-      if (topdesc && topdesc->IsClones()) {
-         container = kClones;
-         middle = "Cla";
-         isclones = true;
-      } else if (!topdesc && branch &&
-                 branch->GetBranchCount() == branch->GetMother()) {
-         container = kClones;
-         middle = "Cla";
-         isclones = true;
-      }
-      Int_t bid = branch->GetID();
+      // Analyze the sub-branch and populate the TTreeProxyGenerator or the topdesc with
+      // its findings.
 
       TStreamerElement *element = 0;
-      TVirtualStreamerInfo *info = branch->GetInfo();
+      if (info==0) info = branch->GetInfo();
 
-      if (bid==-2) {
-         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-               bid);
-      } else if (bid==-1) {
-         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-               bid);
-      } else if (bid>=0) {
+      TIter branches( branch->GetListOfBranches() );
 
-         element = (TStreamerElement *)info->GetElements()->At(bid);
+      return AnalyzeBranches( level, topdesc, branches, info );
+   }
 
-      } else {
-         Error("AnalyzeBranch","Support for branch ID: %d not yet implement.",
-               bid);
+   UInt_t TTreeProxyGenerator::AnalyzeBranches(UInt_t level,
+                                               TBranchProxyClassDescriptor *topdesc,                                               
+                                               TIter &branches,
+                                               TVirtualStreamerInfo *info)
+   {
+      // Analyze the list of sub branches of a TBranchElement by looping over
+      // the streamer elements and create the appropriate class proxies.
+
+/*
+   
+   Find the content class name (GetClassName)
+   Record wether this is a collection or not
+   
+   Find the StreamerInfo
+
+   For each streamerelement
+      if element is base
+         if name match, loop over subbranches
+         otherwise loop over current branches
+      else if eleement is object (or pointer to object?)
+         if name match go ahead, loop over subbranches
+         if name does not match. loop over current branches (fix names).
+      else 
+         add branch.
+
+*/
+      UInt_t lookedAt = 0;
+      EContainer container = kNone;
+      TString middle;
+      TString proxyTypeName;
+      TString prefix;
+      Bool_t  isclones = false;
+      TString subBranchPrefix;
+      Bool_t skipped = false;
+
+      {
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek(); 
+         if (topdesc && topdesc->IsClones()) {
+            container = kClones;
+            middle = "Cla";
+            isclones = true;
+         } else if (!topdesc && branch && branch->GetBranchCount() == branch->GetMother()) {
+            container = kClones;
+            middle = "Cla";
+            isclones = true;
+         } else if (branch->GetType() == 3) {
+            isclones = true;
+         }
+         if (topdesc) {
+            subBranchPrefix = topdesc->GetSubBranchPrefix();
+         } else {
+            TBranchElement *mom = (TBranchElement*)branch->GetMother();
+            subBranchPrefix = mom->GetName();
+            if (subBranchPrefix[subBranchPrefix.Length()-1]=='.') {
+               subBranchPrefix.Remove(subBranchPrefix.Length()-1);
+            } else if (mom->GetType()!=3 && mom->GetType() != 4) {
+               subBranchPrefix = "";
+            }
+         }
       }
+      TIter elements( info->GetElements() );
+      for( TStreamerElement *element = (TStreamerElement*)elements();
+           element;
+           element = (TStreamerElement*)elements() )
+      {
+         Bool_t isBase = false;
+         Bool_t usedBranch = kTRUE;
+         TIter peek = branches;
+         TBranchElement *branch = (TBranchElement*)peek(); 
 
-      if (element) {
+         if (branch==0) {
+            Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
+                  topdesc->GetBranchName(), info->GetName());
+            return lookedAt;
+         }
+
+         TString branchname = branch->GetName();
+         TString branchEndname;
+         {
+            TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+            if (leaf && !isclones && !(branch->GetType() == 3)) branchEndname = leaf->GetName();
+            else branchEndname = branch->GetName();
+            Int_t pos;
+            pos = branchEndname.Index(".");
+            if (pos!=-1) {
+               if (subBranchPrefix.Length() &&
+                  branchEndname.BeginsWith( subBranchPrefix ) ) {
+                     // brprefix += topdesc->GetSubBranchPrefix();
+                  branchEndname.Remove(0,subBranchPrefix.Length()+1);
+               }
+            }
+         }
+
          Bool_t ispointer = false;
          switch(element->GetType()) {
 
@@ -532,53 +668,164 @@ namespace ROOT {
             case TVirtualStreamerInfo::kAny:
             case TVirtualStreamerInfo::kBase: {
                TClass *cl = element->GetClassPointer();
-               if (cl) {
-                  proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
-                  cname = cl->GetName();
-                  if (cl==TClonesArray::Class()) {
-                     isclones = true;
-                     cname = branch->GetClonesName();
-                     if (cname.Length()==0) {
-                        // We may have any unsplit clones array
-                        Long64_t i = branch->GetTree()->GetReadEntry();
-                        if (i<0) i = 0;
-                        branch->GetEntry(i);
-                        char *obj = branch->GetObject();
+               R__ASSERT(cl);
 
-                        const char *ename = 0;
-                        ename = element->GetName();
-
-                        TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
-                        const char *pclname = parent->GetClassName();
-
-                        TClass *clparent = TClass::GetClass(pclname);
-                        // TClass *clm = TClass::GetClass(GetClassName());
-                        Int_t lOffset = 0; // offset in the local streamerInfo.
-                        if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
-                        else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
-
-                        TClonesArray *arr;
-                        if (ispointer) {
-                           arr = (TClonesArray*)*(void**)(obj+lOffset);
-                        } else {
-                           arr = (TClonesArray*)(obj+lOffset);
-                        }
-                        cname = arr->GetClass()->GetName();
-
-                     }
-                     if (cname.Length()==0) {
-                        Error("AnalyzeBranch",
-                              "Introspection of TClonesArray in older file not implemented yet.");
-                     }
-                  }
+               proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
+               TString cname = cl->GetName();
+               if (cl==TClonesArray::Class()) {
+                  isclones = true;
+                  cname = GetContainedClassName(branch, element, ispointer);
                }
-               else Error("AnalyzeBranch",
-                          "Missing class for %s.",
-                          branch->GetName());
-               if (element->IsA()==TStreamerBase::Class()) {
+
+               TBranch *parent = branch->GetMother()->GetSubBranch(branch);
+               TVirtualStreamerInfo *objInfo = 0;
+               if (branch->GetListOfBranches()->GetEntries()) {
+                  objInfo = ((TBranchElement*)branch->GetListOfBranches()->At(0))->GetInfo();
+               } else {
+                  objInfo = branch->GetInfo();
+               }
+               if (element->IsBase()) {
                   isBase = true;
                   prefix  = "base";
+
+                  if (cl == TObject::Class() && info->GetClass()->CanIgnoreTObjectStreamer()) 
+                  {
+                     continue;
+                  }
+
+                  TBranchProxyClassDescriptor *cldesc = 0;
+
+                  if (branchEndname == element->GetName()) {
+                     // We have a proper node for the base class, recurse
+
+                     if (branch->GetListOfBranches()->GetEntries() == 0) {
+                        // The branch contains a non-split base class that we are unfolding!
+
+                        // See AnalyzeTree for similar code!
+                        TBranchProxyClassDescriptor *cldesc = 0;
+
+                        TVirtualStreamerInfo *info = branch->GetInfo();
+                        if (strcmp(cl->GetName(),info->GetName())!=0) {
+                           info = cl->GetStreamerInfo(); // might be the wrong version
+                        }
+                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
+                                                                 branch->GetName(),
+                                                                 isclones, 0 /* unsplit object */);
+
+                        TStreamerElement *elem = 0;
+
+                        TIter next(info->GetElements());
+                        while( (elem = (TStreamerElement*)next()) ) {
+                           AnalyzeElement(branch,elem,level+1,cldesc,"");
+                        }
+
+                     } else {
+
+                        Int_t pos = branchname.Last('.');
+                        if (pos != -1) {
+                           branchname.Remove(pos);
+                        }
+                        TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
+                                                                 branchname,
+                                                                 prefix,
+                                                                 isclones, branch->GetSplitLevel());
+                        lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
+                     }
+                  } else {                   
+                     // We do not have a proper node for the base class, we need to loop over
+                     // the next branches
+                     Int_t pos = branchname.Last('.');
+                     if (pos != -1) {
+                        branchname.Remove(pos);
+                     }
+                     TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                     objInfo = GetBaseClass( element );
+                     if (objInfo == 0) {
+                        // There is no data in this base class
+                        continue;
+                     }
+                     cl = objInfo->GetClass();
+                     cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
+                                                              branchname,
+                                                              prefix,
+                                                              isclones, branch->GetSplitLevel());
+                     usedBranch = kFALSE;
+                     lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
+                  }
+
+                  TBranchProxyClassDescriptor *added = AddClass(cldesc);
+                  if (added) proxyTypeName = added->GetName();
+
+               } else {
+                  TBranchProxyClassDescriptor *cldesc = 0;
+
+                  if (branchEndname == element->GetName()) {
+                     // We have a proper node for the base class, recurse
+                     if (branch->GetListOfBranches()->GetEntries() == 0) {
+                        // The branch contains a non-split object that we are unfolding!
+
+                        // See AnalyzeTree for similar code!
+                        TBranchProxyClassDescriptor *cldesc = 0;
+
+                        TVirtualStreamerInfo *info = branch->GetInfo();
+                        if (strcmp(cl->GetName(),info->GetName())!=0) {
+                           info = cl->GetStreamerInfo(); // might be the wrong version
+                        }
+                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
+                                                                 branch->GetName(),
+                                                                 isclones, 0 /* unsplit object */);
+
+                        TStreamerElement *elem = 0;
+
+                        TIter next(info->GetElements());
+                        while( (elem = (TStreamerElement*)next()) ) {
+                           AnalyzeElement(branch,elem,level+1,cldesc,"");
+                        }
+
+                     } else {
+
+                        if (isclones) {
+                           // We have to guess the version number!
+                           cl = TClass::GetClass(cname);
+                           objInfo = GetStreamerInfo(branch,branch->GetListOfBranches(),cl);
+                        } 
+                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
+                                                                 branch->GetName(),
+                                                                 branch->GetName(),
+                                                                 isclones, branch->GetSplitLevel());
+                        lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
+                     }
+                  } else {                   
+                     // We do not have a proper node for the base class, we need to loop over
+                     // the next branches
+                     TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                     if (prefix.Length()) prefix += ".";
+                     prefix += element->GetName();
+                     objInfo = branch->GetInfo();
+                     Int_t pos = branchname.Last('.');
+                     if (pos != -1) {
+                        branchname.Remove(pos);
+                     }
+                     if (isclones) {
+                        // We have to guess the version number!
+                        cl = TClass::GetClass(cname);
+                        objInfo = GetStreamerInfo(branch, branches, cl);
+                     } 
+                     cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
+                                                              branchname,
+                                                              prefix,
+                                                              isclones, branch->GetSplitLevel());
+                     usedBranch = kFALSE;
+                     skipped = kTRUE;
+                     lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
+                  }
+
+                  TBranchProxyClassDescriptor *added = AddClass(cldesc);
+                  if (added) proxyTypeName = added->GetName();
+
                }
+
                AddForward(cl);
                AddHeader(cl);
                break;
@@ -591,410 +838,22 @@ namespace ROOT {
 
          }
 
-      }
-
-      if ( branch->GetListOfBranches()->GetEntries() > 0 ) {
-         // The branch has sub-branch corresponding the split data member of a class
-
-
-         // See AnalyzeTree for similar code!
-         TBranchProxyClassDescriptor *cldesc = 0;
-
-         TClass *cl = TClass::GetClass(cname);
-         if (cl) {
-            TVirtualStreamerInfo *info = branch->GetInfo();
-            if (strcmp(cl->GetName(),info->GetName())!=0) {
-               info = cl->GetStreamerInfo(); // might be the wrong version
-            }
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
-                                                     branch->GetName(),
-                                                     isclones, branch->GetSplitLevel());
-            TBranch *subbranch;
-            TIter subnext( branch->GetListOfBranches() );
-            while ( (subbranch = (TBranch*)subnext()) ) {
-               Int_t skipped = AnalyzeBranch(subbranch,level+1,cldesc);
-               Int_t s = 0;
-               while( s<skipped && subnext() ) { s++; };
-            }
-
-            TBranchProxyClassDescriptor *added = AddClass(cldesc);
-            if (added) proxyTypeName = added->GetName();
-         }
-
-
-      } else if ( cname.Length() ) {
-         // The branch contains a non-split object that we are unfolding!
-
-         // See AnalyzeTree for similar code!
-         TBranchProxyClassDescriptor *cldesc = 0;
-
-         TClass *cl = TClass::GetClass(cname);
-         if (cl) {
-            TVirtualStreamerInfo *info = branch->GetInfo();
-            if (strcmp(cl->GetName(),info->GetName())!=0) {
-               info = cl->GetStreamerInfo(); // might be the wrong version
-            }
-            cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
-                                                     branch->GetName(),
-                                                     isclones, 0 /* unsplit object */);
-         }
-         if (cldesc) {
-            TVirtualStreamerInfo *info = cl->GetStreamerInfo();
-            TStreamerElement *elem = 0;
-
-            TIter next(info->GetElements());
-            while( (elem = (TStreamerElement*)next()) ) {
-               AnalyzeElement(branch,elem,level+1,cldesc,"");
-            }
-
-            TBranchProxyClassDescriptor *added = AddClass(cldesc);
-            if (added) proxyTypeName = added->GetName();
-            // this codes and the previous 2 lines move from inside the if (cl)
-            // aboce and this line was used to avoid unecessary work:
-            // if (added!=cldesc) cldesc = 0;
-         }
-
-      }
-
-      TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-
-      if (leaf && strlen(leaf->GetTypeName()) == 0) {
-         // no type is know for the first leaf (which case is that?)
-         return extraLookedAt;
-      }
-
-      if (leaf && proxyTypeName.Length()==0) {
-         proxyTypeName = leaf->GetTypeName() ;
-      }
-
-      if (leaf && !isclones) dataMemberName = leaf->GetName();
-      else dataMemberName = branch->GetName();
-
-      TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
-      TString brprefix;
-
-      Int_t pos;
-      pos = dataMemberName.Index(".");
-      if (pos != -1) {
-
-         if (pos!=-1 && topdesc &&
-             dataMemberName.BeginsWith( topdesc->GetSubBranchPrefix() ) ) {
-            brprefix += topdesc->GetSubBranchPrefix();
-            dataMemberName.Remove(0,strlen( topdesc->GetSubBranchPrefix() )+1);
-         }
-         pos = dataMemberName.Index(".");
-         if (pos != -1) {
-            if (strncmp( mom->GetName(),
-                         dataMemberName.Data(),
-                         strlen(mom->GetName()) ) ==0 )
-            {
-               brprefix += dataMemberName(0,pos+1);
-               dataMemberName.Remove(0,strlen(mom->GetName())+1);
-            } else {
-               TBranchElement *current = mom;
-               TVirtualStreamerInfo *momInfo = current->GetInfo();
-               Int_t bid = current->GetID();
-               TStreamerElement *momElement = bid>=0 ? (TStreamerElement *)momInfo->GetElements()->At(bid) : 0;
-               while( momElement && momElement->IsBase() ) {
-                  TString momPrefix = current->GetName();
-                  Int_t classlen = strlen(momElement->GetClass()->GetName());
-                  if (   momPrefix.Length() >= (classlen+1)
-                      && momPrefix[momPrefix.Length()-classlen-1]=='.'
-                      && 0==strcmp((momPrefix.Data()+(momPrefix.Length()-classlen)),momElement->GetClass()->GetName())
-                      )
-                  {
-                     momPrefix.Remove((momPrefix.Length()-classlen-1));
-                     if (strncmp( momPrefix.Data(),
-                           dataMemberName.Data(),
-                           momPrefix.Length() ) ==0 )
-                     {
-                        brprefix += dataMemberName(0,pos+1);
-                        dataMemberName.Remove(0,momPrefix.Length()+1);
-                        break;
-                     }
-                  }
-                  TBranchElement *momSmom = (TBranchElement*)current->GetMother()->GetSubBranch(current);
-
-                  if (momSmom != mom && momSmom != branch->GetMother() &&
-                     strncmp( momSmom->GetName(),
-                     dataMemberName.Data(),
-                     strlen(momSmom->GetName()) ) ==0 )
-                  {
-                     brprefix += dataMemberName(0,pos+1);
-                     dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
-                     break;
-                  }
-                  if (current==momSmom) break; // avoid infinite recursion
-                  current = momSmom;
-                  momInfo = momSmom->GetInfo();
-                  bid = momSmom->GetID();
-                  momElement = bid>=0 ? (TStreamerElement *)momInfo->GetElements()->At(bid) : 0;
-               }
-            }
-         }
-         TBranch *topmother = branch->GetMother();
-         if ( strncmp( topmother->GetName(),
-                       dataMemberName.Data(),
-                       strlen(topmother->GetName()) ) ==0 )
-         {
-            // This test will get it wrong if the element has the same
-            // name as the main branch
-            brprefix = dataMemberName(0,pos+1);
-            dataMemberName.Remove(0,strlen(topmother->GetName())+1);
-         }
-         pos = dataMemberName.Index(".");
-      }
-      pos = dataMemberName.Index("[");
-      if (pos != -1) {
-         dataMemberName.Remove(pos);
-      }
-      pos = dataMemberName.Index(".");
-
-      TString branchName = branch->GetName();
-
-      if (pos != -1) {
-
-         // We still have a "." in the name, we assume that we are in the case
-         // where we reach an embedded object in the object contained in the
-         // TClonesArray
-
-         // Discover the type of this object.
-         TString name = dataMemberName(0,pos);
-
-         TString cname;
-
-         TBranchProxyClassDescriptor::EInClones loc = TBranchProxyClassDescriptor::kOut;
-         if (container!=kClones) {
-            cname = topdesc->GetTitle();
+         TString dataMemberName = element->GetName();
+         if (topdesc) {
+            topdesc->AddDescriptor(  new TBranchProxyDescriptor( dataMemberName.Data(),
+               proxyTypeName, branchname, true, skipped ), isBase );
          } else {
-            loc = TBranchProxyClassDescriptor::kInsideClones;
-            cname = mom->GetClonesName();
+            dataMemberName.Prepend(prefix);
+            AddDescriptor( new TBranchProxyDescriptor( dataMemberName.Data(),
+               proxyTypeName, branchname, true, skipped ) );
          }
-         Debug(4,"Seeing br=%s, td=%s name=%s cl=%s -%s- -%s-\n",
-               branch->GetName(),topdesc ? topdesc->GetTitle() : " no topdesc ",name.Data(),
-               cname.Data(),topdesc ? topdesc->GetSubBranchPrefix() : " no topdesc ",brprefix.Data());
-//          TString brprefix = mom->GetName();
-         if (brprefix.Length() && brprefix[brprefix.Length()-1]!='.') brprefix += ".";
-         brprefix += name;
-         // brprefix += ".";
 
-
-         if ( topdesc && strcmp(topdesc->GetBranchName(),brprefix.Data())==0 ) {
-
-            // Assume we coming recursively from the previous case!
-            dataMemberName.Remove(0,pos+1);
-
-         } else {
-
-            TStreamerElement* branchStreamerElem = 0;
-
-            TVirtualStreamerInfo *momInfo = topdesc ? topdesc->GetInfo() : ((TBranchElement*)branch->GetMother())->GetInfo();
- 
-            if (cname != momInfo->GetName()) {
-               // We do not have the correct TVirtualStreamerInfo, this is
-               // because there is no proper 'branch' holding this sub-object
-               // they are all stored in the branch for the owner of the object
-
-               // We need to discover if 'branch' represents a direct datamember
-               // of the class in 'mom' or if it is an indirect one (with a
-               // missing branch in the hierachy)
-
-               TClass *momBranchClass = TClass::GetClass(cname);
-
-               // We are in the case where there is a missing branch in the hiearchy
-
-               momInfo = momBranchClass->GetStreamerInfo();
-
-               // remove the main branch name (if present)
-               TString parentDataName = branch->GetName();
-               if (parentDataName.Index(mom->GetName())==0) {
-                  parentDataName.Remove(0,strlen(mom->GetName()));
-                  if (parentDataName[0]=='.') {
-                     parentDataName.Remove(0,1);
-                  }
-               }
-
-               // remove the current data member name
-               Ssiz_t pos = parentDataName.Last('.');
-               if (pos>0) {
-                  // We had a branch name of the style:
-                  //     [X.]Y.Z
-                  // and we are looking up 'Y'
-                  parentDataName.Remove(pos);
-                  branchStreamerElem = (TStreamerElement*)momInfo->GetElements()->FindObject( parentDataName.Data() );
-
-               } else {
-                  // We had a branch name of the style:
-                  //     [X.]Z
-                  // and we are looking up 'Z'
-                  // Because we are missing 'Y' (or more exactly the name of the
-                  // thing that contains Z, ... we don't know what do yet.
-
-                  Error("AnalyzeBranch",
-                        "The case of the branch '%s' is not implemented yet.\n"
-                        "Please send your data file to the root developers.",
-                        branch->GetName());
-               }
-
-            } else {
-
-               branchStreamerElem = (TStreamerElement*)
-                  momInfo->GetElements()->FindObject(name.Data());
-
-            }
-
-            if (branchStreamerElem==0) {
-               Error("AnalyzeBranch","We did not find %s (for %s) when looking into %s.",
-                     name.Data(),branch->GetName(),mom->GetName());
-               //mom->Print();
-               //             mom->GetInfo()->Print();
-               return extraLookedAt;
-            } else {
-               //             fprintf(stderr,"SUCC: We did find %s when looking into %s %p.\n",
-               //                     name.Data(),mom->GetName(),branchStreamerElem);
-               //             mom->GetInfo()->Print();
-            }
-
-            TClass *cl = branchStreamerElem->GetClassPointer();
-
-            cname = cl->GetName();
-            if (container==kClones) {
-               proxyTypeName = Form("TClaObjProxy<%s >",cname.Data());
-            } else {
-               proxyTypeName = Form("T%sObjProxy<%s >", middle.Data(), cl->GetName());
-            }
-
-            TBranchProxyClassDescriptor *cldesc;
-
-            cldesc = new TBranchProxyClassDescriptor( cl->GetName(), cl->GetStreamerInfo(),
-                                                      brprefix.Data(), brprefix.Data(),
-                                                      loc,
-                                                      branch->GetSplitLevel()-1);
-
-            TIter next(mom->GetListOfBranches());
-            TBranch *subbranch;
-            while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
-
-            R__ASSERT( subbranch == branch );
-            extraLookedAt -= 1; // Avoid counting the branch itself twice
-
-            do {
-               TString subname = subbranch->GetName();
-               if ( subname.BeginsWith( brprefix ) ) {
-                  Int_t skipped = 0;
-                  if (cldesc) {
-
-                     skipped = AnalyzeBranch( subbranch, level+1, cldesc);
-                     Int_t s = 0;
-                     while( s<skipped && next() ) { s++; };
-
-                  }
-                  extraLookedAt += 1 + skipped;
-               } else {
-                  break;
-               }
-            } while ( (subbranch = (TBranch*)next()) );
-
-            dataMemberName.Remove(pos);
-            //fprintf(stderr,"will use %s\n", dataMemberName.Data());
-
-            // this codes and the previous 2 lines move from inside the if (cl)
-            // aboce and this line was used to avoid unecessary work:
-            TBranchProxyClassDescriptor *added = AddClass(cldesc);
-            if (added) proxyTypeName = added->GetName();
-            // if (added!=cldesc) cldesc = 0;
-
-            pos = branchName.Last('.');
-            if (pos != -1) {
-               branchName.Remove(pos);
-            }
+         if (usedBranch) { 
+            branches.Next(); 
+            ++lookedAt;
          }
       }
-
-      if ( extraLookedAt==0 && topdesc
-           && ((container!=kClones && strcmp(topdesc->GetTitle(),branch->GetClassName())!=0)
-               || (container==kClones && strcmp(topdesc->GetTitle(),branch->GetInfo()->GetName())!=0 ) ) ) {
-
-         Debug(4,"Handling base class for br==%s %d %d %d %s\n",
-               branch->GetName(),extraLookedAt,container,isclones,cname.Data());
-         TBranchProxyClassDescriptor *cldesc;
-         TIter nextel( topdesc->GetInfo()->GetElements() );
-         TStreamerElement *elem;
-
-         TBranchElement *mom = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
-         TIter next(mom->GetListOfBranches());
-         TBranch *subbranch;
-         while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
-
-         while ( (elem = (TStreamerElement*)nextel()) ) {
-            if (elem->IsBase()) {
-
-
-               TClass *clb = elem->GetClassPointer();
-               cldesc = new TBranchProxyClassDescriptor(clb->GetName(), clb->GetStreamerInfo(),
-                                                        branch->GetName(), brprefix.Data(),
-                                                        isclones, branch->GetSplitLevel());
-
-               Int_t skipped = 0;
-               do {
-                  skipped = AnalyzeBranch( subbranch, level, cldesc);
-                  Int_t s = 0;
-                  while( s<skipped && next() ) { s++; };
-
-                  extraLookedAt += 1 + skipped;
-
-                  subbranch = (TBranch*)next();
-                  if (subbranch) {
-                     // Find the TVirtualStreamerInfo
-                     TString subname = subbranch->GetName();
-                     if ( brprefix.Length() != 0 ) {
-                        Debug(6,"Base class check %s %s\n",subname.Data(),brprefix.Data());
-
-                        if (! subname.BeginsWith( brprefix ) ) break;
-
-                        subname.Remove(0,brprefix.Length()+1);
-                        Int_t pos = subname.Index('.');
-                        if (pos != -1) subname.Remove(pos);
-
-                        if ( cldesc->GetInfo()->GetElements()->FindObject( subname.Data() ) ) {
-                           // We are still in this base class.
-                           Debug(6,"Base clas continue in %s for %s\n",clb->GetName(),subname.Data());
-                           continue;
-                        }
-                     }
-                     if ( strcmp( subbranch->GetClassName(), clb->GetName() ) !=0 ) break;
-                     Debug(6,"base loop: br=%s id=%d %s\n",
-                           subbranch->GetName(),((TBranchElement*)subbranch)->GetID(),brprefix.Data());
-                     if ( ((TBranchElement*)subbranch)->GetID() == 0 ) break;
-                  }
-               } while ( subbranch );
-
-               Debug(4,"Base class done with %s (%s)\n",clb->GetName(),brprefix.Data());
-
-               TBranchProxyClassDescriptor *added = AddClass(cldesc);
-               if (added) proxyTypeName = added->GetName();
-
-               topdesc->AddDescriptor( new TBranchProxyDescriptor( element->GetName(),
-                                                                   proxyTypeName, branch->GetName() ),
-                                       kTRUE );
-               return extraLookedAt - 1;
-
-            }
-         }
-      }
-
-      TBranchProxyDescriptor *desc;
-      if (topdesc) {
-         topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
-                                                                    proxyTypeName, branchName.Data() ),
-                                 isBase );
-      } else {
-         dataMemberName.Prepend(prefix);
-         AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
-                                                           proxyTypeName,
-                                                           branchName.Data() ) );
-      }
-      return extraLookedAt;
+      return lookedAt;
    }
 
    UInt_t TTreeProxyGenerator::AnalyzeOldLeaf(TLeaf *leaf, UInt_t /* level */,
@@ -1181,6 +1040,7 @@ namespace ROOT {
       TIter next( tree->GetListOfBranches() );
       TBranch *branch;
       while ( (branch = (TBranch*)next()) ) {
+         TVirtualStreamerInfo *info = 0;
          const char *branchname = branch->GetName();
          const char *classname = branch->GetClassName();
          if (classname && strlen(classname)) {
@@ -1200,6 +1060,7 @@ namespace ROOT {
                   TClass *ncl = TClass::GetClass(cname);
                   if (ncl) {
                      cl = ncl;
+                     info = GetStreamerInfo(branch,branch->GetListOfBranches(),cl);
                   } else {
                      Error("AnalyzeTree",
                            "Introspection of TClonesArray in older file not implemented yet.");
@@ -1266,15 +1127,10 @@ namespace ROOT {
 
             // We have a splitted object
 
-            TBranch *subbranch;
             TIter subnext( branch->GetListOfBranches() );
             UInt_t skipped = 0;
             if (desc) {
-               while ( (subbranch = (TBranch*)subnext()) ) {
-                  skipped = AnalyzeBranch(subbranch,1,desc);
-                  UInt_t s = 0;
-                  while( s<skipped && subnext() ) { s++; };
-               }
+               AnalyzeBranches(1,desc,dynamic_cast<TBranchElement*>(branch),info);
             }
             desc = AddClass(desc);
             type = desc->GetName();
@@ -1283,14 +1139,10 @@ namespace ROOT {
 
             if ( branchname[strlen(branchname)-1] != '.' ) {
                // If there is no dot also include the data member directly
+
+               AnalyzeBranches(1,0,dynamic_cast<TBranchElement*>(branch),info);
+
                subnext.Reset();
-               while ( (subbranch = (TBranch*)subnext()) ) {
-                  skipped = AnalyzeBranch(subbranch,1,0);
-                  UInt_t s = 0;
-                  while( s<skipped && subnext() ) { s++; };
-//                 if (skipped != 0) Error("AnalyzeTree",
-//                                          "Unexpectly read more than one branch in AnalyzeTree.");
-               }
             }
 
          } // if split or non split
