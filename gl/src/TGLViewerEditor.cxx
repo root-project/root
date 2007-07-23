@@ -17,7 +17,7 @@
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
 #include "TGLLightSetEditor.h"
-#include "TGLClip.h" // should become TGLClipSetEditor
+#include "TGLClipSetEditor.h"
 #include "TGLUtil.h"
 
 ClassImp(TGLViewerEditor)
@@ -49,16 +49,6 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fCamContainer(0),
    fCamMode(0),
    fCamMarkupOn(0),
-   fCurrentClip(kClipNone),
-   fTypeButtons(0),
-   fPlanePropFrame(0),
-   fPlaneProp(),
-   fBoxPropFrame(0),
-   fBoxProp(),
-   fClipInside(0),
-   fClipEdit(0),
-   fClipShow(0),
-   fApplyButton(0),
    fViewer(0),
    fIsInPad(kTRUE)
 {
@@ -98,19 +88,6 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraMarkup()");
    fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
 
-   fTypeButtons->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
-   fClipInside->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
-   fClipEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
-   fClipShow->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
-
-   for (Int_t i = 0; i < 4; ++i)
-      fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "ClipValueChanged()");
-
-   for (Int_t i = 0; i < 6; ++i)
-      fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "ClipValueChanged()");
-
-   fApplyButton->Connect("Pressed()", "TGLViewerEditor", this, "UpdateViewerClip()");
-
    fInit = kFALSE;
 }
 
@@ -135,12 +112,12 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fIsInPad = (fViewer->GetDev() != -1);
 
    SetGuides();
-   SetCurrentClip();
 
    if (fInit)
       ConnectSignals2Slots();
 
    fLightSet->SetModel(fViewer->GetLightSet());
+   fClipSet->SetModel(fViewer->GetClipSet());
 
    fClearColor->SetColor(TColor::Number2Pixel(fViewer->GetClearColor()), kFALSE);
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
@@ -334,51 +311,9 @@ void TGLViewerEditor::CreateClippingTab()
    // Create GUI controls - clip type (none/plane/box) and plane/box properties.
    fClipFrame = CreateEditorTabSubFrame("Clipping");
 
-   fTypeButtons = new TGButtonGroup(fClipFrame, "Clip Type");
-   new TGRadioButton(fTypeButtons, "None");
-   new TGRadioButton(fTypeButtons, "Plane");
-   new TGRadioButton(fTypeButtons, "Box");
-
-   fClipFrame->AddFrame(fTypeButtons, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   // Clip inside / edit
-   fClipInside = new TGCheckButton(fClipFrame, "Clip away inside");
-   fClipFrame->AddFrame(fClipInside, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fClipEdit   = new TGCheckButton(fClipFrame, "Edit In Viewer");
-   fClipFrame->AddFrame(fClipEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fClipShow   = new TGCheckButton(fClipFrame, "Show In Viewer");
-   fClipFrame->AddFrame(fClipShow, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-
-   // Plane properties
-   fPlanePropFrame = new TGCompositeFrame(fClipFrame);
-   //fPlanePropFrame->SetCleanup(kDeepCleanup);
-   fClipFrame->AddFrame(fPlanePropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-
-   static const char * const planeStr[] = { "aX + ", "bY +", "cZ + ", "d = 0" };
-
-   for (Int_t i = 0; i < 4; ++i) {
-      TGLabel *label = new TGLabel(fPlanePropFrame, planeStr[i]);
-      fPlanePropFrame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
-      fPlaneProp[i] = new TGNumberEntry(fPlanePropFrame, 1., 8);
-      fPlanePropFrame->AddFrame(fPlaneProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   }
-
-   // Box properties
-   fBoxPropFrame = new TGCompositeFrame(fClipFrame);
-   fClipFrame->AddFrame(fBoxPropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-
-   static const char * const boxStr[] = {"Center X", "Center Y", "Center Z", "Length X", "Length Y", "Length Z" };
-
-   for (Int_t i = 0; i < 6; ++i) {
-      TGLabel *label = new TGLabel(fBoxPropFrame, boxStr[i]);
-      fBoxPropFrame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
-      fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
-      fBoxPropFrame->AddFrame(fBoxProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   }
-
-   // Apply button
-   fApplyButton = new TGTextButton(fClipFrame, "Apply");
-   fClipFrame->AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-
+   fClipSet = new TGLClipSetSubEditor(fClipFrame);
+   fClipSet->Connect("Changed", "TGLViewerEditor", this, "ViewerRedraw()");
+   fClipFrame->AddFrame(fClipSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 }
 
 //______________________________________________________________________________
@@ -390,113 +325,6 @@ void TGLViewerEditor::UpdateReferencePos()
    fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
    fReferencePosZ->SetState(fReferenceOn->IsDown());
-}
-
-//______________________________________________________________________________
-void TGLViewerEditor::ClipValueChanged()
-{
-   // One of number edtries was changed.
-
-   fApplyButton->SetState(kButtonUp);
-}
-
-//______________________________________________________________________________
-void TGLViewerEditor::ClipTypeChanged(Int_t id)
-{
-   // Clip type radio button changed - update viewer.
-
-   TGLClipSet * clipset = fViewer->GetClipSet();
-   if (id == 1) {
-      fCurrentClip = kClipNone;
-      clipset->SetClipType(fCurrentClip);
-      SetCurrentClip();
-      fClipInside->SetState(kButtonDisabled);
-      fClipEdit->SetState(kButtonDisabled);
-      fClipShow->SetState(kButtonDisabled);
-   } else {
-      fCurrentClip = id == 2 ? kClipPlane : kClipBox;
-      clipset->SetClipType(fCurrentClip);
-      SetCurrentClip();
-   }
-
-   // Internal GUI change - need to update the viewer
-   ViewerRedraw();
-
-   fGedEditor->Layout();
-}
-
-//______________________________________________________________________________
-void TGLViewerEditor::UpdateViewerClip()
-{
-   // Change clipping volume.
-
-   Double_t data[6] = {0.};
-   // Fetch GUI state for clip if 'type' into 'data' vector
-   if (fCurrentClip == kClipPlane)
-      for (Int_t i = 0; i < 4; ++i)
-         data[i] = fPlaneProp[i]->GetNumber();
-   else if (fCurrentClip == kClipBox)
-      for (Int_t i = 0; i < 6; ++i)
-         data[i] = fBoxProp[i]->GetNumber();
-
-   fApplyButton->SetState(kButtonDisabled);
-   TGLClipSet * clipset = fViewer->GetClipSet();
-   clipset->SetClipState(fCurrentClip, data);
-   clipset->SetShowManip(fClipEdit->IsDown());
-   clipset->SetShowClip (fClipShow->IsDown());
-   if (fCurrentClip != kClipNone)
-      clipset->GetCurrentClip()->SetMode(fClipInside->IsDown() ? TGLClip::kInside : TGLClip::kOutside);
-   ViewerRedraw();
-}
-
-//______________________________________________________________________________
-void TGLViewerEditor::SetCurrentClip()
-{
-   // Set current (active) GUI clip type from viewer' state.
-
-   Double_t     clip[6] = {0.};
-   TGLClipSet * clipset = fViewer->GetClipSet();
-
-   clipset->GetClipState(fCurrentClip, clip);
-
-   fClipEdit->SetDown(clipset->GetShowManip());
-   fClipShow->SetDown(clipset->GetShowClip());
-   if (fCurrentClip != kClipNone)
-      fClipInside->SetDown(clipset->GetCurrentClip()->GetMode() == TGLClip::kInside);
-
-   fApplyButton->SetState(kButtonDisabled);
-
-   // Button ids run from 1
-   if (TGButton *btn = fTypeButtons->GetButton(fCurrentClip+1)) {
-      btn->SetDown();
-   }
-   switch(fCurrentClip) {
-   case(kClipNone):
-      fTypeButtons->SetButton(1);
-      fClipFrame->HideFrame(fPlanePropFrame);
-      fClipFrame->HideFrame(fBoxPropFrame);
-      return;
-   case(kClipPlane):
-      fTypeButtons->SetButton(2);
-      fClipFrame->ShowFrame(fPlanePropFrame);
-      fClipFrame->HideFrame(fBoxPropFrame);
-      break;
-   case(kClipBox):
-      fTypeButtons->SetButton(3);
-      fClipFrame->HideFrame(fPlanePropFrame);
-      fClipFrame->ShowFrame(fBoxPropFrame);
-      break;
-   default:;
-   }
-
-   if (fCurrentClip == kClipPlane)
-      for (Int_t i = 0; i < 4; ++i)
-         fPlaneProp[i]->SetNumber(clip[i]);
-   else if (fCurrentClip == kClipBox)
-      for (Int_t i = 0; i < 6; ++i)
-         fBoxProp[i]->SetNumber(clip[i]);
-
-   ViewerRedraw();
 }
 
 //______________________________________________________________________________
@@ -526,13 +354,4 @@ void TGLViewerEditor::SetGuides()
    } else {
       fGuidesFrame->HideFrame(fCamContainer);
    }
-}
-
-//______________________________________________________________________________
-void TGLViewerEditor::HideClippingGUI()
-{
-   // Hide clipping GUI.
-
-   fClipFrame->HideFrame(fPlanePropFrame);
-   fClipFrame->HideFrame(fBoxPropFrame);
 }

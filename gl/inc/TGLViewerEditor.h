@@ -23,6 +23,7 @@ class TGLViewer;
 class TGTab;
 
 class TGLLightSetSubEditor;
+class TGLClipSetSubEditor;
 
 class TGLViewerEditor : public TGedFrame
 {
@@ -56,19 +57,7 @@ private:
    TGComboBox*       fCamMode;
    TGCheckButton*    fCamMarkupOn;
 
-   //"Clipping" tab's controls
-   EClipType         fCurrentClip;
-   TGButtonGroup    *fTypeButtons;
-
-   TGCompositeFrame *fPlanePropFrame;
-   TGNumberEntry    *fPlaneProp[4];
-
-   TGCompositeFrame *fBoxPropFrame;
-   TGNumberEntry    *fBoxProp[6];
-   TGCheckButton    *fClipInside;
-   TGCheckButton    *fClipEdit;
-   TGCheckButton    *fClipShow;
-   TGButton         *fApplyButton;
+   TGLClipSetSubEditor *fClipSet;
 
    //Model
    TGLViewer        *fViewer;
@@ -93,7 +82,6 @@ public:
    virtual void SetModel(TObject* obj);
 
    void SetGuides();
-   void SetCurrentClip();
    void DoClearColor(Pixel_t color);
    void DoIgnoreSizesOnUpdate();
    void DoResetCamerasOnUpdate();
@@ -104,13 +92,8 @@ public:
    void UpdateViewerGuides();
    void UpdateReferencePos();
    void DoCameraMarkup();
-   //Clipping manipulation
-   void ClipValueChanged();
-   void ClipTypeChanged(Int_t);
-   void UpdateViewerClip();
 
    void DetachFromPad(){fIsInPad = kFALSE;}
-   void HideClippingGUI();
 
    ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
 };
