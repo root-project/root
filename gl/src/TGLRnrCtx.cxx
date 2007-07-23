@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRnrCtx.cxx,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRnrCtx.cxx,v 1.2 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    fViewerLOD    (kLODUndef),
    fSceneLOD     (kLODUndef),
+   fCombiLOD     (kLODUndef),
    fShapeLOD     (kLODUndef),
 
    fViewerStyle  (kStyleUndef),
@@ -83,6 +84,14 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fQuadric = gluNewQuadric();
    gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
    gluQuadricNormals    (fQuadric, (GLenum)GLU_SMOOTH);
+
+   if (fViewer == 0)
+   {
+      // Assume external usage, initialize for highest quality.
+      fViewerLOD = fSceneLOD = fCombiLOD = fShapeLOD = kLODHigh;
+      fViewerStyle = fSceneStyle = kFill;
+      fDrawPass = kPassFill;
+   }
 }
 
 //______________________________________________________________________
