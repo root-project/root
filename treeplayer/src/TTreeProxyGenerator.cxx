@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.31 2007/07/02 17:13:47 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.32 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -529,7 +529,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       EContainer container = kNone;
       TString middle;
       TString proxyTypeName;
-      TString prefix;
       Bool_t  isclones = false;
       TString subBranchPrefix;
       Bool_t skipped = false;
@@ -567,6 +566,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       {
          Bool_t isBase = false;
          Bool_t usedBranch = kTRUE;
+         TString prefix;
          TIter peek = branches;
          TBranchElement *branch = (TBranchElement*)peek(); 
 
