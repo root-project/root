@@ -35,10 +35,13 @@
 #pragma link C++ class TGLLogicalShape;
 #pragma link C++ class TGLPhysicalShape;
 
-#pragma link C++ class TGLClip;
-#pragma link C++ class TGLClipPlane;
-#pragma link C++ class TGLClipBox;
-#pragma link C++ class TGLClipSet;
+#pragma link C++ class TGLClip+;
+#pragma link C++ class TGLClipPlane+;
+#pragma link C++ class TGLClipBox+;
+#pragma link C++ class TGLClipSet+;
+#pragma link C++ class TGLClipSetEditor+;
+#pragma link C++ class TGLClipSetSubEditor+;
+
 #pragma link C++ class TGLManip;
 #pragma link C++ class TGLScaleManip;
 #pragma link C++ class TGLTransManip;
@@ -52,6 +55,7 @@
 
 #pragma link C++ class TGLSceneBase+;
 #pragma link C++ class TGLScene+;
+#pragma link C++ class TGLScenePad+;
 #pragma link C++ class TGLSceneInfo+;
 #pragma link C++ class TGLScene::TSceneInfo+;
 #pragma link C++ class TGLOverlayElement+;
