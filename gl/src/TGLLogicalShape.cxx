@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.15 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.16 2007/06/18 07:02:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 
@@ -71,7 +71,8 @@ TGLLogicalShape::TGLLogicalShape() :
    fDLBase        (0),
    fDLValid       (0),
    fDLCache       (kTRUE),
-   fRefStrong     (kFALSE)
+   fRefStrong     (kFALSE),
+   fOwnExtObj     (kFALSE)
 {}
 
 //______________________________________________________________________________
@@ -83,7 +84,8 @@ TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fDLBase        (0),
    fDLValid       (0),
    fDLCache       (kTRUE),
-   fRefStrong     (kFALSE)
+   fRefStrong     (kFALSE),
+   fOwnExtObj     (kFALSE)
 {}
 
 //______________________________________________________________________________
@@ -95,7 +97,8 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fDLBase        (0),
    fDLValid       (0),
    fDLCache       (kTRUE),
-   fRefStrong     (kFALSE)
+   fRefStrong     (kFALSE),
+   fOwnExtObj     (kFALSE)
 {
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
@@ -103,6 +106,14 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
    // otherwise use the raw points to generate one
       fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
+   }
+
+   // If the logical is created without an external object reference,
+   // we create a generic  here and delete it during the destruction.
+   if (fExternalObj == 0)
+   {
+      fExternalObj = new TNamed("Generic object", "Internal object created for bookkeeping.");
+      fOwnExtObj = kTRUE;
    }
 }
 
@@ -118,7 +129,12 @@ TGLLogicalShape::~TGLLogicalShape()
       DestroyPhysicals();
    }
    DLCachePurge();
+   if (fOwnExtObj)
+   {
+      delete fExternalObj;
+   }
 }
+
 
 /**************************************************************************/
 // Physical shape ref-counting, replica management

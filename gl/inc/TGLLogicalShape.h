@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.16 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.17 2007/06/18 07:02:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -54,7 +54,8 @@ protected:
    mutable UInt_t     fDLBase;      //! display-list id base
    mutable UShort_t   fDLValid;     //! display-list validity bit-field
    mutable Bool_t     fDLCache;     //! use display list caching
-   mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref)
+   mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref); not in scene
+   mutable Bool_t     fOwnExtObj;   //! External object is a fake
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
 
