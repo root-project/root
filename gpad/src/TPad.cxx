@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.269 2007/07/09 09:22:43 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.270 2007/07/18 12:50:07 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5796,7 +5796,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
       }
 
       if (strstr(type, "gl") && !strstr(type, "ogl"))
-         fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE;
+         fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE, Modified();
       else
          createdExternal = kTRUE;
 
