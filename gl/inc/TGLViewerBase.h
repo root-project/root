@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.2 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -76,8 +76,12 @@ public:
 
    void AddScene(TGLSceneBase* scene);
    void RemoveScene(TGLSceneBase* scene);
+   void SceneDestructing(TGLSceneBase* scene);
 
    TGLSceneInfo* GetSceneInfo(TGLSceneBase* scene);
+
+   void AddOverlayElement(TGLOverlayElement* el);
+   void RemoveOverlayElement(TGLOverlayElement* el);
 
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }
@@ -91,6 +95,7 @@ public:
    // ================================================================
 
    virtual void ResetSceneInfos();
+   virtual void MergeSceneBBoxes(TGLBoundingBox& bbox);
 
    // ================================================================
 

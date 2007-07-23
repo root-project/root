@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.3 2007/06/22 15:11:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.4 2007/06/23 21:23:22 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TGLContext.h"
 #include "TGLIncludes.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 //______________________________________________________________________
@@ -63,6 +64,12 @@ TGLViewerBase::~TGLViewerBase()
 {
    // Destructor.
 
+   for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
+   {
+      (*i)->GetScene()->RemoveViewer(this);
+      delete *i;
+   }
+
    delete fRnrCtx;
 }
 
@@ -94,7 +101,14 @@ void TGLViewerBase::AddScene(TGLSceneBase* scene)
 {
    // Add new scene, appropriate scene-info is created.
 
-   fScenes.push_back(scene->CreateSceneInfo(this));
+   SceneInfoList_i i = FindScene(scene);
+   if (i == fScenes.end()) {
+      fScenes.push_back(scene->CreateSceneInfo(this));
+      scene->AddViewer(this);
+   } else {
+      Warning("TGLViewerBase::AddScene", "scene '%s' already in the list.",
+              scene->GetName());
+   }
 }
 
 //______________________________________________________________________
@@ -106,8 +120,26 @@ void TGLViewerBase::RemoveScene(TGLSceneBase* scene)
    if (i != fScenes.end()) {
       delete *i;
       fScenes.erase(i);
+      scene->RemoveViewer(this);
    } else {
-      Warning("TGLViewerBase::RemoveScene", "scene not found.");
+      Warning("TGLViewerBase::RemoveScene", "scene '%s' not found.",
+              scene->GetName());
+   }
+}
+
+//______________________________________________________________________
+void TGLViewerBase::SceneDestructing(TGLSceneBase* scene)
+{
+   // Remove scene, its scene-info is deleted.
+   // Called from scene that is being destroyed while still holding
+   // viewer references.
+
+   SceneInfoList_i i = FindScene(scene);
+   if (i != fScenes.end()) {
+      delete *i;
+      fScenes.erase(i);
+   } else {
+      Warning("TGLViewerBase::SceneDestructing", "scene not found.");
    }
 }
 
@@ -123,6 +155,22 @@ TGLSceneInfo* TGLViewerBase::GetSceneInfo(TGLSceneBase* scene)
       return 0;
 }
 
+//______________________________________________________________________
+void TGLViewerBase::AddOverlayElement(TGLOverlayElement* el)
+{
+   // Add overlay element.
+
+   fOverlay.push_back(el);
+}
+
+//______________________________________________________________________
+void TGLViewerBase::RemoveOverlayElement(TGLOverlayElement* el)
+{
+   // Remove overlay element.
+   std::vector<TGLOverlayElement*>::iterator it = std::find(fOverlay.begin(), fOverlay.end(), el);
+   if(it != fOverlay.end())
+      fOverlay.erase(it);
+}
 
 /**************************************************************************/
 // SceneInfo update / check
@@ -133,10 +181,7 @@ void TGLViewerBase::ResetSceneInfos()
    // Force rebuild of view-dependent scene-info structures.
    //
    // This should be called before calling render (draw/select) if
-   // something that affects rendering has been changed.
-   //
-   // We now use timestamps for clip / camera, so this should rarely
-   // be needed.
+   // something that affects camera interest has been changed.
 
    SceneInfoList_i i = fScenes.begin();
    while (i != fScenes.end())
@@ -146,6 +191,18 @@ void TGLViewerBase::ResetSceneInfos()
    }
 }
 
+void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
+{
+   // Merge bounding-boxes of all registered scenes.
+
+   bbox.SetEmpty();
+   for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
+   {
+      TGLSceneInfo * sinfo = *i;
+      sinfo->SetupTransformsAndBBox(); // !!! transform not done yet, no camera
+      bbox.MergeAligned(sinfo->GetTransformedBBox());
+   }  
+}
 
 /**************************************************************************/
 // Rendering / selection virtuals
