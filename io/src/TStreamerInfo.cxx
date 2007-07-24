@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.252 2007/03/01 10:37:51 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.253 2007/03/01 16:08:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -530,7 +530,7 @@ void TStreamerInfo::BuildCheck()
                   has a different checksum than the previously loaded StreamerInfo.\n\
                   Reading objects of type %s from the file %s \n\
                   (and potentially other files) might not work correctly.\n\
-                  Most likely you the version number of the class was not properly\n\
+                  Most likely the version number of the class was not properly\n\
                   updated [See ClassDef(%s,%d)].\n", fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
             } else {
                Warning("BuildCheck", "TStreamerInfo (WriteWarning) from %s does not match existing one (%s:%d)", gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
