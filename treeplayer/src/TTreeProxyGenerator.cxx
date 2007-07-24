@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.32 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.33 2007/07/23 21:49:19 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -491,7 +491,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // Analyze the sub-branch and populate the TTreeProxyGenerator or the topdesc with
       // its findings.
 
-      TStreamerElement *element = 0;
       if (info==0) info = branch->GetInfo();
 
       TIter branches( branch->GetListOfBranches() );
@@ -1128,7 +1127,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             // We have a splitted object
 
             TIter subnext( branch->GetListOfBranches() );
-            UInt_t skipped = 0;
             if (desc) {
                AnalyzeBranches(1,desc,dynamic_cast<TBranchElement*>(branch),info);
             }
