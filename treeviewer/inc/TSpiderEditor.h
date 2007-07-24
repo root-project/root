@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpiderEditor.h,v 1.2 2007/07/20 14:37:37 rdm Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
