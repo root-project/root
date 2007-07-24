@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.10 2007/07/02 09:34:36 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.11 2007/07/02 14:31:27 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1682,7 +1682,7 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
    static const char* templateSITags[TDocParser::kNumSourceInfos] = { "%UPDATE%", "%AUTHOR%", "%COPYRIGHT%"};
 
    TString datimeString;
-   if (!lastUpdate) {
+   if (!lastUpdate || !strlen(lastUpdate)) {
       TDatime date;
       datimeString = date.AsString();
       lastUpdate = datimeString.Data();
