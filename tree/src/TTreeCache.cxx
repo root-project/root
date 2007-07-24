@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-14-00 $:$Id: TTreeCache.cxx,v 1.11 2006/10/19 19:35:52 pcanal Exp $
+// @(#)root/tree:$Name: v5-14-00-patches $:$Id: TTreeCache.cxx,v 1.11.2.1 2007/01/08 19:03:39 pcanal Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -110,6 +110,9 @@ void TTreeCache::AddBranch(TBranch *b)
    //this function is called by TBranch::GetBasket
 
    if (!fIsLearning) return;
+
+   // Reject branch that are not from the cached tree.
+   if (!b || fOwner->GetTree() != b->GetTree()) return;
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
