@@ -284,8 +284,7 @@ HISTLIBEXTRA            = -Llib -lMatrix
 GRAFLIBEXTRA            = -Llib -lHist -lMatrix -lRIO
 GPADLIBEXTRA            = -Llib -lGraf -lHist
 G3DLIBEXTRA             = -Llib -lGraf -lHist -lGpad
-GEDLIBEXTRA             = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer \
-                          -lTreeViewer
+GEDLIBEXTRA             = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
 POSTSCRIPTLIBEXTRA      = -Llib -lGraf
 GUILIBEXTRA             = -Llib -lGpad -lGraf -lRIO
 HISTPAINTERLIBEXTRA     = -Llib -lGraf -lHist -lMatrix -lGpad
@@ -296,7 +295,8 @@ MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix
 FUMILILIBEXTRA          = -Llib -lGraf -lHist
 TREELIBEXTRA            = -Llib -lNet -lRIO
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
-TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer
+TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
+                          -lGed
 PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO
 PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread
 PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad -lProofPlayer \
