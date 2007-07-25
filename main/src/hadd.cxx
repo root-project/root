@@ -78,8 +78,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 int main( int argc, char **argv ) 
 {
 
-   if ( argc < 4 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
-      cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 source2 [source3 ...]" << endl;
+   if ( argc < 3 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
+      cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 [source2 source3 ...]" << endl;
       cout << "This program will add histograms from a list of root files and write them" << endl;
       cout << "to a target root file. The target file is newly created and must not " << endl;
       cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
