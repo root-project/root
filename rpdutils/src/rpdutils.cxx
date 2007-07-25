@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.95 2007/03/13 09:31:36 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.96 2007/05/08 14:57:49 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -6046,9 +6046,17 @@ int RpdLogin(int ServType, int auth)
 #endif
       //
       // Anonymous users are confined to their corner
-      if (gAnon && chroot(pw->pw_dir) == -1) {
-         ErrorInfo("RpdLogin: can't chroot to %s", pw->pw_dir);
-         return -1;
+      if (gAnon) {
+         // We need to do it before chroot, otherwise it does not work
+         if (chdir(pw->pw_dir) == -1) {
+            ErrorInfo("RpdLogin: can't change directory to %s (errno: %d)",
+                      pw->pw_dir, errno);
+            return -1;
+         }
+         if (chroot(pw->pw_dir) == -1) {
+            ErrorInfo("RpdLogin: can't chroot to %s", pw->pw_dir);
+            return -1;
+         }
       }
 
       // set access control list from /etc/initgroup
@@ -6072,10 +6080,11 @@ int RpdLogin(int ServType, int auth)
       putenv(home);
    }
 
-   // Change user's HOME, if required
-   if (gDoLogin == 2) {
+   // Change user's HOME, if required (for anon it is already done)
+   if (gDoLogin == 2 && !gAnon) {
       if (chdir(pw->pw_dir) == -1) {
-         ErrorInfo("RpdLogin: can't change directory to %s", pw->pw_dir);
+         ErrorInfo("RpdLogin: can't change directory to %s (errno: %d)",
+                   pw->pw_dir, errno);
          return -1;
       }
    }
