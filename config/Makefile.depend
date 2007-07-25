@@ -12,7 +12,7 @@ ASIMAGELIBDEPM         = $(GRAFLIB)
 ASIMAGEGUILIBDEPM      = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB) $(IOLIB)
 ASIMAGEGSLIBDEPM       = $(GRAFLIB) $(ASIMAGELIB)
 GEDLIBDEPM             = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
-                         $(TREEPLAYERLIB) $(TREEVIEWERLIB)
+                         $(TREEPLAYERLIB) 
 POSTSCRIPTLIBDEPM      = $(GRAFLIB)
 GUILIBDEPM             = $(GPADLIB) $(GRAFLIB) $(IOLIB)
 GUIHTMLLIBDEPM         = $(GUILIB) $(GRAFLIB) $(NETLIB)
@@ -26,7 +26,7 @@ TREELIBDEPM            = $(NETLIB) $(IOLIB)
 TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
                          $(IOLIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB) \
-                         $(TREEPLAYERLIB)
+                         $(TREEPLAYERLIB) $(GEDLIB)
 PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
 PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB) $(IOLIB) $(TREELIB) $(NETLIB) \
                          $(THREADLIB)
@@ -187,8 +187,7 @@ ASIMAGEGUILIBEXTRA      = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
                           lib/libASImage.lib lib/libRIO.lib
 ASIMAGEGSLIBEXTRA       = lib/libGraf.lib lib/libASImage.lib
 GEDLIBEXTRA             = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
-                          lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib \
-                          lib/libTreeViewer.lib
+                          lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib 
 POSTSCRIPTLIBEXTRA      = lib/libGraf.lib
 GUILIBEXTRA             = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib
 HISTPAINTERLIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
@@ -202,7 +201,8 @@ TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libRIO.lib
 TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
-                          lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib
+                          lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib \
+                          lib/libGed.lib
 PROOFLIBEXTRA           = lib/libNet.lib lib/libTree.lib lib/libRIO.lib \
                           lib/libThread.lib
 PROOFPLAYERLIBEXTRA     = lib/libProof.lib lib/libHist.lib lib/libTree.lib \
