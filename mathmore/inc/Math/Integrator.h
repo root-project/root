@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.3 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.4 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -230,9 +230,22 @@ For detailed description on GSL integration algorithms see the
 
     double Integral(double a, double b);
 
+   /**
+   evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
+
+    */
+  double IntegralCauchy(double a, double b, double c);
+
+    /**
+    evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
+
+    */
+  double IntegralCauchy(const IGenFunction & f, double a, double b, double c);
+
     /**
        evaluate the Integral over the infinite interval (-inf,+inf) using the function previously set with Integrator::SetFunction method.
     */
+
     double Integral( );
 
     /**

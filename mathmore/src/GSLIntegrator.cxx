@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.7 2006/12/11 15:06:37 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.8 2006/12/12 13:07:20 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -168,6 +168,26 @@ double  GSLIntegrator::Integral(double a, double b) {
    
 }
 
+//=============================
+double  GSLIntegrator::IntegralCauchy(double a, double b, double c) {
+   
+   if (!CheckFunction()) return 0;  
+  
+   fStatus = gsl_integration_qawc( fFunction.GetFunc(), a, b , c, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+  
+   return fResult;
+   
+}
+
+double  GSLIntegrator::IntegralCauchy(const IGenFunction & f, double a, double b, double c) {
+   
+   if (!CheckFunction()) return 0;  
+   SetFunction(f);
+   return IntegralCauchy(a, b, c);
+   
+}
+
+//==============================
 
 double  GSLIntegrator::Integral( const std::vector<double> & pts) {
    // integral eval with singularities
@@ -188,8 +208,6 @@ double  GSLIntegrator::Integral( const std::vector<double> & pts) {
    }
    return fResult;
 }
-
-
 
 
 double  GSLIntegrator::Integral( ) {

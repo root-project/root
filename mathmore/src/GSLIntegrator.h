@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.6 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.7 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -180,7 +180,20 @@ namespace Math {
          evaluate the Integral of a function f over the infinite interval (-inf,+inf)
        @param f integration function. The function type must implement the mathlib::IGenFunction interface
        */
+
       double Integral(const IGenFunction & f);
+   
+      /**
+	evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
+
+        */   
+      double IntegralCauchy(double a, double b, double c);
+
+      /**
+	evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
+@param f integration function. The function type must implement the mathlib::IGenFunction interface
+      */
+      double IntegralCauchy(const IGenFunction & f, double a, double b, double c);
       
       /**
          evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
