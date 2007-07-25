@@ -31,11 +31,11 @@ Warning in <TClass::PostLoadCheck>:
 
 Processing checkWarn.C(2)...
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo of class Tdata read from file data1.root
-        has the same version (=1) as the active class but a different checksum.
-        You should update the version to ClassDef(Tdata,2).
-        Do not try to write objects with the current class definition,
-        the files will not be readable.
+   The StreamerInfo of class Tdata read from file data1.root
+   has the same version (=1) as the active class but a different checksum.
+   You should update the version to ClassDef(Tdata,2).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
 
 
 StreamerInfo for class: Tdata, version=1
@@ -48,12 +48,12 @@ StreamerInfo for class: Tdata, version=1
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo for version 1 of class Tdata read from file data1.root
-        has a different checksum than the previously loaded StreamerInfo.
-        Reading objects of type Tdata from the file data1.root 
-        (and potentially other files) might not work correctly.
-        Most likely you the version number of the class was not properly
-        updated [See ClassDef(Tdata,1)].
+   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   has a different checksum than the previously loaded StreamerInfo.
+   Reading objects of type Tdata from the file data1.root 
+   (and potentially other files) might not work correctly.
+   Most likely the version number of the class was not properly
+   updated [See ClassDef(Tdata,1)].
 
 
 Processing checkWarn.C(4)...
@@ -62,12 +62,12 @@ can not distinguish an emulated ClassDef(name,1) from a foreign class
 Warning in <TClass::TClass>: no dictionary for class data is available
 Warning in <TClass::TClass>: no dictionary for class Tdata is available
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo for version 2 of class Tdata read from file data5.root
-        has a different checksum than the previously loaded StreamerInfo.
-        Reading objects of type Tdata from the file data5.root 
-        (and potentially other files) might not work correctly.
-        Most likely you the version number of the class was not properly
-        updated [See ClassDef(Tdata,2)].
+   The StreamerInfo for version 2 of class Tdata read from file data5.root
+   has a different checksum than the previously loaded StreamerInfo.
+   Reading objects of type Tdata from the file data5.root 
+   (and potentially other files) might not work correctly.
+   Most likely the version number of the class was not properly
+   updated [See ClassDef(Tdata,2)].
 
 
 Processing checkWarn.C(10)...
@@ -136,11 +136,11 @@ StreamerInfo for class: Tdata, version=1
 
 Processing checkWarn.C(14)...
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo of class Tdata read from file data1.root
-        has the same version (=1) as the active class but a different checksum.
-        You should update the version to ClassDef(Tdata,2).
-        Do not try to write objects with the current class definition,
-        the files will not be readable.
+   The StreamerInfo of class Tdata read from file data1.root
+   has the same version (=1) as the active class but a different checksum.
+   You should update the version to ClassDef(Tdata,2).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
 
 
 StreamerInfo for class: Tdata, version=1
@@ -153,21 +153,21 @@ StreamerInfo for class: Tdata, version=1
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo for version 1 of class Tdata read from file data1.root
-        has a different checksum than the previously loaded StreamerInfo.
-        Reading objects of type Tdata from the file data1.root 
-        (and potentially other files) might not work correctly.
-        Most likely you the version number of the class was not properly
-        updated [See ClassDef(Tdata,1)].
+   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   has a different checksum than the previously loaded StreamerInfo.
+   Reading objects of type Tdata from the file data1.root 
+   (and potentially other files) might not work correctly.
+   Most likely the version number of the class was not properly
+   updated [See ClassDef(Tdata,1)].
 
 
 Processing checkWarn.C(16)...
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo of class Tdata read from file data1.root
-        has the same version (=1) as the active class but a different checksum.
-        You should update the version to ClassDef(Tdata,2).
-        Do not try to write objects with the current class definition,
-        the files will not be readable.
+   The StreamerInfo of class Tdata read from file data1.root
+   has the same version (=1) as the active class but a different checksum.
+   You should update the version to ClassDef(Tdata,2).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
 
 
 StreamerInfo for class: Tdata, version=1
@@ -184,12 +184,12 @@ StreamerInfo for class: Tdata, version=1
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
-        The StreamerInfo for version 1 of class Tdata read from file data1.root
-        has a different checksum than the previously loaded StreamerInfo.
-        Reading objects of type Tdata from the file data1.root 
-        (and potentially other files) might not work correctly.
-        Most likely you the version number of the class was not properly
-        updated [See ClassDef(Tdata,1)].
+   The StreamerInfo for version 1 of class Tdata read from file data1.root
+   has a different checksum than the previously loaded StreamerInfo.
+   Reading objects of type Tdata from the file data1.root 
+   (and potentially other files) might not work correctly.
+   Most likely the version number of the class was not properly
+   updated [See ClassDef(Tdata,1)].
 
 
 StreamerInfo for class: Tdata, version=1
