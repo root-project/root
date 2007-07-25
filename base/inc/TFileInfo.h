@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.10 2007/07/09 16:02:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.11 2007/07/20 15:44:56 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
    static TList   *CreateList(const char *file) { return CreateListFromFile(file); }
    static TList   *CreateListMatching(const char *files);
 
-   ClassDef(TFileInfo,1)  // Describes generic file info including meta information
+   ClassDef(TFileInfo,2)  // Describes generic file info including meta information
 };
 
 #endif
