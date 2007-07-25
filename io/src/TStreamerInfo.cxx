@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.253 2007/03/01 16:08:00 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.254 2007/07/24 14:17:30 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -526,12 +526,12 @@ void TStreamerInfo::BuildCheck()
          if (!match && !fClass->TestBit(TClass::kWarned)) {
             if (done) {
                Warning("BuildCheck", "\n\
-                  The StreamerInfo for version %d of class %s read from file %s\n\
-                  has a different checksum than the previously loaded StreamerInfo.\n\
-                  Reading objects of type %s from the file %s \n\
-                  (and potentially other files) might not work correctly.\n\
-                  Most likely the version number of the class was not properly\n\
-                  updated [See ClassDef(%s,%d)].\n", fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
+   The StreamerInfo for version %d of class %s read from file %s\n\
+   has a different checksum than the previously loaded StreamerInfo.\n\
+   Reading objects of type %s from the file %s \n\
+   (and potentially other files) might not work correctly.\n\
+   Most likely the version number of the class was not properly\n\
+   updated [See ClassDef(%s,%d)].\n", fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
             } else {
                Warning("BuildCheck", "TStreamerInfo (WriteWarning) from %s does not match existing one (%s:%d)", gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
             }
@@ -568,11 +568,11 @@ void TStreamerInfo::BuildCheck()
                }
                if (warn) {
                   Warning("BuildCheck", "\n\
-                     The StreamerInfo of class %s read from file %s\n\
-                     has the same version (=%d) as the active class but a different checksum.\n\
-                     You should update the version to ClassDef(%s,%d).\n\
-                     Do not try to write objects with the current class definition,\n\
-                     the files will not be readable.\n", GetName(), gDirectory->GetFile()->GetName(), fClassVersion, GetName(), fClassVersion + 1);
+   The StreamerInfo of class %s read from file %s\n\
+   has the same version (=%d) as the active class but a different checksum.\n\
+   You should update the version to ClassDef(%s,%d).\n\
+   Do not try to write objects with the current class definition,\n\
+   the files will not be readable.\n", GetName(), gDirectory->GetFile()->GetName(), fClassVersion, GetName(), fClassVersion + 1);
                   fClass->SetBit(TClass::kWarned);
                }
             }
