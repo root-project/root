@@ -326,9 +326,11 @@ void G__createmacro(char *new_name,char *initvalue)
   fprintf(G__mfp,"%s\n",initvalue);
   
   /* translate macro */
+  int start_line = G__ifile.line_number;
   do {
     null_fgets=fgets(line,G__ONELINE,G__ifile.fp);
     if(null_fgets==NULL) {
+      G__fprinterr(G__serr, "Error: Missing newline at or after line %d.\n", start_line);
       G__unexpectedEOF("G__createmacro()");
     }
     ++G__ifile.line_number;

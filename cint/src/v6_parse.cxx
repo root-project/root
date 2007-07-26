@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include <stack>
 
 extern "C" {
 
@@ -3201,6 +3202,9 @@ G__value G__exec_statement()
   mparen = G__mparen;
   G__mparen=0;
 
+  std::stack<int> mparen_lines;
+  int mparen_old = mparen;
+
   result=G__null;
 
   while(1) {
@@ -3226,9 +3230,22 @@ G__value G__exec_statement()
     case ',' : /* column */
       if(!G__ansiheader) break;
 #endif
+    case '\n': /* end of line */
+       // Update dangling parentheses' line numbers
+       if (mparen_old != mparen) {
+          size_t mparen_lines_size = mparen_lines.size();
+          while (mparen_lines_size < mparen) {
+             // the stream has already read the newline, so take line_number - 1
+             mparen_lines.push(G__ifile.line_number - 1);
+             ++mparen_lines_size;
+          }
+          while (mparen_lines_size > mparen) {
+             mparen_lines.pop();
+             --mparen_lines_size;
+          }
+       } // no break!
     case ' ' : /* space */
     case '\t' : /* tab */
-    case '\n': /* end of line */
     case '\r': /* end of line */
     case '\f': /* end of line */
       commentflag=0;
@@ -3829,10 +3846,13 @@ G__value G__exec_statement()
               G__var_type = result.type;
               G__typenum = result.typenum;
               G__tagnum = result.tagnum;
+              int store_constvar = G__constvar;
+              G__constvar = result.obj.i; // see G__string2type
               statement[iout]='(';
               statement[iout+1]='\0';
               G__make_ifunctable(statement);
               G__tagnum=store_tagnum;
+              G__constvar = store_constvar;
               iout=0;
               spaceflag = -1;
 #ifdef G__SECURITY
@@ -4268,10 +4288,17 @@ G__value G__exec_statement()
         }
       }
       else {
+         int paren_start_line = G__ifile.line_number;
         c=G__fignorestream(")");
         iout=0;
         spaceflag=0;
-        if(c!=')') G__genericerror("Error: Parenthesis does not match");
+        if(c!=')') {
+           char *msg = new char[70];
+           sprintf(msg, "Error: Cannot find matching ')' for '(' on line %d.",
+                   paren_start_line);
+           G__genericerror(msg);
+           delete []msg;
+        }
       }
       break;
       
@@ -4542,7 +4569,8 @@ G__value G__exec_statement()
       
     case EOF : /* end of file */
       statement[iout]='\0';
-      G__handleEOF(statement,mparen ,single_quote,double_quote);
+      G__handleEOF(statement,mparen ,single_quote,double_quote,
+                   mparen_lines.size() ? mparen_lines.top() : start_line);
       return(G__null);
       
     case '\\':

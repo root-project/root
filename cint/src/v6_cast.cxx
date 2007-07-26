@@ -356,238 +356,165 @@ G__value G__castvalue_bc(char *casttype,G__value result3, int bc)
     casttype[--lenitem]='\0';
     reftype=G__PARAREFERENCE;
   }
-  
+
+  bool isUnsigned = !strncmp(casttype, "unsigned ", 9);
+  if (isUnsigned) {
+     casttype += 9;
+     lenitem -= 9;
+  } else if (!strncmp(casttype, "signed ", 7)) {
+     casttype += 7;
+     lenitem -= 7;
+  }
+
+  int numLong = 0;
+  while (!strncmp(casttype, "long ", 5)) {
+     ++numLong;
+     casttype += 5;
+     lenitem -= 5;
+  }
+
+  if (!isUnsigned) {
+     isUnsigned = !strncmp(casttype, "unsigned ", 9);
+     if (isUnsigned) {
+        casttype += 9;
+        lenitem -= 9;
+     } else if (!strncmp(casttype, "signed ", 7)) {
+        casttype += 7;
+        lenitem -= 7;
+     }
+  }
+
   type='\0';
   switch(lenitem) {
   case 3:
     if(strcmp(casttype,"int")==0) {
-      type='i'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+       type='i';
       break;
     }
     break;
   case 4:
     if(strcmp(casttype,"char")==0) {
-      type='c'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='c';
       break;
     }
     if(strcmp(casttype,"long")==0) {
-      type='l'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='l';
       break;
     }
     if(strcmp(casttype,"FILE")==0) {
-      type='e'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='e';
       break;
     }
     if(strcmp(casttype,"void")==0) {
-      type='y'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='y';
       break;
     }
     if(strcmp(casttype,"bool")==0) {
-      type='g'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='g';
       break;
     }
     break;
   case 5:
     if(strcmp(casttype,"short")==0) {
-      type='s'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='s';
       break;
     }
     if(strcmp(casttype,"float")==0) {
-      type='f'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='f';
       break;
     }
     break;
   case 6:
     if(strcmp(casttype,"double")==0) {
-      type='d'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='d';
       break;
     }
     break;
   case 8:
     if(strcmp(casttype,"unsigned")==0) {
-      type='h'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='h';
       break;
     }
     if(strcmp(casttype,"longlong")==0) {
-      type='n'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='n';
       break;
     }
     break;
   case 9:
-    if(strcmp(casttype,"long long")==0) {
-      type='n'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     if(strcmp(casttype,"signedint")==0) {
-      type='i'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='i';
       break;
     }
     break;
   case 10:
     if(strcmp(casttype,"longdouble")==0) {
-      type='q'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='q';
       break;
     }
     if(strcmp(casttype,"signedchar")==0) {
-      type='c'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"signed int")==0) {
-      type='i'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='c';
       break;
     }
     if(strcmp(casttype,"signedlong")==0) {
-      type='l'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='l';
       break;
     }
     break;
   case 11:
     if(strcmp(casttype,"unsignedint")==0) {
-      type='h'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"long double")==0) {
-      type='q'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"signed char")==0) {
-      type='c'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='h';
       break;
     }
     if(strcmp(casttype,"signedshort")==0) {
-      type='s'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"signed long")==0) {
-      type='l'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='s';
       break;
     }
     break;
   case 12:
     if(strcmp(casttype,"unsignedchar")==0) {
-      type='b'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='b';
       break;
     }
     if(strcmp(casttype,"unsignedlong")==0) {
-      type='k'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"unsigned int")==0) {
-      type='h'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"signed short")==0) {
-      type='s'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='k';
       break;
     }
     break;
   case 13:
-    if(strcmp(casttype,"unsigned char")==0) {
-      type='b'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"unsigned long")==0) {
-      type='k'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     if(strcmp(casttype,"unsignedshort")==0) {
-      type='r'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='r';
       break;
     }
     break;
   case 14:
-    if(strcmp(casttype,"unsigned short")==0) {
-      type='r'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
     if(strcmp(casttype,"signedlonglong")==0) {
-      type='n'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='n';
       break;
     }
     break;
   case 16:
     if(strcmp(casttype,"unsignedlonglong")==0) {
-      type='m'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
-    if(strcmp(casttype,"signed long long")==0) {
-      type='n'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
+      type='m';
       break;
     }
     break;
-  case 18:
-    if(strcmp(casttype,"unsigned long long")==0) {
-      type='m'+castflag;
-      result3.tagnum = -1;
-      result3.typenum = -1;
-      break;
-    }
+  }
+
+  if (type) {
+     result3.tagnum = -1;
+     result3.typenum = -1;
+
+     while (numLong) {
+        switch (type) {
+        case 'i': type = 'l'; break;
+        case 'l': type = 'n'; break;
+        case 'd': type = 'q'; break;
+        }
+        --numLong;
+     }
+     type += castflag;
+     if (isUnsigned)
+        --type;
   }
 
   if(type && 'u'==store_result.type) {

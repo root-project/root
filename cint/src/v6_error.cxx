@@ -310,10 +310,12 @@ int G__warnundefined(char* item)
 int G__unexpectedEOF(char* message)
 {
   G__eof=2;
-  G__fprinterr(G__serr,"Error: Unexpected EOF %s",message);
+  G__fprinterr(G__serr,"Error: Unexpected end of file (%s)",message);
   G__genericerror((char*)NULL);
+  /*
   if(0==G__cpp)
     G__fprinterr(G__serr,"Advice: You may need to use +P or -p option\n");
+  */
   G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;
@@ -707,10 +709,15 @@ int G__externignore(int* piout, int* pspaceflag, int mparen)
 *
 *  separated from G__exec_statement()
 **************************************************************************/
-int G__handleEOF(char* statement, int mparen, int single_quote, int double_quote)
+int G__handleEOF(char* statement, int mparen, int single_quote, int double_quote, int mparen_line)
 {
   G__eof=1;
   if((mparen!=0)||(single_quote!=0)||(double_quote!=0)){
+     if (mparen)
+        if (mparen > 1)
+           G__fprinterr(G__serr, "Error: %d closing parentheses are missing, e.g. for the block opened around line %d.\n", mparen, mparen_line);
+        else
+           G__fprinterr(G__serr, "Error: Missing closing parenthesis for the block opened around line %d.\n", mparen_line);
     G__unexpectedEOF("G__exec_statement()");
   }
   if(strcmp(statement,"")!=0 && strcmp(statement,"#endif")!=0 &&

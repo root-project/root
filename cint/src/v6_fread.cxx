@@ -115,6 +115,7 @@ int G__fgetname_template(char *string,char *endmark)
   int tmpltnest=0;
   char *pp = string;
   int pflag = 0;
+  int start_line = G__ifile.line_number;
   
   spaceflag=0;
 
@@ -277,6 +278,7 @@ int G__fgetname_template(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetname():2");
       string[i] = '\0';
       return(c);
@@ -377,6 +379,7 @@ int G__fgetstream_newtemplate(char *string,char *endmark)
   int commentflag=0;
   char *pp = string;
   short inew=0;
+  int start_line = G__ifile.line_number;
 
   do {
     ignoreflag=0;
@@ -525,6 +528,7 @@ int G__fgetstream_newtemplate(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetstream_newtemplate():2");
       string[i] = '\0';
       return(c);
@@ -583,7 +587,7 @@ int G__fgetstream_template(char *string,char *endmark)
   int commentflag=0;
   char *pp = string;
   int pflag = 0;
-  
+  int start_line = G__ifile.line_number;
   
   do {
     ignoreflag=0;
@@ -734,6 +738,7 @@ int G__fgetstream_template(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetstream_template():2");
       string[i] = '\0';
       return(c);
@@ -798,6 +803,7 @@ int G__getstream_template(char *source,int *isrc,char *string,char *endmark)
   short nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
   char *pp = string;
   int pflag = 0;
+  int start_line = G__ifile.line_number;
   
 
   do {
@@ -883,6 +889,7 @@ int G__getstream_template(char *source,int *isrc,char *string,char *endmark)
       /* } */
       break;
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__getstream()");
       string[i] = '\0';
       break;
@@ -941,6 +948,7 @@ int G__fgetspace()
 {
   int c;
   short flag=0;
+  int start_line = G__ifile.line_number;
 
   do {
     c=G__fgetc() ;
@@ -982,6 +990,7 @@ int G__fgetspace()
       break;
       
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing white space at or after line %d.\n", start_line);
       G__unexpectedEOF("G__fgetspace():2");
       return(c);
       /* break; */
@@ -1009,6 +1018,7 @@ int G__fgetvarname(char *string,char *endmark)
   int notmpltflag=0;
 #endif
   char* pp = string;
+  int start_line = G__ifile.line_number;
   
   do {
     ignoreflag=0;
@@ -1124,6 +1134,7 @@ int G__fgetvarname(char *string,char *endmark)
           }
           break;
         case EOF:
+          G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
           G__unexpectedEOF("G__fgetvarname():1");
           string[i] = '\0';
           return(c);
@@ -1148,6 +1159,7 @@ int G__fgetvarname(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetvarname():2");
       string[i] = '\0';
       return(c);
@@ -1211,6 +1223,7 @@ int G__fgetname(char *string,char *endmark)
   short i=0,l;
   int c,prev;
   short single_quote=0,double_quote=0,flag=0,spaceflag,ignoreflag;
+  int start_line = G__ifile.line_number;
   
   spaceflag=0;
 
@@ -1296,6 +1309,7 @@ int G__fgetname(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetname():2");
       string[i] = '\0';
       return(c);
@@ -1353,6 +1367,7 @@ int G__getname(char *source,int *isrc,char *string,char *endmark)
   short i=0,l;
   int c,prev;
   short single_quote=0,double_quote=0,flag=0,spaceflag,ignoreflag;
+  int start_line = G__ifile.line_number;
   
   spaceflag=0;
 
@@ -1440,6 +1455,7 @@ int G__getname(char *source,int *isrc,char *string,char *endmark)
 #endif
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetname():2");
       string[i] = '\0';
       return(c);
@@ -1502,6 +1518,7 @@ int G__fdumpstream(char *string,char *endmark)
   int commentflag=0;
   char *pbegin = string;
   int tmpltnest=0;
+  int start_line = G__ifile.line_number;
   
   do {
     ignoreflag=0;
@@ -1636,6 +1653,7 @@ int G__fdumpstream(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fdumpstream():2");
       string[i] = '\0';
       return(c);
@@ -1695,6 +1713,7 @@ int G__fgetstream(char *string,char *endmark)
   int c,prev;
   short nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
   int commentflag=0;
+  int start_line = G__ifile.line_number;
   
   
   do {
@@ -1806,6 +1825,7 @@ int G__fgetstream(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetstream():2");
       string[i] = '\0';
       return(c);
@@ -1862,6 +1882,7 @@ int G__fignorestream(char *endmark)
   short l;
   int c,prev;
   short nest=0,single_quote=0,double_quote=0,flag=0;
+  int start_line = G__ifile.line_number;
   
   do {
     c=G__fgetc() ;
@@ -1935,6 +1956,7 @@ int G__fignorestream(char *endmark)
     /* need to handle preprocessor statements */
       
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fignorestream():3");
       return(c);
 
@@ -1982,6 +2004,7 @@ int G__ignorestream(char *source,int *isrc,char *endmark)
   short l;
   int c,prev;
   short nest=0,single_quote=0,double_quote=0,flag=0;
+  int start_line = G__ifile.line_number;
   
   
   do {
@@ -2058,6 +2081,7 @@ int G__ignorestream(char *source,int *isrc,char *endmark)
     /* need to handle preprocessor statements */
       
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fignorestream():3");
       return(c);
 
@@ -2114,6 +2138,7 @@ int G__fgetstream_new(char *string,char *endmark)
   int c,prev;
   int nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
   int commentflag=0;
+  int start_line = G__ifile.line_number;
 
   short inew=0;
 
@@ -2232,6 +2257,7 @@ int G__fgetstream_new(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetstream_new():2");
       string[i] = '\0';
       return(c);
@@ -2287,6 +2313,7 @@ int G__fgetstream_spaces(char *string,char *endmark)
   int nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
   int commentflag=0;
   int last_was_space = 0;
+  int start_line = G__ifile.line_number;
 
   do {
     ignoreflag=0;
@@ -2380,6 +2407,7 @@ int G__fgetstream_spaces(char *string,char *endmark)
       break;
 
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__fgetstream_new():2");
       string[i] = '\0';
       return(c);
@@ -2443,6 +2471,7 @@ int G__getstream(char *source,int *isrc,char *string,char *endmark)
   short i=0,l;
   int c,prev;
   short nest=0,single_quote=0,double_quote=0,flag=0,ignoreflag;
+  int start_line = G__ifile.line_number;
   
   
   do {
@@ -2505,6 +2534,7 @@ int G__getstream(char *source,int *isrc,char *string,char *endmark)
       /* } */
       break;
     case EOF:
+      G__fprinterr(G__serr, "Error: Missing one of '%s' expected at or after line %d.\n", endmark, start_line);
       G__unexpectedEOF("G__getstream()");
       string[i] = '\0';
       break;

@@ -4943,6 +4943,20 @@
 * - Remove several warnings (comparison signed/unsigned, unused var)
 * - Allow resetting of G__UserSpecificGetSpecialObject
 * - Surround command line macro definitions for external preprocessor by "".
+*
+* 5.16.23 July 25, 2007
+* 6.1.23 July 25, 2007
+* - remove loadfile of bool.h
+* - fix parsing of templated operators
+* - fix constness determination of conversion operators
+* - simplify and fix parsing of cast to basic type
+* - better error message for dangling parentheses
+*
+* 5.16.24 July 26, 2007
+* 6.1.24 July 26, 2007
+* - scrupto: don't free const vars
+* - MSVC: embed manifest
+
 
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion

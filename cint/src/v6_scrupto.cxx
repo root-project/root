@@ -420,7 +420,9 @@ int G__free_struct_upto(int tagnum)
               G__store_struct_offset = store_struct_offset;
               G__tagnum=store_tagnum;
             }
-            if(G__CPPLINK!=G__struct.iscpplink[var->p_tagtable[i]])
+            if(G__CPPLINK!=G__struct.iscpplink[var->p_tagtable[i]]
+               // don't free s in const char s[] = " ";
+               && !(G__CONSTVAR & var->constvar[i]))
               free((void*)var->p[i]);
           }
           if(var->varnamebuf[i]) {

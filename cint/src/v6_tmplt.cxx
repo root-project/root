@@ -1430,13 +1430,15 @@ void G__declare_template()
           This should be removed from the func name (what we are looking for)
           anything preceding combinations of *,& and const. */
        c = G__fgetname_template(temp2,"*&(;=");
-       if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
-          strcat(temp2,"=");
-          c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
-       }
-       if (c=='&' && strncmp(temp2,"operator",strlen("operator"))==0) {
-          strcat(temp2,"&");
-          c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+       if (!strncmp(temp2,"operator",strlen("operator"))
+           && strchr("&*=", c)) {
+          size_t len = strlen(temp2);
+          while (c=='&'||c=='*'||c=='=') {
+             temp2[len + 1] = 0;
+             temp2[len] = c;
+             ++len;
+             c = G__fgetname_template(temp2 + len,"*&(;=");
+          }
        }
     }
     if(0==temp2[0]) { /* constructor template in class definition */
@@ -2455,7 +2457,67 @@ void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
             SET_WRITINGFILE; /* ON777 */
          }
          if(strcmp("new",symbol)==0) isnew=1;
-        if(strcmp("operator",symbol)==0) isnew=1;
+         else if(strcmp("operator",symbol)==0) {
+            SET_READINGFILE; /* ON777 */
+            if (c == '(') {
+               // operator() ()
+               size_t len = strlen(symbol);
+               symbol[len + 1] = 0;
+               symbol[len] = '(';
+               ++len;
+               c=G__fgetstream(symbol + len,")"); // add '('
+               len = strlen(symbol);
+               symbol[len + 1] = 0;
+               symbol[len] = ')';
+               ++len;
+               c=G__fgetstream(symbol + len, punctuation); // add ')'
+            } else if (c == '<') {
+               // operator <, <=, <<
+               size_t len = strlen(symbol);
+               symbol[len + 1] = 0;
+               symbol[len] = '<';
+               ++len;
+               c = G__fgetc();
+               if (c == '<' || c == '=') {
+                  symbol[len + 1] = 0;
+                  symbol[len] = c;
+                  c = G__fgetc();
+               }
+            } else {
+               size_t len = strlen(symbol);
+               size_t templsubst_upto = 8;
+               do {
+                  symbol[len + 1] = 0;
+                  symbol[len] = c;
+                  ++len;
+                  c = G__fgetc();
+
+                  // replace T of "operator T const*"
+                  if(c && (c == ' ' || strchr(punctuation,c))) {
+                     if (G__templatesubstitute(symbol + templsubst_upto + 1,callpara,def_para,templatename
+                                               ,tagname,c,npara,1) && '>'!=c) {
+                        char ignorebuf[G__LONGLINE];
+                        c=G__fgetstream(ignorebuf,">");
+                        G__ASSERT('>'==c);
+                        c='>';
+                     }
+                     len = strlen(symbol);
+                     templsubst_upto = len;
+                  }      
+               } while (c != '(' && c != '<'); // deficiency: no conversion to templated class
+               // replace T of "operator const T"
+               if(symbol[templsubst_upto] == ' ' || strchr(punctuation, symbol[templsubst_upto]))
+                  if (G__templatesubstitute(symbol + templsubst_upto + 1,callpara,def_para,templatename
+                                            ,tagname,c,npara,1) && '>'!=c) {
+                     char ignorebuf[G__LONGLINE];
+                     c=G__fgetstream(ignorebuf,">");
+                     G__ASSERT('>'==c);
+                     c='>';
+                  }
+            }
+            SET_WRITINGFILE; /* ON777 */
+            isnew=1;
+        }
         if(G__templatesubstitute(symbol,callpara,def_para,templatename
            ,tagname,c,npara,isnew) && '>'!=c) {
               char ignorebuf[G__LONGLINE];

@@ -153,7 +153,7 @@ int G__parse_friend(int *piout,int *pspaceflag,int mparen);
 int G__friendignore(int *piout,int *pspaceflag,int mparen);
 #endif
 int G__externignore(int *piout,int *pspaceflag,int mparen);
-int G__handleEOF(char *statement,int mparen,int single_quote,int double_quote);
+int G__handleEOF(char *statement,int mparen,int single_quote,int double_quote, int mparen_line);
 void G__printerror(char *funcname,int ipara,int paran);
 int G__pounderror(void);
 int G__missingsemicolumn(char *item);

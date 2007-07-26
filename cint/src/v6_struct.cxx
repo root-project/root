@@ -651,41 +651,6 @@ int G__defined_tagname(const char *tagname,int noerror)
     }
   }
 
-  /* THIS PART(884) MAY NOT BE NEEDED ANY MORE BY FIX 1604 */
-  if(strcmp(tagname,"bool")==0) {
-    if(
-       0==G__boolflag
-       ) {
-      long store_globalvarpointer=G__globalvarpointer;
-      int store_tagdefining=G__tagdefining;
-      int store_def_struct_member=G__def_struct_member;
-      int store_def_tagnum=G__def_tagnum;
-      int store_tagnum=G__tagnum;
-      int store_cpp=G__cpp;
-      int store_globalcomp = G__globalcomp;
-      struct G__ifunc_table_internal *store_ifunc = G__p_ifunc;
-      G__cpp=0;
-      G__globalvarpointer=G__PVOID;
-      G__tagdefining = -1;
-      G__def_struct_member=0;
-      G__def_tagnum = -1;
-      G__tagnum = -1;
-      G__p_ifunc = &G__ifunc;
-      G__boolflag=1;
-      G__loadfile("bool.h");
-      i=G__defined_tagname(tagname,noerror);
-      G__globalcomp = store_globalcomp;
-      G__cpp=store_cpp;
-      G__globalvarpointer=store_globalvarpointer;
-      G__tagdefining = store_tagdefining;
-      G__def_struct_member=store_def_struct_member;
-      G__def_tagnum = store_def_tagnum;
-      G__tagnum = store_tagnum;
-      G__p_ifunc = store_ifunc;
-      return(i);
-    }
-  }
-
   /* search for typename */
   store_var_type = G__var_type;
   i=G__defined_typename(tagname);
