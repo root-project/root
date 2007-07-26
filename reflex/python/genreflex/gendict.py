@@ -1469,8 +1469,10 @@ class genDictionary(object) :
           new_attrs['artificial'] = 'true'
           self.xref[id] = {'elem':'Constructor', 'attrs':new_attrs,'subelems':[] }
           attrs['members'] += u' ' + id
-        elif len(args) == 0 and 'abstract' not in attrs and \
-             'access' not in self.xref[m]['attrs'] and not self.isDestructorNonPublic(attrs['id']):
+        if (len(args) == 0  or 'default' in args[0] ) \
+               and 'abstract' not in attrs \
+               and 'access' not in self.xref[m]['attrs'] \
+               and not self.isDestructorNonPublic(attrs['id']):
           # NewDel functions extra function
           id = u'_x%d' % self.x_id.next()
           new_attrs = { 'id':id, 'context':attrs['id'], 'artificial':'true' }
