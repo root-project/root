@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.213 2007/07/10 14:24:33 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.214 2007/07/13 13:22:57 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -6213,6 +6213,12 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    // (*)|-------> call CreateDataSet ------->|
    // (*) - optional
 
+   if (fProtocol < 15) {
+      Info("UploadDataSet", "functionality not available: the server has an"
+                            " incompatible version of TFileInfo");
+      return -1;
+   }
+
    // check if  dataSetName is not excluded
    if (strchr(dataSetName, '/')) {
       if (strstr(dataSetName, "public") != dataSetName) {
@@ -6409,6 +6415,12 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    // not uploaded.
    //
 
+   if (fProtocol < 15) {
+      Info("UploadDataSet", "functionality not available: the server has an"
+                            " incompatible version of TFileInfo");
+      return -1;
+   }
+
    TList *fileList = new TList();
    void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(files));
    const char* ent;
@@ -6448,6 +6460,13 @@ Int_t TProof::UploadDataSetFromFile(const char *dataset, const char *file,
    // Where file = name of file containing list of files and
    // dataset = dataset name and opt is a combination of EUploadOpt bits.
    // Each file description (line) can include wildcards.
+   // Check TFileInfo compatibility
+
+   if (fProtocol < 15) {
+      Info("UploadDataSetFromFile", "functionality not available: the server has an"
+                                    " incompatible version of TFileInfo");
+      return -1;
+   }
 
    //TODO: This method should use UploadDataSet(char *dataset, TList *l, ...)
    Int_t fileCount = 0;
@@ -6501,6 +6520,12 @@ Int_t TProof::CreateDataSet(const char *dataSetName,
    //  (*)|<-------kMESS_OK/kMESS_NOTOK<-------| (transaction complete?)
    //  (*) - optional
 
+   // Check TFileInfo compatibility
+   if (fProtocol < 15) {
+      Info("CreateDataSet", "functionality not available: the server has an"
+                            " incompatible version of TFileInfo");
+      return kError;
+   }
 
    // check if  dataSetName is not excluded
    if (strchr(dataSetName, '/')) {
@@ -6619,6 +6644,12 @@ TList *TProof::GetDataSets(const char *dir)
    // * with dir == "public" - ls ~/proof/datasets/public
    // * with dir == "~username/public" - ls ~/username/datasets/public
 
+   if (fProtocol < 15) {
+      Info("GetDataSets", "functionality not available: the server has an"
+                          " incompatible version of TFileInfo");
+      return 0;
+   }
+
    TSocket *master;
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
@@ -6684,6 +6715,12 @@ TList *TProof::GetDataSet(const char *dataset)
 {
    // Get a list of TFileInfo objects describing the files of the specified
    // dataset.
+
+   if (fProtocol < 15) {
+      Info("GetDataSet", "functionality not available: the server has an"
+                         " incompatible version of TFileInfo");
+      return 0;
+   }
 
    TSocket *master;
    if (fActiveSlaves->GetSize())
@@ -6776,6 +6813,12 @@ Int_t TProof::VerifyDataSet(const char *dataSet)
 {
    // Verify if all files in the specified dataset are available.
    // Print a list and return the number of missing files.
+
+   if (fProtocol < 15) {
+      Info("VerifyDataSet", "functionality not available: the server has an"
+                            " incompatible version of TFileInfo");
+      return kError;
+   }
 
    Int_t nMissingFiles = 0;
    TSocket *master;

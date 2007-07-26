@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.119 2007/07/10 08:37:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.120 2007/07/13 13:22:57 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -103,7 +103,7 @@ class TVirtualMutex;
 // 11 -> 12: new progress message
 // 12 -> 13: exchange version/architecture/compiler info
 // 13 -> 14: new proofserv environment setting
-// 14 -> 15: add support for entry lists
+// 14 -> 15: add support for entry lists; new version of TFileInfo
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 15;            // protocol version number
