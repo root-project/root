@@ -55,7 +55,7 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-NETXLIBEXTRA += -L$(XROOTDDIRP) -lXrdClient $(XROOTDDIRL)/libXrdOuc.a
+NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdClient
 endif
 
 ##### local rules #####
