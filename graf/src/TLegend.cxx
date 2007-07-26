@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.34 2007/03/19 10:04:33 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.35 2007/06/05 20:07:46 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -421,6 +421,9 @@ void TLegend::PaintPrimitives()
       while (( entrysize = (TLegendEntry *)nextsize() )) {
          TLatex entrytex( 0, 0, entrysize->GetLabel() );
          entrytex.SetNDC();
+         Style_t tfont = entrysize->GetTextFont();
+         if (tfont == 0) tfont = GetTextFont();
+         entrytex.SetTextFont(tfont);
          entrytex.SetTextSize(textsize);
          if ( entrytex.GetYsize() > maxentryheight ) {
             maxentryheight = entrytex.GetYsize();
@@ -462,6 +465,9 @@ void TLegend::PaintPrimitives()
       while (( entry = (TLegendEntry *)next() )) {
          TLatex entrytex( 0, 0, entry->GetLabel() );
          entrytex.SetNDC();
+         Style_t tfont = entry->GetTextFont();
+         if (tfont == 0) tfont = GetTextFont();
+         entrytex.SetTextFont(tfont);
          if(entry->GetTextSize() == 0) entrytex.SetTextSize(textsize);
          TString opt = entry->GetOption();
          opt.ToLower();

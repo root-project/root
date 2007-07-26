@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.29 2007/04/15 06:08:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.30 2007/04/30 12:52:14 couet Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -207,6 +207,9 @@ void TPaveStats::Paint(Option_t *option)
                Int_t itok = 0;
                while ( st !=0 ) {
                   latex_tok = new TLatex(0.,0.,st);
+                  Style_t tfont = latex->GetTextFont();
+                  if (tfont == 0) tfont = GetTextFont();
+                  latex_tok->SetTextFont(tfont);
                   latex_tok->SetTextSize(textsize);
                   w = latex_tok->GetXsize();
                   if (w > wtok[itok]) wtok[itok] = w;
@@ -217,9 +220,12 @@ void TPaveStats::Paint(Option_t *option)
             } else if (strpbrk(sl, "|") !=0) {
             } else {
                print_name = 0;
+               Style_t tfont = latex->GetTextFont();
+               if (tfont == 0) latex->SetTextFont(GetTextFont());
                latex->SetTextSize(titlesize);
                titlelength = latex->GetXsize()+2.*margin;
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
+               latex->SetTextFont(tfont);
             }
             delete [] sl; sl = 0;
          }
