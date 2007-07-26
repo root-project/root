@@ -1286,7 +1286,7 @@ if test ! "$platform" = "win32"; then
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
-	result "`basename $0`: libX11 (package x11-devel) MUST be installed"
+	result "`basename $0`: libX11 (package libX11-devel) MUST be installed"
         exit 1
     fi
 
