@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.19 2007/05/10 06:36:22 brun Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.20 2007/06/19 13:26:21 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -162,11 +162,12 @@ TMVA::MethodBase::MethodBase( TString      jobName,
      fIsMVAPdfs                 ( kFALSE ),
      fTxtWeightsOnly            ( kTRUE ),
      fSplRefS                   ( 0 ),
-     fSplRefB                   ( 0 ),
-     fLogger                    ( this )
+     fSplRefB                   ( 0 )
 {
    // standard constructur
-   this->Init();
+   Init();
+
+   fLogger = this;
 
    // interpretation of configuration option string
    DeclareOptions();
@@ -220,13 +221,14 @@ TMVA::MethodBase::MethodBase( DataSet&     theData,
      fIsMVAPdfs                 ( kFALSE ),
      fTxtWeightsOnly            ( kTRUE ),
      fSplRefS                   ( 0 ),
-     fSplRefB                   ( 0 ),
-     fLogger                    ( this )
+     fSplRefB                   ( 0 )
 {
    // constructor used for Testing + Application of the MVA,
    // only (no training), using given WeightFiles
 
-   this->Init();
+   Init();
+
+   fLogger = this;
 
    DeclareOptions();
 }
@@ -379,21 +381,21 @@ void TMVA::MethodBase::PrintHelpMessage() const
    //         "|--------------------------------------------------------------|"
    fLogger << kINFO << Endl;
    fLogger << Tools::Color("bold")
-           << "================================================================" 
+           << "================================================================"
            << Tools::Color( "reset" )
            << Endl;
    fLogger << Tools::Color("bold")
-           << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :" 
+           << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :"
            << Tools::Color( "reset" )
            << Endl;
 
    // print method-specific help message
-   GetHelpMessage(); 
+   GetHelpMessage();
 
    fLogger << Endl;
    fLogger << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
    fLogger << Tools::Color("bold")
-           << "================================================================" 
+           << "================================================================"
            << Tools::Color( "reset" )
            << Endl;
    fLogger << Endl;
@@ -575,7 +577,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
       tf << endl << "#WGT -*-*-*-*-*-*-*-*-*-*-*-*- weights -*-*-*-*-*-*-*-*-*-*-*-*-" << endl << endl;
 
       // no weights when standalone class is produced, which would be duplication
-      WriteWeightsToStream( tf ); 
+      WriteWeightsToStream( tf );
    }
 }
 
@@ -720,7 +722,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    if (idx1<0) {
       methodTitle=methodName;
       notit=kTRUE;
-   } 
+   }
    else {
       methodTitle=fullname(idxtit+2,fullname.Length()-1);
       notit=kFALSE;
@@ -790,7 +792,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    fin.getline(buf,512);
    while (!TString(buf).BeginsWith("#WGT")) fin.getline(buf,512);
    fin.getline(buf,512);
-   
+
    ReadWeightsFromStream( fin );
 }
 
@@ -964,7 +966,7 @@ void TMVA::MethodBase::PrepareEvaluationTree( TTree* testTree )
    for (Int_t ievt=0; ievt<testTree->GetEntries(); ievt++) {
 
       ReadTestEvent(ievt);
-      
+
       // fill the MVA output value for this event
       newBranchMVA->SetAddress( &myMVA ); // only when the tree changed, but we don't know when that is
       myMVA = (Float_t)GetMvaValue();
@@ -1075,7 +1077,7 @@ void TMVA::MethodBase::Test( TTree *theTestTree )
    vbranch->SetAddress( &v );
    if (pbranch) pbranch->SetAddress( &p );
    wbranch->SetAddress( &w );
-   tbranch->SetAddress( &t );   
+   tbranch->SetAddress( &t );
    fLogger << kINFO << "Loop over test events and fill histograms with classifier response ..." << Endl;
    if (pbranch) fLogger << kINFO << "Also filling probability and rarity histograms (on request) ..." << Endl;
    for (Int_t ievt=0; ievt<Data().GetNEvtTest(); ievt++) {
