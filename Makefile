@@ -768,6 +768,13 @@ html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
+# Use DESTDIR to set a sandbox prior to calling "make install", e.g.:
+#   ./configure --prefix=/usr/
+#   make
+#   DESTDIR=/tmp/root_install/ make install
+#   cd /tmp/root_install
+#   tar czf ~/root-vxxxx.tar.gz usr
+# Needed to create e.g. rpms.
 install: all
 	@if [ -d $(DESTDIR)$(BINDIR) ]; then \
 	   inode1=`ls -id $(DESTDIR)$(BINDIR) | awk '{ print $$1 }'`; \
