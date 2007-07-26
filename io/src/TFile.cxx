@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.212 2007/07/02 17:40:19 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.213 2007/07/12 07:01:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -241,7 +241,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    //
    //  When opening the file, the system checks the validity of this directory.
    //  If something wrong is detected, an automatic Recovery is performed. In
-   //  this case, the file is scanned sequentially reading all logical blocks 
+   //  this case, the file is scanned sequentially reading all logical blocks
    //  and attempting to rebuild a correct directory (see TFile::Recover).
    //  One can disable the automatic recovery procedure when reading one
    //  or more files by setting the environment variable "TFile::Recover 0"
@@ -479,6 +479,16 @@ void TFile::Init(Bool_t create)
       return;
    fInitDone = kTRUE;
 
+   if (!fIsRootFile) {
+      if (fArchive) {
+         delete fArchive;
+         fArchive = 0;
+         fIsArchive = kFALSE;
+      }
+      gDirectory = gROOT;
+      return;
+   }
+
    if (fArchive) {
       if (fOption != "READ") {
          Error("Init", "archive %s can only be opened in read mode", GetName());
@@ -507,11 +517,6 @@ void TFile::Init(Bool_t create)
          fIsArchive = kFALSE;
          goto zombie;
       }
-   }
-
-   if (!fIsRootFile) {
-      gDirectory = gROOT;
-      return;
    }
 
    Int_t nfree;
