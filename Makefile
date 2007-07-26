@@ -780,7 +780,8 @@ install: all
 	   inode1=`ls -id $(DESTDIR)$(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if ([ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]) || [ "$(USECONFIG)" = "FALSE" ]; then \
+	if ([ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]) || \
+	    [ "$(USECONFIG)" = "FALSE" ]; then \
 	   echo "Everything already installed..."; \
 	else \
 	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
