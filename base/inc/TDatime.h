@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.12 2007/02/04 17:39:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.13 2007/05/03 08:15:11 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -17,7 +17,16 @@
 //                                                                      //
 // TDatime                                                              //
 //                                                                      //
-// Data and time 950130 124559.                                         //
+// This class stores the date and time with a precision of one second   //
+// in an unsigned 32 bit word (e.g. 950130 124559). The date is stored  //
+// with the origin being the 1st january 1995.                          //
+//                                                                      //
+// This class has no support for time zones. The time is assumed        //
+// to be in the local time of the machine where the object was created. //
+// As a result, TDatime objects are not portable between machines       //
+// operating in different time zones and unsuitable for storing the     //
+// date/time of data taking events and the like. If absolute time is    //
+// required, use TTimeStamp.                                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

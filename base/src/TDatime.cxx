@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.13 2006/12/13 18:06:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.14 2007/05/03 08:15:11 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -14,8 +14,15 @@
 // TDatime                                                              //
 //                                                                      //
 // This class stores the date and time with a precision of one second   //
-// in an unsigned 32 bit word. The date is stored with the origin being //
-// the 1st january 1995. See also class TStopwatch.                     //
+// in an unsigned 32 bit word (e.g. 950130 124559). The date is stored  //
+// with the origin being the 1st january 1995.                          //
+//                                                                      //
+// This class has no support for time zones. The time is assumed        //
+// to be in the local time of the machine where the object was created. //
+// As a result, TDatime objects are not portable between machines       //
+// operating in different time zones and unsuitable for storing the     //
+// date/time of data taking events and the like. If absolute time is    //
+// required, use TTimeStamp.                                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -147,7 +154,16 @@ const char *TDatime::AsSQLString() const
 UInt_t TDatime::Convert(Bool_t toGMT) const
 {
    // Convert fDatime from TDatime format to the standard time_t format.
-   // If toGMT is true the returned time_t is converted to GMT.
+   // If toGMT is true, the time offset of the current local time zone is
+   // subtracted from the returned time_t. One use of such a non-standard time_t
+   // value is to convert a TDatime object that contains local time to GMT,
+   // as in this example:
+   //
+   // TDatime now;
+   // now.Set(now.Convert(kTRUE));
+   //
+   // Caution: the time_t returned from Convert(kTRUE) is incompatible with
+   // regular Unix time - it contains an artificial, locale-dependent offset.
 
    UInt_t year  = fDatime>>26;
    UInt_t month = (fDatime<<6)>>28;
