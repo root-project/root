@@ -24,7 +24,7 @@ CASTORO      := $(CASTORS:.cxx=.o)
 CASTORDEP    := $(CASTORO:.o=.d) $(CASTORDO:.o=.d)
 
 CASTORLIB    := $(LPATH)/libRCastor.$(SOEXT)
-CASTORFMAP   := $(CASTORLIB:.$(SOEXT)=.rootmap)
+CASTORMAP    := $(CASTORLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CASTORH))
