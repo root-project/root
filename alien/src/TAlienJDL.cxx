@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.4 2007/03/19 16:55:55 rdm Exp $
+// @(#)root/alien:$Name: v5-15-04 $:$Id: TAlienJDL.cxx,v 1.5 2007/03/20 08:02:11 brun Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -73,9 +73,8 @@ void TAlienJDL:: SetPrice(UInt_t price)
 //______________________________________________________________________________
 void TAlienJDL:: SetTTL(UInt_t ttl)
 {
-   // Sets OutputDirectory.
-
-   TString ttlstring= (Int_t)ttl;
+   TString ttlstring;
+   ttlstring+= ttl;
 
    SetValue("TTL", ttlstring.Data());
 }
@@ -107,19 +106,23 @@ void TAlienJDL::SetInputDataList(const char* value)
       SetValue("InputDataList", AddQuotes(value));
 }
 
+
 //______________________________________________________________________________
 void TAlienJDL::SetSplitMode(const char* value, UInt_t maxnumberofinputfiles, UInt_t maxinputfilesize)
 {
    // Sets the split mode.
 
-   if ( (TString(value) == "se" ) || (TString(value) == "SE") || (TString(value == "Se"))) {
+   if (value && !strcasecmp(value, "SE")) {
+
       SetValue("Split", AddQuotes(value));
       if (maxnumberofinputfiles) {
-         TString val = (Int_t)maxnumberofinputfiles;
+         TString val;
+         val += maxnumberofinputfiles;
          SetValue("SplitMaxInputFileNumber", AddQuotes(val.Data()));
       }
       if (maxinputfilesize) {
-         TString val = (Int_t)maxinputfilesize;
+         TString val;
+         val += maxinputfilesize;
          SetValue("SplitMaxInputFileSize", AddQuotes(val.Data()));
       }
    } else {
