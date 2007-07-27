@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.17 2007/04/16 13:19:07 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.18 2007/04/26 13:55:43 axel Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -127,14 +127,14 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(o.Address());
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(33, int(t.MemberSize()));
 
   t.UpdateMembers();
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(33, int(t.MemberSize()));
 
   m = t.DataMemberAt(0);
   CPPUNIT_ASSERT(m);
