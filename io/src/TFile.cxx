@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.213 2007/07/12 07:01:51 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.214 2007/07/26 22:59:04 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -308,13 +308,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
-   fArchive = TArchiveFile::Open(fUrl.GetUrl(), this);
-   if (fArchive) {
-      fname1 = fArchive->GetArchiveName();
-      // if no archive member is specified then this TFile is just used
-      // to read the archive contents
-      if (!strlen(fArchive->GetMemberName()))
-         fIsArchive = kTRUE;
+   fArchive       = 0;
+   if (fIsRootFile) {
+      fArchive = TArchiveFile::Open(fUrl.GetUrl(), this);
+      if (fArchive) {
+        fname1 = fArchive->GetArchiveName();
+         // if no archive member is specified then this TFile is just used
+         // to read the archive contents
+         if (!strlen(fArchive->GetMemberName()))
+            fIsArchive = kTRUE;
+      }
    }
 
    if (fOption == "NET")
@@ -480,11 +483,6 @@ void TFile::Init(Bool_t create)
    fInitDone = kTRUE;
 
    if (!fIsRootFile) {
-      if (fArchive) {
-         delete fArchive;
-         fArchive = 0;
-         fIsArchive = kFALSE;
-      }
       gDirectory = gROOT;
       return;
    }
