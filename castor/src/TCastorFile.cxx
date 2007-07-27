@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.4 2007/03/08 11:43:54 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.5 2007/07/02 17:39:13 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -178,9 +178,8 @@ TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
    fAuthProto = GetAuthProto(u);
    fUrl.SetUrl(u);
 
-#if 1
-   Info("TCastorFile","fAuthProto = %s, u: %s", fAuthProto.Data(), u.Data());
-#endif
+   if (gDebug > 0)
+      Info("TCastorFile","fAuthProto = %s, u: %s", fAuthProto.Data(), u.Data());
 
    // file is always created by stage_out_hsm() and therefore
    // exists when opened by rootd
@@ -379,7 +378,8 @@ void TCastorFile::FindServerAndPath()
       TUrl rurl(r);
       fUrl = rurl;
 
-      Info("FindServerAndPath"," fDiskServer: %s, r: %s", fDiskServer.Data(), r.Data());
+      if (gDebug > 0)
+         Info("FindServerAndPath"," fDiskServer: %s, r: %s", fDiskServer.Data(), r.Data());
 
       // Now ipath is not null and contains the real internal path on the disk
       // server 'host', e.g. it is fDiskServer:fInternalPath
