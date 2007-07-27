@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.21 2007/06/14 06:51:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.22 2007/06/14 21:01:21 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -79,7 +79,7 @@ void TWebFile::Init(Bool_t)
       return;
    }
 
-   if (strncmp(buf, "root", 4) && strncmp(buf, "PK", 2)) {  // PK is zip file
+   if (fIsRootFile && strncmp(buf, "root", 4) && strncmp(buf, "PK", 2)) {  // PK is zip file
       Error("TWebFile", "%s is not a ROOT file", fUrl.GetUrl());
       MakeZombie();
       gDirectory = gROOT;
