@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.36 2007/02/03 18:07:29 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.37 2007/02/03 19:36:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -786,6 +786,12 @@ Int_t TLinearFitter::Eval()
       fParCovar.Zero();
       fTValues.Zero();
       fParSign.Zero();
+      if (fInputFunction){
+         fInputFunction->SetParameters(fParams.GetMatrixArray());
+         ((TF1*)fInputFunction)->SetChisquare(0);
+         ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
+         ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
+      }
       return 1;
    }
    fParams=coef;
@@ -1527,21 +1533,23 @@ Int_t TLinearFitter::GraphLinearFitter(Double_t h)
    fitResult = Eval();
 
    //calculate the precise chisquare
-   if (!fitOption.Nochisq){
-      Double_t temp, temp2, sumtotal=0;
-      for (Int_t i=0; i<n; i++){
-         if (!f1->IsInside(&x[i])) continue;
-         temp=f1->Eval(x[i]);
-         temp2=(y[i]-temp)*(y[i]-temp);
-         e=grr->GetErrorY(i);
-         if (e<0 || fitOption.W1)
-            e=1;
-         temp2/=(e*e);
-
-         sumtotal+=temp2;
+   if (!fitResult){
+      if (!fitOption.Nochisq){
+         Double_t temp, temp2, sumtotal=0;
+         for (Int_t i=0; i<n; i++){
+            if (!f1->IsInside(&x[i])) continue;
+            temp=f1->Eval(x[i]);
+            temp2=(y[i]-temp)*(y[i]-temp);
+            e=grr->GetErrorY(i);
+            if (e<0 || fitOption.W1)
+               e=1;
+            temp2/=(e*e);
+            
+            sumtotal+=temp2;
+         }
+         fChisquare=sumtotal;
+         f1->SetChisquare(fChisquare);
       }
-      fChisquare=sumtotal;
-      f1->SetChisquare(fChisquare);
    }
    return fitResult;
 }
@@ -1555,19 +1563,11 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
    TGraph2D *gr=(TGraph2D*)GetObjectFit();
    TF2 *f2=(TF2*)GetUserFunc();
 
-   //TGraph2DErrors *gre=0;
-   //if (gr->InheritsFrom(TGraph2DErrors::Class())) gre=(TGraph2DErrors*)gr;
-
-
    Foption_t fitOption=GetFitOption();
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
    Double_t *gz   = gr->GetZ();
-   //  Double_t fxmin = f2->GetXmin();
-   //Double_t fxmax = f2->GetXmax();
-   //Double_t fymin = f2->GetYmin();
-   //Double_t fymax = f2->GetYmax();
    Double_t x[2];
    Double_t z, e;
    Int_t fitResult=0;
@@ -1598,27 +1598,30 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
 
    fitResult = Eval();
 
-   if (!fitOption.Nochisq){
-      Double_t temp, temp2, sumtotal=0;
-      for (Int_t bin=0; bin<n; bin++){
-         x[0] = gx[bin];
-         x[1] = gy[bin];
-         if (!f2->IsInside(x)) {
-            continue;
+   if (!fitResult){
+      if (!fitOption.Nochisq){
+         //calculate the precise chisquare
+         Double_t temp, temp2, sumtotal=0;
+         for (Int_t bin=0; bin<n; bin++){
+            x[0] = gx[bin];
+            x[1] = gy[bin];
+            if (!f2->IsInside(x)) {
+               continue;
+            }
+            z   = gz[bin];
+            
+            temp=f2->Eval(x[0], x[1]);
+            temp2=(z-temp)*(z-temp);
+            e=gr->GetErrorZ(bin);
+            if (e<0 || fitOption.W1)
+               e=1;
+            temp2/=(e*e);
+            
+            sumtotal+=temp2;
          }
-         z   = gz[bin];
-
-         temp=f2->Eval(x[0], x[1]);
-         temp2=(z-temp)*(z-temp);
-         e=gr->GetErrorZ(bin);
-         if (e<0 || fitOption.W1)
-            e=1;
-         temp2/=(e*e);
-
-         sumtotal+=temp2;
+         fChisquare=sumtotal;
+         f2->SetChisquare(fChisquare);
       }
-      fChisquare=sumtotal;
-      f2->SetChisquare(fChisquare);
    }
    return fitResult;
 }
@@ -1665,28 +1668,30 @@ Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
    fitResult = Eval();
 
    //calculate the chisquare
-   if (!fitOption.Nochisq){
-      Double_t temp, temp2, sumtotal=0;
-      next.Reset();
-      while((gr = (TGraph*)next())) {
-         n        = gr->GetN();
-         gx   = gr->GetX();
-         gy   = gr->GetY();
-         for (i=0; i<n; i++){
-            if (!f1->IsInside(&gx[i])) continue;
-            temp=f1->Eval(gx[i]);
-            temp2=(gy[i]-temp)*(gy[i]-temp);
-            e=gr->GetErrorY(i);
-            if (e<0 || fitOption.W1)
-               e=1;
-            temp2/=(e*e);
-
-            sumtotal+=temp2;
+   if (!fitResult){
+      if (!fitOption.Nochisq){
+         Double_t temp, temp2, sumtotal=0;
+         next.Reset();
+         while((gr = (TGraph*)next())) {
+            n        = gr->GetN();
+            gx   = gr->GetX();
+            gy   = gr->GetY();
+            for (i=0; i<n; i++){
+               if (!f1->IsInside(&gx[i])) continue;
+               temp=f1->Eval(gx[i]);
+               temp2=(gy[i]-temp)*(gy[i]-temp);
+               e=gr->GetErrorY(i);
+               if (e<0 || fitOption.W1)
+                  e=1;
+               temp2/=(e*e);
+               
+               sumtotal+=temp2;
+            }
+            
          }
-
+         fChisquare=sumtotal;
+         f1->SetChisquare(fChisquare);
       }
-      fChisquare=sumtotal;
-      f1->SetChisquare(fChisquare);
    }
    return fitResult;
 }
@@ -1737,42 +1742,43 @@ Int_t TLinearFitter::HistLinearFitter()
                if (eu <= 0) continue;
             }
             AddPoint(x, cu, eu);
-
          }
       }
    }
 
    fitResult = Eval();
 
-   if (!fitOption.Nochisq){
-      Double_t temp, temp2, sumtotal=0;
-      for (binz=hzfirst;binz<=hzlast;binz++) {
-         x[2]  = zaxis->GetBinCenter(binz);
-         for (biny=hyfirst;biny<=hylast;biny++) {
-            x[1]  = yaxis->GetBinCenter(biny);
-            for (binx=hxfirst;binx<=hxlast;binx++) {
-               x[0]  = xaxis->GetBinCenter(binx);
-               if (!f1->IsInside(x)) continue;
-               bin = hfit->GetBin(binx,biny,binz);
-               cu  = hfit->GetBinContent(bin);
-
-               if (fitOption.W1) {
-                  if (fitOption.W1==1 && cu == 0) continue;
-                  eu = 1;
-               } else {
-                  eu  = hfit->GetBinError(bin);
-                  if (eu <= 0) continue;
+   if (!fitResult){
+      if (!fitOption.Nochisq){
+         Double_t temp, temp2, sumtotal=0;
+         for (binz=hzfirst;binz<=hzlast;binz++) {
+            x[2]  = zaxis->GetBinCenter(binz);
+            for (biny=hyfirst;biny<=hylast;biny++) {
+               x[1]  = yaxis->GetBinCenter(biny);
+               for (binx=hxfirst;binx<=hxlast;binx++) {
+                  x[0]  = xaxis->GetBinCenter(binx);
+                  if (!f1->IsInside(x)) continue;
+                  bin = hfit->GetBin(binx,biny,binz);
+                  cu  = hfit->GetBinContent(bin);
+                  
+                  if (fitOption.W1) {
+                     if (fitOption.W1==1 && cu == 0) continue;
+                     eu = 1;
+                  } else {
+                     eu  = hfit->GetBinError(bin);
+                     if (eu <= 0) continue;
+                  }
+                  temp=f1->EvalPar(x);
+                  temp2=(cu-temp)*(cu-temp);
+                  temp2/=(eu*eu);
+                  sumtotal+=temp2;
                }
-               temp=f1->EvalPar(x);
-               temp2=(cu-temp)*(cu-temp);
-               temp2/=(eu*eu);
-               sumtotal+=temp2;
             }
          }
+         
+         fChisquare=sumtotal;
+         f1->SetChisquare(fChisquare);
       }
-
-      fChisquare=sumtotal;
-      f1->SetChisquare(fChisquare);
    }
    return fitResult;
 }
