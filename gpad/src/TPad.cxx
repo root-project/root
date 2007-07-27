@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.270 2007/07/18 12:50:07 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.271 2007/07/23 15:11:22 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5776,16 +5776,15 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    Bool_t createdExternal = kFALSE;
 
+   if (fGLDevice != -1) {
+      gGLManager->DeleteGLContext(fGLDevice);
+      fCanvas->SetSelected(this);
+      fGLDevice = -1;
+      fCopyGLDevice = kFALSE;
+      fEmbeddedGL = kFALSE;
+   }
    // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad")) {
-      if (fGLDevice != -1) {
-         gGLManager->DeleteGLContext(fGLDevice);
-         fCanvas->SetSelected(this);
-         fGLDevice = -1;
-         fCopyGLDevice = kFALSE;
-         fEmbeddedGL = kFALSE;
-      }
-
       newViewer = TVirtualViewer3D::Viewer3D(this,type);
 
       if (!newViewer) {
@@ -5801,7 +5800,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          createdExternal = kTRUE;
 
    } else
-         newViewer = new TViewer3DPad(*this);
+      newViewer = new TViewer3DPad(*this);
 
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
