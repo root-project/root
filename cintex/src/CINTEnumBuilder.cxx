@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-13-04b $:$Id: CINTEnumBuilder.cxx,v 1.10 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.11 2006/12/08 09:36:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -30,7 +30,29 @@ namespace ROOT { namespace Cintex {
       if ( e.IsEnum() )  {
          string name = CintName(e.Name(SCOPED));
          int tagnum = ::G__defined_tagname(name.c_str(), 2);
-         if( -1 != tagnum ) return;
+         if( -1 != tagnum ) {
+            // This enum is already known to CINT.
+            // But did we just declare it via an EnumTypeBuilder?
+            // If so it won't have any members yet, so only return if
+            // the e's first member is already known to CINT:
+            if (e.DataMemberSize()) {
+               std::string strVarname(e.DataMemberAt(0).Name(SCOPED));
+               char* varname = new char[strVarname.length()];
+               strcpy(varname, strVarname.c_str());
+               int i = 0;
+               int varhash = 0;
+               long dummy_struct_offset = 0;
+               long dummy_store_struct_offset = 0;
+               G__hash(varname, varhash, i);
+               i = 0;
+               bool known = ((G__searchvariable(varname, varhash, 0, 0, &dummy_struct_offset, 
+                                                &dummy_store_struct_offset, &i, 0)));
+               delete []varname;
+               if (known)
+                  return;
+            } else
+               return;
+         }
 
          if ( Cintex::Debug() )  {
             cout << "Cintex: Building enum " << name << endl;
