@@ -79,8 +79,6 @@ ifeq ($(PLATFORM),solaris)
 RFLX_REFLEXLL   += -ldemangle
 endif
 
-RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py
-
 RFLX_TESTD      = $(REFLEXDIR)/test
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
 RFLX_TESTLIBD2  = $(RFLX_TESTD)/testDict2
@@ -205,10 +203,10 @@ lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< $(CXXOUT)$@
 
 $(RFLX_TESTLIBS1) : $(REFLEXDIRI)/Reflex/Reflex.h $(RFLX_TESTLIBD1)/selection.xml
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict1/Reflex.h -s testDict1/selection.xml -I../../include
+		cd $(RFLX_TESTD); ../../bin/genreflex testDict1/Reflex.h -s testDict1/selection.xml -I../../include
 
 $(RFLX_TESTLIBS2) : $(RFLX_TESTLIBD2)/Class2Dict.h $(RFLX_TESTLIBD2)/selection.xml $(wildcard $(RFLX_TESTLIBD2)/*.h)
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include --iocomments
+		cd $(RFLX_TESTD); ../../bin/genreflex testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include --iocomments
 
 $(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cxx
 		$(CXX) $(OPT) $(CXXFLAGS) -I$(RFLX_CPPUNITI) -Ireflex -c $< $(CXXOUT)$@
