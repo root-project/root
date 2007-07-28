@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.3 2006/08/11 20:17:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.h,v 1.4 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
    Double_t            GetEfficiencyRel();
    static Int_t        GetLearnEntries();
    Bool_t              FillBuffer();
+   TTree              *GetOwner() const;
    TTree              *GetTree() const;
    Bool_t              IsLearning() const {return fIsLearning;}
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);

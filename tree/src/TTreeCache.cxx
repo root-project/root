@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.14 2007/07/16 16:31:57 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.15 2007/07/23 21:35:35 pcanal Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -235,6 +235,14 @@ Int_t TTreeCache::GetLearnEntries()
    //see SetLearnEntries
 
    return fgLearnEntries;
+}
+
+//_____________________________________________________________________________
+TTree *TTreeCache::GetOwner() const
+{
+   //return the owner of this cache.
+
+   return fOwner;
 }
 
 //_____________________________________________________________________________
