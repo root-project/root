@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.310 2006/11/14 20:06:51 pcanal Exp $
+// @(#)root/tree:$Name: v5-14-00-patches $:$Id: TTree.cxx,v 1.311 2006/11/25 00:15:26 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -549,7 +549,7 @@ TTree::~TTree()
          TFileCacheRead *pf = file->GetCacheRead();
          if (pf && pf->InheritsFrom(TTreeCache::Class())) {
             TTreeCache *tpf = (TTreeCache*)pf;
-            if (tpf->GetTree() == this) {
+            if (tpf->GetOwner() == this) {
                delete tpf;
                tpf = 0;
                file->SetCacheRead(0);
