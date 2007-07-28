@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.5 2007/07/02 17:39:13 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.6 2007/07/27 15:08:32 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -89,8 +89,8 @@ static int UseCastor2API()
 {
    // Function that checks whether we should use the old or new stager API.
 
-  int version=use_castor2_api();
-  return version;
+   int version = use_castor2_api();
+   return version;
 }
 
 #else
@@ -196,22 +196,19 @@ void TCastorFile::FindServerAndPath()
 {
    // Find the CASTOR disk server and internal file path.
 
-   // it is just called the rfio_parse and no extra parsing is added here to that
-
+   // just call rfio_parse and no extra parsing is added here to that
 
    TString castorturl;
    char *host=0;
    char *name=0;
 
-  // to be able to use the turl starting with  castor:
-
+   // to be able to use the turl starting with  castor:
    if (!strcmp(fUrl.GetProtocol(),"castor"))
       castorturl=Form("%s://%s","rfio",fUrl.GetFileAndOptions());
    else
       castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
 
    // the complete turl in fname
-
    TString fname = castorturl; // for compatibility with rfio_parse interface
    if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
       castorturl = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
@@ -221,7 +218,6 @@ void TCastorFile::FindServerAndPath()
       Error("FindServerAndPath", "error parsing %s", fUrl.GetUrl());
       return;
    }
-
 
    if (!UseCastor2API()) {
 
@@ -384,7 +380,7 @@ void TCastorFile::FindServerAndPath()
       // Now ipath is not null and contains the real internal path on the disk
       // server 'host', e.g. it is fDiskServer:fInternalPath
       fInternalPath = stcp_output==0?0:stcp_output->ipath;
-      if(stcp_output)
+      if (stcp_output)
          free(stcp_output);
    } else {
 
@@ -429,9 +425,7 @@ void TCastorFile::FindServerAndPath()
          opts.service_class=*auxPoint;
       }
 
-      // in the stage_open I use the fname which is the result of the rfio_parsing
-
-
+      // in stage_open I use the fname which is the result of the rfio_parsing
       rc = stage_open(0,
                       MOVER_PROTOCOL_ROOT,
                       (char *)fname.Data(),
