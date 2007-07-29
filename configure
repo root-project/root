@@ -4721,7 +4721,21 @@ if test "x$enable_reflex" = "xyes"; then
     if test "$prefix" = "\$(ROOTSYS)" ; then
         libdirreflex='`dirname $0`/../lib'
     fi
-    cat $GENREFLEXSHIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXSHOUT
+
+    # determine whether to use GCCXML0.6 python scripts
+    GCCXML06SED=""
+    if test "x$gccxml" != "x"; then
+        if test -x ${gccxml}/gccxml; then
+            GCCXMLVERSION=`${gccxml}/gccxml --version 2>/dev/null | sed 's,.*\([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\).*$,\1,'`
+            GCCXMLVERSION06=`echo $GCCXMLVERSION|grep ^0\.6`
+            if test "x${GCCXMLVERSION06}" != "x"; then
+                GCCXML06SED="-e s|genreflex|genreflex06|g"
+                echo -n ' [ Upgrade to GCCXML >= 0.7 recommended! ] '
+            fi
+        fi
+    fi
+
+    cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXSHOUT
     chmod a+x $GENREFLEXSHOUT
     result "done"
 
@@ -4732,7 +4746,8 @@ if test "x$enable_reflex" = "xyes"; then
         else
             libdirreflex=`cygpath -m $libdir`
         fi
-        cat $GENREFLEXBATIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXBATOUT
+
+        cat $GENREFLEXBATIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXBATOUT
         chmod a+x $GENREFLEXBATOUT
         result "done"
     fi
@@ -4742,7 +4757,7 @@ if test "x$enable_reflex" = "xyes"; then
     if test "$prefix" = "\$(ROOTSYS)" ; then
         libdirreflex='`dirname $0`/../lib'
     fi
-    cat $GENREFLEXROOTCINTSHIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTSHOUT
+    cat $GENREFLEXROOTCINTSHIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXROOTCINTSHOUT
     chmod a+x $GENREFLEXROOTCINTSHOUT
     result "done"
 
@@ -4753,7 +4768,7 @@ if test "x$enable_reflex" = "xyes"; then
         else
             libdirreflex=`cygpath -m $libdir`
         fi
-        cat $GENREFLEXROOTCINTBATIN | sed "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTBATOUT
+        cat $GENREFLEXROOTCINTBATIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXROOTCINTBATOUT
         chmod a+x $GENREFLEXROOTCINTBATOUT
         result "done"
     fi
