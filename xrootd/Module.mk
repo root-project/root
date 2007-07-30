@@ -99,6 +99,10 @@ $(XRDPLUGINS): $(XRDPLUGINSA)
 		          ln -sf bin/$$lname $(LPATH)/$$lname ; \
 		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
 		       else \
+		          if [ "x$(PLATFORM)" = "xmacosx" ] ; then \
+		             lname=`basename $$i` ; \
+		             install_name_tool -id $(LIBDIR)/$$lname $$i ; \
+		          fi ; \
 		          cp $$i $(LPATH)/ ; \
 		       fi ; \
 		    done ; \
