@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.258 2007/03/09 11:17:10 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.259 2007/03/16 15:41:00 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3822,6 +3822,33 @@ char *Compress(const char *str)
 }
 
 //______________________________________________________________________________
+const char *CopyArg(const char *original) 
+{
+   // If the argument starts with MODULE/inc, strip it
+   // to make it the name we can use in #includes.
+
+#ifdef ROOTBUILD
+   if ((strstr(original,"LinkDef") || strstr(original,"Linkdef") ||
+      strstr(original,"linkdef")) && strstr(original,".h")) {
+      return original;
+   }
+   const char *slash = (char *)strchr(original,'\\');
+   if (slash==0) {
+      slash = (char *)strchr(original,'/');
+   }
+   if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 && 
+       ( slash[4]=='/' || slash[4]=='\\') ) 
+   {
+      return slash+5;
+   } else {
+      return original;
+   }
+#else
+   return original;
+#endif
+}
+
+//______________________________________________________________________________
 void StrcpyWithEsc(char *escaped, const char *original)
 {
    // Copy original into escaped BUT make sure that the \ characters
@@ -3835,6 +3862,26 @@ void StrcpyWithEsc(char *escaped, const char *original)
       escaped[k++] = original[j++];
    }
    escaped[k] = '\0';
+}
+
+//______________________________________________________________________________
+void StrcpyArg(char *dest, const char *original)
+{
+   // Copy the command line argument, stripping MODULE/inc if
+   // necessary.
+
+   std::string copy( CopyArg( original ) );
+   strcpy(dest,copy.c_str());
+}
+
+//______________________________________________________________________________
+void StrcpyArgWithEsc(char *escaped, const char *original)
+{
+   // Copy the command line argument, stripping MODULE/inc if
+   // necessary and then escaping string.
+
+   std::string copy( CopyArg( original ) );
+   StrcpyWithEsc(escaped,original);
 }
 
 void ReplaceFile(const char *tmpdictname, const char *dictname)
@@ -4264,9 +4311,9 @@ int main(int argc, char **argv)
       return 1;
    }
 # else
-   sprintf(path[0], "-Ibase/inc");
-   sprintf(path[1], "-Icont/inc");
-   sprintf(path[2], "-Iinclude");
+   //sprintf(path[0], "-Ibase/inc");
+   //sprintf(path[1], "-Icont/inc");
+   sprintf(path[0], "-Iinclude");
 # endif
 #else
    sprintf(path[0], "-I%s", ROOTINCDIR);
@@ -4392,8 +4439,10 @@ int main(int argc, char **argv)
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
-            argvv[argcc++] = "base/inc/TObject.h";
-            argvv[argcc++] = "base/inc/TMemberInspector.h";
+            argvv[argcc++] = "TObject.h";
+            argvv[argcc++] = "TMemberInspector.h";
+            //argvv[argcc++] = "base/inc/TObject.h";
+            //argvv[argcc++] = "base/inc/TMemberInspector.h";
 #else
             argvv[argcc++] = "TObject.h";
             argvv[argcc++] = "TMemberInspector.h";
@@ -4427,8 +4476,9 @@ int main(int argc, char **argv)
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
          if (!icc) {
-            for (j = 0; path[j][0]; j++)
-               argvv[argcc++] = path[j];
+            for (j = 0; path[j][0]; j++) {
+               argvv[argcc++] = (char*)path[j][0];
+            }
             argvv[argcc++] = "+V";
          }
          iv = i;
@@ -4446,14 +4496,16 @@ int main(int argc, char **argv)
          return 1;
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
-         StrcpyWithEsc(esc_arg, argv[i]);
+         StrcpyArgWithEsc(esc_arg, argv[i]);
          fprintf(bundle,"#include \"%s\"\n", esc_arg);
          if (!insertedBundle) {
             argvv[argcc++] = (char*)bundlename.c_str();
             insertedBundle = true;
          }
-      } else
-         argvv[argcc++] = argv[i];
+      } else {
+         argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
+         StrcpyArg(argvv[argcc-1],argv[i]);
+      }
    }
    if (use_preprocessor) {
       fclose(bundle);
