@@ -19,6 +19,7 @@ TMVADO       := $(TMVADS:.cxx=.o)
 TMVADH       := $(TMVADS:.cxx=.h)
 
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+TMVAH_CINT   := $(subst tmva/inc,include/TMVA,$(TMVAH))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVAO        := $(TMVAS:.cxx=.o)
 
@@ -47,9 +48,9 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 		   "$(SOFLAGS)" libTMVA.$(SOEXT) $@ "$(TMVAO) $(TMVADO)" \
 		   "$(TMVALIBEXTRA)"
 
-$(TMVADS):      $(TMVAH) $(TMVAL) $(ROOTCINTTMPEXE)
+$(TMVADS):      $(TMVAH_CINT) $(TMVAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH) $(TMVAL)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH_CINT) $(TMVAL)
 
 $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 		$(RLIBMAP) -o $(TMVAMAP) -l $(TMVALIB) \
