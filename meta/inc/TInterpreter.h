@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.27 2007/03/08 15:52:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.28 2007/06/25 15:39:36 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #endif
 
 class TClass;
+class TEnv;
 class TFunction;
 class TMethod;
 class TObjArray;
@@ -57,6 +58,7 @@ public:
    virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
    virtual Int_t    GetExitCode() const = 0;
+   virtual TEnv    *GetMapfile() const { return 0; }
    virtual Int_t    GetMore() const = 0;
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;

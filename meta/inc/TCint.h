@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.34 2007/03/08 15:52:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.35 2007/06/25 15:39:36 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
    void    EnableAutoLoading();
    void    EndOfLineAction();
    Int_t   GetExitCode() const { return fExitCode; }
+   TEnv   *GetMapfile() const { return fMapfile; }
    Int_t   GetMore() const { return fMore; }
    char   *GetPrompt() { return fPrompt; }
    const char *GetSharedLibs();
