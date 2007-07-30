@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.22 2007/06/14 21:01:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.23 2007/07/27 13:33:49 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -25,6 +25,47 @@
 #include "Bytes.h"
 
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.0";
+
+
+// Internal class used to manage the socket that may stay open between
+// calls when HTTP/1.1 protocol is used
+class TWebSocket {
+private:
+   TWebFile *fWebFile;  // associated web file
+public:
+   TWebSocket(TWebFile *f);
+   ~TWebSocket();
+   void ReOpen();
+};
+
+TWebSocket::TWebSocket(TWebFile *f)
+{
+   // Open web file socket.
+
+   fWebFile = f;
+   if (!f->fSocket)
+      ReOpen();
+}
+
+TWebSocket::~TWebSocket()
+{
+   // Close socket in case not HTTP/1.1 protocol.
+
+   if (!fWebFile->fHTTP11) {
+      delete fWebFile->fSocket;
+      fWebFile->fSocket = 0;
+   }
+}
+
+void TWebSocket::ReOpen()
+{
+   // Re-open web file socket.
+
+   if (fWebFile->fSocket)
+      delete fWebFile->fSocket;
+   fWebFile->fSocket = new TSocket(fWebFile->fUrl.GetHost(),
+                                   fWebFile->fUrl.GetPort());
+}
 
 
 ClassImp(TWebFile)
@@ -57,12 +98,22 @@ TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
 }
 
 //______________________________________________________________________________
+TWebFile::~TWebFile()
+{
+   // Cleanup.
+
+   delete fSocket;
+}
+
+//______________________________________________________________________________
 void TWebFile::Init(Bool_t)
 {
    // Initialize a TWebFile object.
 
    char buf[4];
    int  err;
+
+   fSocket = 0;
 
    if ((err = GetHead()) < 0) {
       if (err == -2)
@@ -178,8 +229,16 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    msg += fUrl.GetPort();
    msg += "/";
    msg += fUrl.GetFile();
-   msg += " HTTP/1.0";
+   if (fHTTP11)
+      msg += " HTTP/1.1";
+   else
+      msg += " HTTP/1.0";
    msg += "\r\n";
+   if (fHTTP11) {
+      msg += "Host: ";
+      msg += fUrl.GetHost();
+      msg += "\r\n";
+   }
    msg += gUserAgent;
    msg += "\r\n";
    msg += "Range: bytes=";
@@ -188,7 +247,9 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    msg += fOffset+len-1;
    msg += "\r\n\r\n";
 
-   if (GetFromWeb10(buf, len, msg) == -1)
+   Int_t n;
+   while ((n = GetFromWeb10(buf, len, msg)) == -2) { }
+   if (n == -1)
       return kTRUE;
 
    fOffset += len;
@@ -267,15 +328,23 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
    msgh += fUrl.GetPort();
    msgh += "/";
    msgh += fUrl.GetFile();
-   msgh += " HTTP/1.0";
+   if (fHTTP11)
+      msgh += " HTTP/1.1";
+   else
+      msgh += " HTTP/1.0";
    msgh += "\r\n";
+   if (fHTTP11) {
+      msgh += "Host: ";
+      msgh += fUrl.GetHost();
+      msgh += "\r\n";
+   }
    msgh += gUserAgent;
    msgh += "\r\n";
    msgh += "Range: bytes=";
 
    TString msg = msgh;
 
-   Int_t k = 0, n = 0;
+   Int_t k = 0, n = 0, r;
    for (Int_t i = 0; i < nbuf; i++) {
       if (n) msg += ",";
       msg += pos[i] + fArchiveOffset;
@@ -284,7 +353,8 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
       n   += len[i];
       if (msg.Length() > 8000) {
          msg += "\r\n\r\n";
-         if (GetFromWeb10(&buf[k], n, msg) == -1)
+         while ((r = GetFromWeb10(&buf[k], n, msg)) == -2) { }
+         if (r == -1)
             return kTRUE;
          msg = msgh;
          k += n;
@@ -294,7 +364,8 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 
    msg += "\r\n\r\n";
 
-   if (GetFromWeb10(&buf[k], n, msg) == -1)
+   while ((r = GetFromWeb10(&buf[k], n, msg)) == -2) { }
+   if (r == -1)
       return kTRUE;
 
    return kFALSE;
@@ -335,17 +406,20 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 {
    // Read multiple byte range request from web server.
    // Uses HTTP 1.0 daemon wihtout mod-root.
-   // Returns -1 in case of error, 0 in case of success.
+   // Returns -2 in case of HTTP/1.1 and connection has been closed and call
+   // has to be retried, -1 in case of error, 0 in case of success.
 
    if (!len) return 0;
 
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid()) {
+   // open fSocket and close it when going out of scope
+   TWebSocket ws(this);
+
+   if (!fSocket->IsValid()) {
       Error("GetFromWeb10", "cannot connect to remote host %s", fUrl.GetHost());
       return -1;
    }
 
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1) {
+   if (fSocket->SendRaw(msg.Data(), msg.Length()) == -1) {
       Error("GetFromWeb10", "error sending command to remote host %s", fUrl.GetHost());
       return -1;
    }
@@ -355,14 +429,14 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    TString boundary, boundaryEnd;
    Long64_t first = -1, last, tot;
 
-   while ((n = GetLine(&s, line, 1024)) >= 0) {
+   while ((n = GetLine(fSocket, line, 1024)) >= 0) {
       if (n == 0) {
          if (ret < 0)
             return ret;
 
          if (first >= 0) {
             Int_t ll = Int_t(last - first) + 1;
-            if (s.RecvRaw(&buf[ltot], ll) == -1) {
+            if (fSocket->RecvRaw(&buf[ltot], ll) == -1) {
                Error("GetFromWeb10", "error receiving data from remote host %s", fUrl.GetHost());
                return -1;
             }
@@ -413,6 +487,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
       if (res.BeginsWith("Content-Range:")) {
          sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
       }
+   }
+
+   if (n == -1 && fHTTP11) {
+      if (gDebug > 0)
+         Info("GetFromWeb10", "HTTP/1.1 socket closed, reopen");
+      ws.ReOpen();
+      return -2;
    }
 
    if (ltot != len) {
@@ -492,6 +573,7 @@ Int_t TWebFile::GetHead()
 
    fSize       = -1;
    fHasModRoot = kFALSE;
+   fHTTP11     = kFALSE;
 
    // Give full URL so Apache's virtual hosts solution works.
    TString msg = "HEAD ";
@@ -533,6 +615,8 @@ Int_t TWebFile::GetHead()
 
       TString res = line;
       if (res.BeginsWith("HTTP/1.")) {
+         if (res.BeginsWith("HTTP/1.1"))
+            fHTTP11 = kTRUE;
          TString scode = res(9, 3);
          Int_t code = scode.Atoi();
          if (code == 500)
@@ -574,7 +658,8 @@ Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t size)
    }
    line[n] = '\0';
    if (err < 0) {
-      Error("GetLine", "error receiving data from remote host %s", fUrl.GetHost());
+      if (!fHTTP11 || gDebug > 0)
+         Error("GetLine", "error receiving data from remote host %s", fUrl.GetHost());
       return -1;
    }
    return n;

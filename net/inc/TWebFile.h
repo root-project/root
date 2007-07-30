@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.10 2007/06/14 06:51:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.11 2007/06/14 21:01:21 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -31,15 +31,20 @@
 #endif
 
 class TSocket;
+class TWebSocket;
 
 
 class TWebFile : public TFile {
 
+friend class TWebSocket;
+
 private:
    mutable Long64_t  fSize;         // file size
+   TSocket          *fSocket;       // socket for HTTP/1.1 (stays alive between calls)
    Bool_t            fHasModRoot;   // true if server has mod_root installed
+   Bool_t            fHTTP11;
 
-   TWebFile() { }
+   TWebFile() : fSocket(0) { }
    void   Init(Bool_t);
    Int_t  GetHead();
    Int_t  GetLine(TSocket *s, char *line, Int_t size);
@@ -51,7 +56,7 @@ private:
 public:
    TWebFile(const char *url);
    TWebFile(TUrl url);
-   virtual ~TWebFile() { }
+   virtual ~TWebFile();
 
    Long64_t GetSize() const;
    Bool_t   IsOpen() const;
