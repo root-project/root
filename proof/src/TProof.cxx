@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.214 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.215 2007/07/26 15:35:04 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -6625,14 +6625,13 @@ Int_t TProof::CreateDataSet(const char *dataSetName,
                      "Unexpected message type: %d", retMess->What());
             delete retMess;
          }
+         Collect();
       }
    } else if (overwriteNoDataSet) {
       Printf("Dataset %s already exists", dataSetName);
-      Collect();
       return kDataSetExists;
    } //if(goodName == 1)
 
-   Collect();
    return fileCount;
 }
 
