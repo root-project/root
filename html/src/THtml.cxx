@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.137 2007/07/02 09:34:36 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.138 2007/07/17 13:10:37 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -17,24 +17,20 @@
 #include "TClassDocOutput.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"
-#include "TDataType.h"
-#include "TDatime.h"
 #include "TDocInfo.h"
 #include "TDocOutput.h"
 #include "TEnv.h"
+#include "TInterpreter.h"
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TVirtualPad.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <list>
-#include <vector>
-#include <algorithm>
-#include <sstream>
+#include <set>
+#include <fstream>
 
 THtml *gHtml = 0;
 
@@ -164,6 +160,13 @@ defined by Root.Html.Description or SetClassDocTag(). See the section on
 <p>Example:</p><pre>
   Root.Html.Description:       //____________________</pre>
 
+<p>The class documentation will show which include statement is to be used 
+and which library needs to be linked to access it.
+The include file name is determined via 
+<a href="http://root.cern.ch/root/html/TClass.html#TClass:GetDeclFileName">
+TClass::GetDeclFileName()</a>;
+leading parts are removed if they match any of the ':' separated entries in 
+THtml::GetIncludePath()
 
 <h4><a name="conf:tags">II.5 Author, copyright, etc.</a></h4>
 
@@ -499,7 +502,8 @@ END_HTML */
 
 ClassImp(THtml)
 //______________________________________________________________________________
-THtml::THtml(): fFoundDot(-1), fCounterFormat("%12s %5s %s"),
+THtml::THtml(): fIncludePath("include"), fFoundDot(-1), 
+   fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"), fProductDocDir("doc"),
    fMacroPath("../doc/macros:."), fModuleDocPath("../doc")
 {
@@ -1238,6 +1242,58 @@ Bool_t THtml::IsNamespace(const TClass*cl)
    // Check whether cl is a namespace
    return (cl->Property() & kIsNamespace);
 }
+
+//______________________________________________________________________________
+void THtml::LoadAllLibs()
+{
+   // Load all libraries known to ROOT via the rootmap system.
+
+   TEnv* mapfile = gInterpreter->GetMapfile();
+   if (!mapfile || !mapfile->GetTable()) return;
+
+   std::set<std::string> direct;
+   std::set<std::string> indirect;
+   
+   TEnvRec* rec = 0;
+   TIter iEnvRec(mapfile->GetTable());
+   while ((rec = (TEnvRec*) iEnvRec())) {
+      TString libs = rec->GetValue();
+      TString lib;
+      Ssiz_t pos = 0;
+      bool first = true;
+      while (libs.Tokenize(lib, pos))
+         if (first) {
+            // ignore libCore - it's already loaded
+            if (lib.BeginsWith("libCore"))
+               continue;
+
+            // first one, i.e. direct
+            direct.insert(lib.Data());
+            first = false;
+         } else
+            indirect.insert(lib.Data());
+   }
+   TString allLibs;
+   for (std::set<std::string>::iterator iDirect = direct.begin();
+        iDirect != direct.end();) {
+      std::set<std::string>::iterator next = iDirect;
+      ++next;
+      if (indirect.find(*iDirect) != indirect.end())
+         direct.erase(iDirect);
+      else allLibs += *iDirect + "* ";
+      iDirect = next;
+   }
+   for (std::set<std::string>::iterator iIndirect = indirect.begin();
+        iIndirect != indirect.end(); ++iIndirect)
+      allLibs += *iIndirect + " ";
+   if (gHtml && gDebug > 2)
+      gHtml->Info("LoadAllLibs", "Loading libraries %s\n", allLibs.Data());
+
+   for (std::set<std::string>::iterator iDirect = direct.begin();
+        iDirect != direct.end(); ++iDirect)
+      gSystem->Load(iDirect->c_str());
+}
+
 
 //______________________________________________________________________________
 void THtml::MakeAll(Bool_t force, const char *filter)

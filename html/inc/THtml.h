@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.36 2007/05/09 17:01:45 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.37 2007/07/02 14:31:27 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -56,6 +56,7 @@ protected:
    
    TString        fSourcePrefix;    // prefix to relative source path
    TString        fSourceDir;       // source path
+   TString        fIncludePath;     // include path
    TString        fOutputDir;       // output directory
    TString        fDotDir;          // directory of GraphViz's dot binary
    TString        fEtcDir;          // directory containing auxiliary files
@@ -83,6 +84,8 @@ public:
    THtml();
    virtual      ~THtml();
 
+   static void   LoadAllLibs();
+
    // Functions to generate documentation
    void          Convert(const char *filename, const char *title, 
                          const char *dirname = "", const char *relpath="../");
@@ -96,6 +99,7 @@ public:
    void          SetProductName(const char* product) { fProductName = product; }
    void          SetOutputDir(const char *dir) { fOutputDir = dir; }
    void          SetSourceDir(const char *dir);
+   void          SetIncludePath(const char *path) { fIncludePath = path; }
    void          SetSourcePrefix(const char *prefix);
    void          SetEtcDir(const char* dir) { fEtcDir = dir; }
    void          SetModuleDocPath(const char* path) { fModuleDocPath = path; }
@@ -125,6 +129,7 @@ public:
    const TString&      GetProductName() const { return fProductName; }
    const TString&      GetOutputDir(Bool_t createDir = kTRUE) const;
    const TString&      GetSourceDir() const { return fSourceDir; }
+   const TString&      GetIncludePath() const { return fIncludePath; }
    const TString&      GetSourcePrefix() const { return fSourcePrefix; }
    virtual const char* GetEtcDir();
    const TString&      GetModuleDocPath() const { return fModuleDocPath; }

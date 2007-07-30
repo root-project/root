@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.7 2007/05/02 10:14:43 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.8 2007/06/11 14:09:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1351,7 +1351,26 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    // needs to go first to allow title on the left
    const char* lib=fCurrentClass->GetSharedLibs();
    const char* incl=fHtml->GetDeclFileName(fCurrentClass);
-   if (incl) incl=gSystem->BaseName(incl);
+   if (incl) {
+      TString inclPath(GetHtml()->GetIncludePath());
+      Ssiz_t posDelim = 0;
+      TString inclDir;
+      TString sIncl(incl);
+#ifdef R__WIN32
+      const char* pdelim = ";";
+      static const char ddelim = '\\';
+#else
+      const char* pdelim = ":";
+      static const char ddelim = '/';
+#endif
+      while (inclPath.Tokenize(inclDir, posDelim, pdelim))
+         if (sIncl.BeginsWith(inclDir)) {
+            incl += inclDir.Length();
+            if (incl[0] == ddelim || incl[0] == '/')
+               ++incl;
+            break;
+         }
+   }
    if (lib && strlen(lib)|| incl && strlen(incl)) {
       classFile << "<div class=\"libinfo\">";
       if (lib) {
