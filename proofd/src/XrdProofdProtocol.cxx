@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.64 2007/07/16 11:23:19 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.65 2007/07/17 14:17:15 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -5148,13 +5148,16 @@ int XrdProofdProtocol::Admin()
       // If the action is requested for a user different from us we
       // must be 'superuser'
       XrdProofdClient *c = fPClient;
+      XrdOucString grp;
       if (usr.length() > 0) {
          // Separate group info, if any
-         XrdOucString grp;
          if (usr.find(':') != STR_NPOS) {
             grp = usr;
             grp.erase(grp.rfind(':'));
             usr.erase(0,usr.find(':') + 1);
+         } else {
+            XrdProofGroup *g = fgGroupsMgr.GetUserGroup(usr.c_str());
+            grp = g ? g->Name() : "default";
          }
          if (usr != fPClient->ID()) {
             if (!fSuperUser) {
@@ -5189,8 +5192,13 @@ int XrdProofdProtocol::Admin()
                   // Yes: create an (invalid) instance of XrdProofdClient:
                   // It would be validated on the first valid login
                   c = new XrdProofdClient(usr.c_str(), (short int) -1, ui);
+                  // Locate and set the group, if any
+                  if (fgGroupsMgr.Num() > 0)
+                     c->SetGroup(fgGroupsMgr.GetUserGroup(usr.c_str(), grp.c_str()));
                   // Add to the list
                   fgProofdClients.push_back(c);
+                  TRACEP(DBG, "Admin: instance for {client, group} = {"<<usr<<", "<<
+                              grp<<"} created and added to the list ("<<c<<")");
                }
             }
          }
@@ -5207,8 +5215,12 @@ int XrdProofdProtocol::Admin()
          }
       }
 
+      // Notify
+      TRACEP(DBG, "Admin: default changed to "<<tag<<" for {client, group} = {"<<
+                  usr<<", "<<grp<<"} ("<<c<<")");
+
       // forward down the tree, if not leaf
-      if (fSrvType != kXPD_WorkerServer) {
+      if (fgMgr.SrvType() != kXPD_WorkerServer) {
          XrdOucString buf("u:");
          buf += c->ID();
          buf += " ";
