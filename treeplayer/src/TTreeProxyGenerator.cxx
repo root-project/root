@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.33 2007/07/23 21:49:19 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.34 2007/07/24 06:04:08 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -368,7 +368,17 @@ namespace ROOT {
 
       if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
          // Actually we probably should look for the file ..
-         TString header = gSystem->BaseName(cl->GetDeclFileName());
+         const char *filename = cl->GetDeclFileName();
+         const char *slash = (char *)strchr(filename,'\\');
+         if (slash==0) {
+            slash = (char *)strchr(filename,'/');
+         }
+         TString header;
+         if (slash && (slash-filename)==7 && strncmp(filename,"include",7)==0) {
+            header = slash+1;
+         } else {
+            header = filename;
+         }
          TString directive = Form("#include \"%s\"\n",header.Data());
          TIter i( &fListOfHeaders );
          for(TNamed *n = (TNamed*) i(); n; n = (TNamed*)i() ) {
