@@ -27,9 +27,13 @@ ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
                 $(MODDIRI)/PosixThreadInc.h
+# Headers that should be copied to $ROOTSYS/include but should not be
+# passed directly to rootcint
+THREADH_EXT  += $(MODDIRI)/TAtomicCountGcc.h $(MODDIRI)/TAtomicCountPthread.h
 else
 THREADH      += $(MODDIRI)/TWin32Condition.h $(MODDIRI)/TWin32Mutex.h \
                 $(MODDIRI)/TWin32Thread.h $(MODDIRI)/TWin32ThreadFactory.h
+THREADH_EXT  += $(MODDIRI)/TAtomicCountWin32.h
 endif
 
 THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
@@ -53,7 +57,7 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH) $(THREADH_EXT))
 ALLLIBS      += $(THREADLIB)
 ALLMAPS      += $(THREADMAP)
 
