@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.155 2007/07/04 08:48:04 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.156 2007/07/16 10:11:15 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -585,7 +585,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          // caching. The method SetClassInfo (i.e. here) is usually called during
          // the building phase of the TClass, hence it is NOT well formed yet.
          if (cl->fClassInfo->IsValid() &&
-             !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
+             !(cl->fClassInfo->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
             cl->MakeZombie();
          }
 
