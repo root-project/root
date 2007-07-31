@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.85 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.86 2007/04/23 10:50:36 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1523,7 +1523,12 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
       return 0;
    }
-   Int_t newbins = nbins/ngroup;
+   if (!newname && xbins) {
+      Error("Rebin","if xbins is specified, newname must be given");
+      return 0;
+   }
+
+      Int_t newbins = nbins/ngroup;
    if (xbins) newbins = ngroup;
 
    // Save old bin contents into a new array
@@ -1559,7 +1564,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
    } else if (xbins) {
-      ngroup = 1;
+      ngroup = newbins;
       hnew->SetBins(newbins,xbins);
    } else {
       hnew->SetBins(newbins,xmin,xmax);
@@ -1575,8 +1580,17 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       binContent = 0;
       binCount   = 0;
       binError   = 0;
+
+      Int_t imax = ngroup;
+      Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
       for (i=0;i<ngroup;i++) {
-         if (oldbin+i > nbins) break;
+
+         if( (hnew == this && (oldbin+i > nbins)) || 
+             (hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
+            imax = i;
+            break;
+         }
+
          binContent += oldBins[oldbin+i];
          binCount   += oldCount[oldbin+i];
          binError   += oldErrors[oldbin+i];
@@ -1584,8 +1598,9 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       cu2[bin] = binContent;
       er2[bin] = binError;
       en2[bin] = binCount;
-      oldbin += ngroup;
+      oldbin += imax;
    }
+
    hnew->SetEntries(entries); //was modified by SetBinContent
 
    delete [] oldBins;

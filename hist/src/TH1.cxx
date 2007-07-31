@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.348 2007/06/25 17:25:19 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.349 2007/07/02 11:58:04 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5092,6 +5092,11 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Error("Rebin", "Operation valid on 1-D histograms only");
       return 0;
    }
+   if (!newname && xbins) {
+      Error("Rebin","if xbins is specified, newname must be given");
+      return 0;
+   }
+   
    Int_t newbins = nbins/ngroup;
    if (xbins) newbins = ngroup;
    
