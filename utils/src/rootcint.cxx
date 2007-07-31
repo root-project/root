@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.259 2007/03/16 15:41:00 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.260 2007/07/30 20:08:25 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4477,11 +4477,11 @@ int main(int argc, char **argv)
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
          if (!icc) {
             for (j = 0; path[j][0]; j++) {
-               argvv[argcc++] = (char*)path[j][0];
+               argvv[argcc++] = (char*)path[j];
             }
             argvv[argcc++] = "+V";
          }
-         iv = i;
+         iv = argcc;
       }
       if ((strstr(argv[i],"LinkDef") || strstr(argv[i],"Linkdef") ||
            strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
@@ -4517,7 +4517,7 @@ int main(int argc, char **argv)
    }
 
    if (!il) {
-      GenerateLinkdef(&argc, argv, iv);
+      GenerateLinkdef(&argcc, argvv, iv);
       argvv[argcc++] = autold;
    }
    G__ShadowMaker::VetoShadow(); // we create them ourselves
