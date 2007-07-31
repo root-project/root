@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSpiderEditor.cxx,v 1.2 2007/07/20 14:37:37 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpiderEditor.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -173,8 +173,8 @@ void TSpiderEditor::MakeBrowse()
 
    TGHorizontalFrame *f3 = new TGHorizontalFrame(fBrowse);
 
-   TGLabel *GotoEntryLabel = new TGLabel(f3,"Go to:");
-   f3->AddFrame(GotoEntryLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 18, 1, 5));
+   TGLabel *gotoEntryLabel = new TGLabel(f3,"Go to:");
+   f3->AddFrame(gotoEntryLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 18, 1, 5));
    fGotoEntry = new TGNumberEntryField(f3, kGotoEntry, 0,
                                       TGNumberFormat::kNESInteger,
                                       TGNumberFormat::kNEANonNegative);

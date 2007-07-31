@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLClipSetEditor.cxx,v 1.1 2007/07/23 15:01:36 rdm Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -19,14 +19,15 @@
 #include "TGNumberEntry.h"
 
 
-//______________________________________________________________________
+//______________________________________________________________________________
 // TGLClipSetSubEditor
 //
 //
 
 ClassImp(TGLClipSetSubEditor)
 
-//______________________________________________________________________
+
+//______________________________________________________________________________
 TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM(0),
@@ -102,7 +103,8 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fApplyButton->Connect("Pressed()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
 }
 
-//______________________________________________________________________
+
+//______________________________________________________________________________
 void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
 {
    // Set model object.
@@ -146,13 +148,15 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
    }
 }
 
-//______________________________________________________________________
+
+//______________________________________________________________________________
 void TGLClipSetSubEditor::Changed()
 {
    // Emit Changed signal.
 
    Emit("Changed()");
 }
+
 
 //______________________________________________________________________________
 void TGLClipSetSubEditor::ClipValueChanged()
@@ -161,6 +165,7 @@ void TGLClipSetSubEditor::ClipValueChanged()
 
    fApplyButton->SetState(kButtonUp);
 }
+
 
 //______________________________________________________________________________
 void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
@@ -178,6 +183,7 @@ void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
    ((TGMainFrame*)GetMainFrame())->Layout();
    Changed();
 }
+
 
 //______________________________________________________________________________
 void TGLClipSetSubEditor::UpdateViewerClip()
@@ -205,14 +211,15 @@ void TGLClipSetSubEditor::UpdateViewerClip()
 }
 
 
-//______________________________________________________________________
+//______________________________________________________________________________
 // TGLClipSetEditor
 //
 //
 
 ClassImp(TGLClipSetEditor)
 
-//______________________________________________________________________
+
+//______________________________________________________________________________
 TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                    UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -228,13 +235,12 @@ TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,
    fSE->Connect("Changed()", "TGLClipSetEditor", this, "Update()");
 }
 
-/**************************************************************************/
 
-//______________________________________________________________________
+//______________________________________________________________________________
 void TGLClipSetEditor::SetModel(TObject* obj)
 {
    // Set model object.
 
-  fM = dynamic_cast<TGLClipSet*>(obj);
-  fSE->SetModel(fM);
+   fM = dynamic_cast<TGLClipSet*>(obj);
+   fSE->SetModel(fM);
 }
