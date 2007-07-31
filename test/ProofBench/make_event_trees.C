@@ -1,4 +1,4 @@
-// $Id: make_event_trees.C,v 1.9 2006/10/18 14:37:53 rdm Exp $
+// $Id: make_event_trees.C,v 1.10 2007/07/16 09:57:39 rdm Exp $
 //
 //
 
@@ -87,8 +87,8 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
    slavemacro << "         Event event;"                                                  << endl;
    slavemacro << "         Event *ep = &event;"                                           << endl;
    slavemacro << "         TTree eventtree(\"EventTree\", \"Event Tree\");"               << endl;
-   slavemacro << "         eventtree.Bronch(\"event\", \"Event\", &ep, 32000, 1);"        << endl;
    slavemacro << "         eventtree.SetDirectory(f);"                                    << endl;
+   slavemacro << "         eventtree.Branch(\"event\", \"Event\", &ep, 32000, 1);"        << endl;
    slavemacro << "         eventtree.AutoSave();"                                         << endl;
    slavemacro <<                                                                             endl;
    slavemacro << "         for(Int_t j=0; j<nevents; j++) {"                              << endl;
