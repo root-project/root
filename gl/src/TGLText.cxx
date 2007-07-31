@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.3 2007/06/21 17:27:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLText.cxx,v 1.4 2007/07/23 15:10:17 rdm Exp $
 // Author:  Olivier Couet  12/04/2007
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TGLText::BBox(const char* string, float& llx, float& lly, float& llz,
 {
    // Calculate bounding-box for given string.
 
-   fGLTextFont->BBox(string, llx, lly, lly, urx, ury, urz);
+   fGLTextFont->BBox(string, llx, lly, llz, urx, ury, urz);
 }
 
 //______________________________________________________________________________
