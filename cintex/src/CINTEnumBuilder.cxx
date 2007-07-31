@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-13-04b $:$Id: CINTEnumBuilder.cxx,v 1.10 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTEnumBuilder.cxx,v 1.11 2006/12/08 09:36:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -29,8 +29,15 @@ namespace ROOT { namespace Cintex {
       // Setup enum info.
       if ( e.IsEnum() )  {
          string name = CintName(e.Name(SCOPED));
-         int tagnum = ::G__defined_tagname(name.c_str(), 2);
-         if( -1 != tagnum ) return;
+         G__ClassInfo cintEnum(name.c_str());
+         if (cintEnum.IsValid()) {
+            // This enum is already known to CINT.
+            // But did we just declare it via an EnumTypeBuilder?
+            // If so it won't have any members yet, so only return if
+            // the e's first member is already known to CINT:
+            if (!e.DataMemberSize() || cintEnum.NDataMembers())
+               return;
+         }
 
          if ( Cintex::Debug() )  {
             cout << "Cintex: Building enum " << name << endl;
@@ -39,6 +46,7 @@ namespace ROOT { namespace Cintex {
          Scope scope = e.DeclaringScope();
          CINTScopeBuilder::Setup( scope );
          bool isCPPMacroEnum = name == "$CPP_MACROS";
+         int tagnum = cintEnum.Tagnum();
 
          if (!isCPPMacroEnum) {
             G__linked_taginfo taginfo;
