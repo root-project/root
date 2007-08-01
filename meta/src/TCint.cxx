@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.156 2007/07/16 10:11:15 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.157 2007/07/31 19:58:56 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -590,6 +590,13 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          }
 
          if (!cl->fClassInfo->IsLoaded()) {
+            if (cl->fClassInfo->Property() & (kIsNamespace)) {
+               // Namespace cna have a ClassInfo but not CINT dictionary per
+               // se because they are auto-created if one of their contained 
+               // classes has a dictionary.
+               cl->MakeZombie();
+            }
+
             // this happens when no CINT dictionary is available
             delete cl->fClassInfo;
             cl->fClassInfo = 0;
