@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.219 2007/07/17 16:30:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.220 2007/08/01 17:32:40 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1105,7 +1105,9 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    // Remove extension if any, ignore files with extension not being .h*
    Int_t where = className.Last('.');
    if (where != kNPOS) {
-      if (!className.Contains(".h"))
+      if (className.EndsWith(".so") || className.EndsWith(".sl") ||
+          className.EndsWith(".dl") || className.EndsWith(".a")  ||
+          className.EndsWith(".dll", TString::kIgnoreCase))
          return result;
       className.Remove(where);
    }
