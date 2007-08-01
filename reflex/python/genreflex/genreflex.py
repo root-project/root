@@ -24,7 +24,7 @@ class genreflex:
     self.opts            = {}
     self.gccxmlpath      = None
     self.gccxmlopt       = ''
-    self.gccxmlvers      = '0.6.0_patch3'
+    self.gccxmlvers      = '0.7.0_20070615'
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False

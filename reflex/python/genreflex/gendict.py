@@ -13,6 +13,7 @@ import gccdemangler
 class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def __init__(self, hfile, opts):
+    print "AXEL DEBUG GENDICT"
     self.classes    = []
     self.namespaces = []
     self.typeids    = []
@@ -90,7 +91,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def findSpecialNamespace(self):
     for ns in self.namespaces:
-      if ns['name'].find('.') != -1:
+      if 'name' not in ns or ns['name'].find('.') != -1:
         self.unnamedNamespaces.append(ns['id'])
       elif ns['name'] == '::' :
         self.globalNamespaceID = ns['id']
@@ -530,7 +531,7 @@ class genDictionary(object) :
     if self.interpreter and elem in ('Field') and 'access' in attrs : # assumes that the default is "public"
       return 0
     #----Filter any non public method
-    if 'access' in attrs :  # assumes that the default is "public"
+    if attrs.get('access') in ('protected', 'private') : 
       if elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') : return 0
     #----Filter any copy constructor with a private copy constructor in any base
     if elem == 'Constructor' and len(args) == 1 and 'name' in args[0] and args[0]['name'] == '_ctor_arg' :
@@ -663,7 +664,7 @@ class genDictionary(object) :
 
   def genClassDict(self, attrs):
     members, bases = [], []
-    cl  = attrs['name']
+    cl  = attrs.get('name')
     clf = '::' + attrs['fullname']
     cls = attrs['fullname']
     clt = string.translate(str(clf), self.transtable)
@@ -734,11 +735,17 @@ class genDictionary(object) :
     return 0
 #----------------------------------------------------------------------------------
   def genClassShadow(self, attrs, inner = 0 ) :
+    if not inner :
+      if attrs['id'] in self.generated_shadow_classes : return ''
+      else : self.generated_shadow_classes.append(attrs['id'])
     inner_shadows = {}
     bases = self.getBases( attrs['id'] )
-    cls = self.genTypeName(attrs['id'],const=True,colon=True)
-    clt = string.translate(str(cls), self.transtable)
-    if self.isUnnamedType(cls) and inner : clt = ''
+    if inner and attrs.has_key('demangled') and self.isUnnamedType(attrs['demangled']) :
+      cls = attrs['demangled']
+      clt = ''
+    else:
+      cls = self.genTypeName(attrs['id'],const=True,colon=True)
+      clt = string.translate(str(cls), self.transtable)
     xtyp = self.xref[attrs['id']]
     typ = xtyp['elem'].lower()
     indent = inner * 2 * ' '
@@ -755,6 +762,7 @@ class genDictionary(object) :
 	  bname = self.genTypeName(b['type'],colon=True)
 	  if self.xref[b['type']]['attrs'].get('access') in ('private','protected'):
             bname = string.translate(str(bname),self.transtable)
+            if not inner: c = self.genClassShadow(self.xref[b['type']]['attrs']) + c
           c += indent + '%s %s' % ( acc , bname )
           if b is not bases[-1] : c += ', ' 
         c += indent + ' {\n' + indent +'  public:\n'
@@ -768,7 +776,7 @@ class genDictionary(object) :
         member = self.xref[m]
         if member['elem'] in ('Class','Struct','Union','Enumeration') \
            and member['attrs'].get('access') in ('private','protected') \
-           and not self.isUnnamedType(member['attrs'].get('name')):
+           and not self.isUnnamedType(member['attrs'].get('demangled')):
           cmem = self.genTypeName(member['attrs']['id'],const=True,colon=True)
           if cmem != cls and cmem not in inner_shadows :
             inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
@@ -797,7 +805,7 @@ class genDictionary(object) :
 
           #---- Check if a type and a member with the same name exist in the same scope
           if mTypeElem in ('Class','Struct'):
-            mTypeName = fundtype['attrs']['name']
+            mTypeName = fundtype['attrs'].get('name')
             mTypeId = fundtype['attrs']['id']
             for el in self.xref[fundtype['attrs']['context']]['attrs'].get('members').split():
               if self.xref[el]['attrs'].get('name') == mTypeName and mTypeId != el :
@@ -805,7 +813,7 @@ class genDictionary(object) :
                 break
           #---- Check for non public types------------------------
           noPublicType = self.checkAccessibleType(axref)
-          if ( noPublicType and not self.isUnnamedType(axref['attrs'].get('name'))):
+          if ( noPublicType and not self.isUnnamedType(axref['attrs'].get('demangled'))):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
             cmem = self.genTypeName(noPubTypeAttrs['id'],const=True,colon=True)
             if cmem != cls and cmem not in inner_shadows :
@@ -818,7 +826,7 @@ class genDictionary(object) :
             if   t.find(ikey) == 0      : t = t.replace(ikey, inner_shadows[ikey])     # change current class by shadow name 
             elif t.find(ikey[2:]) != -1 : t = t.replace(ikey[2:], inner_shadows[ikey]) # idem without leading ::
           mType = axref
-          if mType and self.isUnnamedType(mType['attrs'].get('name')) :
+          if mType and self.isUnnamedType(mType['attrs'].get('demangled')) :
             t = self.genClassShadow(mType['attrs'], inner+1)[:-2]
           fPPos = self.funPtrPos(t)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name'] + arraytype )
@@ -863,6 +871,11 @@ class genDictionary(object) :
     return s
 #----------------------------------------------------------------------------------
   def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False) :
+    elem  = self.xref[id]['elem']
+    attrs = self.xref[id]['attrs']
+    if self.isUnnamedType(attrs.get('demangled')) :
+      if colon : return '__'+attrs['demangled']
+      else : return attrs['demangled']
     if id[-1] in ['c','v'] :
       nid = id[:-1]
       cvdict = {'c':'const','v':'volatile'}
@@ -876,11 +889,10 @@ class genDictionary(object) :
         else     : return cvdict[id[-1]] + ' ' + self.genTypeName(nid, enum, False, colon)
     # "const" vetoeing must not recurse
     const = False
-    elem  = self.xref[id]['elem']
-    attrs = self.xref[id]['attrs']
     s = self.genScopeName(attrs, enum, const, colon)
     if elem == 'Namespace' :
-      if attrs['name'] != '::' : s += attrs['name']
+      if 'name' not in attrs : s += '@anonymous@namespace@'
+      elif attrs['name'] != '::' : s += attrs['name']
     elif elem == 'PointerType' :
       t = self.genTypeName(attrs['type'],enum, const, colon)
       if   t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
@@ -1007,11 +1019,13 @@ class genDictionary(object) :
           c += 'EnumTypeBuilder("' + sc + attrs['name'] + '");\n'
         else :
          name = ''
-         if 'context' in attrs :
-           ns = self.genTypeName(attrs['context'])
-           if ns : name += ns + '::'
-         if 'name' in attrs :
-           name += attrs['name']
+         if 'name' not in attrs and 'demangled' in attrs : name = attrs.get('demangled')
+         else:
+           if 'context' in attrs :
+             ns = self.genTypeName(attrs['context'])
+             if ns : name += ns + '::'
+           if 'name' in attrs :
+             name += attrs['name']
          name = normalizeClass(name,False)
          c += 'TypeBuilder("'+name+'");\n'
     return c 
@@ -1216,7 +1230,7 @@ class genDictionary(object) :
     return c
 #----------------------------------------------------------------------------------
   def genModifier(self, attrs, xattrs ):
-    if 'access' not in attrs            : mod = 'PUBLIC'
+    if   attrs.get('access') == 'public' or 'access' not in attrs : mod = 'PUBLIC'
     elif attrs['access'] == 'private'   : mod = 'PRIVATE'
     elif attrs['access'] == 'protected' : mod = 'PROTECTED'
     else                                : mod = 'NONE'
@@ -1240,7 +1254,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genMCOBuild(self, type, name, attrs, args):
     id       = attrs['id']
-    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('name')) or \
+    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
        self.checkAccessibleType(self.xref[attrs['context']]) : return ''
     if type == 'constructor' : returns  = 'void'
     else                     : returns  = self.genTypeName(attrs['returns'])
@@ -1365,7 +1379,9 @@ class genDictionary(object) :
     return self.genMCODecl( 'constructor', '', attrs, args )
 #----------------------------------------------------------------------------------
   def genConstructorBuild(self, attrs, args):
-    return self.genMCOBuild( 'constructor', attrs['name'], attrs, args )
+    name = attrs.get('name')
+    if not name : name = self.xref[attrs['context']]['attrs']['demangled'].split('::')[-1]
+    return self.genMCOBuild( 'constructor', name, attrs, args )
 #----------------------------------------------------------------------------------
   def genConstructorDef(self, attrs, args):
     cl  = self.genTypeName(attrs['context'], colon=True)
@@ -1397,7 +1413,7 @@ class genDictionary(object) :
     return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  ((::%s*)o)->~%s(); return 0;\n}' % ( attrs['id'], cl, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
-    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('name')) or \
+    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
        self.checkAccessibleType(self.xref[attrs['context']]) : return ''
     mod = self.genModifier(attrs,None)
     id       = attrs['id']
@@ -1447,7 +1463,7 @@ class genDictionary(object) :
     return '  .AddBase(%s, BaseOffset< %s, %s >::Get(), %s)' %  (self.genTypeID(b['type']), clf, self.genTypeName(b['type'],colon=True), mod)
 #----------------------------------------------------------------------------------
   def enhanceClass(self, attrs):
-    if self.isUnnamedType(attrs['name']) or self.checkAccessibleType(self.xref[attrs['id']]) : return
+    if self.isUnnamedType(attrs.get('demangled')) or self.checkAccessibleType(self.xref[attrs['id']]) : return
     # Default constructor
     if 'members' in attrs : members = attrs['members'].split()
     else                  : members = []
@@ -1471,7 +1487,7 @@ class genDictionary(object) :
           attrs['members'] += u' ' + id
         if (len(args) == 0  or 'default' in args[0] ) \
                and 'abstract' not in attrs \
-               and 'access' not in self.xref[m]['attrs'] \
+               and self.xref[m]['attrs'].get('access') == 'public' \
                and not self.isDestructorNonPublic(attrs['id']):
           # NewDel functions extra function
           id = u'_x%d' % self.x_id.next()
