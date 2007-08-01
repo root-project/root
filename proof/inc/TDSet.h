@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.11 2007/06/07 09:23:21 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.12 2007/07/13 13:22:57 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -137,7 +137,6 @@ public:
    };
 
 private:
-
    TString        fDir;         // name of the directory
    TString        fType;        // type of objects (e.g. TTree);
    TString        fObjName;     // name of objects to be analyzed (e.g. TTree name)

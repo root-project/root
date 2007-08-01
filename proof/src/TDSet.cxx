@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.15 2007/06/07 09:23:21 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.16 2007/07/13 13:22:57 ganis Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -866,8 +866,12 @@ Bool_t TDSet::Add(TCollection *filelist)
       TString cn(o->ClassName());
       if (cn == "TFileInfo") {
          TFileInfo *fi = (TFileInfo *)o;
-         Add(fi->GetFirstUrl()->GetUrl(kTRUE), 0, 0,
-             (fi->GetFirst() >= 0) ? fi->GetFirst() : 0, fi->GetEntries());
+         TFileInfoMeta *m = fi->GetMetaData();
+         if (!m)
+            Add(fi->GetFirstUrl()->GetUrl());
+         else
+            Add(fi->GetFirstUrl()->GetUrl(), m->GetName(), m->GetDirectory(),
+                m->GetFirst(), m->GetEntries());
       } else if (cn == "TUrl") {
          Add(((TUrl *)o)->GetUrl());
       } else if (cn == "TObjString") {
@@ -908,15 +912,14 @@ Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
    // Create the file list
    TList *fileinfo = new TList;
    fileinfo->SetOwner();
-   TFileInfo *fi = 0;
 
    TDSetElement *dse = 0;
    TIter next(fElements);
    while ((dse = (TDSetElement *) next())) {
-      Long64_t last = (dse->GetNum() > 0) ? dse->GetFirst()+dse->GetNum()-1 : -1;
-      fi = new TFileInfo(dse->GetFileName(), (Long64_t)(-1), 0,
-                         0, dse->GetEntries(), dse->GetFirst(),
-                         last);
+      TFileInfoMeta *m = new TFileInfoMeta(dse->GetTitle(), GetType(), dse->GetDirectory(),
+                                           dse->GetNum(), dse->GetFirst());
+      TFileInfo *fi = new TFileInfo(dse->GetFileName());
+      fi->AddMetaData(m);
       fileinfo->Add(fi);
    }
 
