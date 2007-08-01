@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.218 2007/07/17 14:43:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.219 2007/07/17 16:30:26 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1098,21 +1098,24 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 
    Int_t result = 0;
 
-   if ( fname == 0 ) return result;
+   if (fname == 0) return result;
 
-   TString className(fname);
+   TString className = gSystem->BaseName(fname);
 
-   // Remove extension if any.
+   // Remove extension if any, ignore files with extension not being .h*
    Int_t where = className.Last('.');
-   if (where != kNPOS) className.Remove( where );
-   className = gSystem->BaseName(className);
+   if (where != kNPOS) {
+      if (!className.Contains(".h"))
+         return result;
+      className.Remove(where);
+   }
 
    TClass *cla = TClass::GetClass(className);
    if ( cla ) {
       if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
       const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
       if(!decfile) return 0;
-      result = strcmp( decfile,fname ) == 0;
+      result = strcmp(decfile,fname) == 0;
    }
    return result;
 }
