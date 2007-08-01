@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.14 2007/07/09 16:02:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.15 2007/07/20 15:44:57 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -22,15 +22,16 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 #include "TError.h"
+#include "TClass.h"
 
 
 ClassImp(TFileInfo)
+ClassImp(TFileInfoMeta)
 
 //______________________________________________________________________________
 TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
-   const char *md5, Long64_t entries, Long64_t first, Long64_t last,
-   TObject *meta) : fCurrentUrl(0), fUrlList(0), fSize(size), fUUID(0),
-   fMD5(0), fEntries(entries), fFirst(first), fLast(last), fMetaDataObject(meta)
+   const char *md5, TObject *meta) : fCurrentUrl(0), fUrlList(0), fSize(size),
+   fUUID(0), fMD5(0)
 {
    // Constructor.
 
@@ -50,6 +51,9 @@ TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
 
    if (url)
       AddUrl(url);
+
+   if (meta)
+      AddMetaData(meta);
 }
 
 //______________________________________________________________________________
@@ -57,10 +61,20 @@ TFileInfo::~TFileInfo()
 {
    // Destructor.
 
-   SafeDelete(fMetaDataObject);
+   SafeDelete(fMetaDataList);
    SafeDelete(fUUID);
    SafeDelete(fMD5);
    SafeDelete(fUrlList);
+}
+
+//______________________________________________________________________________
+TUrl *TFileInfo::GetCurrentUrl() const
+{
+   // Return the current url.
+
+   if (!fCurrentUrl)
+      const_cast<TFileInfo*>(this)->ResetUrl();
+   return fCurrentUrl;
 }
 
 //______________________________________________________________________________
@@ -89,7 +103,7 @@ TUrl *TFileInfo::FindByUrl(const char *url)
    TIter nextUrl(fUrlList);
    TUrl *urlelement;
 
-   while  ( (urlelement = (TUrl*) nextUrl() ) ) {
+   while  ((urlelement = (TUrl*) nextUrl())) {
       if ( TString(urlelement->GetUrl()) == TString(url) ) {
          return urlelement;
       }
@@ -106,15 +120,14 @@ Bool_t TFileInfo::AddUrl(const char *url)
       return kFALSE;
 
    if (!fUrlList) {
-      fUrlList = new TList();
+      fUrlList = new TList;
       fUrlList->SetOwner();
    }
 
-   TUrl *newurl = new TUrl(url);
+   TUrl *newurl = new TUrl(url, kTRUE);
    // We set the current Url to the first url added
-   if (fUrlList->GetSize() == 0) {
+   if (fUrlList->GetSize() == 0)
       fCurrentUrl = newurl;
-   }
 
    fUrlList->Add(newurl);
    return kTRUE;
@@ -123,39 +136,82 @@ Bool_t TFileInfo::AddUrl(const char *url)
 //______________________________________________________________________________
 Bool_t TFileInfo::RemoveUrl(const char *url)
 {
-   // Remove an URL. Returns kTRUE is successful, kFALSE otherwise.
+   // Remove an URL. Returns kTRUE if successful, kFALSE otherwise.
 
    TUrl *lurl;
    if ((lurl = FindByUrl(url))) {
       fUrlList->Remove(lurl);
+      if (lurl == fCurrentUrl)
+         ResetUrl();
+      delete lurl;
       return kTRUE;
    }
    return kFALSE;
 }
 
 //______________________________________________________________________________
-void TFileInfo::AddMetaDataObject(TObject *obj)
+Bool_t TFileInfo::AddMetaData(TObject *meta)
 {
    // Add's a meta data object to the file info object. The object will be
    // adopted by the TFileInfo and should not be deleted by the user.
+   // Typically objects of class TFileInfoMeta or derivatives should be added,
+   // but any class is accepted.
+   // Returns kTRUE if successful, kFALSE otherwise.
 
-   if (obj) {
-      if (fMetaDataObject)
-         delete fMetaDataObject;
-      fMetaDataObject = obj;
+   if (meta) {
+      if (!fMetaDataList) {
+         fMetaDataList = new TList;
+         fMetaDataList->SetOwner();
+      }
+      fMetaDataList->Add(meta);
+      return kTRUE;
    }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TFileInfo::RemoveMetaDataObject()
+Bool_t TFileInfo::RemoveMetaData(const char *meta)
 {
-   // Remove the metadata obeject.
+   // Remove the metadata obeject. If meta is 0 remove all meta data objects.
+   // Returns kTRUE if successful, kFALSE otherwise.
 
-   if (fMetaDataObject) {
-      delete fMetaDataObject;
-      fMetaDataObject = 0;
+   if (fMetaDataList) {
+      if (!meta) {
+         SafeDelete(fMetaDataList);
+         return kTRUE;
+      } else {
+         TObject *o = fMetaDataList->FindObject(meta);
+         if (o) {
+            fMetaDataList->Remove(o);
+            delete o;
+            return kTRUE;
+         }
+      }
    }
+   return kFALSE;
 }
+
+//______________________________________________________________________________
+TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
+{
+   // Get meta data object with specified name. If meta is 0
+   // get first meta data object. Returns 0 in case no
+   // suitable meta data object is found.
+
+   if (fMetaDataList) {
+      TFileInfoMeta *m;
+      if (!meta)
+         m = (TFileInfoMeta *) fMetaDataList->First();
+      else
+         m = (TFileInfoMeta *) fMetaDataList->FindObject(meta);
+      if (m) {
+         TClass *c = m->IsA();
+         return (c && c->InheritsFrom("TFileInfoMeta")) ? m : 0;
+      }
+   }
+   return 0;
+}
+
 
 //______________________________________________________________________________
 Int_t TFileInfo::Compare(const TObject *obj) const
@@ -174,15 +230,20 @@ void TFileInfo::Print(Option_t * /* option */) const
 
    GetMD5()->Final();
    cout << "UUID: " << GetUUID()->AsString() << "\n"
-        << "MD5: " << GetMD5()->AsString() << "\n"
+        << "MD5:  " << GetMD5()->AsString() << "\n"
         << "Size: " << GetSize() << endl;
 
    TIter next(fUrlList);
-   TObject *obj;
+   TUrl *u;
+   cout << " === URLs ===" << endl;
+   while ((u = (TUrl*)next()))
+      cout << " URL: " << u->GetUrl() << endl;
 
-   while ((obj = next())) {
-      const char *url = ((TUrl*)obj)->GetUrl();
-      cout << " URL: " << url << endl;
+   TIter nextm(fMetaDataList);
+   TFileInfoMeta *m;
+   while ((m = (TFileInfoMeta*) nextm())) {
+      cout << " === Meta Data Object ===" << endl;
+      m->Print();
    }
 }
 
@@ -274,4 +335,34 @@ TList *TFileInfo::CreateListMatching(const char *files)
    }
    // Done
    return fileList;
+}
+
+
+//______________________________________________________________________________
+TFileInfoMeta::TFileInfoMeta(const char *objName, const char *objClass,
+                             const char *dir, Long64_t entries, Long64_t first,
+                             Long64_t last)
+   : TNamed(objName, objClass), fDirectory(dir), fEntries(entries),
+     fFirst(first), fLast(last)
+{
+   // Create file meta data object.
+
+   if (fDirectory == "")
+      fDirectory = "/";
+
+   TClass *c = TClass::GetClass(objClass);
+   fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+void TFileInfoMeta::Print(Option_t * /* option */) const
+{
+   // Print information about this object.
+
+   cout << " Name:    " << fName << "\n"
+        << " Class:   " << fTitle << "\n"
+        << " Dir:     " << fDirectory << "\n"
+        << " Entries: " << fEntries << "\n"
+        << " First:   " << fFirst << "\n"
+        << " Last:    " << fLast << endl;
 }
