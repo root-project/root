@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.94 2007/03/01 10:32:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.95 2007/03/19 18:08:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -182,7 +182,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fXmin        = 0;
    fXmax        = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
-   if (fTypeName == "Double32_t") {
+   if (fTypeName == "Double32_t" || fTypeName == "Double32_t*") {
       GetRange(title,fXmin,fXmax,fFactor);
       if (fFactor > 0) SetBit(kHasRange);
    }
