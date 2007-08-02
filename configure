@@ -1891,6 +1891,12 @@ if test ! "x$enable_qt" = "xno" || \
 	      break
 	  fi
        done
+        # Correct path for win32
+        if test "x$platform" = "xwin32"; then
+            if test ! "x$qtmocexe" = "x" ; then
+                qtmocexe=`cygpath -u $qtmocexe`
+            fi
+        fi
 #  we can pick the wrong moc this way  --  fi
     result "$qtmocexe"
 
