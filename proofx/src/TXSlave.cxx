@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.23 2007/06/12 10:30:35 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.24 2007/07/03 16:01:33 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -156,7 +156,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    }
 
    // Fill members
-   fName = url.GetHost();
+   fName = url.GetHostFQDN();
    fPort = url.GetPort(); // We get the right default if the port is not specified
    // Group specification , if any, uses the password field, i.e. user[:group]
    fGroup = url.GetPasswd();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.59 2007/06/08 09:17:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.60 2007/06/12 10:06:00 ganis Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TSlave::TSlave(const char *url, const char *ord, Int_t perf,
     fParallel(0), fMsd(msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
-   fName = TUrl(url).GetHost();
+   fName = TUrl(url).GetHostFQDN();
    fPort = TUrl(url).GetPort();
 
    Init(url, -1, stype);
