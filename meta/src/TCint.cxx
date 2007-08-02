@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.157 2007/07/31 19:58:56 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.158 2007/08/01 21:11:38 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -592,7 +592,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          if (!cl->fClassInfo->IsLoaded()) {
             if (cl->fClassInfo->Property() & (kIsNamespace)) {
                // Namespace cna have a ClassInfo but not CINT dictionary per
-               // se because they are auto-created if one of their contained 
+               // se because they are auto-created if one of their contained
                // classes has a dictionary.
                cl->MakeZombie();
             }
@@ -1515,13 +1515,12 @@ const char* TCint::GetSharedLibs()
             if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
          }
       }
-      if ( !needToSkip &&
-           ( (len>3 && strcmp(end-2,".a") == 0) ||
-             (len>4 && (strcmp(end-3,".sl") == 0 ||
-                        strcmp(end-3,".dl") == 0 ||
-                      strcmp(end-3,".so") == 0)) ||
-             (len>5 && (strcmp(end-4,".dll") == 0 ||
-                        strcmp(end-4,".DLL") == 0)))) {
+      if (!needToSkip &&
+           ((len>3 && strcmp(end-2,".a") == 0)    ||
+            (len>4 && (strcmp(end-3,".sl") == 0   ||
+                       strcmp(end-3,".dl") == 0   ||
+                       strcmp(end-3,".so") == 0)) ||
+            (len>5 && (strcasecmp(end-4,".dll") == 0)))) {
          if (!fSharedLibs.IsNull())
             fSharedLibs.Append(" ");
          fSharedLibs.Append(filename);
@@ -1582,7 +1581,7 @@ const char *TCint::GetSharedLibDeps(const char *lib)
    while ((rec = (TEnvRec*) next())) {
       const char *libs = rec->GetValue();
       if (!strncmp(libs, libname.Data(), len) && strlen(libs) >= len
-          && (!libs[len] || libs[len] == '.')) {
+          && (!libs[len] || libs[len] == ' ' || libs[len] == '.')) {
          return libs;
       }
    }
