@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.27 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.28 2007/02/03 17:33:41 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -675,23 +675,88 @@ void TDatabasePDG::Browse(TBrowser* b)
 
 
 //______________________________________________________________________________
-Int_t TDatabasePDG::WritePDGTable(const char * /*filename*/)
+Int_t TDatabasePDG::WritePDGTable(const char *filename)
 {
    // write contents of the particle DB into a file
 
-   Error("WritePDGTable"," not implemented yet");
-   return 0;
-/*
-  if (1) return 0;
+   if (fParticleList == 0) {
+      Error("WritePDGTable","Do not have a valid PDG particle list;"
+                            " consider loading it with ReadPDGTable first.");
+      return -1;
+   }
 
-  FILE *file = fopen(filename,"w");
-  if (file == 0) {
-    Error("WritePDGTable","Could not open PDG particle file %s",filename);
-    return -1;
-  }
+   FILE *file = fopen(filename,"w");
+   if (file == 0) {
+      Error("WritePDGTable","Could not open PDG particle file %s",filename);
+      return -1;
+   }
 
-  fclose(file);
-*/
+   fprintf(file,"#--------------------------------------------------------------------\n");
+   fprintf(file,"#    i   NAME.............  KF AP   CLASS      Q        MASS     WIDTH  2*I+1 I3 2*S+1 FLVR TrkCod N(dec)\n");
+   fprintf(file,"#--------------------------------------------------------------------\n");
+
+   Int_t nparts=fParticleList->GetEntries();
+   for(Int_t i=0;i<nparts;++i) {
+      TParticlePDG *p = dynamic_cast<TParticlePDG*>(fParticleList->At(i));
+      if(!p) continue;
+
+      Int_t ich=i+1;
+      Int_t kf=p->PdgCode();
+      fprintf(file,"%5i %-20s %- 6i ", ich, p->GetName(), kf);
+
+      Int_t anti=p->AntiParticle() ? 1:0;
+      if(kf<0) {
+         for(Int_t j=0;j<nparts;++j) {
+            TParticlePDG *dummy = dynamic_cast<TParticlePDG*>(fParticleList->At(j));
+            if(dummy==p->AntiParticle()) {
+               anti=j+1;
+               break;
+            }
+         }
+         fprintf(file,"%i 0\n",anti);
+         continue;
+      }
+
+      fprintf(file,"%i ",anti);
+      fprintf(file,"%i ",100);
+      fprintf(file,"%s ",p->ParticleClass());
+      fprintf(file,"% i ",(Int_t)p->Charge());
+      fprintf(file,"%.5le ",p->Mass());
+      fprintf(file,"%.5le ",p->Width());
+      fprintf(file,"%i ",(Int_t)p->Isospin());
+      fprintf(file,"%i ",(Int_t)p->I3());
+      fprintf(file,"%i ",(Int_t)p->Spin());
+      fprintf(file,"%i ",-1);
+      fprintf(file,"%i ",p->TrackingCode());
+      Int_t nch=p->NDecayChannels();
+      fprintf(file,"%i\n",nch);
+      if(nch==0) {
+         continue;
+      }
+      fprintf(file,"#----------------------------------------------------------------------\n");
+      fprintf(file,"#    decay  type(PY6)    BR     Nd         daughters(codes, then names)\n");
+      fprintf(file,"#----------------------------------------------------------------------\n");
+      for(Int_t j=0;j<nch;++j) {
+         TDecayChannel *dc=p->DecayChannel(j);
+
+         fprintf(file,"%9i   ",dc->Number()+1);
+         fprintf(file,"%3i   ",dc->MatrixElementCode());
+         fprintf(file,"%.5le  ",dc->BranchingRatio());
+         Int_t ndau=dc->NDaughters();
+         fprintf(file,"%3i       ",ndau);
+         for (int idau=0; idau<ndau; idau++) {
+            fprintf(file,"%- 6i ",dc->DaughterPdgCode(idau));
+         }
+         for (int idau=0; idau<ndau; idau++) {
+            TParticlePDG *dummy=GetParticle(dc->DaughterPdgCode(idau));
+            if(dummy)
+               fprintf(file,"%-10s ",dummy->GetName());
+            else
+               fprintf(file,"%-10s ","???");
+         }
+         fprintf(file,"\n");
+      }
+   }
+
+   return nparts;
 }
-
-
