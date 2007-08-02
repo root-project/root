@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.9 2006/10/18 21:56:59 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.10 2007/06/06 09:51:59 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -63,7 +63,7 @@ struct MYSQL;
 
 class TMySQLServer : public TSQLServer {
 
-private:
+protected:
    MYSQL     *fMySQL;    // connection to MySQL server
    TString    fInfo;     // server info string
 
