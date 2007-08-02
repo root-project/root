@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.15 2007/07/20 15:44:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.16 2007/08/01 14:23:32 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -339,19 +339,57 @@ TList *TFileInfo::CreateListMatching(const char *files)
 
 
 //______________________________________________________________________________
-TFileInfoMeta::TFileInfoMeta(const char *objName, const char *objClass,
-                             const char *dir, Long64_t entries, Long64_t first,
-                             Long64_t last)
-   : TNamed(objName, objClass), fDirectory(dir), fEntries(entries),
-     fFirst(first), fLast(last)
+TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
+                             Long64_t entries, Long64_t first, Long64_t last)
+   : TNamed(objPath, objClass), fEntries(entries), fFirst(first), fLast(last)
 {
    // Create file meta data object.
 
-   if (fDirectory == "")
-      fDirectory = "/";
+   TString p = objPath;
+   if (!p.BeginsWith("/")) {
+      p.Prepend("/");
+      SetName(p);
+   }
 
    TClass *c = TClass::GetClass(objClass);
-   fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+   fIsTree = (c && c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
+                             const char *objClass, Long64_t entries,
+                             Long64_t first, Long64_t last)
+   : TNamed(objPath, objClass), fEntries(entries), fFirst(first), fLast(last)
+{
+   // Create file meta data object.
+
+   TString sdir = objDir;
+   if (!sdir.BeginsWith("/"))
+      sdir.Prepend("/");
+   if (!sdir.EndsWith("/"))
+      sdir += "/";
+   sdir += objPath;
+   SetName(sdir);
+
+   TClass *c = TClass::GetClass(objClass);
+   fIsTree = (c && c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+const char *TFileInfoMeta::GetDirectory() const
+{
+   // Get the object's directory in the ROOT file.
+
+   return gSystem->DirName(GetName());
+}
+
+//______________________________________________________________________________
+const char *TFileInfoMeta::GetObject() const
+{
+   // Get the object name, with path stripped off. For full path
+   // use GetName().
+
+   return gSystem->BaseName(GetName());
 }
 
 //______________________________________________________________________________
@@ -361,7 +399,6 @@ void TFileInfoMeta::Print(Option_t * /* option */) const
 
    cout << " Name:    " << fName << "\n"
         << " Class:   " << fTitle << "\n"
-        << " Dir:     " << fDirectory << "\n"
         << " Entries: " << fEntries << "\n"
         << " First:   " << fFirst << "\n"
         << " Last:    " << fLast << endl;

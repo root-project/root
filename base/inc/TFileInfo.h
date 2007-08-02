@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.12 2007/07/25 11:52:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.13 2007/08/01 14:23:32 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -106,7 +106,6 @@ public:
 class TFileInfoMeta : public TNamed {
 
 private:
-   TString       fDirectory;  // directory in file where to look for object
    Long64_t      fEntries;    // number of entries in tree or number of objects
    Long64_t      fFirst;      // first valid tree entry
    Long64_t      fLast;       // last valid tree entry
@@ -117,14 +116,17 @@ private:
 
 public:
    TFileInfoMeta() : fEntries(-1), fFirst(0), fLast(-1), fIsTree(kFALSE) { }
-   TFileInfoMeta(const char *objName, const char *objClass = "TTree",
-                 const char *dir = "/", Long64_t entries = -1,
+   TFileInfoMeta(const char *objPath, const char *objClass = "TTree",
+                 Long64_t entries = -1, Long64_t first = 0, Long64_t last = -1);
+   TFileInfoMeta(const char *objPath, const char *objDir,
+                 const char *objClass, Long64_t entries = -1,
                  Long64_t first = 0, Long64_t last = -1);
 
    virtual ~TFileInfoMeta() { }
 
+   const char     *GetObject() const;
    const char     *GetClass() const        { return GetTitle(); }
-   const char     *GetDirectory() const    { return fDirectory; }
+   const char     *GetDirectory() const;
    Long64_t        GetEntries() const      { return fEntries; }
    Long64_t        GetFirst() const        { return fFirst; }
    Long64_t        GetLast() const         { return fLast; }
