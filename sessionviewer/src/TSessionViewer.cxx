@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.12 2007/03/17 18:02:24 rdm Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.13 2007/06/21 15:42:50 pcanal Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -3498,7 +3498,7 @@ void TSessionInputFrame::AddObject(TObject *obj)
 
 //______________________________________________________________________________
 TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
-   TGMainFrame(0, w, h), fSessionHierarchy(0), fSessionItem(0)
+   TGMainFrame(gClient->GetRoot(), w, h), fSessionHierarchy(0), fSessionItem(0)
 {
    // Main Session viewer constructor.
 
@@ -3513,7 +3513,7 @@ TSessionViewer::TSessionViewer(const char *name, UInt_t w, UInt_t h) :
 
 //______________________________________________________________________________
 TSessionViewer::TSessionViewer(const char *name, Int_t x, Int_t y, UInt_t w,
-                              UInt_t h) : TGMainFrame(0, w, h),
+                              UInt_t h) : TGMainFrame(gClient->GetRoot(), w, h),
                               fSessionHierarchy(0), fSessionItem(0)
 {
    // Main Session viewer constructor.
