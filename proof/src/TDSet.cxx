@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.16 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.17 2007/08/01 14:24:17 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -870,7 +870,7 @@ Bool_t TDSet::Add(TCollection *filelist)
          if (!m)
             Add(fi->GetFirstUrl()->GetUrl());
          else
-            Add(fi->GetFirstUrl()->GetUrl(), m->GetName(), m->GetDirectory(),
+            Add(fi->GetFirstUrl()->GetUrl(), m->GetObject(), m->GetDirectory(),
                 m->GetFirst(), m->GetEntries());
       } else if (cn == "TUrl") {
          Add(((TUrl *)o)->GetUrl());
@@ -916,7 +916,7 @@ Int_t TDSet::ExportFileList(const char *fpath, Option_t *opt)
    TDSetElement *dse = 0;
    TIter next(fElements);
    while ((dse = (TDSetElement *) next())) {
-      TFileInfoMeta *m = new TFileInfoMeta(dse->GetTitle(), GetType(), dse->GetDirectory(),
+      TFileInfoMeta *m = new TFileInfoMeta(dse->GetTitle(), dse->GetDirectory(), GetType(),
                                            dse->GetNum(), dse->GetFirst());
       TFileInfo *fi = new TFileInfo(dse->GetFileName());
       fi->AddMetaData(m);
