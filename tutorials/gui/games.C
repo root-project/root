@@ -13,7 +13,7 @@ void games()
    if (st1 == -1) {
       printf("===>The macro games will try to build the Aclock library\n");
       if (UNIX)
-         gSystem->Exec("(cd $ROOTSYS/test; make Aclock.so)");
+         gSystem->Exec("(cd $ROOTSYS/test; make Aclock)");
       else
          gSystem->Exec("(cd %ROOTSYS%\\test && nmake Aclock.dll)");
 
@@ -23,7 +23,7 @@ void games()
    if (st2 == -1) {
       printf("===>The macro games will try to build the Hello library\n");
       if (UNIX)
-         gSystem->Exec("(cd $ROOTSYS/test; make Hello.so)");
+         gSystem->Exec("(cd $ROOTSYS/test; make Hello)");
       else
          gSystem->Exec("(cd %ROOTSYS%\\test && nmake Hello.dll)");
 
@@ -33,7 +33,7 @@ void games()
    if (st3 == -1) {
       if (UNIX) {
          printf("===>The macro games will try to build the Tetris library\n");
-         gSystem->Exec("(cd $ROOTSYS/test; make Tetris.so)");
+         gSystem->Exec("(cd $ROOTSYS/test; make Tetris)");
       } else {
          gSystem->Exec("(cd $ROOTSYS/test; nmake Tetris.dll)");
       }
