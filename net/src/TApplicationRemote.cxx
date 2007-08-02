@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.13 2007/06/26 16:23:43 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.14 2007/07/10 14:14:33 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************
@@ -62,7 +62,7 @@ static const char *gScriptCmd = "\\\"%s %d localhost:%d/%s -d=%d\\\"";
 #ifndef WIN32
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"'(sh=\\`basename \'\\\\\\$SHELL\'\\`; \
-   if test xbash = x\'\\\\\\$sh\' -o xsh = x\'\\\\\\$sh\' -o xksh = x\'\\\\\\$sh\' -o xzsh = x\'\\\\\\$sh\'; then \
+   if test xbash = x\'\\\\\\$sh\' -o xsh = x\'\\\\\\$sh\' -o xksh = x\'\\\\\\$sh\' -o xzsh = x\'\\\\\\$sh\' -o xdash = x\'\\\\\\$sh\'; then \
       \'\\\\\\$SHELL\' -l -c %s; \
    elif test xcsh = x\'\\\\\\$sh\' -o xtcsh = x\'\\\\\\$sh\'; then \
       \'\\\\\\$SHELL\' -c %s; \
@@ -72,7 +72,7 @@ static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
 #else
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"'(sh=`basename $SHELL`; \
-   if test xbash = x$sh -o xsh = x$sh -o xksh = x$sh -o xzsh = x$sh; then \
+   if test xbash = x$sh -o xsh = x$sh -o xksh = x$sh -o xzsh = x$sh -o xdash = x$sh; then \
       $SHELL -l -c %s; \
    elif test xcsh = x$sh -o xtcsh = x$sh; then \
       $SHELL -c %s; \
