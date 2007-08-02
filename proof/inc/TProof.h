@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.120 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.121 2007/07/26 15:35:04 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -126,6 +126,7 @@ const char* const kRM     = "/bin/rm -rf";
 const char* const kLS     = "/bin/ls -l";
 const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
 const char* const kUNTAR2 = "%s -c %s | (cd %s; tar xf -)";
+const char* const kUNTAR3 = "%s -c %s | (tar xf -)";
 const char* const kGUNZIP = "gunzip";
 #else
 const char* const kCP     = "copy";
@@ -133,6 +134,7 @@ const char* const kRM     = "delete";
 const char* const kLS     = "dir";
 const char* const kUNTAR  = "...";
 const char* const kUNTAR2 = "...";
+const char* const kUNTAR3 = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
 

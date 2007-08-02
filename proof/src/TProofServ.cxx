@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.183 2007/07/08 22:21:04 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.184 2007/07/13 13:22:57 ganis Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3747,13 +3747,13 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       // the correct md5 checksum and need to do a read lock there.
       // As yet locking is not that sophisicated so the lock must
       // be released below before the call to fProof->UploadPackage().
-      if (!IsMaster() || err) {
-         // delete par file when on slave or in case of error
+      if (err) {
+         // delete par file in case of error
          gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                        filenam.Data()));
          fPackageLock->Unlock();
-      } else {
-         // forward to slaves
+      } else if (IsMaster()) {
+         // forward to workers
          fPackageLock->Unlock();
          fProof->UploadPackage(fPackageDir + "/" + filenam, (TProof::EUploadPackageOpt)opt);
       }
@@ -3839,6 +3839,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
    Int_t type = 0;
    Bool_t all = kFALSE;
    TMessage msg;
+   Bool_t fromglobal = kFALSE;
 
    // Notification message
    TString noth = Form("worker-%s", fOrdinal.Data());
@@ -3918,6 +3919,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // always follows BuildPackage so no need to check for PROOF-INF
          pdir = fPackageDir + "/" + package;
 
+         fromglobal = kFALSE;
          if (gSystem->AccessPathName(pdir, kReadPermission) ||
              gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
             // Is there a global package with this name?
@@ -3930,6 +3932,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   if (!gSystem->AccessPathName(pdir, kReadPermission) &&
                       !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
                      // Package found, stop searching
+                     fromglobal = kTRUE;
                      break;
                   }
                   pdir = "";
@@ -3948,7 +3951,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          if (IsMaster()) {
             // make sure package is available on all slaves, even new ones
-            fProof->UploadPackage(fPackageDir + "/" + package + ".par");
+            fProof->UploadPackage(pdir + ".par");
          }
          fPackageLock->Lock();
 
@@ -3956,7 +3959,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
             PDB(kPackage, 1)
                Info("HandleCache",
-                    "package %s exists and has PROOF-INF directory", package.Data());
+                    "kBuildPackage: package %s exists and has PROOF-INF directory", package.Data());
 
             ocwd = gSystem->WorkingDirectory();
             gSystem->ChangeDirectory(pdir);
@@ -3978,36 +3981,60 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   v.Gets(f);
                   fclose(f);
                   if (v != gROOT->GetVersion()) {
-                     SendAsynMessage(Form("%s: %s: version change (current: %s, build: %s): cleaning ... ",
-                                          noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                     if (gSystem->Exec("PROOF-INF/BUILD.sh clean"))
-                        status = -1;
+                     if (!fromglobal) {
+                        SendAsynMessage(Form("%s: %s: version change (current: %s, build: %s): cleaning ... ",
+                                             noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
+                        // Hard cleanup: go up the dir tree
+                        gSystem->ChangeDirectory(fPackageDir);
+                        // remove package directory
+                        gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
+                        // find gunzip...
+                        char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
+                                                      kExecutePermission);
+                        if (gunzip) {
+                           TString par = Form("%s.par", pdir.Data()); 
+                           // untar package
+                           TString cmd(Form(kUNTAR3, gunzip, par.Data()));
+                           status = gSystem->Exec(cmd);
+                           if (status)
+                              Error("HandleCache", "kBuildPackage: failure executing: %s", cmd.Data());
+                           else
+                              // Go down to the package directory
+                              gSystem->ChangeDirectory(pdir);
+                           delete [] gunzip;
+                        } else
+                           Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
+                     } else {
+                        SendAsynMessage(Form("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
+                                             " global package: cannot re-build!!! ",
+                                             noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
+                     }
                   }
                }
 
-               // To build the package we execute PROOF-INF/BUILD.sh via a pipe
-               // so that we can send back the log in (almost) real-time to the
-               // (impatient) client. Note that this operation will block, so
-               // the messages from builds on the workers will reach the client
-               // shortly after the master ones.
-               TString ipath(gSystem->GetIncludePath());
-               ipath.ReplaceAll("\"","");
-               TString cmd = Form("export ROOTINCLUDEPATH=\"%s\" ; PROOF-INF/BUILD.sh",
-                                  ipath.Data());
-               {
-                  TProofServLogHandlerGuard hg(cmd, fSocket);
-               }
+               if (!status) {
+                  // To build the package we execute PROOF-INF/BUILD.sh via a pipe
+                  // so that we can send back the log in (almost) real-time to the
+                  // (impatient) client. Note that this operation will block, so
+                  // the messages from builds on the workers will reach the client
+                  // shortly after the master ones.
+                  TString ipath(gSystem->GetIncludePath());
+                  ipath.ReplaceAll("\"","");
+                  TString cmd = Form("export ROOTINCLUDEPATH=\"%s\" ; PROOF-INF/BUILD.sh",
+                                      ipath.Data());
+                  {
+                     TProofServLogHandlerGuard hg(cmd, fSocket);
+                  }
 
-               // write version file
-               f = fopen("PROOF-INF/proofvers.txt", "w");
-               if (f) {
-                  fputs(gROOT->GetVersion(), f);
-                  fclose(f);
+                  // write version file
+                  f = fopen("PROOF-INF/proofvers.txt", "w");
+                  if (f) {
+                     fputs(gROOT->GetVersion(), f);
+                     fclose(f);
+                  }
                }
             }
-
             gSystem->ChangeDirectory(ocwd);
-
          }
 
          fPackageLock->Unlock();
