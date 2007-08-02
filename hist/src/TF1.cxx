@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.139 2007/06/12 15:29:23 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.140 2007/07/05 10:30:48 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -3416,19 +3416,7 @@ void TF1::SetTitle(const char *title)
    if (!title) return;
    fTitle = title;
    if (!fHistogram) return;
-   char *semicol = (char*)strstr(title,";");
-   if (semicol) {
-      Int_t nxt = strlen(semicol);
-      char *ctemp = new char[nxt];
-      strcpy(ctemp,semicol+1);
-      semicol = (char*)strstr(ctemp,";");
-      if (semicol) {
-         *semicol = 0;
-         fHistogram->GetYaxis()->SetTitle(semicol+1);
-      }
-      fHistogram->GetXaxis()->SetTitle(ctemp);
-      delete [] ctemp;
-   }
+   fHistogram->SetTitle(title);
    if (gPad) gPad->Modified();
 }
 
