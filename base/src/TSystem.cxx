@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.173 2007/07/09 20:38:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.174 2007/07/17 14:03:34 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1484,6 +1484,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       if (idx == 0 || libs[idx-1] == '/' || libs[idx-1] == '\\') {
          Ssiz_t len = libs.Length();
          idx += l.Length();
+         if (!l.EndsWith("."))
+            idx++;
          while (idx < len && libs[idx] != '.') {
             if (libs[idx] == ' ' || idx+1 == len)
                return 1;
@@ -1524,8 +1526,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
          }
          libmapfilename += ".rootmap";
       }
-      if (gSystem->GetPathInfo( libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
-         if (gDebug >0) Info("Load","loading %s",libmapfilename.Data());
+      if (gSystem->GetPathInfo(libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
+         if (gDebug > 0) Info("Load", "loading %s", libmapfilename.Data());
          gInterpreter->LoadLibraryMap(libmapfilename);
          deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
       }
