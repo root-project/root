@@ -13,7 +13,6 @@ import gccdemangler
 class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def __init__(self, hfile, opts):
-    print "AXEL DEBUG GENDICT"
     self.classes    = []
     self.namespaces = []
     self.typeids    = []
