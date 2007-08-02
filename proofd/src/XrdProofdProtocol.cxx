@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.65 2007/07/17 14:17:15 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.66 2007/07/30 16:26:54 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2492,6 +2492,10 @@ int XrdProofdProtocol::MapClient(bool all)
       fPClient = pmgr;
       TRACEI(DBG,"MapClient: matching client: "<<pmgr);
 
+      // Make sure that the version is filled correctly (if an admin operation
+      // was run before this may still be -1 on workers) 
+      pmgr->SetClientVers(clientvers);
+
       // If proofsrv, locate the target session
       if (proofsrv) {
          XrdProofServProxy *psrv = 0;
@@ -3956,6 +3960,15 @@ int XrdProofdProtocol::Create()
    // The ROOT version to be used
    xps->SetROOT(fPClient->ROOT());
    XPDPRT("Create: using ROOT version: "<<xps->ROOT()->Export());
+   if (fSrvType == kXPD_TopMaster) {
+      // Notify the client if using a version different from the default one
+      if (fPClient->ROOT() != fgROOT.front()) {
+         XrdOucString msg("++++ Using NON-default ROOT version: ");
+         msg += xps->ROOT()->Export();
+         msg += " ++++\n";
+         fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
+      }
+   }
 
    // Notify
    TRACEI(DBG, "Create: {ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
@@ -4427,7 +4440,7 @@ int XrdProofdProtocol::SendMsg()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(XERR, "SendMsg: session ID not found");
+      TRACEP(XERR, "SendMsg: session ID not found: "<< psid);
       fResponse.Send(kXR_InvalidRequest,"session ID not found");
       return rc;
    }
