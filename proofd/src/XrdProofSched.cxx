@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.3 2007/06/26 10:38:09 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.cxx,v 1.4 2007/07/16 10:14:52 ganis Exp $
 // Author: G. Ganis  September 2007
 
 /*************************************************************************
@@ -93,14 +93,9 @@ XrdProofSched::XrdProofSched(const char *name,
    fValid = 1;
    fMgr = mgr;
    fGrpMgr = grpmgr;
-   fMaxSessions = -1;
-   fWorkerMax = -1;
-   fWorkerSel = kSSORoundRobin;
    fNextWrk = 1;
    fEDest = e;
-   fOptWrksPerUnit = 2;
-   fMinForQuery = 2;
-   fNodesFraction = 0.5;
+   ResetParameters();
 
    memset(fName, 0, kXPSMXNMLEN);
    if (name)
@@ -110,6 +105,19 @@ XrdProofSched::XrdProofSched(const char *name,
    if (cfn && strlen(cfn) > 0)
       if (Config(cfn) != 0)
          fValid = 0;
+}
+
+//______________________________________________________________________________
+void XrdProofSched::ResetParameters()
+{
+   // Reset values for the configurable parameters
+
+   fMaxSessions = -1;
+   fWorkerMax = -1;
+   fWorkerSel = kSSORoundRobin;
+   fOptWrksPerUnit = 2;
+   fMinForQuery = 2;
+   fNodesFraction = 0.5;
 }
 
 //_________________________________________________________________________________
@@ -143,12 +151,7 @@ int XrdProofSched::Config(const char *cfg)
    while ((var = config.GetMyFirstWord())) {
       if (!(strncmp("xpd.schedparam", var, 14))) {
          var += 14;
-         // Get the scheduler name
-         if (!(val = config.GetToken()) || !val[0])
-            continue;
-         if (strncmp(val, "default", 7))
-            continue;
-         // Get the values
+         // Get the parameters
          while ((val = config.GetToken()) && val[0]) {
             XrdOucString s(val);
             if (s.beginswith("wmx:")) {
@@ -168,11 +171,15 @@ int XrdProofSched::Config(const char *cfg)
                s.replace("fraction:","");
                fNodesFraction = strtod(s.c_str(), (char **)0);
             } else if (s.beginswith("optnwrks:")) {
-               s.replace("mxwrksunit:","");
+               s.replace("optnwrks:","");
                fOptWrksPerUnit = strtol(s.c_str(), (char **)0, 10);
             } else if (s.beginswith("minforquery:")) {
                s.replace("minforquery:","");
                fMinForQuery = strtol(s.c_str(), (char **)0, 10);
+            } else if (strncmp(val, "default", 7)) {
+               // This line applies to another scheduler
+               ResetParameters();
+               break;
             }
          }
       } else if (!(strncmp("xpd.resource", var, 12))) {
@@ -195,8 +202,6 @@ int XrdProofSched::Config(const char *cfg)
             } else if (s.beginswith("selopt:")) {
                if (s.endswith("random"))
                   fWorkerSel = kSSORandom;
-               else if (s.endswith("load"))
-                  fWorkerSel = kSSOLoadBased;
                else
                   fWorkerSel = kSSORoundRobin;
             }

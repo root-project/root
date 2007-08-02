@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.h,v 1.1 2007/06/21 08:00:01 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofSched.h,v 1.2 2007/07/16 10:14:52 ganis Exp $
 // Author: G. Ganis  Jun 2007
 
 /*************************************************************************
@@ -92,6 +92,7 @@ protected:
 
    virtual int       Config(const char *cfn);
    virtual int       GetNumWorkers(XrdProofServProxy *xps);
+   virtual void      ResetParameters();
 };
 
 
