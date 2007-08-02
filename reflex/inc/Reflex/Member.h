@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.16 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.17 2006/11/06 09:13:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -169,7 +169,8 @@ namespace ROOT {
 
 
          /** 
-          * IsAbstract checks whether abstract is set for the data member 
+          * IsAbstract checks whether abstract is set for the data member,
+          * or a function member is pure virtual
           * @return true if abstract modifier is set for this member
           */
          bool IsAbstract() const;
@@ -291,6 +292,14 @@ namespace ROOT {
           * @return true if access to this member is public
           */
          bool IsPublic() const;
+
+
+         /** 
+          * IsPureVirtual checks whether the Member is a pure virtual
+          * function.
+          * @return true if function and abstract modifier is set
+          */
+         bool IsPureVirtual() const;
 
 
          /** 
@@ -706,6 +715,14 @@ inline bool ROOT::Reflex::Member::IsProtected() const {
 inline bool ROOT::Reflex::Member::IsPublic() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->IsPublic();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Member::IsPureVirtual() const {
+//-------------------------------------------------------------------------------
+   if ( *this ) return IsFunctionMember() && IsAbstract();
    return false;
 }
 

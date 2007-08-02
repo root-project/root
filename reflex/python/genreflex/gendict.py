@@ -1234,6 +1234,7 @@ class genDictionary(object) :
     elif attrs['access'] == 'protected' : mod = 'PROTECTED'
     else                                : mod = 'NONE'
     if 'virtual' in attrs : mod += ' | VIRTUAL'
+    if 'pure_virtual' in attrs : mod += ' | ABSTRACT'
     if 'static'  in attrs : mod += ' | STATIC'
     # Extra modifiers
     xtrans = ''

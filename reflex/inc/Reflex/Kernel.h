@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.29 2007/04/26 13:47:05 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.30 2007/07/02 07:10:54 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -222,7 +222,7 @@ namespace ROOT {
       // FM = FUNCTIONMEMBER
       // TY = TYPE
       // ME = MEMBER
-      //                              BA  CL  DM  FM  TY  ME
+      //                                BA  CL  DM  FM  TY  ME
       enum ENTITY_DESCRIPTION {
          PUBLIC          = (1<<0),  //  X       X   X       X
          PROTECTED       = (1<<1),  //  X       X   X       X
@@ -242,7 +242,7 @@ namespace ROOT {
          CONST           = (1<<15), //          X       X   X
          VOLATILE        = (1<<16), //          X       X   X
          REFERENCE       = (1<<17), //          X           X
-         ABSTRACT        = (1<<18), //      X           X
+         ABSTRACT        = (1<<18), //      X       X   X
          VIRTUAL         = (1<<19), //  X   X           X
          TRANSIENT       = (1<<20), //          X           X
          ARTIFICIAL      = (1<<21), //  X   X   X   X   X   X
