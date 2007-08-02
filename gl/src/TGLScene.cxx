@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.53 2007/06/23 21:23:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.54 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -27,7 +27,6 @@
 #include <TClass.h>
 
 #include <algorithm>
-#include <typeinfo>
 
 //______________________________________________________________________
 // TGLScene::TSceneInfo
@@ -41,6 +40,7 @@
 // 2. Statistics / debug information
 //
 
+//______________________________________________________________________________
 TGLScene::TSceneInfo::TSceneInfo(TGLViewerBase* view, TGLScene* scene) :
    TGLSceneInfo (view, scene),
    fOpaqueCnt   (0),
@@ -48,6 +48,7 @@ TGLScene::TSceneInfo::TSceneInfo(TGLViewerBase* view, TGLScene* scene) :
    fAsPixelCnt  (0)
 {}
 
+//______________________________________________________________________________
 TGLScene::TSceneInfo::~TSceneInfo()
 {}
 
@@ -771,6 +772,7 @@ Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
 // Selection
 /**************************************************************************/
 
+//______________________________________________________________________________
 Bool_t TGLScene::ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx)
 {
    // Process selection record rec.
@@ -1096,6 +1098,7 @@ void TGLScene::EndUpdate()
    // Via some SceneBase method ... i presume.
 }
 
+//______________________________________________________________________________
 void TGLScene::UpdateLogical(TObject* logid)
 {
    // Drop display-lists for the logical (assume TGLObject/direct rendering).
@@ -1118,6 +1121,7 @@ void TGLScene::UpdateLogical(TObject* logid)
    IncTimeStamp();
 }
 
+//______________________________________________________________________________
 void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
 {
    // Reposition/recolor physical shape.
@@ -1138,6 +1142,7 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, UChar_t* col)
    if (col)    phys->SetDiffuseColor(col);
 }
 
+//______________________________________________________________________________
 void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx, UChar_t transp)
 {
    // Reposition/recolor physical shape.
@@ -1163,6 +1168,7 @@ void TGLScene::UpdatePhysical(UInt_t phid, Double_t* trans, Color_t cidx, UChar_
    }
 }
 
+//______________________________________________________________________________
 void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col)
 {
    // Reposition/recolor physical for given logical (assume TGLObject and
@@ -1190,6 +1196,7 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col
    if (col)    phys->SetDiffuseColor(col);
 }
 
+//______________________________________________________________________________
 void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx, UChar_t transp)
 {
    // Reposition/recolor physical for given logical (assume TGLObject and
@@ -1266,6 +1273,7 @@ void TGLScene::EndSmartRefresh()
    fSmartRefreshCache.clear();
 }
 
+//______________________________________________________________________________
 TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
 {
    // Find and return logical shape identified by unqiue 'ID' in refresh-cache.
@@ -1276,7 +1284,7 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
    {
       TGLLogicalShape* l_shape = it->second;
       fSmartRefreshCache.erase(it);
-      if (typeid(l_shape) != *TGLObject::GetGLRenderer(ID->IsA())->GetTypeInfo())
+      if (l_shape->IsA() != TGLObject::GetGLRenderer(ID->IsA()))
       {
          Warning("TGLScene::FindLogicalSmartRefresh", "Wrong renderer-type found in cache.");
          return 0;
@@ -1340,9 +1348,10 @@ void TGLScene::DumpMapSizes() const
 {
    // Print sizes of logical nad physical-shape maps.
 
-   printf("Scene: %u Logicals / %u Physicals ",  fLogicalShapes.size(), fPhysicalShapes.size());
+   printf("Scene: %lu Logicals / %lu Physicals ",  fLogicalShapes.size(), fPhysicalShapes.size());
 }
 
+//______________________________________________________________________________
 void TGLScene::RGBAFromColorIdx(Float_t rgba[4], Color_t ci, Char_t transp)
 {
    // Fill rgba color from ROOT color-index ci and transparency (0->100).
@@ -1353,6 +1362,7 @@ void TGLScene::RGBAFromColorIdx(Float_t rgba[4], Color_t ci, Char_t transp)
    rgba[3] = 1.0f - transp/100.0f;
 }
 
+//______________________________________________________________________________
 Bool_t TGLScene::IsOutside(const TGLBoundingBox & box,
                            const TGLPlaneSet_t  & planes)
 {
