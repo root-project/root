@@ -3979,7 +3979,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       double ac = TMath::Cos(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
-         pDash[i] = int(tDash[i] * ac);
+         pDash[i] = TMath::Nint(tDash[i] * ac);
       }
 
       UInt_t ddy = dy << 1;
@@ -4057,7 +4057,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       double as = TMath::Sin(TMath::ATan2(dy, dx));
 
       for (i = 0; i < (int)nDash; i++) {
-         pDash[i] = int(tDash[i] * as);
+         pDash[i] = TMath::Nint(tDash[i] * as);
       }
 
       UInt_t ddx = dx << 1;
