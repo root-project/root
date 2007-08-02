@@ -4729,7 +4729,7 @@ if test "x$enable_reflex" = "xyes"; then
             GCCXMLVERSION=`${gccxml}/gccxml --version 2>/dev/null | sed 's,.*\([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\).*$,\1,'`
             GCCXMLVERSION06=`echo $GCCXMLVERSION|grep ^0\.6`
             if test "x${GCCXMLVERSION06}" != "x"; then
-                GCCXML06SED="-e s|genreflex[.-]|genreflex06\1|g"
+                GCCXML06SED="-e s|genreflex\([.-]\)|genreflex06\1|g"
                 echo -n ' [ Upgrade to GCCXML >= 0.7 recommended! ] '
             fi
         fi
