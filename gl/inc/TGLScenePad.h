@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLScenePad.h,v 1.1 2007/07/23 15:02:39 rdm Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -70,6 +70,10 @@ public:
 
    // PadPaint wrapper for calls from TGLViewer:
    virtual void   PadPaintFromViewer(TGLViewer* viewer);
+
+   Bool_t  GetSmartRefresh() const           { return fSmartRefresh; }
+   void    SetSmartRefresh(Bool_t smart_ref) { fSmartRefresh = smart_ref; }
+
 
    // TVirtualViewer3D interface
 

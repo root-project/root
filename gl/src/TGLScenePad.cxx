@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLScenePad.cxx,v 1.1 2007/07/23 15:02:39 rdm Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TGLScenePad.h"
 
+#include "TGLViewer.h"
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLObject.h"
@@ -56,7 +57,8 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
    fNextInternalPID   (1), // 0 reserved
    fAcceptedPhysicals (0),
    fComposite         (0),
-   fCSLevel           (0)
+   fCSLevel           (0),
+   fSmartRefresh      (kFALSE)
 {
    // Constructor.
 }
@@ -166,14 +168,19 @@ void TGLScenePad::SubPadPaint(TVirtualPad* pad)
 }
 
 //______________________________________________________________________________
-void TGLScenePad::PadPaintFromViewer(TGLViewer* /*viewer*/)
+void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
 {
    // Entry point for requesting update of scene's contents from
    // gl-viewer.
 
+   Bool_t sr = fSmartRefresh;
+   fSmartRefresh = viewer->GetSmartRefresh();
+
    BeginScene();
    SubPadPaint(fPad);
    EndScene();
+
+   fSmartRefresh = sr;
 }
 
 //______________________________________________________________________________
