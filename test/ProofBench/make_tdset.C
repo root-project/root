@@ -1,4 +1,4 @@
-// $Id: make_tdset.C,v 1.8 2007/03/14 15:55:35 rdm Exp $
+// $Id: make_tdset.C,v 1.9 2007/07/16 09:57:39 rdm Exp $
 //
 //
 
@@ -72,7 +72,7 @@ TDSet *make_tdset(const char *basedir, Int_t files_per_slave, Int_t max_per_node
          filestr += "/";
          filestr += basedir;
          filestr += "/event_tree_";
-         filestr += (new TUrl(node->GetName()))->GetHostFQDN();
+         filestr += node->GetName();
          filestr += "_";
          filestr += j;
          filestr += ".root";
