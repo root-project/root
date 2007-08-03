@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.6 2006/09/05 13:37:08 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.7 2006/10/18 21:56:59 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -37,7 +37,7 @@ typedef char my_bool;
 
 class TMySQLStatement : public TSQLStatement {
 
-private:
+protected:
 
    struct TParamData {
       void*         fMem;        //! allocated data buffer
