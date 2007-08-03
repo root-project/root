@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.11 2007/06/06 10:51:56 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.12 2007/08/03 16:55:45 pcanal Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -417,7 +417,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
       case MYSQL_TYPE_DOUBLE:
          return *((double*) addr);
          break;
-#if MYSQL_VERSION_ID >= 50000
+#if MYSQL_VERSION_ID >= 50022
       case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
 #endif
       case MYSQL_TYPE_STRING:
@@ -732,7 +732,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_TINY:     allocsize = sizeof(char); break;
       case MYSQL_TYPE_FLOAT:    allocsize = sizeof(float); break;
       case MYSQL_TYPE_DOUBLE:   allocsize = sizeof(double); break;
-#if MYSQL_VERSION_ID >= 50000
+#if MYSQL_VERSION_ID >= 50022
       case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
 #endif
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
