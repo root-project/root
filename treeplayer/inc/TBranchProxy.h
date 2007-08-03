@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.12 2007/08/03 13:33:49 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.13 2007/08/03 15:41:02 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -255,7 +255,7 @@ namespace ROOT {
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in TClonesArray.
 
-         char *location;
+         char *location=0;
 
          if (fCollection) {
 
