@@ -65,6 +65,8 @@ void G__cancel_undo_position(void);
 static int G__atevaluate(G__value buf);
 #endif
 
+static G__input_file G__multi_line_temp;
+
 /**************************************************************************
 * G__SET_TEMPENV
 *
@@ -3304,6 +3306,8 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
       } 
       else {
         com = command+1;
+        ftemp = G__multi_line_temp;
+        G__multi_line_temp.fp = 0;
 #ifndef G__OLDIMPLEMENTATION1774
         if('@'==com[0]) {
           if(ftemp.fp) fclose(ftemp.fp);
@@ -3353,6 +3357,8 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
         }
         if (temp>0) {
           fprintf(ftemp.fp,"%s\n",com);
+          G__multi_line_temp = ftemp;
+
 #ifndef G__OLDIMPLEMENTATION1774
           strcpy(prompt,"end with '}', '@':abort > ");
 #else
