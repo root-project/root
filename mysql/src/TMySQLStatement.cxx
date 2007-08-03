@@ -24,6 +24,11 @@
 
 ClassImp(TMySQLStatement)
 
+#if MYSQL_VERSION_ID >= 50022
+#if defined(R__MACOSX) && !defined(MYSQL_TYPE_NEWDECIMAL)
+#define MYSQL_TYPE_NEWDECIMAL 246
+#endif
+#endif
 
 #if MYSQL_VERSION_ID >= 40100
 
