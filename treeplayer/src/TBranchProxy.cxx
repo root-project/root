@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.9 2007/02/01 15:26:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.10 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -27,7 +27,7 @@ ROOT::TBranchProxy::TBranchProxy() :
    fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(0),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0)
+   fLastTree(0), fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 };
@@ -38,7 +38,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
    fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1),  fWhere(0)
+   fLastTree(0), fRead(-1),  fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -54,7 +54,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, co
    fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0)
+   fLastTree(0), fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -73,7 +73,7 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *paren
    fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0)
+   fLastTree(0), fRead(-1), fWhere(0),fCollection(0)
 {
    // Constructor.
 
@@ -105,6 +105,7 @@ void ROOT::TBranchProxy::Reset()
    fIsClone = false;
    fInitialized = false;
    fLastTree = 0;
+   delete fCollection;
 }
 
 void ROOT::TBranchProxy::Print()
@@ -143,6 +144,12 @@ Bool_t ROOT::TBranchProxy::Setup()
          clones = (TClonesArray*)fParent->GetStart();
 
          pcl = clones->GetClass();
+      } else if (pcl->GetCollectionProxy()) {
+         // We always skip the collections.
+
+         if (fCollection) delete fCollection;
+         fCollection = pcl->GetCollectionProxy()->Generate();
+         pcl = fCollection->GetValueClass();
       }
 
       fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
@@ -217,7 +224,8 @@ Bool_t ROOT::TBranchProxy::Setup()
             fIsaPointer = fElement->IsaPointer();
             fClass = fElement->GetClassPointer();
 
-            if ((fIsMember || be->GetType()!=3) && be->GetType()!=31) {
+            if ((fIsMember || (be->GetType()!=3 && be->GetType() !=4)) 
+                  && (be->GetType()!=31 && be->GetType()!=41)) {
 
                if (fClass==TClonesArray::Class()) {
                   Int_t i = be->GetTree()->GetReadEntry();
@@ -234,6 +242,10 @@ Bool_t ROOT::TBranchProxy::Setup()
                   }
                   if (!fIsMember) fIsClone = true;
                   fClass = clones->GetClass();
+               } else if (fClass && fClass->GetCollectionProxy()) {
+                  delete fCollection;
+                  fCollection = fClass->GetCollectionProxy()->Generate();
+                  fClass = fCollection->GetValueClass();
                }
 
             }
@@ -250,11 +262,24 @@ Bool_t ROOT::TBranchProxy::Setup()
             fIsaPointer = false;
             fWhere = be->GetObject();
 
+         } else if (be->GetType()==4) {
+            // top level TClonesArray
+
+            fCollection = be->GetCollectionProxy()->Generate();
+            fIsaPointer = false;
+            fWhere = be->GetObject();
+
          } else if (id<0) {
             // top level object
 
             fIsaPointer = false;
             fWhere = be->GetObject();
+
+         } else if (be->GetType()==41) {
+
+            fCollection = be->GetCollectionProxy()->Generate();
+            fWhere   = be->GetObject();
+            fOffset += be->GetOffset();
 
          } else if (be->GetType()==31) {
 
@@ -301,7 +326,7 @@ Bool_t ROOT::TBranchProxy::Setup()
            (((TBranchElement*)fBranch)->GetType()==3 || fClass==TClonesArray::Class()) &&
            !fIsMember ) {
          fIsClone = true;
-      }
+      } 
 
       if (fIsMember) {
          if ( fBranch->IsA()==TBranchElement::Class() &&
@@ -362,6 +387,13 @@ Bool_t ROOT::TBranchProxy::Setup()
    }
    if (fClass==TClonesArray::Class()) fIsClone = true;
    if (fWhere!=0) {
+      if (fCollection) {
+         if (IsaPointer()) {
+            fCollection->PushProxy( *(void**)fWhere );
+         } else {
+            fCollection->PushProxy( fWhere );
+         }
+      }
       fLastTree = fDirector->GetTree();
       fInitialized = true;
       return true;

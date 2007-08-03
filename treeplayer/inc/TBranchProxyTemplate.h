@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.6 2007/06/04 17:07:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.7 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -98,6 +98,113 @@ namespace ROOT {
       }
 
       const T* operator [](int i) { return At(i); }
+
+   };
+
+   template <class T>
+   class TStlObjProxy  {
+      TStlProxy obj;
+   public:
+      InjecTBranchProxyInterface();
+
+      void Print() {
+         obj.Print();
+         cout << "obj.GetWhere() " << obj.GetWhere() << endl;
+         //if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
+      }
+
+      TStlObjProxy() : obj() {};
+      TStlObjProxy(TBranchProxyDirector *director, const char *name) : obj(director,name) {};
+      TStlObjProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
+         obj(director,top,name) {};
+      TStlObjProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
+         obj(director,top,name,data) {};
+      TStlObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         obj(director,parent, name, top, mid) {};
+      ~TStlObjProxy() {};
+
+      const TVirtualCollectionProxy* GetPtr() { return obj.GetPtr(); }
+
+      Int_t GetEntries() { return obj.GetEntries(); }
+
+      const T* At(int i) {
+         static T default_val;
+         if (!obj.Read()) return &default_val;
+         if (obj.GetWhere()==0) return &default_val;
+
+         T* temp = (T*)obj.GetStlStart(i);
+         if (temp) return temp;
+         else return &default_val;
+      }
+
+      const T* operator [](int i) { return At(i); }
+
+   };
+
+
+   template <class T>
+   class TStlSimpleProxy : TObjProxy<T> {
+      // Intended to compiled non-split collection
+
+      TVirtualCollectionProxy *fCollection;
+      typedef typename T::value_type value_t;
+   public:
+      InjecTBranchProxyInterface();
+
+      void Print() {
+         obj.Print();
+         cout << "obj.GetWhere() " << obj.GetWhere() << endl;
+         //if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
+      }
+
+      TStlSimpleProxy() : TObjProxy(),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) : TObjProxy(director,name),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
+         TObjProxy(director,top,name),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
+         TObjProxy(director,top,name,data),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         TObjProxy(director,parent, name, top, mid),fCollection(0) {};
+      ~TStlSimpleProxy() { delete fCollection; };
+
+      TVirtualCollectionProxy* GetCollection() { 
+         if (fCollection==0) {
+            TClass *cl = TClass::GetClass(typeid(T));
+            if (cl && cl->GetCollectionProxy()) {
+               fCollection =  cl->GetCollectionProxy()->Generate();
+            }
+         }
+         return fCollection;
+      }
+
+      Int_t GetEntries() { 
+         T *temp = GetPtr();
+         if (temp) {
+            GetCollection();
+            if (!fCollection) return 0;
+            TVirtualCollectionProxy::TPushPop helper( fCollection, temp );
+            return fCollection->Size();
+         }
+         return 0;
+      }
+
+      const value_t At(int i) {
+         static value_t default_val;
+         T *temp = GetPtr();
+         if (temp) {
+            GetCollection();
+            if (!fCollection) return 0;
+            TVirtualCollectionProxy::TPushPop helper( fCollection, temp );
+            return *(value_t*)(fCollection->At(i));
+         }
+         else return default_val;
+      }
+
+      const T* operator [](int i) { return At(i); }
+
+      T* operator->() { return GetPtr(); }
+      operator T*() { return GetPtr(); }
+      // operator T&() { return *GetPtr(); }
 
    };
 

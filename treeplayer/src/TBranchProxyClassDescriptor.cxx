@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.12 2007/06/04 17:07:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.13 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -30,8 +30,10 @@ namespace ROOT {
       fRawSymbol.ReplaceAll(" ","");
       fRawSymbol.ReplaceAll("*","st");
       fRawSymbol.ReplaceAll("&","rf");
-      if (fIsClones!=kOut)
+      if (IsClones())
          fRawSymbol.Prepend("TClaPx_");
+      else if (IsSTL()) 
+         fRawSymbol.Prepend("TStlPx_");
       else
          fRawSymbol.Prepend("TPx_");
       if (fRawSymbol.Length() && fRawSymbol[fRawSymbol.Length()-1]=='.')
@@ -43,7 +45,7 @@ namespace ROOT {
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type,
                                                             TVirtualStreamerInfo *info,
                                                             const char *branchname,
-                                                            UInt_t isclones,
+                                                            ELocation isclones,
                                                             UInt_t splitlevel) :
       TNamed(type,type),
       fIsClones(isclones),
@@ -63,7 +65,7 @@ namespace ROOT {
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname) :
       TNamed(branchname,branchname),
-      fIsClones(false),
+      fIsClones(kOut),
       fIsLeafList(true),
       fSplitLevel(0),
       fBranchName(branchname),
@@ -79,7 +81,7 @@ namespace ROOT {
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info,
                                                             const char *branchname,
-                                                            const char *branchPrefix, UInt_t isclones,
+                                                            const char *branchPrefix, ELocation isclones,
                                                             UInt_t splitlevel) :
       TNamed(type,type),
       fIsClones(isclones),
@@ -190,9 +192,16 @@ namespace ROOT {
    Bool_t TBranchProxyClassDescriptor::IsClones() const
    {
       // Return true if this proxy is for a TClonesArray.
-      return fIsClones!=kOut;
+      return fIsClones==kClones || fIsClones==kInsideClones;
    }
-   UInt_t TBranchProxyClassDescriptor::GetIsClones() const
+
+   Bool_t TBranchProxyClassDescriptor::IsSTL() const
+   {
+      // Return true if this proxy is for a TClonesArray.
+      return fIsClones==kSTL || fIsClones==kInsideSTL;
+   }
+
+   TBranchProxyClassDescriptor::ELocation TBranchProxyClassDescriptor::GetIsClones() const
    {
       // Return whether the branch is inside, nested in or outside of a TClonesArray
       return fIsClones;
@@ -249,7 +258,7 @@ namespace ROOT {
 
 
       TString objInit = "top, mid";
-      if ( GetIsClones() == kInsideClones ) {
+      if ( GetIsClones() == kInsideClones || GetIsClones() == kInsideSTL ) {
          if (fListOfSubProxies.GetSize()) {
             desc = (TBranchProxyDescriptor*)fListOfSubProxies.At(0);
             if (desc && desc->IsSplit()) {
@@ -307,7 +316,7 @@ namespace ROOT {
       fprintf(hf,"%s\n%-*s      %-*s(top,mid)",wroteFirst?",":"",offset," ",fMaxDatamemberType,"ffPrefix");
       wroteFirst = true;
 
-      if ( true ||  IsLoaded() || IsClones() ) {
+      if ( true ||  IsLoaded() || IsClones() || IsSTL() ) {
          fprintf(hf,"%s\n%-*s      %-*s(director, parent, membername)",
                  wroteFirst?",":"",offset," ",fMaxDatamemberType,"obj");
          wroteFirst = true;
@@ -336,6 +345,11 @@ namespace ROOT {
             fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
             fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
             fprintf(hf,"%-*sTClaObjProxy<%s > obj;\n", offset+3, " ", type);
+         } if ( IsSTL() ) {
+            fprintf(hf,"%-*sconst %s* operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
+            fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
+            // fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type_of_the_container);
+            fprintf(hf,"%-*sTStlObjProxy<%s > obj;\n", offset+3, " ", type);         
          } else {
             fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type);
             fprintf(hf,"%-*sTObjProxy<%s > obj;\n", offset+3, " ", type);
@@ -347,6 +361,13 @@ namespace ROOT {
          fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
          fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
          fprintf(hf,"%-*sTClaProxy obj;\n", offset+3," ");
+
+      } else if ( IsSTL()) {
+
+         fprintf(hf,"%-*sInjecTBranchProxyInterface();\n", offset+3," ");
+         fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
+         // fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
+         fprintf(hf,"%-*sTStlProxy obj;\n", offset+3," ");
 
       } else {
 

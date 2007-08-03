@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.8 2007/02/05 18:11:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.9 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -29,14 +29,13 @@ namespace ROOT {
    class TBranchProxyClassDescriptor : public TNamed {
 
    public:
-      typedef enum { kOut=0, kClones, kInsideClones } EInClones; // for IsClones
+      enum ELocation { kOut=0, kClones, kSTL, kInsideClones, kInsideSTL }; // for IsClones
    private:
-      TList   fListOfSubProxies;
-      TList   fListOfBaseProxies;
-      UInt_t  fIsClones;   // 1 for the general case, 2 when this a split clases inside a TClonesArray.
-      Bool_t  fIsLeafList; // true if the branch was constructed from a leaf list.
-
-      UInt_t  fSplitLevel;
+      TList          fListOfSubProxies;
+      TList          fListOfBaseProxies;
+      ELocation      fIsClones;   // 1 for the general case, 2 when this a split clases inside a TClonesArray.
+      Bool_t         fIsLeafList; // true if the branch was constructed from a leaf list.
+      UInt_t         fSplitLevel;
 
       TString        fRawSymbol;
       TString        fBranchName;
@@ -53,11 +52,11 @@ namespace ROOT {
    public:
 
       TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
-                                  UInt_t isclones, UInt_t splitlevel);
+                                  ELocation isclones, UInt_t splitlevel);
       TBranchProxyClassDescriptor(const char *branchname);
 
       TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
-                                  const char *branchPrefix, UInt_t isclones,
+                                  const char *branchPrefix, ELocation isclones,
                                   UInt_t splitlevel);
 
       const char* GetBranchName() const;
@@ -74,7 +73,8 @@ namespace ROOT {
       void AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase);
       Bool_t IsLoaded() const;
       Bool_t IsClones() const;
-      UInt_t GetIsClones() const;
+      Bool_t IsSTL() const;
+      ELocation GetIsClones() const;
 
       void OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */);
 

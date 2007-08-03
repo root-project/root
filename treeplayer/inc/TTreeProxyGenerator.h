@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.4 2005/05/27 16:40:09 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.5 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -34,7 +34,7 @@ namespace ROOT {
    class TTreeProxyGenerator
    {
    public:
-      enum EContainer { kNone, kClones };
+      enum EContainer { kNone, kClones, kSTL };
       enum EOption { kNoOption, kNoHist };
       UInt_t   fMaxDatamemberType;
       TString  fScript;
@@ -48,6 +48,7 @@ namespace ROOT {
       TList    fListOfHeaders;
       TList    fListOfClasses;
       TList    fListOfFriends;
+      TList    fListOfPragmas;
       TList    fListOfTopProxies;
       TList   *fCurrentListOfTopProxies; //!
       TList    fListOfForwards;
@@ -57,12 +58,13 @@ namespace ROOT {
                           const char *fileprefix, const char *option, UInt_t maxUnrolling);
 
       TBranchProxyClassDescriptor* AddClass(TBranchProxyClassDescriptor *desc);
+      void AddDescriptor(TBranchProxyDescriptor *desc);
       void AddForward(TClass *cl);
       void AddForward(const char *classname);
       void AddFriend(TFriendProxyDescriptor *desc);
       void AddHeader(TClass *cl);
       void AddHeader(const char *classname);
-      void AddDescriptor(TBranchProxyDescriptor *desc);
+      void AddPragma(const char *pragma_text);
 
       bool NeedToEmulate(TClass *cl, UInt_t level);
 

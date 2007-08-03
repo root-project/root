@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.10 2007/06/04 17:07:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.11 2007/07/23 17:07:48 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #endif
 #ifndef ROOT_TError
 #include "TError.h"
+#endif
+#ifndef ROOT_TVirtualCollectionProxy
+#include "TVirtualCollectionProxy.h"
 #endif
 
 #include <list>
@@ -100,6 +103,7 @@ namespace ROOT {
       Long64_t fRead;     // Last entry read
 
       void    *fWhere;    // memory location of the data
+      TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
 
    public:
       virtual void Print();
@@ -181,6 +185,8 @@ namespace ROOT {
       }
 
       void* GetWhere() const { return fWhere; } // intentionally non-virtual
+      
+      TVirtualCollectionProxy *GetCollection() { return fCollection; }
 
       // protected:
       virtual  void *GetStart(int /*i*/=0) {
@@ -231,6 +237,50 @@ namespace ROOT {
             if (tca->GetLast()<i) return 0;
 
             location = (char*)tca->At(i);
+         }
+
+         if (location) location += fOffset;
+         else return 0;
+
+         if (IsaPointer()) {
+            return *(void**)(location);
+         } else {
+            return location;
+         }
+
+      }
+
+      virtual void *GetStlStart(int i=0) {
+         // return the address of the start of the object being proxied. Assumes
+         // that Setup() has been called.  Assumes the object containing this data
+         // member is held in TClonesArray.
+
+         char *location;
+
+         if (fCollection) {
+
+            if (fCollection->Size()<i) return 0;
+
+            location = (char*)fCollection->At(i);
+
+            // return location;
+
+         } else if (fParent) {
+
+            //tcaloc = ((unsigned char*)fParent->GetStart());
+            location = (char*)fParent->GetStlStart(i);
+
+         } else {
+
+            R__ASSERT(0);
+            //void *tcaloc;
+            //tcaloc = fWhere;
+            //TClonesArray *tca;
+            //tca = (TClonesArray*)tcaloc;
+
+            //if (tca->GetLast()<i) return 0;
+
+            //location = (char*)tca->At(i);
          }
 
          if (location) location += fOffset;
@@ -324,6 +374,44 @@ namespace ROOT {
       }
 
       const TClonesArray* operator->() { return GetPtr(); }
+
+   };
+
+   class TStlProxy : public TBranchProxy {
+   public:
+      void Print() {
+         TBranchProxy::Print();
+         cout << "fWhere " << fWhere << endl;
+         if (fWhere) {
+            if (IsaPointer()) {
+               cout << "location " << *(TClonesArray**)fWhere << endl;
+            } else {
+               cout << "location " << fWhere << endl;
+            }
+         }
+      }
+
+      TStlProxy() : TBranchProxy() {}
+      TStlProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name) :
+         TBranchProxy(director,top,name) {};
+      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
+         TBranchProxy(director,top,name,data) {};
+      TStlProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
+      ~TStlProxy() {};
+
+      const TVirtualCollectionProxy* GetPtr() {
+         if (!Read()) return 0;
+         return GetCollection();;
+      }
+
+      Int_t GetEntries() {
+         if (!ReadEntries()) return 0;
+         return GetPtr()->Size();
+      }
+
+      const TVirtualCollectionProxy* operator->() { return GetPtr(); }
 
    };
 
@@ -466,6 +554,54 @@ namespace ROOT {
    };
 
    template <class T>
+   class TStlImpProxy : public TBranchProxy {
+   public:
+
+      void Print() {
+         TBranchProxy::Print();
+         cout << "fWhere " << fWhere << endl;
+         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+      }
+
+      TStlImpProxy() : TBranchProxy() {};
+      TStlImpProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
+         TBranchProxy(director,top,name) {};
+      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
+         TBranchProxy(director,top,name,data) {};
+      TStlImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+         TBranchProxy(director,parent, name, top, mid) {};
+      ~TStlImpProxy() {};
+
+      const T& At(int i) {
+         static T default_val;
+         if (!Read()) return default_val;
+         if (fWhere==0) return default_val;
+
+         T *temp = (T*)GetStlStart(i);
+
+         if (temp) return *temp;
+         else return default_val;
+      }
+
+      const T& operator [](int i) { return At(i); }
+
+      // Make sure that the copy methods are really private
+#ifdef private
+#undef private
+#define private_was_replaced
+#endif
+      // For now explicitly disable copying into the value (i.e. the proxy is read-only).
+   private:
+      TStlImpProxy(T);
+      TStlImpProxy &operator=(T);
+#ifdef private_was_replaced
+#define private public
+#endif
+
+   };
+
+   template <class T>
    class TClaArrayProxy : public TBranchProxy {
    public:
       typedef typename T::array_t array_t;
@@ -496,9 +632,40 @@ namespace ROOT {
       }
 
       /* const */ array_t *operator [](int i) { return At(i); }
-
    };
 
+   template <class T>
+   class TStlArrayProxy : public TBranchProxy {
+   public:
+      typedef typename T::array_t array_t;
+      typedef typename T::type_t type_t;
+
+      void Print() {
+         TBranchProxy::Print();
+         cout << "fWhere " << fWhere << endl;
+         if (fWhere) cout << "value? " << *(type_t*)GetStart() << endl;
+      }
+
+      TStlArrayProxy() : TBranchProxy() {}
+      TStlArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
+         TBranchProxy(director,top,name) {};
+      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
+         TBranchProxy(director,top,name,data) {};
+      TStlArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TBranchProxy(director,parent, name, top, mid) {};
+      ~TStlArrayProxy() {};
+
+      /* const */  array_t *At(int i) {
+         static array_t default_val;
+         if (!Read()) return &default_val;
+         if (fWhere==0) return &default_val;
+
+         return (array_t*)GetStlStart(i);
+      }
+
+      /* const */ array_t *operator [](int i) { return At(i); }
+   };
 
    //TImpProxy<TObject> d;
    typedef TImpProxy<Double_t>   TDoubleProxy;
@@ -561,6 +728,37 @@ namespace ROOT {
    typedef TClaArrayProxy<TArrayType<Char_t> >      TClaArrayCharProxy;
    typedef TClaArrayProxy<TArrayType<Bool_t> >      TClaArrayBoolProxy;
    //specialized ! typedef TClaArrayProxy<TArrayType<Char_t> >  TClaArrayCharProxy;
+
+   typedef TStlImpProxy<Double_t>   TStlDoubleProxy;
+   typedef TStlImpProxy<Double32_t> TStlDouble32Proxy;
+   typedef TStlImpProxy<Float_t>    TStlFloatProxy;
+   typedef TStlImpProxy<UInt_t>     TStlUIntProxy;
+   typedef TStlImpProxy<ULong_t>    TStlULongProxy;
+   typedef TStlImpProxy<ULong64_t>  TStlULong64Proxy;
+   typedef TStlImpProxy<UShort_t>   TStlUShortProxy;
+   typedef TStlImpProxy<UChar_t>    TStlUCharProxy;
+   typedef TStlImpProxy<Int_t>      TStlIntProxy;
+   typedef TStlImpProxy<Long_t>     TStlLongProxy;
+   typedef TStlImpProxy<Long64_t>   TStlLong64Proxy;
+   typedef TStlImpProxy<Short_t>    TStlShortProxy;
+   typedef TStlImpProxy<Char_t>     TStlCharProxy;
+   typedef TStlImpProxy<Bool_t>     TStlBoolProxy;
+
+   typedef TStlArrayProxy<TArrayType<Double_t> >    TStlArrayDoubleProxy;
+   typedef TStlArrayProxy<TArrayType<Double32_t> >  TStlArrayDouble32Proxy;
+   typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;
+   typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;
+   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;
+   typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;
+   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;
+   typedef TStlArrayProxy<TArrayType<Int_t> >       TStlArrayIntProxy;
+   typedef TStlArrayProxy<TArrayType<Long_t> >      TStlArrayLongProxy;
+   typedef TStlArrayProxy<TArrayType<Long64_t> >    TStlArrayLong64Proxy;
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayShortProxy;
+   typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;
+   typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;
+   //specialized ! typedef TStlArrayProxy<TArrayType<Char_t> >  TStlArrayCharProxy;
 
 } // namespace ROOT
 
