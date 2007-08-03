@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.12 2007/08/03 16:55:45 pcanal Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.14 2007/08/03 18:18:16 pcanal Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -23,12 +23,6 @@
 #include "snprintf.h"
 
 ClassImp(TMySQLStatement)
-
-#if MYSQL_VERSION_ID >= 50022
-#if defined(R__MACOSX) && !defined(MYSQL_TYPE_NEWDECIMAL)
-#define MYSQL_TYPE_NEWDECIMAL 246
-#endif
-#endif
 
 #if MYSQL_VERSION_ID >= 40100
 
@@ -562,10 +556,13 @@ const char *TMySQLStatement::GetString(Int_t npar)
 
    CheckGetField("GetString", 0);
 
-   if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
-      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) || 
-      (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING) ||
-      (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)) {
+   if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING)
+      || (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) 
+      || (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING)
+#if MYSQL_VERSION_ID >= 50022
+      || (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)
+#endif
+       ) {
          if (fBuffer[npar].fResNull) return 0;
          char* str = (char*) fBuffer[npar].fMem;
          ULong_t len = fBuffer[npar].fResLength;
