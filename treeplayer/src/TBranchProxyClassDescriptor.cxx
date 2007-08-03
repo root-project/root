@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.13 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.14 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -345,7 +345,7 @@ namespace ROOT {
             fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
             fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
             fprintf(hf,"%-*sTClaObjProxy<%s > obj;\n", offset+3, " ", type);
-         } if ( IsSTL() ) {
+         } else if ( IsSTL() ) {
             fprintf(hf,"%-*sconst %s* operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
             fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
             // fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type_of_the_container);
