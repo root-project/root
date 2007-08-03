@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.9 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.10 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

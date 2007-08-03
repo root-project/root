@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.11 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.12 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -250,7 +250,7 @@ namespace ROOT {
 
       }
 
-      virtual void *GetStlStart(int i=0) {
+      virtual void *GetStlStart(UInt_t i=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in TClonesArray.

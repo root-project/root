@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.7 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.8 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -149,22 +149,15 @@ namespace ROOT {
       TVirtualCollectionProxy *fCollection;
       typedef typename T::value_type value_t;
    public:
-      InjecTBranchProxyInterface();
 
-      void Print() {
-         obj.Print();
-         cout << "obj.GetWhere() " << obj.GetWhere() << endl;
-         //if (obj.GetWhere()) cout << "value? " << *(T*)obj.GetWhere() << endl;
-      }
-
-      TStlSimpleProxy() : TObjProxy(),fCollection(0) {};
-      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) : TObjProxy(director,name),fCollection(0) {};
+      TStlSimpleProxy() : ROOT::TObjProxy<T>(),fCollection(0) {};
+      TStlSimpleProxy(TBranchProxyDirector *director, const char *name) : ROOT::TObjProxy<T>(director,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TObjProxy(director,top,name),fCollection(0) {};
+         ROOT::TObjProxy<T>(director,top,name),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TObjProxy(director,top,name,data),fCollection(0) {};
+         ROOT::TObjProxy<T>(director,top,name,data),fCollection(0) {};
       TStlSimpleProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
-         TObjProxy(director,parent, name, top, mid),fCollection(0) {};
+         ROOT::TObjProxy<T>(director,parent, name, top, mid),fCollection(0) {};
       ~TStlSimpleProxy() { delete fCollection; };
 
       TVirtualCollectionProxy* GetCollection() { 
@@ -178,7 +171,7 @@ namespace ROOT {
       }
 
       Int_t GetEntries() { 
-         T *temp = GetPtr();
+         T *temp =  ROOT::TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -190,7 +183,7 @@ namespace ROOT {
 
       const value_t At(int i) {
          static value_t default_val;
-         T *temp = GetPtr();
+         T *temp = ROOT::TObjProxy<T>::GetPtr();
          if (temp) {
             GetCollection();
             if (!fCollection) return 0;
@@ -202,8 +195,8 @@ namespace ROOT {
 
       const T* operator [](int i) { return At(i); }
 
-      T* operator->() { return GetPtr(); }
-      operator T*() { return GetPtr(); }
+      T* operator->() { return ROOT::TObjProxy<T>::GetPtr(); }
+      operator T*() { return ROOT::TObjProxy<T>::GetPtr(); }
       // operator T&() { return *GetPtr(); }
 
    };
