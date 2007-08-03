@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.334 2007/07/16 16:31:22 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.335 2007/07/28 19:13:17 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2302,6 +2302,14 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       for (Long64_t i = 0; i < nentries; i += this->GetTree()->GetEntries()) {
          if (LoadTree(i) < 0) {
             break;
+         }
+         if (newtree->fDirectory) {
+            TFile* file = newtree->fDirectory->GetFile();
+            if (file && (file->GetEND() > fgMaxTreeSize)) {
+               if (newtree->fDirectory == (TDirectory*) file) {
+                  newtree->ChangeFile(file);
+               }
+            }
          }
          TTreeCloner t(GetTree(), newtree, option);
          if (t.IsValid()) {

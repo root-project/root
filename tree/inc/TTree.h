@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.102 2007/05/02 20:18:39 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.103 2007/05/17 22:21:52 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -144,7 +144,6 @@ protected:
    const   char    *GetNameByIndex(TString& varexp, Int_t* index, Int_t colindex) const;
    virtual void     KeepCircular();
    virtual void     MakeIndex(TString& varexp, Int_t* index);
-   virtual TFile   *ChangeFile(TFile* file);
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual Bool_t   CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t ptr);
@@ -223,6 +222,7 @@ public:
    virtual void            Browse(TBrowser*);
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0);
+   virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1);

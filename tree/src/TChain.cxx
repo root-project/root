@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.169 2007/07/02 14:28:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.170 2007/07/09 08:16:22 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1649,6 +1649,8 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
    // the subsequent files will be named "merged_1.root", "merged_2.root",
    // etc.  fgMaxTreeSize may be modified via the static function
    // TTree::SetMaxTreeSize.
+   // When in fast mode, the check and switch is only done in between each
+   // input file.
    //
    // IMPORTANT Note 2: The output file is automatically closed and deleted.
    // ----------------------------------------------------------------------
@@ -1745,6 +1747,14 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
       for (Long64_t i = 0; i < nentries; i += GetTree()->GetEntries()) {
          if (LoadTree(i) < 0) {
             break;
+         }
+         if (newTree->GetDirectory()) {
+            TFile* file = newTree->GetDirectory()->GetFile();
+            if (file && (file->GetEND() > TTree::GetMaxTreeSize())) {
+               if (newTree->GetDirectory() == (TDirectory*) file) {
+                  newTree->ChangeFile(file);
+               }
+            }
          }
          TTreeCloner cloner(GetTree(), newTree, option);
          if (cloner.IsValid()) {
