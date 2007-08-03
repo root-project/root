@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.57 2007/03/26 16:02:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.58 2007/04/23 17:34:14 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -84,7 +84,6 @@ protected:
    Bool_t                   IsMissingCollection() const;
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    TClass                  *GetParentClass(); // Class referenced by fParentName
-   TVirtualCollectionProxy *GetCollectionProxy();
    void                     ReleaseObject();
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
@@ -119,6 +118,7 @@ public:
            UInt_t           GetCheckSum() { return fCheckSum; }
    virtual const char      *GetClassName() const { return fClassName.Data(); }
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
+   TVirtualCollectionProxy *GetCollectionProxy();
    virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
            const char      *GetIconName() const;
            Int_t            GetID() const { return fID; }
