@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.10 2006/12/12 11:29:45 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.11 2007/06/06 10:51:56 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -417,6 +417,9 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
       case MYSQL_TYPE_DOUBLE:
          return *((double*) addr);
          break;
+#if MYSQL_VERSION_ID >= 50000
+      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
+#endif
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
       case MYSQL_TYPE_BLOB: {
@@ -555,8 +558,9 @@ const char *TMySQLStatement::GetString(Int_t npar)
    CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
-      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) ||
-      (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING)) {
+      (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) || 
+      (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING) ||
+      (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)) {
          if (fBuffer[npar].fResNull) return 0;
          char* str = (char*) fBuffer[npar].fMem;
          ULong_t len = fBuffer[npar].fResLength;
@@ -728,6 +732,9 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_TINY:     allocsize = sizeof(char); break;
       case MYSQL_TYPE_FLOAT:    allocsize = sizeof(float); break;
       case MYSQL_TYPE_DOUBLE:   allocsize = sizeof(double); break;
+#if MYSQL_VERSION_ID >= 50000
+      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
+#endif
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65500 ? sqlsize + 10 : 65510; break;
