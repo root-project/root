@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.h,v 1.2 2007/06/07 07:09:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.h,v 1.3 2007/06/07 08:05:00 brun Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -36,6 +36,7 @@ protected:
    TH1             *fDenominator;    //Denominator histogram
    TH1             *fNumerator;      //Numerator histogram
    TF1             *fFunction;       //Function to fit
+   Double_t         fEpsilon;        //Precision required for function integration (option "I")
    Bool_t           fFitDone;        //Set to kTRUE when the fit has been done
    Bool_t           fAverage;        //True if the fit function must be averaged over the bin
    Bool_t           fRange;          //True if the fit range must be taken from the function range
@@ -47,6 +48,7 @@ public:
    virtual ~TBinomialEfficiencyFitter();
 
    void   Set(const TH1 *numerator, const TH1 *denominator);
+   void   SetPrecision(Double_t epsilon);
    Int_t  Fit(TF1 *f1, Option_t* option = "");
    static TVirtualFitter* GetFitter();
    void   ComputeFCN(Int_t& npar, Double_t* /* gin */, Double_t& f, Double_t* par, Int_t flag);

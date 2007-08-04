@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.3 2007/06/07 08:05:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.4 2007/06/13 13:53:29 moneta Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -10,13 +10,64 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBinomialEfficiencyFitter                                            //
-//                                                                      //
-// Binomial Fitter for the division of two histograms.                  //
-// Use when you need to calculate a selection's efficiency from two     //
-// histograms, one containing all entries, and one containing the subset//
-// of these entries that pass the selection                             //
+//
+// TBinomialEfficiencyFitter
+//
+// Binomial fitter for the division of two histograms.
+// Use when you need to calculate a selection's efficiency from two histograms,
+// one containing all entries, and one containing the subset of these entries
+// that pass the selection, and when you have a parametrization available for
+// the efficiency as a function of the variable(s) under consideration.
+//
+// A very common problem when estimating efficiencies is that of error estimation:
+// when no other information is available than the total number of events N and
+// the selected number n, the best estimate for the selection efficiency p is n/N.
+// Standard binomial statistics dictates that the uncertainty (this presupposes
+// sufficiently high statistics that an approximation by a normal distribution is
+// reasonable) on p, given N, is
+//Begin_Latex
+//   #sqrt{#frac{p(1-p)}{N}}.
+//End_Latex
+// However, when p is estimated as n/N, fluctuations from the true p to its
+// estimate become important, especially for low numbers of events, and giving
+// rise to biased results.
+//
+// When fitting a parametrized efficiency, these problems can largely be overcome,
+// as a hypothesized true efficiency is available by construction. Even so, simply
+// using the corresponding uncertainty still presupposes that Gaussian errors
+// yields a reasonable approximation. When using, instead of binned efficiency
+// histograms, the original numerator and denominator histograms, a binned maximum
+// likelihood can be constructed as the product of bin-by-bin binomial probabilities
+// to select n out of N events. Assuming that a correct parametrization of the
+// efficiency is provided, this construction in general yields less biased results
+// (and is much less sensitive to binning details).
+//
+// A generic use of this method is given below (note that the method works for 2D
+// and 3D histograms as well):
+//
+// {
+//   TH1* denominator;              // denominator histogram
+//   TH1* numerator;                // corresponding numerator histogram
+//   TF1* eff;                      // efficiency parametrization
+//   ....                           // set step sizes and initial parameter
+//   ....                           //   values for the fit function
+//   ....                           // possibly also set ranges, see TF1::SetRange()
+//   TBinomialEfficiencyFitter* f = new TBinomialEfficiencyFitter(
+//                                      numerator, denominator);
+//   Int_t status = f->Fit(eff, "I");
+//   if (status == 0) {
+//      // if the fit was successful, display bin-by-bin efficiencies
+//      // as well as the result of the fit
+//      numerator->Sumw2();
+//      TH1* hEff = dynamic_cast<TH1*>(numerator->Clone("heff"));
+//      hEff->Divide(hEff, denominator, 1.0, 1.0, "B");
+//      hEff->Draw("E");
+//      eff->Draw("same");
+//   }
+// }
+//
+// Note that this method cannot be expected to yield reliable results when using
+// weighted histograms (because the likelihood computation will be incorrect).
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBinomialEfficiencyFitter.h"
@@ -26,12 +77,16 @@
 #include "TROOT.h"
 #include "TH1.h"
 #include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 #include "TVirtualFitter.h"
 #include "TEnv.h"
 
 #include <limits>
 
 TVirtualFitter *TBinomialEfficiencyFitter::fgFitter = 0;
+
+const Double_t kDefaultEpsilon = 1E-12;
 
 ClassImp(TBinomialEfficiencyFitter)
 
@@ -49,10 +104,16 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
 }
 
 //______________________________________________________________________________
-TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator)
-{
-   // Constructor
+TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator) {
+   // Constructor.
+   //
+   // Note that no objects are copied, so it is up to the user to ensure that the
+   // histogram pointers remain valid.
+   //
+   // Both histograms need to be "consistent". This is not checked here, but in
+   // TBinomialEfficiencyFitter::Fit().
 
+   fEpsilon = kDefaultEpsilon;
    Set(numerator,denominator);
 }
 
@@ -71,16 +132,24 @@ void TBinomialEfficiencyFitter::Set(const TH1 *numerator, const TH1 *denominator
    fNumerator   = (TH1*)numerator;
    fDenominator = (TH1*)denominator;
 
-   // Note that there is currently NO check that the given histograms are consistent!
-
    fFitDone     = kFALSE;
    fAverage     = kFALSE;
    fRange       = kFALSE;
 }
 
 //______________________________________________________________________________
-TVirtualFitter* TBinomialEfficiencyFitter::GetFitter() {
-   // static: Provide access to the underlying fitter object
+void TBinomialEfficiencyFitter::SetPrecision(Double_t epsilon)
+{
+   // Set the required integration precision, see TF1::Integral()
+   fEpsilon = epsilon;
+}
+
+//______________________________________________________________________________
+TVirtualFitter* TBinomialEfficiencyFitter::GetFitter()
+{
+   // static: Provide access to the underlying fitter object.
+   // This may be useful e.g. for the retrieval of additional information (such
+   // as the output covariance matrix of the fit).
 
    return fgFitter;
 }
@@ -97,9 +166,18 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    // function (the default is to use the entire histogram).
    //
    // Note that all parameter values, limits, and step sizes are copied
-   // from the input fit function f1(so they should be set before calling
-   // this method).
-   // In output f1 contains the fitted parameters and errors
+   // from the input fit function f1 (so they should be set before calling
+   // this method. This is particularly relevant for the step sizes, taken
+   // to be the "error" set on input, as a null step size usually fixes the
+   // corresponding parameter. That is protected against, but in such cases
+   // an arbitrary starting step size will be used, and the reliability of
+   // the fit should be questioned). If parameters are to be fixed, this
+   // should be done by specifying non-null parameter limits, with lower
+   // limits larger than upper limits.
+   //
+   // On output, f1 contains the fitted parameters and errors, as well as
+   // the number of degrees of freedom, and the goodness-of-fit estimator
+   // as given by S. Baker and R. Cousins, Nucl. Instr. Meth. A221 (1984) 437.
 
    TString opt = option;
    opt.ToUpper();
@@ -124,6 +202,13 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
             f1->GetName(), f1->GetNdim(), fNumerator->GetDimension());
       return -4;
    }
+   // Check that the numbers of bins for the histograms match
+   if (fNumerator->GetNbinsX() != fDenominator->GetNbinsX() ||
+       (f1->GetNdim() > 1 && fNumerator->GetNbinsY() != fDenominator->GetNbinsY()) ||
+       (f1->GetNdim() > 2 && fNumerator->GetNbinsZ() != fDenominator->GetNbinsZ())) {
+     Error("Fit", "numerator and denominator histograms do not have identical numbers of bins");
+     return -6;
+   }
 
    // initialize the fitter
 
@@ -145,7 +230,7 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    fgFitter->Clear();
    fgFitter->SetFCN(BinomialEfficiencyFitterFCN);
    Int_t nfixed = 0;
-   Double_t al,bl,arglist[100];
+   Double_t al,bl,we,arglist[100];
    for (i = 0; i < npar; i++) {
       f1->GetParLimits(i,al,bl);
       if (al*bl != 0 && al >= bl) {
@@ -154,12 +239,14 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
          nfixed++;
       }
       // assign an ARBITRARY starting error to ensure the parameter won't be fixed!
-      if (f1->GetParError(i) <= 0) f1->SetParError(i, 0.01);
+      we = f1->GetParError(i);
+      if (we <= 0) we = 0.3*TMath::Abs(f1->GetParameter(i));
+      if (we == 0) we = 0.01;
       fgFitter->SetParameter(i, f1->GetParName(i),
                                 f1->GetParameter(i),
-                                f1->GetParError(i), al,bl);
+                                we, al,bl);
    }
-   if(nfixed > 0)fgFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+   if (nfixed > 0) fgFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
    Double_t plist[1];
    plist[0] = 0.5;
@@ -172,9 +259,9 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    
    //Store fit results in fitFunction
    char parName[50];
-   Double_t par, we;
+   Double_t par;
    Double_t eplus,eminus,eparab,globcc,werr;
-   for (i=0;i<npar;i++) {
+   for (i = 0; i < npar; ++i) {
       fgFitter->GetParameter(i,parName, par,we,al,bl);
       fgFitter->GetErrors(i,eplus,eminus,eparab,globcc);
       if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
@@ -188,71 +275,140 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
 //______________________________________________________________________________
 void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
-                                           Double_t& f, Double_t* par, Int_t /*flag*/) {
+                                           Double_t& f, Double_t* par, Int_t /*flag*/)
+{
    // Compute the likelihood.
 
-   int lowbin  = fDenominator->GetXaxis()->GetFirst();
-   int highbin = fDenominator->GetXaxis()->GetLast();
+   int nDim = fDenominator->GetDimension();
+
+   int xlowbin  = fDenominator->GetXaxis()->GetFirst();
+   int xhighbin = fDenominator->GetXaxis()->GetLast();
+   int ylowbin = 0, yhighbin = 0, zlowbin = 0, zhighbin = 0;
+   if (nDim > 1) {
+      ylowbin  = fDenominator->GetYaxis()->GetFirst();
+      yhighbin = fDenominator->GetYaxis()->GetLast();
+      if (nDim > 2) {
+         zlowbin  = fDenominator->GetZaxis()->GetFirst();
+         zhighbin = fDenominator->GetZaxis()->GetLast();
+      }
+   }
 
    fFunction->SetParameters(par);
 
    if (fRange) {
-      double xmin, xmax;
-      fFunction->GetRange(xmin, xmax);
+      double xmin, xmax, ymin, ymax, zmin, zmax;
 
-      // Note: this way to ensure that a minimum range chosen exactly at a
-      //       bin boundary is far from elegant, but is hopefully adequate.
-      lowbin  = fDenominator->GetXaxis()->FindBin(xmin);
-      highbin = fDenominator->GetXaxis()->FindBin(xmax);
+      // This way to ensure that a minimum range chosen exactly at a
+      // bin boundary is far from elegant, but is hopefully adequate.
+
+      if (nDim == 1) {
+	 fFunction->GetRange(xmin, xmax);
+	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+      } else if (nDim == 2) {
+  	 fFunction->GetRange(xmin, ymin, xmax, ymax);
+	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+	 ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
+	 yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
+      } else if (nDim == 3) {
+ 	 fFunction->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+	 ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
+	 yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
+	 zlowbin  = fDenominator->GetZaxis()->FindBin(zmin);
+	 zhighbin = fDenominator->GetZaxis()->FindBin(zmax);
+      }
    }
+
+   // The coding below is perhaps somewhat awkward -- but it is done
+   // so that 1D, 2D, and 3D cases can be covered in the same loops.
 
    f = 0.;
 
    Int_t npoints = 0;
    Double_t nmax = 0;
-   for (int bin = lowbin; bin <= highbin; ++bin) {
+   for (int xbin = xlowbin; xbin <= xhighbin; ++xbin) {
 
-      // compute the bin edge
-      double xlow = fDenominator->GetBinLowEdge(bin);
-      double xup  = fDenominator->GetBinLowEdge(bin+1);
-      double nDen = fDenominator->GetBinContent(bin);
-      double nNum = fNumerator->GetBinContent(bin);
+      // compute the bin edges
+      Double_t xlow = fDenominator->GetXaxis()->GetBinLowEdge(xbin);
+      Double_t xup  = fDenominator->GetXaxis()->GetBinLowEdge(xbin+1);
 
-      // count maximum value to use in the likelihood for inf
-      // i.e. a number much larger than the other terms  
-      if (nDen> nmax) nmax = nDen; 
-      if (nDen <= 0.) continue;
-      npoints++;
+      for (int ybin = ylowbin; ybin <= yhighbin; ++ybin) {
+
+	 // compute the bin edges (if applicable)
+	 Double_t ylow  = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin) : 0;
+	 Double_t yup   = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin+1) : 0;
+
+	 for (int zbin = zlowbin; zbin <= zhighbin; ++zbin) {
+
+	   // compute the bin edges (if applicable)
+	   Double_t zlow  = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin) : 0;
+	   Double_t zup   = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin+1) : 0;
+
+	   int bin = fDenominator->GetBin(xbin, ybin, zbin);
+	   Double_t nDen = fDenominator->GetBinContent(bin);
+	   Double_t nNum = fNumerator->GetBinContent(bin);
+
+	   // count maximum value to use in the likelihood for inf
+	   // i.e. a number much larger than the other terms  
+	   if (nDen> nmax) nmax = nDen; 
+	   if (nDen <= 0.) continue;
+	   npoints++;
       
-      // mu is the average of the function over the bin OR
-      // the function evaluated at the bin centre
+	   // mu is the average of the function over the bin OR
+	   // the function evaluated at the bin centre
+	   // As yet, there is nothing to prevent mu from being outside the range <0,1> !!
 
-      // As yet, there is nothing to prevent mu from being outside the range <0,1> !!
-      double mu = (fAverage) ?
-        fFunction->Integral(xlow, xup) / (xup-xlow) :
-        fFunction->Eval(fDenominator->GetBinCenter(bin));
+	   Double_t mu = 0;
+	   switch (nDim) {
+	   case 1:
+	     mu = (fAverage) ?
+	       fFunction->Integral(xlow, xup, (Double_t*)0, fEpsilon) / (xup-xlow) :
+	       fFunction->Eval(fDenominator->GetBinCenter(bin));
+	     break;
+	   case 2:
+	     TF2* f2 = dynamic_cast<TF2*>(fFunction);
+	     mu = (fAverage) ?
+	       f2->Integral(xlow, xup, ylow, yup, fEpsilon) / ((xup-xlow)*(yup-ylow)) :
+	       f2->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
+			fDenominator->GetYaxis()->GetBinCenter(ybin));
+	     break;
+	   case 3:
+	     TF3* f3 = dynamic_cast<TF3*>(fFunction);
+	     mu = (fAverage) ?
+	       f3->Integral(xlow, xup, ylow, yup, zlow, zup, fEpsilon)
+	       / ((xup-xlow)*(yup-ylow)*(zup-zlow)) :
+	       f3->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
+			fDenominator->GetYaxis()->GetBinCenter(ybin),
+			fDenominator->GetZaxis()->GetBinCenter(zbin));
+	   }
 
-      // binomial formula (forgetting about the factorials)
-      if (nNum != 0.)
-         if (mu > 0.) 
-            f -= nNum * TMath::Log(mu);
-         else
-            f -= nmax * -1E30; 
-      if (nDen - nNum != 0.)
-         if (1. - mu > 0.)
-            f -= (nDen - nNum) * TMath::Log(1. - mu);
-         else 
-            f -= nmax * -1E30; // crossing our fingers
-
+	   // binomial formula (forgetting about the factorials)
+	   if (nNum != 0.)
+	     if (mu > 0.)
+	       f -= nNum * TMath::Log(mu*nDen/nNum);
+	     else
+	       f -= nmax * -1E30; // crossing our fingers
+	   if (nDen - nNum != 0.)
+	     if (1. - mu > 0.)
+	       f -= (nDen - nNum) * TMath::Log((1. - mu)*nDen/(nDen-nNum));
+	     else 
+	       f -= nmax * -1E30; // crossing our fingers
+	 }
+      }
    }
+
    fFunction->SetNumberFitPoints(npoints);
-   fFunction->SetChisquare(f); //store likelihood instead of chisquare!
+   fFunction->SetChisquare(2.*f);           // store goodness of fit (Baker&Cousins)
 }
 
 //______________________________________________________________________________
-void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag) {
+void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag)
+{
    // Function called by the minimisation package. The actual functionality is passed
-   // on to the TBinomialEfficiencyFitter::ComputeFCN member function.
+   // on to the TBinomialEfficiencyFitter::ComputeFCN() member function.
 
    TBinomialEfficiencyFitter* fitter = dynamic_cast<TBinomialEfficiencyFitter*>(TBinomialEfficiencyFitter::GetFitter()->GetObjectFit());
    if (!fitter) {
