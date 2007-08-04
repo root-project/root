@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.4 2007/06/13 13:53:29 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.5 2007/08/04 09:28:25 brun Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -187,7 +187,8 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    Int_t i, npar;
    npar = f1->GetNpar();
    if (npar <= 0) {
-      Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
+      Error("Fit", "function %s has illegal number of parameters = %d", 
+            f1->GetName(), npar);
       return -3;
    }
 
@@ -302,23 +303,23 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
       // bin boundary is far from elegant, but is hopefully adequate.
 
       if (nDim == 1) {
-	 fFunction->GetRange(xmin, xmax);
-	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
-	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+         fFunction->GetRange(xmin, xmax);
+         xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+         xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
       } else if (nDim == 2) {
-  	 fFunction->GetRange(xmin, ymin, xmax, ymax);
-	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
-	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
-	 ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
-	 yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
+         fFunction->GetRange(xmin, ymin, xmax, ymax);
+         xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+         xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+         ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
+         yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
       } else if (nDim == 3) {
- 	 fFunction->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
-	 xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
-	 xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
-	 ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
-	 yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
-	 zlowbin  = fDenominator->GetZaxis()->FindBin(zmin);
-	 zhighbin = fDenominator->GetZaxis()->FindBin(zmax);
+         fFunction->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+         xlowbin  = fDenominator->GetXaxis()->FindBin(xmin);
+         xhighbin = fDenominator->GetXaxis()->FindBin(xmax);
+         ylowbin  = fDenominator->GetYaxis()->FindBin(ymin);
+         yhighbin = fDenominator->GetYaxis()->FindBin(ymax);
+         zlowbin  = fDenominator->GetZaxis()->FindBin(zmin);
+         zhighbin = fDenominator->GetZaxis()->FindBin(zmax);
       }
    }
 
@@ -337,78 +338,86 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
 
       for (int ybin = ylowbin; ybin <= yhighbin; ++ybin) {
 
-	 // compute the bin edges (if applicable)
-	 Double_t ylow  = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin) : 0;
-	 Double_t yup   = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin+1) : 0;
+         // compute the bin edges (if applicable)
+         Double_t ylow  = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin) : 0;
+         Double_t yup   = (nDim > 1) ? fDenominator->GetYaxis()->GetBinLowEdge(ybin+1) : 0;
 
-	 for (int zbin = zlowbin; zbin <= zhighbin; ++zbin) {
+         for (int zbin = zlowbin; zbin <= zhighbin; ++zbin) {
 
-	   // compute the bin edges (if applicable)
-	   Double_t zlow  = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin) : 0;
-	   Double_t zup   = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin+1) : 0;
+            // compute the bin edges (if applicable)
+            Double_t zlow  = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin) : 0;
+            Double_t zup   = (nDim > 2) ? fDenominator->GetZaxis()->GetBinLowEdge(zbin+1) : 0;
 
-	   int bin = fDenominator->GetBin(xbin, ybin, zbin);
-	   Double_t nDen = fDenominator->GetBinContent(bin);
-	   Double_t nNum = fNumerator->GetBinContent(bin);
+            int bin = fDenominator->GetBin(xbin, ybin, zbin);
+            Double_t nDen = fDenominator->GetBinContent(bin);
+            Double_t nNum = fNumerator->GetBinContent(bin);
 
-	   // count maximum value to use in the likelihood for inf
-	   // i.e. a number much larger than the other terms  
-	   if (nDen> nmax) nmax = nDen; 
-	   if (nDen <= 0.) continue;
-	   npoints++;
+            // count maximum value to use in the likelihood for inf
+            // i.e. a number much larger than the other terms  
+            if (nDen> nmax) nmax = nDen; 
+            if (nDen <= 0.) continue;
+            npoints++;
       
-	   // mu is the average of the function over the bin OR
-	   // the function evaluated at the bin centre
-	   // As yet, there is nothing to prevent mu from being outside the range <0,1> !!
+            // mu is the average of the function over the bin OR
+            // the function evaluated at the bin centre
+            // As yet, there is nothing to prevent mu from being 
+            // outside the range <0,1> !!
 
-	   Double_t mu = 0;
-	   switch (nDim) {
-	   case 1:
-	     mu = (fAverage) ?
-	       fFunction->Integral(xlow, xup, (Double_t*)0, fEpsilon) / (xup-xlow) :
-	       fFunction->Eval(fDenominator->GetBinCenter(bin));
-	     break;
-	   case 2:
-	     TF2* f2 = dynamic_cast<TF2*>(fFunction);
-	     mu = (fAverage) ?
-	       f2->Integral(xlow, xup, ylow, yup, fEpsilon) / ((xup-xlow)*(yup-ylow)) :
-	       f2->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
-			fDenominator->GetYaxis()->GetBinCenter(ybin));
-	     break;
-	   case 3:
-	     TF3* f3 = dynamic_cast<TF3*>(fFunction);
-	     mu = (fAverage) ?
-	       f3->Integral(xlow, xup, ylow, yup, zlow, zup, fEpsilon)
-	       / ((xup-xlow)*(yup-ylow)*(zup-zlow)) :
-	       f3->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
-			fDenominator->GetYaxis()->GetBinCenter(ybin),
-			fDenominator->GetZaxis()->GetBinCenter(zbin));
-	   }
+            Double_t mu = 0;
+            switch (nDim) {
+               case 1:
+                  mu = (fAverage) ?
+                     fFunction->Integral(xlow, xup, (Double_t*)0, fEpsilon) 
+                        / (xup-xlow) :
+                     fFunction->Eval(fDenominator->GetBinCenter(bin));
+                  break;
+               case 2:
+                  {
+                     TF2* f2 = dynamic_cast<TF2*>(fFunction);
+                     mu = (fAverage) ?
+                     f2->Integral(xlow, xup, ylow, yup, fEpsilon) 
+                        / ((xup-xlow)*(yup-ylow)) :
+                     f2->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
+                     fDenominator->GetYaxis()->GetBinCenter(ybin));
+                  }
+                  break;
+               case 3:
+                  {
+                     TF3* f3 = dynamic_cast<TF3*>(fFunction);
+                     mu = (fAverage) ?
+                        f3->Integral(xlow, xup, ylow, yup, zlow, zup, fEpsilon)
+                           / ((xup-xlow)*(yup-ylow)*(zup-zlow)) :
+                        f3->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
+                                 fDenominator->GetYaxis()->GetBinCenter(ybin),
+                                 fDenominator->GetZaxis()->GetBinCenter(zbin));
+                  }
+            }
 
-	   // binomial formula (forgetting about the factorials)
-	   if (nNum != 0.)
-	     if (mu > 0.)
-	       f -= nNum * TMath::Log(mu*nDen/nNum);
-	     else
-	       f -= nmax * -1E30; // crossing our fingers
-	   if (nDen - nNum != 0.)
-	     if (1. - mu > 0.)
-	       f -= (nDen - nNum) * TMath::Log((1. - mu)*nDen/(nDen-nNum));
-	     else 
-	       f -= nmax * -1E30; // crossing our fingers
-	 }
+            // binomial formula (forgetting about the factorials)
+            if (nNum != 0.)
+               if (mu > 0.)
+                  f -= nNum * TMath::Log(mu*nDen/nNum);
+               else
+                  f -= nmax * -1E30; // crossing our fingers
+            if (nDen - nNum != 0.)
+               if (1. - mu > 0.)
+                  f -= (nDen - nNum) * TMath::Log((1. - mu)*nDen/(nDen-nNum));
+               else 
+                  f -= nmax * -1E30; // crossing our fingers
+         }
       }
    }
 
    fFunction->SetNumberFitPoints(npoints);
-   fFunction->SetChisquare(2.*f);           // store goodness of fit (Baker&Cousins)
+   fFunction->SetChisquare(2.*f);    // store goodness of fit (Baker&Cousins)
 }
 
 //______________________________________________________________________________
-void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag)
+void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, 
+                                 Double_t* par, Int_t flag)
 {
-   // Function called by the minimisation package. The actual functionality is passed
-   // on to the TBinomialEfficiencyFitter::ComputeFCN() member function.
+   // Function called by the minimisation package. The actual functionality is 
+   // passed on to the TBinomialEfficiencyFitter::ComputeFCN() member function.
 
    TBinomialEfficiencyFitter* fitter = dynamic_cast<TBinomialEfficiencyFitter*>(TBinomialEfficiencyFitter::GetFitter()->GetObjectFit());
    if (!fitter) {
