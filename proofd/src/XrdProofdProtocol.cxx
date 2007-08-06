@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.66 2007/07/30 16:26:54 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.67 2007/08/02 10:59:11 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -334,7 +334,7 @@ XrdProofSched *XrdProofdProtocol::LoadScheduler(const char *cfn, XrdOucError *ed
          // Process items
          char *val = 0, *var = 0;
          while ((var = cfg.GetMyFirstWord())) {
-            if (!(strncmp("xpd.sched", var, 9))) {
+            if (!(strcmp("xpd.sched", var))) {
                // Get the name
                val = cfg.GetToken();
                if (val && val[0]) {
@@ -2492,10 +2492,6 @@ int XrdProofdProtocol::MapClient(bool all)
       fPClient = pmgr;
       TRACEI(DBG,"MapClient: matching client: "<<pmgr);
 
-      // Make sure that the version is filled correctly (if an admin operation
-      // was run before this may still be -1 on workers) 
-      pmgr->SetClientVers(clientvers);
-
       // If proofsrv, locate the target session
       if (proofsrv) {
          XrdProofServProxy *psrv = 0;
@@ -2527,6 +2523,10 @@ int XrdProofdProtocol::MapClient(bool all)
                        " link assigned to target session "<<psid);
          }
       } else {
+
+         // Make sure that the version is filled correctly (if an admin operation
+         // was run before this may still be -1 on workers) 
+         pmgr->SetClientVers(clientvers);
 
          // The index of the next free slot will be the unique ID
          fCID = pmgr->GetClientID(this);
