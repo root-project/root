@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.3 2007/07/11 22:13:30 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdManager.cxx,v 1.4 2007/07/16 10:14:52 ganis Exp $
 // Author: G. Ganis June 2007
 
 /*************************************************************************
@@ -268,7 +268,6 @@ int XrdProofdManager::Config(const char *fn, XrdOucError *e)
          // Initialize the list of workers if a static config has been required
          // Default file path, if none specified
          if (fPROOFcfg.fName.length() <= 0) {
-            fNumLocalWrks = XrdProofdAux::GetNumCPUs();
             CreateDefaultPROOFcfg();
          } else {
             // Load file content in memory
