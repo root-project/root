@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.11 2006/09/28 18:08:51 pcanal Exp $
+// @(#)root/tree:$Name: v5-14-00-patches $:$Id: TTreeCloner.cxx,v 1.12 2006/10/06 16:45:41 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -31,6 +31,8 @@
 #include "TLeafB.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
+
+R__EXTERN  TBranch *gBranch;
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fIsValid(kTRUE),
@@ -326,6 +328,8 @@ void TTreeCloner::CopyMemoryBaskets()
 
       basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
       if (basket) {
+         // The TBasket streamer uses gBranch, it must be set properly.
+         gBranch = from;
          basket = (TBasket*)basket->Clone();
          to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
       }
