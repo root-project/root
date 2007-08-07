@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.41 2007/01/29 16:14:25 brun Exp $
+// @(#)root/mlp:$Name: v5-16-00 $:$Id: TMultiLayerPerceptron.cxx,v 1.42 2007/05/09 10:06:17 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -171,6 +171,7 @@ Input and outputs are taken from the TTree given as second argument.
 Expressions are evaluated as for TTree::Draw(), arrays are expended in
 distinct neurons, one for each index.
 This can only be done for fixed-size arrays.
+If the formula ends with &quot;!&quot;, softmax functions are used for the output layer.
 One defines the training and test datasets by TEventLists.</FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
 <U><FONT COLOR="#ff0000">Example</FONT></U><SPAN STYLE="text-decoration: none">:
@@ -182,19 +183,6 @@ a string containing the formula to be used to define them, exactly as
 for a TCut.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the
 TMultiLayerPerceptron::SetLearningMethod() . Learning methods are :</FONT></P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
 <P><FONT SIZE=3>TMultiLayerPerceptron::kStochastic, <BR>
 TMultiLayerPerceptron::kBatch,<BR>
 TMultiLayerPerceptron::kSteepestDescent,<BR>
@@ -203,19 +191,6 @@ TMultiLayerPerceptron::kFletcherReeves,<BR>
 TMultiLayerPerceptron::kBFGS<BR></FONT></P>
 <P>A weight can be assigned to events, either in the constructor, either
 with TMultiLayerPerceptron::SetEventWeight(). In addition, the TTree weight
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
 is taken into account.</P>
 <P><FONT SIZE=3>Finally, one starts the training with
 TMultiLayerPerceptron::Train(Int_t nepoch, Option_t* options). The
@@ -236,7 +211,7 @@ the feature lists are not exactly matching:
 <UL>
         <LI><P>mlpfit hybrid learning method is not implemented</P></LI>
         <LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
-        <LI><P>the neural net is exported in C++ (not in FORTRAN)</P></LI>
+        <LI><P>the neural net is exported in C++, FORTRAN or PYTHON</P></LI>
         <LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
 </UL>
 In addition, the paw version of mlpfit had additional limitations on the number of neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
@@ -791,6 +766,10 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    Double_t *dir = new Double_t[els];
    for (i = 0; i < els; i++)
       buffer[i] = 0;
+   Int_t matrix_size = fLearningMethod==TMultiLayerPerceptron::kBFGS ? els : 1;
+   TMatrixD bfgsh(matrix_size, matrix_size);
+   TMatrixD gamma(matrix_size, 1);
+   TMatrixD delta(matrix_size, 1);
    // Epoch loop. Here is the training itself.
    for (Int_t iepoch = 0; iepoch < nEpoch; iepoch++) {
       switch (fLearningMethod) {
@@ -875,9 +854,6 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
          }
       case TMultiLayerPerceptron::kBFGS:
          {
-            TMatrixD bfgsh(els, els);
-            TMatrixD gamma(els, 1);
-            TMatrixD delta(els, 1);
             SetGammaDelta(gamma, delta, buffer);
             if (!(iepoch % fReset)) {
                SteepestDir(dir);
