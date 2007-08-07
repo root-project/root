@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.10 2006/12/10 22:22:50 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.11 2007/01/23 15:20:15 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -282,17 +282,22 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
 
 }
 
-//___________________________________________________________
-double TGDMLParse::Evaluate(const char* evalline)
-{
-   //takes in a string containing a mathematical expression and
-   //returns the result of the expression as a double.
+//takes in a string containing a mathematical expression and
+//returns the result of the expression as a double.
 
-   TFormula form;
-   double result = 0;
-   form.Compile(evalline);
-   result = form.Eval(0);
-   return result;
+double TGDMLParse::Evaluate(const char* evalline) {
+
+	char expression[256];
+
+	SolveConst(expression,evalline);
+	
+	TFormula form;
+
+	form.Compile(expression);
+ 
+	double result = 0;
+	result = form.Eval(0);
+	return result;
 }
 
 //____________________________________________________________
@@ -375,28 +380,49 @@ const char* TGDMLParse::NameShortB(const char* name)
    return retname;   
 }
 
-//____________________________________________________________
-const char* TGDMLParse::FindConst(const char* retval)
-{
-   //If a value is given within the GDML file, this function checks
-   //the constant map set up when all constants are declared.   If a matching
-   //constant name is found, the corresponding value is returned, if not,
-   //the original is returned.
+// The following function finds and replaces the 
+// constants with its values in an expression.
+//
+void TGDMLParse::SolveConst(char *outStr,const char *inStr) {
 
-   const char* tempconst = retval;
+	const char *findStr = NULL;
+	const char *nameStr = NULL;
+	const char *valueStr = NULL;
+	int offset = 0;
 
-   if((strcmp(fCurrentFile,fStartFile)) != 0){
-      retval = Form("%s_%s", retval, fCurrentFile);
-   }
+	char tempStr[256];
 
-   if(fconmap.find(retval) != fconmap.end()){
-      tempconst = fconmap[retval];
-   }
+	bool isOtherFile = (strcmp(fCurrentFile,fStartFile)!=0);
 
-   return tempconst;
+	strcpy(outStr,inStr);
+
+	bool isAnyReplaced;
+
+	do {
+		isAnyReplaced = false;
+
+		for (ConMap::iterator iter=fconmap.begin();iter!=fconmap.end();iter++) { 	// Look up all the defined constants!
+   
+   			nameStr = iter->first;							// Get name and value of constant
+			valueStr = iter->second;
+
+			if (isOtherFile)							// The constant is in an other gdml file
+				nameStr = Form("%s_%s",nameStr,fCurrentFile);
+ 	
+   			findStr = strstr(outStr,nameStr);					// Try to find constant by its name in the expression
+				   
+	      		if (findStr==0) continue;						// Skip if not found, otherwise replace
+
+			strcpy(tempStr,outStr);							// We need a copy of the string
+			strcpy(outStr+offset,valueStr);						// Substitue value of the constant
+			strcpy(outStr+offset+strlen(valueStr),tempStr+offset+strlen(nameStr));	// Copy characters following the constant
+	
+			isAnyReplaced = true;
+		}
+	} while (isAnyReplaced);								// The while loop is to solve recursion
+
+//	std::cout << "Before: " << inStr << " After: " << outStr << std::endl;
 }
-
-
 
 //________________________________________________________
 XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
@@ -427,8 +453,8 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    }
 
    fconmap[name] = value;
+
    return node;
-   
 }
 //__________________________________________________________
 const char* TGDMLParse::GetScale(const char* unit)
@@ -513,13 +539,13 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "x")) == 0) { 
-         xpos = FindConst(gdml->GetAttrValue(attr));
+         xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y") == 0){
-         ypos = FindConst(gdml->GetAttrValue(attr));
+         ypos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         zpos = FindConst(gdml->GetAttrValue(attr));
+         zpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "unit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -577,13 +603,13 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "x")) == 0) { 
-         xpos = FindConst(gdml->GetAttrValue(attr));
+         xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y") == 0){
-         ypos = FindConst(gdml->GetAttrValue(attr));
+         ypos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         zpos = FindConst(gdml->GetAttrValue(attr));
+         zpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "unit") == 0){
          aunit = gdml->GetAttrValue(attr);
@@ -645,7 +671,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "Z")) == 0) { 
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "formula") == 0) {
          formula = gdml->GetAttrValue(attr);
@@ -663,7 +689,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       tempattr = gdml->GetAttrName(attr);
       
       if((strcmp(tempattr, "value")) == 0) { 
-         atom = FindConst(gdml->GetAttrValue(attr));
+         atom = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -721,7 +747,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                tempattr = gdml->GetAttrName(attr);
        
                if((strcmp(tempattr, "value")) == 0) { 
-                  a = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+                  a = Evaluate(gdml->GetAttrValue(attr));
                }       
                attr = gdml->GetNextAttr(attr);
             }          
@@ -732,7 +758,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                tempattr = gdml->GetAttrName(attr);
           
                if((strcmp(tempattr, "value")) == 0) { 
-                  d = Evaluate(FindConst(gdml->GetAttrValue(attr)));   
+                  d = Evaluate(gdml->GetAttrValue(attr));   
                }       
                attr = gdml->GetNextAttr(attr);
             } 
@@ -749,7 +775,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       }
       
       //CHECK FOR CONSTANTS    
-      tempconst = FindConst(gdml->GetAttr(node, "Z"));
+      tempconst = gdml->GetAttr(node, "Z");
       
       mat = new TGeoMaterial(NameShort(name), a, Evaluate(tempconst), d);      
       mixflag = 0;
@@ -770,7 +796,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                tempattr = gdml->GetAttrName(attr);
           
                if((strcmp(tempattr, "n")) == 0) { 
-                  n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+                  n = Evaluate(gdml->GetAttrValue(attr));
                }
                else if((strcmp(tempattr, "ref")) == 0) { 
                   ref = gdml->GetAttrValue(attr);
@@ -795,7 +821,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                tempattr = gdml->GetAttrName(attr);
           
                if((strcmp(tempattr, "n")) == 0) { 
-                  n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+                  n = Evaluate(gdml->GetAttrValue(attr));
                }
                else if((strcmp(tempattr, "ref")) == 0) { 
                   ref = gdml->GetAttrValue(attr);
@@ -812,7 +838,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                tempattr = gdml->GetAttrName(attr);
           
                if((strcmp(tempattr, "value")) == 0) { 
-                  density = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+                  density = Evaluate(gdml->GetAttrValue(attr));
                }
           
                attr = gdml->GetNextAttr(attr);
@@ -1126,13 +1152,13 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                axis = SetAxis(gdml->GetAttrValue(attr));
             }
             else if((strcmp(tempattr, "number")) == 0) { 
-               number = FindConst(gdml->GetAttrValue(attr));
+               number = gdml->GetAttrValue(attr);
             }
             else if(strcmp(tempattr, "width") == 0){
-               width = FindConst(gdml->GetAttrValue(attr));
+               width = gdml->GetAttrValue(attr);
             }
             else if (strcmp(tempattr, "offset") == 0){
-               offset = FindConst(gdml->GetAttrValue(attr));
+               offset = gdml->GetAttrValue(attr);
             }
             else if (strcmp(tempattr, "unit") == 0){
                lunit = gdml->GetAttrValue(attr);
@@ -1199,28 +1225,28 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
    const char* reftemp = "";
    const char* tempattr = "";
    XMLNodePointer_t child = gdml->GetChild(node);
-   TGeoCompositeShape* boolean = 0;
+
    TGeoShape* first = 0;
    TGeoShape* second = 0;
-   TGeoTranslation* pos = new TGeoTranslation(0,0,0);
-   
-   TGeoRotation* rot = new TGeoRotation();
-   rot->RotateZ(0);
-   rot->RotateY(0);
-   rot->RotateX(0);
 
-   TGeoTranslation* pos2 = new TGeoTranslation(0,0,0);
-   
-   TGeoRotation* rot2 = new TGeoRotation();
-   rot2->RotateZ(0);
-   rot2->RotateY(0);
-   rot2->RotateX(0);
-   
+   TGeoTranslation* FirstPos = new TGeoTranslation(0,0,0);
+   TGeoTranslation* SecondPos = new TGeoTranslation(0,0,0);
+
+   TGeoRotation* FirstRot = new TGeoRotation();
+   TGeoRotation* SecondRot = new TGeoRotation();
+
+   FirstRot->RotateZ(0);
+   FirstRot->RotateY(0);
+   FirstRot->RotateX(0);
+
+   SecondRot->RotateZ(0);
+   SecondRot->RotateY(0);
+   SecondRot->RotateX(0);
+
    const char* name = gdml->GetAttr(node, "name");
 
-   if((strcmp(fCurrentFile,fStartFile)) != 0){
+   if((strcmp(fCurrentFile,fStartFile)) != 0)
       name = Form("%s_%s", name, fCurrentFile);
-   }
    
    while (child!=0){
       tempattr = gdml->GetNodeName(child);
@@ -1250,7 +1276,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         pos = fposmap[reftemp];
+         SecondPos = fposmap[reftemp];
       }
       else if((strcmp(tempattr, "positionref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1258,7 +1284,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(fposmap.find(reftemp) != fposmap.end()){ 
-            pos = fposmap[reftemp];
+            SecondPos = fposmap[reftemp];
          }
       }
       else if((strcmp(tempattr, "rotation")) == 0){
@@ -1268,7 +1294,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         rot = frotmap[reftemp];
+         SecondRot = frotmap[reftemp];
       }
       else if((strcmp(tempattr, "rotationref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1276,7 +1302,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(frotmap.find(reftemp) != frotmap.end()){ 
-            rot = frotmap[reftemp];
+            SecondRot = frotmap[reftemp];
          }
       } 
       else if((strcmp(tempattr, "firstposition")) == 0){
@@ -1286,7 +1312,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         pos2 = fposmap[reftemp];
+         FirstPos = fposmap[reftemp];
       }
       else if((strcmp(tempattr, "firstpositionref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1294,7 +1320,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(fposmap.find(reftemp) != fposmap.end()){ 
-            pos2 = fposmap[reftemp];
+            FirstPos = fposmap[reftemp];
          }
       }
       else if((strcmp(tempattr, "firstrotation")) == 0){
@@ -1304,7 +1330,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         rot2 = frotmap[reftemp];
+         FirstRot = frotmap[reftemp];
       }
       else if((strcmp(tempattr, "firstrotationref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1312,37 +1338,27 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(frotmap.find(reftemp) != frotmap.end()){ 
-            rot2 = frotmap[reftemp];
+            FirstRot = frotmap[reftemp];
          }
       }       
       child = gdml->GetNext(child);
    }
-   
-   if(num == 1){
-      TGeoRotation* myrot = new TGeoRotation(rot->Inverse());
-      TGeoMatrix* matr = new TGeoCombiTrans(*pos, *myrot);
-      TGeoMatrix* mat2 = new TGeoCombiTrans(*pos2, *rot2);
-      TGeoSubtraction* sub = new TGeoSubtraction(first, second, mat2, matr);
-      boolean = new TGeoCompositeShape(NameShort(name), sub);
+
+   TGeoMatrix* FirstMatrix = new TGeoCombiTrans(*FirstPos,FirstRot->Inverse());
+   TGeoMatrix* SecondMatrix = new TGeoCombiTrans(*SecondPos,SecondRot->Inverse());
+
+   TGeoCompositeShape* boolean = 0;
+
+   switch (num) {
+   case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,FirstMatrix,SecondMatrix)); break; // SUBTRACTION
+   case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,FirstMatrix,SecondMatrix)); break; // INTERSECTION 
+   case 3: boolean = new TGeoCompositeShape(NameShort(name),new TGeoUnion(first,second,FirstMatrix,SecondMatrix)); break; // UNION
+   default:
+    break;
    }
-   else if(num == 2){
-      TGeoRotation* myrot = new TGeoRotation(rot->Inverse());
-      TGeoTranslation* mypos = new TGeoTranslation(*pos);
-      TGeoMatrix* matr = new TGeoCombiTrans(*mypos, *myrot);
-      TGeoMatrix* mat2 = new TGeoCombiTrans(*pos2, *rot2);
-      TGeoIntersection* inter = new TGeoIntersection(first, second, mat2, matr);
-      boolean = new TGeoCompositeShape(NameShort(name), inter);   
-   }
-   else if(num == 3){
-      TGeoRotation* myrot = new TGeoRotation(rot->Inverse());
-      TGeoMatrix* matr = new TGeoCombiTrans(*pos, *myrot);
-      TGeoMatrix* mat2 = new TGeoCombiTrans(*pos2, *rot2);
-      TGeoUnion* un = new TGeoUnion(first, second, mat2, matr);
-      boolean = new TGeoCompositeShape(NameShort(name), un);
-   }
-   
+
    fsolmap[name] = boolean;
-   
+
    return node;
 }
 
@@ -1490,7 +1506,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
    const char* zpos = "0"; 
    const char* name = "";
    const char* tempattr; 
-   
+
    while (attr!=0) {
       
       tempattr = gdml->GetAttrName(attr);
@@ -1499,13 +1515,13 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "x")) == 0) { 
-         xpos = FindConst(gdml->GetAttrValue(attr));
+         xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y") == 0){
-         ypos = FindConst(gdml->GetAttrValue(attr));
+         ypos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         zpos = FindConst(gdml->GetAttrValue(attr));
+         zpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -1555,7 +1571,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node,
    const char* dzpos = "0"; 
    const char* name = "";
    const char* tempattr; 
-   
+
    while (attr!=0) {
       
       tempattr = gdml->GetAttrName(attr);
@@ -1564,13 +1580,13 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rlo")) == 0) { 
-         rlopos = FindConst(gdml->GetAttrValue(attr));
+         rlopos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rhi") == 0){
-         rhipos = FindConst(gdml->GetAttrValue(attr));
+         rhipos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "dz") == 0){
-         dzpos = FindConst(gdml->GetAttrValue(attr));
+         dzpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -1642,55 +1658,55 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v1x")) == 0) { 
-         v1xpos = FindConst(gdml->GetAttrValue(attr));
+         v1xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v1y") == 0){
-         v1ypos = FindConst(gdml->GetAttrValue(attr));
+         v1ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v2x")) == 0) { 
-         v2xpos = FindConst(gdml->GetAttrValue(attr));
+         v2xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v2y") == 0){
-         v2ypos = FindConst(gdml->GetAttrValue(attr));
+         v2ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v3x")) == 0) { 
-         v3xpos = FindConst(gdml->GetAttrValue(attr));
+         v3xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v3y") == 0){
-         v3ypos = FindConst(gdml->GetAttrValue(attr));
+         v3ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v4x")) == 0) { 
-         v4xpos = FindConst(gdml->GetAttrValue(attr));
+         v4xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v4y") == 0){
-         v4ypos = FindConst(gdml->GetAttrValue(attr));
+         v4ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v5x")) == 0) { 
-         v5xpos = FindConst(gdml->GetAttrValue(attr));
+         v5xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v5y") == 0){
-         v5ypos = FindConst(gdml->GetAttrValue(attr));
+         v5ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v6x")) == 0) { 
-         v6xpos = FindConst(gdml->GetAttrValue(attr));
+         v6xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v6y") == 0){
-         v6ypos = FindConst(gdml->GetAttrValue(attr));
+         v6ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v7x")) == 0) { 
-         v7xpos = FindConst(gdml->GetAttrValue(attr));
+         v7xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v7y") == 0){
-         v7ypos = FindConst(gdml->GetAttrValue(attr));
+         v7ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "v8x")) == 0) { 
-         v8xpos = FindConst(gdml->GetAttrValue(attr));
+         v8xpos = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "v8y") == 0){
-         v8ypos = FindConst(gdml->GetAttrValue(attr));
+         v8ypos = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "dz")) == 0) { 
-         dzpos = FindConst(gdml->GetAttrValue(attr));
+         dzpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -1788,13 +1804,13 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
-         rmin = FindConst(gdml->GetAttrValue(attr));
+         rmin = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax") == 0){
-         rmax = FindConst(gdml->GetAttrValue(attr));
+         rmax = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -1803,10 +1819,10 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -1879,13 +1895,13 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
     name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
-         rmin = FindConst(gdml->GetAttrValue(attr));
+         rmin = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax") == 0){
-         rmax = FindConst(gdml->GetAttrValue(attr));
+         rmax = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -1894,28 +1910,28 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lowX") == 0){
-         lowX = FindConst(gdml->GetAttrValue(attr));
+         lowX = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lowY") == 0){
-         lowY = FindConst(gdml->GetAttrValue(attr));
+         lowY = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lowZ") == 0){
-         lowZ = FindConst(gdml->GetAttrValue(attr));
+         lowZ = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "highX") == 0){
-         highX = FindConst(gdml->GetAttrValue(attr));
+         highX = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "highY") == 0){
-         highY = FindConst(gdml->GetAttrValue(attr));
+         highY = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "highZ") == 0){
-         highZ = FindConst(gdml->GetAttrValue(attr));
+         highZ = gdml->GetAttrValue(attr);
       }
 
       attr = gdml->GetNextAttr(attr);   
@@ -2004,19 +2020,19 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin1")) == 0) { 
-         rmin1 = FindConst(gdml->GetAttrValue(attr));
+         rmin1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax1") == 0){
-         rmax1 = FindConst(gdml->GetAttrValue(attr));
+         rmax1 = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin2")) == 0) {
-         rmin2 = FindConst(gdml->GetAttrValue(attr));
+         rmin2 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax2") == 0){
-         rmax2 = FindConst(gdml->GetAttrValue(attr));
+         rmax2 = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2025,10 +2041,10 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2107,25 +2123,25 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x1") == 0) {
-         x1 = FindConst(gdml->GetAttrValue(attr));
+         x1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x2") == 0) {
-         x2 = FindConst(gdml->GetAttrValue(attr));
+         x2 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x3") == 0) { 
-         x3 = FindConst(gdml->GetAttrValue(attr));
+         x3 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x4") == 0) {
-         x4 = FindConst(gdml->GetAttrValue(attr));
+         x4 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y1") == 0) { 
-         y1 = FindConst(gdml->GetAttrValue(attr));
+         y1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y2") == 0) {
-         y2 = FindConst(gdml->GetAttrValue(attr));
+         y2 = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0) {
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0) {
          lunit = gdml->GetAttrValue(attr);
@@ -2134,16 +2150,16 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "phi") == 0){
-         phi = FindConst(gdml->GetAttrValue(attr));
+         phi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "theta") == 0){
-         theta = FindConst(gdml->GetAttrValue(attr));
+         theta = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "alpha1") == 0) { 
-         alpha1 = FindConst(gdml->GetAttrValue(attr));
+         alpha1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "alpha2") == 0){
-         alpha2 = FindConst(gdml->GetAttrValue(attr));
+         alpha2 = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2226,19 +2242,19 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
          name = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x1") == 0) { 
-         x1 = FindConst(gdml->GetAttrValue(attr));
+         x1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x2") == 0){
-         x2 = FindConst(gdml->GetAttrValue(attr));
+         x2 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y1") == 0) { 
-         y1 = FindConst(gdml->GetAttrValue(attr));
+         y1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y2") == 0){
-         y2 = FindConst(gdml->GetAttrValue(attr));
+         y2 = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2310,9 +2326,9 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
       } else if (strcmp(tempattr, "aunit") == 0) {
          aunit = gdml->GetAttrValue(attr);
       } else if (strcmp(tempattr, "startphi") == 0) {
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       } else if (strcmp(tempattr, "deltaphi") == 0) {
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       attr = gdml->GetNextAttr(attr);   
    } 
@@ -2361,15 +2377,15 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
             tempattr = gdml->GetAttrName(attr);
        
             if((strcmp(tempattr, "rmin")) == 0) { 
-               rmin = FindConst(gdml->GetAttrValue(attr));
+               rmin = gdml->GetAttrValue(attr);
                rminline = Form("%s*%s", rmin, retlunit);
                table[planeno][0] = Evaluate(rminline);
             } else if(strcmp(tempattr, "rmax") == 0) {
-               rmax = FindConst(gdml->GetAttrValue(attr));
+               rmax = gdml->GetAttrValue(attr);
                rmaxline = Form("%s*%s", rmax, retlunit);
                table[planeno][1] = Evaluate(rmaxline);
             } else if (strcmp(tempattr, "z") == 0) {
-               z = FindConst(gdml->GetAttrValue(attr));
+               z = gdml->GetAttrValue(attr);
                zline = Form("%s*%s", z, retlunit);
                table[planeno][2] = Evaluate(zline);
             }
@@ -2437,13 +2453,13 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "numsides") == 0){
-         numsides   = FindConst(gdml->GetAttrValue(attr));
+         numsides = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2492,17 +2508,17 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
             tempattr = gdml->GetAttrName(attr);
        
             if((strcmp(tempattr, "rmin")) == 0) { 
-               rmin = FindConst(gdml->GetAttrValue(attr));
+               rmin = gdml->GetAttrValue(attr);
                rminline = Form("%s*%s", rmin, retlunit);
                table[planeno][0] = Evaluate(rminline);
             }
             else if(strcmp(tempattr, "rmax") == 0){
-               rmax = FindConst(gdml->GetAttrValue(attr));
+               rmax = gdml->GetAttrValue(attr);
                rmaxline = Form("%s*%s", rmax, retlunit);
                table[planeno][1] = Evaluate(rmaxline);
             }
             else if (strcmp(tempattr, "z") == 0){
-               z = FindConst(gdml->GetAttrValue(attr));
+               z = gdml->GetAttrValue(attr);
                zline = Form("%s*%s", z, retlunit);
                table[planeno][2] = Evaluate(zline);
             }
@@ -2567,10 +2583,10 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
-         rmin = FindConst(gdml->GetAttrValue(attr));
+         rmin = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax") == 0) {
-         rmax = FindConst(gdml->GetAttrValue(attr));
+         rmax = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2579,16 +2595,16 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "starttheta") == 0){
-         starttheta = FindConst(gdml->GetAttrValue(attr));
+         starttheta = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltatheta") == 0){
-         deltatheta = FindConst(gdml->GetAttrValue(attr));
+         deltatheta = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2658,13 +2674,13 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
-         rmin = FindConst(gdml->GetAttrValue(attr));
+         rmin = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax") == 0){
-         rmax = FindConst(gdml->GetAttrValue(attr));
+         rmax = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "rtor") == 0){
-         rtor = FindConst(gdml->GetAttrValue(attr));
+         rtor = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2673,10 +2689,10 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "startphi") == 0){
-         startphi = FindConst(gdml->GetAttrValue(attr));
+         startphi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "deltaphi") == 0){
-         deltaphi = FindConst(gdml->GetAttrValue(attr));
+         deltaphi = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2742,13 +2758,13 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
-         rmin = FindConst(gdml->GetAttrValue(attr));
+         rmin = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "rmax") == 0){
-         rmax = FindConst(gdml->GetAttrValue(attr));
+         rmax = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2757,10 +2773,10 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "inst") == 0){
-         inst = FindConst(gdml->GetAttrValue(attr));
+         inst = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "outst") == 0){
-         outst = FindConst(gdml->GetAttrValue(attr));
+         outst = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2829,13 +2845,13 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "x")) == 0) {
-         x = FindConst(gdml->GetAttrValue(attr));
+         x = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y") == 0){
-         y = FindConst(gdml->GetAttrValue(attr));
+         y = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2844,13 +2860,13 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "phi") == 0){
-         phi = FindConst(gdml->GetAttrValue(attr));
+         phi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "theta") == 0){
-         theta = FindConst(gdml->GetAttrValue(attr));
+         theta = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "alpha") == 0){
-         alpha = FindConst(gdml->GetAttrValue(attr));
+         alpha = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -2928,25 +2944,25 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
          name = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x1") == 0) { 
-         x1 = FindConst(gdml->GetAttrValue(attr));
+         x1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x2") == 0){
-         x2 = FindConst(gdml->GetAttrValue(attr));
+         x2 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x3") == 0) { 
-         x3 = FindConst(gdml->GetAttrValue(attr));
+         x3 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "x4") == 0){
-         x4 = FindConst(gdml->GetAttrValue(attr));
+         x4 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y1") == 0) { 
-         y1 = FindConst(gdml->GetAttrValue(attr));
+         y1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "y2") == 0){
-         y2 = FindConst(gdml->GetAttrValue(attr));
+         y2 = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "z") == 0){
-         z = FindConst(gdml->GetAttrValue(attr));
+         z = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -2955,19 +2971,19 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
          aunit = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "phi") == 0){
-         phi = FindConst(gdml->GetAttrValue(attr));
+         phi = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "theta") == 0) {
-         theta = FindConst(gdml->GetAttrValue(attr));
+         theta = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "alpha1") == 0)   { 
-         alpha1 = FindConst(gdml->GetAttrValue(attr));
+         alpha1 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "alpha2") == 0){
-         alpha2 = FindConst(gdml->GetAttrValue(attr));
+         alpha2 = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "twist") == 0) {
-         twist = FindConst(gdml->GetAttrValue(attr));
+         twist = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -3053,13 +3069,13 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XML
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "dx")) == 0) { 
-         xpos = FindConst(gdml->GetAttrValue(attr));
+         xpos = gdml->GetAttrValue(attr);
       }
-      else if(strcmp(tempattr, "dy") == 0){
-         ypos = FindConst(gdml->GetAttrValue(attr));
+      else if(strcmp(tempattr, "dy") == 0) {
+         ypos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "dz") == 0){
-         zpos = FindConst(gdml->GetAttrValue(attr));
+         zpos = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "lunit") == 0){
          lunit = gdml->GetAttrValue(attr);
@@ -3114,7 +3130,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "r")) == 0) { 
-         r = FindConst(gdml->GetAttrValue(attr));
+         r = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "aunit") == 0){
          aunit = gdml->GetAttrValue(attr);
@@ -3167,7 +3183,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    const char* scale = "0";
    const char* name = "";
    const char* tempattr; 
-   
+
    while (attr!=0) {
       
       tempattr = gdml->GetAttrName(attr);
@@ -3184,7 +3200,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       
       attr = gdml->GetNextAttr(attr);   
    } 
-   
+
    if((strcmp(fCurrentFile,fStartFile)) != 0){
       name = Form("%s_%s", name, fCurrentFile);
    }
@@ -3240,21 +3256,20 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
             tempattr = gdml->GetAttrName(attr);
     
             if((strcmp(tempattr, "x")) == 0) { 
-               x = FindConst(gdml->GetAttrValue(attr));
+               x = gdml->GetAttrValue(attr);
                xline = Form("%s*%s", x, retlunit);
                vertx[vert] = Evaluate(xline);
             }
             else if(strcmp(tempattr, "y") == 0){
-               y = FindConst(gdml->GetAttrValue(attr));
+               y = gdml->GetAttrValue(attr);
                yline = Form("%s*%s", y, retlunit);
                verty[vert] = Evaluate(yline);
             }
        
             attr = gdml->GetNextAttr(attr);
          }
-         
+
          vert = vert + 1;
-         
       }
       
       else if((strcmp(gdml->GetNodeName(child), "section")) == 0){
@@ -3271,33 +3286,34 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
             tempattr = gdml->GetAttrName(attr);
     
             if((strcmp(tempattr, "zOrder")) == 0) { 
-               zorder = FindConst(gdml->GetAttrValue(attr));
+               zorder = gdml->GetAttrValue(attr);
                zorderline = Form("%s*%s", zorder, retlunit);
                section[sect][0] = Evaluate(zorderline);
             }
             else if(strcmp(tempattr, "zPosition") == 0){
-               zpos = FindConst(gdml->GetAttrValue(attr));
+               zpos = gdml->GetAttrValue(attr);
                zposline = Form("%s*%s", zpos, retlunit);
                section[sect][1] = Evaluate(zposline);
             }
             else if (strcmp(tempattr, "xOffset") == 0){
-               xoff = FindConst(gdml->GetAttrValue(attr));
+               xoff = gdml->GetAttrValue(attr);
                xoffline = Form("%s*%s", xoff, retlunit);
                section[sect][2] = Evaluate(xoffline);
             }
             else if (strcmp(tempattr, "yOffset") == 0){
-               yoff = FindConst(gdml->GetAttrValue(attr));
+               yoff = gdml->GetAttrValue(attr);
                yoffline = Form("%s*%s", yoff, retlunit);
                section[sect][3] = Evaluate(yoffline);
             }
             else if (strcmp(tempattr, "scalingFactor") == 0){
-               scale = FindConst(gdml->GetAttrValue(attr));
+               scale = gdml->GetAttrValue(attr);
                scaleline = Form("%s*%s", scale, retlunit);
                section[sect][4] = Evaluate(scaleline);
             }
        
             attr = gdml->GetNextAttr(attr);
          }
+		
          sect = sect + 1; 
       }      
       child = gdml->GetNext(child);
@@ -3310,11 +3326,10 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    for (int j = 0; j < sect; j++){
       xtru->DefineSection((int)section[j][0], section[j][1], section[j][2], section[j][3], section[j][4]);
    }
-   
+  
    fsolmap[name] = xtru;
-   
-   return node;
 
+   return node;
 }
 
 //____________________________________________________________
@@ -3350,31 +3365,31 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "sx")) == 0) { 
-         sx = FindConst(gdml->GetAttrValue(attr));
+         sx = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "sy") == 0){
-         sy = FindConst(gdml->GetAttrValue(attr));
+         sy = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "sz") == 0){
-         sz = FindConst(gdml->GetAttrValue(attr));
+         sz = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rx")) == 0) { 
-         rx = FindConst(gdml->GetAttrValue(attr));
+         rx = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "ry") == 0){
-         ry = FindConst(gdml->GetAttrValue(attr));
+         ry = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "rz") == 0){
-         rz = FindConst(gdml->GetAttrValue(attr));
+         rz = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "dx")) == 0) { 
-         dx = FindConst(gdml->GetAttrValue(attr));
+         dx = gdml->GetAttrValue(attr);
       }
       else if(strcmp(tempattr, "dy") == 0){
-         dy = FindConst(gdml->GetAttrValue(attr));
+         dy = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "dz") == 0){
-         dz = FindConst(gdml->GetAttrValue(attr));
+         dz = gdml->GetAttrValue(attr);
       }
       else if (strcmp(tempattr, "solid") == 0){
          solid = gdml->GetAttrValue(attr);

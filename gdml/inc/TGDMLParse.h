@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.5 2006/11/29 11:38:26 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.6 2006/12/08 15:57:19 brun Exp $ */
 // Authors: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -130,10 +130,10 @@ private:
     
    const char*       ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node) ;
    const char*       GetScale(const char* unit);
-   const char*       FindConst(const char* retval);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
    const char*       NameShortB(const char* name);
+   void              SolveConst(char*,const char*);
     
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
@@ -174,14 +174,14 @@ private:
    //'setup' section
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
     
-    
    typedef TGDMMapHelper<TGeoTranslation> PosMap;
    typedef TGDMMapHelper<TGeoRotation> RotMap;
    typedef TGDMMapHelper<TGeoElement> EleMap;
    typedef TGDMMapHelper<TGeoMaterial> MatMap;
    typedef TGDMMapHelper<TGeoMedium> MedMap;
    typedef TGDMMapHelper<TGeoMixture> MixMap;
-   typedef TGDMMapHelper<const char> ConMap;
+   typedef std::map<const char*,const char*> ConMap;
+  
    typedef TGDMMapHelper<TGeoShape> SolMap;
    typedef TGDMMapHelper<TGeoVolume> VolMap;
    typedef TGDMMapHelper<TGDMLRefl> ReflSolidMap;
