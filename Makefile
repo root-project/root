@@ -843,7 +843,7 @@ install: all
 	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
 	   find $(DESTDIR)$(MANDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
-	   rm -rf                               $(DESTDIR)$(ETCDIR); \
+	   rm -f                                $(DESTDIR)$(ETCDIR)/system.rootmap; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   find $(DESTDIR)$(ETCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
