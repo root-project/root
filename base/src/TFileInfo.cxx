@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.16 2007/08/01 14:23:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.17 2007/08/02 15:59:28 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -20,8 +20,6 @@
 #include "TFileInfo.h"
 #include "Riostream.h"
 #include "TSystem.h"
-#include "TRegexp.h"
-#include "TError.h"
 #include "TClass.h"
 
 
@@ -30,8 +28,9 @@ ClassImp(TFileInfoMeta)
 
 //______________________________________________________________________________
 TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
-   const char *md5, TObject *meta) : fCurrentUrl(0), fUrlList(0), fSize(size),
-   fUUID(0), fMD5(0)
+                     const char *md5, TObject *meta)
+   : fCurrentUrl(0), fUrlList(0), fSize(size), fUUID(0), fMD5(0),
+     fMetaDataList(0)
 {
    // Constructor.
 
@@ -212,7 +211,6 @@ TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
    return 0;
 }
 
-
 //______________________________________________________________________________
 Int_t TFileInfo::Compare(const TObject *obj) const
 {
@@ -240,101 +238,11 @@ void TFileInfo::Print(Option_t * /* option */) const
       cout << " URL: " << u->GetUrl() << endl;
 
    TIter nextm(fMetaDataList);
-   TFileInfoMeta *m;
-   while ((m = (TFileInfoMeta*) nextm())) {
+   TObject *m = 0;   // can be any TObject not only TFileInfoMeta
+   while ((m = (TObject*) nextm())) {
       cout << " === Meta Data Object ===" << endl;
       m->Print();
    }
-}
-
-//______________________________________________________________________________
-TList *TFileInfo::CreateListFromFile(const char *file)
-{
-   // Open the text 'file' and create TList of TFileInfo objects.
-   // The 'file' must include one url per line.
-   // The function returns a TList of TFileInfos (possibly empty) or
-   // 0 if 'file' can not be opened.
-
-   Int_t fileCount = 0;
-   ifstream f;
-   TList* fileList = 0;
-   f.open(gSystem->ExpandPathName(file), ifstream::out);
-   if (f.is_open()) {
-      fileList = new TList;
-      while (f.good()) {
-         TString line;
-         line.ReadToDelim(f);
-         if (!line.IsWhitespace()) {
-            fileList->Add(new TFileInfo(line));
-            fileCount++;
-         }
-      }
-      f.close();
-   } else {
-      ::Error("TFileInfo::CreateList", "unable to open file %s", file);
-   }
-   return fileList;
-}
-
-//______________________________________________________________________________
-TList *TFileInfo::CreateListMatching(const char *files)
-{
-   // Find all the files matching 'files' and return a TList of corresponding
-   // TFileInfo objects. 'files' can include wildcards after the last slash.
-   // If 'files' is the full path of a file, a list with only one element is
-   // created. If no files match the selection, 0 is returned
-
-   if (!files || strlen(files) <= 0) {
-      ::Info("TFileInfo::CreateListMatching", "input path undefined");
-      return 0;
-   }
-
-   // Create the list
-   TList *fileList = new TList();
-   fileList->SetOwner();
-
-   FileStat_t st;
-   // If 'files' points to a single file, fill the list and exit
-   if (gSystem->GetPathInfo(files, st) == 0) {
-      if (R_ISREG(st.fMode)) {
-         // Regular, single file
-         fileList->Add(new TFileInfo(files));
-         return fileList;
-      }
-   } else {
-      void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(files));
-      if (!dataSetDir) {
-         // Directory cannot be open
-         ::Error("TFileInfo::CreateListMatching",
-                 "directory %s cannot be open", gSystem->DirName(files));
-      } else {
-         const char* ent;
-         TString filesExp(gSystem->BaseName(files));
-         filesExp.ReplaceAll("*",".*");
-         TRegexp rg(filesExp);
-         while ((ent = gSystem->GetDirEntry(dataSetDir))) {
-            TString entryString(ent);
-            if (entryString.Index(rg) != kNPOS) {
-               // matching dir entry
-               TString fn(Form("%s/%s",gSystem->DirName(files), ent));
-               gSystem->GetPathInfo(fn, st);
-               if (R_ISREG(st.fMode))
-                  // Regular file
-                  fileList->Add(new TFileInfo(fn));
-            }
-         }
-         // Close the directory
-         gSystem->FreeDirectory(dataSetDir);
-      }
-   }
-   if (fileList->GetSize() == 0) {
-      ::Error("TFileInfo::CreateListMatching",
-              "no files match your selection, the list was not created");
-      delete fileList;
-      return 0;
-   }
-   // Done
-   return fileList;
 }
 
 
