@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.57 2007/02/03 08:16:34 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.58 2007/03/01 16:43:36 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -6731,7 +6731,7 @@ void TMinuit::mnscan()
    xhreq = TMath::Max(fWord7[2],fWord7[3]);
    ncall = Int_t((fWord7[1] + .01));
    if (ncall <= 1)  ncall = 41;
-   if (ncall > 101) ncall = 101;
+   if (ncall > 98) ncall = 98;
    nccall = ncall;
    if (fAmin == fUndefi) mnamin();
    iparwd  = Int_t((fWord7[0] + .1));
