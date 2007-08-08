@@ -1,4 +1,4 @@
-/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.12 2007/07/20 12:10:53 brun Exp $ */
+/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.13 2007/07/24 19:56:12 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,5 +23,10 @@
 #pragma link C++ class TTVSession+;
 #pragma link C++ class TSpider+;
 #pragma link C++ class TSpiderEditor;
+#pragma link C++ class TParallelCoord+;
+#pragma link C++ class TParallelCoordVar+;
+#pragma link C++ class TParallelCoordRange+;
+#pragma link C++ class TParallelCoordSelect+;
+#pragma link C++ class TParallelCoordEditor;
 
 #endif
