@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -13,8 +13,8 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordRange.h"
 
-#include <Riostream.h>
-#include <TROOT.h>
+#include "Riostream.h"
+#include "TROOT.h"
 #include "TLatex.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
@@ -68,13 +68,13 @@ TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id,
    fParallel      = parallel;
    fRanges        = new TList();
    fNentries       = fParallel->GetNentries();
-   
+
    fVal = new Double_t[fParallel->GetNentries()];
-   
+
    Double_t ave = 0;
-   
+
    for(Long64_t ui = 0;ui<fParallel->GetNentries();++ui) fVal[ui]=val[ui];
-   
+
    Double_t min,max;
    min = FLT_MAX;
    max = -FLT_MAX;
@@ -83,7 +83,7 @@ TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id,
       if(val[li]>max) max = val[li];
       ave+=val[li];
    }
-   
+
    fMean = ave/((Double_t)fNentries);
    fMinInit    = min;
    fMinCurrent = fMinInit;
@@ -124,7 +124,7 @@ Int_t TParallelCoordVar::DistancetoPrimitive(Int_t px, Int_t py)
    Double_t xx = gPad->AbsPixeltoX(px);
    Double_t yy = gPad->AbsPixeltoY(py);
    Double_t dist = 9999;
-   
+
    if (fX1==fX2) {
       if (yy>fY1+0.01 && yy<fY2-0.01) dist = TMath::Abs(xx - fX1);
    } else {
@@ -444,7 +444,7 @@ void TParallelCoordVar::GetXYfromValue(Double_t value, Double_t & x, Double_t & 
    // Get a position corresponding to the value on the axis.
 
    if(value < fMinCurrent || value > fMaxCurrent) return;
-   
+
    if (fX1==fX2) {
       x = fX1;
       if (TestBit(kLogScale)) y = fY1 + (fY2 - fY1) *
@@ -516,9 +516,9 @@ void TParallelCoordVar::PaintBoxPlot()
    box->SetLineColor(GetLineColor());
    box->SetLineStyle(1);
    box->SetFillStyle(0);
-   
+
    TFrame* frame = gPad->GetFrame();
-   
+
    Double_t boxSize;
    if (fParallel->GetNvar() > 1) {
       if (fX1==fX2) boxSize = fHistoHeight*((frame->GetY2()-frame->GetY1())/(fParallel->GetNvar()-1));
@@ -526,7 +526,7 @@ void TParallelCoordVar::PaintBoxPlot()
       if (boxSize >= 0.03) boxSize = 0.03;
    }
    else boxSize = 0.03;
-   
+
    Double_t qua1,med,qua3,max,min;
    Double_t a,b,maxinit,mininit;
    if (TestBit(kLogScale)) {
@@ -554,7 +554,7 @@ void TParallelCoordVar::PaintBoxPlot()
       max  = fX1 + ((maxinit-a)/b)*(fX2-fX1);
       min  = fX1 + ((mininit-a)/b)*(fX2-fX1);
    }
-   
+
    // min and max lines.
    if (fX1==fX2) {
       line->PaintLine(fX1-boxSize,min,fX1+boxSize,min);
@@ -563,7 +563,7 @@ void TParallelCoordVar::PaintBoxPlot()
       line->PaintLine(min,fY1-boxSize,min,fY1+boxSize);
       line->PaintLine(max,fY2-boxSize,max,fY2+boxSize);
    }
-   
+
    // lines from min and max to the box.
    line->SetLineStyle(7);
    if (fX1==fX2) {
@@ -577,16 +577,16 @@ void TParallelCoordVar::PaintBoxPlot()
       line->PaintLine(min,fY1,qua1,fY2);
       line->PaintLine(qua3,fY1,max,fY2);
    }
-   
+
    // Box
    if(fX1==fX2) box->PaintBox(fX1-boxSize,qua1,fX1+boxSize,qua3);
    else box->PaintBox(qua1,fY1-boxSize,qua3,fY1+boxSize);
-   
+
    // Median line
    line->SetLineStyle(1);
    if(fX1==fX2) line->PaintLine(fX1-boxSize,med,fX1+boxSize,med);
    else line->PaintLine(med,fY1-boxSize,med,fY1+boxSize);
-   
+
    // Paint average
    if (!TestBit(kLogScale) || (TestBit(kLogScale) && fMean > 0)) {
       Double_t mean;
@@ -610,9 +610,9 @@ void TParallelCoordVar::PaintHistogram()
    // Paint the histogram on the axis.
 
    Int_t i;
-   
+
    TFrame *frame = gPad->GetFrame();
-   
+
    // Paint the axis body.
    if (fHistoHeight!=0 && TestBit(kShowBarHisto)) {
       // Paint the axis body using bar chart.
@@ -840,11 +840,11 @@ void TParallelCoordVar::SetCurrentLimits(Double_t min, Double_t max)
    if(TestBit(kLogScale) && min<=0) min = 0.00001*max;
    fMinCurrent = min;
    fMaxCurrent = max;
-   
+
    delete fHistogram;
    fHistogram = NULL;
    GetHistogram();
-   
+
    if (fParallel->TestBit(TParallelCoord::kGlobalScale)) {
       fParallel->SetGlobalMin(min);
       fParallel->SetGlobalMax(max);
