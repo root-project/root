@@ -125,6 +125,8 @@ void TSelectorDraw::Begin(TTree *tree)
    Bool_t profile = kFALSE;
    Bool_t optSame = kFALSE;
    Bool_t optEnlist = kFALSE;
+   Bool_t optpara = kFALSE;
+   Bool_t optcandle = kFALSE;
    if (opt.Contains("same")) {
       optSame = kTRUE;
       opt.ReplaceAll("same","");
@@ -132,6 +134,14 @@ void TSelectorDraw::Begin(TTree *tree)
    if (opt.Contains("entrylist")){
       optEnlist = kTRUE;
       opt.ReplaceAll("entrylist", "");
+   }
+   if (opt.Contains("para")){
+      optpara = kTRUE;
+      opt.ReplaceAll("para","");
+   }
+   if (opt.Contains("candle")) {
+      optcandle = kTRUE;
+      opt.ReplaceAll("candle","");
    }
    TCut realSelection(selection);
    //input list - only TEntryList
@@ -528,7 +538,7 @@ void TSelectorDraw::Begin(TTree *tree)
       fObject = hist;
 
       // 2-D distribution
-   } else if (fDimension == 2) {
+   } else if (fDimension == 2 && !(optpara || optcandle)) {
       fAction = 2;
       if (!fOldHistogram || !optSame) {
          fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
@@ -646,7 +656,7 @@ void TSelectorDraw::Begin(TTree *tree)
       }
 
       // 3-D distribution
-   } else if ((fDimension == 3 || fDimension == 4)) {
+   } else if ((fDimension == 3 || fDimension == 4) && !(optpara || optcandle)) {
       fAction = 3;
       if (fDimension == 4) fAction = 40;
       if (!fOldHistogram || !optSame) {
@@ -805,6 +815,10 @@ void TSelectorDraw::Begin(TTree *tree)
       fOldEstimate = fTree->GetEstimate();
       fTree->SetEstimate(1);
       fObject = evlist;
+   } else if (optcandle || optpara) {
+      if (optcandle) fAction = 7;
+      else           fAction = 6;
+      if(!optSame && (gPad->GetListOfPrimitives())->GetSize()!=0) gPad->Clear();
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
@@ -905,7 +919,6 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    // otherwise select only the specified columns
    ncols  = 1;
    for (i=0;i<nch;i++)  if (title[i] == ':' && ! ( (i>0&&title[i-1]==':') || title[i+1]==':' ) ) ncols++;
-   if (ncols > 4 ) return kFALSE;
    Int_t *index;
    index = new Int_t[ncols+1];
    MakeIndex(title,index);
@@ -1367,6 +1380,18 @@ void TSelectorDraw::TakeAction()
          pm3d->SetPoint(pm3d->GetLastPoint()+1,fVal[2][i],fVal[1][i],fVal[0][i]);
       }
    }
+   //__________________________Parallel coordinates / candle chart_______________________
+   else if (fAction == 6 || fAction == 7){
+   TakeEstimate();
+   Bool_t candle = (fAction==7);
+   TString *vartitles = new TString[fDimension];
+   for (i = 0; i<fDimension;++i) vartitles[i] = fVar[i]->GetTitle();
+   TObject** para = &fObject;
+   // Using CINT to avoid a dependency in TParallelCoord
+   gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TObject**)0x%x,(TTree*)0x%x,%d,%d,(Double_t**)0x%x,\"%s\",(TString*)0x%x,0x%x",
+                               para, fTree, fDimension, fNfill, fVal, fInput->FindObject("varexp")->GetTitle(), vartitles, candle));
+//FIXME: memory leak with vartitles (why do you need this array)?
+   }
    //__________________________something else_______________________
    else if (fAction < 0) {
       fAction = -fAction;
@@ -1590,6 +1615,15 @@ void TSelectorDraw::TakeEstimate()
             if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
+      }
+   }
+   //__________________________Parallel coordinates plot / candle chart_______________________
+   else if (fAction == 6 || fAction == 7){
+      for(i=0;i<fDimension;++i){
+         for (Long64_t entry=0;entry<fNfill;entry++){
+            if (fVmin[i] > fVal[i][entry]) fVmin[i] = fVal[i][entry];
+            if (fVmax[i] < fVal[i][entry]) fVmax[i] = fVal[i][entry];
+         }
       }
    }
 }

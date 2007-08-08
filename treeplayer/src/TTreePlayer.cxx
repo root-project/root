@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.243 2007/06/04 17:07:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.244 2007/06/21 15:42:50 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1028,7 +1028,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    opt.ToLower();
    Bool_t draw = kFALSE;
    if (!drawflag && !opt.Contains("goff")) draw = kTRUE;
-   fHistogram = (TH1*)fSelector->GetObject();
+   Bool_t optPara = kFALSE;
+   Bool_t optcandle = kFALSE;
+   if (opt.Contains("para")) optPara = kTRUE;
+   if (opt.Contains("candle")) optcandle = kTRUE;
+   if (!optcandle && !optPara) fHistogram = (TH1*)fSelector->GetObject();
 
    if (!nrows && drawflag && !opt.Contains("same")) {
       if (gPad) gPad->Clear();
@@ -1041,7 +1045,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (draw) fHistogram->Draw(option);
 
    //*-*- 2-D distribution
-   } else if (fDimension == 2) {
+   } else if (fDimension == 2 && !(optPara||optcandle)) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("X");
       if (action == 4) {
@@ -1060,7 +1064,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          }
       }
    //*-*- 3-D distribution
-   } else if (fDimension == 3) {
+   } else if (fDimension == 3 && !(optPara||optcandle)) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Z");
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
@@ -1076,7 +1080,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          }
       }
    //*-*- 4-D distribution
-   } else if (fDimension == 4) {
+   } else if (fDimension == 4 && !(optPara||optcandle)) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Z");
       if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
       if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
@@ -1088,6 +1092,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          TPolyMarker3D *pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
          if (draw) pm3d->Draw();
       }
+   //*-*- Parallel Coordinates or Candle chart.
+   } else {
+      TObject* para = fSelector->GetObject();
+      fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
+      gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)%p,enlist)",para));
    }
 
    return fSelectedRows;
