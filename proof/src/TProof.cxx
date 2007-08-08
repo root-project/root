@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.215 2007/07/26 15:35:04 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.216 2007/07/30 17:41:46 ganis Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -434,10 +434,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          delete pw;
       }
    }
-   // Make sure to store the FQDN, so to get a solid reference for
-   // subsequent checks (strings corresponding to non-existing hosts
-   // - like "__master__" - will not be touched by this)
-   if (!strlen(fUrl.GetHost()))
+   // Make sure to store the FQDN, so to get a solid reference for subsequent checks
+   if (!strcmp(fUrl.GetHost(), "__master__"))
+      fMaster = fUrl.GetHost();
+   else if (!strlen(fUrl.GetHost()))
       fMaster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
    else
       fMaster = gSystem->GetHostByName(fUrl.GetHost()).GetHostName();
