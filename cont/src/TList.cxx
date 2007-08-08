@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.21 2006/07/09 05:27:53 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.22 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 //    2) Using the TList iterator TListIter (via the wrapper class      //
 //       TIter):                                                        //
 //         TIter next(GetListOfPrimitives());                           //
-//         while (TObject *obj = next())                                //
+//         while ((TObject *obj = next()))                              //
 //            obj->Draw(next.GetOption());                              //
 //                                                                      //
 //    3) Using the TObjLink list entries (that wrap the TObject*):      //
