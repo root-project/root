@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.16 2007/07/13 08:56:13 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.17 2007/07/23 19:59:15 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -1058,10 +1058,13 @@ void TEntryList::SetTree(const TTree *tree)
    TString filename;
    if (tree->GetTree()->GetCurrentFile()){
       filename = tree->GetTree()->GetCurrentFile()->GetName();
-      gSystem->ExpandPathName(filename);
-      if (!gSystem->IsAbsoluteFileName(filename))
-         gSystem->PrependPathName(gSystem->pwd(), filename);
-      filename = gSystem->UnixPathName(filename);
+      TUrl url(filename.Data(), kTRUE);
+      if (!strcmp(url.GetProtocol(), "file")){
+         gSystem->ExpandPathName(filename);
+         if (!gSystem->IsAbsoluteFileName(filename))
+            gSystem->PrependPathName(gSystem->pwd(), filename);
+         filename = gSystem->UnixPathName(filename);
+      }
    } else {
       //memory-resident
       filename = "";

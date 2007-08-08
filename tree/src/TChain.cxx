@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.170 2007/07/09 08:16:22 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.171 2007/08/03 19:19:40 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -2128,7 +2128,8 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
       (*nametitle)="";
       nametitle->Append(((TChainElement*)fFiles->UncheckedAt(ie))->GetName());
       filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
-      if (!nexp){
+      TUrl url(filename.Data(), kTRUE);
+      if (!strcmp(url.GetProtocol(), "file") && !nexp){
          gSystem->ExpandPathName(filename);
          if (!gSystem->IsAbsoluteFileName(filename))
             gSystem->PrependPathName(gSystem->pwd(), filename);
@@ -2153,7 +2154,8 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
          if (temphash == hashtable[i]){
             //found, check if it's the right one
             filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            if (!nexp){
+            TUrl url(filename.Data(), kTRUE);
+            if (!strcmp(url.GetProtocol(), "file") && !nexp){
                gSystem->ExpandPathName(filename);
                if (!gSystem->IsAbsoluteFileName(filename))
                   gSystem->PrependPathName(gSystem->pwd(), filename);
@@ -2189,7 +2191,8 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
          if (temphash == hashtable[i]){
             //found, check if it's the right one
             filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            if (!nexp){
+            TUrl url(filename.Data(), kTRUE);
+            if (!strcmp(url.GetProtocol(), "file") && !nexp){
                gSystem->ExpandPathName(filename);
                if (!gSystem->IsAbsoluteFileName(filename))
                   gSystem->PrependPathName(gSystem->pwd(), filename);
