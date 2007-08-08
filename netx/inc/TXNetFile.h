@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.12 2007/02/22 11:51:50 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.13 2007/05/08 13:49:20 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -56,7 +56,7 @@
 
 class TSocket;
 class XrdClient;
-class XrdOucRecMutex;
+class TMutex;
 
 class TXNetFile : public TNetFile {
 
@@ -71,8 +71,8 @@ private:
    static Bool_t  fgInitDone;    // Avoid initializing more than once
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility
 
-   XrdOucRecMutex *fInitMtx;     // Protects fInitDone, serializes the
-                                 // attempts to Init() for this object only
+   TMutex            *fInitMtx;     // Protects fInitDone, serializes the
+                                   // attempts to Init() for this object only
 
    // Methods
    TXNetFile(const TXNetFile&);  // Not implemented

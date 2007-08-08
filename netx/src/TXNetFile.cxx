@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.47 2007/05/08 13:49:20 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.48 2007/05/29 13:48:17 ganis Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -50,12 +50,12 @@
 #include "TXNetFile.h"
 #include "TROOT.h"
 #include "TVirtualMonitoring.h"
+#include "TMutex.h"
 #include "TFileStager.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
-#include <XrdOuc/XrdOucPthread.hh>
 #include <XProtocol/XProtocol.hh>
 
 ClassImp(TXNetFile);
@@ -119,7 +119,7 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    urlnoanchor.SetAnchor("");
 
    // Init mutex used in the asynchronous open machinery
-   fInitMtx = new XrdOucRecMutex();
+   fInitMtx = new TMutex(kTRUE);
 
    // Create an instance
    CreateXClient(urlnoanchor.GetUrl(), option, netopt, parallelopen);
@@ -676,7 +676,7 @@ void TXNetFile::Init(Bool_t create)
 
    if (fClient) {
       // A mutex serializes this very delicate section
-      XrdOucMutexHelper m(fInitMtx);
+      R__LOCKGUARD(fInitMtx);
 
       // To safely perform the Init() we must make sure that
       // the file is successfully open; this call may block
