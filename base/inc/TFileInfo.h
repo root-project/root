@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.14 2007/08/02 15:59:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.15 2007/08/07 00:39:05 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -62,7 +62,8 @@ private:
 
 public:
    enum EStatusBits {
-      kStaged = BIT(15)
+      kStaged    = BIT(15),
+      kCorrupted = BIT(16)
    };
 
    TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = 0,

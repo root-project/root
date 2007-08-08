@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.12 2007/05/09 12:51:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCollection.cxx,v 1.1 2007/08/07 00:29:26 rdm Exp $
 // Author: Gerhard Erich Bruckner, Jan Fiete Grosse-Oetringhaus  04/06/07
 
 /*************************************************************************
@@ -49,21 +49,7 @@ TFileCollection::TFileCollection(const char *name, const char *title,
    fMetaDataList = new TList;
    fMetaDataList->SetOwner();
 
-   if (textfile) {
-      ifstream f;
-      f.open(gSystem->ExpandPathName(textfile), ifstream::out);
-      if (f.is_open()) {
-         while (f.good()) {
-            TString line;
-            line.ReadToDelim(f);
-            if (!line.IsWhitespace())
-               fList->Add(new TFileInfo(line));
-         }
-         f.close();
-         Update();
-      } else
-         Error("TFileCollection", "unable to open file %s", textfile);
-   }
+   AddFromFile(textfile);
 }
 
 //______________________________________________________________________________
@@ -81,6 +67,28 @@ void TFileCollection::Add(TFileInfo *info)
    // Add TFileInfo to the collection.
 
    fList->Add(info);
+}
+
+//______________________________________________________________________________
+void TFileCollection::AddFromFile(const char *textfile)
+{
+   // Add all file names contained in the specified text file.
+
+   if (textfile && *textfile) {
+      ifstream f;
+      f.open(gSystem->ExpandPathName(textfile), ifstream::out);
+      if (f.is_open()) {
+         while (f.good()) {
+            TString line;
+            line.ReadToDelim(f);
+            if (!line.IsWhitespace())
+               fList->Add(new TFileInfo(line));
+         }
+         f.close();
+         Update();
+      } else
+         Error("AddFromFile", "unable to open file %s", textfile);
+   }
 }
 
 //______________________________________________________________________________
@@ -144,14 +152,14 @@ void TFileCollection::AddFromDirectory(const char *dir)
 //______________________________________________________________________________
 TFileCollection *TFileCollection::GetStagedSubset()
 {
-   // Creates a subset of the files that have the staged bit set.
+   // Creates a subset of the files that have the kStaged & !kCorrupted bit set.
 
    TFileCollection *subset = new TFileCollection(GetName(), GetTitle());
 
    TIter iter(fList);
    TFileInfo *fileInfo = 0;
    while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next()))) {
-      if (fileInfo->TestBit(TFileInfo::kStaged))
+      if (fileInfo->TestBit(TFileInfo::kStaged) && !fileInfo->TestBit(TFileInfo::kCorrupted))
          subset->Add(fileInfo);
    }
 
@@ -183,7 +191,7 @@ void TFileCollection::Update()
       if (fileInfo->GetSize() > 0)
          fTotalSize += fileInfo->GetSize();
 
-      if (fileInfo->TestBit(TFileInfo::kStaged)) {
+      if (fileInfo->TestBit(TFileInfo::kStaged) && !fileInfo->TestBit(TFileInfo::kCorrupted)) {
          stagedFiles++;
 
          if (fileInfo->GetMetaDataList()) {
@@ -276,10 +284,8 @@ const char *TFileCollection::GetDefaultTreeName() const
    while ((metaData = dynamic_cast<TFileInfoMeta*>(metaDataIter.Next()))) {
       if (!metaData->IsTree())
          continue;
-
       return metaData->GetName();
    }
-
    return 0;
 }
 
@@ -321,4 +327,25 @@ void TFileCollection::Sort()
    // Sort the collection.
 
    fList->Sort();
+}
+
+//______________________________________________________________________________
+Float_t TFileCollection::GetCorruptedPercentage() const
+{
+   // Returns the percentage of files with the kCorrupted bit set,
+   // calculated on-the-fly because it is not supposed to be used often.
+
+   if (fList->GetEntries() == 0)
+      return -1;
+
+   Long64_t count = 0;
+
+   TIter iter(fList);
+   TFileInfo *fileInfo = 0;
+   while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next()))) {
+      if (fileInfo->TestBit(TFileInfo::kCorrupted))
+         count++;
+   }
+
+   return 100.0 * count / fList->GetEntries();
 }

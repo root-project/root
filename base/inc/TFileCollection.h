@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TProof.h,v 1.113 2007/05/25 13:53:59 ganis Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCollection.h,v 1.1 2007/08/07 00:29:26 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  01/06/07
 
 /*************************************************************************
@@ -45,20 +45,22 @@ private:
    TFileCollection& operator=(const TFileCollection&);  // not implemented
 
 public:
-    TFileCollection(const char *name = 0, const char *title = 0, const char *textfile = 0);
+    TFileCollection(const char *name = 0, const char *title = 0, const char *file = 0);
     virtual ~TFileCollection();
 
     void            Add(TFileInfo *info);
+    void            AddFromFile(const char *file);
     void            AddFromDirectory(const char *dir);
-    THashList      *GetList() const { return fList; }
+    TList          *GetList() { return (TList*) fList; }
 
     void            Update();
     void            Sort();
     void            SetAnchor(const char *anchor) const;
     void            Print(Option_t *option = "") const;
 
-    Long64_t        GetTotalSize() const        { return fTotalSize; }
+    Long64_t        GetTotalSize() const { return fTotalSize; }
     Float_t         GetStagedPercentage() const { return fStagedPercentage; }
+    Float_t         GetCorruptedPercentage() const;
 
     const char     *GetDefaultTreeName() const;
     Long64_t        GetTotalEntries(const char *tree) const;
