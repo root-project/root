@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TProof.h,v 1.113 2007/05/25 13:53:59 ganis Exp $
+// @(#)root/thread:$Name:  $:$Id: TLockFile.h,v 1.1 2007/06/22 08:55:26 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus, 04.06.07
 
 /*************************************************************************
@@ -48,10 +48,10 @@ protected:
    Bool_t Lock(const char* path, Int_t timeLimit);
 
 public:
-    TLockFile(const char* path, Int_t timeLimit = 0);
-    virtual ~TLockFile();
+   TLockFile(const char* path, Int_t timeLimit = 0);
+   virtual ~TLockFile();
 
-    ClassDef(TLockFile, 0)
+   ClassDef(TLockFile, 0) //Lock an object using a file
 };
 
 #endif

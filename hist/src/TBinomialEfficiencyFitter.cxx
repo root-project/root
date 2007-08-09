@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.5 2007/08/04 09:28:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.6 2007/08/04 17:31:40 brun Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************
@@ -207,8 +207,8 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    if (fNumerator->GetNbinsX() != fDenominator->GetNbinsX() ||
        (f1->GetNdim() > 1 && fNumerator->GetNbinsY() != fDenominator->GetNbinsY()) ||
        (f1->GetNdim() > 2 && fNumerator->GetNbinsZ() != fDenominator->GetNbinsZ())) {
-     Error("Fit", "numerator and denominator histograms do not have identical numbers of bins");
-     return -6;
+      Error("Fit", "numerator and denominator histograms do not have identical numbers of bins");
+      return -6;
    }
 
    // initialize the fitter

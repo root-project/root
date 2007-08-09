@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.114 2007/07/11 15:35:05 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.115 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -830,7 +830,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
          if (!ok || gROOT->IsInterrupted()) break;
          SetProcessing(kFALSE);
-     }
+      }
 
    } CATCH(excode) {
       if (excode == kPEX_STOPPED) {

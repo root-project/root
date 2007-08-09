@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.35 2007/07/30 20:32:54 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.36 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -736,8 +736,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   if (valueClass) cname = valueClass->GetName();
                   else {
                      proxyTypeName = Form("TStlSimpleProxy<%s >", cl->GetName());
-//                     AddPragma(Form("#pragma create TClass %s;\n", cl->GetName())); 
-                       AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName())); 
+//                   AddPragma(Form("#pragma create TClass %s;\n", cl->GetName())); 
+                     AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName())); 
                   }
                }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.7 2007/02/03 17:28:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.8 2007/06/21 19:14:20 pcanal Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -102,7 +102,8 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 //______________________________________________________________________________
 void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
 {
-
+   // add an index to this chain
+   // if delaySort is kFALSE (default) check if the indices of different trees are in order.
    if (index) {
       R__ASSERT(dynamic_cast<const TTreeIndex*>(index));
 

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.30 2007/07/11 15:35:05 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.31 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 /*************************************************************************
@@ -842,6 +842,7 @@ ClassImp(TProofDrawEntryList)
 //______________________________________________________________________________
 TProofDrawEntryList::~TProofDrawEntryList()
 {
+   //class destructor
    SafeDelete(fElist);
 }
 
