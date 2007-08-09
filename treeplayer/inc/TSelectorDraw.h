@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.14 2006/11/22 14:16:55 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.15 2007/07/03 10:00:15 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -38,7 +38,6 @@ protected:
    TTreeFormula **fVar;            //![fDimension] Array of pointers to variables formula
    TTreeFormula  *fSelect;         //  Pointer to selection formula
    TTreeFormulaManager *fManager;  //  Pointer to the formula manager
-   TObject       *fObject;         //! Pointer to object being filled (histogram, event list)
    TObject       *fTreeElist;      //  pointer to Tree Event list
    TH1           *fOldHistogram;   //! Pointer to previously used histogram
    Int_t          fAction;         //! Action type
@@ -86,6 +85,7 @@ public:
    TH1              *GetOldHistogram() const {return fOldHistogram;}
    TTreeFormula     *GetSelect() const    {return fSelect;}
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
+   TTree            *GetTree() const {return fTree;}
    TTreeFormula     *GetVar(Int_t i) const;
    TTreeFormula     *GetVar1() const {return GetVar(0);}
    TTreeFormula     *GetVar2() const {return GetVar(1);}
