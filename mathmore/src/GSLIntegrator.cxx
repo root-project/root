@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.8 2006/12/12 13:07:20 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.9 2007/07/25 10:22:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -170,7 +170,7 @@ double  GSLIntegrator::Integral(double a, double b) {
 
 //=============================
 double  GSLIntegrator::IntegralCauchy(double a, double b, double c) {
-   
+   //FIXME: IntegralCauchy ?  
    if (!CheckFunction()) return 0;  
   
    fStatus = gsl_integration_qawc( fFunction.GetFunc(), a, b , c, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
@@ -180,6 +180,7 @@ double  GSLIntegrator::IntegralCauchy(double a, double b, double c) {
 }
 
 double  GSLIntegrator::IntegralCauchy(const IGenFunction & f, double a, double b, double c) {
+   //FIXME: IntegralCauchy ?  
    
    if (!CheckFunction()) return 0;  
    SetFunction(f);

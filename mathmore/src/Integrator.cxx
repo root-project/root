@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.6 2006/12/11 15:06:37 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.7 2007/07/25 10:22:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -203,13 +203,13 @@ double  Integrator::Integral(const IGenFunction & f, const std::vector<double> &
 
 double  Integrator::IntegralCauchy(const IGenFunction & f, double a, double b, double c) {
    // evaluation of Cauychy principal value using generic function interface 
-  fIntegrator->SetFunction(f);
-  return fIntegrator->IntegralCauchy(a, b, c);
+   fIntegrator->SetFunction(f);
+   return fIntegrator->IntegralCauchy(a, b, c);
 }
 double  Integrator::IntegralCauchy(double a, double b, double c) {
    // evaluation of Cauychy principal value
   
-  return fIntegrator->IntegralCauchy(a, b, c);
+   return fIntegrator->IntegralCauchy(a, b, c);
 }
 
 
