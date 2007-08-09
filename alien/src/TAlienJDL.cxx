@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name: v5-15-04 $:$Id: TAlienJDL.cxx,v 1.5 2007/03/20 08:02:11 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.6 2007/07/26 10:31:05 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -73,6 +73,7 @@ void TAlienJDL:: SetPrice(UInt_t price)
 //______________________________________________________________________________
 void TAlienJDL:: SetTTL(UInt_t ttl)
 {
+   //to inform AliEn master about estimated Time-To-Live of included nodes
    TString ttlstring;
    ttlstring+= ttl;
 
