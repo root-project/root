@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.39 2007/06/22 17:16:35 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.40 2007/07/03 16:01:33 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1041,20 +1041,22 @@ Bool_t TXProofServ::HandleInput(const void *in)
    } else if (acod == kXPD_inflate) {
 
       // Inflate factor
-      Int_t factor = (hin->fInt2 >= 1000) ? hin->fInt2 : fInflateFactor;
+      Int_t factor = hin->fInt2;
 
       if (IsMaster()) {
          // The factor is the priority to be propagated
          fGroupPriority = factor;
          if (fProof)
             fProof->BroadcastGroupPriority(fGroup, fGroupPriority);
-
+         // Notify
+         Info("HandleInput", "kXPD_inflate: group %s priority set to %f",
+              fGroup.Data(), (Float_t) fGroupPriority / 100.);
       } else {
          // Set inflate factor
-         fInflateFactor = factor;
+         fInflateFactor = (factor >= 1000) ? factor : fInflateFactor;
          // Notify
-         Info("HandleInput",
-              "kXPD_inflate: inflate factor set to %f", (Float_t) factor / 1000.);
+         Info("HandleInput", "kXPD_inflate: inflate factor set to %f",
+              (Float_t) fInflateFactor / 1000.);
       }
 
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.28 2007/06/21 07:06:36 ganis Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.29 2007/07/03 16:01:33 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -460,6 +460,29 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, opt, delay, 0};
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
+         }
+         break;
+      case kXPD_inflate:
+         //
+         // Set inflate factor
+         {
+            kXR_int32 inflate = 1000;
+            if (len > 0) {
+               memcpy(&inflate, pdata, sizeof(kXR_int32));
+               inflate = net2host(inflate);
+               if (gDebug > 1)
+                  Info("ProcessUnsolicitedMsg","kXPD_inflate: factor: %d", inflate);
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+            // Handle this input in this thread to avoid queuing on the
+            // main thread
+            XHandleIn_t hin = {acod, inflate, 0, 0};
             if (fHandler)
                fHandler->HandleInput((const void *)&hin);
             else
