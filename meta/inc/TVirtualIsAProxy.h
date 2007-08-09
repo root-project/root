@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.1 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.2 2005/06/08 18:51:36 rdm Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 // Virtual IsAProxy base class.                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+class TClass;
+
 class TVirtualIsAProxy  {
 public:
    virtual ~TVirtualIsAProxy() { }
