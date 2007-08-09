@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.131 2007/06/26 08:52:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.132 2007/07/11 12:14:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1547,6 +1547,13 @@ void TBranch::ResetAddress()
       // FIXME: This is a tail recursion.
       abranch->ResetAddress();
    }
+}
+
+//______________________________________________________________________________
+void TBranch::ResetCount()
+{
+   // Static function resetting fgCount
+   fgCount = 0;
 }
 
 //______________________________________________________________________________

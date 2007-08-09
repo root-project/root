@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.35 2007/03/26 16:02:09 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.36 2007/04/27 16:49:16 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -171,7 +171,7 @@ public:
    virtual void      UpdateAddress() {;}
            void      WriteBasket(TBasket* basket);
 
-   static  void      ResetCount() {fgCount = 0;}
+   static  void      ResetCount();
 
    ClassDef(TBranch,10);  //Branch descriptor
 };
