@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCollection.h,v 1.1 2007/08/07 00:29:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCollection.h,v 1.2 2007/08/08 08:51:27 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  01/06/07
 
 /*************************************************************************
@@ -45,30 +45,30 @@ private:
    TFileCollection& operator=(const TFileCollection&);  // not implemented
 
 public:
-    TFileCollection(const char *name = 0, const char *title = 0, const char *file = 0);
-    virtual ~TFileCollection();
+   TFileCollection(const char *name = 0, const char *title = 0, const char *file = 0);
+   virtual ~TFileCollection();
 
-    void            Add(TFileInfo *info);
-    void            AddFromFile(const char *file);
-    void            AddFromDirectory(const char *dir);
-    TList          *GetList() { return (TList*) fList; }
+   void            Add(TFileInfo *info);
+   void            AddFromFile(const char *file);
+   void            AddFromDirectory(const char *dir);
+   TList          *GetList() { return (TList*) fList; }
 
-    void            Update();
-    void            Sort();
-    void            SetAnchor(const char *anchor) const;
-    void            Print(Option_t *option = "") const;
+   void            Update();
+   void            Sort();
+   void            SetAnchor(const char *anchor) const;
+   void            Print(Option_t *option = "") const;
 
-    Long64_t        GetTotalSize() const { return fTotalSize; }
-    Float_t         GetStagedPercentage() const { return fStagedPercentage; }
-    Float_t         GetCorruptedPercentage() const;
+   Long64_t        GetTotalSize() const { return fTotalSize; }
+   Float_t         GetStagedPercentage() const { return fStagedPercentage; }
+   Float_t         GetCorruptedPercentage() const;
 
-    const char     *GetDefaultTreeName() const;
-    Long64_t        GetTotalEntries(const char *tree) const;
-    TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
+   const char     *GetDefaultTreeName() const;
+   Long64_t        GetTotalEntries(const char *tree) const;
+   TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
 
-    TFileCollection *GetStagedSubset();
+   TFileCollection *GetStagedSubset();
 
-    ClassDef(TFileCollection, 1)  // Collection of TFileInfo objects
+   ClassDef(TFileCollection, 1)  // Collection of TFileInfo objects
 };
 
 #endif
