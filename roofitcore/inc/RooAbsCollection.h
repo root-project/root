@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.rdl,v 1.24 2005/12/08 13:19:54 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.h,v 1.25 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,6 +43,7 @@ public:
 
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
+  Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const ;
 
   // Hash table control
   void setHashTableSize(Int_t i) { _list.setHashTableSize(i) ; }

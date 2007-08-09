@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.75 2007/07/12 20:30:29 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooTreeData.cxx,v 1.76 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -523,6 +523,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
   } else {
     tClone = ((TTree*)t)->CloneTree() ;
   }
+  tClone->SetDirectory(0) ;
     
   // Clone list of variables  
   RooArgSet *sourceArgSet = (RooArgSet*) _vars.snapshot(kFALSE) ;

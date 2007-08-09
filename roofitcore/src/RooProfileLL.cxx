@@ -9,8 +9,13 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
- // -- CLASS DESCRIPTION [PDF] -- 
- // Your description goes here... 
+ // -- CLASS DESCRIPTION [REAL] -- 
+ // Class RooProfileLL implements the profile likelihood estimator for
+ // a given likelihood and set of observables. The value return by 
+ // RooProfileLL is the input likelihood nll minimized w.r.t all parameters
+ // except for those listed in the constructor divided by the input likelihood
+ // minimized w.r.t. all parameters. Note that this function is slow to evaluate
+ // as a MIGRAD minimization step is executed for each function evaluation
 
 #include <iostream> 
 
@@ -32,6 +37,9 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _absMinValid(kFALSE),
   _absMin(0)
 { 
+  // Constructor of profile likelihood given input likelihood nll w.r.t
+  // the given set of variables
+
   // Determine actual parameters and observables
   RooArgSet* actualObs = nll.getObservables(observables) ;
   RooArgSet* actualPars = nll.getParameters(observables) ;
@@ -57,6 +65,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _absMin(0),
   _paramFixed(other._paramFixed)
 { 
+  // Copy constructor
   _piter = _par.createIterator() ;
   _oiter = _obs.createIterator() ;
 } 
@@ -64,6 +73,8 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
 
 RooProfileLL::~RooProfileLL()
 {
+  // Destructor
+
   // Delete instance of minuit if it was ever instantiated
   if (_minuit) {
     delete _minuit ;
@@ -77,6 +88,9 @@ RooProfileLL::~RooProfileLL()
 
 Double_t RooProfileLL::evaluate() const 
 { 
+  // Evaluate profile likelihood by minimizing likelihood w.r.t. all parameters that are not considered
+  // observables of this profile likelihood object.
+
   // Instantiate minuit if we haven't done that already
   if (!_minuit) {
     coutI("Minimization") << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooWorkspace.cxx,v 1.2 2007/07/16 21:04:28 wouter Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooWorkspace.cxx,v 1.3 2007/07/21 21:32:52 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
@@ -13,7 +13,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+// -- CLASS DESCRIPTION [MISC] --
+// The RooWorkspace is a persistable container for RooFit projects. A workspace
+// can contain and own variables, p.d.f.s, functions and datasets. All objects
+// that live in the workspace are owned by the workspace. The import() method
+// enforces consistency of objects upon insertion into the workspace (e.g. no
+// duplicate object with the same name are allowed) and makes sure all objects
+// in the workspace are connected to each other. Easy accessor methods like
+// pdf(), var() and data() allow to refer to the contents of the workspace by
+// object name. The entire RooWorkspace can be saved into a ROOT TFile and organises
+// the consistent streaming of its contents without duplication.
 
 #include "RooFit.h"
 #include "RooWorkspace.h"
@@ -38,27 +47,49 @@ ClassImp(RooWorkspace)
 ;
 
 RooWorkspace::RooWorkspace(const char* name, const char* title) : TNamed(name,title?title:name)
+// Empty workspace constructor
 {
 }
 
 
 RooWorkspace::RooWorkspace(const RooWorkspace& other) : TNamed(other)
 {
+  // Workspace copy constructor
+  other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
+  TIterator* iter = other._dataList.MakeIterator() ;
+  TObject* data ;
+  while((data=iter->Next())) {
+    _dataList.Add(data->Clone()) ;
+  }
+  delete iter ;
 }
 
 
 RooWorkspace::~RooWorkspace() 
 {
+  // Workspace destructor
+  _dataList.Delete() ;
 }
 
 
 Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
+  //  Import a RooAbsArg object, e.g. function, p.d.f or variable into the workspace. This import function clones the input argument and will
+  //  own the clone. If a composite object is offered for import, e.g. a p.d.f with parameters and observables, the
+  //  complete tree of objects is imported. If any of the _variables_ of a composite object (parameters/observables) are already 
+  //  in the workspace the imported p.d.f. is connected to the already existing variables. If any of the _function_ objects (p.d.f, formulas) 
+  //  to be imported already exists in the workspace an error message is printed and the import of the entire tree of objects is cancelled. 
+  //  Several optional arguments can be provided to modify the import procedure.
+  //
   //  Accepted arguments
   //  -------------------------------
   //  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
   //  RenameNodes(const char* suffix) -- Add suffix to all branch node names including top level node
-  //  RenameVariable(const char* inputName, const char* outputName) 
+  //  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
+  //
+  //  The RenameConflictNodes and RenameNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
+  //  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
+  //  two comma separated lists.
 
   RooLinkedList args ;
   args.Add((TObject*)&arg1) ;
@@ -261,6 +292,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
 
 Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
+  //  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data
+  //  The dataset and its variables can be renamed upon insertion with the options below
+  //
   //  Accepted arguments
   //  -------------------------------
   //  RenameDataset(const char* suffix) -- Rename dataset upon insertion
@@ -332,6 +366,14 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
       clone->changeObservableName(iin->c_str(),iout->c_str()) ;
     }
   }
+
+  // Now import the dataset observables
+  TIterator* iter = clone->get()->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    import(*arg) ;
+  }
+  delete iter ;
     
   _dataList.Add(clone) ;
   return kFALSE ;
@@ -340,37 +382,44 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
 
 Bool_t RooWorkspace::merge(const RooWorkspace& /*other*/) 
 {
+  // Stub for merge function with another workspace (not implemented yet)
   return kFALSE ;
 }
 
 
 Bool_t RooWorkspace::join(const RooWorkspace& /*other*/) 
 {
+  // Stub for join function with another workspace (not implemented yet)
   return kFALSE ;
 }
 
 RooAbsPdf* RooWorkspace::pdf(const char* name) 
 { 
+  // Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
   return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name)) ; 
 }
 
 RooAbsReal* RooWorkspace::function(const char* name) 
 { 
+  // Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
   return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name)) ; 
 }
 
 RooRealVar* RooWorkspace::var(const char* name) 
 { 
+  // Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
   return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name)) ; 
 }
 
 RooCategory* RooWorkspace::cat(const char* name) 
 { 
+  // Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
   return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ; 
 }
 
 RooAbsData* RooWorkspace::data(const char* name) 
 {
+  // Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
   return (RooAbsData*)_dataList.FindObject(name) ;
 }
 
@@ -396,6 +445,7 @@ RooAbsData* RooWorkspace::data(const char* name)
 
 void RooWorkspace::Print(Option_t* /*opts*/) const 
 {
+  // Print contents of the workspace 
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
 
   RooAbsArg* arg ;

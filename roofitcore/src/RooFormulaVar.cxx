@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooFormulaVar.cxx,v 1.37 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooFormulaVar.cxx,v 1.38 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -97,10 +97,17 @@ RooFormula& RooFormulaVar::formula() const
 }
 
 
+Double_t RooFormulaVar::getVal(const RooArgSet* set) const 
+{
+  _nset = (RooArgSet*) set ;
+  return RooAbsReal::getVal(set) ;
+}
+
+
 Double_t RooFormulaVar::evaluate() const
 {
   // Calculate current value of object
-  return formula().eval(0) ;
+  return formula().eval(_nset) ;
 }
 
 

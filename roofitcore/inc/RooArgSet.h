@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.rdl,v 1.43 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooArgSet.h,v 1.44 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "RooAbsCollection.h"
 #include "RooErrorHandler.h"
+#include <map>
 
 class RooArgList ;
 
@@ -100,10 +101,19 @@ public:
   Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
   Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
 
+  // Allocation counter information, keeps track of reuse of existing pointers
+  Int_t allocationCounter() const { return allocCount()[this] ; }
+  static Int_t allocationCounter(const RooArgSet* set) { return allocCount()[set] ; }
+  static void printAllocationList(Bool_t recycledOnly=kTRUE) ;
+
 protected:
+
+  Int_t& allocationCounter() { return allocCount()[this] ; }
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
 
+  static std::map<const RooArgSet*,int>& allocCount() ;
+  
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };
 

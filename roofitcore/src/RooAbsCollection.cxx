@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooAbsCollection.cxx,v 1.39 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooAbsCollection.cxx,v 1.40 2007/05/14 14:37:31 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -175,8 +175,31 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   // First create empty list
   TString snapName("Snapshot of ") ;
   snapName.Append(GetName()) ;
-  RooAbsCollection* snapshot = (RooAbsCollection*) create(snapName.Data()) ;
-  snapshot->setHashTableSize(1000) ;
+  RooAbsCollection* output = (RooAbsCollection*) create(snapName.Data()) ;
+  output->setHashTableSize(1000) ;
+  Bool_t error = snapshot(*output,deepCopy) ;
+  if (error) {
+    delete output ;
+    return 0 ;
+  }
+  return output ;
+}
+
+Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) const 
+{
+  // Take a snap shot of current collection contents:
+  // An owning collection is returned containing clones of 
+  // 
+  //     - Elements in this collection 
+  //     - External dependents of all elements
+  //       and recursively any dependents of those dependents
+  //       (if deepCopy flag is set)
+  //
+  // Ff deepCopy is specified, the client-server links between the cloned
+  // list elements and the cloned external dependents are reconnected to
+  // each other, making the snapshot a completely self-contained entity.
+  //
+  //
 
 //    TStopwatch timer ;
 //    timer.Start() ;
@@ -185,11 +208,11 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   RooAbsArg *orig = 0;
   while((0 != (orig= (RooAbsArg*)iterator->Next()))) {
     RooAbsArg *copy= (RooAbsArg*)orig->Clone();
-    snapshot->add(*copy);
+    output.add(*copy);
   }
   delete iterator;
 
-  TIterator* vIter = snapshot->createIterator() ;
+  TIterator* vIter = output.createIterator() ;
   RooAbsArg* var ;
 
 //    cpu4=0 ;
@@ -203,16 +226,15 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   if (deepCopy) {
     // Recursively add clones of all servers
     while ((var=(RooAbsArg*)vIter->Next())) {
-      error |= snapshot->addServerClonesToList(*var) ;
+      error |= output.addServerClonesToList(*var) ;
     }
   }
 
   // Handle eventual error conditions
   if (error) {
     cout << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << endl ;
-    snapshot->_ownCont = kTRUE ;    
-    delete snapshot ;
-    return 0 ;
+    output._ownCont = kTRUE ;    
+    return kTRUE ;
   }
 
 //    Double_t cpu2 = timer.CpuTime() ;
@@ -222,7 +244,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   vIter->Reset() ;
   while ((var=(RooAbsArg*)vIter->Next())) {
 //     cout << "." ;
-    var->redirectServers(*snapshot,deepCopy) ;
+    var->redirectServers(output,deepCopy) ;
   }
 //   cout << endl ;
   delete vIter ;
@@ -234,8 +256,8 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 //    cout << "reconnect time           = " << cpu3 << endl ;
 
   // Transfer ownership of contents to list
-  snapshot->_ownCont = kTRUE ;
-  return snapshot ;
+  output._ownCont = kTRUE ;
+  return kFALSE ;
 }
 
 

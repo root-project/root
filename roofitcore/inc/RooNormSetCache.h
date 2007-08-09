@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.rdl,v 1.10 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.h,v 1.11 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,22 +37,43 @@ public:
 
   void add(const RooArgSet* set1, const RooArgSet* set2=0) ;
 
-  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
+  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0, Bool_t ignoreAC=kFALSE) {
 
     // Match range name first
     if (set2RangeName != _set2RangeName) return -1 ;
 
-    Int_t i ;
-    for (i=0 ; i<_nreg ; i++) {
-      if (_asArr[i]._set1 == set1 && _asArr[i]._set2 == set2) return i ;
+
+    if (ignoreAC) {
+      
+      // Look for entry ignore state of allocation counters
+      Int_t i ;
+      for (i=0 ; i<_nreg ; i++) {
+	if (_asArr[i]._set1 == set1 && 
+	    _asArr[i]._set2 == set2 
+	    ) return i ;
+      }
+
+    } else {
+
+      // Look for entry requiring identical state of allocation counters
+      Int_t i ;
+      for (i=0 ; i<_nreg ; i++) {
+	if (_asArr[i]._set1 == set1 && 
+	    _asArr[i]._set2 == set2 && 
+	    _asArr[i]._set1ac == RooArgSet::allocationCounter(set1) &&
+	    _asArr[i]._set2ac == RooArgSet::allocationCounter(set2)
+	    ) return i ;
+      }
+
     }
+
     return -1 ;
   }
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
+  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0, Bool_t ignoreAC=kFALSE) {
     if (set2RangeName!=_set2RangeName) return kFALSE ;
     if (_htable) return (_htable->findSetPair(set1,set2)) ;
-    return (index(set1,set2,set2RangeName)>=0) ;
+    return (index(set1,set2,set2RangeName,ignoreAC)>=0) ;
   }
 
   inline Bool_t containsSet1(const RooArgSet* set1) {

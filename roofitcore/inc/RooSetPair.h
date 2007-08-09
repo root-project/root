@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetPair.rdl,v 1.2 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooSetPair.h,v 1.3 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,6 +28,8 @@ public:
   // Initial element ctor
   RooSetPair(const RooArgSet* set1=0, const RooArgSet* set2=0) : 
     _set1((RooArgSet*)set1), _set2((RooArgSet*)set2) {
+    _set1ac = RooArgSet::allocationCounter(set1) ;
+    _set2ac = RooArgSet::allocationCounter(set2) ;
   }
 
   // Destructor
@@ -36,6 +38,8 @@ public:
 
   RooArgSet* _set1 ;
   RooArgSet* _set2 ;
+  Int_t _set1ac ;
+  Int_t _set2ac ;
 
   virtual ULong_t Hash() const {
     return TString::Hash((void*)&_set1,2*sizeof(void*)) ;  

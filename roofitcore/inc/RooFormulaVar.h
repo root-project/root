@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.rdl,v 1.27 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.h,v 1.28 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@ class RooArgSet ;
 class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooFormulaVar() { }
+  inline RooFormulaVar() : _formula(0), _nset(0) { }
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
@@ -53,6 +53,7 @@ public:
 //   Double_t analyticalIntegral(Int_t code) const ;
   //inline Bool_t selfNormalized() const { return kTRUE; }
 
+  virtual Double_t getVal(const RooArgSet* set=0) const ;
 
   virtual Double_t defaultErrorLevel() const ;
 
@@ -69,6 +70,7 @@ protected:
 
   RooListProxy _actualVars ; 
   mutable RooFormula* _formula ; // Formula engine 
+  mutable RooArgSet* _nset ; //! Normalization set to be passed along to contents
   TString _formExpr ;
 
   ClassDef(RooFormulaVar,1) // Real-valued variable, calculated from a string expression formula 
