@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.2 2007/08/08 22:17:06 rdm Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -19,15 +19,6 @@
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
 #endif
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordRange                                                  //
-//                                                                      //
-// A TParallelCoordRange is a range used for parallel                   //
-// coordinates plots.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TParallelCoordVar;
 class TParallelCoord;
@@ -70,33 +61,13 @@ public:
    virtual void SetLineColor(Color_t col);
    virtual void SetLineWidth(Width_t wid);
 
-   ClassDef(TParallelCoordRange,1);
+   ClassDef(TParallelCoordRange,1); // A TParallelCoordRange is a range used for parallel coordinates plots.
 };
 
 #endif
 
 #ifndef ROOT_TParallelCoordSelect
 #define ROOT_TParallelCoordSelect
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordSelect                                                 //
-//                                                                      //
-// A TParallelCoordSelect is a specialised TList to hold                //
-// TParallelCoordRanges used by TParallelCoord.                         //
-//                                                                      //
-// Selections of specific entries can be defined over the data set      //
-// using parallel coordinates. With that representation, a selection is //
-// an ensemble of ranges defined on the axes. Ranges defined on the     //
-// same axis are conjugated with OR (an entry must be in one or the     //
-// other ranges to be selected). Ranges on different axes are           //
-// are conjugated with AND (an entry must be in all the ranges to be    //
-// selected).                                                           //
-// Several selections can be defined with different colors. It is       //
-// possible to generate an entry list from a given selection and apply  //
-// it to the tree using the editor ("Apply to tree" button).            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
@@ -133,8 +104,8 @@ public:
    void        SetActivated(Bool_t on);
    void        SetShowRanges(Bool_t s);
    void        SetTitle(const char* title) {fTitle = title;}
-
-   ClassDef(TParallelCoordSelect,0);
+   
+   ClassDef(TParallelCoordSelect,0); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
 };
 
 #endif

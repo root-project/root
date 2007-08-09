@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.2 2007/08/08 22:17:05 rdm Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -11,77 +11,6 @@
 
 #ifndef ROOT_TParallelCoord
 #define ROOT_TParallelCoord
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoord                                                       //
-//                                                                      //
-// The multidimensional system of Parallel coordinates is a common      //
-// way of studying high-dimensional geometry and visualizing            //
-// multivariate problems.                                               //
-//                                                                      //
-// To show a set of points in an n-dimensional space, a backdrop is     //
-// drawn consisting of n parallel lines. A point in n-dimensional space //
-// is represented as a polyline with vertices on the parallel axes;     //
-// the position of the vertex on the i-th axis corresponds to the i-th  //
-// coordinate of the point.                                             //
-//                                                                      //
-// This tool comes with a rather large gui in the editor. It is         //
-// necessary to use this editor in order to explore a data set, as      //
-// explained below.                                                     //
-//                                                                      //
-// Reduce cluttering:                                                   //
-//                                                                      //
-// The main issue for parallel coordinates is the very high cluttering  //
-// of the output when dealing with large data set. Two techniques have  //
-// been implemented to bypass that so far:                              //
-//    - Draw doted lines instead of plain lines with an adjustable      //
-//      dots spacing. A slider to adjust the dots spacing is available  //
-//      in the editor.                                                  //
-//    - Sort the entries to display with  a "weight cut". On each axis  //
-//      is drawn a histogram describing the distribution of the data    //
-//      on the corresponding variable. The "weight" of an entry is the  //
-//      sum of the bin content of each bin the entry is going through.  //
-//      An entry going through the histograms peaks will have a big     //
-//      weight wether an entry going randomly through the histograms    //
-//      will have a rather small weight. Setting a cut on this weight   //
-//      allows to draw only the most representative entries. A slider   //
-//      set the cut is also available in the gui.                       //
-//                                                                      //
-// Selections:                                                          //
-//                                                                      //
-// Selections of specific entries can be defined over the data set      //
-// using parallel coordinates. With that representation, a selection is //
-// an ensemble of ranges defined on the axes. Ranges defined on the     //
-// same axis are conjugated with OR (an entry must be in one or the     //
-// other ranges to be selected). Ranges on different axes are           //
-// are conjugated with AND (an entry must be in all the ranges to be    //
-// selected).                                                           //
-// Several selections can be defined with different colors. It is       //
-// possible to generate an entry list from a given selection and apply  //
-// it to the tree using the editor ("Apply to tree" button).            //
-//                                                                      //
-// Axes:                                                                //
-//                                                                      //
-// Options can be defined each axis separatly using the right mouse     //
-// click. These options can be applied to every axes using the editor.  //
-//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
-//      a color histogram is drawn on the axis.                         //
-//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
-//      on the plot.                                                    //
-// The order in which the variables are drawn is essential to see the   //
-// clusters. The axes can be dragged to change their position.          //
-// A zoom is also available. The logarithm scale is also available by   //
-// right clicking on the axis.                                          //
-//                                                                      //
-// Candle chart:                                                        //
-//                                                                      //
-// TParallelCoord can also be used to display a candle chart. In that   //
-// mode, every variable is drawn in the same scale. The candle chart    //
-// can be combined with the parallel coordinates mode, drawing the      //
-// candle sticks over the axes.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
@@ -98,8 +27,9 @@ class TParallelCoordVar;
 class TParallelCoordRange;
 class TList;
 class TGaxis;
+class TSelectorDraw;
 
-class TParallelCoord : public TNamed, public TAttLine {
+class TParallelCoord : public TNamed {
 public:
    enum {
       kVertDisplay      =BIT(14),      // If the axes are drawn vertically, false if horizontally.
@@ -115,8 +45,10 @@ private:
    UInt_t          fNvar;              // Number of variables.
    Long64_t        fCurrentFirst;      // First entry to display.
    Long64_t        fCurrentN;          // Number of entries to display.
-   Long64_t        fNentries;           // Number of entries;
+   Long64_t        fNentries;          // Number of entries;
    Int_t           fDotsSpacing;       // Spacing between dots to draw the entries.
+   Color_t         fLineColor;         // entries line color.
+   Width_t         fLineWidth;         // entries line width.
    Int_t           fWeightCut;         // Specify a cut on the entries from their weight (see TParallelCoordVar::GetEvtWeight(Long64_t))
    TEntryList     *fEntries;           // Selected entries in the tree.
    TTree          *fTree;              // Pointer to the TTree.
@@ -139,8 +71,7 @@ public:
    void           AddVariable(const char* varexp);
    void           AddSelection(const char* title);
    void           ApplySelectionToTree(); // *MENU*
-   static void    BuildParallelCoord(TObject** pobj, TTree* tree, Int_t dim, Long64_t nentries,
-                                     Double_t **val, const char* title, TString* var, Bool_t candle);
+   static void    BuildParallelCoord(TSelectorDraw* selector, Bool_t candle);
    void           CleanUpSelections(TParallelCoordRange* range);
    void           RemoveVariable(TParallelCoordVar* var);
    TParallelCoordVar* RemoveVariable(const char* var);
@@ -159,6 +90,8 @@ public:
    Double_t       GetGlobalMax();
    Bool_t         GetGlobalScale() {return TestBit(kGlobalScale);}
    Bool_t         GetGlobalLogScale() {return TestBit(kGlobalLogScale);}
+   Color_t        GetLineColor() {return fLineColor;}
+   Width_t        GetLineWidth() {return fLineWidth;}
    Int_t          GetNbins();
    UInt_t         GetNvar() {return fNvar;}
    Long64_t       GetNentries() {return fNentries;}
@@ -186,6 +119,8 @@ public:
    void           SetGlobalLogScale(Bool_t); // *TOGGLE* *GETTER=GetGlobalLogScale
    void           SetGlobalMin(Double_t min);
    void           SetGlobalMax(Double_t max);
+   void           SetLineColor(Color_t col) {fLineColor = col;}
+   void           SetLineWidth(Width_t wid) {fLineWidth = wid;}
    void           SetLiveRangesUpdate(Bool_t);
    void           SetNentries(Long64_t n) {fNentries = n;}
    void           SetTree(TTree* tree) {fTree = tree;}

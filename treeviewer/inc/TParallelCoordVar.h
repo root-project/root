@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.1 2007/08/08 12:57:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -11,25 +11,6 @@
 
 #ifndef ROOT_TParallelCoordVar
 #define ROOT_TParallelCoordVar
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordVar                                                    //
-//                                                                      //
-// Class containing a variable for the TParallelCoord.                  //
-//                                                                      //
-// Options can be defined on an axis using the right mouse              //
-// click. These options can be applied to every axes using the editor.  //
-//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
-//      a color histogram is drawn on the axis.                         //
-//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
-//      on the plot.                                                    //
-// The order in which the variables are drawn is essential to see the   //
-// clusters. The axes can be dragged to change their position.          //
-// A zoom is also available. The logarithm scale is also available by   //
-// right clicking on the axis.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
@@ -96,7 +77,7 @@ public:
    Double_t       GetCurrentMax() const {return fMaxCurrent;}
    Double_t       GetCurrentAverage() const {return fMean;}
    void           GetEntryXY(Long64_t n, Double_t & x, Double_t & y);
-   Int_t          GetEvtWeight(Long64_t evtidx);
+   Int_t          GetEntryWeight(Long64_t evtidx);
    Double_t       GetHistHeight() {return fHistoHeight;}
    Int_t          GetHistLineWidth() {return fHistoLW;}
    void           GetQuantiles();

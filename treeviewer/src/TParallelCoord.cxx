@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -28,6 +28,9 @@
 #include "TEntryList.h"
 #include "TFrame.h"
 #include "TTree.h"
+#include "TTreePlayer.h"
+#include "TSelectorDraw.h"
+#include "TTreeFormula.h"
 #include "TView.h"
 #include "TRandom.h"
 #include "TEnv.h"
@@ -36,10 +39,81 @@
 
 ClassImp(TParallelCoord)
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TParallelCoord                                                       //
+//                                                                      //
+// The multidimensional system of Parallel coordinates is a common      //
+// way of studying high-dimensional geometry and visualizing            //
+// multivariate problems.                                               //
+//                                                                      //
+// To show a set of points in an n-dimensional space, a backdrop is     //
+// drawn consisting of n parallel lines. A point in n-dimensional space //
+// is represented as a polyline with vertices on the parallel axes;     //
+// the position of the vertex on the i-th axis corresponds to the i-th  //
+// coordinate of the point.                                             //
+//                                                                      //
+// This tool comes with a rather large gui in the editor. It is         //
+// necessary to use this editor in order to explore a data set, as      //
+// explained below.                                                     //
+//                                                                      //
+// Reduce cluttering:                                                   //
+//                                                                      //
+// The main issue for parallel coordinates is the very high cluttering  //
+// of the output when dealing with large data set. Two techniques have  //
+// been implemented to bypass that so far:                              //
+//    - Draw doted lines instead of plain lines with an adjustable      //
+//      dots spacing. A slider to adjust the dots spacing is available  //
+//      in the editor.                                                  //
+//    - Sort the entries to display with  a "weight cut". On each axis  //
+//      is drawn a histogram describing the distribution of the data    //
+//      on the corresponding variable. The "weight" of an entry is the  //
+//      sum of the bin content of each bin the entry is going through.  //
+//      An entry going through the histograms peaks will have a big     //
+//      weight wether an entry going randomly through the histograms    //
+//      will have a rather small weight. Setting a cut on this weight   //
+//      allows to draw only the most representative entries. A slider   //
+//      set the cut is also available in the gui.                       //
+//                                                                      //
+// Selections:                                                          //
+//                                                                      //
+// Selections of specific entries can be defined over the data set      //
+// using parallel coordinates. With that representation, a selection is //
+// an ensemble of ranges defined on the axes. Ranges defined on the     //
+// same axis are conjugated with OR (an entry must be in one or the     //
+// other ranges to be selected). Ranges on different axes are           //
+// are conjugated with AND (an entry must be in all the ranges to be    //
+// selected).                                                           //
+// Several selections can be defined with different colors. It is       //
+// possible to generate an entry list from a given selection and apply  //
+// it to the tree using the editor ("Apply to tree" button).            //
+//                                                                      //
+// Axes:                                                                //
+//                                                                      //
+// Options can be defined each axis separatly using the right mouse     //
+// click. These options can be applied to every axes using the editor.  //
+//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
+//      a color histogram is drawn on the axis.                         //
+//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
+//      on the plot.                                                    //
+// The order in which the variables are drawn is essential to see the   //
+// clusters. The axes can be dragged to change their position.          //
+// A zoom is also available. The logarithm scale is also available by   //
+// right clicking on the axis.                                          //
+//                                                                      //
+// Candle chart:                                                        //
+//                                                                      //
+// TParallelCoord can also be used to display a candle chart. In that   //
+// mode, every variable is drawn in the same scale. The candle chart    //
+// can be combined with the parallel coordinates mode, drawing the      //
+// candle sticks over the axes.                                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 //______________________________________________________________________________
 TParallelCoord::TParallelCoord()
-   :TNamed(), TAttLine()
+   :TNamed()
 {
    // Default constructor.
 
@@ -49,7 +123,6 @@ TParallelCoord::TParallelCoord()
 
 //______________________________________________________________________________
 TParallelCoord::TParallelCoord(Long64_t nentries)
-   : TAttLine(kGreen-8,1,1)
 {
    // Constructor without a reference to a tree,
    // the datas must be added afterwards with
@@ -67,7 +140,7 @@ TParallelCoord::TParallelCoord(Long64_t nentries)
 
 //______________________________________________________________________________
 TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
-   :TNamed("Graph","Graph"), TAttLine(kGreen-8,1,1)
+   :TNamed("Graph","Graph")
 {
    // Normal constructor, the datas must be added afterwards
    // with TParallelCoord::AddVariable(Double_t*,const char*).
@@ -172,20 +245,22 @@ void  TParallelCoord::ApplySelectionToTree()
 
 
 //______________________________________________________________________________
-void  TParallelCoord::BuildParallelCoord(TObject** pobj, TTree* tree,
-                                         Int_t dim, Long64_t nentries, Double_t **val,
-                                         const char* title, TString* var,
-                                         Bool_t candle)
+void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
 {
    // Call constructor and add the variables.
 
-   TParallelCoord* pc = new TParallelCoord(tree,nentries);
-   for(Int_t i=0;i<dim;++i)
-      pc->AddVariable(val[i],var[i].Data());
-   pc->SetTitle(title);
+   TParallelCoord* pc = new TParallelCoord(selector->GetTree(),selector->GetNfill());
+   selector->SetObject(pc);
+   TString varexp = "";
+   for(Int_t i=0;i<selector->GetDimension();++i) {
+      pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
+      varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+   }
+   varexp.Remove(TString::kLeading,':');
+   if (selector->GetSelect()) varexp.Append(Form("{%s}",selector->GetSelect()->GetTitle()));
+   pc->SetTitle(varexp.Data());
    if (!candle) pc->Draw();
    else pc->Draw("candle");
-   *pobj = (TObject*)pc;
 }
 
 //______________________________________________________________________________
@@ -419,6 +494,8 @@ void TParallelCoord::Init()
    fCurrentN = 0;
    fCandleAxis = NULL;
    fWeightCut = 0;
+   fLineWidth = 1;
+   fLineColor = kGreen-8;
 }
 
 //______________________________________________________________________________
@@ -490,9 +567,9 @@ void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
       }
       if (fWeightCut > 0) {
          next.Reset();
-         Int_t evtweight = 0;
-         while ((var = (TParallelCoordVar*)next())) evtweight+=var->GetEvtWeight(n);
-         if (evtweight/(Int_t)fNvar < fWeightCut) inrange = kFALSE;
+         Int_t entryweight = 0;
+         while ((var = (TParallelCoordVar*)next())) entryweight+=var->GetEntryWeight(n);
+         if (entryweight/(Int_t)fNvar < fWeightCut) inrange = kFALSE;
       }
       if(!inrange) continue;
       i = 0;

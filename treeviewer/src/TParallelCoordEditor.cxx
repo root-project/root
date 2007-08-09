@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.2 2007/08/08 22:17:06 rdm Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -29,10 +29,33 @@
 #include "TGDoubleSlider.h"
 #include "TTree.h"
 #include "TGListBox.h"
+#include "TGedPatternSelect.h"
 
 #include "Riostream.h"
 
 ClassImp(TParallelCoordEditor)
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TParallelCoordEditor                                                 //
+//                                                                      //
+// This is the TParallelCoord editor. It brings tools to explore datas  //
+// Using parallel coordinates. The main tools are:                      //
+//    - Dots spacing : Set the dots spacing with whichone the lines     //
+//      must be drawn. This tool is useful to reduce the image          //
+//      cluttering.                                                     //
+//    - The Selections section : Set the current edited selection and   //
+//      allows to apply it to the tree through a generated entry list.  //
+//    - The Entries section : Set how many events must be drawn.        //
+//      A weight cut can be defioned here (see TParallelCoord for a     //
+//      a description of the weight cut).                               //
+//    - The Variables tab : To define the global settings to display    //
+//      the axes. It is also possible to add a variable from its        //
+//      expression or delete a selected one (also possible using right  //
+//      click on the pad.                                               //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 enum EParallelWid {
    kGlobalLineColor,
@@ -64,7 +87,9 @@ enum EParallelWid {
    kHistWidth,
    kHistBinning,
    kRenameVar,
-   kWeightCut
+   kWeightCut,
+   kHistColorSelect,
+   kHistPatternSelect
 };
 
 //______________________________________________________________________________
@@ -208,6 +233,8 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
 //______________________________________________________________________________
 void TParallelCoordEditor::MakeVariablesTab()
 {
+   // Make the "variable" tab.
+
    fVarTab = CreateEditorTabSubFrame("Variables");
    //**Variable**_________________________________
 
@@ -261,6 +288,17 @@ void TParallelCoordEditor::MakeVariablesTab()
                                          TGNumberFormat::kNEANonNegative);
    fHistBinning->Resize(68,20);
    fVarTab->AddFrame(fHistBinning);
+   
+   fVarTab->AddFrame(new TGLabel(fVarTab,"Bar histograms style:"));
+   
+   TGCompositeFrame *f13 = new TGCompositeFrame(fVarTab, 80, 20, kHorizontalFrame);
+   fHistColorSelect = new TGColorSelect(f13, 0, kHistColorSelect);
+   f13->AddFrame(fHistColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
+   fHistColorSelect->Associate(this);
+   fHistPatternSelect = new TGedPatternSelect(f13, 1, kHistPatternSelect);
+   f13->AddFrame(fHistPatternSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
+   fHistPatternSelect->Associate(this);
+   fVarTab->AddFrame(f13, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 }
 
 
@@ -343,6 +381,10 @@ void TParallelCoordEditor::ConnectSignals2Slots()
                        this, "DoLiveWeightCut(Int_t)");
    fWeightCutField->Connect("ReturnPressed()","TParallelCoordEditor",
                             this, "DoWeightCut()");
+   fHistColorSelect->Connect("ColorSelected(Pixel_t)", "TParallelCoordEditor",
+                             this, "DoHistColorSelect(Pixel_t)");
+   fHistPatternSelect->Connect("PatternSelected(Style_t)", "TParallelCoordEditor",
+                               this, "DoHistPatternSelect(Style_t)");
 
    fInit = kFALSE;
 }
@@ -363,6 +405,8 @@ void TParallelCoordEditor::DoActivateSelection(Bool_t on)
 //______________________________________________________________________________
 void TParallelCoordEditor::DoAddSelection()
 {
+   // Slot to add a selection.
+
    ++fNselect;
    TString title = fAddSelectionField->GetText();
    if(title == "") title = "Selection";
@@ -606,6 +650,21 @@ void TParallelCoordEditor::DoHistBinning()
 
 
 //______________________________________________________________________________
+void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
+{
+   // Slot to set the histograms color.
+
+   if (fAvoidSignal) return;
+   
+   Color_t col = TColor::GetColor(p);
+   TIter next(fParallel->GetVarList());
+   TParallelCoordVar *var = NULL;
+   while ((var = (TParallelCoordVar*)next())) var->SetFillColor(col);
+   Update();
+}
+
+
+//______________________________________________________________________________
 void TParallelCoordEditor::DoHistHeight()
 {
    // Slot to set histogram height.
@@ -613,6 +672,20 @@ void TParallelCoordEditor::DoHistHeight()
    if (fAvoidSignal) return;
 
    fParallel->SetAxisHistogramHeight(fHistHeight->GetNumber());
+   Update();
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
+{
+   // Slot to set the histograms fill style.
+
+   if (fAvoidSignal) return;
+   
+   TIter next(fParallel->GetVarList());
+   TParallelCoordVar *var = NULL;
+   while ((var = (TParallelCoordVar*)next())) var->SetFillStyle(sty);
    Update();
 }
 
@@ -785,6 +858,7 @@ void TParallelCoordEditor::DoUnApply()
 //______________________________________________________________________________
 void TParallelCoordEditor::DoVariableSelect(const char* /*var*/)
 {
+   // Slot to select a variable.
 
    //cout<<((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle()<<endl;
 }
@@ -882,6 +956,9 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    fWeightCut->SetRange(0,(Int_t)(fParallel->GetNentries()/10)); // Maybe search here for better boundaries.
    fWeightCut->SetPosition(fParallel->GetWeightCut());
    fWeightCutField->SetNumber(fParallel->GetWeightCut());
+   
+   fHistColorSelect->SetColor(TColor::Number2Pixel(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillColor()), kFALSE);
+   fHistPatternSelect->SetPattern(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillStyle(),kFALSE);
 
    if (fInit) ConnectSignals2Slots();
 

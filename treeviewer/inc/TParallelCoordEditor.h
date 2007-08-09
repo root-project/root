@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.h,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.h,v 1.1 2007/08/08 12:57:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -11,27 +11,6 @@
 
 #ifndef ROOT_TParallelCoordEditor
 #define ROOT_TParallelCoordEditor
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordEditor                                                 //
-//                                                                      //
-// This is the TParallelCoord editor. It brings tools to explore datas  //
-// Using parallel coordinates. The main tools are:                      //
-//    - Dots spacing : Set the dots spacing with whichone the lines     //
-//      must be drawn. This tool is useful to reduce the image          //
-//      cluttering.                                                     //
-//    - The Selections section : Set the current edited selection and   //
-//      allows to apply it to the tree through a generated entry list.  //
-//    - The Entries section : Set how many events must be drawn.        //
-//      A weight cut can be defioned here (see TParallelCoord for a     //
-//      a description of the weight cut).                               //
-//    - The Variables tab : To define the global settings to display    //
-//      the axes. It is also possible to add a variable from its        //
-//      expression or delete a selected one (also possible using right  //
-//      click on the pad.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
@@ -48,6 +27,7 @@ class TGColorSelect;
 class TGHSlider;
 class TGComboBox;
 class TGDoubleHSlider;
+class TGedPatternSelect;
 
 class TParallelCoordEditor : public TGedFrame {
 protected:
@@ -88,6 +68,8 @@ protected:
    TGTextButton            *fRenameVar;
    TGHSlider               *fWeightCut;
    TGNumberEntryField      *fWeightCutField;
+   TGColorSelect           *fHistColorSelect;
+   TGedPatternSelect       *fHistPatternSelect;
    Bool_t                   fDelay;
 
    virtual void            ConnectSignals2Slots();
@@ -116,6 +98,8 @@ public:
    virtual void            DoHistHeight();
    virtual void            DoHistWidth();
    virtual void            DoHistBinning();
+   virtual void            DoHistColorSelect(Pixel_t);
+   virtual void            DoHistPatternSelect(Style_t);
    virtual void            DoEntriesToDraw();
    virtual void            DoLineType();
    virtual void            DoLiveDotsSpacing(Int_t a);

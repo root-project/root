@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -24,6 +24,15 @@
 #include "TCanvas.h"
 
 ClassImp(TParallelCoordRange)
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TParallelCoordRange                                                  //
+//                                                                      //
+// A TParallelCoordRange is a range used for parallel                   //
+// coordinates plots.                                                   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 
 //______________________________________________________________________________
@@ -503,6 +512,26 @@ void  TParallelCoordRange::SetLineWidth(Width_t wid)
 
 
 ClassImp(TParallelCoordSelect)
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TParallelCoordSelect                                                 //
+//                                                                      //
+// A TParallelCoordSelect is a specialised TList to hold                //
+// TParallelCoordRanges used by TParallelCoord.                         //
+//                                                                      //
+// Selections of specific entries can be defined over the data set      //
+// using parallel coordinates. With that representation, a selection is //
+// an ensemble of ranges defined on the axes. Ranges defined on the     //
+// same axis are conjugated with OR (an entry must be in one or the     //
+// other ranges to be selected). Ranges on different axes are           //
+// are conjugated with AND (an entry must be in all the ranges to be    //
+// selected).                                                           //
+// Several selections can be defined with different colors. It is       //
+// possible to generate an entry list from a given selection and apply  //
+// it to the tree using the editor ("Apply to tree" button).            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 
 //______________________________________________________________________________

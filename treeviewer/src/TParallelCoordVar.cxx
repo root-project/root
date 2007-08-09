@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.2 2007/08/08 22:17:06 rdm Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -30,10 +30,29 @@
 
 ClassImp(TParallelCoordVar)
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TParallelCoordVar                                                    //
+//                                                                      //
+// Class containing a variable for the TParallelCoord.                  //
+//                                                                      //
+// Options can be defined on an axis using the right mouse              //
+// click. These options can be applied to every axes using the editor.  //
+//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
+//      a color histogram is drawn on the axis.                         //
+//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
+//      on the plot.                                                    //
+// The order in which the variables are drawn is essential to see the   //
+// clusters. The axes can be dragged to change their position.          //
+// A zoom is also available. The logarithm scale is also available by   //
+// right clicking on the axis.                                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 //______________________________________________________________________________
 TParallelCoordVar::TParallelCoordVar()
-   :TNamed(), TAttLine(), TAttFill(kRed,0)
+   :TNamed(), TAttLine(), TAttFill(kOrange+9,0)
 {
    // Default constructor.
 
@@ -59,7 +78,7 @@ TParallelCoordVar::~TParallelCoordVar()
 
 //______________________________________________________________________________
 TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id, TParallelCoord* parallel)
-   :TNamed("TParallelCoordVar",title), TAttLine(1,1,1), TAttFill(kRed,1001)
+   :TNamed("TParallelCoordVar",title), TAttLine(1,1,1), TAttFill(kOrange+9,3002)
 {
    // Normal constructor.
 
@@ -326,8 +345,11 @@ void TParallelCoordVar::GetEntryXY(Long64_t n, Double_t & x, Double_t & y)
 
 
 //______________________________________________________________________________
-Int_t TParallelCoordVar::GetEvtWeight(Long64_t evtidx)
+Int_t TParallelCoordVar::GetEntryWeight(Long64_t evtidx)
 {
+   // Get the entry weight: The weight of an entry for a given variable
+   // is the bin content of the histogram bin the entry is going through.
+
    Int_t bin = 1 + (Int_t)((fVal[evtidx] - fMinCurrent)/((fMaxCurrent-fMinCurrent)/fNbins));
    return (Int_t)fHistogram->GetBinContent(bin);
 }
@@ -619,9 +641,9 @@ void TParallelCoordVar::PaintHistogram()
       TBox *b = new TBox();
       b->SetFillStyle(GetFillStyle());
       b->SetFillColor(GetFillColor());
-      b->SetLineStyle(GetLineStyle());
+      b->SetLineStyle(1);
       b->SetLineColor(GetFillColor());
-      b->SetLineWidth(GetLineWidth());
+      b->SetLineWidth(1);
       Double_t hmin = fHistogram->GetMinimum();
       Double_t hmax = fHistogram->GetMaximum();
       if (fX1 == fX2) {

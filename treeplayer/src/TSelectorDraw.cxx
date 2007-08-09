@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.70 2007/07/03 10:00:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.72 2007/08/08 12:58:13 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -447,6 +447,11 @@ void TSelectorDraw::Begin(TTree *tree)
 
    // Decode varexp and selection
    if (!CompileVariables(varexp, realSelection.GetTitle())) {SetStatus(-1); return;}
+   if (fDimension > 4 && !(optpara || optcandle)) {
+      Error("Begin","Too many variables. Use the option \"para\" or \"candle\" to display more than 4 variables.");
+      SetStatus(-1);
+      return;
+   }
 
    // In case fOldHistogram exists, check dimensionality
    Int_t nsel = strlen(selection);
@@ -1384,13 +1389,8 @@ void TSelectorDraw::TakeAction()
    else if (fAction == 6 || fAction == 7){
    TakeEstimate();
    Bool_t candle = (fAction==7);
-   TString *vartitles = new TString[fDimension];
-   for (i = 0; i<fDimension;++i) vartitles[i] = fVar[i]->GetTitle();
-   TObject** para = &fObject;
    // Using CINT to avoid a dependency in TParallelCoord
-   gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TObject**)0x%x,(TTree*)0x%x,%d,%d,(Double_t**)0x%x,\"%s\",(TString*)0x%x,0x%x",
-                               para, fTree, fDimension, fNfill, fVal, fInput->FindObject("varexp")->GetTitle(), vartitles, candle));
-//FIXME: memory leak with vartitles (why do you need this array)?
+   gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%x,0x%x", this, candle));
    }
    //__________________________something else_______________________
    else if (fAction < 0) {
