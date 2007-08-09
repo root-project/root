@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.5 2006/04/17 21:21:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.6 2006/09/28 17:37:55 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -20,7 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TBranch;
+#ifndef ROOT_TObjArray
+#include "TObjArray.h"
+#endif
+
 #include <vector>
 
 #ifdef R__OLDHPACC
@@ -29,6 +32,9 @@ namespace std {
    using ::vector;
 }
 #endif
+
+class TBranch;
+class TTree;
 
 class TTreeCloner {
    Bool_t     fIsValid;
