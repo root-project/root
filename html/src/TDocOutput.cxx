@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.11 2007/07/02 14:31:27 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.12 2007/07/24 12:52:21 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TMethod.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVirtualMutex.h"
 #include <vector>
 #include <list>
 #include <set>
@@ -321,6 +322,8 @@ Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
 //
 //   NOTE: The destination directory is always fHtml->GetOutputDir()
 //
+
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    // source file name
    char *tmp1 = gSystem->Which(fHtml->GetSourceDir(), sourceName, kReadPermission);
@@ -1140,6 +1143,8 @@ Bool_t TDocOutput::IsModified(TClass * classPtr, EFileType type)
       Error("IsModified", "Unknown file type !");
    }
 
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
+
    // Get info about a file
    Long64_t size;
    Long_t id, flags, sModtime, dModtime;
@@ -1172,6 +1177,8 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
    // included in out (instead of copying it to outdir and generating a link 
    // to linkdir). txt files are passed through Convert(). 
    // The files' links are sorted alphabetically.
+
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    void * dirHandle = gSystem->OpenDirectory(indir);
    if (!dirHandle) return;

@@ -118,3 +118,35 @@ function SetDiv(name, id) {
    }
    return false;
 }
+function WriteFollowPageBox(title, lib, incl) {
+   document.writeln('<div id="followpage">');
+   document.writeln('<a id="followpageshower" class="followpagedisp" '
+      + 'href="#" onclick="javascript:SetCSSValue(\'#followpageshower\',\'display\',\'none\');return SetCSSValue(\'#followpagecontent\',\'display\',\'block\');">+</a>');
+   document.writeln('<div id="followpagecontent"><div id="followpagetitle">' + title + '</div>');
+   document.writeln('<a class="followpagedisp" id="followpagehider" '
+      + 'href="#" onclick="javascript:SetCSSValue(\'#followpageshower\',\'display\',\'inline\');return SetCSSValue(\'#followpagecontent\',\'display\',\'none\');">-</a>');
+   if (lib.length || incl.length) {
+      document.writeln('<div class="libinfo">');
+      if (lib.length)
+         document.writeln('library: ' + lib + '<br />');
+      if (incl.length)
+         document.writeln('#include "' + incl + '"<br />');
+      document.writeln('</div>');
+   }
+   document.writeln('<div id="dispopt">Display options:<br />');
+   document.writeln('<form id="formdispopt" action="#">');
+   document.writeln('<input id="dispoptCBInh" type="checkbox" '
+      + 'onclick="javascript:CBChanged(this);" '
+      + 'title="Select to display inherited members" />Show inherited<br />');
+   document.writeln('<input id="dispoptCBPub" type="checkbox" checked="checked" '
+      + 'onclick="javascript:CBChanged(this);" '
+      + 'title="Select to display protected and private members" />Show non-public<br />');
+   document.writeln('</form>');
+   document.writeln('</div>');
+   document.writeln('<div id="followlinks">');
+   document.writeln('<a href="#TopOfPage">[ &uarr; Top ]</a> |');
+   document.writeln(' <a href="HELP.html">[ ? Help ]</a>'); 
+   document.writeln('</div>');
+   document.writeln('</div>');
+   document.writeln('</div>');
+}

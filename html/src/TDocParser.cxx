@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.14 2007/06/21 17:15:35 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.15 2007/06/21 20:07:28 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TMethod.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVirtualMutex.h"
 
 namespace {
 
@@ -773,6 +774,8 @@ void TDocParser::ExpandCPPLine(TString& line, Ssiz_t& pos)
       if (line.Tokenize(filename, posStartFilename, "[<\"]")) {
          Ssiz_t posEndFilename = posStartFilename;
          if (line.Tokenize(filename, posEndFilename, "[>\"]")) {
+            R__LOCKGUARD(fHtml->GetMakeClassMutex());
+
             TString filesysFileName(filename);
             if (gSystem->FindFile(fHtml->GetSourceDir(), filesysFileName, kReadPermission)) {
                fDocOutput->CopyHtmlFile(filesysFileName);
@@ -1274,8 +1277,14 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 
    params = name(posParam, name.Length() - posParam);
    name.Remove(posParam);
-   while (isspace((UChar_t)name[name.Length() - 1]))
+   while (name.Length() && isspace((UChar_t)name[name.Length() - 1]))
       name.Remove(name.Length() - 1);
+   if (!name.Length()) {
+      ret.Remove(0);
+      name.Remove(0);
+      params.Remove(0);
+      return 0;
+   }
 
    MethodCount_t::const_iterator iMethodName = fMethodCounts.find(name.Data());
    if (iMethodName == fMethodCounts.end() || iMethodName->second <= 0) {

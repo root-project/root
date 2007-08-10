@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.37 2007/07/02 14:31:27 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.38 2007/07/30 19:32:54 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include <map>
 
 class TClass;
+class TClassDocInfo;
+class TVirtualMutex;
 
 class THtml : public TObject {
 protected:
@@ -72,13 +74,20 @@ protected:
    THashList      fModules;         // known modules
    std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
-   THashList      fLibDeps;      // Library dependencies
+   THashList      fLibDeps;         // Library dependencies
+   TIter         *fThreadedClassIter; // fClasses iterator for MakeClassThreaded
+   Int_t          fThreadedClassCount; // counter of processed classes for MakeClassThreaded
+
+   TVirtualMutex *fMakeClassMutex; // Mutex for MakeClassThreaded
 
    virtual void    CreateJavascript() const;
    virtual void    CreateStyleSheet() const;
    void            CreateListOfTypes();
    void            CreateListOfClasses(const char* filter);
    void            MakeClass(void* cdi, Bool_t force=kFALSE);
+   TClassDocInfo  *GetNextClass();
+
+   static void    *MakeClassThreaded(void* info);
 
 public:
    THtml();
@@ -90,7 +99,8 @@ public:
    void          Convert(const char *filename, const char *title, 
                          const char *dirname = "", const char *relpath="../");
    void          CreateHierarchy();
-   void          MakeAll(Bool_t force=kFALSE, const char *filter="*");
+   void          MakeAll(Bool_t force=kFALSE, const char *filter="*",
+                         int numthreads = 1);
    void          MakeClass(const char *className, Bool_t force=kFALSE);
    void          MakeIndex(const char *filter="*");
    void          MakeTree(const char *className, Bool_t force=kFALSE);
@@ -156,18 +166,19 @@ public:
    // Functions that should only be used by TDocOutput etc.
    Bool_t              CopyFileFromEtcDir(const char* filename) const;
    virtual void        CreateAuxiliaryFiles() const;
-   virtual TClass*     GetClass(const char *name);
+   virtual TClass*     GetClass(const char *name) const;
    const char*         GetCounter() const { return fCounter; }
    virtual const char* GetDeclFileName(TClass* cl) const;
    void                GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const;
    virtual const char* GetImplFileName(TClass* cl) const;
-   virtual const char* GetFileName(const char *filename);
+   virtual const char* GetFileName(const char *filename) const;
    virtual void        GetSourceFileName(TString& filename);
-   virtual void        GetHtmlFileName(TClass *classPtr, TString& filename);
-   virtual const char* GetHtmlFileName(const char* classname);
+   virtual void        GetHtmlFileName(TClass *classPtr, TString& filename) const;
+   virtual const char* GetHtmlFileName(const char* classname) const;
    TCollection*        GetLibraryDependencies() { return &fLibDeps; }
    const TList*        GetListOfModules() const { return &fModules; }
    const TList*        GetListOfClasses() const { return &fClasses; }
+   TVirtualMutex*      GetMakeClassMutex() const { return  fMakeClassMutex; }
    virtual void        GetModuleName(TString& module, const char* filename) const;
    virtual void        GetModuleNameForClass(TString& module, TClass* cl) const;
    Bool_t              HaveDot();

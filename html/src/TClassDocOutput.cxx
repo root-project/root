@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.8 2007/06/11 14:09:06 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.9 2007/07/30 19:32:54 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualPad.h"
+#include "TVirtualMutex.h"
 #include "Riostream.h"
 #include <sstream>
 
@@ -839,6 +840,8 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
 //
 // Input: filename - output dot file incl. path
 
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
+
    std::map<std::string, std::string> filesToParse;
    std::list<std::string> listFilesToParse;
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
@@ -1103,8 +1106,12 @@ void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* ex
    TString sourceHtmlDir("src");
    gSystem->PrependPathName(fHtml->GetOutputDir(), sourceHtmlDir);
    // create directory if necessary
-   if (gSystem->AccessPathName(sourceHtmlDir))
-      gSystem->MakeDirectory(sourceHtmlDir);
+   {
+      R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
+
+      if (gSystem->AccessPathName(sourceHtmlDir))
+         gSystem->MakeDirectory(sourceHtmlDir);
+   }
    sourceHtmlFileName = fCurrentClass->GetName();
    NameSpace2FileName(sourceHtmlFileName);
    gSystem->PrependPathName(sourceHtmlDir, sourceHtmlFileName);
@@ -1226,6 +1233,8 @@ void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
       return;
    }
 
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
+
    // Create a canvas without linking against GUI libs
    Bool_t wasBatch = gROOT->IsBatch();
    if (!wasBatch)
@@ -1333,22 +1342,20 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 {
    // Write out the introduction of a class description (shortcuts and links)
 
-   classFile << "<a name=\"TopOfPage\"></a>" << endl
-      << "<div id=\"followpage\">" << endl
-      << "<a id=\"followpageshower\" class=\"followpagedisp\" "
-      << "href=\"#\" onclick=\"javascript:SetCSSValue('#followpageshower','display','none');return SetCSSValue('#followpagecontent','display','block');\">+</a>" << endl
-      << "<div id=\"followpagecontent\"><div id=\"followpagetitle\">" << endl;
-   if (fHtml->IsNamespace(fCurrentClass))
-      classFile << "namespace ";
-   else
-      classFile << "class ";
-   ReplaceSpecialChars(classFile, fCurrentClass->GetName());
-   classFile << "</div>" << endl
-      << "<a class=\"followpagedisp\" id=\"followpagehider\" "
-      << "href=\"#\" onclick=\"javascript:SetCSSValue('#followpageshower','display','inline');return SetCSSValue('#followpagecontent','display','none');\">-</a>" << endl;
+   classFile << "<a name=\"TopOfPage\"></a>" << endl;
+
 
    // show box with lib, include
    // needs to go first to allow title on the left
+   TString sTitle(fCurrentClass->GetName());
+   ReplaceSpecialChars(sTitle);
+   if (fHtml->IsNamespace(fCurrentClass))
+      sTitle.Prepend("namespace ");
+   else
+      sTitle.Prepend("class ");
+
+   TString sInclude;
+   TString sLib;
    const char* lib=fCurrentClass->GetSharedLibs();
    const char* incl=fHtml->GetDeclFileName(fCurrentClass);
    if (incl) {
@@ -1370,42 +1377,23 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
                ++incl;
             break;
          }
+      sInclude = incl;
    }
-   if (lib && strlen(lib)|| incl && strlen(incl)) {
-      classFile << "<div class=\"libinfo\">";
-      if (lib) {
-         char* libDup=StrDup(lib);
-         char* libDupSpace=strchr(libDup,' ');
-         if (libDupSpace) *libDupSpace=0;
-         char* libDupEnd=libDup+strlen(libDup);
-         while (libDupEnd!=libDup)
-            if (*(--libDupEnd)=='.') {
-               *libDupEnd=0;
-               break;
-            }
-         classFile << "library: " << libDup << "<br />";
-         delete[] libDup;
-      }
-      if (incl)
-         classFile << "#include \"" << incl << "\"";
-      classFile << "</div>" << endl;
+   if (lib) {
+      char* libDup=StrDup(lib);
+      char* libDupSpace=strchr(libDup,' ');
+      if (libDupSpace) *libDupSpace=0;
+      char* libDupEnd=libDup+strlen(libDup);
+      while (libDupEnd!=libDup)
+         if (*(--libDupEnd)=='.') {
+            *libDupEnd=0;
+            break;
+         }
+      sLib = libDup;
+      delete[] libDup;
    }
-   classFile << "<div id=\"dispopt\">Display options:<br />" << endl
-      << "<form id=\"formdispopt\" action=\"#\">" << endl
-      << "<input id=\"dispoptCBInh\" type=\"checkbox\" "
-      "onclick=\"javascript:CBChanged(this);\" "
-      "title=\"Select to display inherited members\" />Show inherited<br />" << endl
-      << "<input id=\"dispoptCBPub\" type=\"checkbox\" checked=\"checked\" "
-      "onclick=\"javascript:CBChanged(this);\" "
-      "title=\"Select to display protected and private members\" />Show non-public<br />" << endl
-      << "</form>" << endl << "</div>" << endl;
-   classFile << "<div id=\"followlinks\">" << endl
-      << "<a href=\"#TopOfPage\">[ &uarr; Top ]</a> |" << endl
-      << " <a href=\"HELP.html\">[ ? Help ]</a>" << endl 
-      << "</div>" << endl
-      << "</div>" << endl
-      << "</div>" << endl;
-
+   classFile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
+             << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << endl;
 
    // top links
    classFile << "<div id=\"toplinks\">" << endl;
@@ -1475,8 +1463,34 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    if (viewCVSLink.Length()) {
       if (headerFileName) {
          TString link(viewCVSLink);
-         if (mustReplace) link.ReplaceAll("%f", headerFileName);
-         else link += headerFileName;
+         TString sHeader(headerFileName);
+         if (GetHtml()->GetProductName() && !strcmp(GetHtml()->GetProductName(), "ROOT")
+             && sHeader.BeginsWith("include")) {
+            sHeader.Remove(0,7);
+            if (sourceFileName && strstr(sourceFileName, "src")) {
+               TString src(sourceFileName);
+               src.Remove(src.Index("src"), src.Length());
+               src += "inc";
+               sHeader.Prepend(src);
+            } else {
+               TString src(fCurrentClass->GetSharedLibs());
+               Ssiz_t posEndLib = src.Index(' ');
+               if (posEndLib != kNPOS)
+                  src.Remove(posEndLib, src.Length());
+               if (src.BeginsWith("lib"))
+                  src.Remove(0, 3);
+               posEndLib = src.Index('.');
+               if (posEndLib != kNPOS)
+                  src.Remove(posEndLib, src.Length());
+               src.ToLower();
+               src += "/inc";
+               sHeader.Prepend(src);
+            }
+            if (sHeader.BeginsWith("tmva/inc/TMVA"))
+               sHeader.Remove(8, 5);
+         }
+         if (mustReplace) link.ReplaceAll("%f", sHeader);
+         else link += sHeader;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewCVS header</a> ";
       }
       if (sourceFileName) {

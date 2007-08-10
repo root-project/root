@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.138 2007/07/17 13:10:37 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.139 2007/07/30 19:32:54 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TThread.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,19 @@
 #include <fstream>
 
 THtml *gHtml = 0;
+
+namespace {
+   class THtmlThreadInfo {
+   public:
+      THtmlThreadInfo(THtml* html, bool force): fHtml(html), fForce(force) {}
+      Bool_t GetForce() const {return fForce;}
+      THtml* GetHtml() const {return fHtml;}
+
+   private:
+      THtml* fHtml;
+      Bool_t fForce;
+   };
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -505,7 +519,9 @@ ClassImp(THtml)
 THtml::THtml(): fIncludePath("include"), fFoundDot(-1), 
    fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"), fProductDocDir("doc"),
-   fMacroPath("../doc/macros:."), fModuleDocPath("../doc")
+   fMacroPath("../doc/macros:."), fModuleDocPath("../doc"),
+   fThreadedClassIter(0), fMakeClassMutex(0)
+
 {
    // Create a THtml object.
    // In case output directory does not exist an error
@@ -595,6 +611,8 @@ const char* THtml::GetEtcDir()
    if (fEtcDir.Length())
       return fEtcDir;
 
+   R__LOCKGUARD(GetMakeClassMutex());
+
    fEtcDir = "html";
 
 #ifdef ROOTETCDIR
@@ -612,12 +630,39 @@ const char* THtml::GetEtcDir()
    return fEtcDir;
 }
 
+
+//______________________________________________________________________________
+TClassDocInfo *THtml::GetNextClass()
+{
+   // Return the next class to be generated for MakeClassThreaded.
+
+   if (!fThreadedClassIter) return 0;
+
+   R__LOCKGUARD(GetMakeClassMutex());
+
+   TClassDocInfo* classinfo = 0;
+   while ((classinfo = (TClassDocInfo*)(*fThreadedClassIter)())
+          && !classinfo->IsSelected());
+
+   if (!classinfo) {
+      delete fThreadedClassIter;
+      fThreadedClassIter = 0;
+   }
+
+   fCounter.Form("%5d", fClasses.GetSize() - fThreadedClassCount++);
+
+   return classinfo;
+}
+
+
 //______________________________________________________________________________
 const char* THtml::GetURL(const char* lib /*=0*/) const
 {
    // Get the documentation URL for library lib.
    // If lib == 0 or no documentation URL has been set for lib, return the ROOT 
    // documentation URL. The return value is always != 0.
+
+   R__LOCKGUARD(GetMakeClassMutex());
 
    if (lib && strlen(lib)) {
       std::map<std::string, TString>::const_iterator iUrl = fLibURLs.find(lib);
@@ -635,6 +680,8 @@ Bool_t THtml::HaveDot()
 
    if (fFoundDot != -1) 
       return (Bool_t)fFoundDot;
+
+   R__LOCKGUARD(GetMakeClassMutex());
 
    Info("HaveDot", "Checking for Graphviz (dot)...");
    TString runDot("dot");
@@ -901,10 +948,8 @@ void THtml::CreateListOfClasses(const char* filter)
             moduledir = "tmva/src";
          else if (modulename == "SMATRIX")
             moduledir = "smatrix/src";
-         if (moduledir.Length()) {
-            gSystem->PrependPathName("$(ROOTSYS)", moduledir);
+         if (moduledir.Length())
             module->SetSourceDir(moduledir);
-         }
 
          module->SetSelected(kFALSE);
          fModules.Add(module);
@@ -964,6 +1009,8 @@ void THtml::CreateListOfTypes()
 //______________________________________________________________________________
 Bool_t THtml::CopyFileFromEtcDir(const char* filename) const {
    // Copy a file from $ROOTSYS/etc/html into GetOutputDir()
+
+   R__LOCKGUARD(GetMakeClassMutex());
 
    TString outFile(filename);
 
@@ -1043,7 +1090,7 @@ void THtml::GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) con
 }
 
 //______________________________________________________________________________
-const char *THtml::GetFileName(const char *filename)
+const char *THtml::GetFileName(const char *filename) const
 {
 // It discards any directory information inside filename
 //
@@ -1088,7 +1135,7 @@ void THtml::GetSourceFileName(TString& filename)
 }
 
 //______________________________________________________________________________
-void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
+void THtml::GetHtmlFileName(TClass * classPtr, TString& filename) const
 {
 // Return real HTML filename
 //
@@ -1147,7 +1194,7 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
    if (htmlFileName.Length()) {
       filename = htmlFileName;
       TString className(classPtr->GetName());
-      TDocOutput output(*this);
+      TDocOutput output(*const_cast<THtml*>(this));
       output.NameSpace2FileName(className);
       gSystem->PrependPathName(filename, className);
       filename = className;
@@ -1157,7 +1204,7 @@ void THtml::GetHtmlFileName(TClass * classPtr, TString& filename)
 }
 
 //______________________________________________________________________________
-const char* THtml::GetHtmlFileName(const char* classname)
+const char* THtml::GetHtmlFileName(const char* classname) const
 {
    // Get the html file name for a class named classname.
    // Returns 0 if the class is not documented.
@@ -1168,7 +1215,7 @@ const char* THtml::GetHtmlFileName(const char* classname)
 }
 
 //______________________________________________________________________________
-TClass *THtml::GetClass(const char *name1)
+TClass *THtml::GetClass(const char *name1) const
 {
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
@@ -1201,6 +1248,8 @@ TClass *THtml::GetClass(const char *name1)
 const char* THtml::GetDeclFileName(TClass * cl) const
 {
    // Return declaration file name
+
+   R__LOCKGUARD(GetMakeClassMutex());
    std::map<TClass*,std::string>::const_iterator iClDecl = fGuessedDeclFileNames.find(cl);
    if (iClDecl == fGuessedDeclFileNames.end()) return cl->GetDeclFileName();
    return iClDecl->second.c_str();
@@ -1210,6 +1259,8 @@ const char* THtml::GetDeclFileName(TClass * cl) const
 const char* THtml::GetImplFileName(TClass * cl) const
 {
    // Return implementation file name
+
+   R__LOCKGUARD(GetMakeClassMutex());
    std::map<TClass*,std::string>::const_iterator iClImpl = fGuessedImplFileNames.find(cl);
    if (iClImpl == fGuessedImplFileNames.end()) return cl->GetImplFileName();
    return iClImpl->second.c_str();
@@ -1222,6 +1273,8 @@ const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
    // Create it if it doesn't exist and if createDir is kTRUE.
 
    if (createDir) {
+      R__LOCKGUARD(GetMakeClassMutex());
+
       gSystem->ExpandPathName(const_cast<THtml*>(this)->fOutputDir);
       Long64_t sSize;
       Long_t sId, sFlags, sModtime;
@@ -1296,7 +1349,7 @@ void THtml::LoadAllLibs()
 
 
 //______________________________________________________________________________
-void THtml::MakeAll(Bool_t force, const char *filter)
+void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
 {
 // Produce documentation for all the classes specified in the filter (by default "*")
 // To process all classes having a name starting with XX, do:
@@ -1304,22 +1357,53 @@ void THtml::MakeAll(Bool_t force, const char *filter)
 // If force=kFALSE (default), only the classes that have been modified since
 // the previous call to this function will be generated.
 // If force=kTRUE, all classes passing the filter will be processed.
-//
+// If numthreads is != -1, use numthreads threads, else decide automatically
+// based on the number of CPUs.
 
    MakeIndex(filter);
 
-   // CreateListOfClasses(filter); already done by MakeIndex
-   TClassDocInfo* classinfo = 0;
-   TIter iClassInfo(&fClasses);
-   UInt_t count = 0;
+   if (numthreads == 1) {
+      // CreateListOfClasses(filter); already done by MakeIndex
+      TClassDocInfo* classinfo = 0;
+      TIter iClassInfo(&fClasses);
+      UInt_t count = 0;
 
-   while ((classinfo = (TClassDocInfo*)iClassInfo())) {
-      if (!classinfo->IsSelected()) 
-         continue;
-      fCounter.Form("%5d", fClasses.GetSize() - count++);
-      MakeClass(classinfo, force);
+      while ((classinfo = (TClassDocInfo*)iClassInfo())) {
+         if (!classinfo->IsSelected()) 
+            continue;
+         fCounter.Form("%5d", fClasses.GetSize() - count++);
+         MakeClass(classinfo, force);
+      }
+   } else {
+      if (numthreads == -1) {
+         SysInfo_t sysinfo;
+         gSystem->GetSysInfo(&sysinfo);
+         numthreads = sysinfo.fCpus;
+         if (numthreads < 1)
+            numthreads = 2;
+      }
+      fThreadedClassCount = 0;
+      fThreadedClassIter = new TIter(&fClasses);
+      THtmlThreadInfo hti(this, force);
+      if (!fMakeClassMutex && gGlobalMutex) {
+         gGlobalMutex->Lock();
+         fMakeClassMutex = gGlobalMutex->Factory(kTRUE);
+         gGlobalMutex->UnLock();
+      }
+
+      TList threads;
+      gSystem->Load("libThread");
+      while (--numthreads >= 0) {
+         TThread* thread = new TThread(MakeClassThreaded, &hti);
+         thread->Run();
+         threads.Add(thread);
+      }
+
+      TIter iThread(&threads);
+      TThread* thread = 0;
+      while ((thread = (TThread*) iThread()))
+         thread->Join();
    }
-
    fCounter.Remove(0);
 }
 
@@ -1380,6 +1464,17 @@ void THtml::MakeClass(void *cdi_void, Bool_t force)
       Printf(fCounterFormat.Data(), "-skipped-", fCounter.Data(), cdi->GetName());
 }
 
+
+//______________________________________________________________________________
+void* THtml::MakeClassThreaded(void* info) {
+   const THtmlThreadInfo* hti = (const THtmlThreadInfo*)info;
+   if (!hti) return 0;
+   TClassDocInfo* classinfo = 0;
+   while (classinfo = hti->GetHtml()->GetNextClass())
+      hti->GetHtml()->MakeClass(classinfo, hti->GetForce());
+
+   return 0;
+}
 
 //______________________________________________________________________________
 void THtml::MakeIndex(const char *filter)

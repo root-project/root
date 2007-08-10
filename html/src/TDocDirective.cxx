@@ -15,6 +15,7 @@
 #include "TStyle.h"
 #include "TSystem.h"
 #include "TVirtualPad.h"
+#include "TVirtualMutex.h"
 #include <fstream>
 #include <sstream>
 
@@ -206,9 +207,6 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    // If fShowSource is set, a second tab will be created which shows
    // the source.
 
-   TApplication::NeedGraphicsLibs();
-   gApplication->InitializeGraphics();
-
    if (!fMacro)
       return kFALSE;
 
@@ -218,6 +216,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       return kTRUE;
    }
 
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
+
    if (gDebug > 3)
       Info("HandleDirective_Macro", "executing macro \"%s\" with %d lines.",
          fMacro->GetName(), fMacro->GetListOfLines() ? fMacro->GetListOfLines()->GetEntries() + 1 : 0);
@@ -225,6 +225,10 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    Bool_t wasBatch = gROOT->IsBatch();
    if (!wasBatch && !fNeedGraphics)
       gROOT->SetBatch();
+   else if (fNeedGraphics) {
+      TApplication::NeedGraphicsLibs();
+      gApplication->InitializeGraphics();
+   }
 
    TVirtualPad* padSave = gPad;
 
@@ -247,12 +251,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          else pwd = gSystem->pwd();
       } else pwd = gSystem->pwd();
       TString macroPath(GetHtml()->GetMacroPath());
-      const char* pathDelimiter = 
-#ifdef R__WIN32
-         ";";
-#else
-         ":";
-#endif
+      const char* pathDelimiter = ":"; // use ":" even on windows
       TObjArray* arrDirs(macroPath.Tokenize(pathDelimiter));
       TIter iDir(arrDirs);
       TObjString* osDir = 0;
@@ -383,15 +382,24 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
             Info("HandleDirective_Macro", "Saving returned %s to file %s.",
                objRet->IsA()->GetName(), filename.Data());
 
-         if (fNeedGraphics)
+         if (fNeedGraphics) {
             // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
             gSystem->Sleep(1000);
+            gVirtualX->Update(0);
+            gVirtualX->Update(1);
+         }
 
          gSystem->ProcessEvents();
+         if (fNeedGraphics) {
+            gVirtualX->Update(0);
+            gVirtualX->Update(1);
+         }
+
          objRet->SaveAs(filename);
          gSystem->ProcessEvents(); // SaveAs triggers an event
          
-         if (objRet != gPad)
+         // ensure objRet is not e.g. the TGMainFrame of a new TCanvas: require padSave == gPad
+         if (objRet != gPad && padSave == gPad)
             delete objRet;
 
          if (fShowSource) {
@@ -415,6 +423,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
    }
 
+   // Remove interpreter vars first, so we can check whether we need to delete
+   // gPad ourselves or whether it was a global var in the interpreter.
    gInterpreter->ResetGlobals();
    gInterpreter->Reset();
 
@@ -532,6 +542,8 @@ void TDocLatexDirective::CreateLatex(const char* filename)
       || !fLatex->GetListOfLines()
       || !fLatex->GetListOfLines()->First())
       return;
+
+   R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    TVirtualPad* oldPad = gPad;
 

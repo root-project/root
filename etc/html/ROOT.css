@@ -5,10 +5,10 @@ body {
    color: inherit;
    background-color: #fcfcfc;
    font-family: Arial;
-   font-size: smaller;
+   font-size: small;
 }
 pre {
-   font-size: small;
+   font-size: larger;
 }
 
 /* links */
