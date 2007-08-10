@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.12 2007/07/24 12:52:21 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.13 2007/08/10 13:01:33 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -711,7 +711,7 @@ void TDocOutput::CreateModuleIndex()
    */
 
    // simplify the library dependencies, by removing direct links
-   // that are equivalent to indriect ones, e.g. instead of having both
+   // that are equivalent to indirect ones, e.g. instead of having both
    // A->C, A->B->C, keep only A->B->C.
 
    TIter iLib(fHtml->GetLibraryDependencies());
@@ -732,8 +732,11 @@ void TDocOutput::CreateModuleIndex()
             const std::set<std::string>& deps2 = libinfo2->GetDependencies();
             already_indirect |= deps2.find(*iDep) != deps2.end();
          }
-         if (already_indirect)
-            deps.erase(*iDep);
+         if (already_indirect) {
+            std::set<std::string>::iterator iRemove = iDep;
+            --iDep; // otherwise we cannot do the for loop's ++iDep
+            deps.erase(*iRemove);
+         }
       } // for library dependencies of module in library
    } // for libaries
 

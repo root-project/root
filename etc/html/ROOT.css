@@ -376,8 +376,9 @@ span.baseclass {
 }
 td.funcret, td.datatype {
    text-align: right;
-   padding: 0px 0.5em 0px 0px;
+   padding: 0px 0.5em 0px 0.5em;
    margin: 0px 0px 0px 0px;
+   white-space: nowrap;
 }
 a.funcname {
    font-weight: bolder;
