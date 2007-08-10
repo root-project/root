@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpider.cxx,v 1.2 2007/07/20 14:37:37 rdm Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -909,12 +909,18 @@ void TSpider::Paint(Option_t* options)
 
    Double_t slice = 2*TMath::Pi()/fNcols;
    Double_t offset(1.0);
+   if (!fCanvas) {
+      if (gPad) fCanvas = gPad->GetCanvas();
+      else return;
+   }
 
    TLatex *txt = new TLatex();
    for(UInt_t ui=0;ui<fNx*fNy;++ui){
       txt->SetTextAlign(13);
       fCanvas->cd(ui+1);
-      txt->PaintLatex(-1.2,1.2,0,0.08,Form("#%d",(int)fCurrentEntries[ui]));
+      if (fCurrentEntries) {
+         txt->PaintLatex(-1.2,1.2,0,0.08,Form("#%d",(int)fCurrentEntries[ui]));
+      }
       txt->SetTextSize(0.035);
       for(UInt_t var=0;var<fNcols;++var){ // Print labels.
          if(ui==0){
