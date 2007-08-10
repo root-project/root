@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.13 2007/06/13 16:27:06 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.14 2007/07/18 12:59:01 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -61,6 +61,10 @@ ClassImp(TGraphPolar);
 TGraphPolar::TGraphPolar() : TGraphErrors()
 {
    // TGraphPolar default constructor.
+   fXpol       = 0;
+   fYpol       = 0;
+   fPolargram  = 0;
+   fOptionAxis = kFALSE;
 }
 
 
