@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.225 2007/07/12 18:57:56 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.226 2007/08/10 10:01:06 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -46,8 +46,6 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
-#include "TObjArray.h"
-#include "TPluginManager.h"
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TStreamer.h"
@@ -56,7 +54,6 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualRefProxy.h"
-#include "TVirtualMutex.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 
@@ -1174,7 +1171,7 @@ void TClass::BuildRealData(void* pointer)
       // Force a call to InheritsFrom. This function indirectly
       // calls TClass::GetClass.  It forces the loading of new
       // typedefs in case some of them were not yet loaded.
-      InheritsFrom(TObject::Class());
+      Bool_t isATObject = InheritsFrom(TObject::Class());
 
       if (fShowMembers) {
          // This should always works since 'pointer' should be pointing
@@ -1189,22 +1186,29 @@ void TClass::BuildRealData(void* pointer)
          // will not work if the class derives from TObject but does not
          // have TObject as the leftmost base class.
          //
-         R__LOCKGUARD2(gCINTMutex);
-         G__CallFunc func;
-         void* address = 0;
-         Long_t offset = 0;
-         func.SetFunc(fClassInfo->GetMethod("ShowMembers", "TMemberInspector&,char*", &offset));
-         if (!func.IsValid()) {
-            if (strcmp(GetName(), "string") != 0) {
-               // For std::string we know that we do not have a ShowMembers
-               // function and that it's okay.
-               Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
-            }
+         if (isATObject) {
+            if (!fInterStreamer)
+               CalculateStreamerOffset();
+            TObject* realTObject = (TObject*)((size_t)realDataObject + fOffsetStreamer);
+            realTObject->ShowMembers(brd, parent);
          } else {
-            func.SetArg((long) &brd);
-            func.SetArg((long) parent);
-            address = (void*) (((long) realDataObject) + offset);
-            func.Exec(address);
+            R__LOCKGUARD2(gCINTMutex);
+            G__CallFunc func;
+            void* address = 0;
+            Long_t offset = 0;
+            func.SetFunc(fClassInfo->GetMethod("ShowMembers", "TMemberInspector&,char*", &offset));
+            if (!func.IsValid()) {
+               if (strcmp(GetName(), "string") != 0) {
+                  // For std::string we know that we do not have a ShowMembers
+                  // function and that it's okay.
+                  Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
+               }
+            } else {
+               func.SetArg((long) &brd);
+               func.SetArg((long) parent);
+               address = (void*) (((long) realDataObject) + offset);
+               func.Exec(address);
+            }
          }
       }
 
@@ -1274,6 +1278,22 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       //   TClass *base = element->GetClassPointer();
       //   fBase->Add(new TBaseClass(this, cl, eoffset));
       //}
+   }
+}
+
+
+//______________________________________________________________________________
+void TClass::CalculateStreamerOffset()
+{
+   // Calculate the offset between an object of this class to
+   // its base class TObject. The pointer can be adjusted by
+   // that offset to access any virtual method of TObject like
+   // Streamer() and ShowMembers().
+   if (!fInterStreamer) {
+      G__CallFunc* f  = new G__CallFunc;
+      f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+      fInterStreamer = f;
+      fOffsetStreamer = GetBaseClassOffset(TObject::Class());
    }
 }
 
@@ -4127,12 +4147,8 @@ void TClass::Streamer(void *object, TBuffer &b)
 
       case kTObject:
       {
-         if (!fInterStreamer) {
-            G__CallFunc* f  = new G__CallFunc;
-            f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
-            fInterStreamer = f;
-            fOffsetStreamer = GetBaseClassOffset(TObject::Class());
-         }
+         if (!fInterStreamer)
+            CalculateStreamerOffset();
          TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
          tobj->Streamer(b);
       }

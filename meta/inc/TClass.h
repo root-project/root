@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.76 2007/02/02 17:03:43 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.77 2007/02/05 18:10:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -161,6 +161,7 @@ public:
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
+   void               CalculateStreamerOffset();
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
