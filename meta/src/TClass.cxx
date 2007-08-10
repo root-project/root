@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.224 2007/06/25 15:37:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.225 2007/07/12 18:57:56 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1761,12 +1761,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
    if (!name || !strlen(name)) return 0;
    if (!gROOT->GetListOfClasses())    return 0;
 
-   TString resolvedName;
-
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
    if (!cl) {
-      resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
+      TString resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
       cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
    }
 
