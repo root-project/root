@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.139 2007/07/30 19:32:54 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.140 2007/08/10 13:01:33 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1470,7 +1470,7 @@ void* THtml::MakeClassThreaded(void* info) {
    const THtmlThreadInfo* hti = (const THtmlThreadInfo*)info;
    if (!hti) return 0;
    TClassDocInfo* classinfo = 0;
-   while (classinfo = hti->GetHtml()->GetNextClass())
+   while ((classinfo = hti->GetHtml()->GetNextClass()))
       hti->GetHtml()->MakeClass(classinfo, hti->GetForce());
 
    return 0;
