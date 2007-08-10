@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpider.h,v 1.2 2007/07/20 14:37:37 rdm Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -58,22 +58,22 @@ private:
    Long64_t                fEntry; // Present entry number in fTree.
    Long64_t                fNentries; // Number of entries.
    Long64_t                fFirstEntry; // First entry.
-   Long64_t*               fCurrentEntries; //[fNx*fNy] current selected entries;
-   Double_t*               fAve; // Average value of each variable.
-   Double_t*               fMax; // Maximum value of the variables.
-   Double_t*               fMin; // Minimum value of the variables.
+   Long64_t*               fCurrentEntries; //![fNx*fNy] current selected entries;
+   Double_t*               fAve; //[fNcols] Average value of each variable.
+   Double_t*               fMax; //[fNcols]  Maximum value of the variables.
+   Double_t*               fMin; //[fNcols]  Minimum value of the variables.
    TList*                  fSuperposed; // Superposed spider plots.
-   TTree*                  fTree; // Pointer to the TNtuple to represent.
+   TTree*                  fTree; // Pointer to the TTree to represent.
    TPolyLine*              fAveragePoly; // Polygon representing the average variables value.
-   TArc**                  fAverageSlices; // Average slices.
-   TCanvas*                fCanvas; // Pointer to the mother pad.
+   TArc**                  fAverageSlices; //! Average slices.
+   TCanvas*                fCanvas; //! Pointer to the mother pad.
    TList*                  fFormulas; // List of all formulas to represent.
    TList*                  fInput; // Used for fSelector.
    TTreeFormulaManager*    fManager; // Coordinator for the formulas.
    TGraphPolargram*        fPolargram; // Polar graph.
    TList*                  fPolyList; // Polygons representing the variables.
    TTreeFormula*           fSelect; // Selection condition
-   TSelectorDraw*          fSelector; // Selector.
+   TSelectorDraw*          fSelector; //! Selector.
    Bool_t                  fAngularLabels; // True if the labels are oriented according to their axis.
    Bool_t                  fDisplayAverage; // Display or not the average.
    Bool_t                  fForceDim; // Force dimension.
