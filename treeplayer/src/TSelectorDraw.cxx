@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.72 2007/08/08 12:58:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.73 2007/08/09 09:10:38 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -823,7 +823,6 @@ void TSelectorDraw::Begin(TTree *tree)
    } else if (optcandle || optpara) {
       if (optcandle) fAction = 7;
       else           fAction = 6;
-      if(!optSame && (gPad->GetListOfPrimitives())->GetSize()!=0) gPad->Clear();
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
@@ -1390,7 +1389,8 @@ void TSelectorDraw::TakeAction()
    TakeEstimate();
    Bool_t candle = (fAction==7);
    // Using CINT to avoid a dependency in TParallelCoord
-   gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%x,0x%x", this, candle));
+   if (!fOption.Contains("goff"))gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%x,0x%x",
+                                                             this, candle));
    }
    //__________________________something else_______________________
    else if (fAction < 0) {

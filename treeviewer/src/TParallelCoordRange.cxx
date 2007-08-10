@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.2 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -481,6 +481,15 @@ void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
 
 
 //______________________________________________________________________________
+void TParallelCoordRange::Print(Option_t* /*options*/) const
+{
+   // Print info about the range.
+   
+   printf("On \"%s\" : min = %f, max = %f\n", fVar->GetTitle(), fMin, fMax);
+}
+
+
+//______________________________________________________________________________
 void TParallelCoordRange::SendToBack()
 {
    // Make the selection which owns the range to be drawn under all the others.
@@ -564,7 +573,8 @@ TParallelCoordSelect::~TParallelCoordSelect()
    // Destructor.
 
    TIter next(this);
-   while (TParallelCoordRange* range = (TParallelCoordRange*)next()) range->GetVar()->GetRanges()->Remove(range);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->GetVar()->GetRanges()->Remove(range);
    TList::Delete();
 }
 
@@ -575,7 +585,8 @@ void TParallelCoordSelect::SetActivated(Bool_t on)
    // Activate the selection.
 
    TIter next(this);
-   while (TParallelCoordRange* range = (TParallelCoordRange*)next()) range->SetBit(TParallelCoordRange::kShowOnPad,on);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kShowOnPad,on);
    SetBit(kActivated,on);
 }
 
@@ -586,6 +597,7 @@ void TParallelCoordSelect::SetShowRanges(Bool_t s)
    // Show the ranges niddles.
 
    TIter next(this);
-   while (TParallelCoordRange* range = (TParallelCoordRange*)next()) range->SetBit(TParallelCoordRange::kShowOnPad,s);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kShowOnPad,s);
    SetBit(kShowRanges,s);
 }

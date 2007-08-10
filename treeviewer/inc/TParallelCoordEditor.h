@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.h,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.h,v 1.2 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -31,8 +31,6 @@ class TGedPatternSelect;
 
 class TParallelCoordEditor : public TGedFrame {
 protected:
-   Int_t                    fNselect;
-   Int_t                    fNvariables;
    TGCompositeFrame        *fVarTab;
    TParallelCoord          *fParallel;
    TGColorSelect           *fGlobalLineColor;
@@ -62,7 +60,7 @@ protected:
    TGTextButton            *fButtonAddVar;
    TGComboBox              *fVariables;
    TGTextButton            *fDeleteVar;
-   TGNumberEntryField      *fHistHeight;
+   TGCheckButton           *fHistShowBoxes;
    TGNumberEntryField      *fHistWidth;
    TGNumberEntryField      *fHistBinning;
    TGTextButton            *fRenameVar;
@@ -72,6 +70,8 @@ protected:
    TGedPatternSelect       *fHistPatternSelect;
    Bool_t                   fDelay;
 
+   void                    CleanUpSelections();
+   void                    CleanUpVariables();
    virtual void            ConnectSignals2Slots();
    void                    MakeVariablesTab();
    
@@ -95,7 +95,7 @@ public:
    virtual void            DoGlobalLineColor(Pixel_t);
    virtual void            DoGlobalLineWidth(Int_t);
    virtual void            DoHideAllRanges(Bool_t);
-   virtual void            DoHistHeight();
+   virtual void            DoHistShowBoxes(Bool_t);
    virtual void            DoHistWidth();
    virtual void            DoHistBinning();
    virtual void            DoHistColorSelect(Pixel_t);

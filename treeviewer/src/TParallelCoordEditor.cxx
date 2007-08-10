@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.2 2007/08/08 22:17:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.3 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -100,8 +100,6 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    // Normal constructor.
 
    fPriority = 1;
-   fNselect = 1;
-   fNvariables = 0;
    fDelay = kTRUE;
 
    //**Line**_________________________________________
@@ -267,11 +265,12 @@ void TParallelCoordEditor::MakeVariablesTab()
    TGHorizontalFrame *f11 = new TGHorizontalFrame(fVarTab);
    TGVerticalFrame *v3 = new TGVerticalFrame(f11);
    TGVerticalFrame *v4 = new TGVerticalFrame(f11);
-   v3->AddFrame(new TGLabel(v3,"Height:"));
-   fHistHeight = new TGNumberEntryField(v3, kHistHeight, 0,
-                                        TGNumberFormat::kNESRealOne);
-   fHistHeight->Resize(68,20);
-   v3->AddFrame(fHistHeight);
+   v3->AddFrame(new TGLabel(v3,"Binning:"));
+   fHistBinning = new TGNumberEntryField(v3, kHistWidth, 0,
+                                         TGNumberFormat::kNESInteger,
+                                         TGNumberFormat::kNEANonNegative);
+   fHistBinning->Resize(68,20);
+   v3->AddFrame(fHistBinning);
    v4->AddFrame(new TGLabel(v4,"Width:"));
    fHistWidth = new TGNumberEntryField(v4, kHistWidth, 0,
                                        TGNumberFormat::kNESInteger,
@@ -282,12 +281,8 @@ void TParallelCoordEditor::MakeVariablesTab()
    f11->AddFrame(v4);
    fVarTab->AddFrame(f11);
 
-   fVarTab->AddFrame(new TGLabel(fVarTab,"Binning:"));
-   fHistBinning = new TGNumberEntryField(fVarTab, kHistWidth, 0,
-                                         TGNumberFormat::kNESInteger,
-                                         TGNumberFormat::kNEANonNegative);
-   fHistBinning->Resize(68,20);
-   fVarTab->AddFrame(fHistBinning);
+   fHistShowBoxes = new TGCheckButton(fVarTab,"Show box histograms");
+   fVarTab->AddFrame(fHistShowBoxes);
    
    fVarTab->AddFrame(new TGLabel(fVarTab,"Bar histograms style:"));
    
@@ -309,6 +304,73 @@ TParallelCoordEditor::~TParallelCoordEditor()
 
    delete fLineTypePoly;
    delete fLineTypeCurves;
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordEditor::CleanUpSelections()
+{
+   // Clean up the selection combo box.
+
+   TList *list = fParallel->GetSelectList();
+   fSelectionSelect->RemoveAll();
+   Bool_t enable = list->GetSize() > 0;
+   fSelectionSelect->SetEnabled(enable);
+   fSelectLineColor->SetEnabled(enable);
+   fSelectLineWidth->SetEnabled(enable);
+   fActivateSelection->SetEnabled(enable);
+   fShowRanges->SetEnabled(enable);
+   fDeleteSelection->SetEnabled(enable);
+   if (list->GetSize() > 0) {
+      Int_t i = 0;
+      TIter next(list);
+      TParallelCoordSelect* sel;
+      while ((sel = (TParallelCoordSelect*)next())) {
+         fSelectionSelect->AddEntry(sel->GetTitle(),i);
+         fSelectionSelect->GetListBox()->GetEntry(i)->SetBackgroundColor(TColor::Number2Pixel(sel->GetLineColor()));
+         ++i;
+      }
+      sel = fParallel->GetCurrentSelection();
+      fSelectionSelect->Select(list->IndexOf(sel),kFALSE);
+      Color_t c;
+      Pixel_t p;
+      c = sel->GetLineColor();
+      p = TColor::Number2Pixel(c);
+      fSelectLineColor->SetColor(p);
+      fSelectLineWidth->Select(sel->GetLineWidth());
+      fActivateSelection->SetOn(sel->TestBit(TParallelCoordSelect::kActivated));
+      fShowRanges->SetOn(sel->TestBit(TParallelCoordSelect::kShowRanges));
+   }
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordEditor::CleanUpVariables()
+{
+   // Clean up the variables combo box.
+   
+   TList *list = fParallel->GetVarList();
+   fVariables->RemoveAll();
+   Bool_t enable = list->GetSize() > 0;
+   fVariables->SetEnabled(enable);
+   fDeleteVar->SetEnabled(enable);
+   fHistShowBoxes->SetEnabled(enable);
+   fHistWidth->SetEnabled(enable);
+   fHistBinning->SetEnabled(enable);
+   if (list->GetSize() > 0) {
+      Int_t i = 0;
+      TIter next(list);
+      TParallelCoordVar* var;
+      while ((var = (TParallelCoordVar*)next())) {
+         fVariables->AddEntry(var->GetTitle(),i);
+         ++i;
+      }
+      var = (TParallelCoordVar*)list->First();
+      fVariables->Select(0,kFALSE);
+      fHistShowBoxes->SetOn(var->TestBit(TParallelCoordVar::kShowBarHisto));
+      fHistWidth->SetNumber(var->GetHistLineWidth());
+      fHistBinning->SetNumber(var->GetHistBinning());
+   }
 }
 
 
@@ -371,8 +433,6 @@ void TParallelCoordEditor::ConnectSignals2Slots()
                       this, "DoDeleteVar()");
    fHistWidth->Connect("ReturnPressed()","TParallelCoordEditor",
                        this, "DoHistWidth()");
-   fHistHeight->Connect("ReturnPressed()","TParallelCoordEditor",
-                       this, "DoHistHeight()");
    fHistBinning->Connect("ReturnPressed()","TParallelCoordEditor",
                          this, "DoHistBinning()");
    fWeightCut->Connect("Released()","TParallelCoordEditor",
@@ -385,6 +445,8 @@ void TParallelCoordEditor::ConnectSignals2Slots()
                              this, "DoHistColorSelect(Pixel_t)");
    fHistPatternSelect->Connect("PatternSelected(Style_t)", "TParallelCoordEditor",
                                this, "DoHistPatternSelect(Style_t)");
+   fHistShowBoxes->Connect("Toggled(Bool_t)","TParallelCoordEditor",
+                               this, "DoHistShowBoxes(Bool_t)");
 
    fInit = kFALSE;
 }
@@ -407,7 +469,6 @@ void TParallelCoordEditor::DoAddSelection()
 {
    // Slot to add a selection.
 
-   ++fNselect;
    TString title = fAddSelectionField->GetText();
    if(title == "") title = "Selection";
    TString titlebis = title;
@@ -424,25 +485,7 @@ void TParallelCoordEditor::DoAddSelection()
 
    fParallel->AddSelection(titlebis.Data());
 
-   if(fSelectionSelect->GetNumberOfEntries() == 0){
-      fSelectLineColor->SetEnabled(kTRUE);
-      fSelectLineWidth->SetEnabled(kTRUE);
-      fActivateSelection->SetEnabled(kTRUE);
-      fDeleteSelection->SetEnabled(kTRUE);
-      fSelectionSelect->SetEnabled(kTRUE);
-      if (!fHideAllRanges->IsOn()) fShowRanges->SetEnabled(kTRUE);
-   }
-
-   fSelectionSelect->AddEntry(titlebis.Data(),fNselect);
-   fSelectionSelect->FindEntry(titlebis)->SetBackgroundColor(TColor::Number2Pixel(fParallel->GetCurrentSelection()->GetLineColor()));
-   fSelectionSelect->Select(fSelectionSelect->FindEntry(titlebis.Data())->EntryId(),kFALSE);
-   Color_t c = fParallel->GetCurrentSelection()->GetLineColor();
-   Pixel_t p = TColor::Number2Pixel(c);
-   fSelectLineColor->SetColor(p,kFALSE);
-
-   fSelectLineWidth->Select(fParallel->GetCurrentSelection()->GetLineWidth(), kFALSE);
-
-   fActivateSelection->SetOn(fParallel->GetCurrentSelection()->TestBit(TParallelCoordSelect::kActivated));
+   CleanUpSelections();
 }
 
 
@@ -454,16 +497,7 @@ void TParallelCoordEditor::DoAddVariable()
    if (fAvoidSignal) return;
 
    fParallel->AddVariable(fAddVariable->GetText());
-   if (fParallel->GetVarList()->GetSize() > 0) {
-      ++fNvariables;
-      fVariables->SetEnabled(kTRUE);
-      fDeleteVar->SetEnabled(kTRUE);
-      fHistHeight->SetEnabled(kTRUE);
-      fHistWidth->SetEnabled(kTRUE);
-      fHistBinning->SetEnabled(kTRUE);
-      fVariables->AddEntry(fAddVariable->GetText(),fNvariables);
-      fVariables->Select(fNvariables,kFALSE);
-   }
+   CleanUpVariables();
    Update();
 }
 
@@ -500,18 +534,7 @@ void TParallelCoordEditor::DoDeleteSelection()
 
    fParallel->DeleteSelection(fParallel->GetCurrentSelection());
 
-   fSelectionSelect->RemoveEntry();
-   if(fSelectionSelect->GetNumberOfEntries() == 0){
-      fSelectLineColor->SetEnabled(kFALSE);
-      fSelectLineWidth->SetEnabled(kFALSE);
-      fActivateSelection->SetEnabled(kFALSE);
-      fDeleteSelection->SetEnabled(kFALSE);
-      fSelectionSelect->SetEnabled(kFALSE);
-      fShowRanges->SetEnabled(kFALSE);
-   } else {
-      fSelectionSelect->Select(fSelectionSelect->FindEntry(fParallel->GetCurrentSelection()->GetTitle())->EntryId(),kFALSE);
-      DoSelectionSelect(fParallel->GetCurrentSelection()->GetTitle());
-   }
+   CleanUpSelections();
    Update();
 }
 
@@ -524,20 +547,8 @@ void TParallelCoordEditor::DoDeleteVar()
    if (fAvoidSignal) return;
 
    TParallelCoordVar* var = fParallel->RemoveVariable(((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle());
-   if(var) {
-      delete var;
-      fVariables->RemoveEntry();
-      if (fParallel->GetVarList()->GetSize()>0) {
-         fVariables->Select(fVariables->FindEntry(((TParallelCoordVar*)fParallel->GetVarList()->At(0))->GetTitle())->EntryId(),kFALSE);
-      } else {
-         fVariables->SetEnabled(kFALSE);
-         fDeleteVar->SetEnabled(kFALSE);
-         fHistHeight->SetEnabled(kFALSE);
-         fHistWidth->SetEnabled(kFALSE);
-         fHistBinning->SetEnabled(kFALSE);
-      }
-      Update();
-   }
+   CleanUpVariables();
+   if(var) Update();
 }
 
 
@@ -629,7 +640,8 @@ void TParallelCoordEditor::DoHideAllRanges(Bool_t on)
    if (fAvoidSignal) return;
 
    TIter next(fParallel->GetSelectList());
-   while(TParallelCoordSelect* sel = (TParallelCoordSelect*)next()) sel->SetShowRanges(!on);
+   TParallelCoordSelect* sel;
+   while((sel = (TParallelCoordSelect*)next())) sel->SetShowRanges(!on);
    fShowRanges->SetOn(!on);
    fShowRanges->SetEnabled(!on);
    fShowRanges->SetOn(!on);
@@ -665,13 +677,15 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 
 
 //______________________________________________________________________________
-void TParallelCoordEditor::DoHistHeight()
+void TParallelCoordEditor::DoHistShowBoxes(Bool_t s)
 {
    // Slot to set histogram height.
 
    if (fAvoidSignal) return;
 
-   fParallel->SetAxisHistogramHeight(fHistHeight->GetNumber());
+   TIter next(fParallel->GetVarList());
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) var->SetBit(TParallelCoordVar::kShowBarHisto,s);
    Update();
 }
 
@@ -741,9 +755,11 @@ void TParallelCoordEditor::DoLiveEntriesToDraw()
    fFirstEntry->SetNumber(firstentry);
    fNentries->SetNumber(nentries);
 
-   fParallel->SetCurrentFirst(firstentry);
-   fParallel->SetCurrentN(nentries);
-   if (!fDelay) Update();
+   if (!fDelay) {
+      fParallel->SetCurrentFirst(firstentry);
+      fParallel->SetCurrentN(nentries);
+      Update();
+   }
 }
 
 
@@ -851,7 +867,8 @@ void TParallelCoordEditor::DoUnApply()
 
    if (fAvoidSignal) return;
 
-   fParallel->GetTree()->SetEntryList(NULL);
+   fParallel->ResetTree();
+   Update();
 }
 
 
@@ -902,48 +919,9 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    else     fLineTypeBgroup->SetButton(kLineTypePoly,kTRUE);
 
    if(fInit) fHideAllRanges->SetOn(kFALSE);
-
-   TList *list = fParallel->GetSelectList();
-   TIter next(list);
-   while (TParallelCoordSelect* sel = (TParallelCoordSelect*)next()) {
-      if (!fSelectionSelect->FindEntry(sel->GetTitle())){
-         fSelectionSelect->AddEntry(fParallel->GetCurrentSelection()->GetTitle(),0);
-      }
-      fSelectionSelect->FindEntry(sel->GetTitle())->SetBackgroundColor(TColor::Number2Pixel(sel->GetLineColor()));
-   }
-   if(fSelectionSelect->GetNumberOfEntries()>0) {
-      fSelectionSelect->Select(fSelectionSelect->FindEntry(fParallel->GetCurrentSelection()->GetTitle())->EntryId(),kFALSE);
-      c = fParallel->GetCurrentSelection()->GetLineColor();
-      p = TColor::Number2Pixel(c);
-      fSelectLineColor->SetColor(p);
-
-      fSelectLineWidth->Select(fParallel->GetCurrentSelection()->GetLineWidth());
-
-      fActivateSelection->SetOn(fParallel->GetCurrentSelection()->TestBit(TParallelCoordSelect::kActivated));
-      fShowRanges->SetOn(fParallel->GetCurrentSelection()->TestBit(TParallelCoordSelect::kShowRanges));
-   }
-
-   TList *varlist = fParallel->GetVarList();
-   if (varlist->GetSize() > 0) {
-      TIter nextvar(varlist);
-      while(TParallelCoordVar* var = (TParallelCoordVar*)nextvar()) {
-         if (!fVariables->FindEntry(var->GetTitle())) {
-            ++fNvariables;
-            if(!fVariables->GetListBox()->GetEntry(var->GetId())) fVariables->AddEntry(var->GetTitle(),var->GetId());
-            else ((TGTextLBEntry*)fVariables->GetListBox()->GetEntry(var->GetId()))->SetTitle(var->GetTitle());
-         }
-      }
-      fVariables->Select(((TParallelCoordVar*)varlist->First())->GetId(),kFALSE);
-      fHistHeight->SetNumber(((TParallelCoordVar*)varlist->First())->GetHistHeight());
-      fHistWidth->SetNumber(((TParallelCoordVar*)varlist->First())->GetHistLineWidth());
-      fHistBinning->SetNumber(((TParallelCoordVar*)varlist->First())->GetHistBinning());
-   } else {
-      fVariables->SetEnabled(kFALSE);
-      fDeleteVar->SetEnabled(kFALSE);
-      fHistHeight->SetEnabled(kFALSE);
-      fHistWidth->SetEnabled(kFALSE);
-      fHistBinning->SetEnabled(kFALSE);
-   }
+   
+   CleanUpSelections();
+   CleanUpVariables();
 
    if (fInit) fEntriesToDraw->SetRange(0,fParallel->GetNentries());
    fEntriesToDraw->SetPosition(fParallel->GetCurrentFirst(), fParallel->GetCurrentFirst()+fParallel->GetCurrentN());

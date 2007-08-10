@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.2 2007/08/08 22:17:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.3 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -68,7 +68,8 @@ TParallelCoordVar::~TParallelCoordVar()
    if (fHistogram) delete fHistogram;
    if (fRanges){
       TIter next(fRanges);
-      while(TParallelCoordRange* range = (TParallelCoordRange*)next()) fParallel->CleanUpSelections(range);
+      TParallelCoordRange* range;
+      while((range = (TParallelCoordRange*)next())) fParallel->CleanUpSelections(range);
       fRanges->Delete();
       delete fRanges;
    }
@@ -90,24 +91,9 @@ TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id,
 
    fVal = new Double_t[fParallel->GetNentries()];
 
-   Double_t ave = 0;
-
    for(Long64_t ui = 0;ui<fParallel->GetNentries();++ui) fVal[ui]=val[ui];
 
-   Double_t min,max;
-   min = FLT_MAX;
-   max = -FLT_MAX;
-   for(Long64_t li=0; li<parallel->GetNentries();++li){
-      if(val[li]<min) min = val[li];
-      if(val[li]>max) max = val[li];
-      ave+=val[li];
-   }
-
-   fMean = ave/((Double_t)fNentries);
-   fMinInit    = min;
-   fMinCurrent = fMinInit;
-   fMaxInit    = max;
-   fMaxCurrent = fMaxInit;
+   GetMinMaxMean();
    GetHistogram();
    GetQuantiles();
 }
@@ -174,7 +160,8 @@ Bool_t TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
       TIter next(fRanges);
       Bool_t inarange = kFALSE;
       Bool_t noOwnedRange = kTRUE;
-      while (TParallelCoordRange *range = (TParallelCoordRange*)next()){
+      TParallelCoordRange *range;
+      while ((range = (TParallelCoordRange*)next())){
          if(select->Contains(range)) {
             noOwnedRange = kFALSE;
             if(range->IsIn(fVal[evtidx])) inarange = kTRUE;
@@ -330,16 +317,24 @@ void TParallelCoordVar::GetEntryXY(Long64_t n, Double_t & x, Double_t & y)
 
    if(fX1==fX2){
       x = fX1;
-      if (TestBit(kLogScale)) y = fY1 + (fY2 - fY1) *
-                                  (TMath::Log10(fVal[n]/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
-      else                    y = fY1 + (fY2 - fY1) *
-                                  (fVal[n] - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      if (fMinCurrent != fMaxCurrent) {
+         if (TestBit(kLogScale)) y = fY1 + (fY2 - fY1) *
+                                    (TMath::Log10(fVal[n]/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
+         else                    y = fY1 + (fY2 - fY1) *
+                                    (fVal[n] - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      } else {
+         y = fY1 + 0.5*(fY2-fY1);
+      }
    } else {
       y = fY1;
-      if (TestBit(kLogScale)) x = fX1 + (fX2 - fX1) *
-                                  (TMath::Log10(fVal[n]/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
-      else                    x = fX1 + (fX2 - fX1) *
-                                  (fVal[n] - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      if (fMinCurrent != fMaxCurrent) {
+         if (TestBit(kLogScale)) x = fX1 + (fX2 - fX1) *
+                                    (TMath::Log10(fVal[n]/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
+         else                    x = fX1 + (fX2 - fX1) *
+                                    (fVal[n] - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      } else {
+         x = fX1 + 0.5*(fX2-fX1);
+      }
    }
 }
 
@@ -362,12 +357,35 @@ TH1F* TParallelCoordVar::GetHistogram()
 
    if(fHistogram) delete fHistogram;
    fHistogram = NULL;
-   fHistogram = new TH1F("hpa", "hpa", fNbins, fMinCurrent, fMaxCurrent);
+   fHistogram = new TH1F("hpa", "hpa", fNbins, fMinCurrent, fMaxCurrent+0.0001*(fMaxCurrent-fMinCurrent));
    fHistogram->SetDirectory(0);
-   for(Long64_t li=0; li<fParallel->GetNentries();++li) {
-      if(fVal[li] > fMinCurrent && fVal[li] < fMaxCurrent) fHistogram->Fill(fVal[li]);
+   Long64_t first = fParallel->GetCurrentFirst();
+   Long64_t nentries = fParallel->GetCurrentN();
+   for(Long64_t li=first; li<first+nentries;++li) {
+      if(fVal[li] >= fMinCurrent && fVal[li] <= fMaxCurrent) fHistogram->Fill(fVal[li]);
    }
    return fHistogram;
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordVar::GetMinMaxMean()
+{
+   Double_t min,max,ave = 0;
+   min = FLT_MAX;
+   max = -FLT_MAX;
+   Long64_t first,nentries;
+   first = fParallel->GetCurrentFirst();
+   nentries = fParallel->GetCurrentN();
+   for(Long64_t li=first; li<first+nentries;++li){
+      if(fVal[li]<min) min = fVal[li];
+      if(fVal[li]>max) max = fVal[li];
+      ave+=fVal[li];
+   }
+
+   fMean = ave/((Double_t)nentries);
+   fMinCurrent = fMinInit = min;
+   fMaxCurrent = fMaxInit = max;
 }
 
 
@@ -413,25 +431,29 @@ void TParallelCoordVar::GetQuantiles()
    Double_t *quantiles = new Double_t[3];
    Double_t *prob = new Double_t[3];
    prob[0]=0.25; prob[1]=0.5; prob[2] = 0.75;
-   if (!TestBit(kLogScale)) TMath::Quantiles(fNentries,3,fVal,quantiles,prob,kFALSE);
+   Long64_t first = fParallel->GetCurrentFirst();
+   Long64_t nentries = fParallel->GetCurrentN();
+   if (!TestBit(kLogScale) && first==0 && nentries==fNentries) TMath::Quantiles(fNentries,3,fVal,quantiles,prob,kFALSE);
    else {
-      Double_t* logval = new Double_t[fNentries];
+      Double_t* val = new Double_t[nentries];
       Int_t selected = 0;
       if(fMinInit<=0) {
-         for (Long64_t n=0;n<fNentries;++n) {
+         for (Long64_t n=first;n<first+nentries;++n) {
             if (fVal[n] >= fMinCurrent) {
-               logval[selected] = TMath::Log10(fVal[n]);
+               if (TestBit(kLogScale)) val[selected] = TMath::Log10(fVal[n]);
+               else                    val[selected] = fVal[n];
                ++selected;
             }
          }
       } else {
-         for (Long64_t n=0;n<fNentries;++n) {
-            logval[n] = TMath::Log10(fVal[n]);
+         for (Long64_t n=first;n<first+nentries;++n) {
+            if (TestBit(kLogScale)) val[selected] = TMath::Log10(fVal[n]);
+            else                    val[selected] = fVal[n];
+            ++selected;
          }
-         selected = fNentries;
       }
-      TMath::Quantiles(selected,3,logval,quantiles,prob,kFALSE);
-      delete [] logval;
+      TMath::Quantiles(selected,3,val,quantiles,prob,kFALSE);
+      delete [] val;
    }
    fQua1 = quantiles[0];
    fMed = quantiles[1];
@@ -447,6 +469,7 @@ Double_t TParallelCoordVar::GetValuefromXY(Double_t x,Double_t y)
    // Get the value corresponding to the posiiton.
 
    Double_t pos;
+   if (fMinCurrent == fMaxCurrent) return fMinCurrent;
    if (fX1 == fX2) {
       if (y<=fY1)      pos = fMinCurrent;
       else if (y>=fY2) pos = fMaxCurrent;
@@ -469,16 +492,24 @@ void TParallelCoordVar::GetXYfromValue(Double_t value, Double_t & x, Double_t & 
 
    if (fX1==fX2) {
       x = fX1;
-      if (TestBit(kLogScale)) y = fY1 + (fY2 - fY1) *
-                                  (TMath::Log10(value/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
-      else                    y = fY1 + (fY2 - fY1) *
-                                  (value - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      if (fMinCurrent != fMaxCurrent) {
+         if (TestBit(kLogScale)) y = fY1 + (fY2 - fY1) *
+                                    (TMath::Log10(value/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
+         else                    y = fY1 + (fY2 - fY1) *
+                                    (value - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      } else {
+         y = fY1 + 0.5*(fY2-fY1);
+      }
    } else {
       y = fY1;
-      if (TestBit(kLogScale)) x = fX1 + (fX2 - fX1) *
-                                  (TMath::Log10(value/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
-      else                    x = fX1 + (fX2 - fX1) *
-                                  (value - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      if (fMinCurrent != fMaxCurrent) {
+         if (TestBit(kLogScale)) x = fX1 + (fX2 - fX1) *
+                                    (TMath::Log10(value/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
+         else                    x = fX1 + (fX2 - fX1) *
+                                    (value - fMinCurrent) / (fMaxCurrent - fMinCurrent);
+      } else {
+         x = fX1 + 0.5*(fX2-fX1);
+      }
    }
 }
 
@@ -506,11 +537,11 @@ void TParallelCoordVar::Init()
    fHistogram  = NULL;
    fNbins      = 100;
    fHistoLW    = 2;
-   fHistoHeight     = 0;
+   fHistoHeight     = 0.5;
    fRanges     = NULL;
    SetBit(kLogScale,kFALSE);
    SetBit(kShowBox,kFALSE);
-   SetBit(kShowBarHisto,kFALSE);
+   SetBit(kShowBarHisto,kTRUE);
 }
 
 
@@ -653,7 +684,8 @@ void TParallelCoordVar::PaintHistogram()
          Double_t v = fMinCurrent;
          Double_t y1 = fY1,x2,y2;
          for (i=1; i<=fNbins; i++) {
-            x2 = fX1+((fHistogram->GetBinContent(i)-hmin)/(hmax-hmin))*fHistoHeight*((frame->GetX2()-frame->GetX1())/(fParallel->GetNvar()-1));
+            x2 = fX1+((fHistogram->GetBinContent(i)-hmin)/(hmax-hmin))*fHistoHeight*
+                 ((frame->GetX2()-frame->GetX1())/(fParallel->GetNvar()-1));
             if(TestBit(kLogScale)) y2 = fY1 + (fY2-fY1)*(TMath::Log10((v+dv)/fMinCurrent)) / (TMath::Log10(fMaxCurrent/fMinCurrent));
             else y2=y1+dy;
             b->PaintBox(fX1,y1,x2,y2,"l");
@@ -880,7 +912,8 @@ void TParallelCoordVar::SetLiveRangesUpdate(Bool_t on)
    // If true, the pad is updated while the motion of a dragged range.
 
    TIter next(fRanges);
-   while (TParallelCoordRange* range = (TParallelCoordRange*)next()) range->SetBit(TParallelCoordRange::kLiveUpdate,on);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->SetBit(TParallelCoordRange::kLiveUpdate,on);
 }
 
 
@@ -904,6 +937,19 @@ void TParallelCoordVar::SetLogScale(Bool_t log)
    }
    GetQuantiles();
    GetHistogram();
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordVar::SetValues(Long64_t length, Double_t* val)
+{
+   delete [] fVal;
+   fVal = new Double_t[length];
+   fNentries = length;
+   for (Long64_t li = 0; li < length; ++li) fVal[li] = val[li];
+   GetMinMaxMean();
+   GetHistogram();
+   if (TestBit(kShowBox)) GetQuantiles();
 }
 
 

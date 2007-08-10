@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.245 2007/08/08 12:58:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.246 2007/08/09 09:10:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -844,6 +844,20 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  The option=prof is automatically selected in case of z:y:x>>pf
 //  where pf is an existing TProfile2D histogram.
 //
+//     Making a parallel coordinates plot.
+//     ===========================
+//  In case of a 2-Dim or more expression with the option=para, one can generate
+//  a parallel coordinates plot. With that option, the number of dimensions is
+//  arbitrary. Giving more than 4 variables without the option=para or
+//  option=candle or option=goff will produce an error.
+//
+//     Making a candle sticks chart.
+//     ===========================
+//  In case of a 2-Dim or more expression with the option=candle, one can generate
+//  a candle sticks chart. With that option, the number of dimensions is
+//  arbitrary. Giving more than 4 variables without the option=para or
+//  option=candle or option=goff will produce an error.
+//
 //     Saving the result of Draw to a TEventList or a TEntryList
 //     =========================================================
 //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
@@ -1094,9 +1108,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       }
    //*-*- Parallel Coordinates or Candle chart.
    } else if (optpara || optcandle) {
-      TObject* para = fSelector->GetObject();
-      fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
-      gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%x,enlist)",para));
+      if (draw) {
+         TObject* para = fSelector->GetObject();
+         fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
+         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%x,enlist)",para));
+      }
    }
 
    return fSelectedRows;

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.2 2007/08/08 22:17:05 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.3 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -50,7 +50,8 @@ private:
    Color_t         fLineColor;         // entries line color.
    Width_t         fLineWidth;         // entries line width.
    Int_t           fWeightCut;         // Specify a cut on the entries from their weight (see TParallelCoordVar::GetEvtWeight(Long64_t))
-   TEntryList     *fEntries;           // Selected entries in the tree.
+   TEntryList     *fCurrentEntries;    // Current selected entries in the tree.
+   TEntryList     *fInitEntries;       // Selected entries when TParallelCoord first initialized.
    TTree          *fTree;              // Pointer to the TTree.
    TList          *fVarList;           // List of the variables.
    TList          *fSelectList;        // List of selections over the variables.
@@ -103,6 +104,7 @@ public:
    Bool_t         GetVertDisplay() const {return TestBit(kVertDisplay);}
    Int_t          GetWeightCut() const {return fWeightCut;};
    virtual void   Paint(Option_t* options="");
+   void           ResetTree();
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*
    void           SetAxisHistogramLineWidth(Int_t lw=2); // *MENU*
@@ -113,7 +115,7 @@ public:
    void           SetCurrentSelection(const char* title);
    void           SetCurrentSelection(TParallelCoordSelect* sel);
    void           SetDotsSpacing(Int_t s=0); // *MENU*
-   void           SetEntryList(TEntryList* enlist) {fEntries = enlist;}
+   void           SetEntryList(TEntryList* enlist) {fCurrentEntries = fInitEntries = enlist;}
    static void    SetEntryList(TParallelCoord* para, TEntryList* enlist) {para->SetEntryList(enlist);}
    void           SetGlobalScale(Bool_t gl); // *TOGGLE* *GETTER=GetGlobalScale
    void           SetGlobalLogScale(Bool_t); // *TOGGLE* *GETTER=GetGlobalLogScale

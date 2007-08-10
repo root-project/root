@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.2 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    Int_t          GetEntryWeight(Long64_t evtidx);
    Double_t       GetHistHeight() {return fHistoHeight;}
    Int_t          GetHistLineWidth() {return fHistoLW;}
+   void           GetMinMaxMean();
    void           GetQuantiles();
    Double_t       GetX() {return fX1;}
    Double_t       GetY() {return fY1;}
@@ -108,7 +109,7 @@ public:
    void           SetCurrentMax(Double_t max);
    void           SetLiveRangesUpdate(Bool_t on);
    void           SetLogScale(Bool_t log); // *TOGGLE* *GETTER=GetLogScale
-   //void           SetQuantiles(Int_t length, Long64_t *indexes);
+   void           SetValues(Long64_t length, Double_t* val);
    void           SetX(Double_t x, Bool_t gl);    // Set a new x position in case of a vertical display.
    void           SetY(Double_t y, Bool_t gl);    // Set a new y position in case of a horizontal display.
    void           Unzoom() {SetCurrentLimits(fMinInit,fMaxInit);} // *MENU* Reset fMin and fMax to their original value.

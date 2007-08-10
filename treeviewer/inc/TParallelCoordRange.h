@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.2 2007/08/08 22:17:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.3 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
    TParallelCoordVar* GetVar() {return fVar;}
    Bool_t IsIn(Double_t evtval);
    virtual void Paint(Option_t *options);
+   virtual void Print(Option_t *options) const; // *MENU*
    virtual void SendToBack(); // *MENU*
    virtual void SetLineColor(Color_t col);
    virtual void SetLineWidth(Width_t wid);

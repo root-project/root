@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.1 2007/08/08 12:57:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.2 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -161,7 +161,9 @@ TParallelCoord::~TParallelCoord()
 {
    // Destructor.
 
-   if (fEntries) delete fEntries;
+   printf("TParallelCoord::~TParallelCoord()");
+   if (fCurrentEntries) delete fCurrentEntries;
+   if (fInitEntries != fCurrentEntries && fInitEntries != NULL) delete fInitEntries;
    if (fVarList) {
       fVarList->Delete();
       delete fVarList;
@@ -239,8 +241,30 @@ void  TParallelCoord::ApplySelectionToTree()
    // Apply the current selection to the tree.
 
    if(!fTree) return;
-   TEntryList* enlist = GetEntryList();
-   fTree->SetEntryList(enlist);
+   fCurrentEntries = GetEntryList();
+   fNentries = fCurrentEntries->GetN();
+   fCurrentFirst = 0;
+   fCurrentN = fNentries;
+   fTree->SetEntryList(fCurrentEntries);
+   TString varexp = "";
+   TIter next(fVarList);
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+   varexp.Remove(TString::kLeading,':');
+   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
+   fTree->Draw(varexp.Data(),"","goff para");
+   TIter nextbis(fVarList);
+   Int_t i = 0;
+   while ((var = (TParallelCoordVar*)nextbis())) {
+      var->SetValues(fNentries, selector->GetVal(i));
+      ++i;
+   }
+   if (fSelectList) {
+      fSelectList->Delete();
+      fCurrentSelection = NULL;
+   }
+   gPad->Modified();
+   gPad->Update();
 }
 
 
@@ -270,7 +294,8 @@ void TParallelCoord::CleanUpSelections(TParallelCoordRange* range)
    // when a variable has been deleted.
 
    TIter next(fSelectList);
-   while(TParallelCoordSelect* select = (TParallelCoordSelect*)next()){
+   TParallelCoordSelect* select;
+   while ((select = (TParallelCoordSelect*)next())){
       if(select->Contains(range)) select->Remove(range);
    }
 }
@@ -358,7 +383,8 @@ void TParallelCoord::Draw(Option_t* option)
    title->Draw();
    SetAxesPosition();
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       if(optcandle) {
          var->SetBoxPlot(kTRUE);
          var->SetHistogramHeight(0.5);
@@ -392,18 +418,19 @@ TEntryList* TParallelCoord::GetEntryList(Bool_t sel)
    // Get the whole entry list or one for a selection.
 
    if(!sel){ // If no selection is specified, return the entry list of all the entries.
-      return fEntries;
+      return fCurrentEntries;
    } else { // return the entry list corresponding to the current selection.
       TEntryList *enlist = new TEntryList(fTree);
       TIter next(fVarList);
-      for (Long64_t li=0;li<fEntries->GetN();++li) {
+      for (Long64_t li=0;li<fNentries;++li) {
          next.Reset();
          Bool_t inrange=kTRUE;
-         while(TParallelCoordVar* var = (TParallelCoordVar*)next()){
+         TParallelCoordVar* var;
+         while((var = (TParallelCoordVar*)next())){
             if(!var->Eval(li,fCurrentSelection)) inrange = kFALSE;
          }
          if(!inrange) continue;
-         enlist->Enter(fEntries->GetEntry(li));
+         enlist->Enter(fCurrentEntries->GetEntry(li));
       }
       return enlist;
    }
@@ -417,7 +444,8 @@ Double_t TParallelCoord::GetGlobalMax()
 
    Double_t gmax=-FLT_MAX;
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       if (gmax < var->GetCurrentMax()) gmax = var->GetCurrentMax();
    }
    return gmax;
@@ -431,7 +459,8 @@ Double_t TParallelCoord::GetGlobalMin()
 
    Double_t gmin=FLT_MAX;
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       if (gmin > var->GetCurrentMin()) gmin = var->GetCurrentMin();
    }
    return gmin;
@@ -486,7 +515,8 @@ void TParallelCoord::Init()
    SetBit(kCandleChart,kFALSE);
    SetBit(kGlobalLogScale,kFALSE);
    fTree = NULL;
-   fEntries = NULL;
+   fCurrentEntries = NULL;
+   fInitEntries = NULL;
    fCurrentSelection = NULL;
    fNvar = 0;
    fDotsSpacing = 0;
@@ -510,7 +540,8 @@ void TParallelCoord::Paint(Option_t* /*option*/)
    if(TestBit(kPaintEntries)){
       PaintEntries(NULL);
       TIter next(fSelectList);
-      while(TParallelCoordSelect* sel = (TParallelCoordSelect*)next()) {
+      TParallelCoordSelect* sel;
+      while((sel = (TParallelCoordSelect*)next())) {
          if(sel->GetSize()>0 && sel->TestBit(TParallelCoordSelect::kActivated)) {
             PaintEntries(sel);
          }
@@ -635,6 +666,35 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
 
 
 //______________________________________________________________________________
+void TParallelCoord::ResetTree()
+{
+   // Reset the tree entry list to NULL.
+
+   if(!fTree) return;
+   fTree->SetEntryList(fInitEntries);
+   fCurrentEntries = fInitEntries;
+   fNentries = fCurrentEntries->GetN();
+   TString varexp = "";
+   TIter next(fVarList);
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+   varexp.Remove(TString::kLeading,':');
+   fTree->Draw(varexp.Data(),"","goff para");
+   next.Reset();
+   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
+   Int_t i = 0;
+   while ((var = (TParallelCoordVar*)next())) {
+      var->SetValues(fNentries, selector->GetVal(i));
+      ++i;
+   }
+   if (fSelectList) {
+      fSelectList->Delete();
+      fCurrentSelection = NULL;
+   }
+}
+
+
+//______________________________________________________________________________
 void TParallelCoord::SetAxesPosition()
 {
    // Update the position of the axes.
@@ -662,7 +722,8 @@ void TParallelCoord::SetAxesPosition()
       Int_t i=0;
       TIter next(fVarList);
       
-      while(TParallelCoordVar* var = (TParallelCoordVar*)next()){
+      TParallelCoordVar* var;
+      while((var = (TParallelCoordVar*)next())){
          if (vert) var->SetX(gPad->GetFrame()->GetX1() + i*horSpace,TestBit(kGlobalScale));
          else      var->SetY(gPad->GetFrame()->GetY1() + i*verSpace,TestBit(kGlobalScale));
          ++i;
@@ -684,7 +745,8 @@ void TParallelCoord::SetAxisHistogramBinning(Int_t n)
    // Set the same histogram axis binning for all axis.
 
    TIter next(fVarList);
-   while(TParallelCoordVar *var = (TParallelCoordVar*)next()) var->SetHistogramBinning(n);
+   TParallelCoordVar *var;
+   while((var = (TParallelCoordVar*)next())) var->SetHistogramBinning(n);
 }
 
 
@@ -694,7 +756,8 @@ void TParallelCoord::SetAxisHistogramHeight(Double_t h)
    // Set the same histogram axis height for all axis.
 
    TIter next(fVarList);
-   while(TParallelCoordVar *var = (TParallelCoordVar*)next()) var->SetHistogramHeight(h);
+   TParallelCoordVar *var;
+   while((var = (TParallelCoordVar*)next())) var->SetHistogramHeight(h);
 }
 
 
@@ -706,7 +769,8 @@ void TParallelCoord::SetGlobalLogScale(Bool_t ls)
    if (ls == TestBit(kGlobalLogScale)) return;
    SetBit(kGlobalLogScale,ls);
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) var->SetLogScale(ls);
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) var->SetLogScale(ls);
    if (TestBit(kGlobalScale)) SetGlobalScale(kTRUE);
 }
 
@@ -737,7 +801,8 @@ void TParallelCoord::SetGlobalScale(Bool_t gl)
       SetGlobalMin(min);
       SetGlobalMax(max);
       TIter next(fVarList);
-      while (TParallelCoordVar* var = (TParallelCoordVar*)next()) var->GetHistogram();
+      TParallelCoordVar* var;
+      while ((var = (TParallelCoordVar*)next())) var->GetHistogram();
    }
    gPad->Modified();
    gPad->Update();
@@ -750,7 +815,8 @@ void TParallelCoord::SetAxisHistogramLineWidth(Int_t lw)
    // Set the same histogram axis line width for all axis.
 
    TIter next(fVarList);
-   while(TParallelCoordVar *var = (TParallelCoordVar*)next()) var->SetHistogramLineWidth(lw);
+   TParallelCoordVar *var;
+   while((var = (TParallelCoordVar*)next())) var->SetHistogramLineWidth(lw);
 }
 
 
@@ -762,7 +828,8 @@ void TParallelCoord::SetCandleChart(Bool_t can)
    SetBit(kCandleChart,can);
    SetGlobalScale(can);
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       var->SetBoxPlot(can);
       var->SetHistogramLineWidth(0);
    }
@@ -792,6 +859,13 @@ void TParallelCoord::SetCurrentFirst(Long64_t f)
    if(f<0 || f>fNentries) return;
    fCurrentFirst = f;
    if(fCurrentFirst + fCurrentN > fNentries) fCurrentN = fNentries-fCurrentFirst;
+   TIter next(fVarList);
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
+      var->GetMinMaxMean();
+      var->GetHistogram();
+      if (var->TestBit(TParallelCoordVar::kShowBox)) var->GetQuantiles();
+   }
 }
 
 
@@ -803,6 +877,13 @@ void TParallelCoord::SetCurrentN(Long64_t n)
    if(n<=0) return;
    if(fCurrentFirst+n>fNentries) fCurrentN = fNentries-fCurrentFirst;
    else fCurrentN = n;
+   TIter next(fVarList);
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
+      var->GetMinMaxMean();
+      var->GetHistogram();
+      if (var->TestBit(TParallelCoordVar::kShowBox)) var->GetQuantiles();
+   }
 }  
 
 
@@ -847,7 +928,8 @@ void TParallelCoord::SetGlobalMax(Double_t max)
    // Force all variables to adopt the same max.
 
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       var->SetCurrentMax(max);
    }
 }
@@ -859,7 +941,8 @@ void TParallelCoord::SetGlobalMin(Double_t min)
    // Force all variables to adopt the same min.
 
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       var->SetCurrentMin(min);
    }
 }
@@ -872,7 +955,8 @@ void TParallelCoord::SetLiveRangesUpdate(Bool_t on)
 
    SetBit(kLiveUpdate,on);
    TIter next(fVarList);
-   while(TParallelCoordVar* var = (TParallelCoordVar*)next()) var->SetLiveRangesUpdate(on);
+   TParallelCoordVar* var;
+   while((var = (TParallelCoordVar*)next())) var->SetLiveRangesUpdate(on);
 }
 
 
@@ -889,7 +973,8 @@ void TParallelCoord::SetVertDisplay(Bool_t vert)
    Double_t horaxisspace = (frame->GetX2() - frame->GetX1())/(fNvar-1);
    Double_t veraxisspace = (frame->GetY2() - frame->GetY1())/(fNvar-1);
    TIter next(fVarList);
-   while (TParallelCoordVar* var = (TParallelCoordVar*)next()) {
+   TParallelCoordVar* var;
+   while ((var = (TParallelCoordVar*)next())) {
       if (vert) var->SetX(frame->GetX1() + ui*horaxisspace,TestBit(kGlobalScale));
       else      var->SetY(frame->GetY1() + ui*veraxisspace,TestBit(kGlobalScale));
       ++ui;
@@ -911,5 +996,6 @@ void TParallelCoord::UnzoomAll()
    // Unzoom all variables.
 
    TIter next(fVarList);
-   while(TParallelCoordVar* var = (TParallelCoordVar*)next()) var->Unzoom();
+   TParallelCoordVar* var;
+   while((var = (TParallelCoordVar*)next())) var->Unzoom();
 }

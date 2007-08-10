@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.335 2007/07/28 19:13:17 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.336 2007/08/03 19:19:40 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2970,6 +2970,20 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  instead of a TH2F histogram by specyfying option=prof or option=profs.
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
+   //
+   //     Making a parallel coordinates plot.
+   //     ===========================
+   //  In case of a 2-Dim or more expression with the option=para, one can generate
+   //  a parallel coordinates plot. With that option, the number of dimensions is
+   //  arbitrary. Giving more than 4 variables without the option=para or
+   //  option=candle or option=goff will produce an error.
+   //
+   //     Making a candle sticks chart.
+   //     ===========================
+   //  In case of a 2-Dim or more expression with the option=candle, one can generate
+   //  a candle sticks chart. With that option, the number of dimensions is
+   //  arbitrary. Giving more than 4 variables without the option=para or
+   //  option=candle or option=goff will produce an error.
    //
    //     Saving the result of Draw to a TEventList or a TEntryList
    //     =========================================================
