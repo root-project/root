@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.40 2007/07/17 16:34:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.41 2007/07/19 14:22:31 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -91,6 +91,7 @@
 #include "TVirtualMutex.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "TVirtualPad.h"
 
 
 TPluginManager *gPluginMgr;   // main plugin mamager created in TROOT
@@ -373,6 +374,11 @@ void TPluginManager::LoadHandlerMacros(const char *path)
 
    void *dirp = gSystem->OpenDirectory(path);
    if (dirp) {
+      // Set gPad to 0 in case it triggered the plugin mechanism itself,
+      // and isn't set up properly yet. gROOT->Macro() will call
+      // gPad->Update(). The plugins don't need it anyway.
+      TVirtualPad *oldGPad = gPad;
+      gPad = 0;
       if (gDebug > 0)
          Info("LoadHandlerMacros", "%s", path);
       const char *f1;
@@ -392,6 +398,7 @@ void TPluginManager::LoadHandlerMacros(const char *path)
             delete [] p;
          }
       }
+      gPad = oldGPad;
    }
    gSystem->FreeDirectory(dirp);
 }
