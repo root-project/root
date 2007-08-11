@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.50 2007/07/17 12:55:25 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.51 2007/07/19 07:45:41 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -437,7 +437,7 @@ public:
    // Slots
    void HandleMenu(Int_t id) ;
    
-   ClassDef(TGSplitButton, 0)
+   ClassDef(TGSplitButton, 0) //a split button widget
 };
 
 #endif
