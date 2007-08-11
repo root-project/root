@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.4 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.5 2007/07/20 13:31:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -298,7 +298,7 @@ double hyperg(double a, double b, double c, double x) {
 // (26.x.11)
 
 double laguerre(unsigned n, double x) {
-  return gsl_sf_laguerre_n(n, 0, x);
+   return gsl_sf_laguerre_n(n, 0, x);
 }
 
 

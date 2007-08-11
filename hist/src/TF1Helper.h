@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1Helper.h,v 1.1 2007/06/12 15:29:23 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1Helper.h,v 1.2 2007/06/20 08:30:20 moneta Exp $
 // Author: Lorenzo Moneta 12/06/07
 
 /**********************************************************************
@@ -24,11 +24,11 @@ namespace ROOT {
   /**
      function class representing the derivative with respect a parameter of a given TF1  
   */
-      class GradientParFunction { 
+      class TGradientParFunction { 
 
       public: 
 
-         GradientParFunction(int ipar, TF1 * f)  : 
+         TGradientParFunction(int ipar, TF1 * f)  : 
             fPar(ipar),
             fFunc(f)
          {}

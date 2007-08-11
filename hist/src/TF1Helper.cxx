@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1Helper.cxx,v 1.1 2007/06/12 15:29:23 moneta Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1Helper.cxx,v 1.2 2007/06/20 08:30:20 moneta Exp $
 // Author: Lorenzo Moneta 12/06/07
 
 /**********************************************************************
@@ -71,7 +71,7 @@ double IntegralError(TF1 * func, double a, double b, double epsilon) {
          // should check the limits 
          double integral  = 0;
          if (epar[i] > 0 ) {          
-            TF1 gradFunc("gradFunc",GradientParFunction(i,func),0,0,0);
+            TF1 gradFunc("gradFunc",TGradientParFunction(i,func),0,0,0);
             integral = gradFunc.Integral(a,b,(double*)0,epsilon);
          }
          ig.push_back(integral);
