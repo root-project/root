@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.61 2007/05/10 15:06:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.62 2007/05/10 18:16:58 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -216,7 +216,7 @@ public:
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Long_t            Macro(const char *filename, Int_t *error = 0);
+   Long_t            Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }

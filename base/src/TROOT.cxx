@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.220 2007/08/01 17:32:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.221 2007/08/01 21:42:53 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1365,13 +1365,15 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 }
 
 //______________________________________________________________________________
-Long_t TROOT::Macro(const char *filename, Int_t *error)
+Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
    // command ".x filename". If the filename has "+" or "++" appended
    // the macro will be compiled by ACLiC. The filename must have the format:
    // [path/]macro.C[+|++[g|O]][(args)].
    // The possible error codes are defined by TInterpreter::EErrorCode.
+   // If padUpdate is true (default) update the current pad.
+   // Returns the macro return value.
 
    Long_t result = 0;
 
@@ -1395,7 +1397,8 @@ Long_t TROOT::Macro(const char *filename, Int_t *error)
       }
       delete [] mac;
 
-      if (gPad) gPad->Update();
+      if (padUpdate && gPad)
+         gPad->Update();
    }
 
    return result;
