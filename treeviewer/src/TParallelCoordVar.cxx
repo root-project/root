@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.3 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.4 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -371,6 +371,7 @@ TH1F* TParallelCoordVar::GetHistogram()
 //______________________________________________________________________________
 void TParallelCoordVar::GetMinMaxMean()
 {
+   //Get mean, min and max of thos variable
    Double_t min,max,ave = 0;
    min = FLT_MAX;
    max = -FLT_MAX;
@@ -943,6 +944,7 @@ void TParallelCoordVar::SetLogScale(Bool_t log)
 //______________________________________________________________________________
 void TParallelCoordVar::SetValues(Long64_t length, Double_t* val)
 {
+   //FIXME PLEASE
    delete [] fVal;
    fVal = new Double_t[length];
    fNentries = length;
