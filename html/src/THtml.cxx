@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.140 2007/08/10 13:01:33 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.141 2007/08/10 14:27:53 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1401,6 +1401,15 @@ void THtml::MakeAll(Bool_t force, const char *filter, int numthreads /*= -1*/)
 
       TIter iThread(&threads);
       TThread* thread = 0;
+      Bool_t wait = kTRUE;
+      while (wait) {
+         while (wait && (thread = (TThread*) iThread()))
+            wait &= (thread->GetState() == TThread::kRunningState);
+         gSystem->ProcessEvents();
+         gSystem->Sleep(500);
+      }
+
+      iThread.Reset();
       while ((thread = (TThread*) iThread()))
          thread->Join();
    }
@@ -1467,6 +1476,11 @@ void THtml::MakeClass(void *cdi_void, Bool_t force)
 
 //______________________________________________________________________________
 void* THtml::MakeClassThreaded(void* info) {
+   // Entry point of worker threads for multi-threaded MakeAll().
+   // info points to an (internal) THtmlThreadInfo object containing the current
+   // THtml object, and whether "force" was passed to MakeAll().
+   // The thread will poll GetNextClass() until no further class is available.
+
    const THtmlThreadInfo* hti = (const THtmlThreadInfo*)info;
    if (!hti) return 0;
    TClassDocInfo* classinfo = 0;
