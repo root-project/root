@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.141 2007/08/10 14:27:53 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.142 2007/08/12 14:14:33 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -180,7 +180,7 @@ The include file name is determined via
 <a href="http://root.cern.ch/root/html/TClass.html#TClass:GetDeclFileName">
 TClass::GetDeclFileName()</a>;
 leading parts are removed if they match any of the ':' separated entries in 
-THtml::GetIncludePath()
+THtml::GetIncludePath().</p>
 
 <h4><a name="conf:tags">II.5 Author, copyright, etc.</a></h4>
 
