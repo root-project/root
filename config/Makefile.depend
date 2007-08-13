@@ -26,7 +26,7 @@ TREELIBDEPM            = $(NETLIB) $(IOLIB)
 TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
                          $(IOLIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB) \
-                         $(TREEPLAYERLIB) $(GEDLIB)
+                         $(TREEPLAYERLIB) $(GEDLIB) $(IOLIB)
 PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
 PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB) $(IOLIB) $(TREELIB) $(NETLIB) \
                          $(THREADLIB)
@@ -202,7 +202,7 @@ TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libRIO.lib
 TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib \
-                          lib/libGed.lib
+                          lib/libGed.lib lib/libRIO.lib
 PROOFLIBEXTRA           = lib/libNet.lib lib/libTree.lib lib/libRIO.lib \
                           lib/libThread.lib
 PROOFPLAYERLIBEXTRA     = lib/libProof.lib lib/libHist.lib lib/libTree.lib \
