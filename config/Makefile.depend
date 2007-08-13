@@ -296,7 +296,7 @@ FUMILILIBEXTRA          = -Llib -lGraf -lHist
 TREELIBEXTRA            = -Llib -lNet -lRIO
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
-                          -lGed
+                          -lGed -lRIO
 PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO
 PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread
 PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad -lProofPlayer \
