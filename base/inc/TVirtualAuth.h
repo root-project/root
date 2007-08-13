@@ -19,6 +19,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 class TSecContext;
 class TSocket;
 

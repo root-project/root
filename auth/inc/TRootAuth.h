@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:$:$Id:$
+// @(#)root/auth:$Name:  $:$Id: TRootAuth.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerardo Ganis   08/07/05
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #ifndef ROOT_TVirtualAuth
 #include "TVirtualAuth.h"
 #endif
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
 
 class TSecContext;
 class TSocket;
@@ -39,7 +42,7 @@ public:
                              const char *user, Option_t *options = "");
    Int_t        ClientVersion();
    void         ErrorMsg(const char *where, Int_t ecode = -1);
-   const char  *Name() { return TString("Root"); }
+   const char  *Name() { return "Root"; }
 
    ClassDef(TRootAuth,0)  // client auth interface
 };
