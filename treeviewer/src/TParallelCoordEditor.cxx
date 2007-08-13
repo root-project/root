@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.3 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.4 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -510,6 +510,8 @@ void TParallelCoordEditor::DoApplySelect()
    if (fAvoidSignal) return;
 
    fParallel->ApplySelectionToTree();
+   Update();
+   SetModel(fParallel);
 }
 
 
@@ -835,7 +837,7 @@ void TParallelCoordEditor::DoSelectionSelect(const char* title)
 
    if (fAvoidSignal) return;
 
-   fParallel->SetCurrentSelection(title);
+   if (!fParallel->SetCurrentSelection(title)) return;
 
    Color_t c = fParallel->GetCurrentSelection()->GetLineColor();
    Pixel_t p = TColor::Number2Pixel(c);
@@ -937,7 +939,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    
    fHistColorSelect->SetColor(TColor::Number2Pixel(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillColor()), kFALSE);
    fHistPatternSelect->SetPattern(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillStyle(),kFALSE);
-
+   
    if (fInit) ConnectSignals2Slots();
 
    fAvoidSignal = kFALSE;

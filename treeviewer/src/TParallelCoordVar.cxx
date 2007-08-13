@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.4 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.5 2007/08/12 16:38:44 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -57,6 +57,7 @@ TParallelCoordVar::TParallelCoordVar()
    // Default constructor.
 
    Init();
+   cout<<"TParallelCoordVar::TParallelCoordVar()"<<endl;
 }
 
 
@@ -79,9 +80,10 @@ TParallelCoordVar::~TParallelCoordVar()
 
 //______________________________________________________________________________
 TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id, TParallelCoord* parallel)
-   :TNamed("TParallelCoordVar",title), TAttLine(1,1,1), TAttFill(kOrange+9,3002)
+   :TNamed(title,title), TAttLine(1,1,1), TAttFill(kOrange+9,3002)
 {
-   // Normal constructor.
+   // Normal constructor. By default, the title and the name are the expression given to TTree::Draw. The name
+   // can be changed by the user (the label on the plot) but not the title.
 
    Init();
    fId = id;
@@ -105,8 +107,12 @@ void TParallelCoordVar::AddRange()
    // Add a range to the current selection on the axis.
 
    TParallelCoordSelect *select = fParallel->GetCurrentSelection();
-   TParallelCoordRange *range = new TParallelCoordRange(this,select);
-   range->Draw();
+   if (select) {
+      TParallelCoordRange *range = new TParallelCoordRange(this,select);
+      range->Draw();
+   } else {
+      Error("AddRange","You must create a selection before adding ranges.");
+   }
 }
 
 
@@ -355,7 +361,7 @@ TH1F* TParallelCoordVar::GetHistogram()
 {
    // Create or recreate the histogram.
 
-   if(fHistogram) delete fHistogram;
+   if (fHistogram) delete fHistogram;
    fHistogram = NULL;
    fHistogram = new TH1F("hpa", "hpa", fNbins, fMinCurrent, fMaxCurrent+0.0001*(fMaxCurrent-fMinCurrent));
    fHistogram->SetDirectory(0);
@@ -525,15 +531,16 @@ void TParallelCoordVar::Init()
    fY1         = 0;
    fY2         = 0;
    fId         = 0;
-   fMean= 0;
+   fVal        = NULL;
+   fMean       = 0;
    fMinInit    = 0;
    fMinCurrent = 0;
    fMaxInit    = 0;
    fMaxCurrent = 0;
-   fMed = 0;
-   fQua1= 0;
-   fQua3= 0;
-   fNentries    = 0;
+   fMed        = 0;
+   fQua1       = 0;
+   fQua3       = 0;
+   fNentries   = 0;
    fParallel   = NULL;
    fHistogram  = NULL;
    fNbins      = 100;
@@ -666,6 +673,8 @@ void TParallelCoordVar::PaintHistogram()
    Int_t i;
 
    TFrame *frame = gPad->GetFrame();
+   
+   if (!fHistogram) GetHistogram();
 
    // Paint the axis body.
    if (fHistoHeight!=0 && TestBit(kShowBarHisto)) {
@@ -771,19 +780,19 @@ void TParallelCoordVar::PaintLabels()
    TFrame *frame = gPad->GetFrame();
    t->SetTextSize(0.03);
    if (fX1==fX2) {
-      t->SetText(fX1,frame->GetY1() - 0.04 - t->GetTextSize(),GetTitle());
+      t->SetText(fX1,frame->GetY1() - 0.04 - t->GetTextSize(),GetName());
       Double_t tlength = t->GetXsize();
       if (fX1-0.5*tlength<0.01) {
          t->SetTextAlign(11);
-         t->SetText(0.01, frame->GetY1() - 0.04 - t->GetTextSize(), GetTitle());
+         t->SetText(0.01, frame->GetY1() - 0.04 - t->GetTextSize(), GetName());
          t->Paint();
       } else if (fX1+0.5*tlength > 0.99) {
          t->SetTextAlign(31);
-         t->SetText(0.99,frame->GetY1() - 0.04 - t->GetTextSize(),GetTitle());
+         t->SetText(0.99,frame->GetY1() - 0.04 - t->GetTextSize(),GetName());
          t->Paint();
       } else {
          t->SetTextAlign(21);
-         t->PaintLatex(fX1,frame->GetY1() - 0.04 - t->GetTextSize(),0,0.03,GetTitle());
+         t->PaintLatex(fX1,frame->GetY1() - 0.04 - t->GetTextSize(),0,0.03,GetName());
       }
       if (!fParallel->TestBit(TParallelCoord::kCandleChart)) {
          t->SetTextAlign(21);
@@ -792,16 +801,16 @@ void TParallelCoordVar::PaintLabels()
          t->PaintLatex(fX1,frame->GetY1() - 0.005,0,0.025,Form("%6.4f",fMinCurrent));
       }
    } else {
-      t->SetText(fX1-0.04,fY1+0.02,GetTitle());
+      t->SetText(fX1-0.04,fY1+0.02,GetName());
       t->SetTextSize(0.03);
       Double_t tlength = t->GetXsize();
       if (fX1-0.04-tlength<0.01) {
          t->SetTextAlign(12);
-         t->SetText(0.01,fY1+0.02,GetTitle());
+         t->SetText(0.01,fY1+0.02,GetName());
          t->Paint();
       } else {
          t->SetTextAlign(32);
-         t->PaintLatex(fX1-0.04,fY1+0.02,0,0.03,GetTitle());
+         t->PaintLatex(fX1-0.04,fY1+0.02,0,0.03,GetName());
       }
       if (!fParallel->TestBit(TParallelCoord::kCandleChart)) {
          t->SetTextAlign(12);
@@ -944,8 +953,9 @@ void TParallelCoordVar::SetLogScale(Bool_t log)
 //______________________________________________________________________________
 void TParallelCoordVar::SetValues(Long64_t length, Double_t* val)
 {
-   //FIXME PLEASE
-   delete [] fVal;
+   // Set the variable values.
+
+   if (fVal) delete [] fVal;
    fVal = new Double_t[length];
    fNentries = length;
    for (Long64_t li = 0; li < length; ++li) fVal[li] = val[li];

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.3 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.4 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -24,6 +24,7 @@ class TParallelCoordVar;
 class TParallelCoord;
 class TParallelCoordSelect;
 class TPoint;
+class TString;
 
 class TParallelCoordRange : public TNamed, public TAttLine {
 public:
@@ -73,14 +74,8 @@ public:
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
 #endif
-#ifndef ROOT_TNamed
-#include "TNamed.h"
-#endif
 #ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
 #endif
 
 class TParallelCoord;
@@ -94,7 +89,7 @@ public:
    };
 
 private:
-   TString fTitle;
+   TString fTitle;            // Title of the selection.
 
 public:
    TParallelCoordSelect();    // Default constructor.
@@ -106,7 +101,7 @@ public:
    void        SetShowRanges(Bool_t s);
    void        SetTitle(const char* title) {fTitle = title;}
    
-   ClassDef(TParallelCoordSelect,0); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
+   ClassDef(TParallelCoordSelect,1); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
 };
 
 #endif

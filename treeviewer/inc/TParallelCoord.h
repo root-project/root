@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.3 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.4 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -50,13 +50,15 @@ private:
    Color_t         fLineColor;         // entries line color.
    Width_t         fLineWidth;         // entries line width.
    Int_t           fWeightCut;         // Specify a cut on the entries from their weight (see TParallelCoordVar::GetEvtWeight(Long64_t))
-   TEntryList     *fCurrentEntries;    // Current selected entries in the tree.
-   TEntryList     *fInitEntries;       // Selected entries when TParallelCoord first initialized.
-   TTree          *fTree;              // Pointer to the TTree.
+   TEntryList     *fCurrentEntries;    //-> Current selected entries in the tree.
+   TEntryList     *fInitEntries;       //-> Selected entries when TParallelCoord first initialized.
+   TTree          *fTree;              //! Pointer to the TTree.
+   TString         fTreeName;          // Name of the tree.
+   TString         fTreeFileName;      // Name of the file containing the tree.
    TList          *fVarList;           // List of the variables.
    TList          *fSelectList;        // List of selections over the variables.
-   TParallelCoordSelect* fCurrentSelection; // Current Selection being edited.
-   TGaxis         *fCandleAxis;        // An axis used when displaying a candle chart.
+   TParallelCoordSelect* fCurrentSelection; //! Current Selection being edited.
+   TGaxis         *fCandleAxis;        //! An axis used when displaying a candle chart.
 
    void            Init();
    void            PaintEntries(TParallelCoordSelect* sel=NULL);
@@ -83,7 +85,7 @@ public:
    Bool_t         GetCandleChart() {return TestBit(kCandleChart);}
    Long64_t       GetCurrentFirst() {return fCurrentFirst;}
    Long64_t       GetCurrentN() {return fCurrentN;}
-   TParallelCoordSelect* GetCurrentSelection() {return fCurrentSelection;}
+   TParallelCoordSelect* GetCurrentSelection();
    Bool_t         GetCurveDisplay() const {return TestBit(kCurveDisplay);}
    Int_t          GetDotsSpacing() const {return fDotsSpacing;}
    TEntryList    *GetEntryList(Bool_t sel=kTRUE);
@@ -97,7 +99,7 @@ public:
    UInt_t         GetNvar() {return fNvar;}
    Long64_t       GetNentries() {return fNentries;}
    TList         *GetSelectList() {return fSelectList;}
-   TTree         *GetTree() {return fTree;}
+   TTree         *GetTree();
    Double_t      *GetVariable(const char* var);
    Double_t      *GetVariable(Int_t i);
    TList         *GetVarList() {return fVarList;}
@@ -112,7 +114,7 @@ public:
    virtual void   SetCurveDisplay(Bool_t curve=1) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
    void           SetCurrentFirst(Long64_t);
    void           SetCurrentN(Long64_t);
-   void           SetCurrentSelection(const char* title);
+   TParallelCoordSelect* SetCurrentSelection(const char* title);
    void           SetCurrentSelection(TParallelCoordSelect* sel);
    void           SetDotsSpacing(Int_t s=0); // *MENU*
    void           SetEntryList(TEntryList* enlist) {fCurrentEntries = fInitEntries = enlist;}
@@ -130,7 +132,7 @@ public:
    void           SetWeightCut(Int_t w=0) {fWeightCut = w;} // *MENU*
    void           UnzoomAll(); // *MENU*
 
-   ClassDef(TParallelCoord,0); // To display parallel coordinates plots.
+   ClassDef(TParallelCoord,1); // To display parallel coordinates plots.
 };
 
 #endif

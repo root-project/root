@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.2 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.3 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -51,10 +51,10 @@ private:
    Double_t          fQua1;         // First quantile (Q1).
    Double_t          fQua3;         // Third quantile (Q3).
    Double_t          fHistoHeight;  // Histogram Height.
-   Double_t         *fVal;          //[fNentries] Entries values for the variable.
+   Double_t         *fVal;          //![fNentries] Entries values for the variable.
    TList            *fRanges;       // List of the TParallelRange owned by TParallelCoordVar.
-   TParallelCoord   *fParallel;     //-> Pointer to the TParallelCoord which owns the TParallelCoordVar.
-   TH1F             *fHistogram;    // Histogram holding the variable distribution.
+   TParallelCoord   *fParallel;     // Pointer to the TParallelCoord which owns the TParallelCoordVar.
+   TH1F             *fHistogram;    //! Histogram holding the variable distribution.
 
 public:
    TParallelCoordVar();
@@ -109,12 +109,13 @@ public:
    void           SetCurrentMax(Double_t max);
    void           SetLiveRangesUpdate(Bool_t on);
    void           SetLogScale(Bool_t log); // *TOGGLE* *GETTER=GetLogScale
+   void           SetTitle(const char* /*title*/) {} // To hide TNamed::SetTitle.
    void           SetValues(Long64_t length, Double_t* val);
    void           SetX(Double_t x, Bool_t gl);    // Set a new x position in case of a vertical display.
    void           SetY(Double_t y, Bool_t gl);    // Set a new y position in case of a horizontal display.
    void           Unzoom() {SetCurrentLimits(fMinInit,fMaxInit);} // *MENU* Reset fMin and fMax to their original value.
 
-   ClassDef(TParallelCoordVar,0); // A Variable of a parallel coordinates plot.
+   ClassDef(TParallelCoordVar,1); // A Variable of a parallel coordinates plot.
 };
 
 #endif

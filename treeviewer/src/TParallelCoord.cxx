@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.2 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.3 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TEnv.h"
 #include "TCanvas.h"
 #include "TGaxis.h"
+#include "TFile.h"
 
 ClassImp(TParallelCoord)
 
@@ -149,6 +150,8 @@ TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
    fNentries = nentries;
    fCurrentN = fNentries;
    fTree = tree;
+   fTreeName = fTree->GetName();
+   fTreeFileName = fTree->GetCurrentFile()->GetName();
    fVarList = new TList();
    fSelectList = new TList();
    fCurrentSelection = new TParallelCoordSelect();
@@ -231,7 +234,7 @@ void TParallelCoord::AddSelection(const char* title)
 
    TParallelCoordSelect *sel = new TParallelCoordSelect(title);
    fSelectList->Add(sel);
-   SetCurrentSelection(sel);
+   fCurrentSelection = sel;
 }
 
 
@@ -253,9 +256,9 @@ void  TParallelCoord::ApplySelectionToTree()
    varexp.Remove(TString::kLeading,':');
    TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
    fTree->Draw(varexp.Data(),"","goff para");
-   TIter nextbis(fVarList);
+   next.Reset();
    Int_t i = 0;
-   while ((var = (TParallelCoordVar*)nextbis())) {
+   while ((var = (TParallelCoordVar*)next())) {
       var->SetValues(fNentries, selector->GetVal(i));
       ++i;
    }
@@ -342,6 +345,8 @@ void TParallelCoord::Draw(Option_t* option)
 {
    // Draw the parallel coordinates graph.
 
+   if (!GetTree()) return;
+   if (!fCurrentEntries) fCurrentEntries = fInitEntries;
    Bool_t optcandle = kFALSE;
    TString opt = option;
    opt.ToLower();
@@ -365,8 +370,10 @@ void TParallelCoord::Draw(Option_t* option)
    }
    gPad->Clear();
    if (!optcandle) {
-      ((TCanvas*)gPad)->ToggleEditor();
-      ((TCanvas*)gPad)->ToggleEventStatus();
+      if (!((TCanvas*)gPad)->GetShowEditor()) {
+         ((TCanvas*)gPad)->ToggleEditor();
+         ((TCanvas*)gPad)->ToggleEventStatus();
+      }
    }
    
    gPad->SetBit(TGraph::kClipFrame,kTRUE);
@@ -413,11 +420,22 @@ void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
 
 
 //______________________________________________________________________________
+TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
+{
+   if (!fSelectList) return NULL;
+   if (!fCurrentSelection) {
+      fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
+   }
+   return fCurrentSelection;
+}
+
+
+//______________________________________________________________________________
 TEntryList* TParallelCoord::GetEntryList(Bool_t sel)
 {
    // Get the whole entry list or one for a selection.
 
-   if(!sel){ // If no selection is specified, return the entry list of all the entries.
+   if(!sel || fCurrentSelection->GetSize() == 0){ // If no selection is specified, return the entry list of all the entries.
       return fCurrentEntries;
    } else { // return the entry list corresponding to the current selection.
       TEntryList *enlist = new TEntryList(fTree);
@@ -475,6 +493,47 @@ Int_t TParallelCoord::GetNbins()
    return ((TParallelCoordVar*)fVarList->First())->GetNbins();
 }
 
+
+//______________________________________________________________________________
+TTree* TParallelCoord::GetTree()
+{
+   if (fTree) return fTree;
+   if (fTreeFileName=="" || fTreeName=="") {
+      Error("GetTree","Cannot load the tree: no tree defined!");
+      return NULL;
+   }
+   TFile *f = TFile::Open(fTreeFileName.Data());
+   if (!f) {
+      Error("GetTree","Tree file name : \"%s\" does not exsist (Are you in the correct directory?).",fTreeFileName.Data());
+      return NULL;
+   } else if (f->IsZombie()) {
+      Error("GetTree","while opening \"%s\".",fTreeFileName.Data());
+      return NULL;
+   } else {
+      fTree = (TTree*)f->Get(fTreeName.Data());
+      if (!fTree) {
+         Error("GetTree","\"%s\" not found in \"%s\".", fTreeName.Data(), fTreeFileName.Data());
+         return NULL;
+      } else {
+         fTree->SetEntryList(fCurrentEntries);
+         TString varexp = "";
+         TIter next(fVarList);
+         TParallelCoordVar* var;
+         while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+         varexp.Remove(TString::kLeading,':');
+         fTree->Draw(varexp.Data(),"","goff para");
+         TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
+         next.Reset();
+         Int_t i = 0;
+         while ((var = (TParallelCoordVar*)next())) {
+            var->SetValues(fNentries, selector->GetVal(i));
+            ++i;
+         }
+         return fTree;
+      }
+   }
+}
+
       
 //______________________________________________________________________________
 Double_t* TParallelCoord::GetVariable(const char* vartitle)
@@ -526,6 +585,8 @@ void TParallelCoord::Init()
    fWeightCut = 0;
    fLineWidth = 1;
    fLineColor = kGreen-8;
+   fTreeName = "";
+   fTreeFileName = "";
 }
 
 //______________________________________________________________________________
@@ -533,7 +594,8 @@ void TParallelCoord::Paint(Option_t* /*option*/)
 {
    // Paint the parallel coordinates graph.
 
-   gPad->PaintPadFrame(0.1,0.1,0.9,0.9);
+   if (!GetTree()) return;
+   gPad->Range(0,0,1,1);
    TFrame *frame = gPad->GetFrame();
    frame->SetLineColor(gPad->GetFillColor());
    SetAxesPosition();
@@ -668,12 +730,14 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
 //______________________________________________________________________________
 void TParallelCoord::ResetTree()
 {
-   // Reset the tree entry list to NULL.
+   // Reset the tree entry list to the initial one..
 
    if(!fTree) return;
    fTree->SetEntryList(fInitEntries);
    fCurrentEntries = fInitEntries;
    fNentries = fCurrentEntries->GetN();
+   fCurrentFirst = 0;
+   fCurrentN = fNentries;
    TString varexp = "";
    TIter next(fVarList);
    TParallelCoordVar* var;
@@ -691,6 +755,8 @@ void TParallelCoord::ResetTree()
       fSelectList->Delete();
       fCurrentSelection = NULL;
    }
+   gPad->Modified();
+   gPad->Update();
 }
 
 
@@ -888,16 +954,17 @@ void TParallelCoord::SetCurrentN(Long64_t n)
 
 
 //______________________________________________________________________________
-void TParallelCoord::SetCurrentSelection(const char* title)
+TParallelCoordSelect* TParallelCoord::SetCurrentSelection(const char* title)
 {
    // Set the selection beeing edited.
 
-   if (fCurrentSelection && fCurrentSelection->GetTitle() == title) return;
+   if (fCurrentSelection && fCurrentSelection->GetTitle() == title) return fCurrentSelection;
    TIter next(fSelectList);
    TParallelCoordSelect* sel;
    while((sel = (TParallelCoordSelect*)next()) && strcmp(sel->GetTitle(),title))
-   if(!sel) return;
+   if(!sel) return NULL;
    fCurrentSelection = sel;
+   return sel;
 }
 
 

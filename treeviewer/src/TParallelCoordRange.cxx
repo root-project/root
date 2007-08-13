@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.2 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.3 2007/08/10 10:09:52 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TFrame.h"
 #include "Riostream.h"
 #include "TCanvas.h"
+#include "TString.h"
 
 ClassImp(TParallelCoordRange)
 
