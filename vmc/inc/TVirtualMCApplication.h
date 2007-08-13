@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.7 2007/01/12 16:03:17 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.8 2007/05/21 14:38:15 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 /*************************************************************************
@@ -99,10 +99,6 @@ private:
 
    ClassDef(TVirtualMCApplication,1)  //Interface to MonteCarlo application
 };
-
-// inline methods
-inline TVirtualMCApplication* TVirtualMCApplication::Instance()
-{ return fgInstance; }
 
 #endif //ROOT_TVirtualMCApplication
 

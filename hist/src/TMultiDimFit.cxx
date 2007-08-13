@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.28 2006/09/22 09:09:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.29 2006/12/12 13:48:14 couet Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2384,6 +2384,12 @@ void TMultiDimFit::Fit(Option_t *option)
    }
 }
 
+//____________________________________________________________________
+TMultiDimFit* TMultiDimFit::Instance()
+{
+   // Return the static instance.
+   return fgInstance;
+}
 
 //____________________________________________________________________
 void TMultiDimFit::MakeCandidates()

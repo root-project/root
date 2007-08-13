@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.8 2006/09/19 12:38:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.9 2006/09/22 09:09:47 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -193,7 +193,7 @@ public:
    const TVectorD*  GetTestVariables()     const { return &fTestVariables; }
    const TVectorD*  GetVariables()         const { return &fVariables; }
 
-   static TMultiDimFit* Instance()               { return fgInstance; }
+   static TMultiDimFit* Instance();
    virtual Bool_t   IsFolder()             const { return kTRUE; }
    virtual Double_t MakeChi2(const Double_t* coeff=0);
    virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU*

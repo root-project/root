@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.20 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.21 2006/12/12 16:12:55 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual ~TVirtualMC();
 
    // Static access method
-   static TVirtualMC* GetMC() { return fgMC; }
+   static TVirtualMC* GetMC();
 
    //
    // ------------------------------------------------

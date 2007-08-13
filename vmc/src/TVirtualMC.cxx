@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.cxx,v 1.7 2006/05/14 07:38:51 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.cxx,v 1.8 2006/08/24 16:31:21 rdm Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
 
 /*************************************************************************
@@ -82,6 +82,17 @@ TVirtualMC::~TVirtualMC()
 //
 // methods
 //
+
+
+//_____________________________________________________________________________
+TVirtualMC* TVirtualMC::GetMC()
+{
+//
+// Return the static instance.
+//
+
+   return fgMC;
+}
 
 //_____________________________________________________________________________
 void TVirtualMC::SetStack(TVirtualMCStack* stack)
