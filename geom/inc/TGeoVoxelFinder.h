@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.12 2005/11/28 12:55:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.13 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+
+class TGeoVolume;
 
 /*************************************************************************
  * TGeoVoxelFinder - finder class handling voxels 

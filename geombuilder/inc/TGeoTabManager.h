@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.4 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.h,v 1.5 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -20,11 +20,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TGFrame
+#include "TGFrame.h"
 #endif
 
+#ifndef ROOT_TMap
 #include "TMap.h"
+#endif
 
 class TVirtualPad;
 class TClass;

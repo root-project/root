@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.13 2005/11/18 16:07:58 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.14 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -12,9 +12,9 @@
 #ifndef ROOT_TGeoBoolNode
 #define ROOT_TGeoBoolNode
 
-//#ifndef ROOT_TGeoShape
-//#include "TGeoShape.h"
-//#endif
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
 // forward declarations
 class TGeoShape;

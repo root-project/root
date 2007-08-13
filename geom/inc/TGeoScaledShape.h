@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.4 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.5 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   26/09/05
    
 /*************************************************************************
@@ -20,6 +20,9 @@
  * TGeoScaledShape - A scaled shape. Has a pointer to a shape and to a TGeoScale. 
  *
  *************************************************************************/
+
+class TGeoScale;
+class TGeoShape;
 
 class TGeoScaledShape : public TGeoBBox
 {
