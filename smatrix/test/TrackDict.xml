@@ -1,7 +1,0 @@
-<lcgdict>
- <class name ="TrackD"/>
- <class name ="TrackD32">
-  <field name="fCov" iotype="ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepStd<Double32_t,5,5> >"/>
- </class>
- 
-</lcgdict>

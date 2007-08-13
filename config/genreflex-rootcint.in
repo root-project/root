@@ -1,2 +1,0 @@
-#!/bin/sh
-python @libdir@/python/genreflex/genreflex-rootcint.py "$@"

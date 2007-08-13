@@ -1,3 +1,0 @@
-libroot-ruby@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-ruby@libvers@: postrm-has-useless-call-to-ldconfig
-
