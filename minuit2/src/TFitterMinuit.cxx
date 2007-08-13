@@ -296,15 +296,16 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
       MnMinos minos( *fMinuitFCN, min);
       fMinosErrors.clear();
       for(unsigned int i = 0; i < State().VariableParameters(); i++) {
+         if (fDebug>=3) std::cout << "Running Minos for parameter (ext#) " << State().ExtOfInt(i) << std::endl;
          MinosError me = minos.Minos(State().ExtOfInt(i));
          // print error message in Minos
          if (fDebug >= 0) {
             if ( !me.IsValid() )  
-               std::cout << "Error running Minos for parameter " << i << std::endl; 
+               std::cout << "Error running Minos for parameter " << State().ExtOfInt(i) << std::endl; 
          }
          if (fDebug >= 1) {
             if (!me.LowerValid() )  
-               std::cout << "Minos:  Invalid lower error for parameter " << i << std::endl; 
+               std::cout << "Minos:  Invalid lower error for parameter " << State().ExtOfInt(i) << std::endl; 
             if(me.AtLowerLimit()) 
                std::cout << "Minos:  Parameter  is at Lower limit."<<std::endl;
             if(me.AtLowerMaxFcn())
@@ -313,7 +314,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
                std::cout << "Minos:  New Minimum found while running Minos for lower error" <<std::endl;     
             
             if (!me.UpperValid() )  
-               std::cout << "Minos:  Invalid upper error for parameter " << i << std::endl; 
+               std::cout << "Minos:  Invalid upper error for parameter " << State().ExtOfInt(i) << std::endl; 
             if(me.AtUpperLimit()) 
                std::cout << "Minos:  Parameter  is at Upper limit."<<std::endl;
             if(me.AtUpperMaxFcn())
@@ -522,14 +523,18 @@ Double_t TFitterMinuit::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
 Int_t TFitterMinuit::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const {
    // get fit errors 
    //   std::cout<<"GetError"<<std::endl;
-   if(fMinosErrors.empty()) {
-      eplus = 0.;
-      eminus = 0.; 
-   } else {
-      unsigned int nintern = State().IntOfExt(ipar);
-      eplus = fMinosErrors[nintern].Upper();
-      eminus = fMinosErrors[nintern].Lower();
-   }
+   eplus = 0.;
+   eminus = 0.; 
+
+   MinuitParameter mpar = State().Parameters().Parameter(ipar);
+   if (mpar.IsFixed() || mpar.IsConst() )  return 0;
+   if(fMinosErrors.empty()) return 0; 
+   
+   
+   unsigned int nintern = State().IntOfExt(ipar);
+   eplus = fMinosErrors[nintern].Upper();
+   eminus = fMinosErrors[nintern].Lower();
+   
    eparab = State().Error(ipar);
    globcc = State().GlobalCC().GlobalCC()[ipar];
    return 0;
