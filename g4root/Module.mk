@@ -7,6 +7,10 @@ MODDIR       := g4root
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
+ifdef G4ROOT_DEBUG
+  CXXFLAGS   += -DG4ROOT_DEBUG
+endif
+   
 G4ROOTDIR    := $(MODDIR)
 G4ROOTDIRS   := $(G4ROOTDIR)/src
 G4ROOTDIRI   := $(G4ROOTDIR)/inc
