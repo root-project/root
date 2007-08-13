@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQClass.h,v 1.26 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQClass.h,v 1.1 2006/03/20 21:42:28 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TQObject
-#include "TObject.h"
+#include "TQObject.h"
 #endif
 #ifndef ROOT_TClass
 #include "TClass.h"
