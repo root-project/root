@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.4 2007/04/23 09:07:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.5 2007/05/04 20:40:18 rdm Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -26,15 +26,18 @@
 #include "TGTextEdit.h"
 #endif
 
-class TGToolBar;
-class TTimer;
-class TGStatusBar;
+class TGComboBox;
 class TGLayoutHints;
 class TGMenuBar;
 class TGPopupMenu;
-class TString;
-class TMacro;
+class TGStatusBar;
 class TGText;
+class TGTextBuffer;
+class TGTextEntry;
+class TGToolBar;
+class TMacro;
+class TString;
+class TTimer;
 
 class TGTextEditor : public TGMainFrame {
 

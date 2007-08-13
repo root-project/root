@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.10 2007/02/03 18:12:31 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.11 2007/02/06 15:39:54 antcheva Exp $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #endif
 
 class TGraph;
+class TGButtonGroup;
 class TGTextEntry;
 class TGCheckButton;
 class TGRadioButton;
