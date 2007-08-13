@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.4 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.5 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    UInt_t         GetNvar() {return fNvar;}
    Long64_t       GetNentries() {return fNentries;}
    TList         *GetSelectList() {return fSelectList;}
+   TParallelCoordSelect* GetSelection(const char* title);
    TTree         *GetTree();
    Double_t      *GetVariable(const char* var);
    Double_t      *GetVariable(Int_t i);
@@ -107,22 +108,25 @@ public:
    Int_t          GetWeightCut() const {return fWeightCut;};
    virtual void   Paint(Option_t* options="");
    void           ResetTree();
+   void           SaveEntryLists(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
+   void           SavePrimitive(ostream & out,Option_t *options);
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*
    void           SetAxisHistogramLineWidth(Int_t lw=2); // *MENU*
    void           SetCandleChart(Bool_t can); // *TOGGLE* *GETTER=GetCandleChart
    virtual void   SetCurveDisplay(Bool_t curve=1) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
+   void           SetCurrentEntries(TEntryList* entries) {fCurrentEntries = entries;}
    void           SetCurrentFirst(Long64_t);
    void           SetCurrentN(Long64_t);
    TParallelCoordSelect* SetCurrentSelection(const char* title);
    void           SetCurrentSelection(TParallelCoordSelect* sel);
    void           SetDotsSpacing(Int_t s=0); // *MENU*
-   void           SetEntryList(TEntryList* enlist) {fCurrentEntries = fInitEntries = enlist;}
-   static void    SetEntryList(TParallelCoord* para, TEntryList* enlist) {para->SetEntryList(enlist);}
+   static void    SetEntryList(TParallelCoord* para, TEntryList* enlist);
    void           SetGlobalScale(Bool_t gl); // *TOGGLE* *GETTER=GetGlobalScale
    void           SetGlobalLogScale(Bool_t); // *TOGGLE* *GETTER=GetGlobalLogScale
    void           SetGlobalMin(Double_t min);
    void           SetGlobalMax(Double_t max);
+   void           SetInitEntries(TEntryList* entries) {fInitEntries = entries;}
    void           SetLineColor(Color_t col) {fLineColor = col;}
    void           SetLineWidth(Width_t wid) {fLineWidth = wid;}
    void           SetLiveRangesUpdate(Bool_t);

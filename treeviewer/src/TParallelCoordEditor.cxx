@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.4 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.cxx,v 1.5 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -871,6 +871,7 @@ void TParallelCoordEditor::DoUnApply()
 
    fParallel->ResetTree();
    Update();
+   SetModel(fParallel);
 }
 
 

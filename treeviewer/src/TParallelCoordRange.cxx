@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.3 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.4 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -74,8 +74,6 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, TParallelCoordS
    fVar = var;
    fSelect = sel;
    
-   var->GetRanges()->Add(this);
-   sel->Add(this);
    SetBit(kShowOnPad,kTRUE);
    SetBit(kLiveUpdate,var->GetParallel()->TestBit(TParallelCoord::kLiveUpdate));
 }

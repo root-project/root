@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.5 2007/08/12 16:38:44 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.6 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -57,7 +57,6 @@ TParallelCoordVar::TParallelCoordVar()
    // Default constructor.
 
    Init();
-   cout<<"TParallelCoordVar::TParallelCoordVar()"<<endl;
 }
 
 
@@ -102,16 +101,23 @@ TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id,
 
 
 //______________________________________________________________________________
-void TParallelCoordVar::AddRange()
+void TParallelCoordVar::AddRange(TParallelCoordRange* range)
 {
    // Add a range to the current selection on the axis.
 
-   TParallelCoordSelect *select = fParallel->GetCurrentSelection();
-   if (select) {
-      TParallelCoordRange *range = new TParallelCoordRange(this,select);
-      range->Draw();
+   if (!range) {
+      TParallelCoordSelect *select = fParallel->GetCurrentSelection();
+      if (select) {
+         range = new TParallelCoordRange(this,select);
+         fRanges->Add(range);
+         range->GetSelection()->Add(range);
+         range->Draw();
+      } else {
+         Error("AddRange","You must create a selection before adding ranges.");
+      }
    } else {
-      Error("AddRange","You must create a selection before adding ranges.");
+      fRanges->Add(range);
+      range->GetSelection()->Add(range);
    }
 }
 
@@ -151,6 +157,9 @@ void TParallelCoordVar::Draw(Option_t *option)
 {
    // Draw the axis.
 
+   TIter next(fRanges);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->Draw();
    AppendPad(option);
 }
 
@@ -831,6 +840,47 @@ void TParallelCoordVar::Print(Option_t* /*option*/) const
    printf("**************variable #%d**************\n",fParallel->GetVarList()->IndexOf(this));
    printf("at x1=%f, y1=%f, x2=%f, y2=%f.\n",fX1,fY1,fX2,fY2);
    printf("min = %f, Q1 = %f, Med = %f, Q3 = %f, Max = %f\n", fMinInit, fQua1, fMed, fQua3, fMaxInit);
+}
+
+
+//______________________________________________________________________________
+void TParallelCoordVar::SavePrimitive(ostream & out, Option_t* options)
+{
+   // Save the TParallelCoordVar as a macro. Can be used only in the context
+   // of TParallelCoord::SavePrimitive (pointer "TParallelCoord* para" is 
+   // defined in TParallelCoord::SavePrimitive) with the option "pcalled".
+
+   TString opt = options;
+   if (opt.Contains("pcalled")) {
+      out<<"   var->SetBit(TParallelCoordVar::kLogScale,"<<TestBit(kLogScale)<<");"<<endl;
+      out<<"   var->SetBit(TParallelCoordVar::kShowBox,"<<TestBit(kShowBox)<<");"<<endl;
+      out<<"   var->SetBit(TParallelCoordVar::kShowBarHisto,"<<TestBit(kShowBarHisto)<<");"<<endl;
+      out<<"   var->SetHistogramBinning("<<fNbins<<");"<<endl;
+      out<<"   var->SetHistogramLineWidth("<<fHistoLW<<");"<<endl;
+      out<<"   var->SetInitMin("<<fMinInit<<");"<<endl;
+      out<<"   var->SetInitMax("<<fMaxInit<<");"<<endl;
+      out<<"   var->SetHistogramHeight("<<fHistoHeight<<");"<<endl;
+      out<<"   var->GetMinMaxMean();"<<endl;
+      out<<"   var->GetHistogram();"<<endl;
+      out<<"   var->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+      out<<"   var->SetFillColor("<<GetFillColor()<<");"<<endl;
+      out<<"   var->SetLineColor("<<GetLineColor()<<");"<<endl;
+      out<<"   var->SetLineWidth("<<GetLineWidth()<<");"<<endl;
+      out<<"   var->SetLineStyle("<<GetLineStyle()<<");"<<endl;
+      if (TestBit(kShowBox)) out<<"   var->GetQuantiles();"<<endl;
+      TIter next(fRanges);
+      TParallelCoordRange* range;
+      Int_t i = 1;
+      while ((range = (TParallelCoordRange*)next())) {
+         out<<"   //***************************************"<<endl;
+         out<<"   // Create the "<<i<<"th range owned by the axis \""<<GetTitle()<<"\"."<<endl;
+         out<<"   TParallelCoordSelect* sel = para->GetSelection(\""<<range->GetSelection()->GetTitle()<<"\");"<<endl;
+         out<<"   TParallelCoordRange* newrange = new TParallelCoordRange(var,sel,"<<range->GetMin()<<","<<range->GetMax()<<");"<<endl;
+         out<<"   var->AddRange(newrange);"<<endl;
+         out<<"   sel->Add(newrange);"<<endl;
+         ++i;
+      }
+   }
 }
 
 

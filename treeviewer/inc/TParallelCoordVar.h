@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.3 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.h,v 1.4 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 
 class TParallelCoord;
 class TParallelCoordSelect;
+class TParallelCoordRange;
 class TH1F;
 
 class TParallelCoordVar : public TNamed, public TAttLine, public TAttFill {
@@ -61,7 +62,8 @@ public:
    TParallelCoordVar(Double_t *val, const char* title,Int_t id, TParallelCoord* gram);
    ~TParallelCoordVar();
 
-   void           AddRange(); // *MENU*
+   void           AddRange(TParallelCoordRange* range);
+   void           AddRange() {AddRange(NULL);} // *MENU*
    void           DeleteVariable(); // *MENU*
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   Draw(Option_t *option="");
@@ -99,6 +101,7 @@ public:
    void           PaintHistogram();
    void           PaintLabels();
    virtual void   Print(Option_t* option="") const; // *MENU*
+   void           SavePrimitive(ostream & out, Option_t *options);
    void           SetBoxPlot(Bool_t box); // *TOGGLE* *GETTER=GetBoxPlot
    void           SetBarHisto(Bool_t h) {SetBit(kShowBarHisto,h);} // *TOGGLE* *GETTER=GetBarHisto
    void           SetHistogramLineWidth(Int_t lw=2) {fHistoLW = lw;} // *MENU*
@@ -107,6 +110,8 @@ public:
    void           SetCurrentLimits(Double_t min, Double_t max); // *MENU*
    void           SetCurrentMin(Double_t min);
    void           SetCurrentMax(Double_t max);
+   void           SetInitMin(Double_t min) {fMinInit = min;}
+   void           SetInitMax(Double_t max) {fMaxInit = max;}
    void           SetLiveRangesUpdate(Bool_t on);
    void           SetLogScale(Bool_t log); // *TOGGLE* *GETTER=GetLogScale
    void           SetTitle(const char* /*title*/) {} // To hide TNamed::SetTitle.

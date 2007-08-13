@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.4 2007/08/10 10:09:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.5 2007/08/13 10:50:12 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -55,7 +55,10 @@ public:
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void Draw(Option_t *options="");
    virtual void ExecuteEvent(Int_t entry, Int_t px, Int_t py);
+   virtual Double_t GetMin() {return fMin;}
+   virtual Double_t GetMax() {return fMax;}
    TParallelCoordVar* GetVar() {return fVar;}
+   TParallelCoordSelect* GetSelection() {return fSelect;}
    Bool_t IsIn(Double_t evtval);
    virtual void Paint(Option_t *options);
    virtual void Print(Option_t *options) const; // *MENU*
