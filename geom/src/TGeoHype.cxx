@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.15 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.16 2007/04/23 08:58:53 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -248,6 +248,9 @@ Double_t TGeoHype::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    // find distance to shape
    // Do Z
    Double_t xi, yi, zi;

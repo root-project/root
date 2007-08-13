@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.72 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.73 2007/05/08 12:10:14 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -407,6 +407,9 @@ Double_t TGeoTube::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    // find distance to shape
    return DistFromOutsideS(point, dir, fRmin, fRmax, fDz);
 }
@@ -1617,6 +1620,9 @@ Double_t TGeoTubeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    if ((fPhi2-fPhi1)>=360.) return TGeoTube::DistFromOutsideS(point,dir,fRmin,fRmax,fDz);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
@@ -2436,6 +2442,9 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    Double_t saf[2];
    saf[0] = point[0]*fNlow[0] + point[1]*fNlow[1] + (fDz+point[2])*fNlow[2];
    saf[1] = point[0]*fNhigh[0] + point[1]*fNhigh[1] + (point[2]-fDz)*fNhigh[2];

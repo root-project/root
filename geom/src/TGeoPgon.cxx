@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.62 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.63 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -957,6 +957,9 @@ Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();               // just safety computed
       if (iact==1 && step<*safe) return TGeoShape::Big(); // safety mode
    }   
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    // copy the current point
    Double_t pt[3];
    memcpy(pt,point,3*sizeof(Double_t));

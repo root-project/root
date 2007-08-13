@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.60 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.61 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -471,6 +471,9 @@ Double_t TGeoPcon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // check if ray intersect outscribed cylinder
    if ((point[2]<fZ[0]) && (dir[2]<=0)) return TGeoShape::Big();
    if ((point[2]>fZ[fNz-1]) && (dir[2]>=0)) return TGeoShape::Big();
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
 
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    Double_t radmax=0;

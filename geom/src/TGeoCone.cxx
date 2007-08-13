@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.59 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.60 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -475,6 +475,9 @@ Double_t TGeoCone::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    // compute distance to Z planes
    return TGeoCone::DistFromOutsideS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }
@@ -1735,6 +1738,9 @@ Double_t TGeoConeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();

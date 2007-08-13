@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.38 2007/02/16 10:37:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.39 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -268,7 +268,9 @@ Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to this composite shape.
-   if (!CouldBeCrossed(point, dir)) return TGeoShape::Big();
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    if (fNode) return fNode->DistFromOutside(point, dir, iact, step, safe);
    return TGeoShape::Big();
 }   

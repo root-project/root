@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.55 2007/01/12 16:03:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.56 2007/01/16 09:04:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -453,14 +453,11 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 }      
       
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t step, Double_t * /*safe*/) const
 {
 // Computes distance from outside point to surface of the shape.
-   Double_t snxt=TGeoShape::Big();
-   if (!TGeoBBox::Contains(point)) {
-      snxt=TGeoBBox::DistFromOutside(point,dir,3);
-      if (snxt>1E20) return snxt;
-   }   
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    Double_t dist[5];
    // check lateral faces
    Int_t i;
@@ -1136,6 +1133,9 @@ Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    // compute distance to get ouside this shape
    Bool_t in = kTRUE;
    Double_t pts[8];

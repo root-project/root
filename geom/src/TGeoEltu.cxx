@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.32 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.33 2007/04/23 08:58:53 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -251,6 +251,9 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    }
    // compute vector distance
    if ((safz>0) && (point[2]*dir[2]>=0)) return TGeoShape::Big();
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    Double_t zi;
    if (dir[2]!=0) {
       Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;

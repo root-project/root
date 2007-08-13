@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.36 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.37 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -323,6 +323,9 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+// Check if the bounding box is crossed within the requested distance
+   Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
+   if (sdist>=step) return TGeoShape::Big();
    Double_t daxis;
    Bool_t hasphi = (fDphi<360)?kTRUE:kFALSE;
 //   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
@@ -1062,7 +1065,7 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
    if (!nsol) return TGeoShape::Big();
    // look for first positive solution
    for (Int_t i=0; i<nsol; i++) {
-      if (x[i]>=0) return x[i];
+      if (x[i]>1.e-7) return x[i];
    }
    return TGeoShape::Big();   
 }      

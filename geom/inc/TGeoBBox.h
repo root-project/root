@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.23 2006/11/03 21:22:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.24 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -55,11 +55,11 @@ public:
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  Double_t      DistFromInside(const Double_t *point,const Double_t *dir, 
-                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin);
+                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t stepmax=TGeoShape::Big());
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  Double_t      DistFromOutside(const Double_t *point,const Double_t *dir, 
-                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin);
+                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t stepmax=TGeoShape::Big());
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual const char   *GetAxisName(Int_t iaxis) const;

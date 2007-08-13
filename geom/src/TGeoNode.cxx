@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.41 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.42 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -168,6 +168,11 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    static Int_t icall = 0;
    Int_t i, nd;
    Bool_t clear;
+   Bool_t sampling = kFALSE;
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) sampling = kTRUE;
+
    TGeoNode *daughter;
    TGeoManager *geom = fVolume->GetGeoManager();
    if (icall == 0) {
@@ -175,6 +180,15 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       geom->SetCheckingOverlaps(kTRUE);
       Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(),ovlp);
    }
+   if (sampling) {
+      Info("CheckOverlaps", "Checking overlaps by sampling can only be done per volume.");
+      Info("=============", "Volume %s will be sampled", fVolume->GetName());
+      fVolume->SelectVolume(clear=kFALSE);
+      fVolume->CheckOverlaps(ovlp, option);
+      geom->SetCheckingOverlaps(kFALSE);
+      return;
+   }   
+         
    icall++;
    if (!fVolume->IsSelected()) {
       // this branch was not checked -> check it
