@@ -547,6 +547,7 @@ class genDictionary(object) :
   def tmplclasses(self, local):
     result = []
     for c in self.classes :
+      if not 'name' in c: continue
       name = c['name']
       if name.find('<') == -1 : continue
       temp = name[name.find('<')+1:name.rfind('>')]
