@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.2 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.3 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -80,20 +80,21 @@ namespace Math {
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)     
-      void SetFunction( const IGenFunction & , double , double ) { 
+      int SetFunction( const IGenFunction & , double , double ) { 
          std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
+         return -1;
       }
 #endif    
      
-     void SetFunction( const IGradFunction & f, double Root) { 
+     int SetFunction( const IGradFunction & f, double Root) { 
        const void * p = &f; 
-       SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
+       return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
        }
 
      
      typedef double ( * GSLFuncPointer ) ( double, void *);
      typedef void ( * GSLFdFPointer ) ( double, void *, double *, double *);
-     void SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
+     int SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
 
      int Iterate(); 
 
@@ -123,6 +124,7 @@ namespace Math {
      mutable double fRoot; 
      mutable double fPrevRoot; 
      int fIter; 
+     bool fValidPoint; 
      
    }; 
    

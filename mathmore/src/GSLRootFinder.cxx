@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.cxx,v 1.4 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.cxx,v 1.5 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -68,21 +68,34 @@ GSLRootFinder & GSLRootFinder::operator = (const GSLRootFinder &rhs)
    return *this;
 }
 
-void GSLRootFinder::SetFunction(  GSLFuncPointer f, void * p, double xlow, double xup) { 
+int GSLRootFinder::SetFunction(  GSLFuncPointer f, void * p, double xlow, double xup) { 
    // set from GSL function
    fXlow = xlow; 
    fXup = xup;
    fFunction->SetFuncPointer( f ); 
    fFunction->SetParams( p ); 
-   gsl_root_fsolver_set( fS->Solver(), fFunction->GetFunc(), xlow, xup); 
+
+   int status = gsl_root_fsolver_set( fS->Solver(), fFunction->GetFunc(), xlow, xup); 
+   if (status == GSL_SUCCESS)  
+      fValidInterval = true; 
+   else 
+      fValidInterval = false; 
+
+   return status;
 }
 
-void GSLRootFinder::SetFunction( const IGenFunction & f, double xlow, double xup) {
+int GSLRootFinder::SetFunction( const IGenFunction & f, double xlow, double xup) {
    // set from IGenFunction
    fXlow = xlow; 
    fXup = xup;
    fFunction->SetFunction( f );  
-   gsl_root_fsolver_set( fS->Solver(), fFunction->GetFunc(), xlow, xup); 
+   int status = gsl_root_fsolver_set( fS->Solver(), fFunction->GetFunc(), xlow, xup); 
+   if (status == GSL_SUCCESS)  
+      fValidInterval = true; 
+   else 
+      fValidInterval = false; 
+
+   return status;
 }
 
 void GSLRootFinder::SetSolver(GSLRootFSolver * s ) { 
@@ -100,6 +113,10 @@ int GSLRootFinder::Iterate() {
    if (!fFunction->IsValid() ) {
       std::cerr << "GSLRootFinder - Error: Function is not valid" << std::endl;
       return -1; 
+   }
+   if (!fValidInterval ) {
+      std::cerr << "GSLRootFinder - Error: Interval is not valid" << std::endl;
+      return -2; 
    }
    int status =  gsl_root_fsolver_iterate(fS->Solver());
    // update Root 
@@ -136,6 +153,7 @@ int GSLRootFinder::Solve (int maxIter, double absTol, double relTol)
    do { 
       iter++; 
       status = Iterate();
+      //std::cerr << "RF: iteration " << iter << " status = " << status << std::endl;
       if (status != GSL_SUCCESS) return status; 
       status =  GSLRootHelper::TestInterval(fXlow, fXup, absTol, relTol); 
       if (status == GSL_SUCCESS) { 

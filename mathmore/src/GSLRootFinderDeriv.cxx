@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.6 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -72,14 +72,21 @@ GSLRootFinderDeriv & GSLRootFinderDeriv::operator = (const GSLRootFinderDeriv &r
 
 
 
-void GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double Root) {
+int GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double Root) {
    // set Function with signature as GSL
    fRoot = Root;
    fFunction->SetFuncPointer( f ); 
    fFunction->SetDerivPointer( df ); 
    fFunction->SetFdfPointer( Fdf ); 
    fFunction->SetParams( p ); 
-   gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), Root); 
+   int status = gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), Root); 
+   if (status == GSL_SUCCESS)  
+      fValidPoint = true; 
+   else 
+      fValidPoint = false; 
+
+   return status;
+
 }
 
 void GSLRootFinderDeriv::SetSolver(GSLRootFdFSolver * s ) {
@@ -98,6 +105,10 @@ int GSLRootFinderDeriv::Iterate() {
    if (!fFunction->IsValid() ) {
       std::cerr << "GSLRootFinderDeriv - Error: Function is not valid" << std::endl;
       return -1; 
+   }
+   if (!fValidPoint ) {
+      std::cerr << "GSLRootFinderDeriv - Error: Starting point is not valid" << std::endl;
+      return -2; 
    }
    
    int status = gsl_root_fdfsolver_iterate(fS->Solver()); 

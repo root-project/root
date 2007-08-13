@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinder.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: RootFinder.h,v 1.2 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -70,7 +70,8 @@ namespace Math {
 
      This class does not cupport copying
 
-     @ingroup RootFinder
+     @ingroup RootFinders
+
   */
 
 template <class SolverClass>
@@ -100,10 +101,11 @@ public:
        for algorithms not using derivatives (bracketing algorithms) 
        The templated function f must be of a type implementing the \a operator() method, 
        <em>  double  operator() (  double  x ) </em>
+       Returns non zero if interval is not valid (i.e. does not contains a root)
     */
  
-    void SetFunction( const IGenFunction & f, double xlow, double xup) { 
-    fSolver.SetFunction( f, xlow, xup); 
+    int SetFunction( const IGenFunction & f, double xlow, double xup) { 
+       return fSolver.SetFunction( f, xlow, xup); 
   }   
 
 
@@ -113,10 +115,11 @@ public:
        The templated function f must be of a type implementing the \a operator()  
        and the \a Gradient() methods. 
        <em>  double  operator() (  double  x ) </em>
+       Returns non zero if starting point is not valid 
     */
 
-    void SetFunction( const IGradFunction & f, double Root) { 
-    fSolver.SetFunction( f, Root); 
+    int  SetFunction( const IGradFunction & f, double Root) { 
+       return fSolver.SetFunction( f, Root); 
   }   
 
   /** 
