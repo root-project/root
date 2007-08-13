@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.31 2007/01/12 16:03:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.32 2007/01/25 11:49:33 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -154,6 +154,13 @@ UInt_t TProcessID::AssignID(TObject *obj)
 }
 
 //______________________________________________________________________________
+void TProcessID::CheckInit()
+{
+   // Initialize fObjects.
+   if (!fObjects) fObjects = new TObjArray(100);
+}
+
+//______________________________________________________________________________
 void TProcessID::Cleanup()
 {
    // static function (called by TROOT destructor) to delete all TProcessIDs
@@ -192,6 +199,13 @@ TProcessID *TProcessID::GetProcessID(UShort_t pid)
    // static function returning a pointer to TProcessID number pid in fgPIDs
 
    return (TProcessID*)fgPIDs->At(pid);
+}
+
+//______________________________________________________________________________
+UInt_t TProcessID::GetNProcessIDs()
+{
+   // Return the (static) number of process IDs.
+   return fgPIDs ? fgPIDs->GetLast()+1 : 0;
 }
 
 //______________________________________________________________________________

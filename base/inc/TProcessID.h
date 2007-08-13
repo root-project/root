@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.13 2006/10/11 10:26:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.14 2007/01/25 11:49:33 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    TProcessID(const TProcessID &ref);
    TProcessID& operator=(const TProcessID &ref);
    virtual ~TProcessID();
-   void             CheckInit() {if (!fObjects) fObjects = new TObjArray(100);}
+   void             CheckInit();
    virtual void     Clear(Option_t *option="");
    Int_t            DecrementCount();
    Int_t            IncrementCount();
@@ -60,7 +60,7 @@ public:
    static TProcessID  *AddProcessID();
    static UInt_t       AssignID(TObject *obj);
    static void         Cleanup();
-   static UInt_t       GetNProcessIDs() {return fgPIDs ? fgPIDs->GetLast()+1 : 0;}
+   static UInt_t       GetNProcessIDs();
    static TProcessID  *GetPID();
    static TObjArray   *GetPIDs();
    static TProcessID  *GetProcessID(UShort_t pid);
