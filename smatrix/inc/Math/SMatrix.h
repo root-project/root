@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.25 2006/07/03 14:30:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.26 2006/08/11 13:19:57 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -536,6 +536,12 @@ public:
    */
    template <class Vector> 
    void SetDiagonal(const Vector & v);
+
+   /**
+      return the trace of a matrix
+      Sum of the diagonal elements
+   */
+   T Trace() const; 
 
    /**
       return the upper Triangular block of the matrices (including the diagonal) as
