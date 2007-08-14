@@ -376,6 +376,7 @@ int test10() {
   SVector<double,3> diag = A.Diagonal();
   std::cout << " diagonal =  " << diag << std::endl; 
   iret |= compare( Mag2(diag) , double(1+5*5+9*9) ); 
+  iret |= compare( A.Trace() , double(1+5+9) ); 
 
 
   SMatrix<double,3> B = Transpose(A);
@@ -822,6 +823,12 @@ int test14() {
   iret |= compare( sA(1,1),v[1] );
   sB.SetDiagonal(v);
   iret |= compare( sB(0,0),v[0] );
+  
+  // test Trace
+  iret |= compare( sA.Trace(), v[0]+v[1]);
+  iret |= compare( sB.Trace(), v[0]+v[1]);
+  SMatrix<double,3,2> sAt = Transpose(sA);
+  iret |= compare( sAt.Trace(), v[0]+v[1]);
 
 
   return iret;
