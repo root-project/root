@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.215 2007/04/30 20:38:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.216 2007/05/11 15:18:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -619,19 +619,20 @@ void TGraph::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   //if (opt.Contains("same"))
-   //   Error("Draw", "option \"same\" not supported,\n"
-   //         "see TGraph::PaintGraph() for options");
+   if (opt.Contains("same")) {
+      opt.ReplaceAll("same","");
+   }
 
    // in case of option *, set marker style to 3 (star) and replace
    // * option by option P.
    Ssiz_t pos;
    if ((pos = opt.Index("*")) != kNPOS) {
       SetMarkerStyle(3);
-      opt.Replace(pos, 1, "P");
+      opt.Replace(pos, 1, "p");
    }
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
+      if (opt.Contains("a")) gPad->Clear();
    }
    AppendPad(opt);
 }
