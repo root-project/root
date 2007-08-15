@@ -50,10 +50,10 @@ include $(MAKEFILEDEP)
 MODULES       = build cint metautils pcre utils base cont meta io net math \
                 zip clib matrix newdelete hist tree freetype graf gpad \
                 g3d gui minuit histpainter treeplayer ged treeviewer physics \
-                postscript rint html eg geom geompainter vmc fumili mlp \
-                quadp auth guibuilder xml foam splot smatrix sql tmva \
-                geombuilder spectrum spectrumpainter fitpanel thread \
-                proof proofplayer sessionviewer guihtml
+                postscript rint thread html eg geom geompainter vmc fumili \
+                mlp quadp auth guibuilder xml foam splot smatrix sql tmva \
+                geombuilder spectrum spectrumpainter fitpanel proof \
+                proofplayer sessionviewer guihtml
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
