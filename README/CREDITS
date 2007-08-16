@@ -145,6 +145,10 @@ N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
 
+N: Bastien Dallapiazza
+E: bastien.dallapiazza@epfl.ch
+D: TSpider, TParallelCoord classes
+
 N: Christophe Delaere
 E: Christophe.Delaere@cern.ch
 D: TLimit TLimitDataSource TConfidenceLevel and TMultiLayerPerceptron classes
