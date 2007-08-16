@@ -105,7 +105,7 @@ extern "C" {
 #include "TASPolyUtils.c"
 
 
-ASVisual *TASImage::fgVisual;
+ASVisual *TASImage::fgVisual = 0;
 Bool_t TASImage::fgInit = kFALSE;
 
 static ASFontManager *gFontManager = 0;
@@ -170,6 +170,8 @@ void TASImage::SetDefaults()
 
    fImage         = 0;
    fScaledImage   = 0;
+   fMaxValue      = 1;
+   fMinValue      = 0;
    fEditable      = kFALSE;
    fPaintMode     = 1;
    fZoomOffX      = 0;
@@ -2981,6 +2983,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    }
 
    ASImageBevel bevel;
+   bevel.type = 0;
 
    ARGB32 hi, lo;
    parse_argb_color(hi_color, &hi);
