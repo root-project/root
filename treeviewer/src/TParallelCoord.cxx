@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.5 2007/08/13 15:22:59 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.6 2007/08/16 12:12:23 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -44,7 +44,7 @@ ClassImp(TParallelCoord)
 /* Begin_Html
 <center><h2>Parallel Coordinates class</h2></center>
 <p>
-The multidimensional system of Parallel coordinates is a common way of studying high-dimensional geometry and visualizing multivariate problems.
+The multidimensional system of Parallel coordinates is a common way of studying high-dimensional geometry and visualizing multivariate problems. It has first been proposed by A. Inselberg in 1981.
 <p>
 To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines. A point in n-dimensional space is represented as a polyline with vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th coordinate of the point.
 <p>
@@ -72,9 +72,7 @@ The order in which the variables are drawn is essential to see the clusters. The
 <p>
 TParallelCoord can also be used to display a candle chart. In that mode, every variable is drawn in the same scale. The candle chart can be combined with the parallel coordinates mode, drawing the candle sticks over the axes.
 End_Html
-Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","TParallelCoord Example",200,10,700,500);
    TFile *f = TFile::Open("$ROOTSYS/tutorials/tree/cernstaff.root");
    TTree *T = (TTree*)f->Get("T");
    T->Draw("Age:Grade:Step:Cost:Division:Nation","","para");
@@ -85,9 +83,17 @@ Begin_Macro(source)
    para->GetCurrentSelection()->SetLineColor(kViolet);
    TParallelCoordVar* age = (TParallelCoordVar*)para->GetVarList()->FindObject("Age");
    age->AddRange(new TParallelCoordRange(age,21,30));
-   return c1;
+   gPad->Update();
 }
 End_Macro
+Begin_Html
+<p> Some references:
+<ul>
+<li> Alfred Inselberg's Homepage <http://www.math.tau.ac.il/~aiisreal>, with Visual Tutorial, History, Selected Publications and Applications.</li>
+<li> A small, easy introduction <http://catt.okstate.edu/jones98/parallel.html> by Christopher V. Jones. </li>
+<li> Almir Olivette Artero, Maria Cristina Ferreira de Oliveira, Haim Levkowitz, "Uncovering Clusters in Crowded Parallel Coordinates Visualizations," <i>infovis</i>, pp. 81-88,  IEEE Symposium on Information Visualization (INFOVIS'04),  2004. </li>
+</ul>
+End_Html
 */
 
 

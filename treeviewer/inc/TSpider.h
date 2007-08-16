@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSpider.h,v 1.2 2007/07/20 14:37:37 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpider.h,v 1.3 2007/08/10 10:00:10 brun Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -94,8 +94,8 @@ private:
 
 public:
    TSpider();
-   TSpider(TTree* tree, const char *varexp, const char *selection, Option_t *option,
-                  Long64_t nentries, Long64_t firstentry);
+   TSpider(TTree* tree, const char *varexp, const char *selection, Option_t *option="",
+                  Long64_t nentries=0, Long64_t firstentry=0);
    ~TSpider();
    void           AddSuperposed(TSpider* sp);
    void           AddVariable(const char* varexp); // *MENU*
@@ -103,17 +103,17 @@ public:
    virtual void   Draw(Option_t *options="");
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Style_t        GetAverageLineStyle();
-   Color_t        GetAverageLineColor();
-   Width_t        GetAverageLineWidth();
-   Color_t        GetAverageFillColor();
-   Style_t        GetAverageFillStyle();
+   Style_t        GetAverageLineStyle() const;
+   Color_t        GetAverageLineColor() const;
+   Width_t        GetAverageLineWidth() const;
+   Color_t        GetAverageFillColor() const;
+   Style_t        GetAverageFillStyle() const;
    Bool_t         GetDisplayAverage() const {return fDisplayAverage;}
-   Long64_t       GetCurrentEntry() {return fEntry;}
+   Long64_t       GetCurrentEntry() const {return fEntry;}
    Long64_t       GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const;
    Int_t          GetNx() const {return fNx;}
    Int_t          GetNy() const {return fNy;}
-   Bool_t         GetSegmentDisplay() {return fSegmentDisplay;}
+   Bool_t         GetSegmentDisplay() const {return fSegmentDisplay;}
    void           GotoEntry(Long64_t e); // *MENU*
    void           GotoNext(); // *MENU*
    void           GotoPrevious(); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSpider.cxx,v 1.2 2007/07/20 14:37:37 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSpider.cxx,v 1.3 2007/08/10 10:00:31 brun Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -35,7 +35,7 @@ ClassImp(TSpider)
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Spider class</h2></center>
-A spider view is a handsome way to visualize a set of data stored in a TTree. It draws as
+A spider view is a handy way to visualize a set of data stored in a TTree. It draws as
 many polar axes as selected data members. For each of them, it draws on the axis
 the position of the present event between the min and max of the data member.
 Two modes are availables:
@@ -43,8 +43,28 @@ Two modes are availables:
 <li> The spider view: With each points on the axes is drawn a polyline.</li>
 <li> The segment view: For each data member is drawn an arc segment with the radius corresponding to the event.</li>
 </ul>
-The spider plot is available from the treeviewer called by "atree->StartViewer()".
-End_Html */
+The spider plot is available from the treeviewer called by "atree->StartViewer()", or simply by calling its constructor and defining the variables to display.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","TSpider example",200,10,700,700);
+   TFile *f = new TFile("hsimple.root");
+   if (!f || f->IsZombie()) {
+      printf("Please run <ROOT location>/tutorials/hsimple.C before.");
+      return;
+   }
+   TNtuple* ntuple = f->Get("ntuple");
+   TString varexp = "px:py:pz:random:sin(px):log(px/py):log(pz)";
+   TString select = "px>0 && py>0 && pz>0";
+   TString options = "average";
+   TSpider *spider = new TSpider(ntuple,varexp.Data(),select.Data(),options.Data());
+   spider->Draw();
+   c1->ToggleEditor();
+   c1->Selected(c1,spider,1);
+   return c1;
+}
+End_Macro
+*/
 
 
 //______________________________________________________________________________
@@ -113,8 +133,10 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
    fForceDim=kFALSE;
    fAverageSlices=NULL;
    fSegmentDisplay=kFALSE;
-   fNentries = nentries;
+   if (firstentry < 0 || firstentry > tree->GetEstimate()) firstentry = 0;
    fFirstEntry = firstentry;
+   if (nentries>0) fNentries = nentries;
+   else fNentries = nentries = tree->GetEstimate()-firstentry;
 
    fEntry = fFirstEntry;
 
@@ -583,7 +605,7 @@ void TSpider::DrawSlicesAverage(Option_t* /*options*/)
 
 
 //______________________________________________________________________________
-Style_t TSpider::GetAverageLineStyle()
+Style_t TSpider::GetAverageLineStyle() const
 {
    // Get the LineStyle of the average.
 
@@ -594,7 +616,7 @@ Style_t TSpider::GetAverageLineStyle()
 
 
 //______________________________________________________________________________
-Color_t TSpider::GetAverageLineColor()
+Color_t TSpider::GetAverageLineColor() const
 {
    // Get the LineColor of the average.
 
@@ -605,7 +627,7 @@ Color_t TSpider::GetAverageLineColor()
 
 
 //______________________________________________________________________________
-Width_t TSpider::GetAverageLineWidth()
+Width_t TSpider::GetAverageLineWidth() const
 {
    // Get the LineWidth of the average.
 
@@ -616,7 +638,7 @@ Width_t TSpider::GetAverageLineWidth()
 
 
 //______________________________________________________________________________
-Color_t TSpider::GetAverageFillColor()
+Color_t TSpider::GetAverageFillColor() const
 {
    // Get the FillColor of the average.
 
@@ -627,7 +649,7 @@ Color_t TSpider::GetAverageFillColor()
 
 
 //______________________________________________________________________________
-Style_t TSpider::GetAverageFillStyle()
+Style_t TSpider::GetAverageFillStyle() const
 {
    // Get the FillStyle of the average.
 
