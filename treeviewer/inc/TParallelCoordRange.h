@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.5 2007/08/13 10:50:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.h,v 1.6 2007/08/13 15:22:59 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
 public:
    TParallelCoordRange();
    ~TParallelCoordRange();
-   TParallelCoordRange(TParallelCoordVar *var, TParallelCoordSelect* sel, Double_t min=0, Double_t max=0);
+   TParallelCoordRange(TParallelCoordVar *var, Double_t min=0, Double_t max=0, TParallelCoordSelect* sel=NULL);
 
    virtual void BringOnTop() ;// *MENU*
    virtual void Delete(const Option_t* options=""); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.6 2007/08/13 10:50:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordVar.cxx,v 1.7 2007/08/13 15:22:59 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -30,25 +30,21 @@
 
 ClassImp(TParallelCoordVar)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordVar                                                    //
-//                                                                      //
-// Class containing a variable for the TParallelCoord.                  //
-//                                                                      //
-// Options can be defined on an axis using the right mouse              //
-// click. These options can be applied to every axes using the editor.  //
-//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
-//      a color histogram is drawn on the axis.                         //
-//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
-//      on the plot.                                                    //
-// The order in which the variables are drawn is essential to see the   //
-// clusters. The axes can be dragged to change their position.          //
-// A zoom is also available. The logarithm scale is also available by   //
-// right clicking on the axis.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Axes:</h2></center>
+<p>
+Class containing a variable for the TParallelCoord.
+<p>
+Options can be defined each axis separatly using the right mouse click. These options can be applied to every axes using the editor.
+<ul>
+<li>Axis width: If set to 0, the axis is simply a line. If higher, a color histogram is drawn on the axis.</li>
+<li>Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.</li>
+</ul>
+<p>
+The order in which the variables are drawn is essential to see the clusters. The axes can be dragged to change their position. A zoom is also available. The logarithm scale is also available by right clicking on the axis.
+End_Html
+*/
 
 //______________________________________________________________________________
 TParallelCoordVar::TParallelCoordVar()
@@ -79,7 +75,7 @@ TParallelCoordVar::~TParallelCoordVar()
 
 //______________________________________________________________________________
 TParallelCoordVar::TParallelCoordVar(Double_t *val, const char* title, Int_t id, TParallelCoord* parallel)
-   :TNamed(title,title), TAttLine(1,1,1), TAttFill(kOrange+9,3002)
+   :TNamed(title,title), TAttLine(1,1,1), TAttFill(kOrange+9,3001)
 {
    // Normal constructor. By default, the title and the name are the expression given to TTree::Draw. The name
    // can be changed by the user (the label on the plot) but not the title.
@@ -108,7 +104,7 @@ void TParallelCoordVar::AddRange(TParallelCoordRange* range)
    if (!range) {
       TParallelCoordSelect *select = fParallel->GetCurrentSelection();
       if (select) {
-         range = new TParallelCoordRange(this,select);
+         range = new TParallelCoordRange(this,0,0,select);
          fRanges->Add(range);
          range->GetSelection()->Add(range);
          range->Draw();
@@ -118,6 +114,7 @@ void TParallelCoordVar::AddRange(TParallelCoordRange* range)
    } else {
       fRanges->Add(range);
       range->GetSelection()->Add(range);
+      range->Draw();
    }
 }
 
@@ -875,7 +872,7 @@ void TParallelCoordVar::SavePrimitive(ostream & out, Option_t* options)
          out<<"   //***************************************"<<endl;
          out<<"   // Create the "<<i<<"th range owned by the axis \""<<GetTitle()<<"\"."<<endl;
          out<<"   TParallelCoordSelect* sel = para->GetSelection(\""<<range->GetSelection()->GetTitle()<<"\");"<<endl;
-         out<<"   TParallelCoordRange* newrange = new TParallelCoordRange(var,sel,"<<range->GetMin()<<","<<range->GetMax()<<");"<<endl;
+         out<<"   TParallelCoordRange* newrange = new TParallelCoordRange(var,"<<range->GetMin()<<","<<range->GetMax()<<",sel);"<<endl;
          out<<"   var->AddRange(newrange);"<<endl;
          out<<"   sel->Add(newrange);"<<endl;
          ++i;

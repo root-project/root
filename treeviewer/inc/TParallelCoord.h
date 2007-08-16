@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.5 2007/08/13 10:50:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.h,v 1.6 2007/08/13 15:22:59 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
    void           ResetTree();
    void           SaveEntryLists(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
    void           SavePrimitive(ostream & out,Option_t *options);
+   void           SaveTree(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*
    void           SetAxisHistogramLineWidth(Int_t lw=2); // *MENU*

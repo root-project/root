@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.4 2007/08/13 10:50:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordRange.cxx,v 1.5 2007/08/13 15:22:59 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -59,8 +59,8 @@ TParallelCoordRange::~TParallelCoordRange()
 
 
 //______________________________________________________________________________
-TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, TParallelCoordSelect *sel, Double_t min, Double_t max)
-   :TNamed("Range","Range"), TAttLine(sel->GetLineColor(),1,1), fSize(0.01)
+TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, Double_t max, TParallelCoordSelect *sel)
+   :TNamed("Range","Range"), TAttLine(1,1,1), fSize(0.01)
 {
    // Normal constructor.
 
@@ -72,7 +72,10 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, TParallelCoordS
    fMax = max;
    
    fVar = var;
-   fSelect = sel;
+   if (!sel) fSelect = var->GetParallel()->GetCurrentSelection();
+   else fSelect = sel;
+   
+   SetLineColor(fSelect->GetLineColor());
    
    SetBit(kShowOnPad,kTRUE);
    SetBit(kLiveUpdate,var->GetParallel()->TestBit(TParallelCoord::kLiveUpdate));
@@ -520,26 +523,15 @@ void  TParallelCoordRange::SetLineWidth(Width_t wid)
 
 
 ClassImp(TParallelCoordSelect)
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordSelect                                                 //
-//                                                                      //
-// A TParallelCoordSelect is a specialised TList to hold                //
-// TParallelCoordRanges used by TParallelCoord.                         //
-//                                                                      //
-// Selections of specific entries can be defined over the data set      //
-// using parallel coordinates. With that representation, a selection is //
-// an ensemble of ranges defined on the axes. Ranges defined on the     //
-// same axis are conjugated with OR (an entry must be in one or the     //
-// other ranges to be selected). Ranges on different axes are           //
-// are conjugated with AND (an entry must be in all the ranges to be    //
-// selected).                                                           //
-// Several selections can be defined with different colors. It is       //
-// possible to generate an entry list from a given selection and apply  //
-// it to the tree using the editor ("Apply to tree" button).            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Selections:</h2></center>
+<p>
+A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
+<p>
+Selections of specific entries can be defined over the data se using parallel coordinates. With that representation, a selection is an ensemble of ranges defined on the axes. Ranges defined on the same axis are conjugated with OR (an entry must be in one or the other ranges to be selected). Ranges on different axes are are conjugated with AND (an entry must be in all the ranges to be selected). Several selections can be defined with different colors. It is possible to generate an entry list from a given selection and apply it to the tree using the editor ("Apply to tree" button).
+End_Html
+*/
 
 
 //______________________________________________________________________________

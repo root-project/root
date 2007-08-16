@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.4 2007/08/13 10:50:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.5 2007/08/13 15:22:59 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -40,76 +40,55 @@
 
 ClassImp(TParallelCoord)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoord                                                       //
-//                                                                      //
-// The multidimensional system of Parallel coordinates is a common      //
-// way of studying high-dimensional geometry and visualizing            //
-// multivariate problems.                                               //
-//                                                                      //
-// To show a set of points in an n-dimensional space, a backdrop is     //
-// drawn consisting of n parallel lines. A point in n-dimensional space //
-// is represented as a polyline with vertices on the parallel axes;     //
-// the position of the vertex on the i-th axis corresponds to the i-th  //
-// coordinate of the point.                                             //
-//                                                                      //
-// This tool comes with a rather large gui in the editor. It is         //
-// necessary to use this editor in order to explore a data set, as      //
-// explained below.                                                     //
-//                                                                      //
-// Reduce cluttering:                                                   //
-//                                                                      //
-// The main issue for parallel coordinates is the very high cluttering  //
-// of the output when dealing with large data set. Two techniques have  //
-// been implemented to bypass that so far:                              //
-//    - Draw doted lines instead of plain lines with an adjustable      //
-//      dots spacing. A slider to adjust the dots spacing is available  //
-//      in the editor.                                                  //
-//    - Sort the entries to display with  a "weight cut". On each axis  //
-//      is drawn a histogram describing the distribution of the data    //
-//      on the corresponding variable. The "weight" of an entry is the  //
-//      sum of the bin content of each bin the entry is going through.  //
-//      An entry going through the histograms peaks will have a big     //
-//      weight wether an entry going randomly through the histograms    //
-//      will have a rather small weight. Setting a cut on this weight   //
-//      allows to draw only the most representative entries. A slider   //
-//      set the cut is also available in the gui.                       //
-//                                                                      //
-// Selections:                                                          //
-//                                                                      //
-// Selections of specific entries can be defined over the data set      //
-// using parallel coordinates. With that representation, a selection is //
-// an ensemble of ranges defined on the axes. Ranges defined on the     //
-// same axis are conjugated with OR (an entry must be in one or the     //
-// other ranges to be selected). Ranges on different axes are           //
-// are conjugated with AND (an entry must be in all the ranges to be    //
-// selected).                                                           //
-// Several selections can be defined with different colors. It is       //
-// possible to generate an entry list from a given selection and apply  //
-// it to the tree using the editor ("Apply to tree" button).            //
-//                                                                      //
-// Axes:                                                                //
-//                                                                      //
-// Options can be defined each axis separatly using the right mouse     //
-// click. These options can be applied to every axes using the editor.  //
-//    - Axis width: If set to 0, the axis is simply a line. If higher,  //
-//      a color histogram is drawn on the axis.                         //
-//    - Axis histogram height: If not 0, a usual bar histogram is drawn //
-//      on the plot.                                                    //
-// The order in which the variables are drawn is essential to see the   //
-// clusters. The axes can be dragged to change their position.          //
-// A zoom is also available. The logarithm scale is also available by   //
-// right clicking on the axis.                                          //
-//                                                                      //
-// Candle chart:                                                        //
-//                                                                      //
-// TParallelCoord can also be used to display a candle chart. In that   //
-// mode, every variable is drawn in the same scale. The candle chart    //
-// can be combined with the parallel coordinates mode, drawing the      //
-// candle sticks over the axes.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Parallel Coordinates class</h2></center>
+<p>
+The multidimensional system of Parallel coordinates is a common way of studying high-dimensional geometry and visualizing multivariate problems.
+<p>
+To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines. A point in n-dimensional space is represented as a polyline with vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th coordinate of the point.
+<p>
+This tool comes with a rather large gui in the editor. It is necessary to use this editor in order to explore a data set, as explained below.
+<h4>Reduce cluttering:</h4>
+<p>
+The main issue for parallel coordinates is the very high cluttering of the output when dealing with large data set. Two techniques have been implemented to bypass that so far:
+<ul>
+<li>Draw doted lines instead of plain lines with an adjustable dots spacing. A slider to adjust the dots spacing is available in the editor.</li>
+<li>Sort the entries to display with  a "weight cut". On each axis is drawn a histogram describing the distribution of the data on the corresponding variable. The "weight" of an entry is the sum of the bin content of each bin the entry is going through. An entry going through the histograms peaks will have a big weight wether an entry going randomly through the histograms will have a rather small weight. Setting a cut on this weight allows to draw only the most representative entries. A slider set the cut is also available in the gui.</li>
+</ul>
+<center><h2>Selections:</h2></center>
+<p>
+Selections of specific entries can be defined over the data se using parallel coordinates. With that representation, a selection is an ensemble of ranges defined on the axes. Ranges defined on the same axis are conjugated with OR (an entry must be in one or the other ranges to be selected). Ranges on different axes are are conjugated with AND (an entry must be in all the ranges to be selected). Several selections can be defined with different colors. It is possible to generate an entry list from a given selection and apply it to the tree using the editor ("Apply to tree" button).
+<center><h2>Axes:</h2></center>
+<p>
+Options can be defined each axis separatly using the right mouse click. These options can be applied to every axes using the editor.
+<ul>
+<li>Axis width: If set to 0, the axis is simply a line. If higher, a color histogram is drawn on the axis.</li>
+<li>Axis histogram height: If not 0, a usual bar histogram is drawn on the plot.</li>
+</ul>
+<p>
+The order in which the variables are drawn is essential to see the clusters. The axes can be dragged to change their position. A zoom is also available. The logarithm scale is also available by right clicking on the axis.
+<center><h2>Candle chart:</h2></center>
+<p>
+TParallelCoord can also be used to display a candle chart. In that mode, every variable is drawn in the same scale. The candle chart can be combined with the parallel coordinates mode, drawing the candle sticks over the axes.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","TParallelCoord Example",200,10,700,500);
+   TFile *f = TFile::Open("$ROOTSYS/tutorials/tree/cernstaff.root");
+   TTree *T = (TTree*)f->Get("T");
+   T->Draw("Age:Grade:Step:Cost:Division:Nation","","para");
+   TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
+   TParallelCoordVar* grade = (TParallelCoordVar*)para->GetVarList()->FindObject("Grade");
+   grade->AddRange(new TParallelCoordRange(grade,11.5,14));
+   para->AddSelection("less30");
+   para->GetCurrentSelection()->SetLineColor(kViolet);
+   TParallelCoordVar* age = (TParallelCoordVar*)para->GetVarList()->FindObject("Age");
+   age->AddRange(new TParallelCoordRange(age,21,30));
+   return c1;
+}
+End_Macro
+*/
 
 
 //______________________________________________________________________________
@@ -141,7 +120,7 @@ TParallelCoord::TParallelCoord(Long64_t nentries)
 
 //______________________________________________________________________________
 TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
-   :TNamed("Graph","Graph")
+   :TNamed("ParaCoord","ParaCoord")
 {
    // Normal constructor, the datas must be added afterwards
    // with TParallelCoord::AddVariable(Double_t*,const char*).
@@ -151,7 +130,8 @@ TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
    fCurrentN = fNentries;
    fTree = tree;
    fTreeName = fTree->GetName();
-   fTreeFileName = fTree->GetCurrentFile()->GetName();
+   if (fTree->GetCurrentFile()) fTreeFileName = fTree->GetCurrentFile()->GetName();
+   else fTreeFileName = "";
    fVarList = new TList();
    fSelectList = new TList();
    fCurrentSelection = new TParallelCoordSelect();
@@ -264,9 +244,9 @@ void  TParallelCoord::ApplySelectionToTree()
       var->SetValues(fNentries, selector->GetVal(i));
       ++i;
    }
-   if (fSelectList) {
-      fSelectList->Delete();
-      fCurrentSelection = NULL;
+   if (fSelectList) {           // FIXME It would be better to update the selections by deleting
+      fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
+      fCurrentSelection = NULL; // after applying a new entrylist to the tree.
    }
    gPad->Modified();
    gPad->Update();
@@ -424,6 +404,8 @@ void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
 //______________________________________________________________________________
 TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
 {
+   // Return the selection currently being edited.
+
    if (!fSelectList) return NULL;
    if (!fCurrentSelection) {
       fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
@@ -511,6 +493,9 @@ TParallelCoordSelect* TParallelCoord::GetSelection(const char* title)
 //______________________________________________________________________________
 TTree* TParallelCoord::GetTree()
 {
+   // return the tre if fTree is defined. If not, the method try to load the tree
+   // from fTreeFileName.
+   
    if (fTree) return fTree;
    if (fTreeFileName=="" || fTreeName=="") {
       Error("GetTree","Cannot load the tree: no tree defined!");
@@ -765,9 +750,9 @@ void TParallelCoord::ResetTree()
       var->SetValues(fNentries, selector->GetVal(i));
       ++i;
    }
-   if (fSelectList) {
-      fSelectList->Delete();
-      fCurrentSelection = NULL;
+   if (fSelectList) {           // FIXME It would be better to update the selections by deleting
+      fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
+      fCurrentSelection = NULL; // after applying a new entrylist to the tree.
    }
    gPad->Modified();
    gPad->Update();
@@ -787,13 +772,15 @@ void TParallelCoord::SaveEntryLists(const char* filename, Bool_t overwrite)
       Warning("SaveEntryLists","%s already exists.", sfile.Data());
       if (!overwrite) return;
       else Warning("SaveEntryLists","Overwriting.");
+      f = new TFile(sfile.Data(),"RECREATE");
+   } else {
+      f = new TFile(sfile.Data(),"CREATE");
    }
-   f = new TFile(sfile.Data(),"RECREATE");
    gDirectory = f;
    fInitEntries->Write("initentries");
    fCurrentEntries->Write("currententries");
    Info("SaveEntryLists","File \"%s\" written.",sfile.Data());
-}   
+}
 
 
 //______________________________________________________________________________
@@ -801,13 +788,13 @@ void TParallelCoord::SavePrimitive(ostream & out, Option_t* options)
 {
    // Save the TParallelCoord in a macro.
 
-   // FIXME No protection against missing or incorrect file yet.
    TString opt = options;
    opt.ToLower();
-   Bool_t overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
+   //Bool_t overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
    // Save the entrylists.
    const char* filename = Form("%s_parallelcoord_entries.root",fTree->GetName());
    SaveEntryLists(filename,kTRUE); // FIXME overwriting by default.
+   SaveTree(fTreeFileName,kTRUE);  // FIXME overwriting by default.
    out<<"   // Create a TParallelCoord."<<endl;
    out<<"   TFile *f = TFile::Open(\""<<fTreeFileName.Data()<<"\");"<<endl;
    out<<"   TTree* tree = (TTree*)f->Get(\""<<fTreeName.Data()<<"\");"<<endl;
@@ -822,7 +809,7 @@ void TParallelCoord::SavePrimitive(ostream & out, Option_t* options)
    TParallelCoordSelect* sel;
    out<<"   TParallelCoordSelect* sel;"<<endl;
    out<<"   para->GetSelectList()->Delete();"<<endl;
-   while (sel = (TParallelCoordSelect*)next()) {
+   while ((sel = (TParallelCoordSelect*)next())) {
       out<<"   para->AddSelection(\""<<sel->GetTitle()<<"\");"<<endl;
       out<<"   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();"<<endl;
       out<<"   sel->SetLineColor("<<sel->GetLineColor()<<");"<<endl;
@@ -862,7 +849,32 @@ void TParallelCoord::SavePrimitive(ostream & out, Option_t* options)
    if (TestBit(kGlobalScale)) out<<"   para->SetGlobalScale(kTRUE);"<<endl;
    if (TestBit(kCandleChart)) out<<"   para->SetCandleChart(kTRUE);"<<endl;
    if (TestBit(kGlobalLogScale)) out<<"   para->SetGlobalLogScale(kTRUE);"<<endl;
-   out<<endl<<"para->Draw();"<<endl;
+   out<<endl<<"   para->Draw();"<<endl;
+}
+
+
+//______________________________________________________________________________
+void TParallelCoord::SaveTree(const char* filename, Bool_t overwrite)
+{
+   // Save the tree in a file if fTreeFileName == "".
+
+   if (!(fTreeFileName=="")) return;
+   TString sfile = filename;
+   if (sfile == "") sfile = Form("%s.root",fTree->GetName());
+   
+   TFile* f = TFile::Open(sfile.Data());
+   if (f) {
+      Warning("SaveTree","%s already exists.", sfile.Data());
+      if (!overwrite) return;
+      else Warning("SaveTree","Overwriting.");
+      f = new TFile(sfile.Data(),"RECREATE");
+   } else {
+      f = new TFile(sfile.Data(),"CREATE");
+   }
+   gDirectory = f;
+   fTree->Write(fTreeName.Data());
+   fTreeFileName = sfile;
+   Info("SaveTree","File \"%s\" written.",sfile.Data());
 }
 
 
