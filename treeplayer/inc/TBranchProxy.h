@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.13 2007/08/03 15:41:02 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.14 2007/08/03 16:53:25 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -167,7 +167,8 @@ namespace ROOT {
                }
                fBranch->TBranch::GetEntry(fDirector->GetReadEntry());
             }
-            fRead = fDirector->GetReadEntry();
+            // NO - we only read the entries, not the contained objects!
+            // fRead = fDirector->GetReadEntry();
          }
          return IsInitialized();
       }
