@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.73 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.74 2007/08/10 10:09:52 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -788,8 +788,11 @@ void TSelectorDraw::Begin(TTree *tree)
             h3->SetMarkerSize(fTree->GetMarkerSize());
             if (canRebin)h3->SetBit(TH1::kCanRebin);
             if (!hkeep) {
-               h3->GetXaxis()->SetTitleOffset(1.5);
-               h3->GetYaxis()->SetTitleOffset(1.5);
+               //small correction for the title offsets in x,y to take into account the angles
+               Double_t xoffset = h3->GetXaxis()->GetTitleOffset();
+               Double_t yoffset = h3->GetYaxis()->GetTitleOffset();
+               h3->GetXaxis()->SetTitleOffset(1.2*xoffset);
+               h3->GetYaxis()->SetTitleOffset(1.2*yoffset);
                h3->GetXaxis()->SetTitle(fVar[2]->GetTitle());
                h3->GetYaxis()->SetTitle(fVar[1]->GetTitle());
                h3->GetZaxis()->SetTitle(fVar[0]->GetTitle());
