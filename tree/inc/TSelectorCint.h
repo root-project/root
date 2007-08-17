@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.15 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.16 2007/05/17 22:19:34 pcanal Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -34,34 +34,34 @@ namespace Cint {
 class TSelectorCint : public TSelector {
 
 private:
-   void SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* fname,
+   void SetFuncProto(Cint::G__CallFunc *cf, Cint::G__ClassInfo* cl, const char* fname,
                      const char* argtype, Bool_t required = kTRUE);
 
 protected:
-   G__ClassInfo  *fClass;        //!
-   G__CallFunc   *fFuncVersion;  //!
-   G__CallFunc   *fFuncInit;     //!
-   G__CallFunc   *fFuncBegin;    //!
-   G__CallFunc   *fFuncSlBegin;  //!
-   G__CallFunc   *fFuncNotif;    //!
-   G__CallFunc   *fFuncSlTerm;   //!
-   G__CallFunc   *fFuncTerm;     //!
-   G__CallFunc   *fFuncCut;      //!
-   G__CallFunc   *fFuncFill;     //!
-   G__CallFunc   *fFuncProc;     //!
-   G__CallFunc   *fFuncOption;   //!
-   G__CallFunc   *fFuncObj;      //!
-   G__CallFunc   *fFuncInp;      //!
-   G__CallFunc   *fFuncOut;      //!
-   G__CallFunc   *fFuncGetAbort; //!
-   G__CallFunc   *fFuncGetStat;  //!
+   Cint::G__ClassInfo  *fClass;        //!
+   Cint::G__CallFunc   *fFuncVersion;  //!
+   Cint::G__CallFunc   *fFuncInit;     //!
+   Cint::G__CallFunc   *fFuncBegin;    //!
+   Cint::G__CallFunc   *fFuncSlBegin;  //!
+   Cint::G__CallFunc   *fFuncNotif;    //!
+   Cint::G__CallFunc   *fFuncSlTerm;   //!
+   Cint::G__CallFunc   *fFuncTerm;     //!
+   Cint::G__CallFunc   *fFuncCut;      //!
+   Cint::G__CallFunc   *fFuncFill;     //!
+   Cint::G__CallFunc   *fFuncProc;     //!
+   Cint::G__CallFunc   *fFuncOption;   //!
+   Cint::G__CallFunc   *fFuncObj;      //!
+   Cint::G__CallFunc   *fFuncInp;      //!
+   Cint::G__CallFunc   *fFuncOut;      //!
+   Cint::G__CallFunc   *fFuncGetAbort; //!
+   Cint::G__CallFunc   *fFuncGetStat;  //!
    TSelector     *fIntSelector;  //Pointer to interpreted selector (if interpreted)
    Bool_t        fIsOwner;      //True if fIntSelector shoudl be deleted when the this object is deleted.
 
 public:
    TSelectorCint();
    virtual            ~TSelectorCint();
-   virtual void        Build(TSelector *iselector, G__ClassInfo *cl, Bool_t isowner = kTRUE);
+   virtual void        Build(TSelector *iselector, Cint::G__ClassInfo *cl, Bool_t isowner = kTRUE);
    virtual int         Version() const;
    virtual void        Init(TTree *);
    virtual void        Begin(TTree *tree);

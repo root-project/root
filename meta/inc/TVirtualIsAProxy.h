@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.2 2005/06/08 18:51:36 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.3 2007/08/09 09:20:31 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -11,6 +11,8 @@
 
 #ifndef ROOT_TVirtualIsAProxy
 #define ROOT_TVirtualIsAProxy
+
+class TClass;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

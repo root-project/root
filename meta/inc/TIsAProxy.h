@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.4 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.5 2006/05/23 04:47:40 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -15,6 +15,10 @@
 #ifndef ROOT_TVirtualIsAProxy
 #include "TVirtualIsAProxy.h"
 #endif
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 
 class TClass;
 
