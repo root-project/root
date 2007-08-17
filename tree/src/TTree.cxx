@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.336 2007/08/03 19:19:40 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.337 2007/08/10 10:09:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2296,7 +2296,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    // Copy entries if requested.
    //
 
-   if (fastClone && (nentries < 0) && (newtree->GetListOfLeaves()->GetEntries() == GetListOfLeaves()->GetEntries())) {
+   if (fastClone && (nentries < 0)) {
       // -- Quickly copy the basket without decompression and streaming.
       nentries = GetEntriesFast();
       for (Long64_t i = 0; i < nentries; i += this->GetTree()->GetEntries()) {
