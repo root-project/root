@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.111 2007/06/05 10:46:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.112 2007/07/03 16:42:32 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -185,10 +185,10 @@ Int_t TH2::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }

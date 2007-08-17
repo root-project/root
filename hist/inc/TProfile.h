@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.34 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.35 2006/08/02 12:54:18 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
            TH1D    *ProjectionX(const char *name="_px", Option_t *option="e") const;
    virtual void     PutStats(Double_t *stats);
            TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);
-   virtual void     RebinAxis(Double_t x, const char *ax);
+   virtual void     RebinAxis(Double_t x, TAxis *axis);
    virtual void     Reset(Option_t *option="");
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.83 2007/02/13 05:36:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.84 2007/06/24 09:13:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -281,13 +281,13 @@ Int_t TAxis::FindBin(Double_t x)
       bin = 0;
       if (fParent == 0) return bin;
       if (!fParent->TestBit(TH1::kCanRebin)) return bin;
-      ((TH1*)fParent)->RebinAxis(x,GetName());
+      ((TH1*)fParent)->RebinAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN
       bin = fNbins+1;
       if (fParent == 0) return bin;
       if (!fParent->TestBit(TH1::kCanRebin)) return bin;
-      ((TH1*)fParent)->RebinAxis(x,GetName());
+      ((TH1*)fParent)->RebinAxis(x,this);
       return FindFixBin(x);
    } else {
       if (!fXbins.fN) {        //*-* fix bins
@@ -681,8 +681,9 @@ void TAxis::SetDefaults()
    fFirst   = 0;
    fLast    = 0;
    fBits2   = 0;
-   char name[64];
-   sprintf(name,"%s%s",GetName(),"x");
+   char name[2];
+   strncpy(name,GetName(),1);
+   name[1] = 0;
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();

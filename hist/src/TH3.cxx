@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.96 2007/06/05 10:46:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.97 2007/07/03 16:42:32 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -197,12 +197,12 @@ Int_t TH3::BufferEmpty(Int_t action)
          } else {
             fBuffer = 0;
             Int_t keep = fBufferSize; fBufferSize = 0;
-            if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-            if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
-            if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
-            if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
-            if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,"Z");
-            if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,"Z");
+            if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+            if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
+            if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
+            if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
+            if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,&fZaxis);
+            if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,&fZaxis);
             fBuffer = buffer;
             fBufferSize = keep;
          }

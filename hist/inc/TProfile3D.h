@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.h,v 1.3 2006/05/17 10:01:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.h,v 1.4 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -103,7 +103,7 @@ public:
    TH3D             *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
-   virtual void      RebinAxis(Double_t x, const char *ax);
+   virtual void      RebinAxis(Double_t x, TAxis *axis);
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1);
    virtual void      SetBinEntries(Int_t bin, Double_t w);

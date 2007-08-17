@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.4 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.5 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -415,12 +415,12 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
-         if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,"Z");
-         if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,"Z");
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
+         if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,&fZaxis);
+         if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,&fZaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1275,9 +1275,9 @@ void TProfile3D::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile3D::RebinAxis(Double_t x, const char* ax)
+void TProfile3D::RebinAxis(Double_t x, TAxis *axis)
 {
-// Profile histogram is resized along ax such that x is in the axis range.
+// Profile histogram is resized along axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
 // the current axis range until the specified value x is within the limits.
 // The algorithm makes a copy of the histogram, then loops on all bins
@@ -1287,10 +1287,6 @@ void TProfile3D::RebinAxis(Double_t x, const char* ax)
 //  Ex:  h->SetBit(TH1::kCanRebin);
 
    if (!TestBit(kCanRebin)) return;
-   char achoice = toupper(ax[0]);
-   TAxis *axis = &fXaxis;
-   if (achoice == 'Y') axis = &fYaxis;
-   if (achoice == 'Z') axis = &fZaxis;
    if (axis->GetXmin() >= axis->GetXmax()) return;
    if (axis->GetNbins() <= 0) return;
 

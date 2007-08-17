@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.29 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.30 2007/06/12 15:29:23 moneta Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
    TH2D             *ProjectionXY(const char *name="_pxy", Option_t *option="e") const;
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
-   virtual void      RebinAxis(Double_t x, const char *ax);
+   virtual void      RebinAxis(Double_t x, TAxis *axis);
    virtual TProfile2D *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.349 2007/07/02 11:58:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.350 2007/07/31 21:10:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1061,8 +1061,8 @@ Int_t TH1::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -5243,9 +5243,9 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
 }
 
 //______________________________________________________________________________
-void TH1::RebinAxis(Double_t x, const char *ax)
+void TH1::RebinAxis(Double_t x, TAxis *axis)
 {
-   // Histogram is resized along ax such that x is in the axis range.
+   // Histogram is resized along axis such that x is in the axis range.
    // The new axis limits are recomputed by doubling iteratively
    // the current axis range until the specified value x is within the limits.
    // The algorithm makes a copy of the histogram, then loops on all bins
@@ -5261,10 +5261,6 @@ void TH1::RebinAxis(Double_t x, const char *ax)
       return;
    }
 
-   char achoice = toupper(ax[0]);
-   TAxis *axis = &fXaxis;
-   if (achoice == 'Y') axis = &fYaxis;
-   if (achoice == 'Z') axis = &fZaxis;
    if (axis->GetXmin() >= axis->GetXmax()) return;
    if (axis->GetNbins() <= 0) return;
 

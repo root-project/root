@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.86 2007/04/23 10:50:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.87 2007/07/31 21:10:43 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -413,8 +413,8 @@ Int_t TProfile::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1610,7 +1610,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 }
 
 //______________________________________________________________________________
-void TProfile::RebinAxis(Double_t x, const char* /* ax */)
+void TProfile::RebinAxis(Double_t x, TAxis *axis)
 {
 // Profile histogram is resized along x axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
@@ -1622,7 +1622,6 @@ void TProfile::RebinAxis(Double_t x, const char* /* ax */)
 //  Ex:  h->SetBit(TH1::kCanRebin);
 
    if (!TestBit(kCanRebin)) return;
-   TAxis *axis = &fXaxis;
    if (axis->GetXmin() >= axis->GetXmax()) return;
    if (axis->GetNbins() <= 0) return;
 

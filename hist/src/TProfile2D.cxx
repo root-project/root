@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.55 2007/04/23 10:50:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.56 2007/06/12 15:29:23 moneta Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -424,10 +424,10 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,"Y");
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1565,9 +1565,9 @@ void TProfile2D::Reset(Option_t *option)
 
 
 //______________________________________________________________________________
-void TProfile2D::RebinAxis(Double_t x, const char* ax)
+void TProfile2D::RebinAxis(Double_t x, TAxis *axis)
 {
-// Profile histogram is resized along ax such that x is in the axis range.
+// Profile histogram is resized along axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
 // the current axis range until the specified value x is within the limits.
 // The algorithm makes a copy of the histogram, then loops on all bins
@@ -1577,9 +1577,6 @@ void TProfile2D::RebinAxis(Double_t x, const char* ax)
 //  Ex:  h->SetBit(TH1::kCanRebin);
 
    if (!TestBit(kCanRebin)) return;
-   char achoice = toupper(ax[0]);
-   TAxis *axis = &fXaxis;
-   if (achoice == 'Y') axis = &fYaxis;
    if (axis->GetXmin() >= axis->GetXmax()) return;
    if (axis->GetNbins() <= 0) return;
 
