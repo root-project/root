@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name: v5-14-00-patches $:$Id: TTreeCloner.cxx,v 1.12 2006/10/06 16:45:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.12.4.1 2007/08/06 21:51:20 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -237,19 +237,31 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 
    // Since this is called from the constructor, this can not be a virtual function
 
-   Int_t nb = from->GetEntries();
-   Int_t fnb= to->GetEntries();
-   if (nb!=fnb) {
-      Error("TTreeCloner::CollectSubBranches",
-         "The export branch and the import branch do not have the same number of branches (%d vs %d)",
-         fnb,nb);
-      fIsValid = kFALSE;
+   Int_t fnb = from->GetEntries();
+   Int_t tnb = to->GetEntries();
+   if (!fnb || !tnb) {
       return 0;
    }
 
    UInt_t numBasket = 0;
-   for (Int_t i=0;i<nb;i++)  {
-      numBasket += CollectBranches((TBranch*)from->UncheckedAt(i),(TBranch*)to->UncheckedAt(i));
+   Int_t fi = 0;
+   Int_t ti = 0;
+   while (ti < tnb) {
+      TBranch* fb = (TBranch*) from->UncheckedAt(fi);
+      TBranch* tb = (TBranch*) to->UncheckedAt(ti);
+      if (strcmp(fb->GetName(), tb->GetName())) {
+         ++fi;
+         if (fi >= fnb) {
+            break;
+         }
+         continue;
+      }
+      numBasket += CollectBranches(fb, tb);
+      ++fi;
+      if (fi >= fnb) {
+         break;
+      }
+      ++ti;
    }
    return numBasket;
 }
