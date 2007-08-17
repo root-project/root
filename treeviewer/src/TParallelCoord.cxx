@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.6 2007/08/16 12:12:23 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.7 2007/08/16 15:54:28 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -499,7 +499,7 @@ TParallelCoordSelect* TParallelCoord::GetSelection(const char* title)
 //______________________________________________________________________________
 TTree* TParallelCoord::GetTree()
 {
-   // return the tre if fTree is defined. If not, the method try to load the tree
+   // return the tree if fTree is defined. If not, the method try to load the tree
    // from fTreeFileName.
    
    if (fTree) return fTree;
