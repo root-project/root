@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.73 2007/05/15 12:48:53 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.74 2007/07/09 09:30:18 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1091,10 +1091,10 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             DrawLine(x3,y1,x4,y1,spec);
             break;
          case 5: // acute
-            x1 = x+fs1.Width()/2-0.5*sub;
+            x1 = x+fs1.Width()/2;
             y1 = y +sub -fs1.Over() ;
-            x2 = x1 +2*sub;
-            y2 = y1 -2*sub;
+            x2 = x1 +3*sub;
+            y2 = y1 -2.5*sub;
             DrawLine(x1,y1,x2,y2,spec);
             break;
          case 6: // grave
