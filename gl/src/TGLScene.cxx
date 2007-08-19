@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.54 2007/07/23 15:06:24 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.55 2007/08/02 14:48:04 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
@@ -1079,11 +1079,12 @@ UInt_t TGLScene::GetMaxPhysicalID()
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLScene::BeginUpdate()
+Bool_t TGLScene::BeginUpdate()
 {
-   // Put scene in update mode.
+   // Put scene in update mode, return true if lock acquired.
 
-   TakeLock(kModifyLock);
+   Bool_t ok = TakeLock(kModifyLock);
+   return ok;
 }
 
 //______________________________________________________________________________
@@ -1094,8 +1095,7 @@ void TGLScene::EndUpdate()
    IncTimeStamp();
    ReleaseLock(kModifyLock);
 
-   // !!! Notify viewers, once they're registered.
-   // Via some SceneBase method ... i presume.
+   TagViewersChanged();
 }
 
 //______________________________________________________________________________
@@ -1348,7 +1348,8 @@ void TGLScene::DumpMapSizes() const
 {
    // Print sizes of logical nad physical-shape maps.
 
-   printf("Scene: %lu Logicals / %lu Physicals ",  fLogicalShapes.size(), fPhysicalShapes.size());
+   printf("Scene: %u Logicals / %u Physicals ",
+          (UInt_t) fLogicalShapes.size(), (UInt_t) fPhysicalShapes.size());
 }
 
 //______________________________________________________________________________

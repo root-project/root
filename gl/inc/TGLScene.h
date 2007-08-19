@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.30 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.31 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -160,8 +160,8 @@ public:
    // ----------------------------------------------------------------
    // Updates / removals of logical and physical shapes
 
-   virtual void BeginUpdate();
-   virtual void EndUpdate();
+   virtual Bool_t BeginUpdate();
+   virtual void   EndUpdate();
 
    virtual void UpdateLogical(TObject* logid);
 
