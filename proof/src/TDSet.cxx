@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.17 2007/08/01 14:24:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.18 2007/08/02 16:00:03 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -340,7 +340,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
       return -1;
    }
 
-   // Record end-point Url and mark has looked-up
+   // Record end-point Url and mark as looked-up
    fName = ((TUrl *)file->GetEndpointUrl())->GetUrl();
    SetBit(kHasBeenLookedUp);
 
@@ -1230,7 +1230,7 @@ void TDSet::Lookup()
    // Notify the client if not all the files have entries to be processed
    // (which may happen if an entry-list is used)
    if (ng < tot && gProofServ) {
-      msg = Form("Files with entries to be processed: %d (out of %d)", ng, tot);
+      msg = Form("Files with entries to be processed: %d (out of %d)\n", ng, tot);
       gProofServ->SendAsynMessage(msg);
    }
 }
