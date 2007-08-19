@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScenePad.cxx,v 1.1 2007/07/23 15:02:39 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScenePad.cxx,v 1.2 2007/08/02 14:47:45 rdm Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************
@@ -176,22 +176,28 @@ void TGLScenePad::PadPaintFromViewer(TGLViewer* viewer)
    Bool_t sr = fSmartRefresh;
    fSmartRefresh = viewer->GetSmartRefresh();
 
-   BeginScene();
-   SubPadPaint(fPad);
-   EndScene();
+   PadPaint(fPad);
 
    fSmartRefresh = sr;
 }
 
 //______________________________________________________________________________
-void TGLScenePad::PadPaint(TVirtualPad* /*pad*/)
+void TGLScenePad::PadPaint(TVirtualPad* pad)
 {
-   // Entry point for updating viewer contents via VirtualViewer3D
+   // Entry point for updating scene contents via VirtualViewer3D
    // interface.
    // For now this is handled by TGLViewer as it remains
    // the 'Viewer3D' of given pad.
 
-   Error("TGLScenePad::PadPaint", "This call not expected in current implementation!");
+   if (pad != fPad)
+   {
+      Error("TGLScenePad::PadPaint", "Mismatch between pad argument and data-member!");
+      return;
+   }
+
+   BeginScene();
+   SubPadPaint(fPad);
+   EndScene();
 }
 
 
@@ -213,7 +219,7 @@ void TGLScenePad::BeginScene()
       Info("TGLScenePad::BeginScene", "entering.");
    }
 
-   if (!TakeLock(kModifyLock)) {
+   if ( ! BeginUpdate()) {
       Error("TGLScenePad::BeginScene", "could not take scene lock.");
       return;
    }
@@ -263,10 +269,7 @@ void TGLScenePad::EndScene()
       EndSmartRefresh();
    }
 
-   IncTimeStamp();
-   ReleaseLock(kModifyLock);
-
-   // !!! MT broadcast redraw to viewers?
+   EndUpdate();
 
    if (gDebug > 2) {
       Info("TGLScenePad::EndScene", "Accepted %d physicals", fAcceptedPhysicals);
