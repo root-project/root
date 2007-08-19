@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.4 2007/06/23 21:23:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.cxx,v 1.5 2007/07/23 15:08:39 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -52,7 +52,8 @@ TGLViewerBase::TGLViewerBase() :
    fLOD       (TGLRnrCtx::kLODHigh),
    fStyle     (TGLRnrCtx::kFill),
 
-   fResetSceneInfosOnRender (kFALSE)
+   fResetSceneInfosOnRender (kFALSE),
+   fChanged                 (kFALSE)
 {
    // Constructor.
 
@@ -97,34 +98,54 @@ TGLViewerBase::FindScene(TGLSceneBase* scene)
 }
 
 //______________________________________________________________________
-void TGLViewerBase::AddScene(TGLSceneBase* scene)
+TGLSceneInfo* TGLViewerBase::AddScene(TGLSceneBase* scene)
 {
    // Add new scene, appropriate scene-info is created.
 
    SceneInfoList_i i = FindScene(scene);
    if (i == fScenes.end()) {
-      fScenes.push_back(scene->CreateSceneInfo(this));
+      TGLSceneInfo* sinfo = scene->CreateSceneInfo(this);
+      fScenes.push_back(sinfo);
       scene->AddViewer(this);
+      Changed();
+      return sinfo;
    } else {
       Warning("TGLViewerBase::AddScene", "scene '%s' already in the list.",
               scene->GetName());
+      return 0;
    }
 }
 
 //______________________________________________________________________
 void TGLViewerBase::RemoveScene(TGLSceneBase* scene)
 {
-   // Remove scene, its scene-info is deleted.
+   // Remove scene from the viewer, its scene-info is deleted.
 
    SceneInfoList_i i = FindScene(scene);
    if (i != fScenes.end()) {
       delete *i;
       fScenes.erase(i);
       scene->RemoveViewer(this);
+      Changed();
    } else {
       Warning("TGLViewerBase::RemoveScene", "scene '%s' not found.",
               scene->GetName());
    }
+}
+
+//______________________________________________________________________
+void TGLViewerBase::RemoveAllScenes()
+{
+   // Remove all scenes from the viewer, their scene-infos are deleted.
+
+   for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
+   {
+      TGLSceneInfo * sinfo = *i;
+      sinfo->GetScene()->RemoveViewer(this);
+      delete sinfo;
+   }
+   fScenes.clear();
+   Changed();
 }
 
 //______________________________________________________________________
@@ -138,6 +159,7 @@ void TGLViewerBase::SceneDestructing(TGLSceneBase* scene)
    if (i != fScenes.end()) {
       delete *i;
       fScenes.erase(i);
+      Changed();
    } else {
       Warning("TGLViewerBase::SceneDestructing", "scene not found.");
    }
@@ -161,6 +183,7 @@ void TGLViewerBase::AddOverlayElement(TGLOverlayElement* el)
    // Add overlay element.
 
    fOverlay.push_back(el);
+   Changed();
 }
 
 //______________________________________________________________________
@@ -170,6 +193,7 @@ void TGLViewerBase::RemoveOverlayElement(TGLOverlayElement* el)
    std::vector<TGLOverlayElement*>::iterator it = std::find(fOverlay.begin(), fOverlay.end(), el);
    if(it != fOverlay.end())
       fOverlay.erase(it);
+   Changed();
 }
 
 /**************************************************************************/
@@ -193,14 +217,17 @@ void TGLViewerBase::ResetSceneInfos()
 
 void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
 {
-   // Merge bounding-boxes of all registered scenes.
+   // Merge bounding-boxes of all active registered scenes.
 
    bbox.SetEmpty();
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
       TGLSceneInfo * sinfo = *i;
-      sinfo->SetupTransformsAndBBox(); // !!! transform not done yet, no camera
-      bbox.MergeAligned(sinfo->GetTransformedBBox());
+      if (sinfo->GetActive())
+      {
+         sinfo->SetupTransformsAndBBox(); // !!! transform not done yet, no camera
+         bbox.MergeAligned(sinfo->GetTransformedBBox());
+      }
    }  
 }
 
@@ -249,15 +276,18 @@ void TGLViewerBase::PreRender()
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
       TGLSceneInfo * sinfo = *i;
-      if ( ! sinfo->GetScene()->TakeLock(kDrawLock))
+      if (sinfo->GetActive())
       {
-         Warning("TGLViewerBase::PreRender", "locking of scene '%s' failed, skipping.",
-                 sinfo->GetScene()->GetName());
-         continue;
+         if ( ! sinfo->GetScene()->TakeLock(kDrawLock))
+         {
+            Warning("TGLViewerBase::PreRender", "locking of scene '%s' failed, skipping.",
+                    sinfo->GetScene()->GetName());
+            continue;
+         }
+         sinfo->SetupTransformsAndBBox(); // !!! transform not done yet
+         fOverallBoundingBox.MergeAligned(sinfo->GetTransformedBBox());
+         locked_scenes.push_back(sinfo);
       }
-      sinfo->SetupTransformsAndBBox(); // !!! transform not done yet
-      fOverallBoundingBox.MergeAligned(sinfo->GetTransformedBBox());
-      locked_scenes.push_back(sinfo);
    }
 
    fCamera->Apply(fOverallBoundingBox, fRnrCtx->GetPickRectangle());
@@ -326,6 +356,7 @@ void TGLViewerBase::PostRender()
    {
       fVisScenes[i]->GetScene()->ReleaseLock(kDrawLock);
    }
+   fChanged = kFALSE;
 }
 
 //______________________________________________________________________

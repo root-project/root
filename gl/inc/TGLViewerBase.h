@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.2 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.3 2007/07/23 15:08:39 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -57,6 +57,7 @@ protected:
    Short_t            fStyle;       // Viewer-style for rendering.
 
    Bool_t             fResetSceneInfosOnRender; // Request rebuild of view-specific scene data.
+   Bool_t             fChanged;                 // Change requiring redraw is pending.
 
    SceneInfoList_t    fScenes;                  // Registered scenes.
    SceneInfoVec_t     fVisScenes;               // Visible scenes.
@@ -74,9 +75,10 @@ public:
 
    virtual const char* LockIdStr() const;
 
-   void AddScene(TGLSceneBase* scene);
-   void RemoveScene(TGLSceneBase* scene);
-   void SceneDestructing(TGLSceneBase* scene);
+   TGLSceneInfo* AddScene(TGLSceneBase* scene);
+   void          RemoveScene(TGLSceneBase* scene);
+   void          RemoveAllScenes();
+   void          SceneDestructing(TGLSceneBase* scene);
 
    TGLSceneInfo* GetSceneInfo(TGLSceneBase* scene);
 
@@ -94,8 +96,11 @@ public:
 
    // ================================================================
 
-   virtual void ResetSceneInfos();
-   virtual void MergeSceneBBoxes(TGLBoundingBox& bbox);
+   virtual void   ResetSceneInfos();
+   virtual void   Changed() { fChanged = kTRUE; }
+   virtual Bool_t IsChanged() const { return fChanged; }
+
+   virtual void   MergeSceneBBoxes(TGLBoundingBox& bbox);
 
    // ================================================================
 
