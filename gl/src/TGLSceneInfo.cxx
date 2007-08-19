@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.cxx,v 1.2 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TGLSceneInfo.h"
 #include "TGLRnrCtx.h"
 #include "TGLSceneBase.h"
+#include "TGLViewerBase.h"
 
 //______________________________________________________________________
 // TGLSceneInfo
@@ -36,6 +37,7 @@ ClassImp(TGLSceneInfo)
 TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fViewer    (view),
    fScene     (scene),
+   fActive    (kTRUE),
 
    fLOD   (TGLRnrCtx::kLODUndef),
    fStyle (TGLRnrCtx::kStyleUndef),
@@ -56,6 +58,18 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fClipMode  (kClipNone)
 {
    // Default constructor.
+}
+
+//______________________________________________________________________
+void TGLSceneInfo::SetActive(Bool_t a)
+{
+   // Set active state of the scene, mark viewer as changed.
+
+   if (a != fActive)
+   {
+      fActive = a;
+      fViewer->Changed();
+   }
 }
 
 //______________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.h,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneInfo.h,v 1.2 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -37,6 +37,7 @@ private:
 protected:
    TGLViewerBase  * fViewer;
    TGLSceneBase   * fScene;
+   Bool_t           fActive;    // Show fScene in fViewer
 
    Short_t          fLOD;       // Optional override of scene lod
    Short_t          fStyle;     // Optional override of scene style
@@ -76,6 +77,9 @@ public:
    TGLViewerBase & RefViewer() const { return *fViewer; }
    TGLSceneBase  * GetScene()  const { return  fScene;  }
    TGLSceneBase  & RefScene()  const { return *fScene;  }
+
+   Bool_t GetActive() const { return fActive; }
+   void   SetActive(Bool_t a);
 
    void  SetupTransformsAndBBox();
 
