@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.20 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.21 2007/06/12 14:53:20 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -86,8 +86,8 @@ private:
    TGLSAViewer & operator = (const TGLSAViewer &);
 
 public:
-   TGLSAViewer(TVirtualPad * pad);
-   TGLSAViewer(TGFrame * parent, TVirtualPad * pad);
+   TGLSAViewer(TVirtualPad *pad);
+   TGLSAViewer(TGFrame *parent, TVirtualPad *pad, TGedEditor *ged = 0);
    ~TGLSAViewer();
 
    virtual const char* GetName() const { return "GLViewer"; }

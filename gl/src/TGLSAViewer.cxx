@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.34 2007/06/18 07:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.35 2007/06/23 21:23:22 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -147,7 +147,7 @@ const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 0, 0};
 
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
+TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
    fFileMenu(0),
@@ -190,7 +190,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
 }
 
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
+TGLSAViewer::TGLSAViewer(TGFrame *parent, TVirtualPad *pad, TGedEditor *ged) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
    fFileMenu(0),
@@ -198,7 +198,7 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
    fHelpMenu(0),
    fGLArea(0),
    fLeftVerticalFrame(0),
-   fGedEditor(0),
+   fGedEditor(ged),
    fPShapeWrap(0)
 {
    // Construct an embedded standalone viewer, bound to supplied 'pad'.
@@ -219,10 +219,13 @@ TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
 
    // set recursive cleanup, but exclude fGedEditor
    // destructor of fGedEditor has own way of handling child nodes
-   TObject* fe = fLeftVerticalFrame->GetList()->First();
-   fLeftVerticalFrame->GetList()->Remove(fe);
-   fFrame->SetCleanup(kDeepCleanup);
-   fLeftVerticalFrame->GetList()->AddFirst(fe);
+   if (fLeftVerticalFrame)
+   {
+      TObject* fe = fLeftVerticalFrame->GetList()->First();
+      fLeftVerticalFrame->GetList()->Remove(fe);
+      fFrame->SetCleanup(kDeepCleanup);
+      fLeftVerticalFrame->GetList()->AddFirst(fe);
+   }
 
    Show();
 }
@@ -304,22 +307,25 @@ void TGLSAViewer::CreateFrames()
    TGCompositeFrame* compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
    fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
-   compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY , 2, 2, 2, 2));
+   if (fGedEditor == 0)
+   {
+      fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
+      compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY , 2, 2, 2, 2));
 
-   const TGWindow* cw =  fFrame->GetClient()->GetRoot();
-   fFrame->GetClient()->SetRoot(fLeftVerticalFrame);
+      const TGWindow* cw =  fFrame->GetClient()->GetRoot();
+      fFrame->GetClient()->SetRoot(fLeftVerticalFrame);
 
-   fGedEditor = new TGedEditor();
-   fGedEditor->GetTGCanvas()->ChangeOptions(0);
-   fLeftVerticalFrame->RemoveFrame(fGedEditor);
-   fLeftVerticalFrame->AddFrame(fGedEditor, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 0, 2, 2));
-   fLeftVerticalFrame->GetClient()->SetRoot((TGWindow*)cw);
-   fLeftVerticalFrame->MapSubwindows();
+      fGedEditor = new TGedEditor();
+      fGedEditor->GetTGCanvas()->ChangeOptions(0);
+      fLeftVerticalFrame->RemoveFrame(fGedEditor);
+      fLeftVerticalFrame->AddFrame(fGedEditor, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 0, 2, 2));
+      fLeftVerticalFrame->GetClient()->SetRoot((TGWindow*)cw);
+      fLeftVerticalFrame->MapSubwindows();
 
-   TGVSplitter *splitter = new TGVSplitter(compositeFrame);
-   splitter->SetFrame(fLeftVerticalFrame, kTRUE);
-   compositeFrame->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0,1,2,2) );
+      TGVSplitter *splitter = new TGVSplitter(compositeFrame);
+      splitter->SetFrame(fLeftVerticalFrame, kTRUE);
+      compositeFrame->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0,1,2,2) );
+   }
 
    TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
    compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
@@ -328,16 +334,16 @@ void TGLSAViewer::CreateFrames()
    // Direct events from the TGWindow directly to the base viewer
    Bool_t ok = kTRUE;
    //Execute event commented now
-//   ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
+   //   ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
    ok = ok && fGLWindow->Connect("HandleButton(Event_t*)", "TGLViewer", this, "HandleButton(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleDoubleClick(Event_t*)", "TGLViewer", this, "HandleDoubleClick(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleKey(Event_t*)", "TGLViewer", this, "HandleKey(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleMotion(Event_t*)", "TGLViewer", this, "HandleMotion(Event_t*)");
-//   ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
+   //   ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
    ok = ok && fGLWindow->Connect("Repaint()", "TGLViewer", this, "Repaint()");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
 
-//   canvasWindow->SetContainer(fGLWindow);
+   //   canvasWindow->SetContainer(fGLWindow);
    rightVerticalFrame->AddFrame(fGLWindow, /*canvasWindow,*/ new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }
 
@@ -524,8 +530,8 @@ void TGLSAViewer::SelectionChanged()
 
    TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
 
-   if ( selected  &&  selected == fPShapeWrap->fPShape &&
-        fGedEditor->GetModel() == fPShapeWrap )
+   if (selected  &&  selected == fPShapeWrap->fPShape  &&
+       fGedEditor->GetModel() == fPShapeWrap)
    {
       fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
       return;
