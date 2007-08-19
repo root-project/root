@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.cxx,v 1.2 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -107,6 +107,16 @@ void TGLSceneBase::RemoveViewer(TGLViewerBase* viewer)
       Info("TGLSceneBase::RemoveViewer", "scene '%s' not used - autodestructing.",
            GetName());
       delete this;
+   }
+}
+//______________________________________________________________________________
+void TGLSceneBase::TagViewersChanged()
+{
+   // Tag all viewers as changed.
+
+   for (ViewerList_i i=fViewers.begin(); i!=fViewers.end(); ++i)
+   {
+      (*i)->Changed();
    }
 }
 

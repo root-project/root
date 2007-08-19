@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.h,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.h,v 1.2 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
 
    void AddViewer(TGLViewerBase* viewer);
    void RemoveViewer(TGLViewerBase* viewer);
+   void TagViewersChanged();
 
    virtual const char* LockIdStr() const;
 
@@ -107,6 +108,8 @@ public:
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }
 
+   Bool_t   GetAutoDestruct()   const { return fAutoDestruct; }
+   void     SetAutoDestruct(Bool_t a) { fAutoDestruct = a;    }
 
    // BoundingBox
 
