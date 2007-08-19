@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.42 2007/06/25 19:25:05 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.43 2007/07/23 15:07:42 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -135,8 +135,6 @@ protected:
    Int_t              fGLDevice; //!for embedded gl viewer
    TGLContextIdentity*fGLCtxId;  //!for embedded gl viewer
 
-   TGLViewerEditor *fPadEditor;
-
    // Updata/camera-reset behaviour
    Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update
    Bool_t           fResetCamerasOnUpdate;     // reposition camera on each update
@@ -236,8 +234,6 @@ public:
    Bool_t HandleMotion(Event_t *ev);
    Bool_t HandleExpose(Event_t *ev);
    void   Repaint();
-
-   void SetPadEditor(TGLViewerEditor *ed){fPadEditor = ed;}
 
    ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
 };

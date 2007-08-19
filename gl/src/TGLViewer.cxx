@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.73 2007/06/26 12:43:58 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.74 2007/07/23 15:07:42 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -108,7 +108,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fGLWindow(0),
    fGLDevice(-1),
    fGLCtxId(0),
-   fPadEditor(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
    fResetCamerasOnNextUpdate(kFALSE),
@@ -154,7 +153,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
    fGLCtxId(0),
-   fPadEditor(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
    fResetCamerasOnNextUpdate(kFALSE),
@@ -206,8 +204,8 @@ TGLViewer::~TGLViewer()
 
    delete fContextMenu;
    delete fRedrawTimer;
-   if (fPadEditor) fPadEditor = 0;
-   fPad->ReleaseViewer3D();
+   if (fPad)
+      fPad->ReleaseViewer3D();
    if (fGLDevice != -1)
       fGLCtxId->Release(0);
 }
@@ -219,6 +217,8 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
    // Entry point for updating viewer contents via VirtualViewer3D
    // interface.
    // We search and forward the request to appropriate TGLScenePad.
+   // If it is not found we create a new TGLScenePad so this can
+   // potentially also be used for registration of new pads.
 
    TGLScenePad* scenepad = 0;
    for (SceneInfoList_i si = fScenes.begin(); si != fScenes.end(); ++si)
@@ -249,12 +249,23 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
 //______________________________________________________________________________
 void TGLViewer::UpdateScene()
 {
-   // Force a scene update.
+   // Force update of pad-scenes. Eventually this could be generalized
+   // to all scene-types via a virtual function in TGLSceneBase.
 
-   // We are going to rebuild the scene - ensure any pending redraw timer cancelled now
+   // Cancel any pending redraw timer.
    fRedrawTimer->Stop();
 
-   PadPaint(fPad);
+   for (SceneInfoList_i si = fScenes.begin(); si != fScenes.end(); ++si)
+   {
+      TGLScenePad* scenepad = dynamic_cast<TGLScenePad*>((*si)->GetScene());
+      if (scenepad)
+         scenepad->PadPaintFromViewer(this);
+   }
+
+   PostSceneBuildSetup(fResetCamerasOnNextUpdate || fResetCamerasOnUpdate);
+   fResetCamerasOnNextUpdate = kFALSE;
+
+   RequestDraw();
 }
 
 //______________________________________________________________________________
@@ -1270,6 +1281,8 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
                if (event->fState & kKeyShiftMask) {
                   if (RequestSelect(event->fX, event->fY)) {
                      ApplySelection();
+                  } else {
+                     SelectionChanged(); // Just notify clients.
                   }
                } else if (event->fState & kKeyControlMask) {
                   RequestSelect(event->fX, event->fY, kTRUE);
