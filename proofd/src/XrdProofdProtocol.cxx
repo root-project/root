@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.67 2007/08/02 10:59:11 ganis Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.68 2007/08/06 15:25:32 ganis Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -388,7 +388,7 @@ XrdProofSched *XrdProofdProtocol::LoadScheduler(const char *cfn, XrdOucError *ed
          return (XrdProofSched *)0;
       }
    }
-   // Check result 
+   // Check result
    if (!(sched->IsValid())) {
       TRACE(XERR, "LoadScheduler:"
                   " unable to instantiate the "<<sched->Name()<<" scheduler using "<< cfn);
@@ -1294,7 +1294,7 @@ int XrdProofdProtocol::Config(const char *cfn)
       }
    }
 
-   // Change/DonotChange ownership when logging clients 
+   // Change/DonotChange ownership when logging clients
    fgChangeOwn = (fgMultiUser && getuid()) ? 0 : 1;
 
    return NoGo;
@@ -1307,6 +1307,8 @@ int XrdProofdProtocol::Reconfig()
    // Warning: changes in the authentication policy need to log-off all users
    // and reconnect them according to the new policy: these changes are
    // ignored here.
+   // TODO: this method overlaps with Configure, so the overlapping part
+   // should be moved to some new method.
 
    // Check inputs
    if (fgCfgFile.fName.length() <= 0) {
@@ -1336,7 +1338,7 @@ int XrdProofdProtocol::Reconfig()
    TraceConfig(fgCfgFile.fName.c_str());
 
    // Reconfigure the manager
-   fgMgr.Config(fgCfgFile.fName.c_str());
+   fgMgr.Config(fgCfgFile.fName.c_str(), &fgEDest);
 
    TRACE(HDBG, "Reconfig: file " << fgCfgFile.fName << " changed since last check: rescan");
    fgCfgFile.fMtime = st.st_mtime;
@@ -1668,7 +1670,7 @@ int XrdProofdProtocol::Reconfig()
       }
    }
 
-   // Change/DonotChange ownership when logging clients 
+   // Change/DonotChange ownership when logging clients
    fgChangeOwn = (fgMultiUser && getuid()) ? 0 : 1;
 
    // Done
@@ -2525,7 +2527,7 @@ int XrdProofdProtocol::MapClient(bool all)
       } else {
 
          // Make sure that the version is filled correctly (if an admin operation
-         // was run before this may still be -1 on workers) 
+         // was run before this may still be -1 on workers)
          pmgr->SetClientVers(clientvers);
 
          // The index of the next free slot will be the unique ID
@@ -2643,7 +2645,7 @@ int XrdProofdProtocol::MapClient(bool all)
             fclose(f);
          }
 
-         // Instance can be considered valid by now 
+         // Instance can be considered valid by now
          pmgr->SetValid();
 
          TRACEI(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
@@ -4711,7 +4713,7 @@ int XrdProofdProtocol::Admin()
 
       // Find out for which session is this request
       char *stag = 0;
-      int len = fRequest.header.dlen; 
+      int len = fRequest.header.dlen;
       if (len > 0) {
          char *buf = fArgp->buff;
          if (buf[0] != '*') {
@@ -4775,7 +4777,7 @@ int XrdProofdProtocol::Admin()
          char ln[2048];
          while (fgets(ln, sizeof(ln), f)) {
             if (ln[strlen(ln)-1] == '\n')
-               ln[strlen(ln)-1] = 0; 
+               ln[strlen(ln)-1] = 0;
             // Locate status and url
             char *ps = strchr(ln, ' ');
             if (ps) {
@@ -5986,7 +5988,7 @@ int XrdProofdProtocol::ReadBuffer()
 
    // Find out the file name
    char *file = 0;
-   int dlen = fRequest.header.dlen; 
+   int dlen = fRequest.header.dlen;
    if (dlen > 0 && fArgp->buff) {
       file = new char[dlen+1];
       memcpy(file, fArgp->buff, dlen);
@@ -6292,8 +6294,8 @@ int XrdProofdProtocol::SetGroupEffectiveFractions()
 
    XpdGroupEff_t eff = {0, &glo, 0.5, 1.};
    if (opri) {
-      // In the priority scheme we need to enter effective fractions proportional to the 
-      // priority; the will get normalized later on
+      // In the priority scheme we need to enter effective fractions
+      // proportional to the priority; they will get normalized later on.
       if (glo.prmin == glo.prmax) {
          // If everybody has the same priority, apply the
          // overall factor (if any) and leave the job to the system scheduler
@@ -6464,7 +6466,7 @@ int XrdProofdProtocol::SetInflateFactors()
          float ar = 0;
          int j = 0;
          for (j = i+1 ; j < nn ; j++) {
-            ar += (aa[j+1] - aa[j]) / (j+1); 
+            ar += (aa[j+1] - aa[j]) / (j+1);
          }
          aa[i] = aa[i+1] - (i+1) * (fr - ar);
          TRACE(INFLT, "    --> aa["<<i<<"]: "<<aa[i]<<", fr: "<<fr<<", ar: "<<ar);
