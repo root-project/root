@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.63 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.64 2007/08/13 16:00:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -663,7 +663,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
    // Compute the projected radius from starting point
    Int_t iplstart = ipl;
    Int_t iphcrt = 0;
-   Double_t apr=0, bpr=0, db=0;
+   Double_t apr=TGeoShape::Big(), bpr=0, db=0;
    Double_t rpg=0, rnew=0, znew=0;
    Double_t rpgin=0,rpgout=0,apgin=0,apgout=0,bpgin=0,bpgout=0;
    Double_t divphi = TMath::DegToRad()*fDphi/fNedges;
@@ -868,7 +868,8 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
    Double_t phi = fPhi1*TMath::DegToRad() + (iphi+0.5)*divphi;
    Double_t cphi = TMath::Cos(phi);
    Double_t sphi = TMath::Sin(phi);
-   Double_t apr, bpr;
+   Double_t apr = TGeoShape::Big();
+   Double_t bpr = 0.;
    Rproj(pt[2], point, dir, cphi, sphi, apr, bpr);
    Double_t dz;
    // loop segments
