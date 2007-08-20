@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.185 2007/07/04 12:29:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.186 2007/08/20 08:49:08 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3140,6 +3140,42 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 // Classify a given point. See TGeoChecker::CheckPoint().
    GetGeomPainter()->CheckPoint(x,y,z,option);
 }
+
+//_____________________________________________________________________________
+void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Double_t vz, Option_t *option)
+{
+// Geometry checking. 
+// - if option contains 'o': Optional overlap checkings (by sampling and by mesh). 
+// - if option contains 'b': Optional boundary crossing check + timing per volume.
+//
+// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be 
+//  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can 
+//  be called for the suspicious volumes.
+// STAGE2 : normal overlap checking using the shapes mesh - fills the list of 
+//  overlaps.
+// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of 
+//  crossings per volume (rays propagated from boundary to boundary until 
+//  geometry exit). Timing computed and results stored in a histo.
+// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling 
+//  FindNextBoundary() + Safety() for each call. The timing is normalized by the 
+//  number of crossings computed at stage 2 and presented as percentage. 
+//  One can get a picture on which are the most "burned" volumes during 
+//  transportation from geometry point of view. Another plot of the timing per 
+//  volume vs. number of daughters is produced. 
+   TString opt(option);
+   opt.ToLower();
+   if (!opt.Length()) {
+      Error("CheckGeometryFull","The option string must contain a letter. See method documentation.");
+      return;
+   }   
+   Bool_t checkoverlaps  = opt.Contains("o");
+   Bool_t checkcrossings = opt.Contains("c");
+   Double_t vertex[3];
+   vertex[0] = vx;
+   vertex[1] = vy;
+   vertex[2] = vz;
+   GetGeomPainter()->CheckGeometryFull(checkoverlaps,checkcrossings,ntracks,vertex);
+}   
 
 //_____________________________________________________________________________
 void TGeoManager::CheckGeometry(Option_t * /*option*/)

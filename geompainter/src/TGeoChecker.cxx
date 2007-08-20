@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.49 2007/06/08 15:46:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.50 2007/08/20 08:49:08 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -67,6 +67,8 @@
 //End_Html
 
 #include "TVirtualPad.h"
+#include "TCanvas.h"
+#include "TFile.h"
 #include "TNtuple.h"
 #include "TH2.h"
 #include "TRandom3.h"
@@ -96,7 +98,11 @@ TGeoChecker::TGeoChecker()
              fVsafe(NULL),
              fBuff1(NULL),
              fBuff2(NULL),
-             fFullCheck(kFALSE)
+             fFullCheck(kFALSE),
+             fVal1(NULL),
+             fVal2(NULL),
+             fFlags(NULL),
+             fTimer(NULL)
 {
 // Default constructor
 }
@@ -108,24 +114,13 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
              fVsafe(NULL),
              fBuff1(NULL),
              fBuff2(NULL),
-             fFullCheck(kFALSE)
+             fFullCheck(kFALSE),
+             fVal1(NULL),
+             fVal2(NULL),
+             fFlags(NULL),
+             fTimer(NULL)
 {
 // Constructor for a given geometry
-   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
-   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
-}
-
-//______________________________________________________________________________
-TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
-            :TObject(),
-             fGeoManager(NULL),
-             fVsafe(NULL),
-             fBuff1(NULL),
-             fBuff2(NULL),
-             fFullCheck(kFALSE)
-{
-// Obsolete constructor
-   fGeoManager = gGeoManager;
    fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
    fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
 }
@@ -136,6 +131,297 @@ TGeoChecker::~TGeoChecker()
 // Destructor
    if (fBuff1) delete fBuff1;
    if (fBuff2) delete fBuff2;
+   if (fTimer) delete fTimer;
+}
+
+//______________________________________________________________________________
+void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
+{
+// Geometry checking. Opional overlap checkings (by sampling and by mesh). Optional
+// boundary crossing check + timing per volume.
+//
+// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be 
+//  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can 
+//  be called for the suspicious volumes.
+// STAGE2 : normal overlap checking using the shapes mesh - fills the list of 
+//  overlaps.
+// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of 
+//  crossings per volume (rays propagated from boundary to boundary until 
+//  geometry exit). Timing computed and results stored in a histo.
+// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling 
+//  FindNextBoundary() + Safety() for each call. The timing is normalized by the 
+//  number of crossings computed at stage 2 and presented as percentage. 
+//  One can get a picture on which are the most "burned" volumes during 
+//  transportation from geometry point of view. Another plot of the timing per 
+//  volume vs. number of daughters is produced. 
+// All histos are saved in the file statistics.root
+   Int_t nvol = fGeoManager->GetListOfVolumes()->GetEntries();
+   Int_t nuid = fGeoManager->GetListOfUVolumes()->GetEntries();
+   fTimer = new TStopwatch();
+   Int_t i;
+   Double_t value;
+   fFlags = new Bool_t[nuid];
+   memset(fFlags, 0, nuid*sizeof(Bool_t));
+   TGeoVolume *vol;
+
+// STAGE 1: Overlap checking by sampling per volume
+   if (checkoverlaps) {
+      printf("====================================================================\n");
+      printf("STAGE 1: Overlap checking by sampling per volume\n");
+      printf("====================================================================\n");
+      for (i=0; i<nvol; i++) {
+         vol = (TGeoVolume*)fGeoManager->GetListOfVolumes()->At(i);
+         Int_t uid = vol->GetNumber();
+         if (fFlags[uid]) continue;
+         fFlags[uid] = kTRUE;
+         if (!vol->GetNdaughters()) continue;
+         vol->CheckOverlaps(0.01, "s"); 
+      }
+
+   // STAGE 2: Global overlap/extrusion checking
+      printf("====================================================================\n");
+      printf("STAGE 2: Global overlap/extrusion checking within 100 microns\n");
+      printf("====================================================================\n");
+      fGeoManager->CheckOverlaps(0.01);
+   }   
+   
+   if (!checkcrossings) {
+      delete [] fFlags;
+      fFlags = 0;
+      return;
+   }   
+   
+   fVal1 = new Double_t[nuid];
+   fVal2 = new Double_t[nuid];
+   memset(fVal1, 0, nuid*sizeof(Double_t));
+   memset(fVal2, 0, nuid*sizeof(Double_t));
+   // STAGE 3: How many crossings per volume in a realistic case ?
+   // Ignore volumes with no daughters
+
+   // Generate rays from vertex in phi=[0,2*pi] theta=[0,pi]
+//   Int_t ntracks = 1000000;
+   printf("====================================================================\n");
+   printf("STAGE 3: Propagating %i tracks starting from vertex\n and conting number of boundary crossings...\n", ntracks);
+   printf("====================================================================\n");
+   Int_t nbound = 0;
+   Double_t theta, phi;
+   Double_t point[3], dir[3];
+   memset(point, 0, 3*sizeof(Double_t));
+   if (vertex) memcpy(point, vertex, 3*sizeof(Double_t));
+   
+   new TRandom3();
+
+   fTimer->Start();
+   for (i=0; i<ntracks; i++) {
+      phi = 2.*TMath::Pi()*gRandom->Rndm();
+      theta= TMath::ACos(1.-2.*gRandom->Rndm());
+      dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+      dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+      dir[2]=TMath::Cos(theta);
+      if ((i%1000)==0) printf("... remaining tracks %i\n", ntracks-i);
+      nbound += PropagateInGeom(point,dir);
+   }
+   Double_t time1 = fTimer->CpuTime() *1.E6;
+   Double_t time2 = time1/ntracks;
+   Double_t time3 = time1/nbound;
+   printf("Time for crossing %i boundaries: %g [ms]\n", nbound, time1);
+   printf("Time per track for full geometry traversal: %g [ms], per crossing: %g [ms]\n", time2, time3);
+
+// STAGE 4: How much time per volume:
+   
+   printf("====================================================================\n");
+   printf("STAGE 4: How much navigation time per volume per next+safety call\n");
+   printf("====================================================================\n");
+   TGeoIterator next(fGeoManager->GetTopVolume());
+   TGeoNode*current;
+   TString path;
+   vol = fGeoManager->GetTopVolume();
+   memset(fFlags, 0, nuid*sizeof(Bool_t));
+   Score(vol, 1, TimingPerVolume(vol)); 
+   while ((current=next())) {
+      vol = current->GetVolume();
+      Int_t uid = vol->GetNumber();
+      if (fFlags[uid]) continue;
+      fFlags[uid] = kTRUE;
+      next.GetPath(path);
+      fGeoManager->cd(path.Data());
+      Score(vol,1,TimingPerVolume(vol));
+   }   
+
+   // Draw some histos
+   Double_t time_tot_pertrack = 0.;
+   TCanvas *c1 = new TCanvas("c2","ncrossings",10,10,900,500);
+   c1->SetGrid();
+   c1->SetTopMargin(0.15);
+   TFile *f = new TFile("statistics.root", "RECREATE");
+   TH1F *h = new TH1F("h","number of boundary crossings per volume",3,0,3);
+   h->SetStats(0);
+   h->SetFillColor(38);
+   h->SetBit(TH1::kCanRebin);
+   
+   memset(fFlags, 0, nuid*sizeof(Bool_t));
+   for (i=0; i<nuid; i++) {
+      vol = fGeoManager->GetVolume(i);
+      if (!vol->GetNdaughters()) continue;
+      time_tot_pertrack += fVal1[i]*fVal2[i];
+      h->Fill(vol->GetName(), (Int_t)fVal1[i]);
+   }
+   time_tot_pertrack /= ntracks;
+   h->LabelsDeflate();
+   h->LabelsOption(">","X");
+   h->Draw();   
+
+
+   TCanvas *c2 = new TCanvas("c3","time spent per volume in navigation",10,10,900,500);
+   c2->SetGrid();
+   c2->SetTopMargin(0.15);
+   TH2F *h2 = new TH2F("h2", "time per FNB call vs. ndaughters", 100, 0,100,100,0,15);
+   h2->SetStats(0);
+   h2->SetMarkerStyle(2);
+   TH1F *h1 = new TH1F("h1","percent of time spent per volume",3,0,3);
+   h1->SetStats(0);
+   h1->SetFillColor(38);
+   h1->SetBit(TH1::kCanRebin);
+   for (i=0; i<nuid; i++) {
+      vol = fGeoManager->GetVolume(i);
+      if (!vol->GetNdaughters()) continue;
+      value = fVal1[i]*fVal2[i]/ntracks/time_tot_pertrack;
+      h1->Fill(vol->GetName(), value);
+      h2->Fill(vol->GetNdaughters(), fVal2[i]);
+   }     
+   h1->LabelsDeflate();
+   h1->LabelsOption(">","X");
+   h1->Draw();
+   TCanvas *c3 = new TCanvas("c4","timing vs. ndaughters",10,10,900,500);
+   c3->SetGrid();
+   c3->SetTopMargin(0.15);
+   h2->Draw();   
+   f->Write();
+   delete [] fFlags;
+   fFlags = 0;
+   delete [] fVal1;
+   fVal1 = 0;
+   delete [] fVal2;
+   fVal2 = 0;
+   delete fTimer;
+   fTimer = 0;
+}
+
+//______________________________________________________________________________
+Int_t TGeoChecker::PropagateInGeom(Double_t *start, Double_t *dir)
+{
+// Propagate from START along DIR from boundary to boundary until exiting 
+// geometry. Fill array of hits.
+   fGeoManager->InitTrack(start, dir);
+   TGeoNode *current = 0;
+   Int_t nzero = 0;
+   Int_t nhits = 0;
+   while (!fGeoManager->IsOutside()) {
+      current = fGeoManager->FindNextBoundaryAndStep(TGeoShape::Big(), kFALSE);
+      if (!current || fGeoManager->IsOutside()) return nhits;
+      Double_t step = fGeoManager->GetStep();
+      if (step<2.*TGeoShape::Tolerance()) {
+         nzero++;
+         continue;
+      } 
+      else nzero = 0;
+      if (nzero>3) {
+      // Problems in trying to cross a boundary
+         printf("Error in trying to cross boundary of %s\n", current->GetName());
+         return nhits;
+      }
+      // Generate the hit
+      nhits++;
+      TGeoVolume *vol = current->GetVolume();
+      Score(vol,0,1.);
+      Int_t iup = 1;
+      TGeoNode *mother = fGeoManager->GetMother(iup++);
+      while (mother && mother->GetVolume()->IsAssembly()) {
+         Score(mother->GetVolume(), 0, 1.);
+         mother = fGeoManager->GetMother(iup++);
+      }   
+   }
+   return nhits;
+}      
+
+//______________________________________________________________________________
+void TGeoChecker::Score(TGeoVolume *vol, Int_t ifield, Double_t value)
+{
+// Score a hit for VOL
+   Int_t uid = vol->GetNumber();
+   switch (ifield) {
+      case 0:
+         fVal1[uid] += value;
+         break;
+      case 1:
+         fVal2[uid] += value;
+   }
+}   
+
+//______________________________________________________________________________
+Double_t TGeoChecker::TimingPerVolume(TGeoVolume *vol)
+{
+// Compute timing per "FindNextBoundary" + "Safety" call. Volume must be
+// in the current path.
+   fTimer->Reset();
+   const TGeoShape *shape = vol->GetShape();
+   TGeoBBox *box = (TGeoBBox *)shape;
+   Double_t dx = box->GetDX();
+   Double_t dy = box->GetDY();
+   Double_t dz = box->GetDZ();
+   Double_t ox = (box->GetOrigin())[0];
+   Double_t oy = (box->GetOrigin())[1];
+   Double_t oz = (box->GetOrigin())[2];
+   Double_t point[3], dir[3], lpt[3], ldir[3];
+   Double_t pstep = 0.;
+   pstep = TMath::Max(pstep,dz);
+   Double_t theta, phi;
+   Int_t idaughter;
+   fTimer->Start();
+   Double_t dist;
+   Bool_t inside;
+   for (Int_t i=0; i<1000000; i++) {
+      lpt[0] = ox-dx+2*dx*gRandom->Rndm();
+      lpt[1] = oy-dy+2*dy*gRandom->Rndm();
+      lpt[2] = oz-dz+2*dz*gRandom->Rndm();
+      fGeoManager->GetCurrentMatrix()->LocalToMaster(lpt,point);
+      fGeoManager->SetCurrentPoint(point[0],point[1],point[2]);
+      phi = 2*TMath::Pi()*gRandom->Rndm();
+      theta= TMath::ACos(1.-2.*gRandom->Rndm());
+      ldir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+      ldir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+      ldir[2]=TMath::Cos(theta);
+      fGeoManager->GetCurrentMatrix()->LocalToMasterVect(ldir,dir);
+      fGeoManager->SetCurrentDirection(dir);
+      fGeoManager->SetStep(pstep);
+      fGeoManager->ResetState();
+      inside = kTRUE;
+      dist = TGeoShape::Big();
+      if (!vol->IsAssembly()) {
+         inside = vol->Contains(lpt);
+         if (!inside) {
+            dist = vol->GetShape()->DistFromOutside(lpt,ldir,3,pstep); 
+//            if (dist>=pstep) continue;
+         } else {   
+            vol->GetShape()->DistFromInside(lpt,ldir,3,pstep);
+         }   
+            
+         if (!vol->GetNdaughters()) vol->GetShape()->Safety(lpt, inside);
+      }   
+      if (vol->GetNdaughters()) {
+         fGeoManager->Safety();
+         fGeoManager->FindNextDaughterBoundary(point,dir,idaughter,kFALSE);
+      }   
+   }
+   fTimer->Stop();
+   Double_t time_per_track = fTimer->CpuTime();
+   Int_t uid = vol->GetNumber();
+   Int_t ncrossings = (Int_t)fVal1[uid];
+   if (!vol->GetNdaughters())
+      printf("Time for volume %s (shape=%s): %g [ms] ndaughters=%d ncross=%d\n", vol->GetName(), vol->GetShape()->GetName(), time_per_track, vol->GetNdaughters(), ncrossings);
+   else
+      printf("Time for volume %s (assemb=%d): %g [ms] ndaughters=%d ncross=%d\n", vol->GetName(), vol->IsAssembly(), time_per_track, vol->GetNdaughters(), ncrossings);
+   return time_per_track;
 }
 
 //______________________________________________________________________________

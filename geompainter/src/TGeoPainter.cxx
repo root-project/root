@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.100 2007/05/02 06:51:30 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.101 2007/06/08 15:46:30 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -168,6 +168,14 @@ void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
          return;
    }   
 }
+
+//______________________________________________________________________________
+void TGeoPainter::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
+{
+// Geometry checking method (see: TGeoManager::CheckGeometry())
+   fChecker->CheckGeometryFull(checkoverlaps,checkcrossings,ntracks,vertex);
+}   
+
 //______________________________________________________________________________
 void TGeoPainter::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
 {

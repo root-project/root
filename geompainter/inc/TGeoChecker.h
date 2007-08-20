@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.17 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.18 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -26,6 +26,7 @@ class TGeoMatrix;
 class TGeoOverlap;
 class TBuffer3D;
 class TH2F;
+class TStopwatch;
 
 /*************************************************************************
  * TGeoChecker - A simple checker generating random points inside a 
@@ -43,16 +44,23 @@ private :
    TBuffer3D       *fBuff1;           // Buffer containing mesh vertices for first volume
    TBuffer3D       *fBuff2;           // Buffer containing mesh vertices for second volume
    Bool_t           fFullCheck;       // Full overlap checking
+   Double_t        *fVal1;            //! Array of number of crossings per volume.
+   Double_t        *fVal2;            //! Array of timing per volume.
+   Bool_t          *fFlags;           //! Array of flags per volume.
+   TStopwatch      *fTimer;           //! Timer
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
+   Int_t            PropagateInGeom(Double_t *, Double_t *);
+   void             Score(TGeoVolume *, Int_t, Double_t);
+   Double_t         TimingPerVolume(TGeoVolume *);
 public:
    // constructors
    TGeoChecker();
    TGeoChecker(TGeoManager *geom);
-   TGeoChecker(const char *treename, const char *filename);
    // destructor
    virtual ~TGeoChecker();
    // methods
+   void             CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="");
    void             CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp=0.1, Int_t npoints=1000000) const;
