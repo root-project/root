@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.88 2007/06/05 06:34:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.89 2007/06/08 15:46:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -113,10 +113,15 @@ private :
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
    THashList            *fHashPNE;          //-> hash list of phisical node entries
+   Int_t                 fSizePNEId;        // size of the array of unique ID's for PN entries
+   Int_t                 fNPNEId;           // number of PN entries having a unique ID
+   Int_t                *fKeyPNEId;         //[fSizePNEId] array of uid values for PN entries
+   Int_t                *fValuePNEId;       //[fSizePNEId] array of pointers to PN entries with ID's
 //--- private methods
 
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
    void                  Init();
+   Bool_t                InsertPNEId(Int_t uid, Int_t ientry);
    void                  SetLoopVolumes(Bool_t flag=kTRUE) {fLoopVolumes=flag;}
    void                  UpdateElements();
    void                  Voxelize(Option_t *option = 0);
@@ -304,10 +309,11 @@ public:
    TGeoVolume            *MakeXtru(const char *name, const TGeoMedium *medium,
                                    Int_t nz);
 
-   TGeoPNEntry           *SetAlignableEntry(const char *unique_name, const char *path);
+   TGeoPNEntry           *SetAlignableEntry(const char *unique_name, const char *path, Int_t uid=-1);
    TGeoPNEntry           *GetAlignableEntry(const char *name) const;   
    TGeoPNEntry           *GetAlignableEntry(Int_t index) const;
-   Int_t                  GetNAlignable() const;
+   TGeoPNEntry           *GetAlignableEntryByUID(Int_t uid) const;
+   Int_t                  GetNAlignable(Bool_t with_uid=kFALSE) const;
    TGeoPhysicalNode      *MakeAlignablePN(const char *name);
    TGeoPhysicalNode      *MakeAlignablePN(TGeoPNEntry *entry);
    TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
@@ -494,7 +500,7 @@ public:
    Bool_t                 PopPoint(Int_t index) {return fCurrentNavigator->PopPoint(index);}
    void                   PopDummy(Int_t ipop=9999) {return fCurrentNavigator->PopDummy(ipop);}
 
-   ClassDef(TGeoManager, 11)          // geometry manager
+   ClassDef(TGeoManager, 12)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

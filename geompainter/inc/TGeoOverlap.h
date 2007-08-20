@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.5 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.6 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   09/02/03
 
 /*************************************************************************
@@ -88,6 +88,7 @@ public:
    virtual void      Print(Option_t *option="") const; // *MENU*
    virtual void      PrintInfo() const;
    virtual void      Sizeof3D() const;
+   void              SampleOverlap(Int_t npoints=1000000); // *MENU*
    void              SetIsExtrusion(Bool_t flag=kTRUE) {TObject::SetBit(kGeoExtrusion,flag); TObject::SetBit(kGeoOverlap,!flag);}
    void              SetIsOverlap(Bool_t flag=kTRUE) {TObject::SetBit(kGeoOverlap,flag); TObject::SetBit(kGeoExtrusion,!flag);}
    void              SetNextPoint(Double_t x, Double_t y, Double_t z);

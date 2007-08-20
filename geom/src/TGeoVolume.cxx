@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.101 2007/03/01 10:32:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.102 2007/03/02 08:52:03 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -538,10 +538,10 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
    if (!sampling) fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
-      Info("CheckOverlaps", "=== Checking overlaps vor volume %s ===\n", GetName());
+//      Info("CheckOverlaps", "=== Checking overlaps for volume %s ===\n", GetName());
    }   
    painter->CheckOverlaps(this, ovlp, option);
-   if (sampling) return;
+//   if (sampling) return;
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->SortOverlaps();
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
@@ -563,7 +563,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
          memcpy(name+2+ndigits-strlen(num), num, strlen(num));
          obj->SetName(name);
       }   
-      Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
+      if (novlps) Info("CheckOverlaps", "Number of illegal overlaps/extrusions for volume %s: %d\n", GetName(), novlps);
    }   
 }
 

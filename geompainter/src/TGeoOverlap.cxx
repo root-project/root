@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.9 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.10 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -9,11 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TVirtualPad.h"
+#include "TMath.h"
 #include "TNamed.h"
 #include "TBrowser.h"
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
+#include "TGeoBBox.h"
+#include "TRandom3.h"
 #include "TPolyMarker3D.h"
 #include "TVirtualGeoPainter.h"
 
@@ -155,6 +159,62 @@ void TGeoOverlap::SetNextPoint(Double_t x, Double_t y, Double_t z)
 // Set next overlapping point.
    fMarker->SetNextPoint(x,y,z);
 }
+
+//______________________________________________________________________________
+void TGeoOverlap::SampleOverlap(Int_t npoints)
+{
+// Draw overlap and sample with random points the overlapping region.
+   Draw();
+   // Select bounding box of the second volume (may extrude first)
+   TPolyMarker3D *marker = 0;
+   TGeoBBox *box = (TGeoBBox*)fVolume2->GetShape();
+   Double_t dx = box->GetDX();
+   Double_t dy = box->GetDY();
+   Double_t dz = box->GetDZ();
+   Double_t pt[3];
+   Double_t master[3];
+   const Double_t *orig = box->GetOrigin();
+   Int_t ipoint = 0;
+   Int_t itry = 0;
+   Int_t iovlp = 0;
+   while (ipoint < npoints) {
+   // Shoot randomly in the bounding box.
+      pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
+      pt[1] = orig[1] - dy + 2.*dy*gRandom->Rndm();
+      pt[2] = orig[2] - dz + 2.*dz*gRandom->Rndm();
+      if (!fVolume2->Contains(pt)) {
+         itry++;
+         if (itry>10000 && !ipoint) {
+            Error("SampleOverlap", "No point inside volume!!! - aborting");
+            break;
+         }
+         continue;
+      }  
+      ipoint++;          
+      // Check if the point is inside the first volume
+      fMatrix2->LocalToMaster(pt, master);
+      fMatrix1->MasterToLocal(master, pt);
+      Bool_t in = fVolume1->Contains(pt);
+      if (IsOverlap() && !in) continue;
+      if (!IsOverlap() && in) continue;
+      // The point is in the overlapping region.
+      iovlp++;
+      if (!marker) {
+         marker = new TPolyMarker3D();
+         marker->SetMarkerColor(kRed);
+      }   
+      marker->SetNextPoint(master[0], master[1], master[2]);
+   }
+   if (!iovlp) return;
+   marker->Draw("SAME");
+   gPad->Modified();
+   gPad->Update();
+   Double_t capacity = fVolume1->GetShape()->Capacity();
+   capacity *= Double_t(iovlp)/Double_t(npoints);
+   Double_t err = 1./TMath::Sqrt(Double_t(iovlp));
+   Info("SampleOverlap", "#Overlap %s has %g +/- %g [cm3]",
+         GetName(), capacity, err*capacity);
+}        
 
 //______________________________________________________________________________
 void TGeoOverlap::Sizeof3D() const

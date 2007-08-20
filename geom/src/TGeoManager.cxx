@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.184 2007/06/11 12:04:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.185 2007/07/04 12:29:26 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -516,6 +516,10 @@ TGeoManager::TGeoManager()
       fElementTable = 0;
       fHashVolumes = 0;
       fHashGVolumes = 0;
+      fSizePNEId = 0;
+      fNPNEId = 0;
+      fKeyPNEId = 0;
+      fValuePNEId = 0;
    } else {
       Init();
       gGeoIdentity = 0;
@@ -606,6 +610,10 @@ void TGeoManager::Init()
    fElementTable = 0;
    fHashVolumes = 0;
    fHashGVolumes = 0;
+   fSizePNEId = 0;
+   fNPNEId = 0;
+   fKeyPNEId = 0;
+   fValuePNEId = 0;
 }
 
 //_____________________________________________________________________________
@@ -670,7 +678,11 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fPaintVolume(gm.fPaintVolume),
   fHashVolumes(gm.fHashVolumes),
   fHashGVolumes(gm.fHashGVolumes),
-  fHashPNE(gm.fHashPNE)
+  fHashPNE(gm.fHashPNE),
+  fSizePNEId(0),
+  fNPNEId(0),
+  fKeyPNEId(0),
+  fValuePNEId(0)
 {
    //copy constructor
    for(Int_t i=0; i<256; i++) 
@@ -745,6 +757,10 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fHashVolumes=gm.fHashVolumes;
       fHashGVolumes=gm.fHashGVolumes;
       fHashPNE=gm.fHashPNE;
+      fSizePNEId = 0;
+      fNPNEId = 0;
+      fKeyPNEId = 0;
+      fValuePNEId = 0;
    }
    return *this;
 }
@@ -788,6 +804,10 @@ TGeoManager::~TGeoManager()
    delete [] fDblBuffer;
    delete [] fIntBuffer;
    delete fGLMatrix;
+   if (fSizePNEId) {
+      delete [] fKeyPNEId;
+      delete [] fValuePNEId;
+   }   
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -2775,10 +2795,12 @@ TGeoVolume *TGeoManager::MakeXtru(const char *name, const TGeoMedium *medium, In
 }
 
 //_____________________________________________________________________________
-TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char *path)
+TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char *path,
+                                            Int_t uid)
 {
 // Creates an aligneable object with unique name corresponding to a path
-// and adds it to the list of alignables.
+// and adds it to the list of alignables. An optional unique ID can be
+// provided, in which case PN entries can be searched fast by uid.
    if (!CheckPath(path)) return NULL;
    if (!fHashPNE) fHashPNE = new THashList(256,3);
    TGeoPNEntry *entry = GetAlignableEntry(unique_name);
@@ -2787,7 +2809,12 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
       return 0;
    }
    entry = new TGeoPNEntry(unique_name, path);
+   Int_t ientry = fHashPNE->GetSize();
    fHashPNE->Add(entry);
+   if (uid>=0) {
+      Bool_t added = InsertPNEId(uid, ientry);
+      if (!added) Error("SetAlignableEntry", "A PN entry: has already uid=%i", uid);
+   }
    return entry;
 }
 
@@ -2808,11 +2835,72 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 }   
 
 //_____________________________________________________________________________
-Int_t TGeoManager::GetNAlignable() const
+TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 {
-// Retreives an existing alignable object at a given index.
+// Retreives an existing alignable object having a preset UID.
+   if (!fNPNEId || !fHashPNE) return NULL;
+   Int_t index = TMath::BinarySearch(fNPNEId, fKeyPNEId, uid);
+   if (index<0 || fKeyPNEId[index]!=uid) return NULL;
+   return (TGeoPNEntry*)fHashPNE->At(fValuePNEId[index]);
+}   
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetNAlignable(Bool_t with_uid) const
+{
+// Retreives number of PN entries with or without UID.
    if (!fHashPNE) return 0;
+   if (with_uid) return fNPNEId;
    return fHashPNE->GetSize();
+}   
+
+//_____________________________________________________________________________
+Bool_t TGeoManager::InsertPNEId(Int_t uid, Int_t ientry)
+{
+// Insert a PN entry in the sorted array of indexes.
+   if (!fSizePNEId) {
+      // Create the arrays.
+      fSizePNEId = 128;
+      fKeyPNEId = new Int_t[fSizePNEId];
+      memset(fKeyPNEId, 0, fSizePNEId*sizeof(Int_t));
+      fValuePNEId = new Int_t[fSizePNEId];
+      memset(fValuePNEId, 0, fSizePNEId*sizeof(Int_t));
+      fKeyPNEId[fNPNEId] = uid;
+      fValuePNEId[fNPNEId++] = ientry;
+      return kTRUE;
+   }
+   // Search id in the existing array and return false if it already exists.
+   Int_t index = TMath::BinarySearch(fNPNEId, fKeyPNEId, uid);
+   if (index>0 && fKeyPNEId[index]==uid) return kFALSE;
+   // Resize the arrays and insert the value
+   Bool_t resize = (fNPNEId==fSizePNEId)?kTRUE:kFALSE;
+   if (resize) {
+      fSizePNEId *= 2;
+      Int_t *keys = new Int_t[fSizePNEId];
+      memset(keys, 0, fSizePNEId*sizeof(Int_t));
+      Int_t *values = new Int_t[fSizePNEId];
+      memset(values, 0, fSizePNEId*sizeof(Int_t));
+      memcpy(keys, fKeyPNEId, (index+1)*sizeof(Int_t));
+      keys[index+1] = uid;
+      delete [] fKeyPNEId;
+      fKeyPNEId = keys;
+      memcpy(&keys[index+2], &fKeyPNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
+      memcpy(values, fValuePNEId, (index+1)*sizeof(Int_t));
+      values[index+1] = ientry;
+      memcpy(&values[index+2], &fValuePNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
+      delete [] fValuePNEId;
+      fValuePNEId = values;
+      return kTRUE;
+   }   
+   // Insert the value in the existing arrays
+   Int_t i;
+   for (i=fNPNEId-1; i>index; i--) {
+      fKeyPNEId[i+1] = fKeyPNEId[i];
+      fValuePNEId[i+1] = fValuePNEId[i];
+   }
+   fKeyPNEId[index+1] = uid;
+   fValuePNEId[index+1] = ientry;
+   fNPNEId++;
+   return kTRUE;
 }   
 
 //_____________________________________________________________________________
@@ -2843,6 +2931,7 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
    }
    TGeoPhysicalNode *node = MakePhysicalNode(path);
    entry->SetPhysicalNode(node);
+   node->SetMatrixOrig(entry->GetMatrixOrig());
    return node;
 }        
 

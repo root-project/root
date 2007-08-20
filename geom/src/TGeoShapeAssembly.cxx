@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.9 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.10 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -285,8 +285,26 @@ Double_t TGeoShapeAssembly::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   if (in) return TGeoShape::Big();
    Double_t safety = TGeoShape::Big();
+   Double_t pt[3], loc[3];
+   if (in) {
+      Int_t index = fVolume->GetCurrentNodeIndex();
+      TGeoVolume *vol = fVolume;
+      TGeoNode *node;
+      memcpy(loc, point, 3*sizeof(Double_t));
+      while (index>=0) {
+         memcpy(pt, loc, 3*sizeof(Double_t));
+         node = vol->GetNode(index);
+         node->GetMatrix()->MasterToLocal(pt,loc);
+         vol = node->GetVolume();
+         index = vol->GetCurrentNodeIndex();
+         if (index<0) {
+            safety = vol->GetShape()->Safety(loc, in);
+            return safety;
+         }
+      }
+      return TGeoShape::Big();
+   }         
    Double_t safe;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    Int_t nd = fVolume->GetNdaughters();

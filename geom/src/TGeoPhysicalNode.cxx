@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.25 2007/02/23 11:11:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.26 2007/03/02 08:52:03 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -327,6 +327,16 @@ void TGeoPhysicalNode::SetBranchAsState()
 }
 
 //_____________________________________________________________________________
+void TGeoPhysicalNode::SetMatrixOrig(const TGeoMatrix *local)
+{
+// Allows PN entries (or users) to preset the local original matrix for the
+// last node pointed by the path.
+   if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
+   if (!local) fMatrixOrig->Clear();
+   *fMatrixOrig = local;
+}   
+
+//_____________________________________________________________________________
 Bool_t TGeoPhysicalNode::SetPath(const char *path)
 {
 // Specify the path for this node.
@@ -348,6 +358,7 @@ TGeoPNEntry::TGeoPNEntry()
    else SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
+   fMatrixOrig = 0;
 }
 
 //_____________________________________________________________________________
@@ -361,6 +372,10 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
       throw errmsg;
       return;
    }   
+   gGeoManager->PushPath();
+   gGeoManager->cd(path);
+   fMatrixOrig = gGeoManager->GetCurrentNode()->GetMatrix();
+   gGeoManager->PopPath();
    SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.11 2007/02/12 17:14:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.12 2007/03/02 08:52:02 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    virtual void      Print(Option_t *option="") const;
    void              Refresh();
 
+   void              SetMatrixOrig(const TGeoMatrix *local);
    void              SetIsVolAtt(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeVolAtt,flag);}
    void              SetVisibility(Bool_t flag=kTRUE)  {TObject::SetBit(kGeoPNodeVisible,flag);}
    void              SetVisibleFull(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeFull,flag);}
@@ -110,6 +111,7 @@ private:
    };   
    TGeoPhysicalNode   *fNode;        // Physical node to which this applies
    const TGeoHMatrix  *fMatrix;      // Additional matrix
+   const TGeoMatrix   *fMatrixOrig;  // Original local matrix of the last TGeoNode in the branch
 
 protected:
    TGeoPNEntry(const TGeoPNEntry& pne) 
@@ -125,11 +127,12 @@ public:
    
    inline const char   *GetPath() const {return GetTitle();}
    const TGeoHMatrix   *GetMatrix()  const {return fMatrix;}
+   const TGeoMatrix    *GetMatrixOrig() const {return fMatrixOrig;}
    TGeoPhysicalNode *GetPhysicalNode() const {return fNode;}
    void              SetMatrix(const TGeoHMatrix *matrix);
    void              SetPhysicalNode(TGeoPhysicalNode *node);
    
-   ClassDef(TGeoPNEntry, 2)                  // a physical node entry with unique name
+   ClassDef(TGeoPNEntry, 3)                  // a physical node entry with unique name
 };
 
 #endif
