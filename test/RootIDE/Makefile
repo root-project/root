@@ -18,7 +18,7 @@ else
 MT_MANIFEST = 
 endif
 else
-EXTRALIBS   = -lGuiHtml -lHtml
+EXTRALIBS   = -lGuiHtml -lHtml -lThread
 MT_MANIFEST = 
 endif
 
