@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.18 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.19 2007/08/20 14:00:56 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -50,6 +50,7 @@ private :
    TStopwatch      *fTimer;           //! Timer
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
+   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE);
    Int_t            PropagateInGeom(Double_t *, Double_t *);
    void             Score(TGeoVolume *, Int_t, Double_t);
    Double_t         TimingPerVolume(TGeoVolume *);

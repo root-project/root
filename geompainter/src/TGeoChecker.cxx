@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.50 2007/08/20 08:49:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.51 2007/08/20 14:00:56 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -135,6 +135,53 @@ TGeoChecker::~TGeoChecker()
 }
 
 //______________________________________________________________________________
+void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last)
+{
+// Print current operation progress.
+   static Long64_t icount = 0;
+   const char symbol[4] = {'=','\\','|','/'}; 
+   char progress[11] = "          ";
+   Int_t ichar = icount%4;
+   if (!size) return;
+   icount++;
+   Double_t time = 0.;
+   Double_t etl = 0.;
+   Int_t hours = 0;
+   Int_t minutes = 0;
+   Int_t seconds = 0;
+   if (watch && !last) {
+      watch->Stop();
+      time = watch->RealTime();
+      if (current) {
+         etl = time*(size-current)/current;
+         hours = (Int_t)(etl/3600.);
+         etl -= 3600*hours;
+         minutes = (Int_t)(etl/60.);
+         etl -= 60*minutes;
+         seconds = (Int_t)etl;
+      }   
+   }   
+   Double_t percent = 100.0*current/size;
+   Int_t nchar = Int_t(percent/10);
+   Int_t i;
+   for (i=0; i<nchar; i++)  progress[i] = '=';
+   progress[nchar] = symbol[ichar];
+   for (i=nchar+1; i<10; i++) progress[i] = ' ';
+   progress[10] = '\0';
+   if (size<1000) fprintf(stderr, "%s [%10s] %3lld ",opname ,progress, current);
+   else if(size<10000) fprintf(stderr, "%s [%10s] %4lld ", opname, progress,current);
+   else if(size<100000) fprintf(stderr, "%s [%10s] %5lld ",opname, progress, current);
+   else fprintf(stderr, "%s [%10s] %7lld ",opname, progress, current);
+   if (etl>0.) fprintf(stderr, "[%6.2f %%]    ETL=%2dh %2dm %2ds\r", percent, hours, minutes, seconds);
+   else fprintf(stderr, "[%6.2f %%]\r", percent);
+   if (watch) watch->Continue();
+   if (last) {
+      icount = 0;
+      fprintf(stderr, "\n");
+   }   
+}   
+
+//______________________________________________________________________________
 void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
 {
 // Geometry checking. Opional overlap checkings (by sampling and by mesh). Optional
@@ -163,12 +210,15 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    fFlags = new Bool_t[nuid];
    memset(fFlags, 0, nuid*sizeof(Bool_t));
    TGeoVolume *vol;
+   TCanvas *c = new TCanvas("overlaps", "Overlaps by sampling", 800,800);
 
 // STAGE 1: Overlap checking by sampling per volume
    if (checkoverlaps) {
       printf("====================================================================\n");
       printf("STAGE 1: Overlap checking by sampling per volume\n");
       printf("====================================================================\n");
+      fTimer->Reset();
+      fTimer->Start();
       for (i=0; i<nvol; i++) {
          vol = (TGeoVolume*)fGeoManager->GetListOfVolumes()->At(i);
          Int_t uid = vol->GetNumber();
@@ -176,7 +226,10 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
          fFlags[uid] = kTRUE;
          if (!vol->GetNdaughters()) continue;
          vol->CheckOverlaps(0.01, "s"); 
+         OpProgress("Sampling overlaps",i, nvol, fTimer);
       }
+      fTimer->Stop();
+      OpProgress("Sampling overlaps",nvol, nvol, fTimer, kTRUE);
 
    // STAGE 2: Global overlap/extrusion checking
       printf("====================================================================\n");
@@ -188,6 +241,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    if (!checkcrossings) {
       delete [] fFlags;
       fFlags = 0;
+      delete c;
       return;
    }   
    
@@ -211,6 +265,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    
    new TRandom3();
 
+   fTimer->Reset();
    fTimer->Start();
    for (i=0; i<ntracks; i++) {
       phi = 2.*TMath::Pi()*gRandom->Rndm();
@@ -218,12 +273,15 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
       dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
       dir[2]=TMath::Cos(theta);
-      if ((i%1000)==0) printf("... remaining tracks %i\n", ntracks-i);
+      if ((i%100)==0) OpProgress("Transporting tracks",i, ntracks, fTimer); 
+//      if ((i%1000)==0) printf("... remaining tracks %i\n", ntracks-i);
       nbound += PropagateInGeom(point,dir);
    }
+   fTimer->Stop();
    Double_t time1 = fTimer->CpuTime() *1.E6;
    Double_t time2 = time1/ntracks;
    Double_t time3 = time1/nbound;
+   OpProgress("Transporting tracks",ntracks, ntracks, fTimer, kTRUE); 
    printf("Time for crossing %i boundaries: %g [ms]\n", nbound, time1);
    printf("Time per track for full geometry traversal: %g [ms], per crossing: %g [ms]\n", time2, time3);
 
@@ -237,6 +295,13 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    TString path;
    vol = fGeoManager->GetTopVolume();
    memset(fFlags, 0, nuid*sizeof(Bool_t));
+   TStopwatch timer;
+   timer.Start();
+   i = 0;
+   char volname[30];
+   sprintf(volname, "Tracking %s", vol->GetName());
+   volname[15] = '\0';
+   OpProgress(volname,i++, nuid, &timer); 
    Score(vol, 1, TimingPerVolume(vol)); 
    while ((current=next())) {
       vol = current->GetVolume();
@@ -245,9 +310,12 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
       fFlags[uid] = kTRUE;
       next.GetPath(path);
       fGeoManager->cd(path.Data());
+      sprintf(volname, "Tracking %s", vol->GetName());
+      volname[15] = '\0';
+      OpProgress(volname,i++, nuid, &timer); 
       Score(vol,1,TimingPerVolume(vol));
    }   
-
+   OpProgress("STAGE 4 completed",i, nuid, &timer, kTRUE); 
    // Draw some histos
    Double_t time_tot_pertrack = 0.;
    TCanvas *c1 = new TCanvas("c2","ncrossings",10,10,900,500);
@@ -305,6 +373,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    fVal2 = 0;
    delete fTimer;
    fTimer = 0;
+   delete c;
 }
 
 //______________________________________________________________________________

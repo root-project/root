@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.186 2007/08/20 08:49:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.187 2007/08/20 14:00:56 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3169,7 +3169,7 @@ void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Dou
       return;
    }   
    Bool_t checkoverlaps  = opt.Contains("o");
-   Bool_t checkcrossings = opt.Contains("c");
+   Bool_t checkcrossings = opt.Contains("b");
    Double_t vertex[3];
    vertex[0] = vx;
    vertex[1] = vy;

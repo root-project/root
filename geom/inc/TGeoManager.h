@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.90 2007/08/20 08:49:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.91 2007/08/20 14:00:56 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -207,7 +207,7 @@ public:
    void                   SetMaxVisNodes(Int_t maxnodes=10000); // *MENU*
    //--- geometry checking
    void                   AnimateTracks(Double_t tmin=0, Double_t tmax=5E-8, Int_t nframes=200, Option_t *option="/*"); // *MENU*
-   void                   CheckGeometryFull(Int_t ntracks=10000, Double_t vx=0., Double_t vy=0., Double_t vz=0., Option_t *option="ob"); // *MENU*
+   void                   CheckGeometryFull(Int_t ntracks=1000000, Double_t vx=0., Double_t vy=0., Double_t vz=0., Option_t *option="ob"); // *MENU*
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
