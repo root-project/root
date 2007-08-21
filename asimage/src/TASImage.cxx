@@ -1088,7 +1088,7 @@ void TASImage::Draw(Option_t *option)
 //______________________________________________________________________________
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
                               Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc,
-                              Option_t *opt)
+                              Option_t * /*opt*/)
 {
    // Draw asimage on drawable.
 
@@ -1170,12 +1170,6 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
       Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
       if (pic) {
-         TString option = opt;
-         option.ToLower();
-         if (!option.Contains("opaque")) {
-            SETBIT(wsrc,31);
-            SETBIT(hsrc,31);
-         }
          gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
          gVirtualX->DeletePixmap(pic);
       } else {
