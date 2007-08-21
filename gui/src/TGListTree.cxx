@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.59 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.60 2007/03/08 11:47:30 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -695,7 +695,7 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 {
    // Signal emitted when keyboard key pressed
    //
-   // item - selected item
+   // entry - selected item
    // keysym - defined in "KeySymbols.h"
    // mask - modifier key mask, defined in "GuiTypes.h"
    //
@@ -714,7 +714,7 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
    args[0] = (Long_t)entry;
    args[1] = (Long_t)keysym;
    args[2] = (Long_t)mask;
-   Emit("KeyPressed(TGFame*,ULong_t,ULong_t)", args);
+   Emit("KeyPressed(TGListTreeItem*,ULong_t,ULong_t)", args);
    SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
@@ -2218,7 +2218,7 @@ void TGListTree::ToggleItem(TGListTreeItem *item)
 void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 {
    // Update the state of the node 'item' according to the children states.
-   
+
    if (fAutoCheckBoxPic == kFALSE) return;
 
    Bool_t diff = kFALSE;
