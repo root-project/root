@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.6 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.7 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -53,6 +53,7 @@ namespace PyROOT {
       TConverter*  fConverter;
       Int_t        fOwnerTagnum;   // TODO: wrap up ...
       std::string  fName;
+      Int_t        fOwnerIsNamespace;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}

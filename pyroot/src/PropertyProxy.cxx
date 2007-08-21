@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.13 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.14 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -177,8 +177,10 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
    fName      = dm->GetName();
 
-   if ( dm->GetClass()->GetClassInfo() )
+   if ( dm->GetClass()->GetClassInfo() ) {
       fOwnerTagnum = dm->GetClass()->GetClassInfo()->Tagnum();
+      fOwnerIsNamespace = dm->GetClass()->GetClassInfo()->Property() & G__BIT_ISNAMESPACE;
+   }
 }
 
 //____________________________________________________________________________
@@ -192,6 +194,7 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 
 // no owner (global scope)
    fOwnerTagnum = -1;
+   fOwnerIsNamespace = 0;
 }
 
 //____________________________________________________________________________
@@ -208,6 +211,7 @@ void PyROOT::PropertyProxy::Set( const ROOT::Reflex::Member& mb )
 
 // unknown owner (TODO: handle this case)
    fOwnerTagnum = -1;
+   fOwnerIsNamespace = 0;
 }
 #endif
 
@@ -216,6 +220,9 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
    if ( fProperty & kIsStatic )
       return fOffset;
+   if ( (fOwnerTagnum > -1) && fOwnerIsNamespace ) {
+      return fOffset;
+   }
 
 // special case: non-static lookup through class
    if ( ! pyobj )
