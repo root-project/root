@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.271 2007/07/23 15:11:22 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.272 2007/07/27 09:27:38 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4893,7 +4893,7 @@ void TPad::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    Double_t rmin[3], rmax[3];
    if (view) {
       view->GetRange(rmin, rmax);
-      out<<"   TView *view = new TView(1);"<<endl;
+      out<<"   TView *view = TView::CreateView(1);"<<endl;
       out<<"   view->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<endl;
    }
