@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.12 2006/06/22 08:21:22 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.13 2006/10/05 10:28:49 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -99,7 +99,7 @@ class TXMLEngine : public TObject {
       XMLNsPointer_t    FindNs(XMLNodePointer_t xmlnode, const char* nsname);
       void              TruncateNsExtension(XMLNodePointer_t xmlnode);
       void              UnpackSpecialCharacters(char* target, const char* source, int srclen);
-      void              OutputValue(Char_t* value, TXMLOutputStream* out);
+      void              OutputValue(char* value, TXMLOutputStream* out);
       void              SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t layout, Int_t level);
       XMLNodePointer_t  ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue);
       void              DisplayError(Int_t error, Int_t linenumber);
