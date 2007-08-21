@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.13 2006/10/05 21:04:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.14 2006/10/07 18:01:59 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -140,9 +140,10 @@ const char *TRegexp::MakeWildcard(const char *re)
 
    static char buf[fgMaxpat];
    char *s = buf;
-   int   len = strlen(re);
+   if (!re) return "";
+   int len = strlen(re);
 
-   if (!re || !len) return "";
+   if (!len) return "";
 
    for (int i = 0; i < len; i++) {
       if (i == 0 && re[i] != '^')
