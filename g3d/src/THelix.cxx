@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.17 2007/01/12 16:03:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.18 2007/02/06 14:44:54 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -53,7 +53,7 @@
 //
 //       Example:
 //   c1 = new TCanvas("c1");
-//   TView *view = new TView(1);
+//   TView *view = TView::CreateView(1);
 //   view->SetRange(-1,-1,-1,1,1,1);
 //   THelix *helix = new THelix(0.0, 0.0, 0.0, 1.0, 0.0, 0.3, 10.0);
 //   helix->Draw();
