@@ -1879,7 +1879,8 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
    fMain->AddFrame(canvas,lo);
    fContents->Connect("DoubleClicked(TGListTreeItem*,Int_t)","TestDirList",this,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
-
+   fContents->Connect("Clicked(TGListTreeItem*,Int_t)","TestDirList",this,
+                      "OnDoubleClick(TGListTreeItem*,Int_t)");
 #ifdef G__WIN32
    fContents->AddItem(0,"c:\\");  // browse the upper directory
 #else
