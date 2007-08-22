@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.51 2007/05/18 12:57:37 brun Exp $
+ * @(#)root/roofitcore:$Name:  $:$Id: RooPlot.cxx,v 1.52 2007/06/18 11:52:41 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -712,9 +712,10 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   Double_t scaleFactor = 1.0 ;
   if (_normObj) {
     scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
+  } else {
+    cout << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
+	 << xlo << " to " << xhi << ", substituting full event count" << endl ;
   }
-  cout << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
-       << xlo << " to " << xhi << ", substituting full event count" << endl ;
   return getFitRangeNEvt()*scaleFactor ;
 }
 
@@ -731,13 +732,14 @@ void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
 
 void RooPlot::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class RooPlot.
+
+  // Stream an object of class RooPlot.
   
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
-      R__b.ReadClassBuffer(RooPlot::Class(),this);
+      R__b.ReadClassBuffer(RooPlot::Class(),this,R__v,R__s,R__c);
     } else {
       // backward compatible streamer code here
       // Version 1 of RooPlot was deriving from TH1 and RooPrintable
