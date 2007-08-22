@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.95 2007/05/04 22:15:36 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.96 2007/05/06 07:49:10 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1031,6 +1031,18 @@ void TDirectory::RegisterContext(TContext *ctxt) {
    } else {
       fContext = ctxt;
    }
+}
+
+//______________________________________________________________________________
+Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/) 
+{
+   // See TDirectoryFile::WriteTObject for details
+
+   const char *objname = "no name specified";
+   if (name) objname = name;
+   else if (obj) objname = obj->GetName();
+   Error("WriteTObject","The current directory (%s) is not associated with a file. The object (%s) has not been written.",GetName(),objname);      
+   return 0;
 }
 
 //______________________________________________________________________________

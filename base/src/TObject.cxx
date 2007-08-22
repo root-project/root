@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.91 2007/02/15 15:04:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.92 2007/05/09 10:25:10 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -750,7 +750,13 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    if (option & kWriteDelete) opt += "WriteDelete";
 
    if (gDirectory) return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
-   else            return 0;
+   else {
+      const char *objname = "no name specified";
+      if (name) objname = name;
+      else objname = GetName();
+      Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
