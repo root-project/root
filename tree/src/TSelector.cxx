@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.31 2007/07/10 08:40:12 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.32 2007/07/12 09:59:00 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    G__ClassInfo cl;
    Bool_t ok = kFALSE;
    while (cl.Next()) {
-      if (localname == cl.Name()) {
+      if (localname == cl.Fullname()) {
          if (cl.IsBase("TSelector")) ok = kTRUE;
          break;
       }
