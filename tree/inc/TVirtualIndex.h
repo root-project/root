@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.4 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.5 2007/06/21 19:14:20 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual const char    *GetMinorName()    const = 0;
    virtual Long64_t       GetN()            const = 0;
    virtual TTree         *GetTree()         const {return fTree;}
-   virtual void           UpdateFormulaLeaves() = 0;
+   virtual void           UpdateFormulaLeaves(const TTree *parent) = 0;
    virtual void           SetTree(const TTree *T) = 0;
    
    ClassDef(TVirtualIndex,1);  //Abstract interface for Tree Index

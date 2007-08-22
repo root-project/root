@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.14 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.15 2007/06/21 19:14:21 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -463,14 +463,20 @@ void TTreeIndex::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
-void TTreeIndex::UpdateFormulaLeaves()
+void TTreeIndex::UpdateFormulaLeaves(const TTree *parent)
 {
    // Called by TChain::LoadTree when the parent chain changes it's tree.
 
    if (fMajorFormula)       { fMajorFormula->UpdateFormulaLeaves();}
    if (fMinorFormula)       { fMinorFormula->UpdateFormulaLeaves();}
-   if (fMajorFormulaParent) { fMajorFormulaParent->UpdateFormulaLeaves();}
-   if (fMinorFormulaParent) { fMinorFormulaParent->UpdateFormulaLeaves();}
+   if (fMajorFormulaParent) { 
+      if (parent) fMajorFormulaParent->SetTree((TTree*)parent);
+      fMajorFormulaParent->UpdateFormulaLeaves();
+   }
+   if (fMinorFormulaParent) { 
+      if (parent) fMinorFormulaParent->SetTree((TTree*)parent);
+      fMinorFormulaParent->UpdateFormulaLeaves();
+   }
 }
 //______________________________________________________________________________
 void TTreeIndex::SetTree(const TTree *T)

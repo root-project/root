@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.8 2007/06/21 19:14:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.9 2007/08/09 06:41:03 brun Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -315,12 +315,18 @@ TTreeFormula *TChainIndex::GetMinorFormulaParent(const TTree *T)
 }
 
 //______________________________________________________________________________
-void TChainIndex::UpdateFormulaLeaves()
+void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 {
    // Updates the parent formulae.
    // Called by TChain::LoadTree when the parent chain changes it's tree.
-   if (fMajorFormulaParent) { fMajorFormulaParent->UpdateFormulaLeaves();}
-   if (fMinorFormulaParent) { fMinorFormulaParent->UpdateFormulaLeaves();}
+   if (fMajorFormulaParent) { 
+      if (parent) fMajorFormulaParent->SetTree((TTree*)parent);
+      fMajorFormulaParent->UpdateFormulaLeaves();
+   }
+   if (fMinorFormulaParent) { 
+      if (parent) fMinorFormulaParent->SetTree((TTree*)parent);
+      fMinorFormulaParent->UpdateFormulaLeaves();
+   }
 }
 
 //______________________________________________________________________________

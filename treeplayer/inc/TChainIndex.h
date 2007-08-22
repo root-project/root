@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.4 2007/06/01 11:42:24 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.5 2007/06/21 19:14:20 pcanal Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
    virtual Long64_t       GetN()            const {return fEntries.size();}
    virtual TTreeFormula  *GetMajorFormulaParent(const TTree *T);
    virtual TTreeFormula  *GetMinorFormulaParent(const TTree *T);
-   virtual void           UpdateFormulaLeaves();
+   virtual void           UpdateFormulaLeaves(const TTree *parent);
    virtual void           SetTree(const TTree *T);
 
    ClassDef(TChainIndex,1)  //A Tree Index with majorname and minorname.

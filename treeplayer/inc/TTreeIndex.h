@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.5 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.6 2007/06/21 19:14:20 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
    virtual TTreeFormula  *GetMajorFormulaParent(const TTree *T);
    virtual TTreeFormula  *GetMinorFormulaParent(const TTree *T);
    virtual void           Print(Option_t *option="") const;
-   virtual void           UpdateFormulaLeaves();
+   virtual void           UpdateFormulaLeaves(const TTree *parent);
    virtual void           SetTree(const TTree *T);
    
    ClassDef(TTreeIndex,1);  //A Tree Index with majorname and minorname.
