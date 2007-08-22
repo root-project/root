@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.58 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.59 2007/05/22 11:47:46 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -77,7 +77,7 @@ void TGLBEntry::Activate(Bool_t a)
 
    if (fActive == a) return;
    fActive = a;
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -86,7 +86,7 @@ void TGLBEntry::Toggle()
    // Toggle active state of listbox entry.
 
    fActive = !fActive;
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 
@@ -177,7 +177,7 @@ void TGTextLBEntry::SetText(TGString *new_text)
 
    Resize(fTWidth + 3, fTHeight + 1);
 
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -413,7 +413,6 @@ void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       off_x = fPicture->GetWidth() + 4;
    }
    TGTextLBEntry::DrawCopy(id, x + off_x, y);
-
 }
 
 //______________________________________________________________________________
@@ -423,6 +422,7 @@ void TGIconLBEntry::DoRedraw()
 
    DrawCopy(fId, 0, 0);
 }
+
 //___________________________________________________________________________
 void TGIconLBEntry::SetPicture(const TGPicture *pic)
 {
@@ -503,6 +503,15 @@ void TGLBContainer::Layout()
 
    TGContainer::Layout();
    TGFrame::Resize(fListBox->GetViewPort()->GetWidth(), fHeight);
+}
+
+//______________________________________________________________________________
+void TGLBContainer::DoRedraw()
+{
+   // redraw
+
+   gVirtualX->ClearArea(fId, 0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
+   DrawRegion(0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
 }
 
 //______________________________________________________________________________
@@ -962,7 +971,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          yff = yf0 + f->GetHeight();
 
          activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
-                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)  && !f->IsActive();;
+                        (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)  && !f->IsActive();
 
          if (activate)  {
             f->Activate(kTRUE);
@@ -970,7 +979,9 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          } else {
             f->Activate(kFALSE);
          }
-         if (last != fLastActive) fClient->NeedRedraw(this);
+         if (last != fLastActive) {
+            fClient->NeedRedraw(this);
+         }
       }
    }
    return kTRUE;
@@ -1371,7 +1382,7 @@ void TGListBox::Resize(UInt_t w, UInt_t h)
                      + (fBorderWidth << 1);
 
    TGCompositeFrame::Resize(w, h);
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -1383,7 +1394,7 @@ void TGListBox::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
       h = TMath::Max(fItemVsize, ((h - (fBorderWidth << 1)) / fItemVsize) * fItemVsize)
                      + (fBorderWidth << 1);
    TGCompositeFrame::MoveResize(x, y, w, h);
-   fClient->NeedRedraw(this);
+   DoRedraw();
 }
 
 //______________________________________________________________________________

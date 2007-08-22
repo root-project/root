@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.55 2007/04/23 09:07:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.56 2007/05/31 15:58:45 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -80,6 +80,7 @@ ClassImp(TGCanvas)
 ClassImp(TGViewPort)
 ClassImp(TGContainer)
 
+
 //______________________________________________________________________________
 class TGContainerKeyboardTimer : public TTimer {
 
@@ -157,8 +158,9 @@ void TGViewPort::SetContainer(TGFrame *f)
 
       if (fContainer->InheritsFrom(TGContainer::Class())) {
          ((TGContainer*)fContainer)->fViewPort = this;
-         if (fParent->InheritsFrom(TGCanvas::Class()))
+         if (fParent->InheritsFrom(TGCanvas::Class())) {
             ((TGContainer*)fContainer)->fCanvas = (TGCanvas*)fParent;
+         }
       }
    }
 }
@@ -193,22 +195,16 @@ void TGViewPort::SetHPos(Int_t xpos)
    if (adiff < fWidth) {
       if (diff < 0) {
          gVirtualX->CopyArea(fContainer->GetId(), fContainer->GetId(), GetWhiteGC()(),
-                              adiff, 0, fWidth, fHeight, 0, 0);
-         gVirtualX->ClearArea(fContainer->GetId(), fWidth - adiff, 0, adiff, fHeight);
+                              adiff, 0, fWidth - adiff, fHeight, 0, 0);
+         adiff += 20;   // draw larger region
          ((TGContainer*)fContainer)->DrawRegion(fWidth - adiff, 0, adiff, fHeight);
       } else {
          gVirtualX->CopyArea(fContainer->GetId(), fContainer->GetId(), GetWhiteGC()(),
                               0, 0, fWidth - adiff, fHeight, adiff, 0);
-#ifndef WIN32
-         adiff = adiff + 1;
-#else
-         adiff = adiff << 1;
-#endif
-         gVirtualX->ClearArea(fContainer->GetId(), 0, 0, adiff, fHeight);
+         adiff += 20;   // draw larger region
          ((TGContainer*)fContainer)->DrawRegion(0, 0, adiff, fHeight);
       }
    } else {
-      gVirtualX->ClearArea(fContainer->GetId(), 0, 0, fWidth, fHeight);
       ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
    }
 }
@@ -244,22 +240,16 @@ void TGViewPort::SetVPos(Int_t ypos)
    if (adiff < fHeight) {
       if (diff < 0) {
          gVirtualX->CopyArea(fContainer->GetId(), fContainer->GetId(), GetWhiteGC()(),
-                              0, adiff, fWidth, fHeight, 0, 0);
-         gVirtualX->ClearArea(fContainer->GetId(), 0, fHeight - adiff, fWidth, adiff);
+                              0, adiff, fWidth, fHeight - adiff, 0, 0);
+         adiff += 20;   // draw larger region
          ((TGContainer*)fContainer)->DrawRegion(0, fHeight - adiff, fWidth, adiff);
       } else {
          gVirtualX->CopyArea(fContainer->GetId(), fContainer->GetId(), GetWhiteGC()(),
                               0, 0, fWidth, fHeight - adiff, 0, adiff);
-#ifndef WIN32
-         adiff = adiff + 1;
-#else
-         adiff = adiff << 1;
-#endif
-         gVirtualX->ClearArea(fContainer->GetId(), 0, 0, fWidth, adiff);
+         adiff += 20;   // draw larger region
          ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, adiff);
       }
    } else {
-      gVirtualX->ClearArea(fContainer->GetId(), 0, 0, fWidth, fHeight);
       ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
    }
 }
@@ -314,6 +304,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fKeyTimerActive = kFALSE;
    fScrolling = kFALSE;
    fCanvas = 0;
+   fExposedRegion.Empty();
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -321,6 +312,13 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 1; // NorthWestGravity
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
@@ -349,6 +347,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    fScrollTimer = new TGContainerScrollTimer(this);
    fKeyTimerActive = kFALSE;
    fScrolling = kFALSE;
+   fExposedRegion.Empty();
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -356,6 +355,13 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
+
+   SetWindowAttributes_t wattr;
+   wattr.fMask = kWAWinGravity | kWABitGravity;
+   wattr.fBitGravity = 1; // NorthWestGravity
+   wattr.fWinGravity = 1;
+   gVirtualX->ChangeWindowAttributes(fId, &wattr);
+
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
@@ -380,8 +386,11 @@ void TGContainer::Layout()
 {
    // Layout container entries.
 
-   ClearViewPort();
    TGCompositeFrame::Layout();
+   TGLayoutManager *lm = GetLayoutManager();
+
+   // clear content if positions of subframes changed after layout
+   if (lm->IsModified()) ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -523,10 +532,15 @@ void TGContainer::SelectAll()
    // SelectAll() signal emitted.
 
    TIter next(fList);
-   TGFrameElement* el;
+   TGFrameElement *el;
+   TGFrame *fr;
+   TGPosition pos = GetPagePosition();
 
    while ((el = (TGFrameElement *) next())) {
-      el->fFrame->Activate(kTRUE);
+      fr = el->fFrame;
+      if (!fr->IsActive()) {
+         ActivateItem(el);
+      }
    }
    fSelected = fTotal;
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
@@ -542,14 +556,21 @@ void TGContainer::UnSelectAll()
 
    TIter next(fList);
    TGFrameElement *el;
+   TGPosition pos = GetPagePosition();
+   TGFrame *fr;
 
    while ((el = (TGFrameElement *) next())) {
-      el->fFrame->Activate(kFALSE);
+      fr = el->fFrame;
+      if (fr->IsActive()) {
+         DeActivateItem(el);
+      }
    }
    fLastActiveEl = 0;
    fSelected = 0;
+
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                   fTotal, fSelected);
+
    Emit("UnSelectAll()");
 }
 
@@ -562,19 +583,22 @@ void TGContainer::InvertSelection()
    int selected = 0;
 
    TIter next(fList);
-   TGFrameElement* el;
+   TGFrameElement *el;
 
    while ((el = (TGFrameElement *) next())) {
       if (!el->fFrame->IsActive()) {
-         el->fFrame->Activate(kTRUE);
+         ActivateItem(el);
          ++selected;
       } else {
-         el->fFrame->Activate(kFALSE);
+         DeActivateItem(el);
       }
-   fSelected = selected;
    }
+   ClearViewPort();  // full redraw
+   fSelected = selected;
+
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                   fTotal, fSelected);
+
    Emit("InvertSelection()");
 }
 
@@ -594,6 +618,7 @@ void TGContainer::RemoveAll()
    }
    fLastActiveEl = 0;
    fSelected = fTotal = 0;
+   ClearViewPort();  // full redraw
 }
 
 //______________________________________________________________________________
@@ -613,6 +638,7 @@ void TGContainer::RemoveItem(TGFrame *item)
          break;
       }
    }
+   ClearViewPort();  // fill redraw
 }
 
 //______________________________________________________________________________
@@ -636,14 +662,15 @@ const TGFrame *TGContainer::GetNextSelected(void **current)
 }
 
 //______________________________________________________________________________
-void TGContainer::ActivateItem(TGFrameElement* el)
+void TGContainer::ActivateItem(TGFrameElement *el)
 {
    // Activate item.
 
+   TGFrame *fr = el->fFrame;
+   fr->Activate(kTRUE);
    fLastActiveEl = el;
-   el->fFrame->Activate(kTRUE);
 
-   if (fLastActiveEl!=el) {
+   if (fLastActiveEl != el) {
       CurrentChanged(fLastActiveEl->fFrame->GetX(), fLastActiveEl->fFrame->GetY());
       CurrentChanged(fLastActiveEl->fFrame);
       fSelected++;
@@ -652,19 +679,22 @@ void TGContainer::ActivateItem(TGFrameElement* el)
    if (!fSelected) fSelected = 1;
 
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
-   fClient->NeedRedraw(this);
+
+   TGPosition pos = GetPagePosition();
+   DrawRegion(fr->GetX() - pos.fX, fr->GetY() - pos.fY, fr->GetWidth(), fr->GetHeight());
 }
 
 //______________________________________________________________________________
-void TGContainer::DeActivateItem(TGFrameElement* el)
+void TGContainer::DeActivateItem(TGFrameElement *el)
 {
    // DeActivate item.
 
-   fLastActiveEl = el;
-   el->fFrame->Activate(kFALSE);
-
+   TGFrame *fr = el->fFrame;
+   fr->Activate(kFALSE);
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
-   fClient->NeedRedraw(this);
+
+   TGPosition pos = GetPagePosition();
+   DrawRegion(fr->GetX() - pos.fX, fr->GetY() - pos.fY, fr->GetWidth(), fr->GetHeight());
 }
 
 //______________________________________________________________________________
@@ -731,23 +761,48 @@ void TGContainer::DoRedraw()
 {
    // Redraw content of container in the viewport region.
 
-   DrawRegion(0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
+   if (!fExposedRegion.IsEmpty()) {
+      DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
+                 fExposedRegion.fW, fExposedRegion.fH);
+      
+      fExposedRegion.Empty();
+   }
 }
 
 //______________________________________________________________________________
 void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Draw a region of container in viewport.
+	// x, y, w, h are position and dimension of area to be 
+	// redrawn in viewport coordinates.
 
-   TGFrameElement *el;
-   Handle_t id = fId;
+   static GContext_t gcBg = 0;
+   Pixmap_t pixmap = 0;
 
-   TGPosition pos = GetPagePosition();
+	if (!fMapSubwindows) {
+		pixmap = gVirtualX->CreatePixmap(fId, w, h);
 
-   Int_t xx = pos.fX + x; // translate coordinates to current page position
+   	if (!gcBg) {
+      	GCValues_t gcValues;
+      	gcValues.fForeground = fBackground;
+      	gcValues.fForeground = fBackground;
+      	gcValues.fGraphicsExposures = kTRUE;
+      	gcValues.fMask = kGCForeground | kGCBackground | kGCGraphicsExposures;
+      	gcBg = gVirtualX->CreateGC(fId, &gcValues);
+   	}
+
+		gVirtualX->SetForeground(gcBg, fBackground);
+  		gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, w, h);
+	}
+
+	TGPosition pos = GetPagePosition();
+
+	// translate coordinates in viewport into coordinates in container 
+   Int_t xx = pos.fX + x;
    Int_t yy = pos.fY + y;
 
    TIter next(fList);
+   TGFrameElement *el;
 
    while ((el = (TGFrameElement *) next())) {
       if ((Int_t(el->fFrame->GetY()) > yy - (Int_t)el->fFrame->GetHeight()) &&
@@ -757,20 +812,31 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
          // draw either in container window or in double-buffer
          if (!fMapSubwindows) {
-            el->fFrame->DrawCopy(id, el->fFrame->GetX() - pos.fX, el->fFrame->GetY() - pos.fY);
+				Int_t fx = el->fFrame->GetX() - xx;
+				Int_t fy = el->fFrame->GetY() - yy;
+            el->fFrame->DrawCopy(pixmap, fx, fy);
          } else {
             fClient->NeedRedraw(el->fFrame);
          }
       }
-   }
+	}
+
+	if (fMapSubwindows) return;
+
+	gVirtualX->CopyArea(pixmap, fId, gcBg, 0, 0, w, h, x, y);
+	gVirtualX->DeletePixmap(pixmap);
+ 	gVirtualX->Update(kFALSE);
 }
 
 //______________________________________________________________________________
 void TGContainer::ClearViewPort()
 {
-   // Clear view port.
+   // Clear view port and redraw full content
 
-   gVirtualX->ClearArea(fId, 0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
+   fExposedRegion.fW = fViewPort->GetWidth();
+   fExposedRegion.fH = fViewPort->GetHeight();
+   fExposedRegion.fX = fExposedRegion.fY = 0;
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -781,7 +847,17 @@ Bool_t TGContainer::HandleExpose(Event_t *event)
    if (fMapSubwindows) return TGCompositeFrame::HandleExpose(event);
 
    if (event->fWindow == GetId()) {
-      DrawRegion(event->fX, event->fY, event->fWidth, event->fHeight);
+      TGPosition pos(event->fX, event->fY);
+      TGDimension dim(event->fWidth, event->fHeight);
+      TGRectangle rect(pos, dim);
+
+      if (fExposedRegion.IsEmpty()) {
+         fExposedRegion = rect;
+      } else {
+         fExposedRegion.Merge(rect);
+      }
+
+      fClient->NeedRedraw(this);
    } else {
       TGCompositeFrame::HandleExpose(event);
    }
@@ -871,7 +947,6 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
       }
    }
 
@@ -884,13 +959,13 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fScrolling = kFALSE;
 
          if (gSystem) gSystem->RemoveTimer(fScrollTimer);
-         if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
+
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                      event->fCode, (event->fYRoot << 16) | event->fXRoot);
       }
    }
-   fClient->NeedRedraw(this);
+   DoRedraw();
    return kTRUE;
 }
 
@@ -1006,16 +1081,14 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    TGDimension dim = GetPageDimension();
    Int_t x = pos.fX + event->fX;
    Int_t y = pos.fY + event->fY;
-   TGFrameElement* el = 0;
-   TGFrame* f = 0;
+   TGFrameElement *el = 0;
+   TGFrame *f = 0;
    fOnMouseOver = kFALSE;
 
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
                         TGDNDManager::GetDNDactionCopy(), event->fTime);
-   }
-   else if (fDragging) {
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
+   } else if (fDragging) {
 
       fX0 =  TMath::Min(fXp,x);
       fY0 =  TMath::Min(fYp,y);
@@ -1052,16 +1125,14 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
               (xff > fX0 && xff < fXf)) &&
              ((yf0 > fY0 && yf0 < fYf) ||
               (yff > fY0 && yff < fYf))) {
-            f->Activate(kTRUE);
+            ActivateItem(el);
             gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
             OnMouseOver(f);
             ++selected;
          } else {
-            f->Activate(kFALSE);
+            DeActivateItem(el);
          }
       }
-
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
 
       if (fTotal != total || fSelected != selected) {
          fTotal = total;
@@ -1069,7 +1140,6 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                      fTotal, fSelected);
       }
-      fClient->NeedRedraw(this);
    } else {
       TGFrame *over_frame = 0;
 
@@ -1103,8 +1173,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          if (gDNDManager->IsDragging()) {
             gDNDManager->Drag(event->fXRoot, event->fYRoot,
                               TGDNDManager::GetDNDactionCopy(), event->fTime);
-         }
-         else {
+         } else {
             OnMouseOver(over_frame);
             gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
          }
@@ -1119,6 +1188,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          gSystem->AddTimer(fScrollTimer);
       }
    }
+
    return kTRUE;
 }
 
@@ -1257,7 +1327,7 @@ Bool_t TGContainer::HandleKey(Event_t *event)
          }
       }
    }
-   fClient->NeedRedraw(this);
+   DoRedraw();
    return kTRUE;
 }
 
@@ -1276,7 +1346,6 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
       direction = TGSearchDialog::SearchDialog()->GetType()->fDirection;
    }
 
-   char msg[256];
    TGFrameElement *fe = (TGFrameElement*)FindItem(name, direction, caseSensitive);
 
    if (!fe) {  // find again
@@ -1286,20 +1355,20 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
 
       if (!fe) {
          if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
-            sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
+            TString msg = "Couldn't find \"" + fLastName + '\"';
             gVirtualX->Bell(20);
-            new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
+            new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg.Data(),
                           kMBIconExclamation, kMBOk, 0);
          }
          return 0;
       } else {
-         if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+         if (fLastActiveEl) DeActivateItem(fLastActiveEl);
          ActivateItem(fe);
          AdjustPosition();
          return fe->fFrame;
       }
    } else {
-      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      if (fLastActiveEl) DeActivateItem(fLastActiveEl);
       ActivateItem(fe);
       AdjustPosition();
       return fe->fFrame;
@@ -1319,9 +1388,11 @@ void TGContainer::Search(Bool_t close)
 
    if (!close) {
       if (!TGSearchDialog::SearchDialog()) {
-         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
+                                                             fCanvas, 400, 150, srch, &ret);
       }
-      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGContainer", this, "FindFrameByName(char *)");
+      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGContainer", this,
+                                              "FindFrameByName(char *)");
       TGSearchDialog::SearchDialog()->MapRaised();
    } else {
       new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
@@ -1337,8 +1408,8 @@ void TGContainer::OnAutoScroll()
 {
    // Autoscroll while close to & beyond  The Wall
 
-   TGFrameElement* el = 0;
-   TGFrame* f = 0;
+   TGFrameElement *el = 0;
+   TGFrame *f = 0;
    int xf0, yf0, xff, yff, total, selected;
 
    TGDimension dim = GetPageDimension();
@@ -1377,17 +1448,20 @@ void TGContainer::OnAutoScroll()
       dx *= kAcceleration[adx];
       dy *= kAcceleration[ady];
 
-      fCanvas->SetHsbPosition(pos.fX-dx);
-      fCanvas->SetVsbPosition(pos.fY-dy);
+      Int_t nx = pos.fX-dx;
+      Int_t ny = pos.fY-dy;
+
+      fCanvas->SetHsbPosition(nx);
+      fCanvas->SetVsbPosition(ny);
 
       // position inside container
       x += pos.fX;
       y += pos.fY;
 
-      fX0 =  TMath::Min(fXp,x);
-      fY0 =  TMath::Min(fYp,y);
-      fXf =  TMath::Max(fXp,x);
-      fYf =  TMath::Max(fYp,y);
+      fX0 =  TMath::Min(fXp, x);
+      fY0 =  TMath::Min(fYp, y);
+      fXf =  TMath::Max(fXp, x);
+      fYf =  TMath::Max(fYp ,y);
 
       total = selected = 0;
 
@@ -1405,10 +1479,10 @@ void TGContainer::OnAutoScroll()
             (xff > fX0 && xff < fXf)) &&
             ((yf0 > fY0 && yf0 < fYf) ||
             (yff > fY0 && yff < fYf))) {
-            f->Activate(kTRUE);
+            ActivateItem(el);
             ++selected;
          } else {
-            f->Activate(kFALSE);
+            DeActivateItem(el);
          }
       }
 
@@ -1420,7 +1494,7 @@ void TGContainer::OnAutoScroll()
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                      fTotal, fSelected);
       }
-      fClient->NeedRedraw(this);
+      DoRedraw();
    }
 }
 
@@ -1429,7 +1503,7 @@ void TGContainer::SearchPattern()
 {
    // Search for entry which name begins with pattern.
 
-   TGFrameElement* fe = 0;
+   TGFrameElement *fe = 0;
    TIter next(fList);
    TString str;
 
@@ -1437,8 +1511,9 @@ void TGContainer::SearchPattern()
       str = fe->fFrame->GetTitle();
 
       if (str.BeginsWith(fKeyInput,TString::kIgnoreCase)) {
-         if (fLastActiveEl && (fLastActiveEl!=fe) )
+         if (fLastActiveEl && (fLastActiveEl!=fe) ) {
             fLastActiveEl->fFrame->Activate(kFALSE);
+         }
          ActivateItem(fe);
          AdjustPosition();
          break;
@@ -1454,8 +1529,7 @@ void TGContainer::RepeatSearch()
 {
    // Repeats search.
 
-   char msg[256];
-   TGFrameElement* fe = 0;
+   TGFrameElement *fe = 0;
 
    fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
 
@@ -1465,30 +1539,30 @@ void TGContainer::RepeatSearch()
       fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
 
       if (!fe) {
-         sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
+         TString msg = "Couldn't find \"" + fLastName + '\"';
          gVirtualX->Bell(50);
-         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg,
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "Container", msg.Data(),
                         kMBIconExclamation, kMBOk, 0);
       } else {
-         if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+         if (fLastActiveEl) DeActivateItem(fLastActiveEl);
          ActivateItem(fe);
          AdjustPosition();
       }
    } else {
-      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      if (fLastActiveEl) DeActivateItem(fLastActiveEl);
       ActivateItem(fe);
       AdjustPosition();
    }
 }
 
 //______________________________________________________________________________
-TGFrameElement *TGContainer::FindFrame(Int_t x,Int_t y,Bool_t exclude)
+TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
 {
    // Find frame located int container at position x,y.
 
    TIter next(fList);
-   TGFrameElement* el;
-   TGFrameElement* ret = 0;
+   TGFrameElement *el;
+   TGFrameElement *ret = 0;
    Int_t dx = 0;
    Int_t dy = 0;
    Int_t d = 0;
@@ -1627,12 +1701,12 @@ void TGContainer::AdjustPosition()
 
    TGHScrollBar *hb = GetHScrollbar();
    TGVScrollBar *vb = GetVScrollbar();
-   Int_t pos = 0;
+   Int_t pos = GetPagePosition().fY;
    Int_t pg;
+
 
    if (vb && vb->IsMapped()) {
       pg = (vb->GetPageSize()*GetHeight())/fViewPort->GetHeight();
-      pos = vb->GetPosition()*pg;
       vh =  pos + (Int_t)fViewPort->GetHeight();
 
       if (f->GetY() < pos) {
@@ -1653,7 +1727,7 @@ void TGContainer::AdjustPosition()
 
    if (hb && hb->IsMapped() && (!vb || (vb && !vb->IsMapped()))) {
       pg = (hb->GetPageSize()*GetWidth())/fViewPort->GetWidth();
-      pos = hb->GetPosition()*pg;
+      pos =GetPagePosition().fX;
       hw = pos + (Int_t)fViewPort->GetWidth();
 
       if (f->GetX() < pos) {
@@ -1679,27 +1753,29 @@ void TGContainer::LineLeft(Bool_t select)
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
-   TGFrameElement* fe = (TGFrameElement*)fList->First();
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return; // empty list
 
-   TGFrameElement* old = fLastActiveEl;
+   TGFrameElement *old = fLastActiveEl;
 
-   if (old) old->fFrame->Activate(kFALSE);   //
+   if (old) DeActivateItem(old);   //
    else fLastActiveEl = fe;
 
-   TGFrameElement* la = fLastActiveEl;
+   TGFrameElement *la = fLastActiveEl;
+   Int_t dx = la->fLayout->GetPadLeft() + la->fLayout->GetPadRight();
+   Int_t dy = la->fLayout->GetPadTop() + la->fLayout->GetPadBottom();
    Int_t y = la->fFrame->GetY();
-   Int_t x = la->fFrame->GetX() - la->fFrame->GetWidth() - la->fLayout->GetPadLeft();
+   Int_t x = la->fFrame->GetX() - dx;
 
    Int_t hw = pos.fX + dim.fWidth;
 
-   TGHScrollBar *hb =  GetHScrollbar();
+   TGHScrollBar *hb = GetHScrollbar();
    if (x<=0 && (hb && !hb->IsMapped())) { // move to previous line
       x = hw;
-      y = y - la->fFrame->GetHeight() - la->fLayout->GetPadTop();
+      y = y - la->fFrame->GetDefaultHeight() - dy;
    }
 
-   fe = FindFrame(x,y);
+   fe = FindFrame(x, y);
    if (!fe) fe = (TGFrameElement*)fList->First();
 
    if (!select) fSelected=1;
@@ -1716,32 +1792,30 @@ void TGContainer::LineRight(Bool_t select)
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
-   TGFrameElement* fe = (TGFrameElement*)fList->Last();
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
-   TGFrameElement* old = fLastActiveEl;
+   TGFrameElement *old = fLastActiveEl;
 
-   if (old) old->fFrame->Activate(kFALSE);
+   if (old) DeActivateItem(old);
    else fLastActiveEl = (TGFrameElement*)fList->First();
 
+   Int_t dx = fLastActiveEl->fLayout->GetPadLeft() + fLastActiveEl->fLayout->GetPadRight();
+   Int_t dy = fLastActiveEl->fLayout->GetPadTop() + fLastActiveEl->fLayout->GetPadBottom();
    Int_t y = fLastActiveEl->fFrame->GetY();
-   Int_t x = fLastActiveEl->fFrame->GetX()+
-             fLastActiveEl->fFrame->GetWidth()+
-             fLastActiveEl->fLayout->GetPadRight();
+   Int_t x = fLastActiveEl->fFrame->GetX() + fLastActiveEl->fFrame->GetDefaultWidth() + dx;
 
-   Int_t hw = pos.fX + dim.fWidth -
-             fLastActiveEl->fFrame->GetWidth()-
-             fLastActiveEl->fLayout->GetPadRight();
+   Int_t hw = pos.fX + dim.fWidth - dx;
 
    TGHScrollBar *hb =  GetHScrollbar();
    if (x >= hw && (hb && !hb->IsMapped())) { // move one line down
       x = 0;
-      y = y + fLastActiveEl->fFrame->GetHeight() + fLastActiveEl->fLayout->GetPadBottom();
+      y = y + fLastActiveEl->fFrame->GetDefaultHeight() + dy;
    }
 
-   fe = FindFrame(x,y);
+   fe = FindFrame(x, y);
    if (!fe) fe = (TGFrameElement*)fList->Last();
-   if (!select) fSelected=1;
+   if (!select) fSelected = 1;
 
    ActivateItem(fe);
    AdjustPosition();
@@ -1752,25 +1826,25 @@ void TGContainer::LineUp(Bool_t select)
 {
    // Make current position first line in window by scrolling up.
 
-   TGFrameElement* fe = (TGFrameElement*)fList->First();
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
-   TGFrameElement* old = fLastActiveEl;
+   TGFrameElement *old = fLastActiveEl;
 
-   if (old)
-      old->fFrame->Activate(kFALSE);
-   else
+   if (old) {
+      DeActivateItem(old);
+   } else {
       fLastActiveEl = (TGFrameElement*)fList->First();
+   }
 
-   Int_t y = fLastActiveEl->fFrame->GetY()-
-             fLastActiveEl->fFrame->GetHeight()-
-             fLastActiveEl->fLayout->GetPadTop();
+   Int_t dy = fLastActiveEl->fLayout->GetPadTop() + fLastActiveEl->fLayout->GetPadBottom();
+   Int_t y = fLastActiveEl->fFrame->GetY() - dy;
    Int_t x = fLastActiveEl->fFrame->GetX();
 
-   fe = FindFrame(x,y);
+   fe = FindFrame(x, y);
    if (!fe) fe = (TGFrameElement*)fList->First();
-   if (fe->fFrame->GetY()>fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
-   if (!select) fSelected=1;
+   if (fe->fFrame->GetY() > fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
+   if (!select) fSelected = 1;
 
    ActivateItem(fe);
    AdjustPosition();
@@ -1781,23 +1855,23 @@ void TGContainer::LineDown(Bool_t select)
 {
    // Move one line down.
 
-   TGFrameElement* fe = (TGFrameElement*)fList->Last();
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
    TGFrameElement* old = fLastActiveEl;
 
-   if (old) old->fFrame->Activate(kFALSE);
+   if (old) DeActivateItem(old);
    else fLastActiveEl = (TGFrameElement*)fList->First();
 
-   Int_t y = fLastActiveEl->fFrame->GetY()+
-             fLastActiveEl->fFrame->GetHeight()+
-             fLastActiveEl->fLayout->GetPadBottom();
+   Int_t dy = fLastActiveEl->fLayout->GetPadTop() + fLastActiveEl->fLayout->GetPadBottom();
+   Int_t y = fLastActiveEl->fFrame->GetY() +
+             fLastActiveEl->fFrame->GetHeight() + dy;
    Int_t x = fLastActiveEl->fFrame->GetX();
 
-   fe = FindFrame(x,y);
+   fe = FindFrame(x, y);
    if (!fe) fe = (TGFrameElement*)fList->Last();
-   if (fe->fFrame->GetY()<fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
-   if (!select) fSelected=1;
+   if (fe->fFrame->GetY() < fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
+   if (!select) fSelected = 1;
 
    ActivateItem(fe);
    AdjustPosition();
@@ -1810,12 +1884,12 @@ void TGContainer::PageUp(Bool_t select)
 
    TGDimension dim = GetPageDimension();
 
-   TGFrameElement* fe = (TGFrameElement*)fList->First();
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
    TGFrameElement* old = fLastActiveEl;
 
-   if (old) old->fFrame->Activate(kFALSE);
+   if (old) DeActivateItem(old);
    else fLastActiveEl = (TGFrameElement*)fList->First();
 
    Int_t y = fLastActiveEl->fFrame->GetY();
@@ -1837,8 +1911,9 @@ void TGContainer::PageUp(Bool_t select)
 
    fe = FindFrame(x, y);
 
-   if (!fe || fe->fFrame->GetY()>fLastActiveEl->fFrame->GetY())
+   if (!fe || fe->fFrame->GetY()>fLastActiveEl->fFrame->GetY()) {
       fe = (TGFrameElement*)fList->First();
+   }
 
    if (!select) fSelected = 1;
 
@@ -1853,23 +1928,23 @@ void TGContainer::PageDown(Bool_t select)
 
    TGDimension dim = GetPageDimension();
 
-   TList* li = GetList();
-   TGFrameElement* fe = (TGFrameElement*)fList->Last();
+   TList *li = GetList();
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
-   TGFrameElement* old = fLastActiveEl;
+   TGFrameElement *old = fLastActiveEl;
 
-   if (old) old->fFrame->Activate(kFALSE);
+   if (old) DeActivateItem(old);
    else fLastActiveEl = (TGFrameElement*)fList->First();
 
    Int_t y = fLastActiveEl->fFrame->GetY();
    Int_t x = fLastActiveEl->fFrame->GetX();
 
-   TGVScrollBar *vb =  GetVScrollbar();
-   TGHScrollBar *hb =  GetHScrollbar();
+   TGVScrollBar *vb = GetVScrollbar();
+   TGHScrollBar *hb = GetHScrollbar();
 
    if (vb && vb->IsMapped()) {
-      y +=  dim.fHeight;
+      y += dim.fHeight;
    } else {
       if (hb && hb->IsMapped()) {
          x += dim.fWidth;
@@ -1880,8 +1955,9 @@ void TGContainer::PageDown(Bool_t select)
    }
 
    fe = FindFrame(x, y);
-   if (!fe || fe->fFrame->GetY()<fLastActiveEl->fFrame->GetY() )
+   if (!fe || fe->fFrame->GetY()<fLastActiveEl->fFrame->GetY() ) {
       fe = (TGFrameElement*)li->Last();
+   }
 
    if (!select) fSelected = 1;
 
@@ -1894,11 +1970,11 @@ void TGContainer::Home(Bool_t select)
 {
    // Move to upper-left corner of container.
 
-   TGFrameElement* fe = (TGFrameElement*)fList->First();
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
-   TGFrameElement* old = fLastActiveEl;
-   if (old) old->fFrame->Activate(kFALSE);
+   TGFrameElement *old = fLastActiveEl;
+   if (old) DeActivateItem(old);
 
    if (!select) fSelected = 1;
 
@@ -1911,11 +1987,11 @@ void TGContainer::End(Bool_t select)
 {
    // Move to the bottom-right corner of container.
 
-   TGFrameElement* fe = (TGFrameElement*)fList->Last();
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
-   TGFrameElement* old = fLastActiveEl;
-   if (old) old->fFrame->Activate(kFALSE);
+   TGFrameElement *old = fLastActiveEl;
+   if (old) DeActivateItem(old);
 
    if (!select) fSelected = 1;
 
@@ -1965,10 +2041,12 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
    fHScrollbar->Associate(this);
    fVScrollbar->Associate(this);
 
+   fVport->Move(fBorderWidth, fBorderWidth);
+
    SetWindowName();
+
    fVScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
    fHScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
-   //fEditDisabled = kEditDisableLayout;
 }
 
 //______________________________________________________________________________
@@ -1990,11 +2068,11 @@ void TGCanvas::MapSubwindows()
    if (fVScrollbar) fVScrollbar->MapSubwindows();
 
    if (fVport) {
-   TGFrame *container = fVport->GetContainer();
-   if (!container) {
-      Error("MapSubwindows", "no canvas container set yet");
-      return;
-   }
+      TGFrame *container = fVport->GetContainer();
+      if (!container) {
+         Error("MapSubwindows", "no canvas container set yet");
+         return;
+      }
       container->MapSubwindows();
       fVport->MapSubwindows();
       fVport->MapWindow();
@@ -2248,6 +2326,18 @@ void TGCanvas::SetScrolling(Int_t scrolling)
       fScrolling = scrolling;
       Layout();
    }
+}
+
+//______________________________________________________________________________
+void TGCanvas::ClearViewPort()
+{
+   // Clear view port and redraw content.
+
+   TGFrame *cont = GetContainer();
+   if (!cont) return;
+
+   gVirtualX->ClearArea(cont->GetId(), 0, 0, fVport->GetWidth(), fVport->GetHeight());
+   fClient->NeedRedraw(cont);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.33 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.34 2007/04/19 21:07:02 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@ class TGContainerKeyboardTimer;
 class TGContainerScrollTimer;
 class TGListView;
 class TGPicture;
+class TGRectangle;
 
 class TGContainer : public TGCompositeFrame {
 
@@ -69,12 +70,12 @@ protected:
    Bool_t             fScrolling;     // kTRUE - when scrolling is ON
    Int_t              fXDND, fYDND;
    Bool_t             fBdown;
+   TGRectangle        fExposedRegion; // exposed area
 
    static TGGC       *fgLineGC;
    static const TGGC &GetLineGC();
 
    virtual void DoRedraw();
-   virtual void ClearViewPort();
    virtual void ActivateItem(TGFrameElement* el);
    virtual void DeActivateItem(TGFrameElement* el);
    virtual void SearchPattern();
@@ -95,6 +96,7 @@ public:
    virtual ~TGContainer();
 
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual void ClearViewPort();
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void AdjustPosition();
    virtual void SetPagePosition(const TGPosition& pos);
@@ -105,10 +107,10 @@ public:
    virtual void RemoveItem(TGFrame *item);
    virtual void Layout();
 
-   const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
-   TGPosition        GetPagePosition() const;
-   TGDimension       GetPageDimension() const;
    TGCanvas         *GetCanvas() const { return fCanvas; }
+   const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
+   virtual TGPosition   GetPagePosition() const;
+   virtual TGDimension  GetPageDimension() const;
 
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
@@ -232,6 +234,7 @@ public:
    virtual void  MapSubwindows();
    virtual void  DrawBorder();
    virtual void  Layout();
+   virtual void  ClearViewPort();
    virtual Int_t GetHsbPosition() const;
    virtual Int_t GetVsbPosition() const;
    virtual void  SetHsbPosition(Int_t newPos);

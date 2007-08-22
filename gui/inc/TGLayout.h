@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.16 2006/11/10 10:47:10 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.17 2007/06/07 08:45:21 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -146,12 +146,18 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGLayoutManager : public TObject {
+protected:
+   Bool_t            fModified;// kTRUE if positions of subframes changed after layout
+
 public:
+   TGLayoutManager() : fModified(kTRUE) {}
+
    virtual void Layout() = 0;
    virtual TGDimension GetDefaultSize() const = 0;
    virtual void SetDefaultWidth(UInt_t /* w */) {}
    virtual void SetDefaultHeight(UInt_t /* h */) {}
-   virtual Bool_t IsModified() const { return kTRUE; }
+   virtual Bool_t IsModified() const { return fModified; }
+   virtual void   SetModified(Bool_t flag = kTRUE) { fModified = flag; }
 
    ClassDef(TGLayoutManager,0)  // Layout manager abstract base class
 };
@@ -284,6 +290,7 @@ protected:
    TGCompositeFrame *fMain;   // container frame
    TList            *fList;   // list of frames to arrange
    Bool_t            fModified;// layout changed
+
 
 public:
    TGTileLayout(TGCompositeFrame *main, Int_t sep = 0);

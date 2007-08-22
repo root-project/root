@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.25 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.26 2007/06/07 08:45:21 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -233,6 +233,8 @@ void TGVerticalLayout::Layout()
 
    if (!fList) return;
 
+   fModified = kFALSE;
+
    bottom = msize.fHeight - (top = bw);
    remain = msize.fHeight - (bw << 1);
 
@@ -325,6 +327,11 @@ void TGVerticalLayout::Layout()
             top += extra_space;
 
          ptr->fFrame->MoveResize(x, y, size.fWidth, size.fHeight);
+
+         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                    (ptr->fFrame->GetY() != y) ||
+                    (ptr->fFrame->GetWidth() != size.fWidth) ||
+                    (ptr->fFrame->GetHeight() != size.fHeight);
       }
    }
 }
@@ -384,6 +391,7 @@ void TGHorizontalLayout::Layout()
 
    if (!fList) return;
 
+   fModified = kFALSE;
    right  = msize.fWidth - (left = bw);
    remain = msize.fWidth - (bw << 1);
 
@@ -477,6 +485,11 @@ void TGHorizontalLayout::Layout()
             left += extra_space;
 
          ptr->fFrame->MoveResize(x, y, size.fWidth, size.fHeight);
+
+         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                    (ptr->fFrame->GetY() != y) ||
+                    (ptr->fFrame->GetWidth() != size.fWidth) ||
+                    (ptr->fFrame->GetHeight() != size.fHeight);
       }
    }
 }
@@ -522,12 +535,17 @@ void TGRowLayout::Layout()
    TGDimension     size;
    Int_t  bw = fMain->GetBorderWidth();
    Int_t  x = bw, y = bw;
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       if (ptr->fState & kIsVisible) {
          size = ptr->fFrame->GetDefaultSize();
          ptr->fFrame->Move(x, y);
+
+         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                    (ptr->fFrame->GetY() != y);
+
          ptr->fFrame->Layout();
          x += size.fWidth + fSep;
       }
@@ -574,12 +592,15 @@ void TGColumnLayout::Layout()
    TGDimension     size;
    Int_t  bw = fMain->GetBorderWidth();
    Int_t  x = bw, y = bw;
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       if (ptr->fState & kIsVisible) {
          size = ptr->fFrame->GetDefaultSize();
          ptr->fFrame->Move(x, y);
+         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                    (ptr->fFrame->GetY() != y);
          ptr->fFrame->Layout();
          y += size.fHeight + fSep;
       }
@@ -641,6 +662,7 @@ void TGMatrixLayout::Layout()
    Int_t bw = fMain->GetBorderWidth();
    Int_t x = fSep, y = fSep + bw;
    UInt_t rowcount = fRows, colcount = fColumns;
+   fModified = kFALSE;
 
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
@@ -652,6 +674,9 @@ void TGMatrixLayout::Layout()
    next.Reset();
    while ((ptr = (TGFrameElement *) next())) {
       ptr->fFrame->Move(x, y);
+      fModified = fModified || (ptr->fFrame->GetX() != x) || 
+                   (ptr->fFrame->GetY() != y);
+
       ptr->fFrame->Layout();
 
       if (fColumns == 0) {

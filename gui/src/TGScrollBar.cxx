@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.25 2007/05/04 15:14:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.26 2007/05/22 11:48:30 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -62,9 +62,13 @@ ClassImp(TGVScrollBar)
 class TSBRepeatTimer : public TTimer {
 private:
    TGScrollBar   *fScrollBar;   // scroll bar
+	Int_t 			fSmallInc;
 public:
-   TSBRepeatTimer(TGScrollBar *s, Long_t ms) : TTimer(ms, kTRUE) { fScrollBar = s; }
+   TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE) {
+		fScrollBar = s;  fSmallInc = inc;
+	}
    Bool_t Notify();
+	Int_t  GetSmallInc() const { return fSmallInc; }
 };
 
 //______________________________________________________________________________
@@ -345,10 +349,15 @@ void TGHScrollBar::Layout()
    // Layout and move horizontal scrollbar components.
 
    // Should also recalculate the slider size and range, etc.
-   fHead->MoveResize(0, 0, fgScrollBarWidth, fgScrollBarWidth);
-   fTail->MoveResize(fWidth-fgScrollBarWidth, 0, fgScrollBarWidth, fgScrollBarWidth);
+   fHead->Move(0, 0);
+   fHead->Resize(fgScrollBarWidth, fgScrollBarWidth);
+   fTail->Move(fWidth-fgScrollBarWidth, 0);
+   fTail->Resize(fgScrollBarWidth, fgScrollBarWidth);
 
-   if (fSlider->GetX() != fX0) fSlider->MoveResize(fX0, 0, 50, fgScrollBarWidth);
+   if (fSlider->GetX() != fX0) {
+      fSlider->Move(fX0, 0);
+      fSlider->Resize(50, fgScrollBarWidth);
+   }
 }
 
 //______________________________________________________________________________
@@ -406,7 +415,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       } else {
 
          if (!fRepeat)
-            fRepeat = new TSBRepeatTimer(this, 400); // 500
+            fRepeat = new TSBRepeatTimer(this, 400, fSmallInc); // 500
          fRepeat->Reset();
          gSystem->AddTimer(fRepeat);
          fSubw = subw;
@@ -454,10 +463,10 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       if (fRepeat) {
          fRepeat->Remove();
          fRepeat->SetTime(400);  // might have been shortened in HandleTimer()
+			fSmallInc = ((TSBRepeatTimer*)fRepeat)->GetSmallInc();
       }
 
       fDragging = kFALSE;
-      fSmallInc = 1;
 
       fPos = TMath::Max(fPos, 0);
       fPos = TMath::Min(fPos, fRange-fPsize);
@@ -513,7 +522,8 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
    fX0 = TMath::Max(fX0, fgScrollBarWidth);
    fX0 = TMath::Min(fX0, fgScrollBarWidth + fSliderRange);
 
-   fSlider->MoveResize(fX0, 0, fSliderSize, fgScrollBarWidth);
+   fSlider->Move(fX0, 0);
+   fSlider->Resize(fSliderSize, fgScrollBarWidth);
 
    //  fPos = (fX0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
@@ -538,7 +548,8 @@ void TGHScrollBar::SetPosition(Int_t pos)
    fX0 = TMath::Max(fX0, fgScrollBarWidth);
    fX0 = TMath::Min(fX0, fgScrollBarWidth + fSliderRange);
 
-   fSlider->MoveResize(fX0, 0, fSliderSize, fgScrollBarWidth);
+   fSlider->Move(fX0, 0);
+   fSlider->Resize(fSliderSize, fgScrollBarWidth);
 
    SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);
@@ -591,11 +602,15 @@ void TGVScrollBar::Layout()
    // Layout and move vertical scrollbar components.
 
    // Should recalculate fSliderSize, fSliderRange, fX0, fY0, etc. too...
+   fHead->Move(0, 0);
+   fHead->Resize(fgScrollBarWidth, fgScrollBarWidth);
+   fTail->Move(0, fHeight-fgScrollBarWidth);
+   fTail->Resize(fgScrollBarWidth, fgScrollBarWidth);
 
-   fHead->MoveResize(0, 0, fgScrollBarWidth, fgScrollBarWidth);
-   fTail->MoveResize(0, fHeight-fgScrollBarWidth, fgScrollBarWidth, fgScrollBarWidth);
-
-   if (fSlider->GetY() != fY0) fSlider->MoveResize(0, fY0, fgScrollBarWidth, 50);
+   if (fSlider->GetY() != fY0) {
+      fSlider->Move(0, fY0);
+      fSlider->Resize(fgScrollBarWidth, 50);
+   }
 }
 
 //______________________________________________________________________________
@@ -654,7 +669,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       } else {
 
          if (!fRepeat)
-            fRepeat = new TSBRepeatTimer(this, 400); // 500
+            fRepeat = new TSBRepeatTimer(this, 400, fSmallInc); // 500
          fRepeat->Reset();
          gSystem->AddTimer(fRepeat);
          fSubw = subw;
@@ -702,10 +717,10 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       if (fRepeat) {
          fRepeat->Remove();
          fRepeat->SetTime(400);  // might have been shortened in HandleTimer()
+         fSmallInc = ((TSBRepeatTimer*)fRepeat)->GetSmallInc();
       }
 
       fDragging = kFALSE;
-      fSmallInc = 1;
 
       fPos = TMath::Max(fPos, 0);
       fPos = TMath::Min(fPos, fRange-fPsize);
@@ -762,7 +777,8 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
    fY0 = TMath::Max(fY0, fgScrollBarWidth);
    fY0 = TMath::Min(fY0, fgScrollBarWidth + fSliderRange);
 
-   fSlider->MoveResize(0, fY0, fgScrollBarWidth, fSliderSize);
+   fSlider->Move(0, fY0);
+    fSlider->Resize(fgScrollBarWidth, fSliderSize);
 
    //  fPos = (fY0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
@@ -787,7 +803,8 @@ void TGVScrollBar::SetPosition(Int_t pos)
    fY0 = TMath::Max(fY0, fgScrollBarWidth);
    fY0 = TMath::Min(fY0, fgScrollBarWidth + fSliderRange);
 
-   fSlider->MoveResize(0, fY0, fgScrollBarWidth, fSliderSize);
+   fSlider->Move(0, fY0);
+   fSlider->Resize(fgScrollBarWidth, fSliderSize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.47 2007/05/03 15:01:59 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.49 2007/07/03 07:01:00 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -383,6 +383,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, ftmpWidth, fTHeight + 1);
          gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       }
+
       TGString tmpTGString(tmpString);
       tmpTGString.Draw(id, fNormGC, x+lx, y+ly + max_ascent);
    } else {
@@ -430,7 +431,7 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
 
-            if (x + lx < 0) continue; // out of left boundary or mess in name
+            //if (x + lx < 0) continue; // out of left boundary or mess in name
             TGString tmpTGString(tmpString);
             tmpTGString.Draw(id, fNormGC, x + lx, y + ly + max_ascent);
          }
@@ -868,12 +869,12 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         if (fMapSubwindows)
+         if (fMapSubwindows) {
             gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0,
                                      fYf-fY0);
+         }
       }
    }
-
 
    if (event->fType == kButtonRelease) {
       gVirtualX->SetInputFocus(fId);
@@ -896,7 +897,7 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
 }
 
 //______________________________________________________________________________
-TList* TGLVContainer::GetSelectedItems()
+TList *TGLVContainer::GetSelectedItems()
 {
    // Get list of selected items in container.
 
@@ -909,6 +910,159 @@ TList* TGLVContainer::GetSelectedItems()
          ret->Add(new TObjString(((TGLVEntry*)el->fFrame)->GetItemName()->GetString()));
       }
    }
+   return ret;
+}
+
+//______________________________________________________________________________
+void TGLVContainer::LineLeft(Bool_t select)
+{
+   // Move current position one column left.
+
+   TGPosition pos = GetPagePosition();
+   TGDimension dim = GetPageDimension();
+
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
+   if (!fe) return; // empty list
+
+   TGFrameElement *old = fLastActiveEl;
+
+   if (old) DeActivateItem(old);   //
+   else fLastActiveEl = fe;
+
+   TGFrameElement *la = fLastActiveEl;
+
+   TGDimension ms = fListView->GetMaxItemSize();
+   Int_t dx = ms.fWidth;
+   Int_t dy = ms.fHeight;
+   Int_t y = la->fFrame->GetY();
+   Int_t x = la->fFrame->GetX() - dx;
+
+   Int_t hw = pos.fX + dim.fWidth;
+
+   TGHScrollBar *hb = GetHScrollbar();
+   if (x<=0 && (hb && !hb->IsMapped())) { // move to previous line
+      x = hw;
+      y = y - la->fFrame->GetDefaultHeight() - dy;
+   }
+
+   fe = FindFrame(x, y);
+   if (!fe) fe = (TGFrameElement*)fList->First();
+
+   if (!select) fSelected=1;
+
+   ActivateItem(fe);
+   AdjustPosition();
+}
+
+//______________________________________________________________________________
+void TGLVContainer::LineRight(Bool_t select)
+{
+   // Move current position one column right.
+
+   TGPosition pos = GetPagePosition();
+   TGDimension dim = GetPageDimension();
+
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
+   if (!fe) return;
+
+   TGFrameElement *old = fLastActiveEl;
+
+   if (old) DeActivateItem(old);
+   else fLastActiveEl = (TGFrameElement*)fList->First();
+
+   TGDimension ms = fListView->GetMaxItemSize();
+   Int_t dx = ms.fWidth;
+   Int_t dy = ms.fHeight;
+
+   Int_t y = fLastActiveEl->fFrame->GetY();
+   Int_t x = fLastActiveEl->fFrame->GetX() + dx;
+
+   Int_t hw = pos.fX + dim.fWidth - dx;
+
+   TGHScrollBar *hb =  GetHScrollbar();
+   if (x >= hw && (hb && !hb->IsMapped())) { // move one line down
+      x = 0;
+      y = y + dy;
+   }
+
+   fe = FindFrame(x, y);
+   if (!fe) fe = (TGFrameElement*)fList->Last();
+   if (!select) fSelected = 1;
+
+   ActivateItem(fe);
+   AdjustPosition();
+}
+
+//______________________________________________________________________________
+void TGLVContainer::LineUp(Bool_t select)
+{
+   // Make current position first line in window by scrolling up.
+
+   TGFrameElement *fe = (TGFrameElement*)fList->First();
+   if (!fe) return;
+
+   TGFrameElement *old = fLastActiveEl;
+
+   if (old) {
+      DeActivateItem(old);
+   } else {
+      fLastActiveEl = (TGFrameElement*)fList->First();
+   }
+
+   TGDimension ms = fListView->GetMaxItemSize();
+   Int_t dy = ms.fHeight;
+
+   Int_t y = fLastActiveEl->fFrame->GetY() - dy;
+   Int_t x = fLastActiveEl->fFrame->GetX();
+
+   fe = FindFrame(x, y);
+   if (!fe) fe = (TGFrameElement*)fList->First();
+   if (fe->fFrame->GetY() > fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
+   if (!select) fSelected = 1;
+
+   ActivateItem(fe);
+   AdjustPosition();
+}
+
+//______________________________________________________________________________
+void TGLVContainer::LineDown(Bool_t select)
+{
+   // Move one line down.
+
+   TGFrameElement *fe = (TGFrameElement*)fList->Last();
+   if (!fe) return;
+
+   TGFrameElement *old = fLastActiveEl;
+
+   if (old) DeActivateItem(old);
+   else fLastActiveEl = (TGFrameElement*)fList->First();
+
+   TGDimension ms = fListView->GetMaxItemSize();
+   Int_t dy = ms.fHeight;
+
+   Int_t y = fLastActiveEl->fFrame->GetY() + dy;
+   Int_t x = fLastActiveEl->fFrame->GetX();
+
+   fe = FindFrame(x, y);
+   if (!fe) fe = (TGFrameElement*)fList->Last();
+   if (fe->fFrame->GetY() < fLastActiveEl->fFrame->GetY()) fe = fLastActiveEl;
+   if (!select) fSelected = 1;
+
+   ActivateItem(fe);
+   AdjustPosition();
+}
+
+
+//______________________________________________________________________________
+TGDimension TGLVContainer::GetPageDimension() const
+{
+   // Returns page dimension.
+
+   TGDimension ret;
+   if (!fViewPort) return ret;
+
+   ret.fWidth = fViewPort->GetWidth();
+   ret.fHeight = fViewPort->GetHeight();
    return ret;
 }
 
@@ -933,7 +1087,7 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
    if (fHScrollbar)
       fHScrollbar->Connect("PositionChanged(Int_t)", "TGListView",
                            this, "ScrollHeader(Int_t)");
-   fHeader = new TGHeaderFrame(this, 20, 20, kChildFrame | kFixedWidth);
+   fHeader = new TGHeaderFrame(fVport, 20, 20, kChildFrame | kFixedWidth);
 
    SetDefaultHeaders();
 }
@@ -1006,6 +1160,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fColHeader = new TGTextButton* [fNColumns];
    fColNames  = new TString [fNColumns];
    fSplitHeader = new TGVFileSplitter* [fNColumns];
+
    for (int i = 0; i < fNColumns; i++) {
       fColHeader[i] = 0;
       fJmode[i] = kTextLeft;
@@ -1150,6 +1305,8 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
       Error("SetDefaultColumnWidth", "no listview container set yet");
       return;
    }
+   container->ClearViewPort();
+
    for (int i = 0; i < fNColumns; ++i) {
       if ( fSplitHeader[i] == splitter ) {
          UInt_t w = fColHeader[i]->GetDefaultWidth() + 20;
@@ -1191,12 +1348,12 @@ void TGListView::Layout()
       Error("Layout", "no listview container set yet");
       return;
    }
+
    fMaxSize = container->GetMaxItemSize();
 
    if (fViewMode == kLVDetails) {
-
       h = fColHeader[0]->GetDefaultHeight()-4;
-      fHeader->MoveResize(fBorderWidth, fBorderWidth, fWidth-4, h);
+      fHeader->MoveResize(0, 0, fWidth, h);
       fHeader->MapWindow();
       for (i = 0; i < fNColumns-1; ++i) {
          fColHeader[i]->SetText(fColNames[i]);
@@ -1226,7 +1383,7 @@ void TGListView::Layout()
       }
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
-      fSplitHeader[i]->Move(fVport->GetWidth(),  fSplitHeader[i]->GetHeight());
+      fSplitHeader[i]->Move(fVport->GetWidth(), fSplitHeader[i]->GetHeight());
       fSplitHeader[i]->MapWindow();
       fVScrollbar->RaiseWindow();
 
@@ -1239,16 +1396,26 @@ void TGListView::Layout()
       }
       fHeader->UnmapWindow();
    }
-
    TGLayoutManager *lm = container->GetLayoutManager();
+
    lm->SetDefaultWidth(xl);
    TGCanvas::Layout();
-
+ 
    if (fViewMode == kLVDetails) {
+      if (fJustChanged) {
+         fVport->MoveResize(fBorderWidth, fBorderWidth,
+									 fVport->GetWidth(), fVport->GetHeight());
+			container->Move(0, h);
+         fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
+      } else {
+         container->DrawRegion(0, 0, fVport->GetWidth(), fVport->GetHeight());
+      }
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
-      fVport->MoveResize(fBorderWidth, fBorderWidth+h, fVport->GetWidth(),
-                         fVport->GetHeight()-h);
-      fVScrollbar->SetRange(container->GetHeight(), fVport->GetHeight());
+      fColHeader[i]->MapWindow();
+   } else {
+      fVport->MoveResize(fBorderWidth, fBorderWidth, 
+								 fVport->GetWidth(), fVport->GetHeight());
+		container->Move(0, 0);
    }
 
    fJustChanged = kFALSE;
@@ -1271,10 +1438,11 @@ void TGListView::LayoutHeader(TGFrame *head)
       return;
    }
    fMaxSize = container->GetMaxItemSize();
+	Int_t posx = container->GetPagePosition().fX;
 
    if (fViewMode == kLVDetails) {
       h = fColHeader[0]->GetDefaultHeight()-4;
-      fHeader->MoveResize(fBorderWidth, fBorderWidth, fWidth-4, h);
+      fHeader->MoveResize(0, 0, fWidth, h);
       fHeader->MapWindow();
       for (i = 0; i < fNColumns-1; ++i) {
          fColHeader[i]->SetText(fColNames[i]);
@@ -1296,22 +1464,23 @@ void TGListView::LayoutHeader(TGFrame *head)
          }
 
          if ((TGFrame *)fColHeader[i] == head) {
-            if (oldPos > 0)
+            if (oldPos > 0) {
                gVirtualX->DrawLine(container->GetId(), container->GetLineGC()(),
-                                   oldPos, 0, oldPos, container->GetHeight());
+                                   oldPos - posx, 0, oldPos - posx, fVport->GetHeight());
+            }
             gVirtualX->DrawLine(container->GetId(), container->GetLineGC()(),
-                                xl + w, 0, xl + w, container->GetHeight());
+                                xl + w - posx, 0, xl + w - posx, fVport->GetHeight());
             oldPos = xl + w;
          }
 
-         fColHeader[i]->MoveResize(xl, 0, w, h);
+         fColHeader[i]->MoveResize(xl - posx, 0, w, h);
          fColHeader[i]->MapWindow();
          xl += w;
          fSplitHeader[i]->Move(xl, 0);
          fSplitHeader[i]->MapWindow();
          fColumns[i] = xl-2;  // -2 is fSep in the layout routine
       }
-      fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
+      fColHeader[i]->MoveResize(xl - posx, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
       fSplitHeader[i]->Move(fVport->GetWidth(),  fSplitHeader[i]->GetHeight());
       fSplitHeader[i]->MapWindow();

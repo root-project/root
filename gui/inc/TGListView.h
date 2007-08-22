@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.33 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.34 2007/05/14 13:29:09 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -185,6 +185,7 @@ public:
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
    virtual void   SetIncrements(Int_t hInc, Int_t vInc);
    virtual void   SetDefaultColumnWidth(TGVFileSplitter* splitter);
+   TGDimension    GetMaxItemSize() const { return fMaxSize; }
 
    virtual void SelectionChanged() { Emit("SelectionChanged()"); }  //*SIGNAL*
    virtual void Clicked(TGLVEntry *entry, Int_t btn);  //*SIGNAL*
@@ -234,12 +235,17 @@ public:
    EListViewMode GetViewMode() const { return fViewMode; }
    virtual void  SetColumns(Int_t *cpos, Int_t *jmode);
 
+   virtual TGDimension GetPageDimension() const;
    virtual TGDimension GetMaxItemSize() const;
    virtual Int_t GetMaxSubnameWidth(Int_t idx) const;
    virtual void  SetColHeaders(const char* n1="",const char* n2="",const char* n3="",
                                const char* n4="",const char* n5="",const char* n6="",
                                const char* n7="",const char* n8="",const char* n9="",
                                const char* n10="",const char* n11="",const char* n12="");
+   virtual void LineUp(Bool_t select = kFALSE);
+   virtual void LineDown(Bool_t select = kFALSE);
+   virtual void LineLeft(Bool_t select = kFALSE);
+   virtual void LineRight(Bool_t select = kFALSE);
 
    virtual Bool_t HandleButton(Event_t* event);
    TList* GetSelectedItems();

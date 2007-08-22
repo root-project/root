@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.30 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.31 2007/03/08 11:47:30 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -163,14 +163,13 @@ protected:
    static const TGGC   &GetHighlightGC();
    static const TGGC   &GetColorGC();
 
-   virtual void DoRedraw();
-   void  Draw(Int_t yevent, Int_t hevent);
+   void  Draw(Handle_t id, Int_t yevent, Int_t hevent);
    void  Draw(Option_t * ="") { MayNotUse("Draw(Option_t*)"); }
-   Int_t DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xroot);
-   void  DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
+   Int_t DrawChildren(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y, Int_t xroot);
+   void  DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
                   UInt_t *retwidth, UInt_t *retheight);
-   void  DrawItemName(TGListTreeItem *item);
-   void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
+   void  DrawItemName(Handle_t id, TGListTreeItem *item);
+   void  DrawNode(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y);
    virtual void UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
    void  SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n);
@@ -212,7 +211,6 @@ public:
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleKey(Event_t *event);
