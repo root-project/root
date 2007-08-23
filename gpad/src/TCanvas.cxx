@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.127 2007/06/01 08:32:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.128 2007/06/08 06:10:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1629,6 +1629,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<endl;
    out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<endl;
 
+   if (gStyle->GetCanvasPreferGL())
+      out <<endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<endl<<endl;
+       
    //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
       out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
