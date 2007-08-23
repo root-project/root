@@ -1336,6 +1336,7 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
    fX = newX;
    fY = newY;
    fZ = newZ;
+   fSize = fNpoints;
    if (fHistogram) {delete fHistogram; fHistogram = 0;}
    return ipoint;
 }
