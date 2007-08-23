@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.7 2007/08/16 15:54:28 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.8 2007/08/17 08:23:03 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -72,7 +72,9 @@ The order in which the variables are drawn is essential to see the clusters. The
 <p>
 TParallelCoord can also be used to display a candle chart. In that mode, every variable is drawn in the same scale. The candle chart can be combined with the parallel coordinates mode, drawing the candle sticks over the axes.
 End_Html
+Begin_Macro(source)
 {
+   TCanvas *c1 = new TCanvas("c1");
    TFile *f = TFile::Open("$ROOTSYS/tutorials/tree/cernstaff.root");
    TTree *T = (TTree*)f->Get("T");
    T->Draw("Age:Grade:Step:Cost:Division:Nation","","para");
@@ -83,7 +85,7 @@ End_Html
    para->GetCurrentSelection()->SetLineColor(kViolet);
    TParallelCoordVar* age = (TParallelCoordVar*)para->GetVarList()->FindObject("Age");
    age->AddRange(new TParallelCoordRange(age,21,30));
-   gPad->Update();
+   return c1;
 }
 End_Macro
 Begin_Html
