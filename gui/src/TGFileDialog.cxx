@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.39 2007/06/07 13:25:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.40 2007/06/12 08:15:20 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -350,6 +350,10 @@ void TGFileDialog::CloseWindow()
    // Close file dialog.
 
    fFileInfo->fFilename = 0;
+   if (fFileInfo->fFileNamesList != 0) {
+      fFileInfo->fFileNamesList->Delete();
+      fFileInfo->fFileNamesList = 0;
+   }
    DeleteWindow();
 }
 
@@ -413,6 +417,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fFileInfo->fFilename = 0;
                      if (fFc->GetDisplayStat()) 
                         fFc->SetDisplayStat(kFALSE);
+                     if (fFileInfo->fFileNamesList != 0) {
+                        fFileInfo->fFileNamesList->Delete();
+                        fFileInfo->fFileNamesList = 0;
+                     }
                      DeleteWindow();
                      return kTRUE;   //no need to redraw fFc
                      break;
