@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.61 2007/08/21 09:54:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.62 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -425,9 +425,8 @@ Bool_t TGListTree::HandleButton(Event_t *event)
                return kTRUE;
             }
             if ((event->fX < maxx) && (event->fX > minx)) {
-               ClearViewPort();
                item->fOpen = !item->fOpen;
-               fClient->NeedRedraw(this);
+               ClearViewPort();
                return kTRUE;
             }
          }
@@ -2301,8 +2300,9 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
                                 fClient->GetPicture("unchecked_t.xpm"));
    }
 
-   if (redraw)
-      fClient->NeedRedraw(this);
+   if (redraw) {
+      ClearViewPort();
+   }
 }
 
 //______________________________________________________________________________
