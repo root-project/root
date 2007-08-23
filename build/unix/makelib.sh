@@ -45,7 +45,7 @@ EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
    if [ $LIB != "lib/libCint.$soext" ] && [ $LIB != "lib/libReflex.$soext" ]; then
       NEEDREFLEX=""
-      if [ "$(bin/root-config --dicttype)" != "cint" ]; then
+      if [ "`bin/root-config --dicttype`" != "cint" ]; then
           NEEDREFLEX="-lReflex"
           if [ $LIB != "lib/libCintex.$soext" ]; then
               NEEDREFLEX="-lCintex $NEEDREFLEX"
