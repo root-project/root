@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.36 2007/04/27 16:49:16 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.37 2007/08/09 08:33:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -131,9 +131,9 @@ public:
            Int_t     GetReadBasket()  const {return fReadBasket;}
            Long64_t  GetReadEntry()   const {return fReadEntry;}
            Int_t     GetWriteBasket() const {return fWriteBasket;}
-           Long64_t  GetTotalSize()   const;
-           Long64_t  GetTotBytes()    const {return fTotBytes;}
-           Long64_t  GetZipBytes()    const {return fZipBytes;}
+           Long64_t  GetTotalSize(Option_t *option="")   const;
+           Long64_t  GetTotBytes(Option_t *option="")    const;
+           Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}

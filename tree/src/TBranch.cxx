@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.132 2007/07/11 12:14:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.133 2007/08/09 08:33:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1266,16 +1266,51 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
 }
 
 //______________________________________________________________________________
-Long64_t TBranch::GetTotalSize() const
+Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
 {
    // Return total number of bytes in the branch (including current buffer)
-   // =====================================================================
 
    TBufferFile b(TBuffer::kWrite,10000);
    TBranch::Class()->WriteBuffer(b,(TBranch*)this);
    Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;
    return totbytes + b.Length();
+}
+
+//______________________________________________________________________________
+Long64_t TBranch::GetTotBytes(Option_t *option) const
+{
+   // Return total number of bytes in the branch (excluding current buffer)
+   // if option ="*" includes all sub-branches of this branch too
+
+   Long64_t totbytes = fTotBytes;
+   if (!option) return totbytes;
+   if (option[0] != '*') return totbytes;
+   //scan sub-branches
+   Int_t len = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < len; ++i) {
+      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      if (branch) totbytes += branch->GetTotBytes();
+   }
+   return totbytes;
+}
+
+//______________________________________________________________________________
+Long64_t TBranch::GetZipBytes(Option_t *option) const
+{
+   // Return total number of zip bytes in the branch
+   // if option ="*" includes all sub-branches of this branch too
+
+   Long64_t zipbytes = fZipBytes;
+   if (!option) return zipbytes;
+   if (option[0] != '*') return zipbytes;
+   //scan sub-branches
+   Int_t len = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < len; ++i) {
+      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      if (branch) zipbytes += branch->GetZipBytes();
+   }
+   return zipbytes;
 }
 
 //______________________________________________________________________________
