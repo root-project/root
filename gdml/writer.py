@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: writer.py,v 1.4 2006/07/10 16:06:09 brun Exp $
+# @(#)root/gdml:$Name:  $:$Id: writer.py,v 1.5 2007/01/23 15:20:15 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 # This is the application-independent part of the GDML 'writer' implementation.
 # It contains the 'writeFile' method (at the end of the file) which does the actual
@@ -127,7 +127,7 @@ class writer(object):
 	self.solids[2].append(['xtru',{'name':name, 'lunit':'cm'}, elems])
 
     def addEltube(self, name, x, y, z):
-        self.solids[2].append( ['eltube', {'name':name, 'x':x, 'y':y, 'z':z, 'lunit':'cm'},[]] )
+        self.solids[2].append( ['eltube', {'name':name, 'dx':x, 'dy':y, 'dz':z, 'lunit':'cm'},[]] )
 
     def addHype(self, name, rmin, rmax, inst, outst, z):
         self.solids[2].append( ['hype', {'name':name, 'rmin':rmin, 'rmax':rmax,

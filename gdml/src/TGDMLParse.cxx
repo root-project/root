@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.11 2007/01/23 15:20:15 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.12 2007/08/07 07:53:05 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -282,22 +282,23 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
 
 }
 
-//takes in a string containing a mathematical expression and
-//returns the result of the expression as a double.
-
+//____________________________________________________________
 double TGDMLParse::Evaluate(const char* evalline) {
 
-	char expression[256];
+   //takes in a string containing a mathematical expression and
+   //returns the result of the expression as a double.
 
-	SolveConst(expression,evalline);
+   char expression[256];
+
+   SolveConst(expression,evalline);
 	
-	TFormula form;
+   TFormula form;
 
-	form.Compile(expression);
+   form.Compile(expression);
  
-	double result = 0;
-	result = form.Eval(0);
-	return result;
+   double result = 0;
+   result = form.Eval(0);
+   return result;
 }
 
 //____________________________________________________________
@@ -380,48 +381,46 @@ const char* TGDMLParse::NameShortB(const char* name)
    return retname;   
 }
 
-// The following function finds and replaces the 
-// constants with its values in an expression.
-//
-void TGDMLParse::SolveConst(char *outStr,const char *inStr) {
+//_____________________________________________________________
+void TGDMLParse::SolveConst(char *outStr,const char *inStr)
+{
+   // The following function finds and replaces the 
+   // constants with its values in an expression.
 
-	const char *findStr = NULL;
-	const char *nameStr = NULL;
-	const char *valueStr = NULL;
-	int offset = 0;
+   const char *findStr = NULL;
+   const char *nameStr = NULL;
+   const char *valueStr = NULL;
+   int offset = 0;
 
-	char tempStr[256];
+   char tempStr[256];
 
-	bool isOtherFile = (strcmp(fCurrentFile,fStartFile)!=0);
+   bool isOtherFile = (strcmp(fCurrentFile,fStartFile)!=0);
 
-	strcpy(outStr,inStr);
+   strcpy(outStr,inStr);
 
-	bool isAnyReplaced;
+   bool isAnyReplaced;
 
-	do {
-		isAnyReplaced = false;
+   do {
+      isAnyReplaced = false;
 
-		for (ConMap::iterator iter=fconmap.begin();iter!=fconmap.end();iter++) { 	// Look up all the defined constants!
+      for (ConMap::iterator iter=fconmap.begin();iter!=fconmap.end();iter++) {     // Look up all the defined constants!
    
-   			nameStr = iter->first;							// Get name and value of constant
-			valueStr = iter->second;
+         nameStr = iter->first;                                                    // Get name and value of constant
+         valueStr = iter->second;
 
-			if (isOtherFile)							// The constant is in an other gdml file
-				nameStr = Form("%s_%s",nameStr,fCurrentFile);
+         if (isOtherFile) nameStr = Form("%s_%s",nameStr,fCurrentFile);
  	
-   			findStr = strstr(outStr,nameStr);					// Try to find constant by its name in the expression
-				   
-	      		if (findStr==0) continue;						// Skip if not found, otherwise replace
+         findStr = strstr(outStr,nameStr);                                         // Try to find constant by its name in the expression
+         
+	 if (findStr==0) continue;                                                 // Skip if not found, otherwise replace
 
-			strcpy(tempStr,outStr);							// We need a copy of the string
-			strcpy(outStr+offset,valueStr);						// Substitue value of the constant
-			strcpy(outStr+offset+strlen(valueStr),tempStr+offset+strlen(nameStr));	// Copy characters following the constant
+         strcpy(tempStr,outStr);                                                   // We need a copy of the string
+         strcpy(outStr+offset,valueStr);					   // Substitue value of the constant
+         strcpy(outStr+offset+strlen(valueStr),tempStr+offset+strlen(nameStr));	   // Copy characters following the constant
 	
-			isAnyReplaced = true;
-		}
-	} while (isAnyReplaced);								// The while loop is to solve recursion
-
-//	std::cout << "Before: " << inStr << " After: " << outStr << std::endl;
+         isAnyReplaced = true;
+      }
+   } while (isAnyReplaced);                                                        // The while loop is to solve recursion
 }
 
 //________________________________________________________
@@ -1350,9 +1349,9 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
    TGeoCompositeShape* boolean = 0;
 
    switch (num) {
-   case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,FirstMatrix,SecondMatrix)); break; // SUBTRACTION
-   case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,FirstMatrix,SecondMatrix)); break; // INTERSECTION 
-   case 3: boolean = new TGeoCompositeShape(NameShort(name),new TGeoUnion(first,second,FirstMatrix,SecondMatrix)); break; // UNION
+   case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,FirstMatrix,SecondMatrix)); break;      // SUBTRACTION
+   case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,FirstMatrix,SecondMatrix)); break;     // INTERSECTION 
+   case 3: boolean = new TGeoCompositeShape(NameShort(name),new TGeoUnion(first,second,FirstMatrix,SecondMatrix)); break;            // UNION
    default:
     break;
    }
@@ -3274,11 +3273,9 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       
       else if((strcmp(gdml->GetNodeName(child), "section")) == 0){
 
-         const char* zorderline = "";
          const char* zposline = "";
          const char* xoffline = "";
          const char* yoffline = "";
-         const char* scaleline = "";
          
          attr = gdml->GetFirstAttr(child);
          
@@ -3287,8 +3284,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
     
             if((strcmp(tempattr, "zOrder")) == 0) { 
                zorder = gdml->GetAttrValue(attr);
-               zorderline = Form("%s*%s", zorder, retlunit);
-               section[sect][0] = Evaluate(zorderline);
+               section[sect][0] = Evaluate(zorder);
             }
             else if(strcmp(tempattr, "zPosition") == 0){
                zpos = gdml->GetAttrValue(attr);
@@ -3307,8 +3303,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
             }
             else if (strcmp(tempattr, "scalingFactor") == 0){
                scale = gdml->GetAttrValue(attr);
-               scaleline = Form("%s*%s", scale, retlunit);
-               section[sect][4] = Evaluate(scaleline);
+               section[sect][4] = Evaluate(scale);
             }
        
             attr = gdml->GetNextAttr(attr);
