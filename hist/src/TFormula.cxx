@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.134 2007/03/09 08:19:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.135 2007/03/30 15:03:05 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #pragma optimize("",off)
 #endif
 
-static Int_t gMAXOP,gMAXPAR,gMAXCONST;
+static Int_t gMAXOP=1000,gMAXPAR=1000,gMAXCONST=1000;
 const Int_t  gMAXSTRINGFOUND = 10;
 const UInt_t kOptimizationError = BIT(19);
 
@@ -105,8 +105,13 @@ ClassImp(TFormula)
 //*-*   For more performant access to the information, see the implementation
 //*-*   TFormula::EvalPar
 //*-*
-//*-*     WHY TFormula CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
-//*-*     ====================================================
+//*-*   CHANGING DEFAULT SETTINGS
+//*-*   =========================
+//*-*   When creating complex formula , it may be necessary to increase
+//*-*   some default parameters. see static function TFormula::SetMaxima
+//*-*
+//*-*   WHY TFormula CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
+//*-*   ====================================================
 //*-* This is a frequently asked question.
 //*-* C++ is a strongly typed language. There is no way for TFormula (without
 //*-* recompiling this class) to know about all possible user defined data types.
@@ -2054,11 +2059,7 @@ Int_t TFormula::Compile(const char *expression)
       ProcessLinear(chaine);
    }
 
-
-   gMAXOP   = 1000;
-   gMAXPAR  = 1000;
-   gMAXCONST= 1000;
-
+     // see static function SetMaxima to change the gMAX.. default values
    fExpr   = new TString[gMAXOP];
    fConst  = new Double_t[gMAXCONST];
    fParams = new Double_t[gMAXPAR];
@@ -4189,3 +4190,23 @@ Int_t TFormula::PreCompile()
 
 
 }
+
+
+//______________________________________________________________________________
+void TFormula::SetMaxima(Int_t maxop, Int_t maxpar, Int_t maxconst)
+{
+   // static function to set the maximum value of 3 parameters
+   //  -maxop    : maximum number of operations
+   //  -maxpar   : maximum number of parameters
+   //  -maxconst : maximum number of constants
+   // None of these parameters cannot be less than 10 (default is 1000)
+   // call this function to increase one or all maxima when processing
+   // very complex formula, eg TFormula::SetMaxima(100000,1000,1000000);
+   // If you process many functions with a small number of operations/parameters
+   // you may gain some memory and performance by decreasing these values.
+   
+   gMAXOP    = TMath::Max(10,maxop);
+   gMAXPAR   = TMath::Max(10,maxpar);
+   gMAXCONST = TMath::Max(10,maxconst);
+}   
+   

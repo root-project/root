@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.32 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.33 2006/09/15 12:33:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -254,6 +254,8 @@ public:
                                    *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
    virtual void        Update() {;}
 
+   static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
+   
    ClassDef(TFormula,7)  //The formula base class  f(x,y,z,par)
 };
 
