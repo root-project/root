@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.56 2007/05/31 15:58:45 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.57 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -773,31 +773,31 @@ void TGContainer::DoRedraw()
 void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Draw a region of container in viewport.
-	// x, y, w, h are position and dimension of area to be 
-	// redrawn in viewport coordinates.
+   // x, y, w, h are position and dimension of area to be 
+   // redrawn in viewport coordinates.
 
    static GContext_t gcBg = 0;
    Pixmap_t pixmap = 0;
 
-	if (!fMapSubwindows) {
-		pixmap = gVirtualX->CreatePixmap(fId, w, h);
+   if (!fMapSubwindows) {
+      pixmap = gVirtualX->CreatePixmap(fId, w, h);
 
-   	if (!gcBg) {
-      	GCValues_t gcValues;
-      	gcValues.fForeground = fBackground;
-      	gcValues.fForeground = fBackground;
-      	gcValues.fGraphicsExposures = kTRUE;
-      	gcValues.fMask = kGCForeground | kGCBackground | kGCGraphicsExposures;
-      	gcBg = gVirtualX->CreateGC(fId, &gcValues);
-   	}
+      if (!gcBg) {
+         GCValues_t gcValues;
+         gcValues.fForeground = fBackground;
+         gcValues.fForeground = fBackground;
+         gcValues.fGraphicsExposures = kTRUE;
+         gcValues.fMask = kGCForeground | kGCBackground | kGCGraphicsExposures;
+         gcBg = gVirtualX->CreateGC(fId, &gcValues);
+      }
 
-		gVirtualX->SetForeground(gcBg, fBackground);
-  		gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, w, h);
-	}
+      gVirtualX->SetForeground(gcBg, fBackground);
+      gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, w, h);
+   }
 
-	TGPosition pos = GetPagePosition();
+   TGPosition pos = GetPagePosition();
 
-	// translate coordinates in viewport into coordinates in container 
+   // translate coordinates in viewport into coordinates in container 
    Int_t xx = pos.fX + x;
    Int_t yy = pos.fY + y;
 
@@ -812,20 +812,20 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
          // draw either in container window or in double-buffer
          if (!fMapSubwindows) {
-				Int_t fx = el->fFrame->GetX() - xx;
-				Int_t fy = el->fFrame->GetY() - yy;
+            Int_t fx = el->fFrame->GetX() - xx;
+            Int_t fy = el->fFrame->GetY() - yy;
             el->fFrame->DrawCopy(pixmap, fx, fy);
          } else {
             fClient->NeedRedraw(el->fFrame);
          }
       }
-	}
+   }
 
-	if (fMapSubwindows) return;
+   if (fMapSubwindows) return;
 
-	gVirtualX->CopyArea(pixmap, fId, gcBg, 0, 0, w, h, x, y);
-	gVirtualX->DeletePixmap(pixmap);
- 	gVirtualX->Update(kFALSE);
+   gVirtualX->CopyArea(pixmap, fId, gcBg, 0, 0, w, h, x, y);
+   gVirtualX->DeletePixmap(pixmap);
+   gVirtualX->Update(kFALSE);
 }
 
 //______________________________________________________________________________

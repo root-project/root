@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.62 2007/08/22 08:50:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.63 2007/08/23 13:56:19 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -251,7 +251,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fMargin   = 2;
 
    fColorMode = kDefault;
-	if (fCanvas) fCanvas->GetVScrollbar()->SetSmallIncrement(20);
+   if (fCanvas) fCanvas->GetVScrollbar()->SetSmallIncrement(20);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask,
@@ -1007,14 +1007,14 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
 
    gVirtualX->SetForeground(gcBg, fBackground);
   	gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, fViewPort->GetWidth(),
-                            fViewPort->GetHeight());
+   fViewPort->GetHeight());
 
    Draw(pixmap, 0, fViewPort->GetHeight());
 
-	gVirtualX->CopyArea(pixmap, fId, gcBg, 0, y, fViewPort->GetWidth(), h, 0, y);
+   gVirtualX->CopyArea(pixmap, fId, gcBg, 0, y, fViewPort->GetWidth(), h, 0, y);
 
-	gVirtualX->DeletePixmap(pixmap);
- 	gVirtualX->Update(kFALSE);
+   gVirtualX->DeletePixmap(pixmap);
+   gVirtualX->Update(kFALSE);
 }
 
 //______________________________________________________________________________

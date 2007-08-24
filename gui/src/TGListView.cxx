@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.49 2007/07/03 07:01:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.50 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -1404,8 +1404,8 @@ void TGListView::Layout()
    if (fViewMode == kLVDetails) {
       if (fJustChanged) {
          fVport->MoveResize(fBorderWidth, fBorderWidth,
-									 fVport->GetWidth(), fVport->GetHeight());
-			container->Move(0, h);
+         fVport->GetWidth(), fVport->GetHeight());
+         container->Move(0, h);
          fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
       } else {
          container->DrawRegion(0, 0, fVport->GetWidth(), fVport->GetHeight());
@@ -1414,8 +1414,8 @@ void TGListView::Layout()
       fColHeader[i]->MapWindow();
    } else {
       fVport->MoveResize(fBorderWidth, fBorderWidth, 
-								 fVport->GetWidth(), fVport->GetHeight());
-		container->Move(0, 0);
+      fVport->GetWidth(), fVport->GetHeight());
+      container->Move(0, 0);
    }
 
    fJustChanged = kFALSE;
@@ -1438,7 +1438,7 @@ void TGListView::LayoutHeader(TGFrame *head)
       return;
    }
    fMaxSize = container->GetMaxItemSize();
-	Int_t posx = container->GetPagePosition().fX;
+   Int_t posx = container->GetPagePosition().fX;
 
    if (fViewMode == kLVDetails) {
       h = fColHeader[0]->GetDefaultHeight()-4;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.26 2007/05/22 11:48:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.27 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -62,13 +62,13 @@ ClassImp(TGVScrollBar)
 class TSBRepeatTimer : public TTimer {
 private:
    TGScrollBar   *fScrollBar;   // scroll bar
-	Int_t 			fSmallInc;
+   Int_t 			      fSmallInc;    // step
 public:
-   TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE) {
-		fScrollBar = s;  fSmallInc = inc;
-	}
+   TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE) 
+      { fScrollBar = s;  fSmallInc = inc; }
+      
    Bool_t Notify();
-	Int_t  GetSmallInc() const { return fSmallInc; }
+   Int_t  GetSmallInc() const { return fSmallInc; }
 };
 
 //______________________________________________________________________________
@@ -463,7 +463,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       if (fRepeat) {
          fRepeat->Remove();
          fRepeat->SetTime(400);  // might have been shortened in HandleTimer()
-			fSmallInc = ((TSBRepeatTimer*)fRepeat)->GetSmallInc();
+         fSmallInc = ((TSBRepeatTimer*)fRepeat)->GetSmallInc();
       }
 
       fDragging = kFALSE;
@@ -778,7 +778,7 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
    fY0 = TMath::Min(fY0, fgScrollBarWidth + fSliderRange);
 
    fSlider->Move(0, fY0);
-    fSlider->Resize(fgScrollBarWidth, fSliderSize);
+   fSlider->Resize(fgScrollBarWidth, fSliderSize);
 
    //  fPos = (fY0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
