@@ -6451,6 +6451,17 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    char *buf;
    int sz;
+
+   UInt_t w = GetWidth();
+   UInt_t h = GetHeight();
+
+   if (w > 500) { // workarond CINT limitations
+      w = 500;
+      Double_t scale = 500./GetWidth();
+      h = TMath::Nint(GetHeight()*scale);
+      Scale(w, h);
+   }   
+
    GetImageBuffer(&buf, &sz, TImage::kXpm);
 
    TString name = GetName();
@@ -6464,7 +6475,7 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << endl << str << endl << endl;
    out << "   TImage *";
    out << name << " = TImage::Create();" << endl;
-   out << "   " << name << "->SetImageBuffer((char**)&" << xpm << ", TImage::kXpm);" << endl;
+   out << "   " << name << "->SetImageBuffer(" << xpm << ", TImage::kXpm);" << endl;
    out << "   " << name << "->Draw();" << endl;
 }
 
