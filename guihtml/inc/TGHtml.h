@@ -1,4 +1,4 @@
-// $Id$
+// $Id: TGHtml.h,v 1.1 2007/05/04 17:07:01 brun Exp $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -169,11 +169,11 @@ struct SHtmlStyle {
 
 #define N_FONT_FAMILY     8
 #define N_FONT_SIZE       7
-#define N_FONT            ((N_FONT_FAMILY << 3) | N_FONT_SIZE)
+#define N_FONT            71
 #define NormalFont(X)     (X)
-#define BoldFont(X)       ((X) | (1 << 3))
-#define ItalicFont(X)     ((X) | (2 << 3))
-#define CWFont(X)         ((X) | (4 << 3))
+#define BoldFont(X)       ((X) | 8)
+#define ItalicFont(X)     ((X) | 16)
+#define CWFont(X)         ((X) | 32)
 #define FontSize(X)       ((X) & 007)
 #define FontFamily(X)     ((X) & 070)
 #define FONT_Any          -1
