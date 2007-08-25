@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.8 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.9 2007/05/22 13:35:16 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,13 +12,17 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.8 2006/11/10 11:04:42 moneta Exp $
+// Last update: $Id: PositionVector3D.h,v 1.9 2007/05/22 13:35:16 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd 
 #include "Math/GenVector/DisplacementVector3Dfwd.h"
+#endif
+
+#ifndef ROOT_Math_GenVector_Cartesian3D 
+#include "Math/GenVector/Cartesian3D.h"
 #endif
 
 #ifndef ROOT_Math_GenVector_GenVectorIO
