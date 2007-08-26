@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.14 2006/10/07 18:01:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.15 2007/08/21 13:12:19 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -133,10 +133,10 @@ const char *TRegexp::MakeWildcard(const char *re)
    // a general regular expression used for pattern matching.
    // When using wildcards the regular expression is assumed to be
    // preceded by a "^" (BOL) and terminated by a "$" (EOL). Also, all
-   // "*"'s (closures) are assumed to be preceded by a "." (i.e. any character,
-   // except "/"'s) and all .'s are escaped (so *.ps is different from *.eps).
-   // The special treatment of "/" allows the easy matching of pathnames, e.g.
-   // "*.root" will match "aap.root", but not "pipo/aap.root".
+   // "*"'s and "?"'s (closures) are assumed to be preceded by a "." (i.e. any
+   // character, except "/"'s) and all .'s are escaped (so *.ps is different
+   // from *.eps). The special treatment of "/" allows the easy matching of
+   // pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
 
    static char buf[fgMaxpat];
    char *s = buf;
@@ -148,7 +148,7 @@ const char *TRegexp::MakeWildcard(const char *re)
    for (int i = 0; i < len; i++) {
       if (i == 0 && re[i] != '^')
          *s++ = '^';
-      if (re[i] == '*') {
+      if (re[i] == '*' || re[i] == '?') {
 #ifndef R__WIN32
          //const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
          const char *wc = "[^/]";
