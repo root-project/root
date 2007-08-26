@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.9 2007/06/08 09:45:02 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.10 2007/07/03 13:02:13 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -339,9 +339,9 @@ TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
       return 0;
    }
 
-   PGSQL_STMT *stmt = new PGSQL_STMT;
+   PgSQL_Stmt_t *stmt = new PgSQL_Stmt_t;
    if (!stmt){
-      SetError(-1, "cannot allocate PGSQL_STMT", "Statement");
+      SetError(-1, "cannot allocate PgSQL_Stmt_t", "Statement");
       return 0;
    }
    stmt->fConn = fPgSQL;

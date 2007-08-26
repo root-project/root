@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.2 2007/06/06 11:12:28 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.3 2007/06/08 09:45:02 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -36,9 +36,8 @@ struct PGresult;
 #endif
 
 
-typedef char pg_bool;
 
-struct PGSQL_STMT {
+struct PgSQL_Stmt_t {
    PGconn   *fConn;
    PGresult *fRes;
 };
@@ -47,7 +46,7 @@ struct PGSQL_STMT {
 class TPgSQLStatement : public TSQLStatement {
 
 private:
-   PGSQL_STMT           *fStmt;          //! executed statement
+   PgSQL_Stmt_t         *fStmt;          //! executed statement
    Int_t                 fNumBuffers;    //! number of statement parameters
    char                **fBind;          //! array of data for input
    char                **fFieldName;     //! array of column names
@@ -70,7 +69,7 @@ private:
    void        SetBuffersNumber(Int_t n);
 
 public:
-   TPgSQLStatement(PGSQL_STMT* stmt, Bool_t errout = kTRUE);
+   TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout = kTRUE);
    virtual ~TPgSQLStatement();
 
    virtual void        Close(Option_t * = "");

@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLStatement.cxx,v 1.1 2007/06/06 10:51:56 rdm Exp $
+// @(#)root/pgsql:$Name:  $:$Id: TPgSQLStatement.cxx,v 1.2 2007/06/08 09:45:02 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -29,7 +29,7 @@ ClassImp(TPgSQLStatement)
 #ifdef PG_VERSION_NUM
 
 //______________________________________________________________________________
-TPgSQLStatement::TPgSQLStatement(PGSQL_STMT* stmt, Bool_t errout):
+TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    TSQLStatement(errout),
    fStmt(stmt),
    fNumBuffers(0),
@@ -527,7 +527,7 @@ Bool_t TPgSQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
    // Set parameter value as unsinged integer.
 
-   sprintf(fBind[npar],"%d",value);
+   sprintf(fBind[npar],"%u",value);
 
    return kTRUE;
 }
@@ -547,7 +547,7 @@ Bool_t TPgSQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
    // Set parameter value as 64-bit integer.
 
-   sprintf(fBind[npar],"%ld",(long)value);
+   sprintf(fBind[npar],"%lld",(Long64_t)value);
 
    return kTRUE;
 }
@@ -557,7 +557,7 @@ Bool_t TPgSQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
    // Set parameter value as unsinged 64-bit integer.
 
-   sprintf(fBind[npar],"%lu",(unsigned long)value);
+   sprintf(fBind[npar],"%llu",(ULong64_t)value);
 
    return kTRUE;
 }
@@ -646,7 +646,7 @@ Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t 
 #else
 
 //______________________________________________________________________________
-TPgSQLStatement::TPgSQLStatement(PGSQL_STMT*, Bool_t)
+TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t*, Bool_t)
 {
    // Normal constructor.
    // For PgSQL version < 8.2 no statement is supported.
