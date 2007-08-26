@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.41 2007/03/22 14:58:45 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.42 2007/03/30 16:12:09 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // The ROOT graphics editor can be activated by selecting 'Editor'      //
 // from the View canvas menu, or SetLine/Fill/Text/MarkerAttributes     //
 // from the context menu. The algorithm in use is simple: according to  //
-// the selected object <obj> in the canvas it looks for a class name    // 
+// the selected object <obj> in the canvas it looks for a class name    //
 // <obj>Editor. If a class with this name exists, the editor verifies   //
 // that this class derives from the base editor class TGedFrame.        //
 // It makes an instance of the object editor, scans all object base     //
@@ -40,7 +40,7 @@
 //                                                                      //
 // Any created canvas will be shown with the editor if you have a       //
 // .rootrc file in your working directory containing the the line:      //
-// Canvas.ShowEditor:      true                                         // 
+// Canvas.ShowEditor:      true                                         //
 //                                                                      //
 // An created object can be set as selected in a macro by:              //
 // canvas->Selected(parent_pad_of_object, object, 1);                   //
@@ -54,7 +54,7 @@
 //End_Html
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGedEditor.h" 
+#include "TGedEditor.h"
 #include "TCanvas.h"
 #include "TGCanvas.h"
 #include "TGTab.h"
@@ -70,7 +70,7 @@ public:
    TGTabElement      *fElement;
    TGCompositeFrame  *fContainer;
 
-   TGedTabInfo(TGTabElement* el, TGCompositeFrame* f) : 
+   TGedTabInfo(TGTabElement* el, TGCompositeFrame* f) :
       fElement(el), fContainer(f) {}
 };
 
@@ -83,7 +83,7 @@ TGedEditor* TGedEditor::fgFrameCreator = 0;
 TGedEditor* TGedEditor::GetFrameCreator()
 {
    // Returns TGedEditor that currently creates TGedFrames.
-   
+
    return fgFrameCreator;
 }
 
@@ -91,7 +91,7 @@ TGedEditor* TGedEditor::GetFrameCreator()
 void TGedEditor::SetFrameCreator(TGedEditor* e)
 {
    // Set the TGedEditor that currently creates TGedFrames.
-   
+
    fgFrameCreator = e;
 }
 
@@ -109,7 +109,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 {
    // Constructor of graphics editor.
 
-   fCan = new TGCanvas(this, 170, 10, kFixedWidth); 
+   fCan = new TGCanvas(this, 170, 10, kFixedWidth);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    fTab = new TGTab(fCan->GetViewPort(), 10, 10);
@@ -145,7 +145,7 @@ TGedEditor::~TGedEditor()
 
    if(fGlobal){
       TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
-      TQObject::Disconnect("TCanvas", "Closed()"); 
+      TQObject::Disconnect("TCanvas", "Closed()");
    }
 
    // delete class editors
@@ -186,7 +186,7 @@ void TGedEditor::Update(TGedFrame* /*frame*/)
 TGCompositeFrame* TGedEditor::GetEditorTab(const Text_t* name)
 {
    // Find or create tab with name.
-   
+
    return GetEditorTabInfo(name)->fContainer;
 }
 
@@ -236,7 +236,7 @@ void TGedEditor::CloseWindow()
 
 //______________________________________________________________________________
 void TGedEditor::ReinitWorkspace()
-{  
+{
    // Clears windows in editor tab.
    // Unmap and withdraw currently shown frames and thus prepare for
    // construction of a new class layout or destruction.
@@ -272,8 +272,8 @@ void TGedEditor::SetGlobal(Bool_t global)
    fGlobal = global;
    if (fGlobal) {
       TQObject::Connect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)",
-                        "TGedEditor", this, "GlobalSetModel(TVirtualPad *, TObject *, Int_t)"); 
-       
+                        "TGedEditor", this, "GlobalSetModel(TVirtualPad *, TObject *, Int_t)");
+
       TQObject::Connect("TCanvas", "Closed()",
                         "TGedEditor", this, "GlobalClosed()");
    }
@@ -293,7 +293,7 @@ void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * obj, Int_t ev)
 {
    // Set canvas to global editor.
 
-   if ((ev != kButton1Down) || !IsMapped() || 
+   if ((ev != kButton1Down) || !IsMapped() ||
        (obj && obj->InheritsFrom("TColorWheel")))
       return;
 
@@ -350,7 +350,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
- 
+
    fPad = pad;
    if (obj == 0) obj = fPad;
 
@@ -388,7 +388,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
          while ((ti = (TGedTabInfo *) next())) {
             fTab->AddFrame(ti->fElement,0);
             fTab->AddFrame(ti->fContainer,0);
-         }  
+         }
       }
       ConfigureGedFrames(kTRUE);
    } else {
@@ -404,7 +404,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
       }
       if (seltab == 0 || fTab->SetTab(seltab->GetString(), kFALSE) == kFALSE)
          fTab->SetTab(0, kFALSE);
-   } 
+   }
 
    if (fGlobal)
       Layout();
@@ -434,7 +434,7 @@ void TGedEditor::Show()
       UInt_t ch = fCanvas->GetWindowHeight();
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
       UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
-      if (!ch) 
+      if (!ch)
          cy = cy + 20;      // embeded canvas protection
 
       Int_t gedx = 0, gedy = 0;
@@ -479,7 +479,7 @@ void TGedEditor::RecursiveRemove(TObject* obj)
 {
    // Remove references to fModel in case the fModel is being deleted.
    // Deactivate attribute frames if they point to obj.
-  
+
    if (obj == fPad) {
       // printf("TGedEditor::RecursiveRemove: %s - pad deleted.\n", locglob);
       SetModel(fCanvas, fCanvas, kButton1Down);
@@ -496,7 +496,7 @@ void TGedEditor::RecursiveRemove(TObject* obj)
 //______________________________________________________________________________
 void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
 {
-   // Searches for GedFrames for given class. In recursive mode look for class 
+   // Searches for GedFrames for given class. In recursive mode look for class
    // editor in its list of bases.
 
    TPair     *pair = (TPair*) fFrameMap.FindObject(cl);
@@ -544,7 +544,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
          }
          InsertGedFrame(frame);
       }
-   }    
+   }
 
    if (recurse && !exclbases) {
       if (frame)
@@ -576,9 +576,9 @@ void  TGedEditor::ExcludeClassEditor(TClass* cl, Bool_t recurse)
    TPair* pair = (TPair*) fExclMap.FindObject(cl);
    if (pair) {
       if (recurse && pair->Value() == 0)
-         pair->SetValue((TObject*)1); // hack, reuse TObject as Bool_t
+         pair->SetValue((TObject*)(Long_t)1); // hack, reuse TObject as Bool_t
    } else {
-      fExclMap.Add(cl, (TObject*)(recurse ? 1 : 0));
+      fExclMap.Add(cl, (TObject*)(Long_t)(recurse ? 1 : 0));
    }
 }
 

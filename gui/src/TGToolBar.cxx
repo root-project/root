@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.19 2006/04/06 11:15:38 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -163,7 +163,7 @@ TGButton *TGToolBar::GetButton(Int_t id) const
 }
 
 //______________________________________________________________________________
-void TGToolBar::SetId(TGButton *button, Int_t id)
+void TGToolBar::SetId(TGButton *button, Long_t id)
 {
    // changes id for button.
 
@@ -174,16 +174,16 @@ void TGToolBar::SetId(TGButton *button, Int_t id)
 }
 
 //______________________________________________________________________________
-Int_t TGToolBar::GetId(TGButton *button) const
+Long_t TGToolBar::GetId(TGButton *button) const
 {
    // Finds and returns the id of the button.
    // Returns -1 if the button is not a member of this group.
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a)
-      return (Int_t)Long_t(a->Value());
+      return Long_t(a->Value());
    else
-      return -1;
+      return Long_t(-1);
 }
 
 //______________________________________________________________________________
