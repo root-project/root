@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.13 2007/05/03 08:15:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.14 2007/07/26 13:28:09 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    Int_t        GetYear() const { return (fDatime>>26) + 1995; }
    Int_t        GetMonth() const { return (fDatime<<6)>>28; }
    Int_t        GetDay() const { return (fDatime<<10)>>27; }
+   Int_t        GetDayOfWeek() const;
    Int_t        GetHour() const { return (fDatime<<15)>>27; }
    Int_t        GetMinute() const { return (fDatime<<20)>>26; }
    Int_t        GetSecond() const { return (fDatime<<26)>>26; }

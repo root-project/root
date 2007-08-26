@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.14 2007/05/03 08:15:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.15 2007/07/26 13:28:10 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -40,6 +40,8 @@
 #include "TDatime.h"
 #include "TError.h"
 #include "Bytes.h"
+#include "TString.h"
+
 
 ClassImp(TDatime)
 
@@ -77,6 +79,21 @@ TDatime::TDatime(const char *sqlDateTime)
    // yyyy-mm-dd hh:mm:ss.
 
    Set(sqlDateTime);
+}
+
+//______________________________________________________________________________
+Int_t TDatime::GetDayOfWeek() const
+{
+   // Returns day of week, with Monday being day 1 and Sunday day 7.
+
+   static TString weekDays[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+   TString wd = AsString();
+   int  day;
+   for (day = 0; day < 7; day++) {
+      if (wd(0, 3) == weekDays[day])
+         break;
+   }
+   return (day < 7) ? day+1: -1;
 }
 
 //______________________________________________________________________________
