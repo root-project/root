@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.350 2007/07/31 21:10:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.351 2007/08/17 09:12:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2299,6 +2299,8 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 //  It is the user's responsability to delete this histogram.
 //  The kCanDelete bit is set for the returned object. If a pad containing
 //  this copy is cleared, the histogram will be automatically deleted.
+//  See also remark about calling Sumw2 before scaling a histogram to get
+//  a correct computation of the error bars.
 //
 //     See Draw for the list of options
 //
