@@ -1853,24 +1853,24 @@ if test ! "x$enable_qt" = "xno" || \
     qtlib=$found_lib
     qtlibdir=$found_dir
    else
-     check_library "libQtCore QtCore" "$enable_shared" \
+     check_library "libQtCore QtCore QtCore4" "$enable_shared" \
          "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
          /usr/lib /usr/qt/lib
      qtlib=$found_lib
      qtlibdir=$found_dir
-     check_library "libQtGui QtGui" "$enable_shared" \
+     check_library "libQtGui QtGui QtGui4" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
-     check_library "libQt3Support Qt3Support" "$enable_shared" \
+     check_library "libQt3Support Qt3Support Qt3Support4" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
-     check_library "libQtOpenGL QtOpenGL" "$enable_shared" \
+     check_library "libQtOpenGL QtOpenGL QtOpenGL4" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
-     check_library "libQtSvg QtSvg" "$enable_shared" \
+     check_library "libQtSvg QtSvg QtSvg4" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
-     check_library "libQtXml QtXml" "$enable_shared" \
+     check_library "libQtXml QtXml QtXml4" "$enable_shared" \
          "$found_raw_dir"  ""
      qtlib="$qtlib $found_lib"
    fi
@@ -1913,7 +1913,11 @@ if test ! "x$enable_qt" = "xno" || \
    else
 	  qtverneed="4.3.0"
 	  qttoonew="5.0.0"
-     qttestdir=$qtmainincdir/Qt
+     if test "x$platform" = xwin32 ; then
+        qttestdir=$qtmainincdir/../src/corelib/global
+     else
+        qttestdir=$qtmainincdir/Qt
+     fi
    fi
         message "Checking whether $qtverneed <= Qt version < $qttoonew under $qttestdir/qglobal.h "
 	logmsg "grep '# *define *QT_VERSION_STR *' $qttestdir/qglobal.h"
