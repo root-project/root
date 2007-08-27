@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.12 2007/05/06 08:04:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.cxx,v 1.13 2007/07/05 13:29:55 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -1674,6 +1674,12 @@ TGFont *TGFontPool::GetFont(FontStruct_t fs)
 TGFont *TGFontPool::GetFont(const char *family, Int_t ptsize, Int_t weight, Int_t slant)
 {
    // Returns font specified bay family, pixel/point size, weight and slant
+   //  negative value of ptsize means size in pixels
+   //  positive value of ptsize means size in points
+   //
+   //  For example:
+   //    TGFont *font = fpool->GetFont("helvetica", -9, kFontWeightNormal, kFontSlantRoman);
+   //    font->Print();
 
    char *s;
    TString tmp;

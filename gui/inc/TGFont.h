@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.11 2007/07/04 09:05:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.12 2007/07/05 13:29:54 rdm Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -46,18 +46,22 @@ enum ETextLayoutFlags {
    kTextIgnoreNewlines = BIT(4)
 };
 
-enum EFontWeight { kFontWeightNormal = 0,
-                   kFontWeightMedium = 0,
-                   kFontWeightBold = 1,
-                   kFontWeightLight = 2,
-                   kFontWeightDemibold = 3,
-                   kFontWeightBlack = 4,
-                   kFontWeightUnknown = -1 };
+enum EFontWeight {
+   kFontWeightNormal = 0,
+   kFontWeightMedium = 0,
+   kFontWeightBold = 1,
+   kFontWeightLight = 2,
+   kFontWeightDemibold = 3,
+   kFontWeightBlack = 4,
+   kFontWeightUnknown = -1
+};
 
-enum EFontSlant { kFontSlantRoman = 0,
-                  kFontSlantItalic = 1,
-                  kFontSlantOblique = 2,
-                  kFontSlantUnknown = -1 };
+enum EFontSlant {
+   kFontSlantRoman = 0,
+   kFontSlantItalic = 1,
+   kFontSlantOblique = 2,
+   kFontSlantUnknown = -1
+};
 
 
 struct FontMetrics_t {
