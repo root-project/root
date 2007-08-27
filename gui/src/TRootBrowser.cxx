@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.125 2007/06/26 13:17:38 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.126 2007/07/17 13:35:49 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1996,7 +1996,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (obj) fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
                   }
                   fClient->NeedRedraw(fLt);
-                  fListView->AdjustHeaders();
+                  fListView->LayoutHeader(0);
                   fListView->Layout();
                }
                break;
