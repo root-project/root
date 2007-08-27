@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.59 2007/05/22 11:47:46 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.60 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -158,7 +158,7 @@ void TGTextLBEntry::DoRedraw()
 {
    // Redraw text listbox entry.
 
-   DrawCopy(fId, 0, 0);
+   if (fId) DrawCopy(fId, 0, 0);
 }
 
 //______________________________________________________________________________
@@ -346,7 +346,7 @@ void TGLineLBEntry::DoRedraw()
 {
    // Redraw line style listbox entry.
 
-   DrawCopy(fId, 0, 0);
+   if (fId) DrawCopy(fId, 0, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -420,7 +420,7 @@ void TGIconLBEntry::DoRedraw()
 {
    // Redraw icon & text listbox entry.
 
-   DrawCopy(fId, 0, 0);
+   if (fId) DrawCopy(fId, 0, 0);
 }
 
 //___________________________________________________________________________

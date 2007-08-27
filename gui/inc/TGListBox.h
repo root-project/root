@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.37 2007/06/06 13:39:24 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.38 2007/08/22 08:50:02 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -361,6 +361,7 @@ public:
    virtual Bool_t GetSelection(Int_t id) { return fLbc->GetSelection(id); }
    virtual TGLBEntry *GetSelectedEntry() const { return fLbc->GetSelectedEntry(); }
    virtual void GetSelectedEntries(TList *selected);
+   UInt_t  GetItemVsize() const { return fItemVsize; }
 
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
