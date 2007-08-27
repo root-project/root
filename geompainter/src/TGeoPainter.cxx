@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.101 2007/06/08 15:46:30 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.102 2007/08/20 14:00:56 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -243,7 +243,7 @@ void TGeoPainter::DefineColors() const
 Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
 {
 // Get index of a base color with given light intensity (0,1)
-   const Int_t kBCols[7] = {1,2,3,5,4,6,7};
+   const Int_t kBCols[8] = {1,2,3,5,4,6,7,1};
    TColor *tcolor = gROOT->GetColor(base);
    Float_t r,g,b;
    tcolor->GetRGB(r,g,b);
