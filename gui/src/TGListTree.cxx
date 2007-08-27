@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.63 2007/08/23 13:56:19 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.64 2007/08/24 07:32:01 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1006,8 +1006,7 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
    }
 
    gVirtualX->SetForeground(gcBg, fBackground);
-  	gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, fViewPort->GetWidth(),
-   fViewPort->GetHeight());
+   gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
 
    Draw(pixmap, 0, fViewPort->GetHeight());
 
