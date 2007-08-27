@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.7 2005/09/05 14:26:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.8 2007/01/17 13:59:15 antcheva Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -65,6 +65,7 @@ protected:
    TGSearchType       *fType;                  // search type structure
    Int_t              *fRetCode;               // return code
    TGComboBox         *fCombo;                 // text entry combobox
+
    static TGSearchDialog *fgSearchDialog;      // global singleton
 
 public:
@@ -79,7 +80,8 @@ public:
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
    virtual TGSearchType *GetType() const { return fType; }
-   static TGSearchDialog *&SearchDialog() { return fgSearchDialog; }
+
+   static TGSearchDialog *&SearchDialog();
 
    ClassDef(TGSearchDialog,0)  // Text search dialog used by TGTextEdit widget
 };

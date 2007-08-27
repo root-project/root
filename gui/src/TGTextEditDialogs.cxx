@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.16 2006/07/03 13:30:29 antcheva Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -100,7 +100,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
 
    fCombo = new TGComboBox(fF3, "");
    fSearch = fCombo->GetTextEntry();
-   fBSearch = fSearch->GetBuffer(); 
+   fBSearch = fSearch->GetBuffer();
    fSearch->Associate(this);
    fCombo->Resize(220, fSearch->GetDefaultHeight());
    fSearch->SelectAll();
@@ -285,6 +285,15 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+TGSearchDialog *&TGSearchDialog::SearchDialog()
+{
+   // Return global search dialog.
+
+   return fgSearchDialog;
+}
+
 
 //______________________________________________________________________________
 TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
