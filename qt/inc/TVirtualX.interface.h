@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.10 2007/06/17 03:09:52 fine Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.11 2007/06/26 21:32:55 fine Exp $
 // Author: Valeri Fine   28/07/2004
 
 //
@@ -245,6 +245,20 @@ public:
    unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
    Pixmap_t       CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
    Window_t       GetCurrentWindow() const;
+   
+   //---- Drag and Drop -----
+   virtual void         DeleteProperty(Window_t, Atom_t&);
+   virtual Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   virtual void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   virtual void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   virtual Bool_t       SetSelectionOwner(Window_t, Atom_t&);
+   virtual void         ChangeProperties(Window_t id, Atom_t property, Atom_t type,
+                                         Int_t format, UChar_t *data, Int_t len);
+   virtual void         SetDNDAware(Window_t, Atom_t *);
+   virtual void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
 #if 0 
 //   Alas CINT does not understand the complex CPP statement below.

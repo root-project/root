@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.183 2007/06/21 22:03:33 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.185 2007/08/25 02:27:26 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -344,11 +344,13 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       case kGXset:
          fROp = Qt::SetROP;     // dst = 1
          break;
+#else
+      case 0: // to make VC++ compiler happy
 #endif /* not QT_VERSION */
       default:
 #if QT_VERSION < 0x40000
 	      fROp = Qt::CopyROP;
-	break;
+	      break;
 #else /* QT_VERSION */
         fROp = QPainter::CompositionMode_Source; //Qt::CopyROP;
         break;
@@ -920,7 +922,7 @@ void TGQt::NextEvent(Event_t &event)
          // For example the mouse pointer had left some screen area but
          // event keeps reporting it is still there
          event = *ev; delete ev;
-         if (gDebug > 3) fprintf(stderr," TGQt::NextEvent event type=%d win=%p, WM handle=%lx\n", event.fType,(void *)event.fWindow,wid(event.fWindow)->handle());
+         if (gDebug > 3) fprintf(stderr," TGQt::NextEvent event type=%d win=%p\n", event.fType,(void *)event.fWindow);
       }
    }
 }
@@ -3256,3 +3258,93 @@ Window_t TGQt::GetCurrentWindow() const
 
    return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
 }
+
+//______________________________________________________________________________
+void TGQt::DeleteProperty(Window_t, Atom_t&)
+{
+   // Deletes the specified property only if the property was defined on the 
+   // specified window and causes the X server to generate a PropertyNotify 
+   // event on the window unless the property does not exist.
+
+}
+
+//______________________________________________________________________________
+Int_t TGQt::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                             Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**)
+{
+   // Returns the actual type of the property; the actual format of the property; 
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
+   // bytes remaining to be read in the property; and a pointer to the data 
+   // actually returned.
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGQt::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
+{
+   // Changes the specified dynamic parameters if the pointer is actively 
+   // grabbed by the client and if the specified time is no earlier than the 
+   // last-pointer-grab time and no later than the current X server time.
+
+}
+
+//______________________________________________________________________________
+void TGQt::ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&)
+{
+   // Requests that the specified selection be converted to the specified 
+   // target type.
+
+}
+
+//______________________________________________________________________________
+Bool_t TGQt::SetSelectionOwner(Window_t, Atom_t&)
+{
+   // Changes the owner and last-change time for the specified selection.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGQt::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
+{
+   // Alters the property for the specified window and causes the X server 
+   // to generate a PropertyNotify event on that window.
+
+}
+
+//______________________________________________________________________________
+void TGQt::SetDNDAware(Window_t, Atom_t *)
+{
+   // Add XdndAware property and the list of drag and drop types to the 
+   // Window win.
+
+}
+
+//______________________________________________________________________________
+void TGQt::SetTypeList(Window_t, Atom_t, Atom_t *)
+{
+   // Add the list of drag and drop types to the Window win.
+
+}
+
+//______________________________________________________________________________
+Window_t TGQt::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
+{
+   // Recursively search in the children of Window for a Window which is at 
+   // location x, y and is DND aware, with a maximum depth of maxd.
+
+   return kNone;
+}
+
+//______________________________________________________________________________
+Bool_t TGQt::IsDNDAware(Window_t, Atom_t *)
+{
+   // Checks if the Window is DND aware, and knows any of the DND formats
+   // passed in argument.
+
+   return kFALSE;
+}
+
+      
+

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.91 2007/06/20 01:49:02 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.93 2007/08/25 02:27:26 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -126,9 +126,31 @@ ClassImp(TQtWidget)
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded):QWidget(parent,name,f)
+TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded) :
+#if QT_VERSION < 0x40000
+      QWidget(parent,name,f)
+#else
+      QWidget(parent,f)
+#endif
           ,fBits(0),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
+{ 
+   if (name && name[0]) setName(name);
+   Init() ;
+}
+
+//_____________________________________________________________________________
+TQtWidget::TQtWidget(QWidget* parent, Qt::WFlags f,bool embedded) :
+#if QT_VERSION < 0x40000
+      QWidget(parent,"tqtwidget",f)
+#else
+      QWidget(parent,f)
+#endif
+          ,fBits(0),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
+{ Init() ;}
+//_____________________________________________________________________________
+void TQtWidget::Init()
 {
 #if QT_VERSION < 0x40000
   setFocusPolicy(QWidget::WheelFocus);
@@ -145,7 +167,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     TGQt::RegisterWid(this);
-    fCanvas = new TCanvas(name, 4, 4, TGQt::RegisterWid(this));
+    fCanvas = new TCanvas(name(), 4, 4, TGQt::RegisterWid(this));
     // fprintf(stderr,"TQtWidget::TQtWidget %p fEditable %d\n", fCanvas, fCanvas->IsEditable());
     gROOT->SetBatch(batch);
   }
@@ -728,7 +750,7 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
    // Stretch the widget during sizing
 
    if  (!paintingActive()) {
-#ifdef R__QTWIN32
+#if defined(R__QTWIN32) && (QT_VERSION < 0x40000)
       QPainter painter( this );
       if (!StretchBlt(
          painter.handle(),    // handle of destination device context

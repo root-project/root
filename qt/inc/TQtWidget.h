@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.18 2007/05/25 07:45:10 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.19 2007/06/19 06:51:45 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -74,8 +74,10 @@ class TQtWidgetBuffer : public QPixmap
     QWidget *fWidget;
 
   public:
-    TQtWidgetBuffer(QWidget *w=0) :  QPixmap(), fWidget(w)
-    { if (w) resize(w->size()); }
+    TQtWidgetBuffer() :  QPixmap(), fWidget(0) { }
+    TQtWidgetBuffer(QWidget *w) :  QPixmap(w?w->size():QSize(0,0)), fWidget(w)
+    { }
+    inline void resize(const QSize &size) { QPixmap newSize(size); *(QPixmap *)this = newSize; }
     inline QRect rect () const { return fWidget->rect();}
 };
 //___________________________________________________________________
@@ -91,6 +93,8 @@ private:
    enum {
       kBitMask       = 0x00ffffff
    };
+protected:
+   void Init();
 public:
    enum {
       kEXITSIZEMOVE,
@@ -98,7 +102,8 @@ public:
       kFORCESIZE
    };
 #ifndef __CINT__
-   TQtWidget( QWidget* parent=0, const char* name=0, Qt::WFlags f=Qt::WStyle_NoBorder, bool embedded=TRUE);
+  TQtWidget( QWidget* parent, const char* name, Qt::WFlags f=0, bool embedded=TRUE);
+  TQtWidget( QWidget* parent=0, Qt::WFlags f=0, bool embedded=TRUE);
 #else
   TQtWidget( QWidget* parent=0);
 #endif  

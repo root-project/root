@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQUserEvent.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQUserEvent.h,v 1.3 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -13,20 +13,35 @@
 #ifndef ROOT_TQUserEvent
 #define ROOT_TQUserEvent
 
-#include <qevent.h>
-#if QT_VERSION >= 0x40000
-//Added by qt3to4:
-#include <QCustomEvent>
+#include <qglobal.h>
+#if QT_VERSION < 0x40000
+  #include <qevent.h>
 #endif /* QT_VERSION */
 #include "GuiTypes.h"
 
-class TQUserEvent : public QCustomEvent {
+class TQUserEvent : public 
+#if QT_VERSION < 0x40000
+   QCustomEvent 
+#else
+   QEvent 
+#endif
+{
+#if QT_VERSION >= 0x40000
+private:
+   Event_t *fEvent;
+#endif 
 public:
+#if QT_VERSION >= 0x40000
+   Event_t *data() const { return fEvent;}
+   void setData(Event_t *ev) { delete data(); fEvent=ev;}
+   TQUserEvent(const Event_t &pData) : QEvent(Type(QEvent::User+Type(1)))
+#else
    TQUserEvent(const Event_t &pData) : QCustomEvent(Id(),0)
+#endif
    {   setData(new Event_t); *(Event_t *)data() = pData;  }
-   ~TQUserEvent() {delete (Event_t *)data(); }
+   ~TQUserEvent() { delete (Event_t *)data(); }
    void getData( Event_t &user) const { user = *(Event_t*)data(); }
-   static Type Id() { return Type(QEvent::User + 1 /*kQTGClientEvent*/) ;}
+   static Type Id() { return Type(QEvent::User + Type(1) /*kQTGClientEvent*/) ;}
 };
 
 #endif

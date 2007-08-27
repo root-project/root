@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.25 2006/09/09 20:44:53 fine Exp $
+# $Id: rootlibs.pri,v 1.26 2007/08/21 21:56:17 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -62,8 +62,12 @@ win32 {
       -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__Graf1  -include:_G__cpp_setupG__G3D     \
       -include:_G__cpp_setupG__GPad       -include:_G__cpp_setupG__Tree   -include:_G__cpp_setupG__Rint    \
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
-      -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1   
+      -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1  
     
+   exists( $(ROOTSYS)/lib/lib/libRIO.lib ) {
+      LIBS	+= -include:_G__cpp_setupG__IO
+   }   
+
    exists( $(ROOTSYS)/lib/libTable.lib ) {
       LIBS	+= -include:_G__cpp_setupG__Table
    }   
@@ -72,7 +76,7 @@ win32 {
       LIBS	+=  -include:_G__cpp_setupG__QtGUI     
    }   
    
-   LIBS	+=                                                                                              \
+   LIBS	+=                                                                                               \
     "$(ROOTSYS)/lib/libCore.lib"   "$(ROOTSYS)/lib/libCint.lib"     "$(ROOTSYS)/lib/libHist.lib"         \
     "$(ROOTSYS)/lib/libGraf.lib"   "$(ROOTSYS)/lib/libGraf3d.lib"   "$(ROOTSYS)/lib/libGpad.lib"         \
     "$(ROOTSYS)/lib/libTree.lib"   "$(ROOTSYS)/lib/libRint.lib"     "$(ROOTSYS)/lib/libPostscript.lib"   \
@@ -80,6 +84,10 @@ win32 {
     "$(ROOTSYS)/lib/libGeom.lib"   "$(ROOTSYS)/lib/libTable.lib"                                         \
     "$(ROOTSYS)/lib/libGQt.lib"   
     
+   exists( $(ROOTSYS)/lib/lib/libRIO.lib ) {
+      LIBS	+= "$(ROOTSYS)/lib/libRIO.lib" 
+   }   
+
    exists( $(ROOTSYS)/lib/libTable.lib ) {
       LIBS	+=  "$(ROOTSYS)/lib/libTable.lib"
    }   
@@ -112,11 +120,11 @@ unix {
           message ( "Found Qt extensions library !!!") 
     }
 }
-FORCELINKLIST	+=                                                                   \
+FORCELINKLIST	+=                                                                  \
         _G__cpp_setupG__Hist        _G__cpp_setupG__Graf1   _G__cpp_setupG__G3D     \
         _G__cpp_setupG__GPad        _G__cpp_setupG__Tree    _G__cpp_setupG__Rint    \
         _G__cpp_setupG__PostScript  _G__cpp_setupG__Matrix  _G__cpp_setupG__Physics \
-        _G__cpp_setupG__Gui1        _G__cpp_setupG__Geom1   
+        _G__cpp_setupG__Gui1        _G__cpp_setupG__Geom1   _G__cpp_setup_initG__IO 
 
 mac {
   equals(TEMPLATE, app_fake) {
