@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.41 2007/03/13 09:31:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.42 2007/04/24 12:58:35 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -1126,4 +1126,20 @@ void TSocket::NetError(const char *where, Int_t err)
 
    if (gDebug > 0)
       ::Error(where, "%s", gRootdErrStr[err]);
+}
+
+//______________________________________________________________________________
+ULong64_t TSocket::GetSocketBytesSent()
+{
+   // Get total number of bytes sent via all sockets.
+
+   return fgBytesSent;
+}
+
+//______________________________________________________________________________
+ULong64_t TSocket::GetSocketBytesRecv()
+{
+   // Get total number of bytes received via all sockets.
+
+   return fgBytesRecv;
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.22 2006/05/29 07:58:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.23 2006/05/30 16:35:00 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -95,8 +95,8 @@ protected:
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
-   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0), 
-      fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(), 
+   TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
+      fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
       fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl() { }
 
    Bool_t       Authenticate(const char *user);
@@ -157,8 +157,8 @@ public:
 
    static Int_t          GetClientProtocol();
 
-   static ULong64_t      GetSocketBytesSent() { return fgBytesSent; }
-   static ULong64_t      GetSocketBytesRecv() { return fgBytesRecv; }
+   static ULong64_t      GetSocketBytesSent();
+   static ULong64_t      GetSocketBytesRecv();
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host,
                                           Int_t port, Int_t size = 0,
