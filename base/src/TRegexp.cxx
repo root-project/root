@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.15 2007/08/21 13:12:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.16 2007/08/26 17:52:42 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -148,7 +148,7 @@ const char *TRegexp::MakeWildcard(const char *re)
    for (int i = 0; i < len; i++) {
       if (i == 0 && re[i] != '^')
          *s++ = '^';
-      if (re[i] == '*' || re[i] == '?') {
+      if (re[i] == '*') {
 #ifndef R__WIN32
          //const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
          const char *wc = "[^/]";
@@ -161,7 +161,18 @@ const char *TRegexp::MakeWildcard(const char *re)
       }
       if (re[i] == '.')
          *s++ = '\\';
-      *s++ = re[i];
+      if (re[i] == '?') {
+#ifndef R__WIN32
+         //const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
+         const char *wc = "[^/]";
+#else
+         //const char *wc = "[a-zA-Z0-9-+_., []<>]";
+         const char *wc = "[^\\/:]";
+#endif
+         strcpy(s, wc);
+         s += strlen(wc);
+      } else
+         *s++ = re[i];
       if (i == len-1 && re[i] != '$')
          *s++ = '$';
    }
