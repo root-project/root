@@ -117,7 +117,7 @@ TCanvas * chi2test(Float_t w=0)
   h2->SetEntries(500);
 
 //apply the chi2 test and retrieve the residuals
-  Double_t res[n], x[n];
+  Double_t res[n], x[20];
   h1->Chi2Test(h2,"UW P",res);
 
 //Graph for Residuals
