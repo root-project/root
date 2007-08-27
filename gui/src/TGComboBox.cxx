@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.49 2006/08/15 10:06:19 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.50 2007/01/10 14:55:08 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -411,6 +411,19 @@ void TGComboBox::RemoveEntry(Int_t id)
       }
    }
    Resize();
+}
+
+//______________________________________________________________________________
+void TGComboBox::Layout()
+{
+   // layout combobox
+
+   TGCompositeFrame::Layout();
+   UInt_t h = fListBox->GetNumberOfEntries()*fListBox->GetItemVsize();
+
+   if (h && (h < 100)) {
+      fListBox->Resize(fListBox->GetWidth(), h);
+   }
 }
 
 //______________________________________________________________________________
