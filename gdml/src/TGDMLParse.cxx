@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.12 2007/08/07 07:53:05 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.13 2007/08/24 08:40:11 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -412,7 +412,7 @@ void TGDMLParse::SolveConst(char *outStr,const char *inStr)
  	
          findStr = strstr(outStr,nameStr);                                         // Try to find constant by its name in the expression
          
-	 if (findStr==0) continue;                                                 // Skip if not found, otherwise replace
+         if (findStr==0) continue;                                                 // Skip if not found, otherwise replace
 
          strcpy(tempStr,outStr);                                                   // We need a copy of the string
          strcpy(outStr+offset,valueStr);					   // Substitue value of the constant
@@ -1228,19 +1228,19 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
    TGeoShape* first = 0;
    TGeoShape* second = 0;
 
-   TGeoTranslation* FirstPos = new TGeoTranslation(0,0,0);
-   TGeoTranslation* SecondPos = new TGeoTranslation(0,0,0);
+   TGeoTranslation* firstPos = new TGeoTranslation(0,0,0);
+   TGeoTranslation* secondPos = new TGeoTranslation(0,0,0);
 
-   TGeoRotation* FirstRot = new TGeoRotation();
-   TGeoRotation* SecondRot = new TGeoRotation();
+   TGeoRotation* firstRot = new TGeoRotation();
+   TGeoRotation* secondRot = new TGeoRotation();
 
-   FirstRot->RotateZ(0);
-   FirstRot->RotateY(0);
-   FirstRot->RotateX(0);
+   firstRot->RotateZ(0);
+   firstRot->RotateY(0);
+   firstRot->RotateX(0);
 
-   SecondRot->RotateZ(0);
-   SecondRot->RotateY(0);
-   SecondRot->RotateX(0);
+   secondRot->RotateZ(0);
+   secondRot->RotateY(0);
+   secondRot->RotateX(0);
 
    const char* name = gdml->GetAttr(node, "name");
 
@@ -1275,7 +1275,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         SecondPos = fposmap[reftemp];
+         secondPos = fposmap[reftemp];
       }
       else if((strcmp(tempattr, "positionref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1283,7 +1283,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(fposmap.find(reftemp) != fposmap.end()){ 
-            SecondPos = fposmap[reftemp];
+            secondPos = fposmap[reftemp];
          }
       }
       else if((strcmp(tempattr, "rotation")) == 0){
@@ -1293,7 +1293,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         SecondRot = frotmap[reftemp];
+         secondRot = frotmap[reftemp];
       }
       else if((strcmp(tempattr, "rotationref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1301,7 +1301,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(frotmap.find(reftemp) != frotmap.end()){ 
-            SecondRot = frotmap[reftemp];
+            secondRot = frotmap[reftemp];
          }
       } 
       else if((strcmp(tempattr, "firstposition")) == 0){
@@ -1311,7 +1311,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         FirstPos = fposmap[reftemp];
+         firstPos = fposmap[reftemp];
       }
       else if((strcmp(tempattr, "firstpositionref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1319,7 +1319,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(fposmap.find(reftemp) != fposmap.end()){ 
-            FirstPos = fposmap[reftemp];
+            firstPos = fposmap[reftemp];
          }
       }
       else if((strcmp(tempattr, "firstrotation")) == 0){
@@ -1329,7 +1329,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
          if((strcmp(fCurrentFile,fStartFile)) != 0){
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
-         FirstRot = frotmap[reftemp];
+         firstRot = frotmap[reftemp];
       }
       else if((strcmp(tempattr, "firstrotationref")) == 0){
          reftemp = gdml->GetAttr(child, "ref");
@@ -1337,21 +1337,21 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
             reftemp = Form("%s_%s", reftemp, fCurrentFile);
          }
          if(frotmap.find(reftemp) != frotmap.end()){ 
-            FirstRot = frotmap[reftemp];
+            firstRot = frotmap[reftemp];
          }
       }       
       child = gdml->GetNext(child);
    }
 
-   TGeoMatrix* FirstMatrix = new TGeoCombiTrans(*FirstPos,FirstRot->Inverse());
-   TGeoMatrix* SecondMatrix = new TGeoCombiTrans(*SecondPos,SecondRot->Inverse());
+   TGeoMatrix* firstMatrix = new TGeoCombiTrans(*firstPos,firstRot->Inverse());
+   TGeoMatrix* secondMatrix = new TGeoCombiTrans(*secondPos,secondRot->Inverse());
 
    TGeoCompositeShape* boolean = 0;
 
    switch (num) {
-   case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,FirstMatrix,SecondMatrix)); break;      // SUBTRACTION
-   case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,FirstMatrix,SecondMatrix)); break;     // INTERSECTION 
-   case 3: boolean = new TGeoCompositeShape(NameShort(name),new TGeoUnion(first,second,FirstMatrix,SecondMatrix)); break;            // UNION
+   case 1: boolean = new TGeoCompositeShape(NameShort(name),new TGeoSubtraction(first,second,firstMatrix,secondMatrix)); break;      // SUBTRACTION
+   case 2: boolean = new TGeoCompositeShape(NameShort(name),new TGeoIntersection(first,second,firstMatrix,secondMatrix)); break;     // INTERSECTION 
+   case 3: boolean = new TGeoCompositeShape(NameShort(name),new TGeoUnion(first,second,firstMatrix,secondMatrix)); break;            // UNION
    default:
     break;
    }
