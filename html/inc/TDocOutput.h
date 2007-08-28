@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.2 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.3 2007/07/02 14:31:27 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -64,7 +64,7 @@ protected:
    void           WriteModuleLinks(std::ostream& out);
 
 public:
-   enum EFileType { kSource, kInclude, kTree };
+   enum EFileType { kSource, kInclude, kTree, kDoc };
 
    TDocOutput(THtml& html);
    virtual ~TDocOutput();

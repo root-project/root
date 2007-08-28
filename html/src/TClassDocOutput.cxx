@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.9 2007/07/30 19:32:54 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.10 2007/08/10 13:01:33 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -62,7 +62,8 @@ void TClassDocOutput::Class2Html(Bool_t force)
 
    filename += ".html";
 
-   if (!force && !IsModified(fCurrentClass, kSource)) {
+   if (!force && !IsModified(fCurrentClass, kSource)
+       && !IsModified(fCurrentClass, kDoc)) {
       Printf(fHtml->GetCounterFormat(), "-no change-", fHtml->GetCounter(), filename.Data());
       return;
    }

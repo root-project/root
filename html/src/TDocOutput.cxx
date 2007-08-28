@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.13 2007/08/10 13:01:33 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.14 2007/08/10 15:13:08 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1140,6 +1140,20 @@ Bool_t TDocOutput::IsModified(TClass * classPtr, EFileType type)
       gSystem->PrependPathName(fHtml->GetOutputDir(), classname);
       filename = classname;
       filename += "_Tree.pdf";
+      break;
+
+   case kDoc:
+      if (classPtr->GetImplFileLine()) {
+         sourceFile = fHtml->GetImplFileName(classPtr);
+         fHtml->GetSourceFileName(sourceFile);
+      } else {
+         sourceFile = fHtml->GetDeclFileName(classPtr);
+         fHtml->GetSourceFileName(sourceFile);
+      }
+      filename = classname;
+      NameSpace2FileName(filename);
+      gSystem->PrependPathName(fHtml->GetOutputDir(), filename);
+      filename += ".html";
       break;
 
    default:
