@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualStreamerInfo.cxx,v 1.1 2007/02/05 18:06:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualStreamerInfo.cxx,v 1.2 2007/06/15 12:35:04 brun Exp $
 // Author: Rene Brun   05/02/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -142,6 +142,10 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory(TClass *cl)
          if (h->LoadPlugin() == -1)
             return 0;
          fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
+      } else {
+         gROOT->GetPluginManager()->Error("FindHandler",
+            "Cannot find plugin handler for TVirtualStreamerInfo!"
+            " Does $ROOTSYS/etc/plugins/TVirtualStreamerInfo exist?");
       }
    }
 
