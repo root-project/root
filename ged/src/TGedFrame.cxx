@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.21 2007/02/07 09:00:41 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.22 2007/05/23 15:43:30 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -270,7 +270,8 @@ void TGedNameFrame::SetModel(TObject* obj)
    string.Append(obj->ClassName());
 
    fLabel->SetText(new TGString(string));
-   string = Form("Name: '%s'; Title: '%s'; Class: '%s'", obj->GetName(), obj->GetTitle(), obj->ClassName());
+   string = Form("Name: %s\nTitle:   %s\nClass: %s",
+                 obj->GetName(), obj->GetTitle(), obj->ClassName());
    fTip->SetText(string);
 
    // Resize label-frame to a reasonable width.
