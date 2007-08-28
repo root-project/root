@@ -18,7 +18,7 @@ double MyFunc (double *x, double *p ) {
 // function object (functor) 
 struct MyDerivFunc { 
    MyDerivFunc(TF1 * f): fFunc(f) {}
-   double operator() (double *x, double * ) const { 
+   double operator() (double *x, double * )  const { 
       return fFunc->Derivative(*x);
    }
    TF1 * fFunc; 
