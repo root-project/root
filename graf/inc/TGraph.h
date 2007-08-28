@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.58 2007/01/23 11:12:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.59 2007/02/01 16:04:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    virtual void      Apply(TF1 *f);
    virtual void      Browse(TBrowser *b);
    virtual Double_t  Chisquare(const TF1 *f1) const;
+   static Bool_t     CompareArg(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t     CompareX(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t     CompareY(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t     CompareRadius(const TGraph* gr, Int_t left, Int_t right);
