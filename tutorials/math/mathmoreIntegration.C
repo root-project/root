@@ -16,8 +16,7 @@
 #include "TMath.h"
 #include "TH1.h"
 #include "TCanvas.h"
-#include <TApplication.h>
-#include <TLatex.h>
+#include "TLegend.h"
 
 //#include "TLabel.h"
 #include "Math/Integrator.h"
@@ -89,7 +88,6 @@ void  testIntegPerf(double x1, double x2, int n = 100000){
   std::cout << "Time using ROOT::Math::Integrator(GAUSS61):\t" << timer.RealTime() << std::endl; 
   std::cout << "Number of function calls = " << nc/n << std::endl;
   pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
-  std::cout << "nfunc calls = " << nc/n << std::endl;
 
 
   //TF1 *fBW = new TF1("fBW","TMath::BreitWigner(x)",x1, x2);  //  this is faster but cannot measure number of function calls
@@ -116,97 +114,91 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    std::cout << "Drawing cumulatives of BreitWigner in interval [ " << x1 << " , " << x2 << " ]\n\n";
 
   
-  double dx = (x2-x1)/double(n); 
+   double dx = (x2-x1)/double(n); 
 
-  TH1D *cum0 = new TH1D("cum0", "", n, x1, x2); //exact cumulative
-  for (int i = 1; i <= n; ++i) {
-    double x = x1 + dx*i;
-    cum0->SetBinContent(i, exactIntegral(x1, x));
+   TH1D *cum0 = new TH1D("cum0", "", n, x1, x2); //exact cumulative
+   for (int i = 1; i <= n; ++i) {
+      double x = x1 + dx*i;
+      cum0->SetBinContent(i, exactIntegral(x1, x));
 
-  }
+   }
 
-  // alternative method using ROOT::Math::Functor class 
-  ROOT::Math::Functor1D<ROOT::Math::IGenFunction> f1(& TMath::BreitWigner);
+   // alternative method using ROOT::Math::Functor class 
+   ROOT::Math::Functor1D<ROOT::Math::IGenFunction> f1(& TMath::BreitWigner);
   
-  ROOT::Math::Integrator ig(f1, ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61,1.E-12,1.E-12);
+   ROOT::Math::Integrator ig(f1, ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61,1.E-12,1.E-12);
  
-  TH1D *cum1 = new TH1D("cum1", "", n, x1, x2); 
-  for (int i = 1; i <= n; ++i) { 
-     double x = x1 + dx*i;
+   TH1D *cum1 = new TH1D("cum1", "", n, x1, x2); 
+   for (int i = 1; i <= n; ++i) { 
+      double x = x1 + dx*i;
       cum1->SetBinContent(i, ig.Integral(x1,x));
-  }
+   }
   
  
-  TF1 *fBW = new TF1("fBW","TMath::BreitWigner(x, 0, 1)",x1, x2);
+   TF1 *fBW = new TF1("fBW","TMath::BreitWigner(x, 0, 1)",x1, x2);
  
 
-  TH1D *cum2 = new TH1D("cum2", "", n, x1, x2); 
-  for (int i = 1; i <= n; ++i) { 
-     double x = x1 + dx*i; 
-     cum2->SetBinContent(i, fBW->Integral(x1,x));
-  }
+   TH1D *cum2 = new TH1D("cum2", "", n, x1, x2); 
+   for (int i = 1; i <= n; ++i) { 
+      double x = x1 + dx*i; 
+      cum2->SetBinContent(i, fBW->Integral(x1,x));
+   }
 
-  TH1D *cum10 = new TH1D("cum10", "", n, x1, x2); //difference between  1 and exact 
-  TH1D *cum20 = new TH1D("cum23", "", n, x1, x2); //difference between 2 and excact
-  for (int i = 1; i <= n; ++i) { 
-     double delta  =  cum1->GetBinContent(i) - cum0->GetBinContent(i); 
-     double delta2 =  cum2->GetBinContent(i) - cum0->GetBinContent(i); 
-     //std::cout << " diff for " << x << " is " << delta << "  " << cum1->GetBinContent(i) << std::endl;
-     cum10->SetBinContent(i, delta );
-     cum10->SetBinError(i, std::numeric_limits<double>::epsilon() * cum1->GetBinContent(i) );
-     cum20->SetBinContent(i, delta2 );
-  }
+   TH1D *cum10 = new TH1D("cum10", "", n, x1, x2); //difference between  1 and exact 
+   TH1D *cum20 = new TH1D("cum23", "", n, x1, x2); //difference between 2 and excact
+   for (int i = 1; i <= n; ++i) { 
+      double delta  =  cum1->GetBinContent(i) - cum0->GetBinContent(i); 
+      double delta2 =  cum2->GetBinContent(i) - cum0->GetBinContent(i); 
+      //std::cout << " diff for " << x << " is " << delta << "  " << cum1->GetBinContent(i) << std::endl;
+      cum10->SetBinContent(i, delta );
+      cum10->SetBinError(i, std::numeric_limits<double>::epsilon() * cum1->GetBinContent(i) );
+      cum20->SetBinContent(i, delta2 );
+   }
 
-  //!graphics
-  TLatex *Capt0 = new TLatex();
-  Capt0->SetNDC(); //!!! coordinates in (0,1) range!
-  Capt0->SetTextAlign(21);
-  Capt0->SetTextSize(0.030);
-  Capt0->SetTextColor(kBlack);
-  char mytext0[200];
-  sprintf(mytext0, "exact");
   
-  TCanvas *c1 = new TCanvas("c1","Integration example",20,10,800,500);
-  c1->Divide(2,1);
-  c1->Draw();
+   TCanvas *c1 = new TCanvas("c1","Integration example",20,10,800,500);
+   c1->Divide(2,1);
+   c1->Draw();
 
-  cum0->SetLineColor(kBlack);
-  cum0->SetTitle("BreitWigner - the cumulative");
-  cum0->SetStats(0);
-  cum1->SetLineStyle(2);
-  cum2->SetLineStyle(3);
-  cum1->SetLineColor(kBlue);
-  cum2->SetLineColor(kRed);
-  c1->cd(1);
-  cum0->DrawCopy("h");
-  cum1->DrawCopy("same");
-  //cum2->DrawCopy("same");
-  cum2->DrawCopy("same");
+   cum0->SetLineColor(kBlack);
+   cum0->SetTitle("BreitWigner - the cumulative");
+   cum0->SetStats(0);
+   cum1->SetLineStyle(2);
+   cum2->SetLineStyle(3);
+   cum1->SetLineColor(kBlue);
+   cum2->SetLineColor(kRed);
+   c1->cd(1);
+   cum0->DrawCopy("h");
+   cum1->DrawCopy("same");
+   //cum2->DrawCopy("same");
+   cum2->DrawCopy("same");
 
-  c1->cd(2);
-  cum10->SetTitle("Difference");
-  cum10->SetStats(0);
-  cum10->SetLineColor(kBlack);
-  cum10->Draw("e0");
-  cum20->SetLineColor(kRed);
-  cum20->Draw("hsame");
-  //Capt0->DrawLatex(0.3, 0.8, mytext0);
+   c1->cd(2);
+   cum10->SetTitle("Difference");
+   cum10->SetStats(0);
+   cum10->SetLineColor(kBlue);
+   cum10->Draw("e0");
+   cum20->SetLineColor(kRed);
+   cum20->Draw("hsame");
+
+   TLegend * l = new TLegend(0.11, 0.8, 0.7 ,0.89);
+   l->AddEntry(cum10, "GSL integration - analytical ");
+   l->AddEntry(cum20, "TF1::Integral  - analytical ");
+   l->Draw();
 
 
-  c1->Update();
-  std::cout << "\n***************************************************************\n";
+   c1->Update();
+   std::cout << "\n***************************************************************\n";
   
 
 }
 
 
 
-int mathmoreIntegration(double a = -2, double b = 2)
+void mathmoreIntegration(double a = -2, double b = 2)
 {
 
-  DrawCumulative(a, b);
-  testIntegPerf(a, b);
-  return 0;
-
+   DrawCumulative(a, b);
+   testIntegPerf(a, b);
 }
 
