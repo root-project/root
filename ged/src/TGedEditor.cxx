@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.42 2007/03/30 16:12:09 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.43 2007/08/26 16:51:48 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -539,7 +539,8 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
                // locate the composite frame on created tabs
                TGedTabInfo* ti = GetEditorTabInfo(subf->fName);
                ti->fContainer->AddFrame(subf->fFrame);
-               fVisibleTabs.Add(ti);
+               if (fVisibleTabs.FindObject(ti) == 0)
+                  fVisibleTabs.Add(ti);
             }
          }
          InsertGedFrame(frame);
