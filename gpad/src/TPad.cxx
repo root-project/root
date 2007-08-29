@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.272 2007/07/27 09:27:38 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.273 2007/08/21 10:19:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3054,7 +3054,11 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
          }
       }
       gVirtualPS->DrawBox(x1, y1, x2, y2);
-      if (option[0] == 's') gVirtualPS->SetFillStyle(style0);
+      if (option[0] == 'l') {
+         gVirtualPS->SetFillStyle(0);
+         gVirtualPS->DrawBox(x1, y1, x2, y2);
+      }
+      if (option[0] == 's' || option[0] == 'l') gVirtualPS->SetFillStyle(style0);
    }
 
    Modified();
