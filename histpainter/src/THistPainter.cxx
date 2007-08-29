@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.284 2007/03/08 17:12:05 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.285 2007/05/02 14:37:42 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -5965,7 +5965,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin) continue;
+            if (z < Hparam.zmin || z == 0) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                sprintf(format,"#splitline{%s%s}{#pm %s%s}",
