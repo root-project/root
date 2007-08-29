@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.156 2007/06/15 13:46:24 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.157 2007/07/18 15:10:48 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -411,7 +411,9 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
       case kConfigureNotify:
          while (gVirtualX->CheckEvent(fId, kConfigureNotify, *event))
             ;
-         HandleConfigureNotify(event);
+         // protection
+         if ((event->fWidth < 32768) && (event->fHeight  < 32768))
+            HandleConfigureNotify(event);
          break;
 
       case kGKeyPress:

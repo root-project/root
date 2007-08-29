@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.57 2007/08/22 08:50:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.58 2007/08/24 07:32:01 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -276,6 +276,12 @@ Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
    }
 
    TGContainer *cont = (TGContainer*)fContainer;
+
+   // protection 
+   if ((event->fWidth > 32768) || (event->fHeight  > 32768)) {
+      return kFALSE;
+   }
+
    cont->DrawRegion(event->fX, event->fY, event->fWidth, event->fHeight);
 
    return kTRUE;
@@ -778,6 +784,20 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    static GContext_t gcBg = 0;
    Pixmap_t pixmap = 0;
+
+   // sanity checks
+   if ((x > (Int_t)fViewPort->GetWidth()) || (y > (Int_t)fViewPort->GetHeight())) {
+      return;
+   }
+   x = x < 0 ? 0 : x;
+   y = y < 0 ? 0 : y;
+
+   w = x + w > fViewPort->GetWidth() ? fViewPort->GetWidth() - x : w;
+   h = y + h > fViewPort->GetHeight() ? fViewPort->GetHeight() - y :  h;
+
+   if (((Int_t)w < 1) || ((Int_t)h < 1)) {
+      return;
+   }
 
    if (!fMapSubwindows) {
       pixmap = gVirtualX->CreatePixmap(fId, w, h);

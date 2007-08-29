@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.64 2007/08/24 07:32:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.65 2007/08/27 17:04:43 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -994,8 +994,21 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
 
    static GContext_t gcBg = 0;
 
-   Pixmap_t pixmap = gVirtualX->CreatePixmap(fId, fViewPort->GetWidth(),
-                                             fViewPort->GetHeight());
+   // sanity checks
+   if (y > (Int_t)fViewPort->GetHeight()) {
+      return;
+   }
+
+   y = y < 0 ? 0 : y;
+   UInt_t w = fViewPort->GetWidth();
+
+   // more sanity checks
+   if (((Int_t)w < 1) || (w > 32768) || ((Int_t)h < 1)) {
+      return;
+   }
+
+   Pixmap_t pixmap = gVirtualX->CreatePixmap(fId, w, fViewPort->GetHeight());
+
    if (!gcBg) {
       GCValues_t gcValues;
       gcValues.fForeground = fBackground;
@@ -1006,11 +1019,11 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
    }
 
    gVirtualX->SetForeground(gcBg, fBackground);
-   gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
+   gVirtualX->FillRectangle(pixmap, gcBg, 0, 0, w, fViewPort->GetHeight());
 
    Draw(pixmap, 0, fViewPort->GetHeight());
 
-   gVirtualX->CopyArea(pixmap, fId, gcBg, 0, y, fViewPort->GetWidth(), h, 0, y);
+   gVirtualX->CopyArea(pixmap, fId, gcBg, 0, y, w, fViewPort->GetHeight(), 0, y);
 
    gVirtualX->DeletePixmap(pixmap);
    gVirtualX->Update(kFALSE);
@@ -1578,7 +1591,7 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
    }
 
    delete item;
-   DoRedraw();
+   fClient->NeedRedraw(this);
 
    return 1;
 }
