@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.43 2007/07/23 15:07:42 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.44 2007/08/19 10:07:48 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -223,7 +223,8 @@ public:
 
    virtual void PostSceneBuildSetup(Bool_t resetCameras);
 
-   virtual void SelectionChanged(); // *SIGNAL*
+   virtual void SelectionChanged();    // *SIGNAL*
+   virtual void OverlayDragFinished(); // *SIGNAL*
 
    // Interaction - events to ExecuteEvent are passed on to these
    Bool_t HandleEvent(Event_t *ev);

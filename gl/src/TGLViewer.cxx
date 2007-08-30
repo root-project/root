@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.74 2007/07/23 15:07:42 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.75 2007/08/19 10:07:49 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -273,7 +273,8 @@ void TGLViewer::ResetCurrentCamera()
 {
    // Resets position/rotation of current camera to default values.
 
-   CurrentCamera().Reset();
+   MergeSceneBBoxes(fOverallBoundingBox);
+   CurrentCamera().Setup(fOverallBoundingBox, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -1033,7 +1034,8 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
 //______________________________________________________________________________
 void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const
 {
-   // Fetch the state of guides (axes & reference markers) into arguments
+   // Fetch the state of guides (axes & reference markers) into arguments.
+
    axesType    = fAxesType;
    referenceOn = fReferenceOn;
    referencePos[0] = fReferencePos.X();
@@ -1044,7 +1046,8 @@ void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & referenceOn, Double_t r
 //______________________________________________________________________________
 void TGLViewer::SetGuideState(Int_t axesType, Bool_t referenceOn, const Double_t referencePos[3])
 {
-   // Set the state of guides (axes & reference markers) from arguments
+   // Set the state of guides (axes & reference markers) from arguments.
+
    fAxesType    = axesType;
    fReferenceOn = referenceOn;
    fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
@@ -1069,8 +1072,17 @@ const TGLPhysicalShape * TGLViewer::GetSelected() const
 //______________________________________________________________________________
 void TGLViewer::SelectionChanged()
 {
-   // Emit signal indicating selection has changed
+   // Emit signal indicating selection has changed.
+
    Emit("SelectionChanged()");
+}
+
+//______________________________________________________________________________
+void TGLViewer::OverlayDragFinished()
+{
+   // Emit signal indicating that an overlay drag has finished.
+
+   Emit("OverlayDragFinished()");
 }
 
 
@@ -1223,7 +1235,8 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 Bool_t TGLViewer::HandleEvent(Event_t *event)
 {
    // Handle generic Event_t type 'event' - provided to catch focus changes
-   // and terminate any interaction in viewer
+   // and terminate any interaction in viewer.
+
    if (event->fType == kFocusIn) {
       if (fAction != kNone) {
          Error("TGLViewer::HandleEvent", "active action at focus in");
@@ -1240,7 +1253,8 @@ Bool_t TGLViewer::HandleEvent(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleButton(Event_t * event)
 {
-   // Handle mouse button 'event'
+   // Handle mouse button 'event'.
+
    if (IsLocked()) {
       if (gDebug>2) {
          Info("TGLViewer::HandleButton", "ignored - viewer is %s", LockName(CurrentLock()));
@@ -1321,7 +1335,6 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
                                                      gClient->GetDefaultRoot()->GetId(),
                                                      event->fX, event->fY, x, y, childdum);
                      selected->InvokeContextMenu(*fContextMenu, x, y);
-                     // MT-TODO: Find a way to request redraw after dialog has finished.
                   }
                } else {
                   fAction = kDragCameraDolly;
@@ -1337,8 +1350,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
    {
       if (fAction == kDragOverlay) {
          fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
-         SelectionChanged();
-         // XXX CLIPA ClipChanged();
+         OverlayDragFinished();
          if (RequestOverlaySelect(event->fX, event->fY))
             RequestDraw();
       }
@@ -1375,7 +1387,8 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
 {
-   // Handle mouse double click 'event'
+   // Handle mouse double click 'event'.
+
    if (IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleDoubleClick", "ignored - viewer is %s", LockName(CurrentLock()));
@@ -1397,7 +1410,8 @@ Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 {
-   // Handle configure notify 'event' - a window resize/movement
+   // Handle configure notify 'event' - a window resize/movement.
+
    if (IsLocked()) {
       if (gDebug > 0) {
          Info("TGLViewer::HandleConfigureNotify", "ignored - viewer is %s", LockName(CurrentLock()));
@@ -1415,7 +1429,8 @@ Bool_t TGLViewer::HandleConfigureNotify(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleKey(Event_t *event)
 {
-   // Handle keyboard 'event'
+   // Handle keyboard 'event'.
+
    if (IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleKey", "ignored - viewer is %s", LockName(CurrentLock()));
@@ -1528,7 +1543,8 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleMotion(Event_t * event)
 {
-   // Handle mouse motion 'event'
+   // Handle mouse motion 'event'.
+
    if (IsLocked()) {
       if (gDebug>3) {
          Info("TGLViewer::HandleMotion", "ignored - viewer is %s", LockName(CurrentLock()));
@@ -1581,7 +1597,8 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleExpose(Event_t * event)
 {
-   // Handle window expose 'event' - show
+   // Handle window expose 'event' - show.
+
    if (event->fCount != 0) return kTRUE;
 
    if (IsLocked()) {
@@ -1598,7 +1615,8 @@ Bool_t TGLViewer::HandleExpose(Event_t * event)
 //______________________________________________________________________________
 void TGLViewer::Repaint()
 {
-   // Handle window expose 'event' - show
+   // Handle window expose 'event' - show.
+
    if (IsLocked()) {
       if (gDebug > 0) {
          Info("TGLViewer::HandleExpose", "ignored - viewer is %s", LockName(CurrentLock()));
