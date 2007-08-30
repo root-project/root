@@ -1991,7 +1991,7 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
-   if (fgVisual && fgVisual->dpy) {
+   if (fgVisual && fgVisual->dpy) { // already initialized
       return kTRUE;
    }
 
@@ -1999,6 +1999,7 @@ Bool_t TASImage::InitVisual()
    if (!fgVisual && (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32"))) {
       dpy = 0;
       fgVisual = create_asvisual(0, 0, 0, 0);
+      fgVisual->dpy = (Display*)1; //fake (not used)
       return kTRUE;
    }
 
@@ -2016,6 +2017,7 @@ Bool_t TASImage::InitVisual()
    }
 #else
    fgVisual = create_asvisual(0, 0, 0, 0);
+   fgVisual->dpy = (Display*)1; //fake (not used)
 #endif
 
    return kTRUE;
