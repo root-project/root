@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.35 2007/06/25 15:39:36 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.36 2007/07/30 15:31:23 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -138,6 +138,7 @@ public:
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);
    static int   AutoLoadCallback(const char *cls, const char *lib);
    static void  UpdateClassInfo(char *name, Long_t tagnum);
+   static void  UpdateClassInfoWork(const char *name, Long_t tagnum);
    static void  UpdateAllCanvases();
    static const char *GetTopLevelMacroName();
    static const char *GetCurrentMacroName();

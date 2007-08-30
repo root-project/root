@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.77 2007/02/05 18:10:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.78 2007/08/10 15:31:58 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -30,6 +30,9 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
+#ifndef ROOT_TObjString
+#include "TObjString.h"
+#endif
 
 class TBaseClass;
 class TBrowser;
@@ -48,6 +51,7 @@ class TVirtualCollectionProxy;
 class TMethodCall;
 class TVirtualIsAProxy;
 class TVirtualRefProxy;
+class THashTable;
 
 namespace ROOT { class TGenericClassInfo; class TCollectionProxyInfo; }
 
@@ -68,7 +72,8 @@ public:
           kUnloaded    = BIT(16), kIsTObject = BIT(17),
           kIsForeign   = BIT(18), kIsEmulation = BIT(19),
           kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
-          kWarned      = BIT(21)
+          kWarned      = BIT(21),
+          kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
@@ -125,6 +130,7 @@ private:
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il);
+   void ForceReload (TClass* oldcl);
 
    void               SetClassVersion(Version_t version) { fClassVersion = version; fCurrentInfo = 0; }
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
@@ -137,6 +143,35 @@ private:
    enum { kLoading = BIT(14) };
    // Internal streamer type.
    enum {kDefault=0, kEmulated=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
+
+   // When a new class is created, we need to be able to find
+   // if there are any existing classes that have the same name
+   // after any typedefs are expanded.  (This only really affects
+   // template arguments.)  To avoid having to search through all classes
+   // in that case, we keep a hash table mapping from the fully
+   // typedef-expanded names to the original class names.
+   // An entry is made in the table only if they are actually different.
+   //
+   // In these objects, the TObjString base holds the typedef-expanded
+   // name (the hash key), and fOrigName holds the original class name
+   // (the value to which the key maps).
+   //
+   class TNameMapNode
+     : public TObjString
+   {
+   public:
+     TNameMapNode (const char* typedf, const char* orig);
+     TString fOrigName;
+   };
+
+   // These are the above-referenced hash tables.  (The pointers are null
+   // if no entries have been made.)  There are actually two variants.
+   // In the first, the typedef names are resolved with
+   // TClassEdit::ResolveTypedef; in the second, the class names
+   // are first massaged with TClassEdit::ShortType with kDropStlDefault.
+   // (??? Are the two distinct tables really needed?)
+   static THashTable* fgClassTypedefHash;
+   static THashTable* fgClassShortTypedefHash;
 
 protected:
    TClass(const TClass& tc);

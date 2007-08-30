@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.33 2007/01/24 21:28:41 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.34 2007/01/29 16:09:47 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -451,8 +451,12 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    //assignement operator
    if(this!=&dm) {
+      delete fInfo;
+      delete fValueSetter;
+      delete fValueGetter;
+
       TDictionary::operator=(dm);
-      fInfo=dm.fInfo;
+      fInfo=new G__DataMemberInfo(*dm.fInfo);
       fClass=dm.fClass;
       fDataType=dm.fDataType;
       fOffset=dm.fOffset;

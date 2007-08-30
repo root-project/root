@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.159 2007/08/02 12:43:33 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.160 2007/08/03 17:19:18 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -550,16 +550,34 @@ void TCint::UpdateListOfTypes()
    // function is called by TROOT::GetListOfTypes().
 
    R__LOCKGUARD2(gCINTMutex);
-   G__TypedefInfo t;
+
+   // Remember the index of the last type that we looked at,
+   // so that we don't keep reprocessing the same types.
+   static int last_typenum = -1;
+
+   // Also remember the count from the last time the dictionary
+   // was rewound.  If it's been rewound since the last time we've
+   // been called, then we recan everything.
+   static int last_scratch_count = 0;
+   int this_scratch_count = G__scratch_upto(0);
+   if (this_scratch_count != last_scratch_count) {
+     last_scratch_count = this_scratch_count;
+     last_typenum = -1;
+   }
+
+   // Scan from where we left off last time.
+   G__TypedefInfo t (last_typenum);
    while (t.Next()) {
-      if (gROOT && gROOT->fTypes && t.IsValid() && t.Name()) {
-         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
+      const char* name = t.Name();
+      if (gROOT && gROOT->fTypes && t.IsValid() && name) {
+         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(name);
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals()),
          // this 'feature' is being used in TROOT::GetType().
          if (!d) {
             gROOT->fTypes->Add(new TDataType(new G__TypedefInfo(t)));
          }
+         last_typenum = t.Typenum();
       }
    }
 }
@@ -1404,34 +1422,7 @@ namespace {
          : fName(item),fTagnum(tagnum)
       {}
       void Update() {
-         Update(fName.c_str(),fTagnum);
-      }
-      static void Update(const char *item, Long_t tagnum)
-      {
-         Bool_t load = kFALSE;
-         if (strchr(item,'<')) {
-            // We have a template which may have duplicates.
-
-            TIter next( gROOT->GetListOfClasses() );
-            TClass *cl;
-
-            TString resolvedItem(
-               TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
-                  TClassEdit::kDropStlDefault).c_str(), kTRUE) );
-            TString resolved;
-            while ( (cl = (TClass*)next()) ) {
-               resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
-                  TClassEdit::kDropStlDefault).c_str(), kTRUE);
-               if (resolved==resolvedItem) {
-                  // we found at least one equivalent.
-                  // let's force a reload
-                  load = kTRUE;
-               }
-            }
-         }
-
-         TClass *cl = TClass::GetClass(item, load);
-         if (cl) cl->ResetClassInfo(tagnum);
+         TCint::UpdateClassInfoWork(fName.c_str(),fTagnum);
       }
    };
 }
@@ -1456,7 +1447,7 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
          topLevel = kTRUE;
       }
       if (topLevel) {
-         TInfoNode::Update(item,tagnum);
+         UpdateClassInfoWork(item,tagnum);
       } else {
          // If we are called indirectly from within another call to
          // TCint::UpdateClassInfo, we delay the update until the dictionary loading
@@ -1477,6 +1468,49 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
       }
    }
 }
+
+//______________________________________________________________________________
+void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
+{
+  // This does the actual work of UpdateClassInfo.
+
+  Bool_t load = kFALSE;
+  if (strchr(item,'<') && TClass::fgClassShortTypedefHash) {
+    // We have a template which may have duplicates.
+
+    TString resolvedItem(
+       TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
+          TClassEdit::kDropStlDefault).c_str(), kTRUE) );
+
+    if (resolvedItem != item) {
+      TClass* cl= (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
+      if (cl)
+        load = kTRUE;
+    }
+
+    if (!load) {
+      TIter next(TClass::fgClassShortTypedefHash->GetListForObject(resolvedItem));
+
+      while ( TClass::TNameMapNode* htmp =
+              static_cast<TClass::TNameMapNode*> (next()) )
+      {
+        if (resolvedItem == htmp->String()) {
+          TClass* cl = gROOT->GetClass (htmp->fOrigName);
+          if (cl) {
+            // we found at least one equivalent.
+            // let's force a reload
+            load = kTRUE;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  TClass *cl = gROOT->GetClass(item, load);
+  if (cl) cl->ResetClassInfo(tagnum);
+}
+
 
 //______________________________________________________________________________
 void TCint::UpdateAllCanvases()
