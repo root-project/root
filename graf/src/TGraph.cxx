@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.217 2007/08/15 07:38:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.218 2007/08/28 08:39:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -504,12 +504,13 @@ Double_t TGraph::Chisquare(const TF1 *f1) const
 //______________________________________________________________________________
 Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 {
-  // Return kTRUE if point number "left"'s argument (angle with respect to positive
-  // x-axis) is bigger than that of point number "right". Can be used by Sort.
-  Double_t xl,yl,xr,yr;
-  gr->GetPoint(left,xl,yl);
-  gr->GetPoint(right,xr,yr);
-  return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
+   // Return kTRUE if point number "left"'s argument (angle with respect to positive
+   // x-axis) is bigger than that of point number "right". Can be used by Sort.
+   
+   Double_t xl,yl,xr,yr;
+   gr->GetPoint(left,xl,yl);
+   gr->GetPoint(right,xr,yr);
+   return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
 }
 
 //______________________________________________________________________________
