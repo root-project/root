@@ -101,13 +101,13 @@ void G__store_dictposition(G__dictposition *dictpos)
 *
 *
 ***********************************************************************/
-void G__scratch_upto(G__dictposition *dictpos)
+int G__scratch_upto(G__dictposition *dictpos)
 {
   /* int i; */
 
   /* struct G__var_array *local; */
 
-  if(!dictpos) return;
+  if(!dictpos) return G__scratch_count;
 
   G__LockCriticalSection();
 
@@ -233,6 +233,7 @@ void G__scratch_upto(G__dictposition *dictpos)
   G__tagdefining = -1;
 
   G__UnlockCriticalSection();
+  return G__scratch_count;
 }
 
 
@@ -652,7 +653,7 @@ static int G__destroy_upto_vararray(G__var_array *var,int global
 int G__destroy_upto(G__var_array *var,int global
                     ,G__var_array *dictpos,int ig15)
 {
-
+   ++G__scratch_count;
    if (!var) return 0;
    G__var_array *tail = var;
    G__var_array *prev = 0;

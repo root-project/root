@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.30 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/meta:$Name: v5-14-00-patches $:$Id: TCint.h,v 1.31 2006/12/05 10:55:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -135,6 +135,7 @@ public:
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);
    static int   AutoLoadCallback(const char *cls, const char *lib);
    static void  UpdateClassInfo(char *name, Long_t tagnum);
+   static void  UpdateClassInfoWork(const char *name, Long_t tagnum);
    static void  UpdateAllCanvases();
 
    ClassDef(TCint,0)  //Interface to CINT C/C++ interpreter
