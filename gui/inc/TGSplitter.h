@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.16 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.17 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -44,6 +44,8 @@ public:
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGSplitter() { }
+
+   virtual void   SetFrame(TGFrame *frame, Bool_t prev) = 0;
 
    virtual Bool_t HandleButton(Event_t *event) = 0;
    virtual Bool_t HandleMotion(Event_t *event) = 0;
