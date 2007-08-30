@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.17 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.18 2007/06/23 21:23:22 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -275,8 +275,8 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
            center.X() + halfRange,
            center.Y() - halfRange,
            center.Y() + halfRange,
-           center.Z() - halfDepth,
-           center.Z() + halfDepth);
+          -center.Z() + halfDepth,
+          -center.Z() - halfDepth);
 
 
    glMatrixMode(GL_MODELVIEW);
