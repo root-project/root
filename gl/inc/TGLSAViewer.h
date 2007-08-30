@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.22 2007/08/19 10:08:15 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.23 2007/08/30 20:30:12 rdm Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -12,10 +12,9 @@
 #ifndef ROOT_TGLSAViewer
 #define ROOT_TGLSAViewer
 
-//#ifndef ROOT_TGLViewer
-//#include "TGLViewer.h"
-//#endif
+#ifndef ROOT_TGLViewer
 #include "TGLViewer.h"
+#endif
 
 #ifndef ROOT_TString
 #include "TString.h"

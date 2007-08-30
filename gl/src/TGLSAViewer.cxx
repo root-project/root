@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.36 2007/08/19 10:08:15 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.37 2007/08/30 20:30:12 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include <memory>
 
 #include "TRootHelpDialog.h"
@@ -45,7 +46,6 @@
 #endif
 
 #include "TGLPhysicalShape.h"
-//#include "TGLRenderArea.h"
 #include "TGLWidget.h"
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
