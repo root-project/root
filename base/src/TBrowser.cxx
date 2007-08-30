@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.23 2007/03/02 10:24:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.24 2007/03/30 07:55:27 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -82,8 +82,8 @@ private:
 ClassImp(TBrowser)
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0),
+TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp)
+   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0),
      fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title. Width and height are by
@@ -100,16 +100,15 @@ TBrowser::TBrowser(const char *name, const char *title)
       Float_t cx = gStyle->GetScreenFactor();
       UInt_t w = UInt_t(cx*800);
       UInt_t h = UInt_t(cx*500);
-
-      fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
+      if (!fImp) fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
       Create();
    }
 }
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title,
-                   UInt_t width, UInt_t height)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+                   UInt_t width, UInt_t height, TBrowserImp *extimp)
+   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height.
@@ -117,15 +116,15 @@ TBrowser::TBrowser(const char *name, const char *title,
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
    gApplication->InitializeGraphics();
-   fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
+   if (!fImp) fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
    Create();
 }
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title,
                    Int_t x, Int_t y,
-                   UInt_t width, UInt_t height)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+                   UInt_t width, UInt_t height, TBrowserImp *extimp)
+   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, position, width and height.
@@ -151,7 +150,7 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
    UInt_t w = UInt_t(cx*800);
    UInt_t h = UInt_t(cx*500);
 
-   fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
+   if (!fImp) fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
    Create(obj);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.13 2006/05/12 12:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.14 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -57,9 +57,9 @@ public:
       kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
 
-   TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
-   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height);
-   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   TBrowser(const char *name="Browser", const char *title="ROOT Object Browser", TBrowserImp *extimp=0);
+   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp=0);
+   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, TBrowserImp *extimp=0);
 
    TBrowser(const char *name, TObject *obj, const char *title="ROOT Object Browser");
    TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height);
@@ -92,6 +92,7 @@ public:
    virtual void  Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
+   void          SetBrowserImp(TBrowserImp *i) { fImp = i; }
    TContextMenu *GetContextMenu() const        { return fContextMenu; }
    Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
    TObject      *GetSelected() const           { return fLastSelectedObject; }
