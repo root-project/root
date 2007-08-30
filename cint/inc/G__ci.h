@@ -1871,7 +1871,7 @@ extern G__EXPORT int G__const_whatnoerror G__P((void));
 extern G__EXPORT int G__close_inputfiles G__P((void));
 /* earlier in this file: G__p2f2funcname */
 extern G__EXPORT void G__scratch_globals_upto G__P((struct G__dictposition *dictpos));
-extern G__EXPORT void G__scratch_upto G__P((struct G__dictposition *dictpos));
+extern G__EXPORT int G__scratch_upto G__P((struct G__dictposition *dictpos));
 /* earlier in this file: G__settemplevel */
 extern G__EXPORT void G__store_dictposition G__P((struct G__dictposition* dictpos));
 extern G__EXPORT int G__printf (char* fmt,...);

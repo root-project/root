@@ -321,7 +321,7 @@ G__DECL_API(218, int, G__const_resetnoerror, (void));
 G__DECL_API(219, int, G__const_setnoerror, (void));
 G__DECL_API(220, int, G__const_whatnoerror, (void));
 G__DECL_API(222, void, G__scratch_globals_upto, (struct G__dictposition *dictpos));
-G__DECL_API(223, void, G__scratch_upto, (struct G__dictposition *dictpos));
+G__DECL_API(223, int, G__scratch_upto, (struct G__dictposition *dictpos));
 G__DECL_API(224, void, G__store_dictposition, (struct G__dictposition* dictpos));
 #ifdef G__WIN32
 G__DECL_API(225, int, G__printf, (char* fmt,...));

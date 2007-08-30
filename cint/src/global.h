@@ -647,6 +647,13 @@ extern int G__cintv6;
 
 extern struct G__input_file G__lasterrorpos;
 
+/**************************************************************************
+* Incremented every time the cint dictionary is rewound in scrupto.
+* Can be used to see if cached information derived from the dictionary
+* is still valid.
+**************************************************************************/
+extern int G__scratch_count;
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

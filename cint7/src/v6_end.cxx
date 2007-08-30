@@ -49,6 +49,7 @@ extern "C" void G__scratch_all()
   struct G__var_array *local;
 
   G__LockCriticalSection();
+  ++G__scratch_count;
 
   G__lasterrorpos.line_number = 0;
   G__lasterrorpos.filenum = -1;

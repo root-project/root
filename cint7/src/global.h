@@ -653,6 +653,13 @@ extern int G__dynconst;
 extern G__DLLINIT G__initpermanentsl ;
 extern int G__ispermanentsl;
 
+/**************************************************************************
+* Incremented every time the cint dictionary is rewound in scrupto.
+* Can be used to see if cached information derived from the dictionary
+* is still valid.
+**************************************************************************/
+extern int G__scratch_count;
+
    } // namespace Internal
 } // namespace Cint
 

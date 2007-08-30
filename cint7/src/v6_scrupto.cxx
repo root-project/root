@@ -112,7 +112,7 @@ extern "C" void G__scratch_upto(G__dictposition *dictpos)
 
   /* struct G__var_array *local; */
 
-  if(!dictpos) return;
+  if(!dictpos) return G__scratch_count;
 
   G__LockCriticalSection();
 
@@ -238,6 +238,7 @@ extern "C" void G__scratch_upto(G__dictposition *dictpos)
   G__tagdefining = ::Reflex::Scope();
 
   G__UnlockCriticalSection();
+  return G__scratch_count;
 }
 
 
@@ -671,6 +672,7 @@ int Cint::Internal::G__destroy_upto(G__var_array *var,int global
                                     ,G__var_array *dictpos,int ig15)
 {
 
+   ++G__scratch_count;
    if (!var) return 0;
    G__var_array *tail = var;
    G__var_array *prev = 0;
