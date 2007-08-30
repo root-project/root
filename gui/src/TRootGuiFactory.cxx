@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.cxx,v 1.2 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.cxx,v 1.3 2003/10/22 17:20:50 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -24,7 +24,8 @@
 #include "TRootBrowser.h"
 #include "TRootContextMenu.h"
 #include "TRootControlBar.h"
-
+#include "TROOT.h"
+#include "TPluginManager.h"
 
 ClassImp(TRootGuiFactory)
 
@@ -73,6 +74,12 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
 {
    // Create a ROOT native GUI version of TBrowserImp
 
+   TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp");
+
+   if (ph && ph->LoadPlugin() != -1) {
+      TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(4, b, title, width, height);
+      if (imp) return imp;
+   }
    return new TRootBrowser(b, title, width, height);
 }
 
@@ -82,6 +89,12 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
 {
    // Create a ROOT native GUI version of TBrowserImp
 
+   TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp");
+
+   if (ph && ph->LoadPlugin() != -1) {
+      TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(6, b, title, x, y, width, height);
+      if (imp) return imp;
+   }
    return new TRootBrowser(b, title, x, y, width, height);
 }
 
