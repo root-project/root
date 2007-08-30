@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.273 2007/08/21 10:19:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.274 2007/08/29 08:54:41 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4281,6 +4281,7 @@ void TPad::Print(const char *filenam, Option_t *option)
             img->FromPad(this);
             img->WriteImage(psname, gtype);
             gErrorIgnoreLevel = saver;
+            delete img;
          }
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
