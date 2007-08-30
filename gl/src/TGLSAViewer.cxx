@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.35 2007/06/23 21:23:22 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.36 2007/08/19 10:08:15 rdm Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 
 #include "TGLOutput.h"
 
+#include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLPShapeObj.h"
 #include "TGLClip.h"
@@ -190,7 +191,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
 }
 
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(TGFrame *parent, TVirtualPad *pad, TGedEditor *ged) :
+TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
    fFileMenu(0),
@@ -261,6 +262,8 @@ void TGLSAViewer::CreateMenus()
    //File/Camera/Help menus.
 
    fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fFileMenu->AddEntry("&Edit Object", kGLEditObject);
+   fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Close Viewer", kGLCloseViewer);
    fFileMenu->AddSeparator();
    fFileSaveMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
@@ -291,7 +294,7 @@ void TGLSAViewer::CreateMenus()
    fHelpMenu->Associate(fFrame);
 
    // Create menubar
-   TGMenuBar *menuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame | kRaisedFrame);
+   TGMenuBar *menuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame);
    menuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    menuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    menuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
@@ -304,11 +307,12 @@ void TGLSAViewer::CreateFrames()
 {
    // Internal frames creation.
 
-   TGCompositeFrame* compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
-   fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-
+   TGCompositeFrame* compositeFrame = fFrame;
    if (fGedEditor == 0)
    {
+      compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
+      fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
       fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
       compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY , 2, 2, 2, 2));
 
@@ -330,7 +334,7 @@ void TGLSAViewer::CreateFrames()
    TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
    compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
 
-   fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, kSunkenFrame | kDoubleBorder);
+   fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, 0);
    // Direct events from the TGWindow directly to the base viewer
    Bool_t ok = kTRUE;
    //Execute event commented now
@@ -343,8 +347,7 @@ void TGLSAViewer::CreateFrames()
    ok = ok && fGLWindow->Connect("Repaint()", "TGLViewer", this, "Repaint()");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
 
-   //   canvasWindow->SetContainer(fGLWindow);
-   rightVerticalFrame->AddFrame(fGLWindow, /*canvasWindow,*/ new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   rightVerticalFrame->AddFrame(fGLWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }
 
 
@@ -492,6 +495,9 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             }
 
             break;
+         case kGLEditObject:
+            ToggleEditObject();
+            break;
          case kGLCloseViewer:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI
             // will all be changed in future anyway
@@ -515,7 +521,6 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-
 //______________________________________________________________________________
 void TGLSAViewer::SelectionChanged()
 {
@@ -527,23 +532,27 @@ void TGLSAViewer::SelectionChanged()
    // I misuse this function after overlay-mouse-drag as well.
    // Need something like refresh-viewer-gui which also does ged update.
 
-
    TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
-
-   if (selected  &&  selected == fPShapeWrap->fPShape  &&
-       fGedEditor->GetModel() == fPShapeWrap)
-   {
-      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
-      return;
-   }
 
    if (selected) {
       fPShapeWrap->fPShape = selected;
-      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
+      if (fFileMenu->IsEntryChecked(kGLEditObject))
+         fGedEditor->SetModel(fPad, selected->GetLogical()->GetExternal(), kButton1Down);
+      else
+         fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
    } else {
       fPShapeWrap->fPShape = 0;
       fGedEditor->SetModel(fPad, this, kButton1Down);
    }
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::OverlayDragFinished()
+{
+   // An overlay operation can result in change to an object.
+   // Refresh geditor.
+
+   fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
 }
 
 //______________________________________________________________________________
@@ -571,4 +580,16 @@ void TGLSAViewer::SavePicture(const TString &fileName)
       gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
    else
       SavePicture();
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::ToggleEditObject()
+{
+   // Toggle state of the 'Edit Object' manu entry.
+
+   if (fFileMenu->IsEntryChecked(kGLEditObject))
+      fFileMenu->UnCheckEntry(kGLEditObject);
+   else
+      fFileMenu->CheckEntry(kGLEditObject);
+   SelectionChanged();
 }

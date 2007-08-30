@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.21 2007/06/12 14:53:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.22 2007/08/19 10:08:15 rdm Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TString.h"
 #endif
 
+class TGWindow;
 class TGFrame;
 class TGCompositeFrame;
 class TGPopupMenu;
@@ -48,7 +49,8 @@ public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
       kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
       kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF,
-      kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT};
+      kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT,
+      kGLEditObject };
 
 private:
    // GUI components
@@ -87,12 +89,13 @@ private:
 
 public:
    TGLSAViewer(TVirtualPad *pad);
-   TGLSAViewer(TGFrame *parent, TVirtualPad *pad, TGedEditor *ged = 0);
+   TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged = 0);
    ~TGLSAViewer();
 
    virtual const char* GetName() const { return "GLViewer"; }
 
-   virtual void SelectionChanged(); // *SIGNAL*
+   virtual void SelectionChanged();     // *SIGNAL*
+   virtual void OverlayDragFinished(); // *SIGNAL*
 
    virtual void RefreshPadEditor(TObject* changed=0);
 
@@ -107,6 +110,8 @@ public:
    TGLSAFrame*       GetFrame() const { return fFrame; }
    TGCompositeFrame* GetLeftVerticalFrame() const { return fLeftVerticalFrame; }
    TGedEditor*       GetGedEditor() const { return fGedEditor; }
+
+   void ToggleEditObject();
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };
