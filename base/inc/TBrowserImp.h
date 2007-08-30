@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.7 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.8 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -59,6 +59,9 @@ public:
    virtual void  Show() { }
    virtual void  SetDrawOption(Option_t *option="");
    virtual Option_t *GetDrawOption() const { return 0; }
+
+   virtual TBrowser *GetBrowser() const      { return fBrowser; }
+   virtual void      SetBrowser(TBrowser *b) { fBrowser = b; }
 
    ClassDef(TBrowserImp,0)  //ABC describing browser implementation protocol
 };
