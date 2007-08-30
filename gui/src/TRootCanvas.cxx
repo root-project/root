@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.123 2007/07/19 14:20:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.124 2007/07/20 14:28:22 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -293,7 +293,7 @@ ClassImp(TRootCanvas)
 
 //______________________________________________________________________________
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TCanvasImp(c)
+   : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
 {
    // Create a basic ROOT canvas.
 
@@ -307,7 +307,7 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t heig
 
 //______________________________________________________________________________
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TCanvasImp(c)
+   : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
 {
    // Create a basic ROOT canvas.
 
