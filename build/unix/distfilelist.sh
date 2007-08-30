@@ -30,7 +30,8 @@ find tutorials -name "work.pc" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "work.pcl" -exec rm -rf {} \; >/dev/null 2>&1;true
 
 # remove cintdll dictionary sources, dependencies, import libraries
-find cint -name 'G__c*' -exec rm -f {} \; >/dev/null 2>&1;true
+find cint -name 'G__c_*' -exec rm -f {} \; >/dev/null 2>&1;true
+find cint -name 'G__cpp_*' -exec rm -f {} \; >/dev/null 2>&1;true
 find cint -name 'rootcint_*' -exec rm -f {} \; >/dev/null 2>&1;true
 
 mv -f tutorials/gallery.root- tutorials/gallery.root
