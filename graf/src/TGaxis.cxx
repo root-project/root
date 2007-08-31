@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.100 2007/06/22 07:17:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.101 2007/07/10 09:08:30 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1473,6 +1473,13 @@ L110:
 //*-*-              We eliminate the dot, unless dot is forced.
                   if (label[last] == '.') {
                      if (!optionDot) { label[last] = 0; last--;}
+                  }
+
+//*-*-            Make sure the label is not "-0"
+                  if (last-first == 1 && label[first] == '-'
+                                      && label[last]  == '0') {
+                     strcpy(label, "0");
+                     label[last] = 0;
                   }
                }
 
