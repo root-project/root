@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.84 2006/08/14 10:46:21 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.85 2006/09/04 00:45:03 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -170,8 +170,13 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t
    Long_t dev, ino;
 
    if (fProtocol > 12) {
+#ifdef R__WIN32
+      sscanf(msg, "%ld %ld %d %d %d %I64d %ld %d", &dev, &ino, &mode,
+            &uid, &gid, size, modtime, &islink);
+#else
       sscanf(msg, "%ld %ld %d %d %d %lld %ld %d", &dev, &ino, &mode,
             &uid, &gid, size, modtime, &islink);
+#endif
       if (dev == -1)
          return 1;
       if (id)
@@ -186,7 +191,11 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t
             *flags |= 4;
       }
    } else {
+#ifdef R__WIN32
+      sscanf(msg, "%ld %I64d %ld %ld", id, size, flags, modtime);
+#else
       sscanf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
+#endif
       if (*id == -1)
          return 1;
    }
@@ -337,7 +346,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    fBytesRead  += len;
    fReadCalls++;
-#ifdef WIN32
+#ifdef R__WIN32
    SetFileBytesRead(GetFileBytesRead() + len);
    SetFileReadCalls(GetFileReadCalls() + 1);
 #else
@@ -436,7 +445,7 @@ Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    fBytesRead  += total_len;
    fReadCalls++;
-#ifdef WIN32
+#ifdef R__WIN32
    SetFileBytesRead(GetFileBytesRead() + total_len);
    SetFileReadCalls(GetFileReadCalls() + 1);
 #else
@@ -509,7 +518,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
    fOffset += len;
 
    fBytesWrite  += len;
-#ifdef WIN32
+#ifdef R__WIN32
    SetFileBytesWritten(GetFileBytesWritten() + len);
 #else
    fgBytesWrite += len;

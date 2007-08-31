@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.23 2007/07/27 13:33:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.24 2007/07/30 00:52:51 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -482,10 +482,18 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
          boundaryEnd = boundary + "--";
       }
       if (res.BeginsWith("Content-range:")) {
+#ifdef R__WIN32
+         sscanf(res.Data(), "Content-range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
+#else
          sscanf(res.Data(), "Content-range: bytes %lld-%lld/%lld", &first, &last, &tot);
+#endif
       }
       if (res.BeginsWith("Content-Range:")) {
+#ifdef R__WIN32
+         sscanf(res.Data(), "Content-Range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
+#else
          sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
+#endif
       }
    }
 

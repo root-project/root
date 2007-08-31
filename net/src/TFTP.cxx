@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.33 2005/06/23 10:51:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.34 2005/10/27 16:36:38 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
-#ifndef WIN32
+#ifndef R__WIN32
 #   include <unistd.h>
 #else
 #   define ssize_t int
@@ -235,7 +235,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 
    if (!IsOpen() || !file || !*file) return -1;
 
-#if defined(WIN32) || defined(R__WINGCC)
+#if defined(R__WIN32) || defined(R__WINGCC)
    Int_t fd = open(file, O_RDONLY | O_BINARY);
 #elif defined(R__SEEK64)
    Int_t fd = open64(file, O_RDONLY);
@@ -299,7 +299,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
    char *buf = new char[fBlockSize];
 #if defined(R__SEEK64)
    lseek64(fd, pos, SEEK_SET);
-#elif defined(WIN32)
+#elif defined(R__WIN32)
    _lseeki64(fd, pos, SEEK_SET);
 #else
    lseek(fd, pos, SEEK_SET);
@@ -440,7 +440,11 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
       Error("GetFile", "error receiving remote file size");
       return -2;
    }
+#ifdef R__WIN32
+   sscanf(mess, "%I64d", &size);
+#else
    sscanf(mess, "%lld", &size);
+#endif
 
    // check if restartat value makes sense
    if (restartat && (restartat >= size))
@@ -449,7 +453,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    // open local file
    Int_t fd;
    if (!restartat) {
-#if defined(WIN32) || defined(R__WINGCC)
+#if defined(R__WIN32) || defined(R__WINGCC)
       if (fMode == kBinary)
          fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                    S_IREAD | S_IWRITE);
@@ -462,7 +466,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
       fd = open(localName, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #endif
    } else {
-#if defined(WIN32) || defined(R__WINGCC)
+#if defined(R__WIN32) || defined(R__WINGCC)
       if (fMode == kBinary)
          fd = open(localName, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
       else
@@ -499,7 +503,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    if (restartat) {
 #if defined(R__SEEK64)
       if (lseek64(fd, restartat, SEEK_SET) < 0) {
-#elif defined(WIN32)
+#elif defined(R__WIN32)
       if (_lseeki64(fd, restartat, SEEK_SET) < 0) {
 #else
       if (lseek(fd, restartat, SEEK_SET) < 0) {
@@ -590,7 +594,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
 
    delete [] buf; delete [] buf2;
 
-#ifndef WIN32
+#ifndef R__WIN32
    fchmod(fd, 0644);
 #endif
 
@@ -1058,8 +1062,13 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
    Long_t   id, flags, dev, ino, mtime;
    Long64_t size;
    if (fProtocol > 12) {
+#ifdef R__WIN32
+      sscanf(mess, "%ld %ld %d %d %d %I64d %ld %d", &dev, &ino, &mode,
+             &uid, &gid, &size, &mtime, &islink);
+#else
       sscanf(mess, "%ld %ld %d %d %d %lld %ld %d", &dev, &ino, &mode,
              &uid, &gid, &size, &mtime, &islink);
+#endif
       if (dev == -1)
          return 1;
       buf.fDev    = dev;
@@ -1071,7 +1080,11 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
       buf.fMtime  = mtime;
       buf.fIsLink = (islink == 1);
    } else {
+#ifdef R__WIN32
+      sscanf(mess, "%ld %I64d %ld %ld", &id, &size, &flags, &mtime);
+#else
       sscanf(mess, "%ld %lld %ld %ld", &id, &size, &flags, &mtime);
+#endif
       if (id == -1)
          return 1;
       buf.fDev    = (id >> 24);
