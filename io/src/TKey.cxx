@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TKey.cxx,v 1.68 2007/02/07 15:41:06 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TKey.cxx,v 1.69 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -375,19 +375,24 @@ void TKey::Browse(TBrowser *b)
 
    if (fMotherDir==0) return;
 
-   TObject *obj = fMotherDir->GetList()->FindObject(GetName());
-   if (obj && !obj->IsFolder()) {
-      if (obj->InheritsFrom(TCollection::Class()))
-         obj->Delete();   // delete also collection elements
-      delete obj;
-      obj = 0;
-   }
+   TClass *objcl = TClass::GetClass(GetClassName());
+
+   void* obj = fMotherDir->GetList()->FindObject(GetName());
+   if (obj && objcl->InheritsFrom(TObject::Class())) {
+      TObject *tobj = (TObject*)obj;
+      if (!tobj->IsFolder()) {
+         if (tobj->InheritsFrom(TCollection::Class()))
+            tobj->Delete();   // delete also collection elements
+         delete tobj;
+         tobj = 0;
+      }
+   } 
 
    if (!obj)
       obj = ReadObj();
 
    if (b && obj) {
-      obj->Browse(b);
+      objcl->Browse(obj,b);
       b->SetRefreshFlag(kTRUE);
    }
 }
@@ -586,7 +591,7 @@ Bool_t TKey::IsFolder() const
    Bool_t ret = kFALSE;
 
    TClass *classPtr = TClass::GetClass((const char *) fClassName);
-   if (classPtr && classPtr->GetClassInfo()) {
+   if (classPtr && classPtr->GetClassInfo() && classPtr->InheritsFrom(TObject::Class())) {
       TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
       if (obj) {
          ret = obj->IsFolder();
