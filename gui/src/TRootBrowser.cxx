@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.126 2007/07/17 13:35:49 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.127 2007/08/27 12:23:03 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2472,6 +2472,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
    Bool_t browsable = kFALSE;
    const char *dirname = 0;
    if (obj) {
+
       TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
 
       Bool_t useLock = kTRUE;
@@ -2495,9 +2496,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       }
 
       if (obj->InheritsFrom("TKey")) {
-         TObject *keyobj = gROOT->FindObject(obj->GetName());
-         if (keyobj && keyobj->ClassName() && 
-            (!strcmp(keyobj->ClassName(), "TFormula")))
+         TKey *key = dynamic_cast<TKey*>(obj);
+         if (key->GetClassName() && (!strcmp(key->GetClassName(), "TFormula")))
             browsable = kFALSE;
       }
 
