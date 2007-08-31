@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.4 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.5 2007/06/12 10:22:49 brun Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include <cstring>
@@ -54,7 +54,7 @@ enum EApplyButtonIds {
       kTBBottom,
       kTBLeft,
       kTBFront,
-      kTBEndOfList,
+      kTBEndOfList
 };
 
 enum EGLEditorIdent {
