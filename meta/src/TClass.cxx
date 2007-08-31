@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.227 2007/08/10 15:31:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.228 2007/08/30 15:59:32 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1172,6 +1172,13 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
 
       // do something useful.
 
+   } else if (IsTObject()) {
+      // Call TObject::Browse.
+
+      if (!fInterStreamer)
+         const_cast<TClass*>(this)->CalculateStreamerOffset();
+      TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
+      realTObject->Browse(b);
    }
    return 0;
 }
