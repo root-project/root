@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.128 2007/06/08 06:10:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.129 2007/08/23 12:02:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1997,7 +1997,7 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
    }
 
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+   if (!gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }
