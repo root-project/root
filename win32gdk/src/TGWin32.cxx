@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.125 2007/04/24 08:15:08 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.126 2007/05/05 10:31:16 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2965,7 +2965,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
       // make sure that foreground and background are different
       gdk_gc_get_values(gc, &gcvals);
 
-      if (gcvals.foreground.pixel == gcvals.background.pixel) {
+      if (gcvals.foreground.pixel != gcvals.background.pixel) {
          color.pixel = gColors[!ci].color.pixel;
          color.red = gColors[!ci].color.red;
          color.green = gColors[!ci].color.green;
