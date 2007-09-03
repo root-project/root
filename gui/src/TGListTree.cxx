@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.65 2007/08/27 17:04:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.66 2007/08/29 07:16:10 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -442,8 +442,6 @@ Bool_t TGListTree::HandleButton(Event_t *event)
          Clicked(item, event->fCode, event->fXRoot, event->fYRoot);
       }
    }
-   if (event->fType == kButtonRelease) gVirtualX->SetInputFocus(fId);
-
    return kTRUE;
 }
 
