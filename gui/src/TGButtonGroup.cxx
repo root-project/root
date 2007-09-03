@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.29 2007/07/04 15:10:49 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.30 2007/07/09 12:13:09 antcheva Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -398,6 +398,7 @@ void TGButtonGroup::Remove(TGButton *button)
    if (item) {
       button->SetGroup(0);
       button->Disconnect(this);
+      button->DestroyWindow();
    }
 
    RemoveFrame(button);
