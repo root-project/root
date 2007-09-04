@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.7 2007/04/23 09:07:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.8 2007/04/24 10:01:28 brun Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -294,7 +294,7 @@ void TGTextEditor::Build()
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
 
-   fMenuFile = new TGPopupMenu(fClient->GetRoot());
+   fMenuFile = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuFile->AddEntry("&New", kM_FILE_NEW);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Open...", kM_FILE_OPEN);
@@ -305,7 +305,7 @@ void TGTextEditor::Build()
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("E&xit", kM_FILE_EXIT);
 
-   fMenuEdit = new TGPopupMenu(fClient->GetRoot());
+   fMenuEdit = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuEdit->AddEntry("Cu&t             Ctrl+X", kM_EDIT_CUT);
    fMenuEdit->AddEntry("&Copy          Ctrl+C", kM_EDIT_COPY);
    fMenuEdit->AddEntry("&Paste         Ctrl+V", kM_EDIT_PASTE);
@@ -315,7 +315,7 @@ void TGTextEditor::Build()
    fMenuEdit->AddSeparator();
    fMenuEdit->AddEntry("Set &Font", kM_EDIT_SELFONT);
 
-   fMenuTools = new TGPopupMenu(fClient->GetRoot());
+   fMenuTools = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuTools->AddEntry("&Compile Macro  Ctrl+F7", kM_TOOLS_COMPILE);
    fMenuTools->AddEntry("&Execute Macro   Ctrl+F5", kM_TOOLS_EXECUTE);
    fMenuTools->AddEntry("&Interrupt              Shift+F5", kM_TOOLS_INTERRUPT);
@@ -325,13 +325,13 @@ void TGTextEditor::Build()
    fMenuEdit->DisableEntry(kM_EDIT_DELETE);
    fMenuEdit->DisableEntry(kM_EDIT_PASTE);
 
-   fMenuSearch = new TGPopupMenu(fClient->GetRoot());
+   fMenuSearch = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuSearch->AddEntry("&Find...         Ctrl+F", kM_SEARCH_FIND);
    fMenuSearch->AddEntry("Find &Next    F3", kM_SEARCH_FINDNEXT);
    fMenuSearch->AddSeparator();
    fMenuSearch->AddEntry("&Goto Line... Ctrl+L", kM_SEARCH_GOTO);
 
-   fMenuHelp = new TGPopupMenu(fClient->GetRoot());
+   fMenuHelp = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenuHelp->AddEntry("&Help Topics    F1", kM_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry("&About...", kM_HELP_ABOUT);
