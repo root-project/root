@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.51 2007/05/22 08:13:06 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.52 2007/06/07 08:43:58 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -376,6 +376,14 @@ void TGTextEntry::ReturnPressed()
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_ENTER),fWidgetId, 0);
 
    Emit("ReturnPressed()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::ShiftTabPressed()
+{
+   // This signal is emitted when <SHIFT> and <TAB> keys are pressed.
+
+   Emit("ShiftTabPressed()");
 }
 
 //______________________________________________________________________________
@@ -1184,6 +1192,13 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
       ReturnPressed();                                      // emit signal
       if (!TestBit(kNotDeleted)) return kTRUE;
       fSelectionOn = kFALSE;
+
+   } else if (event->fState & kKeyShiftMask) {
+       if ((EKeySym)keysym  == kKey_Backtab) {
+          ShiftTabPressed();                               // emit signal
+          fSelectionOn = kFALSE;
+          return kTRUE;
+       }
 
    } else if ((EKeySym)keysym  == kKey_Tab) {
 

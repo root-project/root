@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.32 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.33 2006/10/25 08:03:31 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -190,6 +190,7 @@ public:
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
    virtual  void        TabPressed();                           //*SIGNAL*
+   virtual  void        ShiftTabPressed();                      //*SIGNAL*
    virtual  void        CursorOutLeft();                        //*SIGNAL*
    virtual  void        CursorOutRight();                       //*SIGNAL*
    virtual  void        CursorOutUp();                          //*SIGNAL*
