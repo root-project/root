@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.13 2007/06/21 15:42:50 pcanal Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.14 2007/08/02 16:10:23 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -4140,7 +4140,7 @@ void TSessionViewer::Build()
    fBaseIcon = fClient->GetPicture("proof_base.xpm");
 
    //--- File menu
-   fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fFileMenu->AddEntry("&Load Config...", kFileLoadConfig);
    fFileMenu->AddEntry("&Save Config...", kFileSaveConfig);
    fFileMenu->AddSeparator();
@@ -4149,7 +4149,7 @@ void TSessionViewer::Build()
    fFileMenu->AddEntry("&Quit ROOT",       kFileQuit);
 
    //--- Session menu
-   fSessionMenu = new TGPopupMenu(gClient->GetRoot());
+   fSessionMenu = new TGPopupMenu(gClient->GetDefaultRoot());
    fSessionMenu->AddLabel("Session Management");
    fSessionMenu->AddSeparator();
    fSessionMenu->AddEntry("&New Session", kSessionNew);
@@ -4167,7 +4167,7 @@ void TSessionViewer::Build()
    fSessionMenu->DisableEntry(kSessionAdd);
 
    //--- Query menu
-   fQueryMenu = new TGPopupMenu(gClient->GetRoot());
+   fQueryMenu = new TGPopupMenu(gClient->GetDefaultRoot());
    fQueryMenu->AddLabel("Query Management");
    fQueryMenu->AddSeparator();
    fQueryMenu->AddEntry("&New...", kQueryNew);
@@ -4185,7 +4185,7 @@ void TSessionViewer::Build()
    fConfigFile = Form("%s/%s", gSystem->HomeDirectory(), kConfigFile);
 #endif
 
-   fCascadeMenu = new TGPopupMenu(fClient->GetRoot());
+   fCascadeMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    Int_t i = 0;
    while (kFeedbackHistos[i]) {
       fCascadeMenu->AddEntry(kFeedbackHistos[i], 41+i);
@@ -4196,7 +4196,7 @@ void TSessionViewer::Build()
    fCascadeMenu->DisableEntry(50);
 
    //--- Options menu
-   fOptionsMenu = new TGPopupMenu(fClient->GetRoot());
+   fOptionsMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fOptionsMenu->AddLabel("Global Options");
    fOptionsMenu->AddSeparator();
    fOptionsMenu->AddEntry("&Autosave Config", kOptionsAutoSave);
@@ -4211,7 +4211,7 @@ void TSessionViewer::Build()
    fOptionsMenu->CheckEntry(kOptionsAutoSave);
 
    //--- Help menu
-   fHelpMenu = new TGPopupMenu(gClient->GetRoot());
+   fHelpMenu = new TGPopupMenu(gClient->GetDefaultRoot());
    fHelpMenu->AddEntry("&About ROOT...",  kHelpAbout);
 
    fFileMenu->Associate(this);
@@ -4262,7 +4262,7 @@ void TSessionViewer::Build()
    AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
 
-   fPopupSrv = new TGPopupMenu(fClient->GetRoot());
+   fPopupSrv = new TGPopupMenu(fClient->GetDefaultRoot());
    fPopupSrv->AddEntry("Connect",kSessionConnect);
    fPopupSrv->AddEntry("Disconnect",kSessionDisconnect);
    fPopupSrv->AddEntry("Shutdown",kSessionShutdown);
@@ -4276,7 +4276,7 @@ void TSessionViewer::Build()
    fPopupSrv->Connect("Activated(Int_t)","TSessionViewer", this,
          "MyHandleMenu(Int_t)");
 
-   fPopupQry = new TGPopupMenu(fClient->GetRoot());
+   fPopupQry = new TGPopupMenu(fClient->GetDefaultRoot());
    fPopupQry->AddEntry("Edit",kQueryEdit);
    fPopupQry->AddEntry("Submit",kQuerySubmit);
    fPopupQry->AddSeparator();
