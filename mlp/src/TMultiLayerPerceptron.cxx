@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name: v5-16-00 $:$Id: TMultiLayerPerceptron.cxx,v 1.42 2007/05/09 10:06:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.43 2007/08/07 07:48:44 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1657,9 +1657,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          sourcefile << "     case " << idx++ << ":" << endl
-                    << "         return ((neuron" << neuron << "()*"
-                    << neuron->GetNormalisation()[0] << ")+"
-                    << neuron->GetNormalisation()[1] << ");" << endl;
+                    << "         return neuron" << neuron << "();" << endl;
       sourcefile << "     default:" << endl
                  << "         return 0.;" << endl << "   }"
                  << endl;
@@ -1787,9 +1785,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       while ((neuron = (TNeuron *) it->Next())) {
          sourcefile << ifelseif.Data() << idx++ << ") then" << endl
                     << "          " << filename
-                    << "=((neuron" << neuron << "(x)*"
-                    << neuron->GetNormalisation()[0] << ")+"
-                    << neuron->GetNormalisation()[1] << ");" << endl;
+                    << "=neuron" << neuron << "(x);" << endl;
          ifelseif = "      else if (index.eq.";
       }
       sourcefile << "      else" << endl
@@ -1911,9 +1907,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          pythonfile << "\t\tif index==" << idx++
-             << ": return ((self.neuron" << neuron << "()*"
-             << neuron->GetNormalisation()[0] << ")+"
-             << neuron->GetNormalisation()[1] << ");" << endl;
+                    << ": return self.neuron" << neuron << "();" << endl;
       pythonfile << "\t\treturn 0." << endl;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
