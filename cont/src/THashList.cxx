@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.7 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.8 2007/07/19 17:00:20 pcanal Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -185,9 +185,18 @@ void THashList::Clear(Option_t *option)
 void THashList::Delete(Option_t *option)
 {
    // Remove all objects from the list AND delete all heap based objects.
+   // If option="slow" then keep list consistent during delete. This allows
+   // recursive list operations during the delete (e.g. during the dtor
+   // of an object in this list one can still access the list to search for
+   // other not yet deleted objects).
 
-   fTable->Clear("nodelete");  // all objects will be deleted
-   TList::Delete(option);      // this deletes the objects
+   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
+
+   if (!slow)
+      fTable->Clear("nodelete");  // all objects will be deleted
+   TList::Delete(option);         // this deletes the objects
+   if (slow)
+      fTable->Clear("nodelete");  // all objects will be deleted
 }
 
 //______________________________________________________________________________
