@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.52 2007/06/07 08:43:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.53 2007/09/04 07:23:24 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1194,11 +1194,11 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
       fSelectionOn = kFALSE;
 
    } else if (event->fState & kKeyShiftMask) {
-       if ((EKeySym)keysym  == kKey_Backtab) {
-          ShiftTabPressed();                               // emit signal
-          fSelectionOn = kFALSE;
-          return kTRUE;
-       }
+      if ((EKeySym)keysym  == kKey_Backtab) {
+         ShiftTabPressed();                               // emit signal
+         fSelectionOn = kFALSE;
+         return kTRUE;
+      }
 
    } else if ((EKeySym)keysym  == kKey_Tab) {
 
