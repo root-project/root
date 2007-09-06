@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.8 2007/07/19 17:00:20 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.9 2007/09/05 22:48:32 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -174,7 +174,7 @@ void THashList::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
-   fTable->Clear("nodelete");  // any kCanDelete objects will be deleted
+   fTable->Clear("nodelete");  // clear table so not more lookups
    if (IsOwner())
       TList::Delete(option);
    else
@@ -192,11 +192,25 @@ void THashList::Delete(Option_t *option)
 
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
-   if (!slow)
-      fTable->Clear("nodelete");  // all objects will be deleted
-   TList::Delete(option);         // this deletes the objects
-   if (slow)
-      fTable->Clear("nodelete");  // all objects will be deleted
+   if (!slow) {
+      fTable->Clear("nodelete");     // clear table so no more lookups
+      TList::Delete(option);         // this deletes the objects
+   } else {
+      while (fFirst) {
+         TObjLink *tlk = fFirst;
+         fFirst = fFirst->Next();
+         fSize--;
+         // remove object from table
+         fTable->Remove(tlk->GetObject());
+         // delete only heap objects
+         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
+            TCollection::GarbageCollect(tlk->GetObject());
+
+         delete tlk;
+      }
+      fFirst = fLast = fCache = 0;
+      fSize  = 0;
+   }
 }
 
 //______________________________________________________________________________
