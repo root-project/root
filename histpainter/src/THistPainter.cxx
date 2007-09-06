@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.285 2007/05/02 14:37:42 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.286 2007/08/29 16:28:53 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -710,14 +710,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
 
-   l = strstr(chopt,"TRI");
-   if (l) {
-      Hoption.Scat = 0;
-      Hoption.Tri = 1; strncpy(l,"   ",3);
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
-   }
-
    l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
 
    l = strstr(chopt,"CONT");
@@ -783,6 +775,15 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strncpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
+
+   l = strstr(chopt,"TRI");
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Color  = 0;
+      Hoption.Tri = 1; strncpy(l,"   ",3);
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+   }
 
    l = strstr(chopt,"AITOFF");
    if (l) {
