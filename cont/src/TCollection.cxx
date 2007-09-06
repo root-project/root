@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.37 2007/01/20 19:29:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.38 2007/03/22 20:07:36 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -463,6 +463,7 @@ void TCollection::EmptyGarbageCollection()
 void TCollection::GarbageCollect(TObject *obj)
 {
    // Add to the list of things to be cleaned up.
+
    R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageCollection) {
       if (!fgEmptyingGarbage) {
