@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.10 2007/07/09 15:43:58 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.h,v 1.11 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -51,6 +51,7 @@ class TVirtualPacketizer : public TObject {
 friend class TPacketizer;
 friend class TAdaptivePacketizer;
 friend class TPacketizerProgressive;
+friend class TPacketizerUnit;
 
 private:
    Long64_t  fProcessed;    // number of entries processed
@@ -80,12 +81,12 @@ protected:
    Bool_t   fValid;           // Constructed properly?
    Bool_t   fStop;            // Termination of Process() requested?
 
-   TVirtualPacketizer();
+   TVirtualPacketizer(TList *input);
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
    enum EStatusBits { kIsInitializing = BIT(16) };
-   virtual ~TVirtualPacketizer() { }
+   virtual ~TVirtualPacketizer();
 
    Bool_t                  IsValid() const { return fValid; }
    Long64_t                GetEntriesProcessed() const { return fProcessed; }

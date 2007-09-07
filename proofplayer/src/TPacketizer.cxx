@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.50 2007/07/03 16:26:44 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.51 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -241,7 +241,7 @@ ClassImp(TPacketizer)
 
 //______________________________________________________________________________
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
-                         Long64_t num, TList *input)
+                         Long64_t num, TList *input) : TVirtualPacketizer(input)
 {
    // Constructor
 
@@ -266,11 +266,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fInitTime = 0;
    fProcTime = 0;
    fTimeUpdt = -1.;
-
-   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
-   fCircN = 10;
-   TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
-   fCircProg->SetCircular(fCircN);
 
    Long_t maxSlaveCnt = 4;
    TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);
@@ -471,13 +466,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    PDB(kPacketizer,1) Info("TPacketizer", "Base Packetsize = %lld", fPacketSize);
 
-   if (fValid) {
-      Long_t period = 500;
-      TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
-      fProgress = new TTimer;
-      fProgress->SetObject(this);
-      fProgress->Start(period, kFALSE);
-   }
+   if (!fValid)
+      SafeDelete(fProgress);
 
    PDB(kPacketizer,1) Info("TPacketizer", "Return");
 }
@@ -496,7 +486,6 @@ TPacketizer::~TPacketizer()
    SafeDelete(fUnAllocated);
    SafeDelete(fActive);
    SafeDelete(fFileNodes);
-   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________

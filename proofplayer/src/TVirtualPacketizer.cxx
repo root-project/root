@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.12 2007/07/09 15:43:58 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.13 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TMessage.h"
 #include "TObjString.h"
 
+#include "TProof.h"
 #include "TProofDebug.h"
 #include "TProofPlayer.h"
 #include "TProofServ.h"
@@ -58,13 +59,35 @@
 ClassImp(TVirtualPacketizer)
 
 //______________________________________________________________________________
-TVirtualPacketizer::TVirtualPacketizer()
+TVirtualPacketizer::TVirtualPacketizer(TList *input)
 {
    // Constructor.
 
    fValid = kTRUE;
    fStop = kFALSE;
    ResetBit(TVirtualPacketizer::kIsInitializing);
+
+   // Init circularity ntple for performance calculations
+   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
+   fCircN = 10;
+   TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
+   fCircProg->SetCircular(fCircN);
+
+   // Init progress timer
+   Long_t period = 500;
+   TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
+   fProgress = new TTimer;
+   fProgress->SetObject(this);
+   fProgress->Start(period, kFALSE);
+}
+
+//______________________________________________________________________________
+TVirtualPacketizer::~TVirtualPacketizer()
+{
+   // Destructor.
+
+   SafeDelete(fCircProg);
+   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________

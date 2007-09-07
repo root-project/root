@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.11 2007/05/29 16:06:55 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.12 2007/07/03 16:26:44 ganis Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -219,13 +219,12 @@ const char *TPacketizerProgressive::TSlaveStat::GetName() const
 ClassImp(TPacketizerProgressive)
 
 //______________________________________________________________________________
-TPacketizerProgressive::TPacketizerProgressive(TDSet* dset,
-                                               TList* slaves,
-                                               Long64_t first,
-                                               Long64_t num,
-                                               TList* /*input*/)
-   : fDset(dset), fSlaves(slaves), fSlavesRemaining(0), fFirstEvent(first),
-     fTotalEvents(num), fEntriesSeen(0), fFilesOpened(0), fEstTotalEntries(0)
+TPacketizerProgressive::TPacketizerProgressive(TDSet* dset, TList* slaves,
+                                               Long64_t first, Long64_t num,
+                                               TList* input)
+   : TVirtualPacketizer(input), fDset(dset), fSlaves(slaves), fSlavesRemaining(0),
+     fFirstEvent(first), fTotalEvents(num), fEntriesSeen(0), fFilesOpened(0),
+     fEstTotalEntries(0)
 {
    // Constructor
 
@@ -279,7 +278,6 @@ TPacketizerProgressive::~TPacketizerProgressive()
    delete fActiveNonSlaves;
    delete fLastEntrySizes;
    delete fNewFileSlaves;
-   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________

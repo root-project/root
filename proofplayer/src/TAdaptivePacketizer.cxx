@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.15 2007/07/09 15:43:58 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.16 2007/07/13 13:22:57 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -389,6 +389,7 @@ Int_t TAdaptivePacketizer::fgNetworkFasterThanHD = 1;
 //______________________________________________________________________________
 TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
                           Long64_t first, Long64_t num, TList *input)
+                    : TVirtualPacketizer(input)
 {
    // Constructor
 
@@ -417,11 +418,6 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fProcTime = 0;
    fTimeUpdt = -1.;
    SetBit(TVirtualPacketizer::kIsInitializing);
-
-   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
-   fCircN = 10;
-   TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
-   fCircProg->SetCircular(fCircN);
 
    Long_t maxSlaveCnt = 0;
    if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt)))
@@ -636,13 +632,8 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    Info("TAdaptivePacketizer",
         "fraction of remote files %f", fFractionOfRemoteFiles);
 
-   if (fValid) {
-      Long_t period = 500;
-      TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
-      fProgress = new TTimer;
-      fProgress->SetObject(this);
-      fProgress->Start(period, kFALSE);
-   }
+   if (!fValid)
+      SafeDelete(fProgress);
 
    PDB(kPacketizer,1) Info("TAdaptivePacketizer", "return");
 }
@@ -661,7 +652,6 @@ TAdaptivePacketizer::~TAdaptivePacketizer()
    SafeDelete(fUnAllocated);
    SafeDelete(fActive);
    SafeDelete(fFileNodes);
-   SafeDelete(fProgress);
 }
 
 //______________________________________________________________________________
