@@ -1956,7 +1956,7 @@ UInt_t TASImage::GetWidth() const
    // Return width of original image not of the displayed image.
    // (Number of image pixels)
 
-   return fImage ? fImage->width : 0;
+   return fScaledImage ? fScaledImage->fImage->width : (fImage ? fImage->width : 0);
 }
 
 //______________________________________________________________________________
@@ -1965,7 +1965,7 @@ UInt_t TASImage::GetHeight() const
    // Return height of original image not of the displayed image.
    // (Number of image pixels)
 
-   return fImage ? fImage->height : 0;
+   return fScaledImage ? fScaledImage->fImage->height : (fImage ? fImage->height : 0);
 }
 
 //______________________________________________________________________________
@@ -3310,15 +3310,21 @@ UInt_t *TASImage::GetArgbArray()
       return 0;
    }
 
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+   if (!img) return 0;
+
+   if (!img->alt.argb32) {
+      if (fScaledImage) {
+         fScaledImage->BeginPaint();
+         img = fScaledImage->fImage;
+      } else {
+         BeginPaint();
+         img = fImage;
+      }
+   }
 
    return (UInt_t *)img->alt.argb32;
 }
-
 
 //______________________________________________________________________________
 UInt_t *TASImage::GetRgbaArray()
@@ -3332,11 +3338,18 @@ UInt_t *TASImage::GetRgbaArray()
       return 0;
    }
 
-   if (!fImage->alt.argb32) {
-      BeginPaint();
-   }
-
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+   if (!img) return 0;
+
+   if (!img->alt.argb32) {
+      if (fScaledImage) {
+         fScaledImage->BeginPaint();
+         img = fScaledImage->fImage;
+      } else {
+         BeginPaint();
+         img = fImage;
+      }
+   }
 
    UInt_t i, j;
    Int_t y = 0;
