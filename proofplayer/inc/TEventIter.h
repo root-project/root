@@ -1,5 +1,6 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.20 2007/07/11 14:23:10 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.21 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
+// Modified: Long Tran-Thanh    04/09/07  (Addition of TEventIterUnit)
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -77,6 +78,26 @@ public:
    static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
 
    ClassDef(TEventIter,0)  // Event iterator used by TProofPlayer's
+};
+
+
+//------------------------------------------------------------------------
+
+class TEventIterUnit : public TEventIter {
+
+private:
+ Long64_t fNum;
+ Long64_t fCurrent;
+
+
+public:
+   TEventIterUnit();
+   TEventIterUnit(TDSet *dset, TSelector *sel, Long64_t num);
+   ~TEventIterUnit() { }
+
+   Long64_t GetNextEvent();
+
+   ClassDef(TEventIterUnit,0)  // Event iterator for objects
 };
 
 

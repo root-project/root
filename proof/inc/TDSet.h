@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.12 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.13 2007/08/01 14:24:17 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -70,7 +70,8 @@ public:
    // TDSetElement status bits
    enum EStatusBits {
       kHasBeenLookedUp = BIT(15),
-      kWriteV3         = BIT(16)
+      kWriteV3         = BIT(16),
+      kEmpty           = BIT(17)
    };
 
 private:
@@ -133,7 +134,8 @@ class TDSet : public TNamed {
 public:
    // TDSet status bits
    enum EStatusBits {
-      kWriteV3         = BIT(16)
+      kWriteV3         = BIT(16),
+      kEmpty           = BIT(17)
    };
 
 private:

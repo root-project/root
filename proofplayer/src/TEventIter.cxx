@@ -1,5 +1,6 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.36 2007/07/11 14:23:10 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.cxx,v 1.37 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
+// Modified: Long Tran-Thanh    04/09/07  (Addition of TEventIterUnit)
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -95,7 +96,9 @@ TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long
 {
    // Create and instance of the appropriate iterator
 
-   if ( dset->IsTree() ) {
+   if (dset->TestBit(TDSet::kEmpty)) {
+      return new TEventIterUnit(dset, sel, num);
+   }  else if (dset->IsTree()) {
       return new TEventIterTree(dset, sel, first, num);
    } else {
       return new TEventIterObj(dset, sel, first, num);
@@ -161,6 +164,62 @@ Int_t TEventIter::LoadDir()
    }
 
    return ret;
+}
+
+//------------------------------------------------------------------------
+
+
+ClassImp(TEventIterUnit)
+
+//______________________________________________________________________________
+TEventIterUnit::TEventIterUnit()
+{
+   // Default constructor
+
+   fDSet = 0;
+   fElem = 0;
+   fSel = 0;
+   fNum = 0;
+   fCurrent = 0;
+   fStop = kFALSE;
+}
+
+//______________________________________________________________________________
+TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
+{
+   // Main constructor
+
+   fDSet = dset;
+   fElem = 0;
+   fSel = sel;
+   fNum = num;
+   fCurrent = 0;
+   fStop = kFALSE;
+}
+
+//______________________________________________________________________________
+Long64_t TEventIterUnit::GetNextEvent()
+{
+   // Get next event
+
+   if (fStop || fNum == 0)
+      return -1;
+
+   while (fElem == 0 || fCurrent == 0) {
+      fElem = fDSet->Next();
+      if (!fElem->TestBit(TDSetElement::kEmpty)) {
+         Error("GetNextEvent", "data element must be set to kEmtpy");
+         return -1;
+      }
+
+      fNum = fElem->GetNum();
+      if (!(fCurrent = fNum)) {
+         fNum = 0;
+         return -1;
+      }
+   }
+   --fCurrent;
+   return fCurrent;
 }
 
 //------------------------------------------------------------------------
