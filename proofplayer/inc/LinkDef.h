@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.8 2007/07/09 20:59:43 rdm Exp $ */
+/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.9 2007/07/11 15:35:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,7 @@
 #pragma link C++ class TAdaptivePacketizer+;
 
 #pragma link C++ class TEventIter+;
+#pragma link C++ class TEventIterUnit+;
 #pragma link C++ class TEventIterObj+;
 #pragma link C++ class TEventIterTree+;
 
