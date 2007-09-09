@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.13 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.14 2007/09/07 21:12:02 ganis Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -63,9 +63,19 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input)
 {
    // Constructor.
 
+   fProcessed = 0;
+   fBytesRead = 0;
+   fTotalEntries = 0;
    fValid = kTRUE;
    fStop = kFALSE;
-   ResetBit(TVirtualPacketizer::kIsInitializing);
+
+   // Performance monitoring
+   TTime tnow = gSystem->Now();
+   fStartTime = Long_t(tnow);
+   SetBit(TVirtualPacketizer::kIsInitializing);
+   fInitTime = 0;
+   fProcTime = 0;
+   fTimeUpdt = -1.;
 
    // Init circularity ntple for performance calculations
    fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");

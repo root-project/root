@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.12 2007/07/03 16:26:44 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.13 2007/09/07 21:12:02 ganis Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -44,6 +44,8 @@
 #include "TError.h"
 #include "TList.h"
 #include "TMap.h"
+#include "TMath.h"
+#include "TNtupleD.h"
 #include "TSlave.h"
 #include "TTimer.h"
 #include "TUrl.h"
@@ -230,21 +232,11 @@ TPacketizerProgressive::TPacketizerProgressive(TDSet* dset, TList* slaves,
 
    PDB(kPacketizer,1) Info("TPacketizerProgressive",
                            "enter (first %lld, num %lld)", first, num);
-
-   fProcessed = 0;
-
    if (fTotalEvents != -1) {
       // -1 events indicate to process the entire TDSet
       Error("TPacketizerProgressive",
             "this packetizer does not handle TDSet regions");
    }
-
-   TTime tnow = gSystem->Now();
-   fStartTime = Long_t(tnow);
-   SetBit(TVirtualPacketizer::kIsInitializing);
-   fInitTime = 0;
-   fProcTime = 0;
-   fTimeUpdt = -1.;
 
    fSlavesRemaining = new TList;
    fSlaveStats = new TMap;
@@ -347,11 +339,6 @@ void TPacketizerProgressive::Init()
 
    host_map.DeleteKeys();
 
-   // set up timer
-   fProgress = new TTimer;
-   fProgress->SetObject(this);
-   fProgress->Start(500, kFALSE);
-
    PDB(kPacketizer, 2) Info("Init", "finished init");
 }
 
@@ -390,9 +377,11 @@ TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
       num = entries_remaining;
    }
 
-   PDB(kPacketizer,3) Info("BuildPacket",
-                           "packet of size %lld requested (assigning %lld).  pos: %lld, num entries: %lld",
-                           size, num, fs->GetNextEntry(), elem_entries);
+   PDB(kPacketizer,3)
+      Info("BuildPacket",
+           "packet of size %lld requested (assigning %lld)."
+           "  pos: %lld, num entries: %lld",
+            size, num, fs->GetNextEntry(), elem_entries);
 
    TDSetElement* base = stat->GetCurrentElement();
    TDSetElement* packet = CreateNewPacket(base, fs->GetNextEntry(), num);
@@ -432,9 +421,10 @@ void TPacketizerProgressive::RecalculatePacketSize(Long64_t newCount)
    // calculate the mean
    Long64_t total = 0, mean = 0, elems_remaining;
    elems_remaining = fDset->GetListOfElements()->GetSize() - fFilesOpened;
-   PDB(kPacketizer, 4) Info("RecalculatePacketSize", "files opened: %lld, fdset size: %d, elems remaining: %lld",
-                            fFilesOpened, fDset->GetListOfElements()->GetSize(),
-                            elems_remaining);
+   PDB(kPacketizer, 4)
+      Info("RecalculatePacketSize",
+           "files opened: %lld, fdset size: %d, elems remaining: %lld",
+           fFilesOpened, fDset->GetListOfElements()->GetSize(), elems_remaining);
    TParameter<Long64_t>* count;
    TIter i(fLastEntrySizes);
    while ((count = (TParameter<Long64_t>*) i.Next())) {
@@ -449,8 +439,10 @@ void TPacketizerProgressive::RecalculatePacketSize(Long64_t newCount)
       fPacketSize = 1;
    }
 
-   PDB(kPacketizer, 3) Info("RecalculatePacketSize", "estimated number of entries: %lld, new packet size: %lld",
-                            fEstTotalEntries, fPacketSize);
+   PDB(kPacketizer, 3)
+      Info("RecalculatePacketSize",
+           "estimated number of entries: %lld, new packet size: %lld",
+           fEstTotalEntries, fPacketSize);
 }
 
 //______________________________________________________________________________
@@ -464,9 +456,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextActive(TSlaveS
 
    // check if the current host has any more TFileNodes
    if (stat->GetFileNode() && stat->GetFileNode()->HasActiveFiles()) {
-      PDB(kPacketizer, 3) Info("GetNextActive",
-                               "Assigning slave %s TDSetElement from current data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextActive",
+              "Assigning slave %s TDSetElement from current data source",
+              stat->GetName());
 
       file = stat->GetFileNode()->GetNextActive();
       return file;
@@ -475,9 +468,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextActive(TSlaveS
    // check if any non slaves have active TFileNodes
    if (fActiveNonSlaves->GetSize() &&
        ((TFileNode*) fActiveNonSlaves->First())->GetSlaveCnt() < kNonSlaveHostConnLim) {
-      PDB(kPacketizer, 3) Info("GetNextActive",
-                               "Assigning slave %s TDSetElement from non-slave data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextActive",
+              "Assigning slave %s TDSetElement from non-slave data source",
+              stat->GetName());
 
       file = ((TFileNode*) fActiveNonSlaves->First())->GetNextActive();
       return file;
@@ -486,9 +480,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextActive(TSlaveS
    // check if any slaves have active TFileNodes
    if (fActiveSlaves->GetSize() &&
        ((TFileNode*) fActiveSlaves->First())->GetSlaveCnt() < kSlaveHostConnLim) {
-      PDB(kPacketizer, 3) Info("GetNextActive",
-                               "Assigning slave %s TDSetElement from peer data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextActive",
+              "Assigning slave %s TDSetElement from peer data source",
+              stat->GetName());
 
       file = ((TFileNode*) fActiveSlaves->First())->GetNextActive();
       return file;
@@ -509,9 +504,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextUnAlloc(TSlave
 
    // check if the current host has any more TFileNodes
    if (stat->GetFileNode() && stat->GetFileNode()->HasUnAllocFiles()) {
-      PDB(kPacketizer, 3) Info("GetNextUnAlloc",
-                               "Assigning slave %s TDSetElement from current data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextUnAlloc",
+              "Assigning slave %s TDSetElement from current data source",
+              stat->GetName());
 
       fn = stat->GetFileNode();
       file = fn->GetNextUnAlloc();
@@ -542,9 +538,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextUnAlloc(TSlave
    // check if any non slaves have unallocated TFileNodes
    if (fUnAllocNonSlaves->GetSize() &&
        ((TFileNode*)fUnAllocNonSlaves->First())->GetSlaveCnt() < kNonSlaveHostConnLim) {
-      PDB(kPacketizer, 3) Info("GetNextUnAlloc",
-                               "Assigning slave %s TDSetElement from non-slave data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextUnAlloc",
+              "Assigning slave %s TDSetElement from non-slave data source",
+              stat->GetName());
 
       fn = (TFileNode*) fUnAllocNonSlaves->First();
       file = fn->GetNextUnAlloc();
@@ -560,9 +557,10 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextUnAlloc(TSlave
    // check if any slaves have unallocated TFileNodes
    if (fUnAllocSlaves->GetSize() &&
        ((TFileNode*) fUnAllocSlaves->First())->GetSlaveCnt() < kSlaveHostConnLim) {
-      PDB(kPacketizer, 3) Info("GetNextUnAlloc",
-                               "Assigning slave %s TDSetElement from peer data source",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("GetNextUnAlloc",
+              "Assigning slave %s TDSetElement from peer data source",
+              stat->GetName());
 
       fn = (TFileNode*) fUnAllocSlaves->First();
       file = fn->GetNextUnAlloc();
@@ -587,10 +585,14 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
 
    TSlaveStat* stat = (TSlaveStat*) fSlaveStats->GetValue(s);
 
-   PDB(kPacketizer, 4) Info("GetNextPacket", "current file node (%s) has %d connections",
-                            stat->GetFileNode()->GetName(), stat->GetFileNode()->GetSlaveCnt());
-   PDB(kPacketizer, 4) Info("GetNextPacket", "unalloc'd slaves: %d, unalloc'd non-slaves: %d, active slaves: %d, active non-slaves: %d",
-                            fUnAllocSlaves->GetSize(), fUnAllocNonSlaves->GetSize(), fActiveSlaves->GetSize(), fActiveNonSlaves->GetSize());
+   PDB(kPacketizer, 4)
+      Info("GetNextPacket", "current file node (%s) has %d connections",
+           stat->GetFileNode()->GetName(), stat->GetFileNode()->GetSlaveCnt());
+   PDB(kPacketizer, 4)
+      Info("GetNextPacket", "unalloc'd slaves: %d, unalloc'd non-slaves: %d,"
+           " active slaves: %d, active non-slaves: %d",
+           fUnAllocSlaves->GetSize(), fUnAllocNonSlaves->GetSize(),
+           fActiveSlaves->GetSize(), fActiveNonSlaves->GetSize());
 
    Double_t latency, proctime, proccpu;
    Long64_t bytesread, numentries;
@@ -598,7 +600,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    if (stat->GetCurrentElement() && ! stat->GetCurrentFile()->IsDone()) {
       (*r) >> latency >> proctime >> proccpu >> bytesread >> numentries;
       if (gPerfStats != 0) {
-         gPerfStats->PacketEvent(s->GetOrdinal(), s->GetName(), stat->GetCurrentElement()->GetFileName(),
+         gPerfStats->PacketEvent(s->GetOrdinal(), s->GetName(),
+                                 stat->GetCurrentElement()->GetFileName(),
                                  numentries, latency, proctime, proccpu, bytesread);
       }
    }
@@ -607,7 +610,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    if (stat->GetCurrentFile() && stat->GetCurrentFile()->IsDone()) {
       if (gPerfStats != 0) {
          TFileStat* file = stat->GetCurrentFile();
-         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(), file->GetNode()->GetName(),
+         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(),
+                               file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kFALSE);
       }
       stat->SetCurrentElement(0);
@@ -644,8 +648,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    TFileStat* fs = 0;
    // try to find an unallocated file first
    if ((fs = GetNextUnAlloc(stat))) {
-      PDB(kPacketizer, 3) Info("AssignElement", "giving slave %s unallocated file",
-                               stat->GetName());
+      PDB(kPacketizer, 3)
+         Info("AssignElement", "giving slave %s unallocated file", stat->GetName());
       stat->SetFileNode(fs->GetNode());
       stat->GetFileNode()->IncSlaveCnt(s->GetName());
       stat->SetCurrentFile(fs);
@@ -665,7 +669,9 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
 
       if (stat->GetCurrentElement()->GetNum() == -1) {
          // we grabbed an element that hasn't been fully opened yet
-         PDB(kPacketizer, 3) Info("AssignElement", "grabbed a packet that isn't fully opened, waiting");
+         PDB(kPacketizer, 3)
+            Info("AssignElement",
+                 "grabbed a packet that isn't fully opened, waiting");
          return (TDSetElement*) -1;
       }
       foundUnallocatedFile = 0;
@@ -679,7 +685,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    } else {
       if (gPerfStats != 0) {
          TFileStat* file = stat->GetCurrentFile();
-         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(), file->GetNode()->GetName(),
+         gPerfStats->FileEvent(s->GetOrdinal(), s->GetName(),
+                               file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kTRUE);
       }
       if (foundUnallocatedFile == 1)
@@ -694,7 +701,8 @@ Bool_t TPacketizerProgressive::HandleTimer(TTimer *)
 {
    // Send progress message to client.
 
-   PDB(kPacketizer, 4) Info("HandlerTimer", "estimated total entries: %lld, entries processed: %lld",
+   PDB(kPacketizer, 4)
+      Info("HandlerTimer", "estimated total entries: %lld, entries processed: %lld",
                             fEstTotalEntries, fProcessed);
 
    if (fProgress == 0) return kFALSE; // timer stopped already
@@ -703,7 +711,55 @@ Bool_t TPacketizerProgressive::HandleTimer(TTimer *)
    if (fEstTotalEntries <= 0) return kFALSE;
 
    TMessage m(kPROOF_PROGRESS);
-   m << fEstTotalEntries << fProcessed;
+
+   if (gProofServ->GetProtocol() > 11) {
+
+      // Prepare progress info
+      TTime tnow = gSystem->Now();
+      Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
+      Double_t evts = (Double_t) fProcessed;
+      Double_t mbs = (fBytesRead > 0) ? fBytesRead / TMath::Power(2.,20.) : 0.; //�--> MB
+
+      // Times and counters
+      Float_t evtrti = -1., mbrti = -1.;
+      if (TestBit(TVirtualPacketizer::kIsInitializing)) {
+         // Initialization
+         fInitTime = now;
+      } else {
+         // Fill the reference as first
+         if (fCircProg->GetEntries() <= 0) {
+            fCircProg->Fill((Double_t)0., 0., 0.);
+            // Best estimation of the init time
+            fInitTime = (now + fInitTime) / 2.;
+         }
+         // Time between updates
+         fTimeUpdt = now - fProcTime;
+         // Update proc time
+         fProcTime = now - fInitTime;
+         // Good entry
+         fCircProg->Fill((Double_t)fProcTime, evts, mbs);
+         // Instantaneous rates (at least 5 reports)
+         if (fCircProg->GetEntries() > 4) {
+            Double_t *ar = fCircProg->GetArgs();
+            fCircProg->GetEntry(0);
+            Double_t dt = (Double_t)fProcTime - ar[0];
+            evtrti = (dt > 0) ? (Float_t) (evts - ar[1]) / dt : -1. ;
+            mbrti = (dt > 0) ? (Float_t) (mbs - ar[2]) / dt : -1. ;
+            if (gPerfStats != 0)
+               gPerfStats->RateEvent((Double_t)fProcTime, dt,
+                                     (Long64_t) (evts - ar[1]),
+                                     (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
+         }
+      }
+
+      // Fill the message now
+      m << fEstTotalEntries << fProcessed << fBytesRead << fInitTime << fProcTime
+        << evtrti << mbrti;
+
+   } else {
+      // Old format
+      m << fEstTotalEntries << fProcessed;
+   }
 
    // send message to client;
    gProofServ->GetSocket()->Send(m);

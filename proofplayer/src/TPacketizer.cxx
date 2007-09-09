@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.51 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.52 2007/09/07 21:12:02 ganis Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -254,18 +254,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated = 0;
    fActive = 0;
    fFileNodes = 0;
-   fProgress = 0;
-
-   fProcessed = 0;
-   fBytesRead = 0;
    fMaxPerfIdx = 1;
-
-   TTime tnow = gSystem->Now();
-   fStartTime = Long_t(tnow);
-   SetBit(TVirtualPacketizer::kIsInitializing);
-   fInitTime = 0;
-   fProcTime = 0;
-   fTimeUpdt = -1.;
 
    Long_t maxSlaveCnt = 4;
    TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);

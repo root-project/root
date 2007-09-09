@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.16 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.17 2007/09/07 21:12:02 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -403,25 +403,18 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fUnAllocated = 0;
    fActive = 0;
    fFileNodes = 0;
-   fProgress = 0;
-
-   fProcessed = 0;
-   fBytesRead = 0;
    fCumProcTime = 0;
-
    fMaxPerfIdx = 1;
 
-   // performance monitoring
-   TTime tnow = gSystem->Now();
-   fStartTime = Long_t(tnow);
-   fInitTime = 0;
-   fProcTime = 0;
-   fTimeUpdt = -1.;
-   SetBit(TVirtualPacketizer::kIsInitializing);
-
    Long_t maxSlaveCnt = 0;
-   if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt)))
+   if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt))) {
       fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
+   } else {
+      // Use number of CPUs as default
+      SysInfo_t si;
+      gSystem->GetSysInfo(&si);
+      fgMaxSlaveCnt = (si.fCpus > 0) ? si.fCpus : 2;
+   }
 
    fgNetworkFasterThanHD = gEnv->GetValue("ProofServ.NetworkFasterThanHD", 1);
    if (fgNetworkFasterThanHD != 1)
