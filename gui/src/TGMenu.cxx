@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.72 2007/06/15 10:03:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.73 2007/07/19 07:46:07 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -132,7 +132,7 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
 
    fKeyNavigate = kFALSE;
 
-   fMenuMore = new TGPopupMenu(gClient->GetRoot());
+   fMenuMore = new TGPopupMenu(gClient->GetDefaultRoot());
    fMenuMore->AddLabel("Hidden Menus");
    fMenuMore->AddSeparator();
    fMenuBarMoreLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
@@ -2036,7 +2036,7 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    char quote = '"';
 
    out << "   TGPopupMenu *";
-   out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
+   out << GetName() << " = new TGPopupMenu(gClient->GetDefaultRoot()"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
 
    Bool_t hasradio = kFALSE;
