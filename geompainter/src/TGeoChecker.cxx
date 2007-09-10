@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.51 2007/08/20 14:00:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.52 2007/08/21 16:01:25 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -1368,7 +1368,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
       if (opt.Contains("many") && !node->IsOverlapping()) continue;
       if (opt.Contains("only") && node->IsOverlapping()) continue;
       ic = node->GetColour();
-      if ((ic<0) || (ic>=128)) ic = 0;
+      if ((ic<0) || (ic>=128)) ic = 1;
       marker = (TPolyMarker3D*)pm->At(ic);
       if (!marker) {
          marker = new TPolyMarker3D();

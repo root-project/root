@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.17 2007/06/05 06:34:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.18 2007/06/08 15:46:30 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,6 +42,7 @@
 #pragma link C++ class TGeoVoxelFinder+;
 #pragma link C++ class TGeoCylVoxels+;
 #pragma link C++ class TGeoFullVoxels+;
+#pragma link C++ class TGeoUniformVoxels+;
 #pragma link C++ class TGeoShape+;
 #pragma link C++ class TGeoHelix+;
 #pragma link C++ class TGeoHalfSpace+;

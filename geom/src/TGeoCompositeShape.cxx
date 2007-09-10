@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.39 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.40 2007/08/13 16:00:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -352,11 +352,11 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
    // Returns bool flag indicating if the caller should continue to
    // paint child objects
 
-   Bool_t addChildren = kFALSE;
+   Bool_t addChildren = kTRUE;
 
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
-   if (!painter || !viewer) return addChildren;
+   if (!painter || !viewer) return kFALSE;
 
    if (fNode) {
       // Fill out the buffer for the composite shape - nothing extra

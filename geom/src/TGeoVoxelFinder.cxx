@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.39 2006/07/09 05:27:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.40 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 ClassImp(TGeoVoxelFinder)
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVoxelFinder::TGeoVoxelFinder()
 {
 // Default constructor
@@ -79,7 +79,7 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    fBits1    = 0;
    SetInvalid(kFALSE);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
 {
 // Default constructor
@@ -122,7 +122,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    SetNeedRebuild();
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
   TObject(vf),
   fVolume(vf.fVolume),
@@ -170,7 +170,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(const TGeoVoxelFinder& vf) :
    }
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
 {
    //assignment operator
@@ -221,7 +221,7 @@ TGeoVoxelFinder& TGeoVoxelFinder::operator=(const TGeoVoxelFinder& vf)
    return *this;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVoxelFinder::~TGeoVoxelFinder()
 {
 // Destructor
@@ -250,7 +250,7 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
    if (fBits1) delete [] fBits1;
 //   printf("checklist...\n");
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::BuildVoxelLimits()
 {
 // build the array of bounding boxes of the nodes inside
@@ -297,7 +297,7 @@ void TGeoVoxelFinder::BuildVoxelLimits()
       fBoxes[6*id+5] = 0.5*(xyz[4]+xyz[5]); // Oz
    }
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::CreateCheckList()
 {
 // Initializes check list.
@@ -310,7 +310,7 @@ void TGeoVoxelFinder::CreateCheckList()
    if (!fCheckList) fCheckList = new Int_t[nd];
    if (!fBits1) fBits1 = new UChar_t[1+((nd-1)>>3)];
 }      
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master) const
 {
 // convert a point from the local reference system of node id to reference
@@ -318,7 +318,7 @@ void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *mast
    TGeoMatrix *mat = fVolume->GetNode(id)->GetMatrix();
    mat->LocalToMaster(local, master);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const
 {
 // Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
@@ -340,7 +340,7 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsa
    return kFALSE;
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoVoxelFinder::Efficiency()
 {
 //--- Compute voxelization efficiency.
@@ -386,7 +386,7 @@ Double_t TGeoVoxelFinder::Efficiency()
    printf("Total efficiency : %g\n", eff);
    return eff;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 {
 // create the list of nodes for which the bboxes overlap with inode's bbox
@@ -437,7 +437,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    node->SetOverlaps(ovlps, novlp);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::GetIndices(Double_t *point)
 {
 // Getindices for current slices on x, y, z
@@ -480,7 +480,7 @@ Bool_t TGeoVoxelFinder::GetIndices(Double_t *point)
    return flag;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const
 {
 //--- Return the list of extra candidates in a given X slice compared to
@@ -498,7 +498,7 @@ Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;   
 }
          
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const
 {
 //--- Return the list of extra candidates in a given Y slice compared to
@@ -516,7 +516,7 @@ Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;   
 }
          
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) const
 {
 //--- Return the list of extra candidates in a given Z slice compared to
@@ -534,7 +534,7 @@ Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) cons
    return list;   
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are not contained in current check list
@@ -554,7 +554,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
    return fCheckList;        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
@@ -574,7 +574,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
    return fCheckList;        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
@@ -595,7 +595,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*
 }      
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 {
 // Returns list of new candidates in next voxel. If NULL, nowhere to
@@ -1114,7 +1114,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
    return 0;            
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 {
 // get the list in the next voxel crossed by a ray
@@ -1245,7 +1245,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 //      for (Int_t i=0; i<fNcandidates; i++) printf("    %i\n", fCheckList[i]);
 //   }   
 }   
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
 {
 // get the list of daughter indices for which point is inside their bbox
@@ -1341,7 +1341,7 @@ Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
    return 0;   
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck)
 {
 // get the list of candidates in voxel (i,j,k) - no check
@@ -1403,7 +1403,7 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
    return 0; 
 }     
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck)
 {
 // get the list of new candidates for the next voxel crossed by current ray
@@ -1426,7 +1426,7 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t 
    return GetNextCandidates(point, ncheck);
 } 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *result)
 {
 // return the list of nodes corresponding to one array of bits
@@ -1454,7 +1454,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *r
    return kTRUE;        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
 {
 // return the list of nodes corresponding to one array of bits
@@ -1486,7 +1486,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
    return kTRUE;        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
 {
 // make union of older bits with new array
@@ -1518,7 +1518,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
    return (fNcandidates>0);        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
 {
 // make union of older bits with new array
@@ -1543,7 +1543,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
    return (fNcandidates>0);        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
 {
 // make union of older bits with new array
@@ -1569,7 +1569,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
    return (fNcandidates>0);        
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t &nf, Int_t *result)
 {
 // return the list of nodes corresponding to the intersection of two arrays of bits
@@ -1597,7 +1597,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
    return (nf>0);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
 {
 // return the list of nodes corresponding to the intersection of two arrays of bits
@@ -1624,7 +1624,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    return (fNcandidates>0);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t n3, UChar_t *array3, Int_t &nf, Int_t *result)
 {
 // return the list of nodes corresponding to the intersection of three arrays of bits
@@ -1652,7 +1652,7 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
    return (nf>0);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
 {
 // return the list of nodes corresponding to the intersection of three arrays of bits
@@ -1678,7 +1678,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    }
    return (fNcandidates>0);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::SortAll(Option_t *)
 {
 // order bounding boxes along x, y, z
@@ -2104,7 +2104,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    } 
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::Print(Option_t *) const
 {
 // Print the voxels.
@@ -2205,7 +2205,7 @@ void TGeoVoxelFinder::Print(Option_t *) const
    }
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
 {
 // print the voxel containing point
@@ -2240,7 +2240,7 @@ void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
       }
    }
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
 {
 // Voxelize attached volume according to option
@@ -2248,29 +2248,29 @@ void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
    SortAll();
    SetNeedRebuild(kFALSE);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 
 ClassImp(TGeoCylVoxels)
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCylVoxels::TGeoCylVoxels()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCylVoxels::TGeoCylVoxels(TGeoVolume *vol)
               :TGeoVoxelFinder(vol)
 {
 // Constructor
    fVolume->SetCylVoxels(kTRUE);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCylVoxels::~TGeoCylVoxels()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCylVoxels::BuildVoxelLimits()
 {
 //--- Compute boundary limits in R, Phi and Z coordinates for all daughters
@@ -2513,13 +2513,13 @@ void TGeoCylVoxels::BuildVoxelLimits()
 //      printf(" Z   : %g %g\n", fBoxes[6*id+4], fBoxes[6*id+5]);
    }
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoCylVoxels::Efficiency()
 {
 //--- Compute voxelization efficiency.
    return 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCylVoxels::FindOverlaps(Int_t inode) const
 {
 // create the list of nodes for which the bboxes overlap with inode's bbox
@@ -2607,7 +2607,7 @@ void TGeoCylVoxels::FindOverlaps(Int_t inode) const
    node->SetOverlaps(ovlps, novlp);
 //   printf("Overlaps for MANY node %s : %i\n", node->GetName(), novlp);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
 {
 //--- Get the list of nodes possibly containing a given point.
@@ -2627,13 +2627,13 @@ Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
    return TGeoVoxelFinder::GetCheckList(&ptcyl[0], nelem);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoCylVoxels::GetNextVoxel(Double_t * /*point*/, Double_t * /*dir*/, Int_t & /*ncheck*/)
 {
 //--- Get the list of nodes possibly crossed by a given ray.
    return 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t TGeoCylVoxels::IntersectIntervals(Double_t vox1, Double_t vox2, Double_t phi1, Double_t phi2) const
 {
 // Intersect a phi voxel interval in range (0,360) with a node phi interval of
@@ -2672,7 +2672,7 @@ Int_t TGeoCylVoxels::IntersectIntervals(Double_t vox1, Double_t vox2, Double_t p
    if (d21>0) return 1;
    return 0;   
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCylVoxels::Print(Option_t *) const
 {
 // Print info about voxels.
@@ -2728,7 +2728,7 @@ void TGeoCylVoxels::Print(Option_t *) const
       }
    }
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCylVoxels::SortAll(Option_t *)
 {
 // Order voxels along R, Phi, Z.
@@ -3039,7 +3039,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
 //      Efficiency();
    }   
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCylVoxels::Voxelize(Option_t *)
 {
 //--- Voxelize fVolume.
@@ -3052,7 +3052,7 @@ void TGeoCylVoxels::Voxelize(Option_t *)
 ClassImp(TGeoFullVoxels)
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoFullVoxels::TGeoFullVoxels()
 {
 // Default constructor
@@ -3062,7 +3062,7 @@ TGeoFullVoxels::TGeoFullVoxels()
    fNvz     = 0;
    fVox     = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoFullVoxels::TGeoFullVoxels(TGeoVolume *vol)
                :TGeoVoxelFinder(vol)
 {
@@ -3074,14 +3074,14 @@ TGeoFullVoxels::TGeoFullVoxels(TGeoVolume *vol)
    fVox     = 0;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoFullVoxels::~TGeoFullVoxels()
 {
 // Destructor
    if (fVox) delete [] fVox;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoFullVoxels::Voxelize(Option_t *)
 {
 //--- Voxelize fVolume.
@@ -3161,7 +3161,7 @@ void TGeoFullVoxels::Voxelize(Option_t *)
    }                           
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoFullVoxels::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck)
 {
 // get the list of candidates in voxel (i,j,k) - no check
@@ -3176,7 +3176,7 @@ Int_t *TGeoFullVoxels::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nche
    return fCheckList;
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t *TGeoFullVoxels::GetCheckList(Double_t *point, Int_t &nelem)
 {
 // get the list of daughter indices for which point is inside their bbox
@@ -3226,8 +3226,634 @@ Int_t *TGeoFullVoxels::GetCheckList(Double_t *point, Int_t &nelem)
    return fCheckList;   
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoFullVoxels::Print(Option_t *) const
 {
 }
 
+//_____________________________________________________________________________
+TGeoUniformVoxels::TGeoUniformVoxels()
+{
+// Default constructor
+   fNaxis = 0;
+   for (Int_t i=0; i<5; i++) {
+      fIaxis[i] = -1;
+      fNvoxels[i] = 0;
+      fVoxWidth[i] = 0.0;
+      fVoxEff[i] = 0.0;
+      fMotherLimits[i] = NULL;
+      fInd[i] = NULL;
+   }   
+}
+//_____________________________________________________________________________
+TGeoUniformVoxels::TGeoUniformVoxels(TGeoVolume *vol)
+               :TGeoVoxelFinder(vol)
+{
+// Constructor
+   fNaxis = 0;
+   for (Int_t i=0; i<5; i++) {
+      fIaxis[i] = -1;
+      fNvoxels[i] = 0;
+      fVoxWidth[i] = 0.0;
+      fVoxEff[i] = 0.0;
+      fMotherLimits[i] = NULL;
+      fInd[i] = NULL;
+   }   
+}
+
+//_____________________________________________________________________________
+TGeoUniformVoxels::~TGeoUniformVoxels()
+{
+// Destructor
+}
+
+//_____________________________________________________________________________
+Double_t TGeoUniformVoxels::BuildUniformVoxels(Int_t iaxis, Int_t nforced, Bool_t create)
+{
+// Make a uniform slicing on given axis in order to maximize the quality value.
+   const Int_t kMaxVoxels = 2000;
+   if (iaxis>2) return TGeoShape::Big();
+   TGeoBBox *box = (TGeoBBox*)fVolume->GetShape();
+   Double_t mother_width = 0.;
+   Int_t *ind = NULL;
+   switch (iaxis) {
+      case 0:
+         mother_width = box->GetDX();
+         break;
+      case 1:   
+         mother_width = box->GetDY();
+         break;
+      case 2:   
+         mother_width = box->GetDZ();
+   }
+   if (mother_width <= 0.) {
+      Error("BuildUniformVoxels", "Width of volume %s on axis %d is zero!", fVolume->GetName(), iaxis);
+      return TGeoShape::Big();
+   }   
+   Double_t lo_limit = box->GetOrigin()[iaxis] - mother_width;
+   Double_t hi_limit = box->GetOrigin()[iaxis] + mother_width;
+   Double_t min_width = TGeoShape::Big();
+   Double_t width;
+   Int_t nvoxels = nforced;
+   // Find the minimum range on the given axis.
+   Int_t id;
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nvoxels) {
+      for (id=0; id<nd; id++) {
+         width = fBoxes[6*id+iaxis];
+         if (width < min_width) min_width = width;
+      }
+      // Estimate number of voxels
+      nvoxels = (Int_t)(4.*mother_width/min_width+1);
+   }   
+   if (nvoxels>kMaxVoxels) nvoxels = kMaxVoxels;
+   width = 2.*mother_width/nvoxels;
+   fNvoxels[iaxis] = nvoxels;
+   fVoxWidth[iaxis] = width;
+   
+   // Size in bytes of the array of bits per voxel
+   Int_t npervoxel  = 1 /*N in voxel*/ + 1+(nd-1)/(8*sizeof(Int_t)); /*Nbytes per slice*/
+   // Create (if needed) array of voxels
+   UChar_t *bits = NULL;
+   UInt_t loc, bitnumber;
+   UChar_t bit;
+   if (create) {
+      switch (iaxis) {
+         case 0:
+            if (fIndX) {delete [] fIndX; fIndX=0; fNx=0;}
+            if (!fXb) {fXb = new Double_t[2]; fIbx = 2;}
+            fXb[0] = lo_limit;
+            fXb[1] = hi_limit;
+            break;
+         case 1:   
+            if (fIndY) {delete [] fIndY; fIndY=0; fNy=0;}
+            if (!fYb) {fYb = new Double_t[2]; fIby = 2;}
+            fYb[0] = lo_limit;
+            fYb[1] = hi_limit;
+            break;
+         case 2:   
+            if (fIndZ) {delete [] fIndZ; fIndZ=0; fNz=0;}
+            if (!fZb) {fZb = new Double_t[2]; fIbz = 2;}
+            fZb[0] = lo_limit;
+            fZb[1] = hi_limit;
+      }      
+      ind = new Int_t[nvoxels*npervoxel];
+      memset(ind,0, nvoxels*npervoxel*sizeof(Int_t));
+   }
+   // Loop slices   
+   Double_t min, max;
+   Int_t ivoxel, ninvoxel;
+   Int_t current = 0;
+   Double_t sum_in_voxels = 0;
+   Double_t sum_touched_voxels = 0;
+   for (ivoxel=0; ivoxel<nvoxels; ivoxel++) {
+      ninvoxel = 0;
+      if (create) {
+         ind[current] = 0;                   // number of candidates in voxel
+         bits = (UChar_t*)(&ind[current+1]); // adress of bits for this voxel
+      }   
+      min = lo_limit + ivoxel*width;
+      max = min + width;
+      // Loop all daughters and check if they are in the voxel
+      for (id=0; id<nd; id++) {
+         if (!InRange(id, iaxis, min, max)) continue;
+         ninvoxel++;
+         if (!create) continue;
+         ind[current]++;
+         bitnumber = (UInt_t)id;
+         loc = bitnumber/8;
+         bit = bitnumber%8;
+         bits[loc] |= 1<<bit;
+      }
+      if (ninvoxel) sum_touched_voxels += 1.;
+      sum_in_voxels += ninvoxel;
+      current += npervoxel;
+   }
+   if (create) {
+      switch (iaxis) {
+         case 0:
+            fIndX = ind;
+            fNx = current;
+            break;
+         case 1:
+            fIndY = ind;
+            fNy = current;
+            break;
+         case 2:
+            fIndZ = ind;
+            fNz = current;
+      }
+   }
+   Double_t qf = 0.;
+   if (nd==1) qf = 1.- sum_touched_voxels/nvoxels;
+   else qf = (nd-sum_in_voxels/sum_touched_voxels)/(nd-1.);
+   fVoxEff[iaxis] = qf;
+   return qf;
+}   
+   
+//_____________________________________________________________________________
+void TGeoUniformVoxels::CreateCheckList()
+{
+// Initializes check list.
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+   }   
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) return;
+   if (!fCheckList) fCheckList = new Int_t[nd];
+   if (!fBits1) fBits1 = new UChar_t[1+((nd-1)>>3)];
+   for (Int_t ibest=0; ibest<fNaxis; ibest++) {
+      Int_t iaxis = fIaxis[ibest];
+      switch (iaxis) {
+         case 0:
+            fMotherLimits[iaxis] = fXb;
+            fInd[iaxis] = fIndX;
+            break;
+         case 1:   
+            fMotherLimits[iaxis] = fYb;
+            fInd[iaxis] = fIndY;
+            break;
+         case 2:   
+            fMotherLimits[iaxis] = fZb;
+            fInd[iaxis] = fIndZ;
+      }
+   }   
+}      
+
+//_____________________________________________________________________________
+Bool_t TGeoUniformVoxels::InRange(Int_t idaughter, Int_t iaxis, Double_t min, Double_t max) const
+{
+// Check if a daughter node is in the given range on iaxis.
+   const Double_t *array = &fBoxes[6*idaughter];
+   Double_t lo_limit = array[iaxis+3]-array[iaxis];
+   Double_t hi_limit = array[iaxis+3]+array[iaxis];
+   if (hi_limit-min <= TGeoShape::Tolerance()) return kFALSE;
+   if (max-lo_limit <= TGeoShape::Tolerance()) return kFALSE;
+   return kTRUE;
+}   
+
+//_____________________________________________________________________________
+void TGeoUniformVoxels::Voxelize(Option_t *)
+{
+// Voxelize fVolume.
+   const Double_t vqmin_limit = 0.4;
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) return;
+   SetNeedRebuild(kFALSE);
+   fNaxis = 0;
+   for (Int_t i=0; i<5; i++) {
+      fIaxis[i] = -1;
+      fNvoxels[i] = 0;
+      fVoxWidth[i] = 0.0;
+      fVoxEff[i] = 0.0;
+   }   
+   
+   TGeoVoxelFinder::BuildVoxelLimits();
+   Double_t vox_quality_factor[3];
+   Int_t iaxis;
+   // Build voxels on the three cartesian axis and compute quality factor.
+//   printf("voxels for %s:\n", fVolume->GetName());
+   for (iaxis=0; iaxis<3; iaxis++) {
+      vox_quality_factor[iaxis] = BuildUniformVoxels(iaxis);
+//      printf("%i: %g\n", iaxis, vox_quality_factor[iaxis]);
+      // Reduce number of voxels for the axis without losing 
+      // more than 2% in voxel quality
+      if (vox_quality_factor[iaxis]>vqmin_limit)
+         vox_quality_factor[iaxis] = ReduceVoxels(iaxis, fNvoxels[iaxis], vox_quality_factor[iaxis]);
+   }      
+      
+   Int_t ibest = TMath::LocMax(3, vox_quality_factor);
+   if (vox_quality_factor[ibest]>vqmin_limit) {
+      fIaxis[0] = ibest;
+      Int_t i2 = (ibest+1)%3;
+      Int_t i3 = (ibest+2)%3;
+      if (vox_quality_factor[i2]>vox_quality_factor[i3]) {
+         if (vox_quality_factor[i2]>vqmin_limit) fIaxis[1]=i2;
+         if (vox_quality_factor[i3]>vqmin_limit) fIaxis[2]=i3;
+      } else {   
+         if (vox_quality_factor[i3]>vqmin_limit) fIaxis[1]=i3;
+         if (vox_quality_factor[i2]>vqmin_limit) fIaxis[2]=i2;
+      }
+   }         
+   // 
+   for (ibest=0; ibest<3; ibest++) {
+      if (fIaxis[ibest]<0) continue;
+      fNaxis++;
+      BuildUniformVoxels(fIaxis[ibest], fNvoxels[fIaxis[ibest]], kTRUE);
+   }  
+   if (!fNaxis) SetInvalid();
+   else CreateCheckList();
+}
+
+//_____________________________________________________________________________
+Double_t TGeoUniformVoxels::ReduceVoxels(Int_t iaxis, Int_t nvoxelsmax, Double_t vq)
+{
+// Try to reduce the number of voxels without reducing the voxels quality by less than 5%.
+   Double_t vqorig = vq;
+   Int_t nvoxorig = nvoxelsmax;
+   Double_t vqmin = vq-0.02;
+   Int_t nvoxelsmin = 3;
+   Int_t nvoxels;
+   while ((nvoxelsmax-nvoxelsmin)>3 && vq>vqmin) {
+      nvoxels = (nvoxelsmax+nvoxelsmin)/2;
+      vq = BuildUniformVoxels(iaxis, nvoxels);
+      if (vq>vqmin) {
+         nvoxelsmax = nvoxels;
+         vqorig = vq;
+         nvoxorig = nvoxels;
+      } else {
+         nvoxelsmin = nvoxels;
+      }
+   }
+   fNvoxels[iaxis] = nvoxorig;
+   return vqorig;         
+}   
+
+//_____________________________________________________________________________
+Int_t *TGeoUniformVoxels::GetCheckList(Double_t *point, Int_t &nelem)
+{
+// get the list of daughter indices for which point is inside their bbox
+   if (NeedRebuild()) {
+      TGeoUniformVoxels *vox = (TGeoUniformVoxels*)this;
+      vox->Voxelize("");
+      fVolume->FindOverlaps();
+   }   
+   nelem = fNcandidates = 0;
+   // Find touched voxel on all voxelized axis.
+   Int_t iaxis;
+   Int_t ivox[5];
+   Int_t nd[5];
+   UChar_t *slice[5];
+   Int_t npervoxel  = 2+(fVolume->GetNdaughters()-1)/(8*sizeof(Int_t));
+   for (Int_t ibest=0; ibest<fNaxis; ibest++) {
+      iaxis = fIaxis[ibest];
+      ivox[iaxis] = (Int_t)((point[iaxis]-fMotherLimits[iaxis][0])/fVoxWidth[iaxis]);
+      if (ivox[iaxis]<0 || ivox[iaxis]>fNvoxels[iaxis]-1) return NULL;
+      Int_t index = ivox[iaxis]*npervoxel;
+      nd[iaxis] = fInd[iaxis][index];
+      slice[iaxis] = (UChar_t*)(&fInd[iaxis][index+1]);
+   }
+   Bool_t intersect = kFALSE;
+   switch (fNaxis) {
+      case 1:
+         intersect = TGeoVoxelFinder::Intersect(nd[fIaxis[0]], slice[fIaxis[0]], nelem, fCheckList);
+         break;
+      case 2:
+         intersect = TGeoVoxelFinder::Intersect(nd[fIaxis[0]], slice[fIaxis[0]], nd[fIaxis[1]], slice[fIaxis[1]], nelem, fCheckList);
+         break;
+      case 3:
+         intersect = TGeoVoxelFinder::Intersect(nd[fIaxis[0]], slice[fIaxis[0]], nd[fIaxis[1]], slice[fIaxis[1]], nd[fIaxis[2]], slice[fIaxis[2]], nelem, fCheckList);
+         break;
+   }      
+   if (intersect) return fCheckList;
+   return NULL;
+}
+
+//_____________________________________________________________________________
+Int_t *TGeoUniformVoxels::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck)
+{
+// get the list of new candidates for the next voxel crossed by current ray
+//   printf("### GetNextVoxel current slices: (%d, %d, %d)\n", fSlices[0], fSlices[1], fSlices[2]);
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+   }   
+   if (fCurrentVoxel==0) {
+//      printf(">>> first voxel, %i candidates\n", ncheck);
+//      printf("   bits[0]=%i\n", gGeoManager->GetBits()[0]);
+      fCurrentVoxel++;
+      ncheck = fNcandidates;
+      return fCheckList;
+   }
+   fCurrentVoxel++;
+   Double_t step = gGeoManager->GetStep();
+   step *= dir[fIaxis[0]];
+   // If step on best axis is less than voxel width, proceed with full algorithm
+   if (step>4.*fVoxWidth[fIaxis[0]]) return 0;
+//   printf(">>> voxel %i\n", fCurrentVoxel);
+   // Get slices for next voxel
+//   printf("before - fSlices : %i %i %i\n", fSlices[0], fSlices[1], fSlices[2]);
+   ncheck = 0;
+   if (fLimits[0]<0) return 0;
+   if (fLimits[1]<0) return 0;
+   if (fLimits[2]<0) return 0;
+   Int_t dind[3]; // new slices
+   //---> start from old slices
+   memcpy(&dind[0], &fSlices[0], 3*sizeof(Int_t));
+   Double_t dmin[3]; // distances to get to next X,Y, Z slices.
+   dmin[0] = dmin[1] = dmin[2] = TGeoShape::Big();
+   //---> max. possible step to be considered
+   Double_t maxstep = TMath::Min(gGeoManager->GetStep(), fLimits[TMath::LocMin(3, fLimits)]);
+//   printf("1- maxstep=%g\n", maxstep);
+   Bool_t isForced[3], isLimit[3];
+   isForced[0] = isForced[1] = isForced[2] = kFALSE;
+   isLimit[0] = isLimit[1] = isLimit[2] = kFALSE;
+   Double_t dforced[3];
+   dforced[0] = dforced[1] = dforced[2] = 0.; // yes, we need to do a LocMax here
+   Int_t iforced = 0;
+   Int_t iaxis, ibest;
+   UChar_t *slice[5];
+   Int_t npervoxel = 2+(fVolume->GetNdaughters()-1)/(8*sizeof(Int_t));
+   for (ibest=0; ibest<fNaxis; ibest++) {
+      // Select axis
+      iaxis = fIaxis[ibest];
+      // Modify ALL voxel indices
+      Int_t iextra = GetVoxelWithExtra(iaxis, dind[iaxis], fInc[iaxis]);
+      // If next significant slice is not the same, crossing is forced
+      if (iextra != dind[iaxis]) {
+         dind[iaxis] = iextra;
+         isForced[iaxis] = kTRUE;
+//         printf("   -> axis %d is forced\n", iaxis);
+      } else {   
+         // just go to next slice
+         dind[iaxis] += fInc[iaxis];
+      }   
+      // Check if we are already out of range
+      if (dind[iaxis]<-1 || dind[iaxis]>fNvoxels[iaxis]) return 0;
+      // Compute distance to next significant voxel on the selected axis
+      if (fInc[iaxis]>0) dmin[iaxis] = (fMotherLimits[iaxis][0]+dind[iaxis]*fVoxWidth[iaxis]-point[iaxis])*fInvdir[iaxis];
+      else dmin[iaxis] = (fMotherLimits[iaxis][0]+(dind[iaxis]+1)*fVoxWidth[iaxis]-point[iaxis])*fInvdir[iaxis];
+      if (dmin[iaxis]<TGeoShape::Tolerance()) dmin[iaxis]=TGeoShape::Tolerance();
+      // Check if moving to next voxel is beyond the limit on this axis
+      if (dmin[iaxis]>maxstep) isLimit[iaxis] = kTRUE;
+      // If crossing forced but beyond limit - done
+      if (isForced[iaxis]) {
+         if (isLimit[iaxis]) return 0;
+         dforced[iaxis] = dmin[iaxis];
+         iforced++;
+      } 
+   }     
+   //---> We are done with checking. See which is the closest slice.
+   // First check if some slice is forced. If so, we need to cross on the axis
+   // having the maximum dforced.
+   
+   Double_t dslice = 0;
+   Int_t islice = 0;
+   if (iforced) {
+      islice = TMath::LocMax(3, dforced);
+      dslice = dforced[islice];
+   } else {
+   // No forcing, so cross the closest voxel
+      islice = TMath::LocMin(3, dmin);
+      dslice = dmin[islice];
+      // If next voxel too far we are done. 
+      if (dslice>=maxstep) return 0;
+   }   
+   // Now islice is the axis to be processed and dslice is the distance to next
+   // voxel. If on limit we are done.
+   if (isLimit[islice]) return 0;
+   // Update active slice
+   fSlices[islice] = dind[islice];
+   // If crossing was forced, recompute voxels for other axis
+   if (iforced) {
+      for (ibest=0; ibest<fNaxis; ibest++) {
+         // Select axis
+         iaxis = fIaxis[ibest];
+         if (iaxis==islice) continue;
+         if (dslice>fLimits[iaxis]) return 0;
+         Double_t coord = point[iaxis]+dslice/fInvdir[iaxis];
+         fSlices[iaxis] = (Int_t)((coord-fMotherLimits[iaxis][0])/fVoxWidth[iaxis]);
+      }
+   }      
+   // new indices are set -> Get new candidates
+   slice[0] = slice[1] = slice[2] = 0;   
+   for (ibest=0; ibest<fNaxis; ibest++) {
+      // Select axis
+      iaxis = fIaxis[ibest];
+      if (fSlices[iaxis]<0 || fSlices[iaxis]>fNvoxels[iaxis]-1) return 0;
+      Int_t index = fSlices[iaxis]*npervoxel;
+      slice[ibest] = (UChar_t*)(&fInd[iaxis][index+1]);
+   }
+   IntersectAndGetExtra(slice[0], slice[1], slice[2]);   
+   ncheck = fNcandidates;
+   return fCheckList;
+} 
+
+//_____________________________________________________________________________
+void TGeoUniformVoxels::Print(Option_t *) const
+{
+// Print information about voxels.
+   printf("voxels quality for %s (nd=%d):\n", fVolume->GetName(), fVolume->GetNdaughters());
+   if (!fNaxis) {
+      printf("   NO VOXELS\n");
+      return;
+   }    
+   for (Int_t ibest=0; ibest<fNaxis; ibest++) {
+      printf("   axis %d: qf=%g in %d voxels (width=%g limits=[%g, %g])\n", fIaxis[ibest], fVoxEff[fIaxis[ibest]], fNvoxels[fIaxis[ibest]], fVoxWidth[fIaxis[ibest]], fMotherLimits[fIaxis[ibest]][0],fMotherLimits[fIaxis[ibest]][1]);
+   }  
+}
+
+//_____________________________________________________________________________
+void TGeoUniformVoxels::SortCrossedVoxels(Double_t *point, Double_t *dir)
+{
+// get the list in the next voxel crossed by a ray
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+   } 
+   fCurrentVoxel = 0;
+//   printf("###Sort crossed voxels for %s\n", fVolume->GetName());
+   fNcandidates = 0;
+   Int_t ndaughters = fVolume->GetNdaughters();
+   Double_t step = gGeoManager->GetStep();
+   Double_t min[3] = {0.,0.,0.};
+   Double_t max[3] = {0.,0.,0.};
+   step *= dir[fIaxis[0]];
+   // If step on best axis is less than voxel width, proceed with full algorithm
+   if (step>4.*fVoxWidth[fIaxis[0]]) {
+      fNcandidates = 0;
+      Int_t ibest, iaxis;
+      for (ibest=0; ibest<fNaxis; ibest++) {
+         iaxis = fIaxis[ibest];
+         Double_t endval = point[iaxis] + dir[iaxis]*gGeoManager->GetStep();
+         if (dir[iaxis]>0) {
+            min[iaxis] = point[iaxis];
+            max[iaxis] = endval;
+         } else {
+            min[iaxis] = endval;
+            max[iaxis] = point[iaxis];
+         }
+      }   
+      for (Int_t id=0; id<ndaughters; id++)
+         if (IsCrossedVoxel(min,max,id)) fCheckList[fNcandidates++]=id;
+      return;
+   }      
+     
+   Int_t loc = 1+((ndaughters-1)>>3);
+   Int_t npervoxel = 2+(ndaughters-1)/(8*sizeof(Int_t));
+   Int_t iaxis, ibest;
+   Int_t ivox[5];
+   Int_t nd[5];
+   UChar_t *slice[5];
+   Bool_t flag = kTRUE;
+   memset(fBits1, 0, loc);
+   memset(fInc, 0, 3*sizeof(Int_t));
+   for (Int_t i=0; i<3; i++) {
+      fInvdir[i] = TGeoShape::Big();
+      if (TMath::Abs(dir[i])<TGeoShape::Tolerance()) continue;
+      fInc[i] = (dir[i]>0)?1:-1;
+      fInvdir[i] = 1./dir[i];
+      fLimits[i] = TGeoShape::Big();
+   }
+   for (ibest=0; ibest<fNaxis; ibest++) {
+      iaxis = fIaxis[ibest];
+      ivox[iaxis] = (Int_t)((point[iaxis]-fMotherLimits[iaxis][0])/fVoxWidth[iaxis]);
+      fSlices[iaxis] = ivox[iaxis];
+      if (ivox[iaxis]<0 || ivox[iaxis]>fNvoxels[iaxis]-1) flag=kFALSE;
+      if (flag) {
+         Int_t index = ivox[iaxis]*npervoxel;
+         nd[iaxis] = fInd[iaxis][index];
+         slice[iaxis] = (UChar_t*)(&fInd[iaxis][index+1]);
+      }   
+      if (fInc[iaxis]==0) fLimits[iaxis] = TGeoShape::Big();
+      else fLimits[iaxis]=(fMotherLimits[iaxis][(fInc[iaxis]+1)>>1]-point[iaxis])*fInvdir[iaxis];
+   }
+   
+   if (!flag) {
+//      printf("   NO candidates in first voxel\n");
+//      printf("   bits[0]=%i\n", bits[0]);
+      return;
+   }
+//   printf("   current slices : %i   %i  %i\n", fSlices[0], fSlices[1], fSlices[2]);
+   switch (fNaxis) {
+      case 1:
+         IntersectAndGetExtra(slice[fIaxis[0]]);
+         break;
+      case 2:
+         IntersectAndGetExtra(slice[fIaxis[0]], slice[fIaxis[1]]);
+         break;
+      case 3:
+         IntersectAndGetExtra(slice[fIaxis[0]], slice[fIaxis[1]], slice[fIaxis[2]]);
+         break;
+   }      
+
+//   printf("   bits[0]=%i  END\n", bits[0]);
+//   if (fNcandidates) {
+//      printf("   candidates for first voxel :\n");
+//      for (Int_t i=0; i<fNcandidates; i++) printf("    %i\n", fCheckList[i]);
+//   }   
+}   
+
+//_____________________________________________________________________________
+void TGeoUniformVoxels::IntersectAndGetExtra(UChar_t *array1, UChar_t *array2, UChar_t *array3)
+{
+// Make an AND for the arrays and make and OR with the existing result.
+   fNcandidates = 0;
+   Int_t  nbytes = 1+((fVolume->GetNdaughters()-1)>>3);
+   Int_t narrays = 0;
+   Int_t base;
+   UChar_t byte;
+   UChar_t extra;
+   UChar_t *array[3];
+   if (array1) array[narrays++]=array1;
+   if (array2) array[narrays++]=array2;
+   if (array3) array[narrays++]=array3;
+//   if (array1) printf("Intersecting: %d", array1[0]);
+//   if (array2) printf("   %d", array2[0]);
+//   if (array3) printf("   %d", array3[0]);
+//   printf("\n");
+   
+   for (Int_t ibyte=0; ibyte<nbytes; ibyte++) {
+      byte = array[0][ibyte];
+      for (Int_t iarray=1; iarray<narrays; iarray++)
+         byte &= array[iarray][ibyte];   
+      byte |= fBits1[ibyte];
+      if (byte == fBits1[ibyte]) continue;
+      base = ibyte<<3;
+      extra = byte & (~fBits1[ibyte]);
+      for (UInt_t ibit=0; ibit<8; ibit++)
+         if (extra & (1<<ibit)) fCheckList[fNcandidates++] = base + ibit;
+      fBits1[ibyte] = byte;
+   }
+//   printf("...candidates: ");
+//   for (Int_t i=0; i<fNcandidates; i++) printf("  %d", fCheckList[i]);
+//   printf("\n");
+}            
+      
+//_____________________________________________________________________________
+Int_t TGeoUniformVoxels::GetVoxelWithExtra(Int_t iaxis, Int_t ivoxel, Int_t inc) const
+{
+// Get voxel having extra candidates with respect to the ones stored in fBits1.
+//   printf("... checking voxel %d with extra to %d on axis %d\n", ivoxel, fBits1[0], iaxis);
+   if (!inc) return ivoxel;
+   if (ivoxel==-1 && inc>0) return 0;
+   if (ivoxel==fNvoxels[iaxis] && inc<0) return (ivoxel-1);
+   Int_t ndaughters = fVolume->GetNdaughters();
+   Int_t nbytes = 1+((ndaughters-1)>>3);
+   Int_t npervoxel = 2+(ndaughters-1)/(8*sizeof(Int_t));
+   Int_t limit = fNvoxels[iaxis];
+   if (inc<0) limit = -1;
+   Int_t icrt = ivoxel; // start from current voxel
+   Int_t index;
+   UChar_t byte;
+   UChar_t extra;
+   UChar_t *array = 0;
+   while (icrt != limit) {
+      index = icrt * npervoxel;
+      array = (UChar_t*)(&fInd[iaxis][index+1]);
+      for (Int_t ibyte=0; ibyte<nbytes; ibyte++) {
+         byte = array[ibyte];
+         extra = array[ibyte] & (~fBits1[ibyte]);
+//         if (extra) printf("...found extra %d on slice %d\n", extra, icrt);
+         if (extra) return icrt;
+      }
+      icrt += inc;
+   }
+   return icrt;
+}         
+
+//_____________________________________________________________________________
+Bool_t TGeoUniformVoxels::IsCrossedVoxel(Double_t *min, Double_t *max, Int_t id) const
+{
+// Check if voxels containing daughter id are crossed by track.
+   Int_t ibest, iaxis;
+   for (ibest=0; ibest<fNaxis; ibest++) {
+      iaxis = fIaxis[ibest];
+      // Check if [vmin,vmax] crosses [min, max]
+      if (!InRange(id, iaxis, min[iaxis], max[iaxis])) return kFALSE;
+   }
+   return kTRUE;
+}      
+      

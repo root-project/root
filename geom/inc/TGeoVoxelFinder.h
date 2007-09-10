@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.13 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.14 2007/08/13 14:05:59 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -110,7 +110,7 @@ public :
    TGeoVoxelFinder();
    TGeoVoxelFinder(TGeoVolume *vol);
    virtual ~TGeoVoxelFinder();
-   void                CreateCheckList();
+   virtual void        CreateCheckList();
    void                DaughterToMother(Int_t id, Double_t *local, Double_t *master) const;
    virtual Double_t    Efficiency();
    virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
@@ -127,7 +127,7 @@ public :
    void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
    void                SetNeedRebuild(Bool_t flag=kTRUE) {TObject::SetBit(kGeoRebuildVoxels, flag);}
    virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
-   void                SortCrossedVoxels(Double_t *point, Double_t *dir);
+   virtual void        SortCrossedVoxels(Double_t *point, Double_t *dir);
    virtual void        Voxelize(Option_t *option="");
 
    ClassDef(TGeoVoxelFinder, 2)                // voxel finder class
@@ -195,6 +195,51 @@ public:
    virtual void        Voxelize(Option_t *option);
 
    ClassDef(TGeoFullVoxels, 1)                // full voxels class
+};
+
+/*************************************************************************
+ * TGeoUniformVoxels - voxelization based on equidistant slicing
+ *  
+ *************************************************************************/
+
+class TGeoUniformVoxels : public TGeoVoxelFinder
+{
+private:
+   Int_t               fNaxis;        // number of axis voxelized
+   Int_t               fIaxis[5];     // voxelization axis
+   Int_t               fNvoxels[5];   // number of voxels on each axis   
+   Double_t            fVoxWidth[5];  // voxel width
+   Double_t            fVoxEff[5];    // voxels efficiency
+   Double_t           *fMotherLimits[5]; //! mother limits
+   Int_t              *fInd[5];          //! arrays of voxels
+
+   TGeoUniformVoxels(const TGeoUniformVoxels&); // Not implemented
+   TGeoUniformVoxels& operator=(const TGeoUniformVoxels&); // Not implemented
+
+   Double_t            BuildUniformVoxels(Int_t iaxis, Int_t nforced=0, Bool_t create=kFALSE);
+   Bool_t              InRange(Int_t idaughter, Int_t iaxis, Double_t min, Double_t max) const;
+   Double_t            ReduceVoxels(Int_t iaxis, Int_t nvoxmax, Double_t vqmin);
+public:
+   TGeoUniformVoxels();
+   TGeoUniformVoxels(TGeoVolume *vol);
+   virtual ~TGeoUniformVoxels();
+   
+//   virtual void        BuildVoxelLimits();
+   virtual void        CreateCheckList();
+//   virtual Double_t    Efficiency();
+//   virtual void        FindOverlaps(Int_t inode) const;
+   virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
+   void                IntersectAndGetExtra(UChar_t *array1=0, UChar_t *array2=0, UChar_t *array3=0);
+   Bool_t              IsCrossedVoxel(Double_t *min, Double_t *max, Int_t id) const;
+//   virtual Bool_t      GetNextIndices(Double_t *point, Double_t *dir);
+//   virtual Int_t      *GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck);
+   virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
+   Int_t               GetVoxelWithExtra(Int_t iaxis, Int_t ivoxel, Int_t inc) const;
+   virtual void        Print(Option_t *option="") const;
+   virtual void        SortCrossedVoxels(Double_t *point, Double_t *dir);
+   virtual void        Voxelize(Option_t *option="");
+
+   ClassDef(TGeoUniformVoxels, 1)                // uniform slicing voxels class
 };
 
 #endif

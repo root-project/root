@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNavigator.cxx,v 1.1 2007/06/08 15:46:30 brun Exp $
 // Author: Mihaela Gheata   30/05/07
 
 /*************************************************************************
@@ -856,9 +856,10 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
    }
    // if current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
+   Int_t sumchecked = 0;
    Int_t *vlist = 0;
    voxels->SortCrossedVoxels(point, dir);
-   while ((vlist=voxels->GetNextVoxel(point, dir, ncheck))) {
+   while ((sumchecked<nd) && (vlist=voxels->GetNextVoxel(point, dir, ncheck))) {
       for (i=0; i<ncheck; i++) {
          current = vol->GetNode(vlist[i]);
          if (fGeometry->IsActivityEnabled() && !current->GetVolume()->IsActive()) continue;
@@ -867,6 +868,8 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
          current->MasterToLocalVect(dir, ldir);
          if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint)) continue;
          snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
+         sumchecked++;
+//         printf("checked %d from %d : snext=%g\n", sumchecked, nd, snext);
          if (snext<fStep) {
             indnext = current->GetVolume()->GetNextNodeIndex();
             if (compmatrix) {

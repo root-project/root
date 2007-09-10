@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.187 2007/08/20 14:00:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.188 2007/08/21 16:01:25 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -780,7 +780,7 @@ TGeoManager::~TGeoManager()
 //   TBrowser *browser = 0;
 //   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
    delete TGeoBuilder::Instance(this);
-   delete [] fBits;
+   if (fBits)  delete [] fBits;
    if (fNodes) delete fNodes;
    if (fTopNode) delete fTopNode;
    if (fOverlaps) {fOverlaps->Delete(); delete fOverlaps;}
