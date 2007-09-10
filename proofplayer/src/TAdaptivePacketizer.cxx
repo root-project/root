@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.17 2007/09/07 21:12:02 ganis Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.18 2007/09/09 16:10:01 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -413,7 +413,8 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       // Use number of CPUs as default
       SysInfo_t si;
       gSystem->GetSysInfo(&si);
-      fgMaxSlaveCnt = (si.fCpus > 0) ? si.fCpus : 2;
+      if (si.fCpus > 2)
+         fgMaxSlaveCnt =  si.fCpus;
    }
 
    fgNetworkFasterThanHD = gEnv->GetValue("ProofServ.NetworkFasterThanHD", 1);
