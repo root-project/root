@@ -106,7 +106,7 @@ extern "C" void G__store_dictposition(G__dictposition *dictpos)
 *
 *
 ***********************************************************************/
-extern "C" void G__scratch_upto(G__dictposition *dictpos)
+int G__scratch_upto(G__dictposition *dictpos)
 {
   /* int i; */
 

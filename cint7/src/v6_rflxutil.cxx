@@ -101,6 +101,7 @@ int Cint::Internal::G__get_tagtype(const ::ROOT::Reflex::Type& in)
       case ::ROOT::Reflex::STRUCT: return 's';
       case ::ROOT::Reflex::ENUM: return 'e';
       case ::ROOT::Reflex::UNION: return 'u';
+      default: return 0;
    }
    return 0;
 }
