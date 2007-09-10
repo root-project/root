@@ -2358,9 +2358,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
              ) {
             if(G__ONLYMETHODLINK==G__struct.globalcomp[i]&&
                G__METHODLINK!=ifunc->globalcomp[j]) continue;
-#ifndef G__OLDIMPLEMENTATION2039
             if(0==ifunc->hash[j]) continue;
-#endif
 #ifndef G__OLDIMPLEMENTATION1656
             if(ifunc->pentry[j]->size<0) continue; /* already precompiled */
 #endif
@@ -2385,13 +2383,11 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
               else ++isdestructor;
               continue;
             }
-#ifndef G__OLDIMPLEMENTATION2039
             else if('\0'==ifunc->funcname[j][0] && j==0) {
               /* this must be the place holder for the destructor.
                * let's skip it! */
               continue;
             }
-#endif
             else {
 #ifdef G__DEFAULTASSIGNOPR
               if(strcmp(ifunc->funcname[j],"operator=")==0
@@ -5428,193 +5424,279 @@ static int G__hascompiledoriginalbase(int tagnum)
 **************************************************************************/
 void G__cpplink_memvar(FILE *fp)
 {
-  int i,j,k;
-  struct G__var_array *var;
-  int typenum;
-  int pvoidflag; /* local enum compilation bug fix */
-  G__value buf;
-  char value[G__MAXNAME*6],ttt[G__MAXNAME*6];
-  int store_var_type;
-  fpos_t pos;
-  int count;
-  char commentbuf[G__LONGLINE];
-  /* int alltag=0; */
-
-  fprintf(fp,"\n/*********************************************************\n");
-  fprintf(fp,"* Data Member information setup/\n");
-  fprintf(fp,"*********************************************************/\n");
-
-  fprintf(fp,"\n   /* Setting up class,struct,union tag member variable */\n");
-  for(i=0;i<G__struct.alltag;i++) {
-    if((G__CPPLINK==G__struct.globalcomp[i]||
-        G__CLINK==G__struct.globalcomp[i])&&
-       (-1==(int)G__struct.parent_tagnum[i]
-        || G__nestedclass
-        )
-       && -1!=G__struct.line_number[i]&&
-       (G__struct.hash[i] || 0==G__struct.name[i][0])
-       ) {
-
-      var = G__struct.memvar[i];
-
-      if('$'==G__struct.name[i][0]) {
-        typenum=G__defined_typename(G__struct.name[i]+1);
-        if(isupper(G__newtype.type[typenum])) continue;
-      }
-
-      /* link member variable information */
-      fprintf(fp,"\n   /* %s */\n",G__type2string('u',i,-1,0,0));
-
-      if('e'==G__struct.type[i]) continue;
-
-
-      if(G__CPPLINK == G__globalcomp) {
-        fprintf(fp,"static void G__setup_memvar%s(void) {\n",G__map_cpp_name(G__fulltagname(i,0)));
-      }
-      else {
-        if(G__clock)
-          fprintf(fp,"static void G__setup_memvar%s() {\n",G__map_cpp_name(G__fulltagname(i,0)));
-        else
-          fprintf(fp,"static void G__setup_memvar%s(void) {\n",G__map_cpp_name(G__fulltagname(i,0)));
-      }
-
-      count=0;
-      fgetpos(fp,&pos);
-
-      fprintf(fp,"   G__tag_memvar_setup(G__get_linked_tagnum(&%s));\n"
-              ,G__mark_linked_tagnum(i));
-      if('n'==G__struct.type[i]
-         || 0==G__struct.name[i][0]
+   char value[G__MAXNAME*6];
+   char ttt[G__MAXNAME*6];
+   char commentbuf[G__LONGLINE];
+   fprintf(fp, "\n/*********************************************************\n");
+   fprintf(fp, "* Data Member information setup/\n");
+   fprintf(fp, "*********************************************************/\n");
+   fprintf(fp, "\n   /* Setting up class,struct,union tag member variable */\n");
+   //
+   //  Loop over all known classes, enums, namespaces, structs and unions.
+   //
+   for (int i = 0; i < G__struct.alltag; ++i) {
+      if (
+         // -- Class is marked for dictionary generation.
+         (
+            (G__struct.globalcomp[i] == G__CPPLINK) || // Class is marked for c++ dictionary, or
+            (G__struct.globalcomp[i] == G__CLINK) // Class is marked for c dictionary,
+         ) && // and,
+         (
+            (G__struct.parent_tagnum[i] == -1) || // Not an innerclass, or
+            G__nestedclass // Is an inner class,
+         ) && // and,
+         (G__struct.line_number[i] != -1) && // Class has line number information, and
+         (
+            G__struct.hash[i] || // Class has a name with a non-zero hash, or
+            !G__struct.name[i][0] // Class is unnamed
          )
-        fprintf(fp,"   {\n");
-      else
-        fprintf(fp,"   { %s *p; p=(%s*)0x1000; if (p) { }\n"
-                ,G__type2string('u',i,-1,0,0),G__type2string('u',i,-1,0,0));
-      while(var) {
-        for(j=0;j<var->allvar;j++) {
-          if(-1!=G__struct.virtual_offset[i] &&
-             strcmp(var->varnamebuf[j],"G__virtualinfo")==0
-             && 0==G__hascompiledoriginalbase(i)
-             ) {
-          }
-          if(((G__PUBLIC==var->access[j]
-               ||(G__PROTECTED==var->access[j] &&
-                  (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
-               || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
-               ) && 0==var->bitfield[j])||
-             G__precomp_private) {
-            ++count;
-            if((-1!=var->p_tagtable[j]&&
-                islower(var->type[j])&&var->constvar[j]&&
-                'e'==G__struct.type[var->p_tagtable[j]])
+      ) {
+         //
+         //  FIXME: What is this block doing?
+         //
+         if (G__struct.name[i][0] == '$') {
+            int typenum = G__defined_typename(G__struct.name[i] + 1);
+            if (isupper(G__newtype.type[typenum])) {
+               continue;
+            }
+         }
+         //
+         //  Skip all enums.
+         //
+         if (G__struct.type[i] == 'e') {
+            continue;
+         }
+         //
+         //  Write the class name to the dictionary file
+         //  for the poor humans who have to read it later.
+         //
+         fprintf(fp, "\n   /* %s */\n", G__type2string('u', i, -1, 0, 0));
+         //
+         //  Write out member variable setup function
+         //  header to dictionary file.
+         //
+         if (G__globalcomp == G__CPPLINK) {
+            // -- C++ style.
+            fprintf(fp, "static void G__setup_memvar%s(void) {\n", G__map_cpp_name(G__fulltagname(i, 0)));
+         }
+         else {
+            if (G__clock) {
+               // -- C style.
+               fprintf(fp, "static void G__setup_memvar%s() {\n", G__map_cpp_name(G__fulltagname(i, 0)));
+            }
+            else {
+               // -- C++ style by default.
+               fprintf(fp, "static void G__setup_memvar%s(void) {\n", G__map_cpp_name(G__fulltagname(i, 0)));
+            }
+         }
+         //
+         //  Write out call to member variable setup
+         //  initialization to the dictionary file.
+         //
+         fprintf(fp, "   G__tag_memvar_setup(G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(i));
+         //
+         //  We need a fake this pointer, except for namespace and unnamed struct members.
+         //
+         if ((G__struct.type[i] == 'n') || !G__struct.name[i][0]) {
+            fprintf(fp, "   {\n");
+         }
+         else {
+            fprintf(fp, "   { %s *p; p=(%s*)0x1000; if (p) { }\n", G__type2string('u', i, -1, 0, 0), G__type2string('u', i, -1, 0, 0));
+         }
+         //
+         //  Loop over all the data members and write setup info to the file.
+         //
+         struct G__var_array* var = G__struct.memvar[i];
+         while (var) {
+            // -- Loop over all variable pages.
+            for (int j = 0; j < var->allvar; ++j) {
+               // -- Loop over all variables on page.
+               //
+               // FIXME: What is this block for?
+               //
+               //if (
+               //   (G__struct.virtual_offset[i] != -1) &&
+               //   !strcmp(var->varnamebuf[j], "G__virtualinfo") &&
+               //   !G__hascompiledoriginalbase(i)
+               //) {}
+               if (
+                  // -- Data member is accessible and is not a bitfield, or G__precomp_private.
+                  (
+                     (
+                        (var->access[j] == G__PUBLIC) ||
+                        ((var->access[j] == G__PROTECTED) && (G__struct.protectedaccess[i] & G__PROTECTEDACCESS)) ||
+                        (G__struct.protectedaccess[i] & G__PRIVATEACCESS)
+                     ) &&
+                     !var->bitfield[j]
+                  ) ||
+                  G__precomp_private
+               ) {
+                  // -- Write a data member setup call to the dictionary file.
+                  int pvoidflag = 0;
+                  if (
+                     // -- Is enumerator or unaddressable bool.
+                     (
+                        islower(var->type[j]) && // not a pointer, and
+                        var->constvar[j] && // is const, and
+                        (var->p_tagtable[j] != -1) && // class tag is valid, and
+                        (G__struct.type[var->p_tagtable[j]] == 'e') // data member of an enum
+                     )
 #ifdef G__UNADDRESSABLEBOOL
-               ||'g'==var->type[j]
-#endif
-               )
-              pvoidflag=1;
-            else pvoidflag=0;
-            fprintf(fp,"   G__memvar_setup(");
-            if(G__PUBLIC==var->access[j] && 0==var->bitfield[j]) {
-              if(0==G__struct.name[i][0]) {
-                fprintf(fp,"(void*)0,");
-              }
-              else
-              if (var->statictype[j]==G__LOCALSTATIC
-                 || var->statictype[j]==G__COMPILEDGLOBAL 
-                 && ('n'==G__struct.type[i] || 0==G__struct.name[i][0])) {
-                if(pvoidflag) fprintf(fp,"(void*)G__PVOID,");
-                else          fprintf(fp,"(void*)(&%s::%s),"
-                                      ,G__fulltagname(i,1),var->varnamebuf[j]);
-              }
-              else {
-                fprintf(fp,"(void*)((long)(&p->%s)-(long)(p)),"
-                        ,var->varnamebuf[j]);
-              }
-            }
-            else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
-              fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
-            }
-            else {
-              // Private or protected member
-              fprintf(fp,"(void*)NULL,");
-            }
-            fprintf(fp, "%d,", var->type[j]);
-            fprintf(fp, "%d,", var->reftype[j]);
-            fprintf(fp, "%d,", var->constvar[j]);
-            if (var->p_tagtable[j] != -1) {
-              fprintf(fp, "G__get_linked_tagnum(&%s),", G__mark_linked_tagnum(var->p_tagtable[j]));
-            }
-            else {
-              fprintf(fp, "-1,");
-            }
-            if (var->p_typetable[j] != -1) {
-              fprintf(fp, "G__defined_typename(\"%s\"),", G__newtype.name[var->p_typetable[j]]);
-            }
-            else {
-              fprintf(fp, "-1,");
-            }
-            fprintf(fp, "%d,", var->statictype[j]);
-            fprintf(fp, "%d,", var->access[j]);
-            fprintf(fp, "\"%s", var->varnamebuf[j]);
-            if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
-              fprintf(fp, "[]");
-            } else if (var->varlabel[j][1] /* num of elements */) {
-              fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
-            }
-            for (k = 1; k< var->paran[j]; ++k) {
-              fprintf(fp, "[%d]", var->varlabel[j][k+1]);
-            }
-            if (
-              pvoidflag &&
-              (var->statictype[j] == G__LOCALSTATIC)
+                     || (var->type[j] == 'g') // or, is an unaddressable bool
+#endif // G__UNADDRESSABLEBOOL
+                     // --
+                  ) {
+                     // -- Pass a null pointer as the address of these things.
+                     pvoidflag = 1;
+                  }
+                  fprintf(fp, "   G__memvar_setup(");
+                  //
+                  //  Offset in object for a non-static data member, or
+                  //  the address of global variable for a static data
+                  //  member, or a namespace member.
+                  //
+                  if ((var->access[j] == G__PUBLIC) && !var->bitfield[j]) {
+                     // -- Public member.
+                     if (!G__struct.name[i][0]) {
+                        // -- Unnamed class or namespace, we pass a null pointer.
+                        fprintf(fp, "(void*)0,");
+                     }
+                     else if (
+                        // -- Static member or namespace member.
+                        (var->statictype[j] == G__LOCALSTATIC) || // Static member, or
+                        (G__struct.type[i] == 'n') // Namespace member
+                     ) {
+                        // -- We pass the address of the global variable, or a null pointer.
+                        if (pvoidflag) {
+                           // -- Special case, is enumerator or unaddressable bool, pass G__PVOID (is -1).
+                           fprintf(fp, "(void*)G__PVOID,");
+                        }
+                        else {
+                           // -- We pass the address of the global variable.
+                           fprintf(fp, "(void*)(&%s::%s),", G__fulltagname(i, 1), var->varnamebuf[j]);
+                        }
+                     }
+                     else {
+                        // -- We pass the offset of the data member in the class.
+                        fprintf(fp, "(void*)((long)(&p->%s)-(long)(p)),", var->varnamebuf[j]);
+                     }
+                  }
+                  else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
+                     // -- Protected member.
+                     fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
+                  }
+                  else {
+                     // -- Private or protected member, we pass a null pointer.
+                     fprintf(fp, "(void*)0,");
+                  }
+                  //
+                  //  Type code, referenceness, and constness.
+                  //
+                  fprintf(fp, "%d,", var->type[j]);
+                  fprintf(fp, "%d,", var->reftype[j]);
+                  fprintf(fp, "%d,", var->constvar[j]);
+                  //
+                  //  Tagnum of data type, if not fundamental.
+                  //
+                  if (var->p_tagtable[j] != -1) {
+                     fprintf(fp, "G__get_linked_tagnum(&%s),", G__mark_linked_tagnum(var->p_tagtable[j]));
+                  }
+                  else {
+                     fprintf(fp, "-1,");
+                  }
+                  //
+                  //  Typenum of data type, if it is a typedef.
+                  //
+                  if (var->p_typetable[j] != -1) {
+                     fprintf(fp, "G__defined_typename(\"%s\"),", G__newtype.name[var->p_typetable[j]]);
+                  }
+                  else {
+                     fprintf(fp, "-1,");
+                  }
+                  //
+                  //  Storage duration and staticness, member access.
+                  //
+                  fprintf(fp, "%d,", var->statictype[j]);
+                  fprintf(fp, "%d,", var->access[j]);
+                  //
+                  //  Name and array dimensions (quoted) as the
+                  //  left hand side of an assignment expression.
+                  //
+                  fprintf(fp, "\"%s", var->varnamebuf[j]);
+                  //
+                  if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
+                     fprintf(fp, "[]");
+                  }
+                  else if (var->varlabel[j][1] /* num of elements */) {
+                     fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+                  }
+                  for (int k = 1; k < var->paran[j]; ++k) {
+                     fprintf(fp, "[%d]", var->varlabel[j][k+1]);
+                  }
+                  if (
+                     // -- Enumerator in a static enum.
+                     pvoidflag && // Is enumerator or unaddressable bool, and
+                     (var->statictype[j] == G__LOCALSTATIC) // is static
 #ifdef G__UNADDRESSABLEBOOL
-              && (var->type[j] != 'g')
-#endif
-            ) {
-              // local enum member as static member.
-              // CAUTION: This implementation cause error on enum in
-              // nested class.
-              sprintf(ttt, "%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
-              store_var_type = G__var_type; /* questionable */
-              G__var_type = 'p';
-              buf = G__getitem(ttt);
-              G__var_type = store_var_type; /* questionable */
-              G__string(buf, value);
-              G__quotedstring(value, ttt);
-              fprintf(fp, "=%s\",0", ttt);
+                     && (var->type[j] != 'g') // and is unaddressable bool FIXME: Should be or here?
+#endif // G__UNADDRESSABLEBOOL
+                     // --
+                  ) {
+                     // -- Enumerator in a static enum has a special initializer.
+                     // FIXME: CAUTION: This implementation cause error on enum in nested class.
+                     sprintf(ttt, "%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
+                     int store_var_type = G__var_type;
+                     G__var_type = 'p';
+                     G__value buf = G__getitem(ttt);
+                     G__var_type = store_var_type;
+                     G__string(buf, value);
+                     G__quotedstring(value, ttt);
+                     fprintf(fp, "=%s\"", ttt);
+                  }
+                  else {
+                     // --
+                     fprintf(fp, "=\"");
+                  }
+                  //
+                  //  Define macro flag (always zero).
+                  //
+                  fprintf(fp, ",0");
+                  //
+                  //  Comment string.
+                  //
+                  G__getcommentstring(commentbuf, i, &var->comment[j]);
+                  fprintf(fp, ",%s);\n", commentbuf);
+               }
+               G__var_type = 'p';
             }
-            else {
-              fprintf(fp, "=\",0");
-            }
-            G__getcommentstring(commentbuf, i, &var->comment[j]);
-            fprintf(fp, ",%s);\n", commentbuf);
-          } /* end if(G__PUBLIC) */
-          G__var_type = 'p';
-        } /* end for(j) */
-        var = var->next;
-      }  /* end while(var) */
-      fprintf(fp, "   }\n");
-      fprintf(fp, "   G__tag_memvar_reset();\n");
-      fprintf(fp, "}\n\n");
-    } /* end if(globalcomp) */
-  } /* end for(i) */
-  if (G__globalcomp == G__CPPLINK) {
-    fprintf(fp, "extern \"C\" void G__cpp_setup_memvar%s() {\n", G__DLLID);
-  }
-  else {
-    fprintf(fp, "void G__c_setup_memvar%s() {\n", G__DLLID);
-  }
-  fprintf(fp, "}\n");
-  // Following dummy comment string is needed to clear rewinded part of the
-  // interface method source file.
-  fprintf(fp, "/***********************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "************************************************************\n");
-  fprintf(fp, "***********************************************************/\n");
+            var = var->next;
+         }
+         fprintf(fp, "   }\n");
+         //
+         //  Write out a call to the shutdown routine for member
+         //  variable initialization to the dictionary file.
+         //
+         fprintf(fp, "   G__tag_memvar_reset();\n");
+         fprintf(fp, "}\n\n");
+      }
+   }
+   if (G__globalcomp == G__CPPLINK) {
+      fprintf(fp, "extern \"C\" void G__cpp_setup_memvar%s() {\n", G__DLLID);
+   }
+   else {
+      fprintf(fp, "void G__c_setup_memvar%s() {\n", G__DLLID);
+   }
+   fprintf(fp, "}\n");
+   // Following dummy comment string is needed to clear rewinded part of the
+   // interface method source file.
+   fprintf(fp, "/***********************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "************************************************************\n");
+   fprintf(fp, "***********************************************************/\n");
 }
 
 /**************************************************************************
@@ -5712,12 +5794,10 @@ void G__cpplink_memfunc(FILE *fp)
               continue;
             }
 
-#ifndef G__OLDIMPLEMENTATION2039
             if (!ifunc->hash[j]) {
               // no hash, skip it
               continue;
             }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1656
             if (ifunc->pentry[j]->size < 0) {
@@ -5864,19 +5944,13 @@ void G__cpplink_memfunc(FILE *fp)
             G__getcommentstring(buf, i, &ifunc->comment[j]);
             fprintf(fp, ", %s", buf);
 #ifdef G__TRUEP2F
-#if defined(G__OLDIMPLEMENTATION1289_YET) || !defined(G__OLDIMPLEMENTATION1993)
             if (
-#ifndef G__OLDIMPLEMENTATION1993
                (ifunc->staticalloc[j] || 'n' == G__struct.type[i])
-#else
-               ifunc->staticalloc[j]
-#endif
 #ifndef G__OLDIMPLEMENTATION1292
                && G__PUBLIC == ifunc->access[j]
-#endif
+#endif // G__OLDIMPLEMENTATION1292
                && G__MACROLINK != ifunc->globalcomp[j]
                ) {
-#ifndef G__OLDIMPLEMENTATION1993
               int k;
               fprintf(fp, ", (void*) (%s (*)("
                       , G__type2string(ifunc->type[j]
@@ -5896,17 +5970,11 @@ void G__cpplink_memfunc(FILE *fp)
                                         ,ifunc->param[j][k]->isconst));
               }
               fprintf(fp, "))(&%s::%s)", G__fulltagname(ifunc->tagnum, 1), ifunc->funcname[j]);
-#else
-              fprintf(fp, ", (void*)%s::%s", G__fulltagname(ifunc->tagnum, 1), ifunc->funcname[j]);
-#endif
             }
             else
               fprintf(fp, ", (void*) NULL");
 
             fprintf(fp, ", %d", ifunc->isvirtual[j] + ifunc->ispurevirtual[j]*2);
-#else /* 1289_YET  || !1993 */
-            fprintf(fp, ", (void*) NULL, %d", ifunc->isvirtual[j] + ifunc->ispurevirtual[j]*2);
-#endif /* 1289_YET */
 #endif /* G__TRUEP2F */
             fprintf(fp, ");\n");
           } /* end of if access public && not pure virtual func */
@@ -6649,18 +6717,10 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
      // G__struct.incsetup_memvar[tagnum]->clear();
    
   if(
-#ifndef G__OLDIMPLEMENTATION2027
      1==G__struct.memfunc[tagnum]->allifunc
-#else
-     0==G__struct.memfunc[tagnum]->allifunc
-#endif
      || 'n'==G__struct.type[tagnum]
      || (
-#if !defined(G__OLDIMPLEMENTATION2027)
          -1!=G__struct.memfunc[tagnum]->pentry[1]->size
-#else
-         -1!=G__struct.memfunc[tagnum]->pentry[0]->size
-#endif
          && 2>=G__struct.memfunc[tagnum]->allifunc)){
      char found = 0;
      found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
@@ -6764,57 +6824,86 @@ int G__tag_memvar_setup(int tagnum)
 *
 * Used in G__cpplink.C
 **************************************************************************/
-int G__memvar_setup(void *p,int type
-                    ,int reftype
-                    ,int constvar,int tagnum,int typenum,int statictype,int accessin
-                    ,const char *expr,int definemacro,const char *comment)
+int G__memvar_setup(void* p, int type, int reftype, int constvar, int tagnum, int typenum, int statictype, int accessin, const char* expr, int definemacro, const char* comment)
 {
-  int store_asm_noverflow;
-  int store_prerun;
-  int store_asm_wholefunction;
-  int store_constvar = G__constvar;
-  int store_def_struct_member = G__def_struct_member;
-  int store_tagdefining = G__tagdefining;
-  struct G__var_array *store_p_local = G__p_local;
-  if('p'==type && G__def_struct_member) {
-    G__def_struct_member = 0;
-    G__tagdefining = -1;
-    G__p_local = (struct G__var_array*)0;
-  }
-
-  G__setcomment = (char*)comment;
-
-  G__globalvarpointer = (long)p;
-  G__var_type = type;
-  G__reftype = reftype;
-  G__tagnum = tagnum;
-  G__typenum = typenum;
-  if(G__AUTO == statictype) G__static_alloc=0;
-  else                      G__static_alloc=1;
-  /* G__access = constvar;*/  /* dummy statement to avoid lint error */
-  G__constvar = constvar; /* Not sure why I didn't do this for a long time */
-  G__access = accessin;
-  G__definemacro=definemacro;
-  store_asm_noverflow=G__asm_noverflow;
-  G__asm_noverflow=0;
-  store_prerun = G__prerun;
-  G__prerun=1;
-  store_asm_wholefunction = G__asm_wholefunction;
-  G__asm_wholefunction = G__ASM_FUNC_NOP;
-  G__getexpr((char*)expr);
-  if('p'==type && store_def_struct_member) {
-    G__def_struct_member = store_def_struct_member;
-    G__tagdefining = store_tagdefining;
-    G__p_local = store_p_local;
-  }
-  G__asm_wholefunction = store_asm_wholefunction;
-  G__prerun=store_prerun;
-  G__asm_noverflow=store_asm_noverflow;
-  G__definemacro=0;
-  G__setcomment = (char*)NULL;
-  G__reftype=G__PARANORMAL;
-  G__constvar = store_constvar;
-  return(0);
+   // -- Recreate a member variable from a dictionary entry.
+   //  Save some state.
+   int store_constvar = G__constvar;
+   //
+   //  Special case of an enumerator in a static enum,
+   //  it has a special initializer, and should be
+   //  treated as a global variable.
+   //
+   int store_def_struct_member = G__def_struct_member;
+   int store_tagdefining = G__tagdefining;
+   struct G__var_array* store_p_local = G__p_local;
+   if ((type == 'p') && G__def_struct_member) {
+      // -- Special case of an enumerator in a static enum.
+      G__def_struct_member = 0;
+      G__tagdefining = -1;
+      G__p_local = 0;
+   }
+   // Note: This may be a global variable address,
+   // or it may be an offset into an object, possibly zero.
+   G__globalvarpointer = (long) p;
+   G__var_type = type;
+   G__reftype = reftype;
+   G__constvar = constvar;
+   G__tagnum = tagnum;
+   G__typenum = typenum;
+   if ((statictype == G__AUTO) || (statictype == G__AUTOARYDISCRETEOBJ)) {
+      G__static_alloc = 0;
+   }
+   else if (statictype == G__LOCALSTATIC) {
+      G__static_alloc = 1;
+   }
+   else if (statictype == G__COMPILEDGLOBAL) {
+      G__static_alloc = 1;  // FIXME: This is probaby wrong!
+   }
+   else {
+      // -- File scope static variable, which is actually a static data member.
+      G__static_alloc = 1;
+   }
+   G__access = accessin;
+   G__definemacro = definemacro;
+   G__setcomment = (char*) comment;
+   //
+   //  Evaluate the expression to create
+   //  the member variable.
+   //
+   // We are not doing whole function bytecode generation.
+   int store_asm_wholefunction = G__asm_wholefunction;
+   G__asm_wholefunction = G__ASM_FUNC_NOP;
+   // Do not generate bytecode.
+   int store_asm_noverflow = G__asm_noverflow;
+   G__asm_noverflow = 0;
+   // We are not executing, we are declaring.
+   int store_prerun = G__prerun;
+   G__prerun = 1;
+   // Do the actual variable creation.
+   G__getexpr((char*)expr);
+   if ((type == 'p') && store_def_struct_member) {
+      // -- Special case of an enumerator in a static enum.
+      // Restore state.
+      G__def_struct_member = store_def_struct_member;
+      G__tagdefining = store_tagdefining;
+      G__p_local = store_p_local;
+   }
+   //
+   //  Restore state.
+   G__asm_wholefunction = store_asm_wholefunction;
+   G__prerun = store_prerun;
+   G__asm_noverflow = store_asm_noverflow;
+   //
+   //  Force some state.
+   //
+   G__definemacro = 0;
+   G__setcomment = 0;
+   G__reftype = G__PARANORMAL;
+   //  Restore more state.
+   G__constvar = store_constvar;
+   // and return.
+   return 0;
 }
 
 /**************************************************************************
@@ -6917,15 +7006,13 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 #ifdef G__TRUEP2F
                      ,void *truep2f
                      ,int isvirtual
-#endif
+#endif // G__TRUEP2F
                      )
 {
 #ifndef G__SMALLOBJECT
-#ifndef G__OLDIMPLEMENTATION2027
   int store_func_now = -1;
   struct G__ifunc_table_internal *store_p_ifunc = 0;
   int dtorflag=0;
-#endif
    
   if (G__p_ifunc->allifunc == G__MAXIFUNC) {
     G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
@@ -6949,7 +7036,6 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   }
   G__func_now=G__p_ifunc->allifunc;
 
-#ifndef G__OLDIMPLEMENTATION2027
   if('~'==funcname[0] && 0==G__struct.memfunc[G__p_ifunc->tagnum]->hash[0]) {
     store_func_now = G__func_now;
     store_p_ifunc = G__p_ifunc;
@@ -6957,7 +7043,6 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
     G__func_now = 0;
     dtorflag=1;
   }
-#endif
   G__savestring(&G__p_ifunc->funcname[G__func_now],(char*)funcname);
   G__p_ifunc->hash[G__func_now] = hash;
 
@@ -6966,18 +7051,18 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
     G__p_ifunc->entry[G__func_now].filenum=G__struct.filenum[G__p_ifunc->tagnum];
   else G__p_ifunc->entry[G__func_now].filenum = G__ifile.filenum;
   G__p_ifunc->entry[G__func_now].size = -1;
-#else
+#else // G__OLDIMLEMENTATION2012
   G__p_ifunc->entry[G__func_now].filenum = -1;
-#endif
+#endif // G__OLDIMLEMENTATION2012
   G__p_ifunc->entry[G__func_now].line_number = -1;
 #ifdef G__ASM_WHOLEFUNC
   G__p_ifunc->entry[G__func_now].bytecode = (struct G__bytecodefunc*)NULL;
-#endif
+#endif // G__ASM_WHOLEFUNC
 #ifdef G__TRUEP2F
   if(truep2f) 
      G__p_ifunc->entry[G__func_now].tp2f=truep2f;
   else G__p_ifunc->entry[G__func_now].tp2f=(void*)funcp;
-#endif
+#endif // G__TRUEP2F
 
   G__p_ifunc->type[G__func_now] = type;
   G__p_ifunc->p_tagtable[G__func_now] = tagnum;
@@ -7000,10 +7085,10 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 #ifdef G__TRUEP2F
   G__p_ifunc->isvirtual[G__func_now] = isvirtual&0x01;
   G__p_ifunc->ispurevirtual[G__func_now] = (isvirtual&0x02)/2;
-#else
+#else // G__TRUEP2F
   G__p_ifunc->isvirtual[G__func_now] = 0;
   G__p_ifunc->ispurevirtual[G__func_now] = 0;
-#endif
+#endif // G__TRUEP2F
 
   G__p_ifunc->param[G__func_now][0]->name=(char*)NULL;
   /* parse parameter setup information */
@@ -7011,7 +7096,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 
 #ifdef G__FRIEND
   G__p_ifunc->friendtag[G__func_now] = (struct G__friendtag*)NULL;
-#endif
+#endif // G__FRIEND
 
   G__p_ifunc->comment[G__func_now].p.com = (char*)comment;
   if(comment) G__p_ifunc->comment[G__func_now].filenum = -2;
@@ -7167,7 +7252,6 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
      }
    }
    else {
-#ifndef G__OLDIMPLEMENTATION2027
      if(dtorflag) {
        G__func_now = store_func_now;
        G__p_ifunc = store_p_ifunc;
@@ -7175,14 +7259,10 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
      else {
        G__memfunc_next();
      }
-#else /* 2027 */
-     G__memfunc_next();
-#endif /* 2027 */
    }
  }
-#else /* 1706 */
+#else // G__OLDIMPLEMENTATION1702
 
-#ifndef G__OLDIMPLEMENTATION2027
  if(dtorflag) {
     G__func_now = store_func_now;
     G__p_ifunc = store_p_ifunc;
@@ -7190,14 +7270,11 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   else {
     G__memfunc_next();
   }
-#else /* 2027 */
-  G__memfunc_next();
-#endif /* 2027 */
 
-#endif /* 1706 */
+#endif // G__OLDIMPLEMENTATION1702
 
 
-#endif
+#endif // G__SMALLOBJECT
   //if (G__p_ifunc->param[0][para_nu-1]) return (1);
   return(0);
 }

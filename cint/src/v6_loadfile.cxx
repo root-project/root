@@ -1078,8 +1078,6 @@ int G__loadfile_tmpfile(FILE *fp)
 
   G__eof = 0;
   G__prerun = 1;
-  G__switch = 0;
-  G__mparen = 0;
   store_nobreak=G__nobreak;
   G__nobreak=1;
 
@@ -1105,7 +1103,10 @@ int G__loadfile_tmpfile(FILE *fp)
   /******************************************************
    * read source file
    ******************************************************/
-  while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
+  while (!G__eof && (G__return < G__RETURN_EXIT1)) {
+     int brace_level = 0;
+     G__exec_statement(&brace_level);
+  }
 
 
   /******************************************************
@@ -1935,8 +1936,6 @@ int G__loadfile(const char *filenamein)
 
   G__eof = 0;
   G__prerun = 1;
-  G__switch = 0;
-  G__mparen = 0;
   store_nobreak=G__nobreak;
   G__nobreak=1;
 
@@ -2017,8 +2016,13 @@ int G__loadfile(const char *filenamein)
         G__UnlockCriticalSection();
         return(G__LOADFILE_FAILURE);
       }
-      if(G__copyflag) G__copysourcetotmp(prepname,&G__ifile,fentry);
-      while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
+      if (G__copyflag) {
+         G__copysourcetotmp(prepname, &G__ifile, fentry);
+      }
+      while (!G__eof && (G__return < G__RETURN_EXIT1)) {
+         int brace_level = 0;
+         G__exec_statement(&brace_level);
+      }
       G__store_struct_offset = store_struct_offset;
     }
   }
@@ -2036,7 +2040,10 @@ int G__loadfile(const char *filenamein)
       G__UnlockCriticalSection();
       return(G__LOADFILE_FAILURE);
     }
-    while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement();
+    while (!G__eof && (G__return < G__RETURN_EXIT1)) {
+       int brace_level = 0;
+       G__exec_statement(&brace_level);
+    }
   }
 #endif  /* of G__SHAREDLIB */
 

@@ -21,9 +21,9 @@
 #endif
 
 #define G__CINTVERSION_V6      60010024
-#define G__CINTVERSIONSTR_V6  "6.1.24, July 26, 2007"
+#define G__CINTVERSIONSTR_V6  "6.1.25, Sept 10, 2007"
 #define G__CINTVERSION_V5      50160024
-#define G__CINTVERSIONSTR_V5  "5.16.24, July 26, 2007"
+#define G__CINTVERSIONSTR_V5  "5.16.25, Sept 10, 2007"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -1553,6 +1553,13 @@ typedef struct {
  **********************************************/
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
+
+#elif (defined(__mips)&&defined(linux))
+/**********************************************
+* MIPS, Linux
+**********************************************/
+# define G__VAARG_INC_COPY_N 4
+# define G__VAARG_PASS_BY_REFERENCE 8
 
 #else
 /**********************************************

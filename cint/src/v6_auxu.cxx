@@ -15,645 +15,588 @@
 
 #include "common.h"
 
-/****************************************************************
-*  Support libraries. Not essensial to C/C++ interpreter.
-*
-****************************************************************/
-
 extern "C" {
 
-/****************************************************************
-* G__split(original,stringbuf,argc,argv)
-* split arguments separated by space char.
-* CAUTION: input string will be modified. If you want to keep
-*         the original string, you should copy it to another string.
-****************************************************************/
-int G__split(char *line,char *sstring,int *argc,char *argv[])
-{
-  unsigned char *string = (unsigned char*)sstring;
-  int lenstring;
-  int i=0;
-  int flag=0;
-  int n_eof=1;
-  int single_quote=0,double_quote=0,back_slash=0;
-  
-  while((string[i]!='\n')&&
-        (string[i]!='\r')&&
-        (string[i]!='\0')
-        ) i++;
-  string[i]='\0';
-  line[i]='\0';
-  lenstring=i;
-  argv[0]=line;
+// Static functions.
+// None.
 
-  *argc=0;
-  for(i=0;i<lenstring;i++) {
-    switch(string[i]) {
-    case '\\':
-      if(back_slash==0) back_slash=1;
-      else              back_slash=0;
-      break;
-    case '\'':
-      if((double_quote==0)&&(back_slash==0)) {
-        single_quote ^= 1;
-        string[i]='\0';
-        flag=0;
+// External functions.
+int G__readsimpleline(FILE* fp, char* line);
+int G__readline(FILE* fp, char* line, char* argbuf, int* argn, char* arg[]);
+#ifndef G__SMALLOBJECT
+int G__cmparray(short array1[], short array2[], int num, short mask);
+void G__setarray(short array[], int num, short mask, char* mode);
+int G__graph(double* xdata, double* ydata, int ndata, char* title, int mode);
+#ifndef G__NSTOREOBJECT
+int G__storeobject(G__value *buf1, G__value *buf2);
+int G__scanobject(G__value* buf);
+int G__dumpobject(char* file, void* buf, int size);
+int G__loadobject(char* file, void* buf, int size);
+#endif // G__NSTOREOBJECT
+#ifndef G__NSEARCHMEMBER
+long G__what_type(char* name, char* type, char* tagname, char* type_name);
+#endif // G__NSEARCHMEMBER
+#endif // G__SMALLOBJECT
+int G__textprocessing(FILE* fp);
+#ifdef G__REGEXP
+int G__matchregex(char* pattern, char* string);
+#endif // G__REGEXP
+#ifdef G__REGEXP1
+int G__matchregex(char* pattern, char* string);
+#endif // G__REGEXP1
+
+// Functions in the C interface.
+int G__split(char* line, char* sstring, int* argc, char* argv[]);
+
+//______________________________________________________________________________
+//
+//  Static functions.
+//
+
+// None.
+
+//______________________________________________________________________________
+//
+//  External functions.
+//
+
+//______________________________________________________________________________
+int G__readsimpleline(FILE* fp, char* line)
+{
+   // -- FIXME: Describe this function!
+   char* null_fgets = fgets(line, 2 * G__LONGLINE, fp); // FIXME: Possible buffer overflow here!
+   if (null_fgets) {
+      char* p = strchr(line, '\n');
+      if (p) {
+         *p = '\0';
       }
-      break;
-    case '"' :
-      if((single_quote==0)&&(back_slash==0)) {
-        double_quote ^= 1;
-        string[i]='\0';
-        flag=0;
+      p = strchr(line, '\r');
+      if (p) {
+         *p = '\0';
       }
-      break;
-    default  :
-      if((isspace(string[i]))&&(back_slash==0)&&
-         (single_quote==0)&&(double_quote==0)) {
-        string[i]='\0';
-        flag=0;
-      }
-      else {
-        if(flag==0) {
-          (*argc)++;
-          argv[*argc] = (char*)&string[i];
-          flag=1;
-        }
-      }
-      back_slash=0;
-      break;
-    }
-  }
-  return(n_eof);
+   }
+   else {
+      line[0] = '\0';
+   }
+   if (!null_fgets) {
+      return 0;
+   }
+   return 1;
 }
 
-/****************************************************************
-* G__readsimpleline(fp,line)
-****************************************************************/
-int G__readsimpleline(FILE *fp,char *line)
+//______________________________________________________________________________
+int G__readline(FILE* fp, char* line, char* argbuf, int* argn, char* arg[])
 {
-  char *null_fgets;
-  char *p;
-  null_fgets=fgets(line,G__LONGLINE*2,fp);
-  if(null_fgets!=NULL) {
-    p=strchr(line,'\n');
-    if(p) *p='\0';
-    p=strchr(line,'\r');
-    if(p) *p='\0';
-  }
-  else {
-    line[0]='\0';
-  }
-  if(null_fgets==NULL) return(0);
-  else                 return(1);
-}
-
-/****************************************************************
-* G__readline(fp,line,argbuf,argn,arg)
-****************************************************************/
-int G__readline(FILE *fp,char *line,char *argbuf,int *argn, char *arg[])
-{
-  /* int i; */
-  char *null_fgets;
-#define G__OLDIMPLEMENTATION1816
-  null_fgets=fgets(line,G__LONGLINE*2,fp);
-  if(null_fgets!=NULL) {
-    strcpy(argbuf,line);
-    G__split(line,argbuf,argn,arg);
-  }
-  else {
-    line[0]='\0';
-    argbuf='\0';
-    *argn=0;
-    arg[0]=line;
-  }
-  if(null_fgets==NULL) return(0);
-  else                 return(1);
+   // -- FIXME: Describe this function!
+   char* null_fgets = fgets(line, 2 * G__LONGLINE, fp);  // FIXME: Possible buffer overflow here!
+   if (null_fgets) {
+      strcpy(argbuf, line);
+      G__split(line, argbuf, argn, arg);
+   }
+   else {
+      line[0] = '\0';
+      argbuf = '\0';
+      *argn = 0;
+      arg[0] = line;
+   }
+   if (!null_fgets) {
+      return 0;
+   }
+   return 1;
 }
 
 
 #ifndef G__SMALLOBJECT
 
-/****************************************************************
-* DMA test support functions
-*
-* G__cmparray(array1,array2,num,mask)
-* G__setarray(array,num,mask,mode)
-****************************************************************/
-
-/******************************************************************
-* int G__cmparray(array1,array2,num,mask)
-******************************************************************/
-int G__cmparray(short array1[],short array2[],int num,short mask)
+//______________________________________________________________________________
+int G__cmparray(short array1[], short array2[], int num, short mask)
 {
-  int i,fail=0,firstfail = -1,fail1=0,fail2=0;
-  for(i=0;i<num;i++) {
-    if((array1[i]&mask)!=(array2[i]&mask)) {
-      if(firstfail == -1) {
-        firstfail=i;
-        fail1=array1[i];
-        fail2=array2[i];
+   // -- FIXME: Describe this function!
+   int i, fail = 0, firstfail = -1, fail1 = 0, fail2 = 0;
+   for (i = 0;i < num;i++) {
+      if ((array1[i]&mask) != (array2[i]&mask)) {
+         if (firstfail == -1) {
+            firstfail = i;
+            fail1 = array1[i];
+            fail2 = array2[i];
+         }
+         fail++;
       }
-      fail++;
-    }
-  }
-  if(fail!=0) {
-    G__fprinterr(G__serr,"G__cmparray() failcount=%d from [%d] , %d != %d\n",
-            fail,firstfail,fail1,fail2);
-  }
-  return(fail);
+   }
+   if (fail != 0) {
+      G__fprinterr(G__serr, "G__cmparray() failcount=%d from [%d] , %d != %d\n",
+                   fail, firstfail, fail1, fail2);
+   }
+   return(fail);
 }
 
-/******************************************************************
-* G__setarray(array,num,mask,mode)
-******************************************************************/
-void G__setarray(short array[], int num, short mask,char *mode)
+//______________________________________________________________________________
+void G__setarray(short array[], int num, short mask, char* mode)
 {
-        int i;
+   // -- FIXME: Describe this function!
+   int i;
 
-        if(strcmp(mode,"rand")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=rand()&mask;
-                }
-        }
-        if(strcmp(mode,"inc")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=i&mask;
-                }
-        }
-        if(strcmp(mode,"dec")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=(num-i)&mask;
-                }
-        }
-        if(strcmp(mode,"check1")==0)  {
-                for(i=0;i<num;i++) {
-                        array[i]=0xaaaa&mask;
-                        array[++i]=0x5555&mask;
-                }
-        }
-        if(strcmp(mode,"check2")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=0x5555&mask;
-                        array[++i]=0xaaaa&mask;
-                }
-        }
-        if(strcmp(mode,"check3")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=0xaaaa&mask;
-                        array[++i]=0xaaaa&mask;
-                        array[++i]=0x5555&mask;
-                        array[++i]=0x5555&mask;
-                }
-        }
-        if(strcmp(mode,"check4")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=0x5555&mask;
-                        array[++i]=0x5555&mask;
-                        array[++i]=0xaaaa&mask;
-                        array[++i]=0xaaaa&mask;
-                }
-        }
-        if(strcmp(mode,"zero")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=0;
-                }
-        }
-        if(strcmp(mode,"one")==0) {
-                for(i=0;i<num;i++) {
-                        array[i]=0xffff&mask;
-                }
-        }
+   if (strcmp(mode, "rand") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = rand() & mask;
+      }
+   }
+   if (strcmp(mode, "inc") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = i & mask;
+      }
+   }
+   if (strcmp(mode, "dec") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = (num - i) & mask;
+      }
+   }
+   if (strcmp(mode, "check1") == 0)  {
+      for (i = 0;i < num;i++) {
+         array[i] = 0xaaaa & mask;
+         array[++i] = 0x5555 & mask;
+      }
+   }
+   if (strcmp(mode, "check2") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = 0x5555 & mask;
+         array[++i] = 0xaaaa & mask;
+      }
+   }
+   if (strcmp(mode, "check3") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = 0xaaaa & mask;
+         array[++i] = 0xaaaa & mask;
+         array[++i] = 0x5555 & mask;
+         array[++i] = 0x5555 & mask;
+      }
+   }
+   if (strcmp(mode, "check4") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = 0x5555 & mask;
+         array[++i] = 0x5555 & mask;
+         array[++i] = 0xaaaa & mask;
+         array[++i] = 0xaaaa & mask;
+      }
+   }
+   if (strcmp(mode, "zero") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = 0;
+      }
+   }
+   if (strcmp(mode, "one") == 0) {
+      for (i = 0;i < num;i++) {
+         array[i] = 0xffff & mask;
+      }
+   }
 }
 
-
-/************************************************************************
-* G__graph.c
-************************************************************************/
-
-/************************************************************************
-* G__graph(xdata,ydata,ndata,title,mode)
-*   xdata[i] : *double pointer of x data array
-*   ydata[i] : *double pointer of y data array
-*   ndata    : int number of data
-*   title    : *char title
-*   mode     : int mode 0:wait for close, 
-*                       1:leave window and proceed
-*                       2:kill xgraph window
-************************************************************************/
-
-int G__graph(double *xdata,double *ydata,int ndata,char *title,int mode)
+//______________________________________________________________________________
+int G__graph(double* xdata, double* ydata, int ndata, char* title, int mode)
 {
-  int i;
-  FILE *fp;
-
-  if(mode==2) {
-    system("killproc xgraph");
-    return(1);
-  }
-  
-  switch(mode) {
-  case 1:
-  case 0:
-    fp=fopen("G__graph","w");
-    fprintf(fp,"TitleText: %s\n",title);
-    break;
-  case 2:
-    fp=fopen("G__graph","w");
-    fprintf(fp,"TitleText: %s\n",title);
-    break;
-  case 3:
-    fp=fopen("G__graph","a");
-    fprintf(fp,"\n");
-    fprintf(fp,"TitleText: %s\n",title);
-    break;
-  case 4:
-  default:
-    fp=fopen("G__graph","a");
-    fprintf(fp,"\n");
-    fprintf(fp,"TitleText: %s\n",title);
-    break;
-  }
-  fprintf(fp,"\"%s\"\n",title);
-  for(i=0;i<ndata;i++) {
-    fprintf(fp,"%e %e\n",xdata[i],ydata[i]);
-  }
-  fclose(fp);
-  switch(mode) {
-  case 1:
-  case 4:
-    system("xgraph G__graph&");
-    break;
-  case 0:
-    system("xgraph G__graph");
-    break;
-  }
-  return(0);
+   // -- FIXME: Describe this function!
+   //
+   //  xdata[i] : *double pointer of x data array
+   //  ydata[i] : *double pointer of y data array
+   //  ndata    : int number of data
+   //  title    : *char title
+   //  mode     : int mode 0:wait for close,
+   //                      1:leave window and proceed
+   //                      2:kill xgraph window
+   FILE* fp = 0;
+   if (mode == 2) {
+      system("killproc xgraph");
+      return 1;
+   }
+   switch (mode) {
+      case 1:
+      case 0:
+         fp = fopen("G__graph", "w");
+         fprintf(fp, "TitleText: %s\n", title);
+         break;
+      case 2:
+         fp = fopen("G__graph", "w");
+         fprintf(fp, "TitleText: %s\n", title);
+         break;
+      case 3:
+         fp = fopen("G__graph", "a");
+         fprintf(fp, "\n");
+         fprintf(fp, "TitleText: %s\n", title);
+         break;
+      case 4:
+      default:
+         fp = fopen("G__graph", "a");
+         fprintf(fp, "\n");
+         fprintf(fp, "TitleText: %s\n", title);
+         break;
+   }
+   fprintf(fp, "\"%s\"\n", title);
+   for (int i = 0; i < ndata; ++i) {
+      fprintf(fp, "%e %e\n", xdata[i], ydata[i]);
+   }
+   fclose(fp);
+   switch (mode) {
+      case 1:
+      case 4:
+         system("xgraph G__graph&");
+         break;
+      case 0:
+         system("xgraph G__graph");
+         break;
+   }
+   return 0;
 }
-
-/****************************************************************
-* End of Support libraries. Not essensial to C/C++ interpreter.
-****************************************************************/
-
 
 #ifndef G__NSTOREOBJECT
-/****************************************************************
-* G__storeobject
-*
-* Copy object buf2 to buf1 if not a pointer
-*
-*  This function looks different from interpreted environment 
-* and compiled environment.
-*  Interpreter : G__storeobject(void *buf1,void *buf2)
-*  Compiler    : G__storeobject(G__value *buf1,G__value *buf2)
-****************************************************************/
-int G__storeobject(G__value *buf1,G__value *buf2)
+//______________________________________________________________________________
+int G__storeobject(G__value *buf1, G__value *buf2)
 {
-  int i;
-  struct G__var_array *var1,*var2;
-  G__value lbuf1,lbuf2;
-  
-  
-  if(buf1->type=='U' && buf2->type=='U' && buf1->tagnum==buf2->tagnum ) {
-    G__incsetup_memvar(buf1->tagnum);
-    G__incsetup_memvar(buf2->tagnum);
-    var1 = G__struct.memvar[buf1->tagnum] ;
-    var2 = G__struct.memvar[buf2->tagnum] ;
-    do {
-      for(i=0;i<var1->allvar;i++) {
-        switch(var1->type[i]) {
-        case 'u':
-          lbuf1.obj.i = buf1->obj.i + var1->p[i];
-          lbuf2.obj.i = buf2->obj.i + var2->p[i];
-          lbuf1.type='U';
-          lbuf2.type='U';
-          lbuf1.tagnum=var1->p_tagtable[i];
-          lbuf2.tagnum=var2->p_tagtable[i];
-          G__storeobject(&lbuf1,&lbuf2);
-          break;
-          
-        case 'g':
+   // -- Copy object buf2 to buf1 if not a pointer.
+   int i;
+   struct G__var_array* var1;
+   struct G__var_array* var2;
+   G__value lbuf1;
+   G__value lbuf2;
+   if ((buf1->type != 'U') || (buf2->type != 'U') || (buf1->tagnum != buf2->tagnum)) {
+      G__genericerror("Error:G__storeobject buf1,buf2 different type or non struct");
+      G__fprinterr(G__serr, "buf1->type = %c , buf2->type = %c\n", buf1->type, buf2->type);
+      G__fprinterr(G__serr, "buf1->tagnum = %d , buf2->tagnum = %d\n", buf1->tagnum, buf2->tagnum);
+      return 1;
+   }
+   G__incsetup_memvar(buf1->tagnum);
+   G__incsetup_memvar(buf2->tagnum);
+   var1 = G__struct.memvar[buf1->tagnum];
+   var2 = G__struct.memvar[buf2->tagnum];
+   do {
+      for (i = 0; i < var1->allvar; ++i) {
+         void* p1 = (void*) (buf1->obj.i + var1->p[i]);
+         void* p2 = (void*) (buf2->obj.i + var2->p[i]);
+         int num_of_elements = var1->varlabel[i][1];
+         if (!num_of_elements) {
+            num_of_elements = 1;
+         }
+         switch (var1->type[i]) {
+            case 'u':
+               lbuf1.obj.i = buf1->obj.i + var1->p[i];
+               lbuf2.obj.i = buf2->obj.i + var2->p[i];
+               lbuf1.type = 'U';
+               lbuf2.type = 'U';
+               lbuf1.tagnum = var1->p_tagtable[i];
+               lbuf2.tagnum = var2->p_tagtable[i];
+               G__storeobject(&lbuf1, &lbuf2);
+               break;
+            case 'g':
 #ifdef G__BOOL4BYTE
-          memcpy((void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__INTALLOC*(var1->varlabel[i][1]));
-          break;
-#endif
-        case 'b':
-        case 'c':
-          memcpy((void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__CHARALLOC*(var1->varlabel[i][1]));
-          break;
-          
-        case 'r':
-        case 's':
-          memcpy(
-                 (void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__SHORTALLOC*(var1->varlabel[i][1])
-                 );
-          break;
-          
-        case 'h':
-        case 'i':
-          memcpy(
-                 (void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__INTALLOC*(var1->varlabel[i][1])
-                 );
-          break;
-          
-        case 'k':
-        case 'l':
-          memcpy(
-                 (void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__LONGALLOC*(var1->varlabel[i][1])
-                 );
-          break;
-          
-        case 'f':
-          memcpy(
-                 (void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__FLOATALLOC*(var1->varlabel[i][1])
-                 );
-          break;
-          
-        case 'd':
-        case 'w':
-          memcpy(
-                 (void *)(buf1->obj.i+var1->p[i])
-                 ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__DOUBLEALLOC*(var1->varlabel[i][1])
-                 );
-          break;
-        }
+               memcpy(p1, p2, num_of_elements * G__INTALLOC);
+               break;
+#endif // G__BOOL4BYTE
+            case 'b':
+            case 'c':
+               memcpy(p1, p2, num_of_elements * G__CHARALLOC);
+               break;
+            case 'r':
+            case 's':
+               memcpy(p1, p2, num_of_elements * G__SHORTALLOC);
+               break;
+            case 'h':
+            case 'i':
+               memcpy(p1, p2, num_of_elements * G__INTALLOC);
+               break;
+            case 'k':
+            case 'l':
+               memcpy(p1, p2, num_of_elements * G__LONGALLOC);
+               break;
+            case 'f':
+               memcpy(p1, p2, num_of_elements * G__FLOATALLOC);
+               break;
+            case 'd':
+            case 'w':
+               memcpy(p1, p2, num_of_elements * G__DOUBLEALLOC);
+               break;
+         }
       }
       var1 = var1->next;
       var2 = var2->next;
-    } while(var1);
-    
-    return(0);
-  }
-  else {
-    G__genericerror(
-            "Error:G__storeobject buf1,buf2 different type or non struct"
-                    );
-    G__fprinterr(G__serr,"buf1->type = %c , buf2->type = %c\n"
-            ,buf1->type,buf2->type);
-    G__fprinterr(G__serr,"buf1->tagnum = %d , buf2->tagnum = %d\n"
-            ,buf1->tagnum,buf2->tagnum);
-    return(1);
-  }
+   }
+   while (var1);
+   return 0;
 }
+#endif // G__NSTOREOBJECT
 
-/****************************************************************
-* G__scanobject
-*
-* Scan struct object and call 'G__do_scanobject()'
-*
-*  This function looks different from interpreted environment 
-* and compiled environment.
-*  Interpreter : G__storeobject(void *buf1,void *buf2)
-*  Compiler    : G__storeobject(G__value *buf1,G__value *buf2)
-****************************************************************/
-int G__scanobject(G__value *buf1)
+#ifndef G__NSTOREOBJECT
+//______________________________________________________________________________
+int G__scanobject(G__value* buf)
 {
-  int i;
-  struct G__var_array *var1;
-
-  char type;
-  char *name;
-  char *tagname;
-  char *type_name;
-  long pointer;
-
-  char ifunc[G__ONELINE];
-
-  if(buf1->type=='U') {
-    G__incsetup_memvar(buf1->tagnum);
-    var1 = G__struct.memvar[buf1->tagnum] ;
-    do {
-      for(i=0;i<var1->allvar;i++) {
-        pointer = buf1->obj.i + var1->p[i];
-        name = var1->varnamebuf[i];
-        type = var1->type[i] ;
-        if(var1->p_tagtable[i]>=0) {
-          tagname = G__struct.name[var1->p_tagtable[i]];
-        }
-        else {
-          tagname = (char *)NULL;
-        }
-        if(var1->p_typetable[i]>=0) {
-          type_name = G__newtype.name[var1->p_typetable[i]] ;
-        }
-        else {
-          type_name = (char *)NULL;
-        }
-        sprintf(ifunc,
-                "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)"
-                ,tagname,pointer,(long)name,type,(long)tagname,(long)type_name);
-        G__getexpr(ifunc);
+   // -- Scan struct object and call G__do_scanobject(ptr, name, type, tagname, type_name).
+   if (buf->type != 'U') {
+      G__genericerror("Error:G__scanobject buf not a struct");
+      return 1;
+   }
+   G__incsetup_memvar(buf->tagnum);
+   G__var_array* var = G__struct.memvar[buf->tagnum];
+   do {
+      for (int i = 0; i < var->allvar; ++i) {
+         char* name = var->varnamebuf[i];
+         char type = var->type[i] ;
+         long pointer = buf->obj.i + var->p[i];
+         char* tagname = 0;
+         if (var->p_tagtable[i] > -1) {
+            tagname = G__struct.name[var->p_tagtable[i]];
+         }
+         char* type_name = 0;
+         if (var->p_typetable[i] > -1) {
+            type_name = G__newtype.name[var->p_typetable[i]];
+         }
+         char ifunc[G__ONELINE];
+         sprintf(ifunc, "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)", tagname, pointer, (long) name, type, (long) tagname, (long) type_name);
+         G__getexpr(ifunc);
       }
-      var1 = var1->next;
-    } while(var1);
-    
-    return(0);
-  }
-  else {
-    G__genericerror("Error:G__scanobject buf not a struct");
-    return(1);
-  }
+      var = var->next;
+   }
+   while (var);
+   return 0;
 }
+#endif // G__NSTOREOBJECT
 
-
-/****************************************************************
-* G__dumpobject
-*
-* dump object into a file
-*
-****************************************************************/
-int G__dumpobject(char *file,void *buf,int size)
+#ifndef G__NSTOREOBJECT
+//______________________________________________________________________________
+int G__dumpobject(char* file, void* buf, int size)
 {
-        FILE *fp;
-
-        fp=fopen(file,"wb");
-        fwrite(buf ,(size_t)size ,1,fp);
-        fflush(fp);
-        fclose(fp);
-        return(1);
+   // -- Dump object into a file.
+   FILE* fp;
+   fp = fopen(file, "wb");
+   fwrite(buf, size , 1, fp);
+   fflush(fp);
+   fclose(fp);
+   return 1;
 }
+#endif // G__NSTOREOBJECT
 
-/****************************************************************
-* G__loadobject
-*
-* load object from a file
-*
-****************************************************************/
-int G__loadobject(char *file,void *buf,int size)
+#ifndef G__NSTOREOBJECT
+//______________________________________________________________________________
+int G__loadobject(char* file, void* buf, int size)
 {
-        FILE *fp;
-
-        fp=fopen(file,"rb");
-        fread(buf ,(size_t)size ,1,fp);
-        fclose(fp);
-        return(1);
+   // -- Load object from a file.
+   FILE* fp = fopen(file, "rb");
+   fread(buf, size, 1, fp);
+   fclose(fp);
+   return 1;
 }
-
-#endif
-
+#endif // G__NSTOREOBJECT
 
 #ifndef G__NSEARCHMEMBER
-/****************************************************************
-* G__what_type()
-*
-*
-****************************************************************/
-long G__what_type(char *name,char *type,char *tagname,char *type_name)
+//______________________________________________________________________________
+long G__what_type(char* name, char* type, char* tagname, char* type_name)
 {
-  G__value buf;
-  static char vtype[80];
-  char ispointer[3];
-  
-  buf = G__calc_internal(name);
-  
-  if(isupper(buf.type)) {
-    sprintf(ispointer," *");
-  }
-  else {
-    ispointer[0]='\0';
-    /* sprintf(ispointer,""); */
-  }
-  
-  switch(tolower(buf.type)) {
-  case 'u':
-    sprintf(vtype,"struct %s %s",G__struct.name[buf.tagnum],ispointer);
-    break;
-  case 'b':
-    sprintf(vtype,"unsigned char %s",ispointer);
-    break;
-  case 'c':
-    sprintf(vtype,"char %s",ispointer);
-    break;
-  case 'r':
-    sprintf(vtype,"unsigned short %s",ispointer);
-    break;
-  case 's':
-    sprintf(vtype,"short %s",ispointer);
-    break;
-  case 'h':
-    sprintf(vtype,"unsigned int %s",ispointer);
-    break;
-  case 'i':
-    sprintf(vtype,"int %s",ispointer);
-    break;
-  case 'k':
-    sprintf(vtype,"unsigned long %s",ispointer);
-    break;
-  case 'l':
-    sprintf(vtype,"long %s",ispointer);
-    break;
-  case 'f':
-    sprintf(vtype,"float %s",ispointer);
-    break;
-  case 'd':
-    sprintf(vtype,"double %s",ispointer);
-    break;
-  case 'e':
-    sprintf(vtype,"FILE %s",ispointer);
-    break;
-  case 'y':
-    sprintf(vtype,"void %s",ispointer);
-    break;
-  case 'w':
-    sprintf(vtype,"logic %s",ispointer);
-    break;
-  case 0:
-    sprintf(vtype,"NULL %s",ispointer);
-    break;
-  case 'p':
-    sprintf(vtype,"macro");
-    break;
-  case 'o':
-    sprintf(vtype,"automatic");
-    break;
-  case 'g':
-    sprintf(vtype,"bool");
-    break;
-  default:
-    sprintf(vtype,"unknown %s",ispointer);
-    break;
-  }
-  if(type) strcpy(type,vtype);
-  if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]);
-  if(type_name && buf.typenum>=0) strcpy(type_name,G__newtype.name[buf.typenum]);
-  
-  sprintf(vtype,"&%s",name);
-  buf = G__calc_internal(vtype);
-
-  return(buf.obj.i);
+   // -- FIXME: Describe this function!
+   G__value buf = G__calc_internal(name);
+   char ispointer[3] = "";
+   if (isupper(buf.type)) {
+      sprintf(ispointer, " *");
+   }
+   static char vtype[80];
+   switch (tolower(buf.type)) {
+      case 'u':
+         sprintf(vtype, "struct %s %s", G__struct.name[buf.tagnum], ispointer);
+         break;
+      case 'b':
+         sprintf(vtype, "unsigned char %s", ispointer);
+         break;
+      case 'c':
+         sprintf(vtype, "char %s", ispointer);
+         break;
+      case 'r':
+         sprintf(vtype, "unsigned short %s", ispointer);
+         break;
+      case 's':
+         sprintf(vtype, "short %s", ispointer);
+         break;
+      case 'h':
+         sprintf(vtype, "unsigned int %s", ispointer);
+         break;
+      case 'i':
+         sprintf(vtype, "int %s", ispointer);
+         break;
+      case 'k':
+         sprintf(vtype, "unsigned long %s", ispointer);
+         break;
+      case 'l':
+         sprintf(vtype, "long %s", ispointer);
+         break;
+      case 'f':
+         sprintf(vtype, "float %s", ispointer);
+         break;
+      case 'd':
+         sprintf(vtype, "double %s", ispointer);
+         break;
+      case 'e':
+         sprintf(vtype, "FILE %s", ispointer);
+         break;
+      case 'y':
+         sprintf(vtype, "void %s", ispointer);
+         break;
+      case 'w':
+         sprintf(vtype, "logic %s", ispointer);
+         break;
+      case 0:
+         sprintf(vtype, "NULL %s", ispointer);
+         break;
+      case 'p':
+         sprintf(vtype, "macro");
+         break;
+      case 'o':
+         sprintf(vtype, "automatic");
+         break;
+      case 'g':
+         sprintf(vtype, "bool");
+         break;
+      default:
+         sprintf(vtype, "unknown %s", ispointer);
+         break;
+   }
+   if (type) {
+      strcpy(type, vtype);
+   }
+   if (tagname && (buf.tagnum > -1)) {
+      strcpy(tagname, G__struct.name[buf.tagnum]);
+   }
+   if (type_name && (buf.typenum > -1)) {
+      strcpy(type_name, G__newtype.name[buf.typenum]);
+   }
+   sprintf(vtype, "&%s", name);
+   buf = G__calc_internal(vtype);
+   return buf.obj.i;
 }
-#endif
+#endif // G__NSEARCHMEMBER
 
-#endif /* G__SMALLOBJECT */
+#endif // G__SMALLOBJECT
 
-/**************************************************************************
-* G__textprocessing()
-**************************************************************************/
-int G__textprocessing(FILE *fp)
+//______________________________________________________________________________
+int G__textprocessing(FILE* fp)
 {
-        return(G__readline(fp,G__oline,G__argb,&G__argn,G__arg));
+   // -- FIXME: Describe this function!
+   return G__readline(fp, G__oline, G__argb, &G__argn, G__arg);
 }
 
 #ifdef G__REGEXP
-/**************************************************************************
-* G__matchtregex()
-**************************************************************************/
-int G__matchregex(char *pattern, char *string)
+//______________________________________________________________________________
+int G__matchregex(char* pattern, char* string)
 {
-  int i;
-  regex_t re;
-  /* char buf[256]; */
-  i=regcomp(&re,pattern,REG_EXTENDED|REG_NOSUB);
-  if(i!=0) return(0); 
-  i=regexec(&re,string,(size_t)0,(regmatch_t*)NULL,0);
-  regfree(&re);
-  if(i!=0) return(0); 
-  return(1); /* match */
+   // -- FIXME: Describe this function!
+   regex_t re;
+   int i = regcomp(&re, pattern, REG_EXTENDED | REG_NOSUB);
+   if (i) {
+      return 0;
+   }
+   i = regexec(&re, string, 0, 0, 0);
+   regfree(&re);
+   if (i) {
+      return 0;
+   }
+   // match
+   return 1;
 }
-#endif
+#endif // G__REGEXP
 
 #ifdef G__REGEXP1
-/**************************************************************************
-* G__matchtregex()
-**************************************************************************/
-int G__matchregex(char *pattern,char *string)
+//______________________________________________________________________________
+int G__matchregex(char* pattern, char* string)
 {
-  char *re, *s;
-  /* char buf[256]; */
-  re=regcmp(pattern, NULL);
-  if(re==0) return(0);
-  s=regex(re,string);
-  free(re);
-  if(s==0) return(0);
-  return(1); /* match */
+   // -- FIXME: Describe this function!
+   char* re = regcmp(pattern, 0);
+   if (!re) {
+      return 0;
+   }
+   char* s = regex(re, string);
+   free(re);
+   if (!s) {
+      return 0;
+   }
+   // match
+   return 1;
 }
-#endif
+#endif // G__REGEXP1
 
+//______________________________________________________________________________
+//
+//  Functions in the C interface.
+//
 
-} /* extern "C" */
+//______________________________________________________________________________
+int G__split(char* line, char* sstring, int* argc, char* argv[])
+{
+   // -- Split arguments separated by space char.
+   //
+   //  CAUTION: input string will be modified. If you want to keep
+   //           the original string, you should copy it to another string.
+   //
+   unsigned char* string = (unsigned char*) sstring;
+   int i = 0;
+   while ((string[i] != '\n') && (string[i] != '\r') && string[i]) {
+      ++i;
+   }
+   string[i] = '\0';
+   line[i] = '\0';
+   int lenstring = i;
+   argv[0] = line;
+   *argc = 0;
+   int single_quote = 0;
+   int double_quote = 0;
+   int back_slash = 0;
+   int flag = 0;
+   for (i = 0; i < lenstring; ++i) {
+      switch (string[i]) {
+         case '\\':
+            // -- Backslash.
+            back_slash ^= 1;
+            break;
+         case '\'':
+            // -- Single quote.
+            if (!double_quote && !back_slash) {
+               single_quote ^= 1;
+               string[i] = '\0';
+               flag = 0;
+            }
+            break;
+         case '"':
+            // -- Double quote.
+            if (!single_quote && !back_slash) {
+               double_quote ^= 1;
+               string[i] = '\0';
+               flag = 0;
+            }
+            break;
+         default:
+            // -- Any other character.
+            if ((isspace(string[i])) && !back_slash && !single_quote && !double_quote) {
+               string[i] = '\0';
+               flag = 0;
+            }
+            else {
+               if (!flag) {
+                  (*argc)++;
+                  argv[*argc] = (char*) &string[i];
+                  flag = 1;
+               }
+            }
+            back_slash = 0;
+            break;
+      }
+   }
+   return 1;
+}
+
+} // extern "C"
 
 /*
  * Local Variables:
  * c-tab-always-indent:nil
- * c-indent-level:2
- * c-continued-statement-offset:2
- * c-brace-offset:-2
+ * c-indent-level:3
+ * c-continued-statement-offset:3
+ * c-brace-offset:-3
  * c-brace-imaginary-offset:0
  * c-argdecl-indent:0
- * c-label-offset:-2
+ * c-label-offset:-3
  * compile-command:"make -k"
  * End:
  */

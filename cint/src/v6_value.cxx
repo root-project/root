@@ -543,11 +543,6 @@ G__value G__letPvalue(G__value *p,G__value result)
 
 /******************************************************************
 * G__value G__letvalue(G__value *p,G__value expression)
-*
-* Called by
-*   G__letvariable
-*   G__initary
-*
 ******************************************************************/
 G__value G__letvalue(G__value *p,G__value result)
 {
@@ -613,7 +608,6 @@ G__value G__letvalue(G__value *p,G__value result)
     return(result);
   }
 
-#ifndef G__OLDIMPLEMENTATION1329
   if(-1!=p->typenum && G__newtype.nindex[p->typenum]) {
     char store_var_type = G__var_type;
     int size = G__Lsizeof(G__newtype.name[p->typenum]);
@@ -623,7 +617,6 @@ G__value G__letvalue(G__value *p,G__value result)
     memcpy((void*)p->obj.i,(void*)result.obj.i,size);
     return(result);
   }
-#endif
   switch(p->obj.reftype.reftype) {
   case G__PARAP2P:
   case G__PARAP2P2P:

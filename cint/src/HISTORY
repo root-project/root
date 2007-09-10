@@ -4956,7 +4956,22 @@
 * 6.1.24 July 26, 2007
 * - scrupto: don't free const vars
 * - MSVC: embed manifest
-
+*
+* 5.16.25 Sept 10, 2007
+* 6.1.25 Sept 10, 2007
+* - add gcc4 iostream dictionary.
+* - fix support for multi line command line entries
+* - fix handling of storage duration for unspecified length arrays
+* - fix bytecode generation for switch
+* - fix parsing/execution of a break or continue nested inside 
+*   multiple levels of braces
+* - disable bytecode generation for any function or loop
+*   which uses G__va_arg
+* - conversion "operator A*()": keep the '*' (and references etc)
+* - tighten up the semantics of statictype (namespace
+*   members were getting declared static, even when they were not)
+* - scratch_upto now returns a counter that gets bumped 
+*   every time the dictionary is rewound, allows detection of changed dict.
 
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion

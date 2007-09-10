@@ -639,7 +639,6 @@ char *G__type2string(int type,int tagnum,int typenum,int reftype,int isconst)
               ,G__newtype.name[typenum]);
     else
       sprintf(string,"%s",G__newtype.name[typenum]);
-#ifndef G__OLDIMPLEMENTATION1329
     if(G__newtype.nindex[typenum]) {
       int pointlevel = 0;
       if(isupper(type)) pointlevel = 1;
@@ -671,7 +670,6 @@ char *G__type2string(int type,int tagnum,int typenum,int reftype,int isconst)
         break;
       }
     }
-#endif
     if(isupper(G__newtype.type[typenum])) {
       switch(G__newtype.reftype[typenum]) {
       case G__PARANORMAL:
@@ -1447,12 +1445,8 @@ int G__isfloat(char *string,int *type)
       /******************************
        * long
        ******************************/
-#ifndef G__OLDIMPLEMENTATION1874
       if('l'==*type) *type = 'n';
       else           *type = 'l';
-#else
-      *type = 'l';
-#endif
       break;
 #ifdef G__NEVER
     case 's':

@@ -59,7 +59,7 @@ extern int G__asm_cond_cp; /* avoid wrong bytecode optimization */
 
 #ifdef G__ASM_WHOLEFUNC
 extern int G__asm_wholefunction;
-#endif
+#endif // G__ASM_WHOLEFUNC
 
 extern int G__asm_wholefunc_default_cp;
 
@@ -73,13 +73,13 @@ extern G__value G__asm_stack_g[G__MAXSTACK]; /* data stack */
 extern char G__asm_name_g[]; /* buffer to store function names which 
 				* is called within the compiled loop */
 extern int G__asm_name_p; /* pointer to the function name buffer */
-#else
+#else // G__ASM_IFUNC
 extern long G__asm_inst[G__MAXINST]; /* p-code instruction buffer */
 extern G__value G__asm_stack[G__MAXSTACK]; /* data stack */
 extern char G__asm_name[]; /* buffer to store function names which 
 				* is called within the compiled loop */
 extern int G__asm_name_p; /* pointer to the function name buffer */
-#endif
+#endif // G__ASM_IFUNC
 
 extern struct G__param *G__asm_param; /* pointer of parameter buffer to 
 				* bring function parameter */
@@ -93,12 +93,12 @@ extern int G__asm_dbg; /* p-code debugging flag, only valid when compiled with
 		   * G__ASM_DBG */
 #ifdef G__ASM_DBG
 extern char *G__LOOPCOMPILEABORT;
-#endif
+#endif // G__ASM_DBG
 extern int G__asm_cp;               /* compile time program counter */
 extern int G__asm_dt;   /* compile time stack pointer */
 extern int G__asm_index;              /* variable index */
 
-#endif
+#endif // G__ASM
 
 /**************************************************************************
 * signal handling
@@ -262,8 +262,8 @@ extern int G__return;           /* 0:normal,1:return,2:exit()or'q',3:'qq'(not us
 /* int G__extern_global;    number of globals defined in c function */
 extern int G__disp_mask;        /* temporary read count */
 extern int G__temp_read;        /* temporary read count */
-extern int G__switch;           /* switch case control flag */
-extern int G__mparen;           /* switch case break nesting control */
+extern int G__switch;           /* in a switch, parser should evaluate case expressions */
+extern int G__switch_searching; /* in a switch, parser should return after evaluating a case expression */
 extern int G__eof_count;        /* end of file error flag */
 extern int G__ismain;           /* is there a main function */
 extern int G__globalcomp;       /* make compiled func's global table */
@@ -393,7 +393,7 @@ extern long G__memberfunc_struct_offset;
 /**************************************************************************
 * buffer to store default parameter value
 **************************************************************************/
-extern G__value G__default_parameter;
+//extern G__value G__default_parameter;
 extern char G__def_parameter[];
 
 
@@ -616,6 +616,7 @@ extern int G__boolflag;
 extern int G__init;
 
 extern int G__last_error;
+extern int G__const_noerror;
 
 extern int G__dispmsg;
 
@@ -646,6 +647,12 @@ extern int G__scopelevel;
 extern int G__cintv6;
 
 extern struct G__input_file G__lasterrorpos;
+
+extern int G__initval_eval;
+extern int G__dynconst;
+
+/*extern std::list<G__DLLINIT>* G__initpermanentsl;*/
+extern int G__ispermanentsl;
 
 /**************************************************************************
 * Incremented every time the cint dictionary is rewound in scrupto.

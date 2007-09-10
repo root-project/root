@@ -112,7 +112,7 @@ void G__define_type()
   char temp[G__LONGLINE];
   int isnext;
   fpos_t next_fpos;
-  int /* itag=0,*/ mparen,store_tagnum,store_def_struct_member=0;
+  int /* itag=0,*/ store_tagnum,store_def_struct_member=0;
   struct G__var_array *store_local;
   /* char store_tagname[G__LONGLINE] */
   char category[10],memname[G__MAXNAME],val[G__ONELINE];
@@ -813,9 +813,6 @@ void G__define_type()
     }
     G__newtype.tagnum[typenum] = -1;
 
-    /*
-     * maybe better to change G__defined_type
-     */
     G__newtype.type[typenum]=type;
     G__newtype.globalcomp[typenum]=G__default_link?G__globalcomp:G__NOLINK;
     G__newtype.reftype[typenum]=reftype;
@@ -932,15 +929,14 @@ void G__define_type()
         
           store_def_struct_member=G__def_struct_member;
           G__def_struct_member=1;
-          /* G__prerun = 1; */ /* redundant */
-          G__switch = 0; /* redundant */
-          mparen = G__mparen;
-          G__mparen=0;
         
           G__disp_mask=10000;
           G__tagdefining=G__tagnum;
           G__def_tagnum = G__tagdefining;
-          G__exec_statement();
+          // Tell the parser to process the entire struct block.
+          int brace_level = 0;
+          // And call the parser.
+          G__exec_statement(&brace_level);
           G__tagnum=G__tagdefining;
           G__def_tagnum = store_def_tagnum;
         
@@ -984,7 +980,6 @@ void G__define_type()
           G__tagdefining = store_tagdefining;
         
           G__def_struct_member=store_def_struct_member;
-          G__mparen=mparen;
           G__p_local = store_local;
         
           G__fignorestream(";");
@@ -1106,9 +1101,7 @@ int G__defined_typename(const char *type_name)
   len=strlen(temp);
 
   if(
-#ifndef G__OLDIMPLEMENTATION1863
      len>0 && 
-#endif
      temp[len-1]=='*') {
     temp[--len]='\0';
     ispointer = 'A' - 'a';
@@ -1362,194 +1355,7 @@ int G__search_typename2(const char *type_name,int typein
   return(ret);
 }
 
-/******************************************************************
-* G__defined_type(type_name,len)
-*
-* Search already defined type_name and tagname
-* and allocate automatic variables.
-******************************************************************/
-int G__defined_type(char *type_name,int len)
-/* struct G__input_file *fin; */
-{
-  int store_tagnum,store_typenum;
-  /* char type; */
-  int cin;
-  int refrewind = -2;
-  fpos_t pos;
-  int line;
-  char store_typename[G__LONGLINE];  
-
-  if(G__prerun&&'~'==type_name[0]) {
-    G__var_type = 'y';
-    cin = G__fignorestream("(");
-    type_name[len++]=cin;
-    type_name[len]='\0';
-    G__make_ifunctable(type_name);
-    return(1);
-  }
-
-  if(!isprint(type_name[0]) && len==1) {
-    return(1);
-  }
-
-  fgetpos(G__ifile.fp,&pos);
-  line=G__ifile.line_number;
-  /* this is not the fastest to insure proper unwinding in case of 
-     error, but it is the simpliest :( */
-  strcpy(store_typename,type_name);
-
-  /*************************************************************
-   * check if this is a declaration or not
-   * declaration:
-   *     type varname... ; type *varname
-   *          ^ must be alphabet '_' , '*' or '('
-   * else
-   *   if not alphabet, return
-   *     type (param);   function name
-   *     type = expr ;   variable assignment
-   *************************************************************/
-  cin = G__fgetspace();
-  /* This change is risky. Need more evaluation */
-  switch(cin) {
-  case '*':
-  case '&':
-    cin=G__fgetc();
-    fseek(G__ifile.fp,-2,SEEK_CUR);
-    if(G__dispsource) G__disp_mask=2;
-    if('='==cin) return(0);
-    break;
-  case '(':
-  case '_':
-    fseek(G__ifile.fp,-1,SEEK_CUR);
-    if(G__dispsource) G__disp_mask=1;
-    break;
-  default:
-    fseek(G__ifile.fp,-1,SEEK_CUR);
-    if(G__dispsource) G__disp_mask=1;
-    if(!isalpha(cin)) return(0);
-    break;
-  }
-  
-  if(type_name[len-1]=='&') {
-    G__reftype=G__PARAREFERENCE;
-    type_name[--len]='\0';
-    --refrewind;
-  }
-  
-  store_tagnum = G__tagnum;
-  store_typenum=G__typenum;
-  
-  /* search for typedef names */
-  if(len>2 && '*'==type_name[len-1] && '*'==type_name[len-2]) {
-    /* pointer to pointer */
-    len -=2;
-    type_name[len]='\0';
-    /* type** a;
-     *     ^<<^      */
-    fsetpos(G__ifile.fp,&pos);
-    G__ifile.line_number=line;
-    /* the following fseek is now potentialy wrong (because of fake_space!) */
-    fseek(G__ifile.fp,-1,SEEK_CUR);
-    cin = G__fgetc();
-    if (cin=='*') {
-      /* we have a fake space */
-      fseek(G__ifile.fp,refrewind,SEEK_CUR);
-    } else {
-      fseek(G__ifile.fp,refrewind-1,SEEK_CUR);
-    }
-    if(G__dispsource) G__disp_mask=2;
-  }
-  else if(len>1 && '*'==type_name[len-1]) {
-    int cin2;
-    len -=1;
-    type_name[len]='\0';
-    fsetpos(G__ifile.fp,&pos);
-    G__ifile.line_number=line;
-    /* To know how much to rewind we need to know if there is a fakespace */
-    fseek(G__ifile.fp,-1,SEEK_CUR);
-    cin = G__fgetc();
-    if (cin=='*') {
-      /* we have a fake space */
-      fseek(G__ifile.fp,refrewind+1,SEEK_CUR);
-    } else {
-      fseek(G__ifile.fp,refrewind,SEEK_CUR);
-    }
-    if(G__dispsource) G__disp_mask=1;
-    cin2 = G__fgetc();
-    if(!isalnum(cin2)
-       && '>'!=cin2
-       ) {
-      fseek(G__ifile.fp,-1,SEEK_CUR);
-      if(G__dispsource) G__disp_mask=1;
-    }
-  }
-
-  G__typenum = G__defined_typename(type_name);
-  
-  if(-1 == G__typenum) {
-    /* search for class/struct/enum tagnames */
-    G__tagnum = G__defined_tagname(type_name,1);
-    if(-1 == G__tagnum) {
-      /* This change is risky. Need more evaluation */
-      if(G__fpundeftype && '('!=cin &&
-         (-1==G__func_now || -1!=G__def_tagnum)) {
-        G__tagnum=G__search_tagname(type_name,'c');
-        fprintf(G__fpundeftype,"class %s; /* %s %d */\n",type_name
-                ,G__ifile.name,G__ifile.line_number);
-        fprintf(G__fpundeftype,"#pragma link off class %s;\n\n",type_name);
-        G__struct.globalcomp[G__tagnum] = G__NOLINK;
-      }
-      else {
-        /* if not found, return */
-        /* Restore properly the previous state! */
-        fsetpos(G__ifile.fp,&pos);
-        G__ifile.line_number = line;
-        strcpy(type_name,store_typename);
-        G__tagnum = store_tagnum;
-        G__typenum = store_typenum;
-        G__reftype=G__PARANORMAL;
-        return(0);
-      }
-    }
-    else {
-      G__typenum = G__defined_typename(type_name);
-      if(-1!=G__typenum) {
-        G__reftype += G__newtype.reftype[G__typenum];
-        G__typedefnindex = G__newtype.nindex[G__typenum];
-        G__typedefindex = G__newtype.index[G__typenum];
-      }
-    }
-    G__var_type = 'u';
-  }
-  else {
-    G__tagnum=G__newtype.tagnum[G__typenum];
-    /* Questionable adding of G__reftype, maybe |= instead */
-    G__reftype += G__newtype.reftype[G__typenum];
-    G__typedefnindex = G__newtype.nindex[G__typenum];
-    G__typedefindex = G__newtype.index[G__typenum];
-  }
-
-  if(-1 != G__tagnum && G__struct.type[G__tagnum]=='e') {
-    /* in case of enum */
-    G__var_type='i';
-  }
-  
-  
-  /* allocate variable */
-  G__define_var(G__tagnum,G__typenum);
-  
-  G__typedefnindex = 0;
-  G__typedefindex = (int*)NULL;
-  
-  G__tagnum=store_tagnum;
-  G__typenum=store_typenum;
-  
-  G__reftype=G__PARANORMAL;
-  
-  return(1);
-}
-
-} /* extern "C" */
+} // extern "C"
 
 /*
  * Local Variables:

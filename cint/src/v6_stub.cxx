@@ -352,9 +352,7 @@ void G__cppstub_memfunc(FILE *fp)
         for(j=0;j<ifunc->allifunc;j++) {
           
           if(
-#ifndef G__OLDIMPLEMENTATION2039
              ifunc->hash[j]!=0 &&
-#endif
              -1==ifunc->pentry[j]->line_number
              &&0==ifunc->ispurevirtual[j] && ifunc->hash[j] &&
              (G__CPPSTUB==ifunc->globalcomp[j]||

@@ -42,6 +42,7 @@ CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/gcc3strm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/gcc4strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif3.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/accstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/iccstrm.%,$(CINTS2))
@@ -170,7 +171,7 @@ endif
 ifeq ($(GCC_MAJOR),4)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/gcc3strm.cxx
+CINTS2       += $(MODDIRS)/gcc4strm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 ifeq ($(CXXCMD),xlC)

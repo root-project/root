@@ -1833,7 +1833,7 @@ int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int
     int c = G__fgetstream(expr, ",{}");
     if (expr[0]) {
       // -- We have an initializer expression.
-      // FIXME: Do we handle a string literal correctly here?  See similar code in G__initary().
+      // FIXME: Do we handle a string literal correctly here?
       ++linear_index;
       // If we are an array, make sure we have not gone beyond the end.
       if ((num_of_elements || isauto) && (linear_index >= num_of_elements)) {
@@ -2231,7 +2231,7 @@ struct G__var_array* G__blockscope::allocatevariable(G__TypeReader& type
     // this part corresponds to G__compiler::Init(),
     // the bytecode compiler uses legacy G__malloc() and it uses the last
     // entry of class/struct table as size/offset calculation buffer.
-    int num = var->varlabel[ig15][1];
+    int num = var->varlabel[ig15][1] /* number of elements */;
     if (num == INT_MAX) {
       num = 0;
     } else if (!num) {

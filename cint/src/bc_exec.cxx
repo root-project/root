@@ -380,6 +380,9 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   char localbuf[G__LOCALBUFSIZE];
   struct G__var_array *var;
   void *ptmpbuf;
+  if (G__asm_dbg) {
+    G__fprinterr(G__serr, "G__exec_bytecode: starting bytecode execution ...\n");
+  }
 
   G__bc_funccallstack_obj.setlinenum(G__ifile.line_number);
 
@@ -387,8 +390,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   bytecode = (struct G__bytecodefunc*)funcname;
   var = bytecode->var;
 
-  ptmpbuf=G__allocheapobjectstack(G__get_ifunc_ref(bytecode->ifunc),bytecode->ifn
-				  ,++G__scopelevel);
+  ptmpbuf=G__allocheapobjectstack(G__get_ifunc_ref(bytecode->ifunc),bytecode->ifn,++G__scopelevel);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
     fprintf(G__serr,"tmpobj=%p scope%d\n",ptmpbuf,G__scopelevel);
@@ -550,8 +552,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 
   /* run bytecode function */
   
-  G__bc_funccallstack_obj.push(bytecode,localmem,G__store_struct_offset
-			       ,G__ifile.line_number,libp);
+  G__bc_funccallstack_obj.push(bytecode,localmem,G__store_struct_offset,G__ifile.line_number,libp);
   ++bytecode->ifunc->busy[bytecode->ifn];
   G__exec_asm(/*start*/0,/*stack*/libp->paran,result7,localmem);
   --bytecode->ifunc->busy[bytecode->ifn];
@@ -613,7 +614,10 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   G__memberfunc_tagnum=store_memberfunc_tagnum;
 
   if(ptmpbuf) G__copyheapobjectstack(ptmpbuf,result7,G__get_ifunc_ref(bytecode->ifunc),bytecode->ifn);
-
+ 
+  if (G__asm_dbg) {
+    G__fprinterr(G__serr, "G__exec_bytecode: end bytecode execution ...\n");
+  }
   return(0);
 }
 

@@ -29,6 +29,8 @@ extern "C" {
 
 int G__rootCcomment=0;
 
+void G__loadlonglong(int* ptag, int* ptype, int which);
+
 /******************************************************************
 * int G__sizeof(G__value *object)
 *
@@ -301,7 +303,7 @@ int G__Lsizeof(char *type_name)
   if (var) {
     if (var->varlabel[ig15][1] == INT_MAX /* unspecified size array flag */) {
       if (var->type[ig15] == 'c') {
-        return strlen((char*) var->p[ig15]);
+        return strlen((char*) var->p[ig15]) + 1;
       }
       else {
         return sizeof(void *);
@@ -1520,6 +1522,71 @@ int G__DLL_direct_globalfunc(G__value *result7
   result7->isconst = ifunc->isconst[ifn];
 
   return 1;
+}
+
+//______________________________________________________________________________
+//
+//  Functions in the C interface.
+//
+
+//______________________________________________________________________________
+void G__loadlonglong(int* ptag, int* ptype, int which)
+{
+   int lltag = -1, lltype = -1;
+   int ulltag = -1, ulltype = -1;
+   int ldtag = -1, ldtype = -1;
+   int store_decl = G__decl;
+   int store_def_struct_member = G__def_struct_member;
+   int flag = 0;
+   int store_tagdefining = G__tagdefining;
+   int store_def_tagnum = G__def_tagnum;
+   G__tagdefining = -1;
+   G__def_tagnum = -1;
+   G__def_struct_member = 0;
+   G__decl = 0;
+   if (0 == G__defined_macro("G__LONGLONG_H")) {
+      G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+      flag = 1;
+   }
+   G__decl = 1;
+   G__def_struct_member = store_def_struct_member;
+   if (which == G__LONGLONG || flag) {
+      lltag = G__defined_tagname("G__longlong", 2);
+      lltype = G__search_typename("long long", 'u', G__tagnum, G__PARANORMAL);
+      G__struct.defaulttypenum[lltag] = lltype;
+      G__newtype.tagnum[lltype] = lltag;
+   }
+   if (which == G__ULONGLONG || flag) {
+      ulltag = G__defined_tagname("G__ulonglong", 2);
+      ulltype
+      = G__search_typename("unsigned long long", 'u', G__tagnum, G__PARANORMAL);
+      G__struct.defaulttypenum[ulltag] = ulltype;
+      G__newtype.tagnum[ulltype] = ulltag;
+   }
+   if (which == G__LONGDOUBLE || flag) {
+      ldtag = G__defined_tagname("G__longdouble", 2);
+      ldtype = G__search_typename("long double", 'u', G__tagnum, G__PARANORMAL);
+      G__struct.defaulttypenum[ldtag] = ldtype;
+      G__newtype.tagnum[ldtype] = ldtag;
+   }
+   switch (which) {
+      case G__LONGLONG:
+         *ptag = lltag;
+         *ptype = lltype;
+         break;
+      case G__ULONGLONG:
+         *ptag = ulltag;
+         *ptype = ulltype;
+         break;
+      case G__LONGDOUBLE:
+         *ptag = ldtag;
+         *ptype = ldtype;
+         break;
+   }
+   G__def_tagnum = store_def_tagnum;
+   G__tagdefining = store_tagdefining;
+   G__decl = store_decl;
+   return;
 }
 
 } /* extern "C" */

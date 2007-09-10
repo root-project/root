@@ -64,7 +64,7 @@ int G__asm_step=0;
 ****************************************************************/
 double G__doubleM(G__value *buf)
 {
-  return G__convertT<double>(buf);
+   return G__convertT<double>(buf);
 }
 
 /****************************************************************
@@ -237,7 +237,7 @@ void G__asm_tovalue_U(G__value *result)
   buf->ref = var->p[ig15]+offset;         \
   buf->obj.i = *(casttype*)buf->ref
 */
- 
+
 } // extern "C"
 
 #define LDARGS G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15
@@ -2139,10 +2139,10 @@ void G__OP2_modassign(G__value *bufm1,G__value *bufm2)
     return;
   }
 #endif
-  if(G__isunsignedM(bufm1)) {
+    if(G__isunsignedM(bufm1)) {
     G__ModAssign(bufm2, G__convertT<unsigned long>(bufm1));
-  }
-  else {
+    }
+    else {
     G__ModAssign(bufm2, G__convertT<long>(bufm1));
   }
   G__intassign(bufm2->ref,bufm2->obj.i,bufm2->type);
@@ -2207,7 +2207,7 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
         return;
       }
 #endif
-      if(G__isunsignedM(bufm1)) {
+        if(G__isunsignedM(bufm1)) {
 	G__DivAssign(bufm2, G__convertT<unsigned long>(bufm1));
       }
       else {
@@ -2226,24 +2226,27 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
 /****************************************************************
 * G__OP1_postfixinc_i()
 ****************************************************************/
-void G__OP1_postfixinc_i(G__value *pbuf)
+void G__OP1_postfixinc_i(G__value* pbuf)
 {
-  *(int*)pbuf->ref = (int)pbuf->obj.i+1;
+  *(int*)pbuf->ref = (int) pbuf->obj.i + 1;
 }
+
 /****************************************************************
 * G__OP1_postfixdec_i()
 ****************************************************************/
-void G__OP1_postfixdec_i(G__value *pbuf)
+void G__OP1_postfixdec_i(G__value* pbuf)
 {
-  *(int*)pbuf->ref = (int)pbuf->obj.i-1;
+  *(int*)pbuf->ref = (int) pbuf->obj.i - 1;
 }
+
 /****************************************************************
 * G__OP1_prefixinc_i()
 ****************************************************************/
-void G__OP1_prefixinc_i(G__value *pbuf)
+void G__OP1_prefixinc_i(G__value* pbuf)
 {
   *(int*)pbuf->ref = (int)(++pbuf->obj.i);
 }
+
 /****************************************************************
 * G__OP1_prefixdec_i()
 ****************************************************************/
@@ -2257,8 +2260,9 @@ void G__OP1_prefixdec_i(G__value *pbuf)
 ****************************************************************/
 void G__OP1_postfixinc_d(G__value *pbuf)
 {
-  *(double*)pbuf->ref = (double)pbuf->obj.d+1.0;
+  *(double*)pbuf->ref = (double)pbuf->obj.d + 1.0;
 }
+
 /****************************************************************
 * G__OP1_postfixdec_d()
 ****************************************************************/
@@ -2437,26 +2441,27 @@ void G__OP1_minus(G__value *pbuf)
 ******************************************************************/
 void G__suspendbytecode()
 {
-  if(G__asm_dbg && G__asm_noverflow) {
-    if(G__dispmsg>=G__DISPNOTE) {
-      G__fprinterr(G__serr,"Note: Bytecode compiler suspended(off) and resumed(on)");
-      G__printlinenum();
-    }
-  }
-  G__asm_noverflow=0;
+   if (G__asm_dbg && G__asm_noverflow) {
+      if (G__dispmsg >= G__DISPNOTE) {
+         G__fprinterr(G__serr, "Note: Bytecode compiler suspended.");
+         G__printlinenum();
+      }
+   }
+   G__asm_noverflow = 0;
 }
+
 /******************************************************************
 * G__resetbytecode()
 ******************************************************************/
 void G__resetbytecode()
 {
-  if(G__asm_dbg && G__asm_noverflow) {
-    if(G__dispmsg>=G__DISPNOTE) {
-      G__fprinterr(G__serr,"Note: Bytecode compiler reset (off)");
-      G__printlinenum();
-    }
-  }
-  G__asm_noverflow=0;
+   if (G__asm_dbg && G__asm_noverflow) {
+      if (G__dispmsg >= G__DISPNOTE) {
+         G__fprinterr(G__serr, "Note: Bytecode compiler reset.");
+         G__printlinenum();
+      }
+   }
+   G__asm_noverflow = 0;
 }
 
 /******************************************************************
@@ -2464,17 +2469,20 @@ void G__resetbytecode()
 ******************************************************************/
 void G__abortbytecode()
 {
-  if(G__asm_dbg && G__asm_noverflow) {
-    if(G__dispmsg>=G__DISPNOTE) {
-      if(0==G__xrefflag)
-        G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
-                     ,G__asm_noverflow);
-      else
-        G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
-      G__printlinenum();
-    }
-  }
-  if(0==G__xrefflag) G__asm_noverflow=0;
+   if (G__asm_dbg && G__asm_noverflow) {
+      if (G__dispmsg >= G__DISPNOTE) {
+         if (!G__xrefflag) {
+            G__fprinterr(G__serr, "Note: Bytecode compiler stops at this line.  Enclosing loop or function may be slow. %d", G__asm_noverflow);
+         }
+         else {
+            G__fprinterr(G__serr, "Note: Bytecode limitation encountered but compiler continues for local variable cross-referencing.");
+         }
+         G__printlinenum();
+      }
+   }
+   if (!G__xrefflag) {
+      G__asm_noverflow = 0;
+   }
 }
 
 /****************************************************************
@@ -2488,87 +2496,78 @@ void G__abortbytecode()
 * void.
 *
 ****************************************************************/
-int G__inc_cp_asm(int cp_inc,int dt_dec)
+int G__inc_cp_asm(int cp_inc, int dt_dec)
 {
-  if(0==G__xrefflag) {
-    G__asm_cp+=cp_inc;
-    G__asm_dt-=dt_dec;
-  }
-
-  if(G__asm_instsize && G__asm_cp>G__asm_instsize-8) {
-    void *p;
-    G__asm_instsize += 0x100;
-    p = realloc((void*)G__asm_stack,sizeof(long)*G__asm_instsize);
-    if(!p) G__genericerror("Error: memory exhausted for bytecode instruction buffer\n");
-    G__asm_inst = (long*)p;
-  }
-  else if(!G__asm_instsize && G__asm_cp>G__MAXINST-8) {
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Warning: loop compile instruction overflow");
-      G__printlinenum();
-    }
-    G__abortbytecode();
-  }
-
-  if(G__asm_dt<30) {
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Warning: loop compile data overflow");
-      G__printlinenum();
-    }
-    G__abortbytecode();
-  }
-  return(0);
+   if (!G__xrefflag) {
+      G__asm_cp += cp_inc;
+      G__asm_dt -= dt_dec;
+   }
+   if (G__asm_instsize && (G__asm_cp > (G__asm_instsize - 8))) {
+      G__asm_instsize += 0x100;
+      void* p = realloc((void*) G__asm_stack, sizeof(long) * G__asm_instsize);
+      if (!p) {
+         G__genericerror("Error: memory exhausted for bytecode instruction buffer\n");
+      }
+      G__asm_inst = (long*) p;
+   }
+   else if (!G__asm_instsize && (G__asm_cp > (G__MAXINST - 8))) {
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Warning: loop compile instruction overflow");
+         G__printlinenum();
+      }
+      G__abortbytecode();
+   }
+   if (G__asm_dt < 30) {
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Warning: loop compile data overflow");
+         G__printlinenum();
+      }
+      G__abortbytecode();
+   }
+   return 0;
 }
 
 /****************************************************************
 * G__clear_asm()
-*
-* Called by
-*    G__exec_do()
-*    G__exec_while()
-*    G__exec_while()
-*    G__exec_for()
-*    G__exec_for()
-*
-*  Reset instruction and data buffer.
-* This function is called at the beginning of compilation.
-*
 ****************************************************************/
 int G__clear_asm()
 {
-  G__asm_cp=0;
-  G__asm_dt=G__MAXSTACK-1;
-  G__asm_name_p=0;
-  G__asm_cond_cp = -1; /* avoid wrong optimization */
-  return(0);
+   // -- Reset instruction and data buffer.
+   G__asm_cp = 0;
+   G__asm_dt = G__MAXSTACK - 1;
+   G__asm_name_p = 0;
+   G__asm_cond_cp = -1;
+   return 0;
 }
 
 /******************************************************************
 * G__asm_clear()
-*
-*
 ******************************************************************/
 int G__asm_clear()
 {
-  if(G__asm_clear_mask) return(0);
+   // -- FIXME: Describe this function!
+   if (G__asm_clear_mask) {
+      return 0;
+   }
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
-                         ,G__ifile.name ,G__ifile.line_number);
-#endif
-
-  /* Issue, value of G__CL must be unique. Otherwise, following optimization
-   * causes problem. There is similar issue, but the biggest risk is here. */
-  if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]
-     && (G__asm_inst[G__asm_cp-1]&0xffff0000)==0x7fff0000)
-    G__inc_cp_asm(-2,0);
-  G__asm_inst[G__asm_cp]=G__CL;
-  G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK)
-                    + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
-  G__inc_cp_asm(2,0);
-  return(0);
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "%3x,%3x: CL %s:%d  %s:%d\n", G__asm_cp, G__asm_dt, G__ifile.name, G__ifile.line_number, __FILE__, __LINE__);
+   }
+#endif // G__ASM_DBG
+   if (
+      (G__asm_cp >= 2) &&
+      (G__asm_inst[G__asm_cp-2] == G__CL) &&
+      ((G__asm_inst[G__asm_cp-1] & 0xffff0000) == 0x7fff0000)
+   ) {
+      G__inc_cp_asm(-2, 0);
+   }
+   G__asm_inst[G__asm_cp] = G__CL;
+   G__asm_inst[G__asm_cp+1] = (G__ifile.line_number & G__CL_LINEMASK) + ((G__ifile.filenum & G__CL_FILEMASK) * G__CL_FILESHIFT);
+   G__inc_cp_asm(2, 0);
+   return 0;
 }
 
-#endif /* G__ASM */
+#endif // G__ASM
 
 #ifdef G__ASM
 /**************************************************************************
@@ -2577,13 +2576,15 @@ int G__asm_clear()
 int G__asm_putint(int i)
 {
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD %d from %x\n",G__asm_cp,i,G__asm_dt);
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "%3x,%3x: LD %d  %s:%d\n", G__asm_cp, G__asm_dt, i, __FILE__, __LINE__);
+   }
 #endif
-  G__asm_inst[G__asm_cp]=G__LD;
-  G__asm_inst[G__asm_cp+1]=G__asm_dt;
-  G__letint(&G__asm_stack[G__asm_dt],'i',(long)i);;
-  G__inc_cp_asm(2,1);
-  return(0);
+   G__asm_inst[G__asm_cp] = G__LD;
+   G__asm_inst[G__asm_cp+1] = G__asm_dt;
+   G__letint(&G__asm_stack[G__asm_dt], 'i', (long) i);
+   G__inc_cp_asm(2, 1);
+   return 0;
 }
 #endif
 
@@ -2991,8 +2992,10 @@ int G__asm_optimize(int *start)
      G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-5])->type[G__asm_inst[G__asm_cp-8]])) {
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i++ optimized\n",G__asm_cp-9);
-#endif
+    if (G__asm_dbg) {
+       G__fprinterr(G__serr, "   %3x: INCJMP i++ optimized  %s:%d\n", G__asm_cp - 9, __FILE__, __LINE__);
+    }
+#endif // G__ASM_DBG
 
     G__asm_inst[G__asm_cp-8]=
       ((struct G__var_array*)G__asm_inst[G__asm_cp-5])->p[G__asm_inst[G__asm_cp-8]];
@@ -3002,7 +3005,7 @@ int G__asm_optimize(int *start)
       G__asm_inst[G__asm_cp-8] += G__store_struct_offset;
     }
 
-    G__asm_inst[G__asm_cp-9]=G__INCJMP;
+    G__asm_inst[G__asm_cp-9] = G__INCJMP;
 
     switch(G__asm_inst[G__asm_cp-3]) {
     case G__OPR_POSTFIXINC:
@@ -3063,8 +3066,10 @@ int G__asm_optimize(int *start)
           G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]]))  {
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i+=1 optimized\n",G__asm_cp-11);
-#endif
+    if (G__asm_dbg) {
+       G__fprinterr(G__serr, "   %3x: INCJMP i += 1 optimized  %s:%d\n", G__asm_cp - 11, __FILE__, __LINE__);
+    }
+#endif // G__ASM_DBG
 
     G__asm_inst[G__asm_cp-10]=
       ((struct G__var_array*)G__asm_inst[G__asm_cp-7])->p[G__asm_inst[G__asm_cp-10]];
@@ -3074,7 +3079,7 @@ int G__asm_optimize(int *start)
       G__asm_inst[G__asm_cp-10] += G__store_struct_offset;
     }
 
-    G__asm_inst[G__asm_cp-11]=G__INCJMP;
+    G__asm_inst[G__asm_cp-11] = G__INCJMP;
 
     switch(G__asm_inst[G__asm_cp-3]) {
     case G__OPR_ADDASSIGN:
@@ -3138,9 +3143,11 @@ int G__asm_optimize(int *start)
           G__asm_inst[G__asm_cp-4]=='p') {
 
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: INCJMP  i=i+1 optimized\n",G__asm_cp-16);
-#endif
-    G__asm_inst[G__asm_cp-16]=G__INCJMP;
+    if (G__asm_dbg) {
+       G__fprinterr(G__serr, "   %3x: INCJMP i = i + 1 optimized  %s:%d\n", G__asm_cp - 16, __FILE__, __LINE__);
+    }
+#endif // G__ASM_DBG
+    G__asm_inst[G__asm_cp-16] = G__INCJMP;
 
     G__asm_inst[G__asm_cp-15]=
       ((struct G__var_array*)G__asm_inst[G__asm_cp-3])->p[G__asm_inst[G__asm_cp-6]];
@@ -3668,38 +3675,41 @@ void G__LD_RP0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 /*************************************************************************
 * G__LD_p0_optimize()
 *************************************************************************/
-void G__LD_p0_optimize(struct G__var_array *var,int ig15,int pc,long inst)
+void G__LD_p0_optimize(struct G__var_array* var, int ig15, int pc, long inst)
 {
-  long originst=G__asm_inst[pc];
-  int pointlevel=G__asm_inst[pc+3];
-  if(var->bitfield[ig15]) return;
+   long originst = G__asm_inst[pc];
+   int pointlevel = G__asm_inst[pc+3];
+   if (var->bitfield[ig15]) {
+      return;
+   }
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) {
-    switch(inst) {
-    case G__LDST_VAR_P:
-      G__fprinterr(G__serr,"  G__LD_VAR optimized 6 G__LDST_VAR_P\n");
-      break;
-    case G__LDST_MSTR_P:
-      G__fprinterr(G__serr,"  G__LD_MSTR optimized 6 G__LDST_MSTR_P\n");
-      break;
-    case G__LDST_LVAR_P:
-      G__fprinterr(G__serr,"  G__LD_LvAR optimized 6 G__LDST_LVAR_P\n");
-      break;
-    }
-  }
+   if (G__asm_dbg)
+   {
+      switch (inst) {
+         case G__LDST_VAR_P:
+            G__fprinterr(G__serr, "        G__LD_VAR optimized 6 to G__LDST_VAR_P\n");
+            break;
+         case G__LDST_MSTR_P:
+            G__fprinterr(G__serr, "  G__LD_MSTR optimized 6 to G__LDST_MSTR_P\n");
+            break;
+         case G__LDST_LVAR_P:
+            G__fprinterr(G__serr, "  G__LD_LVAR optimized 6 to G__LDST_LVAR_P\n");
+            break;
+      }
+   }
 #endif
-  G__asm_inst[pc] = inst;
-  G__asm_inst[pc+3] = 0;
-  if(0==G__get_LD_p0_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
+   G__asm_inst[pc] = inst;
+   G__asm_inst[pc+3] = 0;
+   if (!G__get_LD_p0_p2f(var->type[ig15], &G__asm_inst[pc+2]))
+   {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Error: LD_VAR,LD_MSTR optimize (6) error %s\n"
-              ,var->varnamebuf[ig15]);
-    }
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "Error: LD_VAR,LD_MSTR optimize (6) error %s\n", var->varnamebuf[ig15]);
+      }
 #endif
-    G__asm_inst[pc] = originst;
-    G__asm_inst[pc+3] = pointlevel;
-  }
+      G__asm_inst[pc] = originst;
+      G__asm_inst[pc+3] = pointlevel;
+   }
 }
 
 /*************************************************************************
@@ -4755,12 +4765,11 @@ int G__asm_optimize3(int *start)
       * sp+1             <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: LD %g from %x \n"
-                             ,pc
-                             ,G__double(G__asm_stack[G__asm_inst[pc+1]])
-                             ,G__asm_inst[pc+1]);
-#endif
-      /* no optimize */
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x: LD %d from %x  %s:%d\n", pc, G__int(G__asm_stack[G__asm_inst[pc+1]]), G__asm_inst[pc+1], __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
+      // no optimize
       if('i'==G__asm_stack[G__asm_inst[pc+1]].type) {
         G__LD_int_optimize(&pc,(int*)(&(G__asm_stack[G__asm_inst[pc+1]].obj.i)));
       }
@@ -4773,10 +4782,10 @@ int G__asm_optimize3(int *start)
       *  clear stack pointer
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %s:%d\n",pc
-                 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
-                                  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3lx: CL %s:%d  %s:%d\n", pc, G__srcfile[G__asm_inst[pc+1] / G__CL_FILESHIFT].filename, G__asm_inst[pc+1]&G__CL_LINEMASK, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
       /* no optimize */
       pc+=2;
       break;
@@ -5019,9 +5028,9 @@ int G__asm_optimize3(int *start)
       * 3 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: INCJMP *(int*)0x%lx+%d to %x\n"
-                             ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
-                             ,G__asm_inst[pc+3]);
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x: INCJMP *(int*)0x%lx+%d to %x  %s:%d\n", pc, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
+      }
 #endif
       /* no optimization */
       pc+=4;
@@ -5219,7 +5228,6 @@ int G__asm_optimize3(int *start)
         G__asm_inst[pc] = G__OP1_OPTIMIZED;
         G__asm_inst[pc+1] = (long)G__OP1_prefixdec_d;
         break;
-
       case G__OPR_POSTFIXINC:
         G__asm_inst[pc] = G__OP1_OPTIMIZED;
         G__asm_inst[pc+1] = (long)G__OP1_postfixinc;
@@ -6446,12 +6454,10 @@ int G__dasm(FILE *fout,int isthrow)
       * 0 CL
       *  clear stack pointer
       ***************************************/
-      if(0==isthrow) {
-        fprintf(fout,"%3x: CL %s:%ld\n",pc
-                 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
-                                  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+      if (!isthrow) {
+         fprintf(fout, "%3x: CL %s:%ld  %s:%d\n", pc, G__srcfile[G__asm_inst[pc+1] / G__CL_FILESHIFT].filename, G__asm_inst[pc+1]&G__CL_LINEMASK, __FILE__, __LINE__);
       }
-      pc+=2;
+      pc += 2;
       break;
 
     case G__OP2:
@@ -6614,10 +6620,8 @@ int G__dasm(FILE *fout,int isthrow)
       * 2 increment
       * 3 next_pc
       ***************************************/
-      if(0==isthrow) {
-        fprintf(fout,"%3x: INCJMP *(int*)0x%lx+%ld to %lx\n"
-                ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
-                ,G__asm_inst[pc+3]);
+      if (!isthrow) {
+        fprintf(fout, "%3x: INCJMP *(int*)0x%lx+%ld to %lx  %s:%d\n", pc, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
       }
       pc+=4;
       break;
@@ -6753,15 +6757,16 @@ int G__dasm(FILE *fout,int isthrow)
       * sp-1  a
       * sp    G__null     <-
       ***************************************/
-      if(0==isthrow) {
-        if(G__asm_inst[pc+1]<256 && isprint(G__asm_inst[pc+1]))
-          fprintf(fout,"%3x: OP1 '%c'%ld\n",pc
-                  ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1] );
-        else
-          fprintf(fout,"%3x: OP1 %ld\n",pc,G__asm_inst[pc+1]);
-      }
-      pc+=2;
-      break;
+         if (!isthrow) {
+            if ((G__asm_inst[pc+1] < 256) && isprint(G__asm_inst[pc+1])) {
+               fprintf(fout, "%3x: OP1 '%c' %ld,%ld\n", pc, (char) G__asm_inst[pc+1], G__asm_inst[pc+1], G__asm_inst[pc+1]);
+            }
+            else {
+               fprintf(fout, "%3x: OP1 %ld,%ld\n", pc, G__asm_inst[pc+1], G__asm_inst[pc+1]);
+            }
+         }
+         pc += 2;
+         break;
 
     case G__LETVVAL:
       /***************************************

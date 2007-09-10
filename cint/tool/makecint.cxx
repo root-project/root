@@ -8,7 +8,7 @@
  *  This tool creates Makefile for encapsurating arbitrary C/C++ object
  * into Cint as Dynamic Link Library or archived library
  ************************************************************************
- * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2007  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * For the licensing terms see the file COPYING
  *
@@ -88,24 +88,24 @@ private:
 G__SourceFile::G__SourceFile(const std::string& source, G__C_OR_CXX mode): fSource(source) {
   size_t extpos = source.find('.');
   if (extpos == std::string::npos) {
-    printf("ERROR in G__SourceFile::G__SourceFile: source %s has no extension!",
-           source.c_str());
+    std::cerr << "ERROR in G__SourceFile::G__SourceFile: source " << source << " has no extension!" << std::endl;
     return;
   }
   std::string ext = source.substr(extpos+1);
-  for (size_t i = 0; i < ext.length(); ++i)
-    if (ext[i] >= 'a' && ext[i] <= 'z') ext[i] += 'A'-'a';
-  if (ext != "C" && ext != "CC" && ext != "CXX" && ext != "CPP") {
-    printf("ERROR in G__SourceFile::G__SourceFile: source %s has unrecognized extension %s!",
-           source.c_str(), ext.c_str());
+  std::string extup = ext;
+  for (size_t i = 0; i < extup.length(); ++i)
+    if (extup[i] >= 'a' && extup[i] <= 'z') extup[i] += 'A'-'a';
+  if (extup != "C" && extup != "CC" && extup != "CXX" && extup != "CPP") {
+    std::cerr << "ERROR in G__SourceFile::G__SourceFile: source " << source
+              << " has unrecognized extension " << ext << "!" << std::endl;
     return;
   }
   if (mode==G__unknown_MODE)
-    if (ext=="C") mode=G__C_MODE;
+    if (ext=="c") mode=G__C_MODE; // not extup - .C can be C++!
     else mode=G__CXX_MODE;
-  else if ((ext == "C") != (mode == G__C_MODE))
-    printf("WARNING in G__SourceFile::G__SourceFile: %s mode does not match source file %s",
-           mode==G__C_MODE?"C":"CXX", source.c_str());
+  else if ((ext == "c") != (mode == G__C_MODE))
+    std::cerr << "WARNING in G__SourceFile::G__SourceFile: " <<  (mode==G__C_MODE?"C":"CXX") 
+              << " mode does not match source file " << source << std::endl;
 
   fObject=source.substr(0, extpos);
   fObject+=G__CFG_OBJEXT;
@@ -126,7 +126,7 @@ std::list<G__SourceFile> G__SOURCEFILES;
 ****************************************************************/
 void G__printtitle()
 {
-  printf("################################################################\n");
+  printf("##########################################################################\n");
 #if defined(G__DJGPP)
   printf("# makecint : interpreter-compiler for cint (MS-DOS DJGPP version)\n");
 #elif defined(G__CYGWIN)
@@ -138,10 +138,8 @@ void G__printtitle()
 #else
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
-  printf("#\n");
-  printf("# Copyright(c) 1995~2004 Masaharu Goto (cint@pcroot.cern.ch)\n");
-  printf("#                        (cint mailing list 'cint@root.cern.ch')\n");
-  printf("################################################################\n");
+  printf("# Copyright(c) 1995~2007 Masaharu Goto. Mailing list: cint@pcroot.cern.ch\n");
+  printf("##########################################################################\n");
 }
 
 /****************************************************************
@@ -189,8 +187,7 @@ void G__displayhelp()
 ****************************************************************/
 void G__displaytodo()
 {
-  printf("%s is created. Makecint success.\n",G__makefile.c_str());
-  printf("Do 'make -f %s' to compile the object\n",G__makefile.c_str());
+  printf("Run 'make -f %s' to compile the object\n",G__makefile.c_str());
 }
 
 /******************************************************************
@@ -226,6 +223,7 @@ void G__printsourcecompile(std::ostream& out)
 void G__readargument(int argc, char **argv)
 {
   G__MODE mode=G__IDLE;
+  G__flags = 0;
   const std::string space(" ");
   int i=1;
   while(i<argc) {
@@ -594,6 +592,30 @@ void G__outputmakefile(int argc,char **argv)
       << "CXXSTUBCINT = " << G__CXXSTUB << std::endl
       << std::endl;
 
+#if defined(G__CYGWIN) || defined(_MSC_VER) || \
+  defined(__BORLANDC__) || defined(__BCPLUSPLUS__) || defined(G__BORLANDCC5)
+  out << "MAINOBJ    := " << "G__main" << G__CFG_OBJEXT << std::endl;
+#else
+  out << "MAINOBJ    := " << "$(CINTSYSDIRW)/main/G__main" << G__CFG_OBJEXT << std::endl;
+#endif
+  out << "SETUPOBJ    := " << "G__setup" << G__CFG_OBJEXT << std::endl;
+
+#if !defined(G__CFG_EXPLLINK)
+#define G__CFG_EXPLLINK 0
+#endif
+  if (!G__CFG_EXPLLINK || !strlen(G__CFG_EXPLLINK)) {
+    // if the libs are not linked against readline then the executable needs to
+    out << "READLINEA   := " 
+#ifdef G__CFG_READLINELIB
+        << G__CFG_READLINELIB << " "
+#endif
+#ifdef G__CFG_CURSESLIB
+        << G__CFG_CURSESLIB
+#endif
+        << std::endl;
+  }
+
+
   /***************************************************************************
    * Link Object
    ***************************************************************************/
@@ -605,7 +627,7 @@ void G__outputmakefile(int argc,char **argv)
         << G__CFG_SOFLAGS << ") "<< G__CFG_SOOUT 
         << "$(OBJECT) $(COFILES) $(CIFO) $(CXXIFO) $(CXXOFILES) $(LIBS)" 
         << std::endl;
-  else if(G__ismain) {
+  else if(G__flags & G__ismain) {
 #ifdef _AIX
 TODO!
   cout << "$(OBJECT) : $(CINTLIB) $(READLINEA) $(DLFCN) G__setup.o $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO)";
@@ -615,26 +637,24 @@ TODO!
   out << "$(OBJECT) : $(CINTLIB) $(READLINEA) G__setup" << G__CFG_OBJEXT 
       << " $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO)" << std::endl
       << "\t$(LD) " << G__CFG_LDFLAGS << " $(CCOPT) " 
-      << G__CFG_LDOUT << "$(OBJECT) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) G__setup" 
-      << G__CFG_OBJEXT <<" $(READLINEA) $(LIBS)" << std::endl;
+      << G__CFG_LDOUT << "$(OBJECT) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) $(SETUPOBJ) $(LIBS) $(READLINEA)"  << std::endl;
 #endif
   }
   else {
 #ifdef _AIX
     TODO!
-    out << "$(OBJECT) : $(MAINO) $(CINTLIB) $(READLINEA) $(DLFCN) G__setup.o $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO) \n";
+    out << "$(OBJECT) : $(MAINOBJ) $(CINTLIB) $(READLINEA) $(DLFCN) $(SETUPOBJ) $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO) \n";
     out << "\trm -f shr.o $(OBJECT).nm $(OBJECT).exp\n";
-    out << "\t$(NM) $(MAINO) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(NMOPT)\n";
+    out << "\t$(NM) $(MAINOBJ) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) $(SETUPOBJ) $(READLINEA) $(DLFCN) $(LIBS) $(NMOPT)\n";
     out << "\trm -f shr.o\n";
     out << "\techo \"#!\" > $(OBJECT).exp ; cat $(OBJECT).nm >> $(OBJECT).exp\n";
     out << "\trm -f $(OBJECT).nm\n";
-    out << "\t$(LD) -bE:$(OBJECT).exp -bM:SRE  $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(MAINO) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) G__setup.o $(READLINEA) $(DLFCN) $(LIBS)\n";
+    out << "\t$(LD) -bE:$(OBJECT).exp -bM:SRE  $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(MAINOBJ) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) $(SETUPOBJ) $(READLINEA) $(DLFCN) $(LIBS)\n";
 #else
-    out << "$(OBJECT) : $(MAINO) $(CINTLIB) $(READLINEA) G__setup" << G__CFG_OBJEXT 
+    out << "$(OBJECT) : $(MAINOBJ) $(CINTLIB) $(READLINEA) $(SETUPOBJ) "
         << " $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO)" << std::endl
         << "\t$(LD) $(CCOPT) " << G__CFG_LDFLAGS << " " 
-        << G__CFG_LDOUT << "$(OBJECT) $(MAINO) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) G__setup" 
-        << G__CFG_OBJEXT << " $(READLINEA) $(LIBS)" << std::endl;
+        << G__CFG_LDOUT << "$(OBJECT) $(MAINOBJ) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) $(SETUPOBJ) $(LIBS) $(READLINEA)" << std::endl;
 #endif
   }
   out << std::endl;

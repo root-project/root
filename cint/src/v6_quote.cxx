@@ -31,9 +31,9 @@ void G__asm_gen_strip_quotation(G__value *pval)
    * put defined
    **************************************/
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx(%s) from %x\n"
-                         ,G__asm_cp ,G__int(*pval)
-                         ,(char *)G__int(*pval) ,G__asm_dt);
+  if (G__asm_dbg) {
+    G__fprinterr(G__serr, "%3x,%3x: LD %ld  %s:%d\n", G__asm_cp, G__asm_dt, G__int(*pval), __FILE__, __LINE__);
+  }
 #endif
   G__asm_inst[G__asm_cp]=G__LD;
   G__asm_inst[G__asm_cp+1]=G__asm_dt;

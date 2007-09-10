@@ -121,7 +121,6 @@ long Cint::G__DataMemberInfo::Property()
     if(var->constvar[index]&G__CONSTVAR) property|=G__BIT_ISCONSTANT;
     if(var->constvar[index]&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;
     if(var->paran[index]) property|=G__BIT_ISARRAY;
-#ifndef G__OLDIMPLEMENTATION1673
     if(-1!=var->p_typetable[index]) property|=G__BIT_ISTYPEDEF;
     if(-1==var->p_tagtable[index]) property|=G__BIT_ISFUNDAMENTAL;
     else {
@@ -147,7 +146,6 @@ long Cint::G__DataMemberInfo::Property()
 	}
       }
     }
-#endif
     return(property);
   }
   else {

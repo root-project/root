@@ -182,9 +182,7 @@ long Cint::G__MethodInfo::Property()
     long property=0;
     struct G__ifunc_table_internal *ifunc;
     ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
-#ifndef G__OLDIMPLEMENTATION2039
     if (ifunc->hash[index]==0) return property;
-#endif
     switch(ifunc->access[index]) {
     case G__PUBLIC: property|=G__BIT_ISPUBLIC; break;
     case G__PROTECTED: property|=G__BIT_ISPROTECTED; break;

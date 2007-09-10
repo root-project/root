@@ -16,7 +16,6 @@
 #ifndef G__COMMON_H
 #define G__COMMON_H
 
-
 /**************************************************************************
 * Note, Warning message display flag
 **************************************************************************/
@@ -43,6 +42,12 @@
 #include <time.h>
 #include "G__ci.h"
 
+#ifdef __cplusplus
+extern "C"
+#else
+extern 
+#endif
+G__value G__default_parameter;
 
 /**************************************************************************
 * GNU readline
@@ -291,6 +296,7 @@
 * loop compile mode turned on
 *********************************************/
 #define G__ASM
+#define G__ASM_DBG
 
 /*********************************************
 * Old style compiled function name buffer size
@@ -451,9 +457,9 @@
 #define G__TRY_UNCAUGHT               9
 
 struct G__breakcontinue_list {
-  int destination;
-  int breakcontinue;
-  struct G__breakcontinue_list *prev;
+  struct G__breakcontinue_list* next; // next entry in list
+  int isbreak; // is it a break or a continue
+  int idx; // index into bytecode array to patch
 };
 
 /*********************************************
@@ -595,30 +601,30 @@ struct G__Definetemplatefunc {
 #define G__FUNCMACRO
 
 struct G__Charlist {
-  char *string;
-  struct G__Charlist *next;
+  char* string;
+  struct G__Charlist* next;
 };
 
-struct G__Callfuncmacro{
-  FILE *call_fp;
+struct G__Callfuncmacro {
+  FILE* call_fp;
   fpos_t call_pos;
   int line;
   fpos_t mfp_pos;
-  struct G__Callfuncmacro *next;
+  struct G__Callfuncmacro* next;
   short call_filenum;
-} ;
+};
 
 struct G__Deffuncmacro {
-  char *name;
+  char* name;
   int hash;
   int line;
-  FILE *def_fp;
+  FILE* def_fp;
   fpos_t def_pos;
   struct G__Charlist def_para;
   struct G__Callfuncmacro callfuncmacro;
-  struct G__Deffuncmacro *next;
+  struct G__Deffuncmacro* next;
   short def_filenum;
-} ;
+};
 
 
 /**************************************************************************
@@ -956,34 +962,64 @@ struct G__paramfunc {
   G__value *pdefault;
   struct G__paramfunc *next;
 };
+
 struct G__params {
+   struct G__paramfunc* fparams;
 #ifdef __cplusplus  
-   G__params() { fparams = 0; }
-   ~G__params() { free((void*)fparams); }
-   struct G__paramfunc* operator[](int idx) {
+   G__params()
+   : fparams(0)
+   {
+   }
+   ~G__params()
+   {
+      struct G__paramfunc* params = fparams;
+      struct G__paramfunc* next = 0;
+      for (; params; params = next) {
+         if (params->name) {
+            free(params->name);
+            params->name = 0;
+         }
+         if (params->def) {
+            free(params->def);
+            params->def = 0;
+         }
+         if (params->pdefault) {
+            if ((params->pdefault != &G__default_parameter) && (params->pdefault != (G__value*) (-1))) {
+               free(params->pdefault);
+            }
+            params->pdefault = 0;
+         }
+         next = params->next;
+         params->next = 0;
+         free(params);
+      }
+      fparams = 0;
+   }
+   struct G__paramfunc* operator[](int idx)
+   {
       if (!fparams) {
-         fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
-         memset(fparams,0,sizeof(struct G__paramfunc));
+         fparams = (struct G__paramfunc*) malloc(sizeof (struct G__paramfunc));
+         memset(fparams, 0, sizeof (struct G__paramfunc));
          fparams->id = idx;
          return fparams;
       }
-      struct G__paramfunc *params = fparams;
-      while(params) {
-         if (params->id == idx) return params;
-         struct G__paramfunc *nparams  = params->next;
+      struct G__paramfunc* params = fparams;
+      for (; params; params = params->next) {
+         if (params->id == idx) {
+            return params;
+         }
+         struct G__paramfunc* nparams = params->next;
          if (!nparams) {
-            nparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
-            memset(nparams,0,sizeof(struct G__paramfunc));
-            nparams->id=idx;
+            nparams = (struct G__paramfunc*) malloc(sizeof (struct G__paramfunc));
+            memset(nparams, 0, sizeof (struct G__paramfunc));
+            nparams->id = idx;
             params->next = nparams;
             return nparams;
          }
-         params = params->next;
       }
       return 0;
    }
 #endif
-   struct G__paramfunc *fparams;
 };
 
 struct G__ifunc_table {
@@ -1142,26 +1178,45 @@ struct G__herit {
   G__SIGNEDCHAR_T baseaccess;
   char property;
   char  id;
-  struct G__herit *next;
+  struct G__herit* next;
 };
+
 struct G__herits {
+  struct G__herit* fherits;
 #ifdef __cplusplus
-   ~G__herits() { free((void*)fherits); }
-   struct G__herit* operator[](int idx) {
+   G__herits()
+   : fherits(0)
+   {
+   }
+   ~G__herits()
+   {
+      struct G__herit* herits = fherits;
+      struct G__herit* nxt = 0;
+      for (; herits; herits = nxt) {
+         nxt = herits->next;
+         herits->next = 0;
+         free(herits);
+      }
+      fherits = 0;
+   }
+   struct G__herit* operator[](int idx)
+   {
       if (!fherits) {
-         fherits = (struct G__herit*)malloc(sizeof(struct G__herit));
-         memset(fherits,0,sizeof(struct G__herit));
+         fherits = (struct G__herit*) malloc(sizeof(struct G__herit));
+         memset(fherits, 0, sizeof(struct G__herit));
          fherits->id = idx;
          return fherits;
       }
-      struct G__herit *herits = fherits;
-      while(herits) {
-         if (herits->id == idx) return herits;
-         struct G__herit *nherits  = herits->next;
+      struct G__herit* herits = fherits;
+      while (herits) {
+         if (herits->id == idx) {
+            return herits;
+         }
+         struct G__herit* nherits  = herits->next;
          if (!nherits) {
-            nherits = (struct G__herit*)malloc(sizeof(struct G__herit));
-            memset(nherits,0,sizeof(struct G__herit));
-            nherits->id=idx;
+            nherits = (struct G__herit*) malloc(sizeof(struct G__herit));
+            memset(nherits, 0, sizeof(struct G__herit));
+            nherits->id = idx;
             herits->next = nherits;
             return nherits;
          }
@@ -1170,8 +1225,8 @@ struct G__herits {
       return 0;
    }
 #endif
-  struct G__herit *fherits;
 };
+
 struct G__inheritance {
   int basen;
   struct G__herits herit;
@@ -1281,7 +1336,7 @@ struct G__tagtable {
 
    std::list<G__incsetup> *incsetup_memvar[G__MAXSTRUCT];
    std::list<G__incsetup> *incsetup_memfunc[G__MAXSTRUCT];
-   
+
   char rootflag[G__MAXSTRUCT];
   struct G__RootSpecial *rootspecial[G__MAXSTRUCT];
 

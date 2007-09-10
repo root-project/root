@@ -22,6 +22,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void psrxxx_dump_gvars();
 /* G__cfunc.c */
 int G__compiled_func(G__value *result7,char *funcname,struct G__param *libp,int hash);
 void G__list_sut(FILE *fp);
@@ -37,7 +38,6 @@ extern int G__list_struct(FILE *fp);
 extern int G__list_stub(FILE *fp);
 
 /* in src/xxx.c */
-/* struct G__var_array *G__rawvarentry(char *name,int hash,int *ig15,struct G__var_array *memvar); */
 /* int G__split(char *line,char *string,int *argc,char **argv); */
 int G__readsimpleline(FILE *fp,char *line);
 int G__cmparray(short array1[],short array2[],int num,short mask);
@@ -55,21 +55,18 @@ int G__matchregex(char *pattern,char *string);
 #ifdef G__REGEXP1
 int G__matchregex(char *pattern,char *string);
 #endif
-void G__castclass(G__value *result3,int tagnum,int castflag,int *ptype,int reftype);
 G__value G__castvalue(char *casttype,G__value result3);
 G__value G__castvalue_bc(char *casttype,G__value result3, int i);
   void G__this_adjustment(struct G__ifunc_table_internal *ifunc, int ifn);
 void G__asm_cast(int type,G__value *buf,int tagnum,int reftype);
   /* void G__setdebugcond(void); */
 int G__findposition(char *string,struct G__input_file view,int *pline,int *pfnum);
-int G__findfuncposition(char *func,int *pline,int *pfnum);
 int G__beforelargestep(char *statement,int *piout,int *plargestep);
 void G__afterlargestep(int *plargestep);
 void G__EOFfgetc(void);
 void G__BREAKfgetc(void);
 void G__DISPNfgetc(void);
 void G__DISPfgetc(int c);
-void G__lockedvariable(char *item);
 int G__lock_variable(char *varname);
 int G__unlock_variable(char *varname);
 G__value G__interactivereturn(void);
@@ -78,14 +75,9 @@ void G__del_tracemode(char *name);
 void G__set_classbreak(char *name);
 void G__del_classbreak(char *name);
 void G__setclassdebugcond(int tagnum,int brkflag);
-int G__get_newname(char *new_name);
-int G__unsignedintegral(int *pspaceflag,int *piout,int mparen);
 void G__define_var(int tagnum,int typenum);
-int G__initary(char *new_name);
 struct G__var_array* G__initmemvar(int tagnum,int* pindex,G__value *pbuf);
 struct G__var_array* G__incmemvar(struct G__var_array* memvar,int* pindex,G__value *pbuf);
-int G__initstruct(char *new_name);
-int G__ignoreinit(char *new_name);
 int G__listfunc(FILE *fp,int access,char* fname,struct G__ifunc_table *ifunc);
 int G__listfunc_pretty(FILE *fp,int access,char* fname,struct G__ifunc_table *ifunc,char friendlyStyle);
 int G__showstack(FILE *fout);
@@ -106,76 +98,64 @@ int G__pushdumpinput(FILE *fp,int exflag);
 int G__popdumpinput(void);
 int G__dumpinput(char *line);
 char *G__xdumpinput(char *prompt);
-  /* void G__scratch_all(void); */
 int G__free_ifunc_table(struct G__ifunc_table_internal *ifunc);
-int G__free_member_table(struct G__var_array *mem);
-int G__free_ipath(struct G__includepath *ipath);
 int G__isfilebusy(int ifn);
-void G__free_preprocessfilekey(struct G__Preprocessfilekey *pkey);
-int G__free_ifunc_table_upto(struct G__ifunc_table_internal *ifunc,struct G__ifunc_table_internal *dictpos,int ifn);
-int G__free_string_upto(struct G__ConstStringList *conststringpos);
-int G__free_typedef_upto(int typenum);
-int G__free_struct_upto(int tagnum);
 int G__destroy_upto(struct G__var_array *var,int global,struct G__var_array *dictpos,int ig15);
-void G__close_inputfiles_upto(struct G__dictposition* dictpos);
-void G__destroy(struct G__var_array *var,int global);
 int G__call_atexit(void);
-int G__close_inputfiles(void);
 int G__interpretexit(void);
-void G__nosupport(char *name);
-void G__malloc_error(char *varname);
-void G__arrayindexerror(int ig15,struct G__var_array *var,char *item,int p_inc);
-int G__asm_execerr(char *message,int num);
-int G__assign_error(char *item,G__value *pbuf);
-int G__reference_error(char *item);
-int G__warnundefined(char *item);
-int G__unexpectedEOF(char *message);
+void G__nosupport(char* name);
+void G__malloc_error(char* varname);
+void G__arrayindexerror(int varid, struct G__var_array* var, char* name, int index);
+#ifdef G__ASM
+int G__asm_execerr(char* message, int num);
+#endif // G__ASM
+int G__assign_error(char* item, G__value* pbuf);
+int G__reference_error(char* item);
+int G__warnundefined(char* item);
+int G__unexpectedEOF(char* message);
+int G__shl_load_error(char* shlname, char* message);
+int G__getvariable_error(char* item);
+int G__referencetypeerror(char* new_name);
+int G__syntaxerror(char* expr);
+int G__parenthesiserror(char* expression, char* funcname);
+int G__commenterror();
+int G__changeconsterror(char* item, char* categ);
+int G__pounderror();
+int G__missingsemicolumn(char* item);
+void G__printerror(char* funcname, int ipara, int paran);
+#ifdef G__SECURITY
+int G__check_drange(int p, double low, double up, double d, G__value* result7, char* funcname);
+int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* funcname);
+int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char* funcname);
+int G__check_nonull(int p, int t, G__value* para, G__value* result7, char* funcname);
+#endif // G__SECURITY
 int G__shl_load(char *shlfile);
-int G__shl_load_error(char *shlname,char *message);
-int G__getvariable_error(char *item);
-int G__referencetypeerror(char *new_name);
-int G__err_pointer2pointer(char *item);
-int G__syntaxerror(char *expr);
 void G__setDLLflag(int flag);
 void G__setInitFunc(char *initfunc);
-int G__assignmenterror(char *item);
-int G__parenthesiserror(char *expression,char *funcname);
-int G__commenterror(void);
-int G__changeconsterror(char *item,char *categ);
-  /* int G__printlinenum(void); */
 int G__autocc(void);
 int G__init_readline(void);
 int G__using_namespace(void);
-
-#ifdef G__FRIEND
-int G__parse_friend(int *piout,int *pspaceflag,int mparen);
-#else
-int G__friendignore(int *piout,int *pspaceflag,int mparen);
-#endif
-int G__externignore(int *piout,int *pspaceflag,int mparen);
-int G__handleEOF(char *statement,int mparen,int single_quote,int double_quote, int mparen_line);
-void G__printerror(char *funcname,int ipara,int paran);
-int G__pounderror(void);
-int G__missingsemicolumn(char *item);
 G__value G__calc_internal(char *exprwithspace);
 G__value G__getexpr(char *expression);
 G__value G__getprod(char *expression1);
 G__value G__getpower(char *expression2);
 G__value G__getitem(char *item);
-int G__getoperator(int newoperator,int oldoperator);
 int G__testandor(int lresult,char *rexpression,int operator2);
 int G__test(char *expression2);
 int G__btest(int operator2,G__value lresult,G__value rresult);
 int G__fgetspace(void);
+int G__fgetspace_peek(void);
 int G__fgetvarname(char *string,char *endmark);
 int G__fgetname(char *string,char *endmark);
 int G__getname(char* source,int* isrc,char *string,char *endmark);
 int G__fdumpstream(char *string,char *endmark);
 int G__fgetstream(char *string,char *endmark);
+void G__fgetstream_peek(char* string, int nchars);
 int G__fignorestream(char *endmark);
 int G__ignorestream(char *string,int* isrc,char *endmark);
 int G__fgetstream_new(char *string,char *endmark);
 void G__fignoreline(void);
+void G__fignoreline_peek(void);
 void G__fsetcomment(struct G__comment_info *pcomment);
 int G__fgetc(void);
 long G__op1_operator_detail(int opr,G__value *val);
@@ -271,18 +251,10 @@ int G__cleardictfile(int flag);
 void G__openmfp(void);
 int G__closemfp(void);
 void G__define(void);
-int G__handle_as_typedef(char *oldtype,char *newtype);
-void G__createmacro(char *new_name,char *initvalue);
 G__value G__execfuncmacro(char *item,int *done);
-int G__transfuncmacro(char *item,struct G__Deffuncmacro *deffuncmacro,struct G__Callfuncmacro *callfuncmacro,fpos_t call_pos,char *p,int nobraces,int nosemic);
-int G__replacefuncmacro(char *item,struct G__Callfuncmacro *callfuncmacro,struct G__Charlist *callpara,struct G__Charlist *defpara,FILE *def_fp,fpos_t def_pos,int nobraces,int nosemic);
 int G__execfuncmacro_noexec(char* macroname);
 int G__maybe_finish_macro(void);
-int G__argsubstitute(char *symbol,struct G__Charlist *callpara,struct G__Charlist *defpara);
-int G__createfuncmacro(char *new_name);
-int G__getparameterlist(char *paralist,struct G__Charlist *charlist);
 int G__freedeffuncmacro(struct G__Deffuncmacro *deffuncmacro);
-int G__freecallfuncmacro(struct G__Callfuncmacro *callfuncmacro);
 int G__freecharlist(struct G__Charlist *charlist);
 long G__malloc(int n,int bsize,char *item);
 void *G__TEST_Malloc(size_t size);
@@ -299,7 +271,6 @@ int G__getarrayindex(char *indexlist);
 void G__delete_operator(char *expression,int isarray);
 int G__alloc_newarraylist(long point,int pinc);
 int G__free_newarraylist(long point);
-int G__handle_delete(int *piout,char *statement);
 int G__call_cppfunc(G__value *result7,struct G__param *libp,struct G__ifunc_table_internal *ifunc,int ifn);
 void G__gen_cppheader(char *headerfile);
 void G__gen_clink(void);
@@ -345,40 +316,21 @@ void G__bstore(int operatorin,G__value expressionin,G__value *defined);
 void G__doubleassignbyref(G__value *defined,double val);
 void G__intassignbyref(G__value *defined,G__int64 val);
 int G__scopeoperator(char *name,int *phash,long *pstruct_offset,int *ptagnum);
-int G__label_access_scope(char *statement,int *piout,int *pspaceflag,int *pmparen);
 int G__cmp(G__value buf1,G__value buf2);
 int G__getunaryop(char unaryop,char *expression,char *buf,G__value *preg);
 int G__overloadopr(int operatorin,G__value expressionin,G__value *defined);
 int G__parenthesisovldobj(G__value *result3,G__value *result,char *realname,struct G__param *libp,int flag);
 int G__parenthesisovld(G__value *result3,char *funcname,struct G__param *libp,int flag);
 int G__tryindexopr(G__value *result7,G__value *para,int paran,int ig25);
-int G__exec_delete(char *statement,int *piout,int *pspaceflag,int isarray,int mparen);
-int G__exec_function(char *statement,int *pc,int *piout,int *plargestep,G__value *presult);
-int G__keyword_anytime_5(char *statement);
-int G__keyword_anytime_6(char *statement);
-int G__keyword_anytime_7(char *statement);
-int G__keyword_exec_6(char *statement,int *piout,int *pspaceflag,int mparen);
-int G__setline(char *statement,int c,int *piout);
 int G__skip_comment(void);
+int G__skip_comment_peek(void);
 int G__pp_command(void);
 void G__pp_skip(int elifskip);
 int G__pp_if(void);
 int G__defined_macro(char *macro);
 int G__pp_ifdef(int def);
-void G__pp_undef(void);
-G__value G__exec_do(void);
-G__value G__return_value(char *statement);
 void G__free_tempobject(void);
-G__value G__alloc_tempstring(char *string);
-G__value G__exec_switch(void);
-G__value G__exec_if(void);
-G__value G__exec_loop(char *forinit,char *condition,int naction,char **foraction);
-G__value G__exec_while(void);
-G__value G__exec_for(void);
-G__value G__exec_else_if(void);
-G__value G__exec_statement(void);
-int G__readpointer2function(char *new_name,char *pvar_type);
-int G__search_gotolabel(char *label,fpos_t *pfpos,int line,int *pmparen);
+G__value G__exec_statement(int* mparen);
 int G__update_stdio(void);
   /* int G__pause(void); */
 int G__setaccess(char *statement,int iout);
@@ -450,9 +402,7 @@ int G__isenclosingclass(int enclosingtagnum,int env_tagnum);
 int G__isenclosingclassbase(int enclosingtagnum,int env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
-#ifndef G__OLDIMPLEMENTATION1560
 int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int ftype);
-#endif
 void G__define_struct(char type);
 G__value G__classassign(long pdest,int tagnum,G__value result);
 int G__cattemplatearg(char *tagname,struct G__Charlist *charlist);
@@ -472,9 +422,7 @@ void G__IntList_free(struct G__IntList *body);
 struct G__Templatearg *G__read_formal_templatearg(void);
 int G__createtemplatememfunc(char *new_name);
 int G__createtemplateclass(char *new_name,struct G__Templatearg *targ,int isforwarddecl);
-#ifndef G__OLDIMPLEMENTATION1560
 struct G__Definetemplatefunc *G__defined_templatefunc(char *name);
-#endif
 struct G__Definetemplatefunc *G__defined_templatememfunc(char *name);
 void G__declare_template(void);
 int G__gettemplatearglist(char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara,int parent_tagnum);
@@ -493,14 +441,11 @@ int G__templatefunc(G__value *result,char *funcname,struct G__param *libp,int ha
 int G__matchtemplatefunc(struct G__Definetemplatefunc *deftmpfunc,struct G__param *libp,struct G__Charlist *pcall_para,int funcmatch);
 int G__createtemplatefunc(char *funcname,struct G__Templatearg *targ,int line_number,fpos_t *ppos);
 void G__define_type(void);
-int G__defined_type(char *typenamein,int len);
 char *G__valuemonitor(G__value buf,char *temp);
 char *G__access2string(int caccess);
 char *G__tagtype2string(int tagtype);
-#ifndef G__OLDIMPLEMENTATION1560
 char* G__rename_templatefunc(char* funcname,int isrealloc);
 char *G__fulltypename(int typenum);
-#endif
 int G__val2pointer(G__value *result7);
 char *G__getbase(unsigned int expression,int base,int digit,char *result1);
 int G__getdigit(unsigned int number);
@@ -523,7 +468,6 @@ G__value G__letstructmem(int store_var_type,char *varname,char *membername,char 
 void G__letstruct(G__value *result,int p_inc,struct G__var_array *var,int ig15,char *item,int paran,long G__struct_offset);
 void G__letstructp(G__value result,long G__struct_offset,int ig15,int p_inc,struct G__var_array *var,int paran,char *item,G__value *para,int pp_inc);
 void G__returnvartype(G__value* presult,struct G__var_array *var,int ig15,int paran);
-G__value G__allocvariable(G__value result,G__value para[],struct G__var_array *varglobal,struct G__var_array *varlocal,int paran,int varhash,char *item,char *varname,int parameter00);
 struct G__var_array *G__getvarentry(char *varname,int varhash,int *pi,struct G__var_array *varglobal,struct G__var_array *varlocal);
 int G__getthis(G__value *result7,char *varname,char *item);
 void G__letpointer2memfunc(struct G__var_array *var,int paran,int ig15,char *item,int p_inc,G__value *presult,long G__struct_offset);
@@ -543,10 +487,6 @@ long G__get_MethodInfo(int item,long tagnum,long *handle,long *index,char *buf);
 long G__get_MethodArgInfo(int item,long tagnum,long handle,long index,long *argn,char *buf);
 
 #ifdef G__SECURITY
-int G__check_drange(int p,double low,double up,double d,G__value *result7,char *funcname);
-int G__check_lrange(int p,long low,long up,long l,G__value *result7,char *funcname);
-int G__check_type(int p,int t1,int t2,G__value *para,G__value *result7,char *funcname);
-int G__check_nonull(int p,int t,G__value *para,G__value *result7,char *funcname);
 G__UINT32 G__getsecuritycode(char *string);
 #endif
 void G__cpp_setupG__stream(void);
@@ -555,12 +495,8 @@ void G__c_setupG__stdstrct(void);
 int G__setautoccnames(void);
 int G__appendautocc(FILE *fp);
 int G__isautoccupdate(void);
-void G__free_friendtag(struct G__friendtag *friendtag);
 
 int G__free_exceptionbuffer(void);
-int G__exec_try(char* statement);
-int G__exec_throw(char* statement);
-int G__ignore_catch(void);
 int G__exec_catch(char* statement);
 
 
@@ -626,9 +562,7 @@ void G__DeleteConstStringList(struct G__ConstStringList* current);
 
 int G__ReadInputMode(void);
 
-#ifndef G__OLDIMPLEMENTATION1825
 char* G__setiparseobject(G__value* result,char *str);
-#endif
 
 #ifdef G__SHMGLOBAL
 void* G__shmmalloc(int size);
@@ -653,10 +587,8 @@ int G__GetShlFilenum();
 
 int G__loadfile_tmpfile(FILE *fp);
 
-#ifndef G__OLDIMPLEMENTATION2030
 int G__callfunc0(G__value *result,struct G__ifunc_table *ifunc,int ifn,struct G__param* libp,void* p,int funcmatch);
 int G__calldtor(void* p,int tagnum,int isheap);
-#endif
 
 void G__init_replacesymbol();
 void G__add_replacesymbol(const char* s1,const char* s2);

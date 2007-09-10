@@ -1037,7 +1037,6 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(char *name)
   return(result);
 }
 
-#ifndef G__OLDIMPLEMENTATION1560
 /***********************************************************************
 * G__defined_templatefunc()
 *
@@ -1122,7 +1121,6 @@ struct G__Definetemplatefunc *G__defined_templatefunc(char *name)
   }
   return((struct G__Definetemplatefunc*)NULL);
 }
-#endif
 
 
 /***********************************************************************
@@ -1303,12 +1301,14 @@ int G__explicit_template_specialization()
     G__disp_mask = 0;
     fsetpos(G__ifile.fp,&store_pos);
     G__ifile.line_number = store_line;
-    G__exec_statement();
+    int brace_level = 0;
+    G__exec_statement(&brace_level);
     return(0);
   }
 
 #else
-  G__exec_statement();
+  int brace_level = 0;
+  G__exec_statement(&brace_level);
   return(0);
 #endif
 }
@@ -2692,7 +2692,8 @@ void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
   G__asm_wholefunction = 0;
   G__reftype=G__PARANORMAL;
 
-  G__exec_statement();
+  int brace_level = 0;
+  G__exec_statement(&brace_level);
 
   G__func_now=store_func_now;
   G__func_page=store_func_page;

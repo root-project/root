@@ -17,7 +17,7 @@ CPPHEADER  = iostrm.h fstrm.h sstrm.h linkdef.h
 
 
 $(SRCCPPIFC) : $(CPPIFC)
-	cint ../snstream/length.cxx 255 $(CPPIFC) $(CPPIFH)
+#	cint ../snstream/length.cxx 255 $(CPPIFC) $(CPPIFH)
 	$(MV) $(CPPIFC) $(SRCCPPIFC)		
 	$(MV) $(CPPIFH) $(SRCCPPIFH)		
 
