@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListFromFile.h,v 1.1 2007/03/15 11:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListFromFile.h,v 1.2 2007/03/16 18:16:56 brun Exp $
 // Author: Anna Kreshuk 17/03/2007
 
 /*************************************************************************
@@ -61,7 +61,7 @@ class TEntryListFromFile: public TEntryList
    virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/)  {return 0;};
    virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/){return 0;};
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
-   virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/) {return 0;};
+   virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t */*opt=""*/) {return 0;};
    
    virtual Long64_t    GetEntry(Int_t index);
    virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);

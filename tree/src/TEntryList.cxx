@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.17 2007/07/23 19:59:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.18 2007/08/08 14:58:35 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -697,22 +697,47 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 }
 
 //______________________________________________________________________________
-TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
+TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename, Option_t *opt)
 {
    //return the entry list, correspoding to treename and filename
+   //By default, the filename is first tried as is, and then, if the corresponding list 
+   //is not found, the filename is expanded to the absolute path, and compared again. 
+   //To avoid it, use option "ne"
 
    if (gDebug > 1)
       Info("GetEntryList","tree: %s, file: %s",
                           (treename ? treename : "-"), (filename ? filename : "-"));
 
+   TString option = opt;
+   option.ToUpper();
+   Bool_t nexp = option.Contains("NE");
+
    TString fn;
-   TUrl u(filename);
-   fn = (!strcmp(u.GetProtocol(),"file")) ? u.GetFile() : filename;
+   TUrl u(filename, kTRUE);
+   //fn = (!strcmp(u.GetProtocol(),"file")) ? u.GetFile() : filename;
+   Bool_t local=kFALSE;
+   if (!nexp){
+      local = !strcmp(u.GetProtocol(), "file");
+      if (local) fn = u.GetFile();
+      else fn = u.GetUrl();
+   } else {
+      fn = filename;
+   }
 
    if (!fLists){
+      //there are no sublists
       if (!strcmp(treename, fTreeName.Data()) && !(strcmp(fn.Data(), fFileName.Data()))){
          return this;
       } else {
+         //if the file is local, try the full name, unless "ne" option was specified
+         if (!nexp && local){
+            gSystem->ExpandPathName(fn);
+            if (!gSystem->IsAbsoluteFileName(fn))
+               gSystem->PrependPathName(gSystem->pwd(), fn);
+            fn = gSystem->UnixPathName(fn);
+            if (!strcmp(treename, fTreeName.Data()) && !(strcmp(fn.Data(), fFileName.Data())))
+               return this;
+         }
          return 0;
       }
    }
@@ -736,23 +761,25 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    }
 
    //didn't find anything for this filename, try the full name too
-   TString longname = fn;
-   gSystem->ExpandPathName(longname);
-   if (!gSystem->IsAbsoluteFileName(longname))
-      gSystem->PrependPathName(gSystem->pwd(), longname);
-   longname = gSystem->UnixPathName(longname);
-   stotal = treename;
-   stotal.Append(longname);
-   newhash = stotal.Hash();
-   next.Reset();
-   while ((templist = (TEntryList*)next())){
-      if (templist->fStringHash==0){
-         stotal = templist->fTreeName + templist->fFileName;
-         templist->fStringHash = stotal.Hash();
-      }
-      if (newhash == templist->fStringHash){
-         if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), longname)){
-            return templist;
+   if (!nexp && local){
+      TString longname = fn;
+      gSystem->ExpandPathName(longname);
+      if (!gSystem->IsAbsoluteFileName(longname))
+         gSystem->PrependPathName(gSystem->pwd(), longname);
+      longname = gSystem->UnixPathName(longname);
+      stotal = treename;
+      stotal.Append(longname);
+      newhash = stotal.Hash();
+      next.Reset();
+      while ((templist = (TEntryList*)next())){
+         if (templist->fStringHash==0){
+            stotal = templist->fTreeName + templist->fFileName;
+            templist->fStringHash = stotal.Hash();
+         }
+         if (newhash == templist->fStringHash){
+            if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), longname)){
+               return templist;
+            }
          }
       }
    }
@@ -902,8 +929,11 @@ void TEntryList::Print(const Option_t* option) const
             elist->Print(option);
          }
       } else {
-         while ((elist = (TEntryList*)next())){
-            printf("%s %s\n", elist->GetTreeName(), elist->GetFileName());
+         if (fN==0) printf("%s %s\n", fTreeName.Data(), fFileName.Data());
+         else {
+            while ((elist = (TEntryList*)next())){
+               printf("%s %s\n", elist->GetTreeName(), elist->GetFileName());
+            }
          }
       }
    }
@@ -957,6 +987,8 @@ void TEntryList::SetTree(const char *treename, const char *filename)
 {
    //If a list for a tree with such name and filename exists, sets it as the current sublist
    //If not, creates this list and sets it as the current sublist
+   //
+   // ! the filename is taken as provided, no extensions to full path or url !
 
    TEntryList *elist = 0;
 
@@ -1005,7 +1037,8 @@ void TEntryList::SetTree(const char *treename, const char *filename)
          fTreeName = treename;
          fFileName = filename;
          stotal = fTreeName + fFileName;
-         fStringHash = stotal.Hash();
+         //fStringHash = stotal.Hash();
+         fStringHash = newhash;
          fCurrent = this;
       } else {
          if (fStringHash == 0){
@@ -1052,6 +1085,11 @@ void TEntryList::SetTree(const TTree *tree)
 {
    //If a list for a tree with such name and filename exists, sets it as the current sublist
    //If not, creates this list and sets it as the current sublist
+   //The name of the file, where the tree is, is taken as 
+   //tree->GetTree()->GetCurrentFile()->GetName(), and then expanded either to the absolute path,
+   //or to full url. If, for some reason, you want to provide 
+   //the filename in a different format, use SetTree(const char *treename, const char *filename),
+   //where the filename is taken "as is".
 
    if (!tree) return;
    TString treename = tree->GetTree()->GetName();
@@ -1064,6 +1102,8 @@ void TEntryList::SetTree(const TTree *tree)
          if (!gSystem->IsAbsoluteFileName(filename))
             gSystem->PrependPathName(gSystem->pwd(), filename);
          filename = gSystem->UnixPathName(filename);
+      } else {
+         filename = url.GetUrl();
       }
    } else {
       //memory-resident

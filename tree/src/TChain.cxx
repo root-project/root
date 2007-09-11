@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.172 2007/08/08 14:58:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.173 2007/08/22 17:36:46 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -854,7 +854,7 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
                   (const_cast<TChain*>(this))->LoadTree(fTreeOffset[i-1]);
             }
          }
-         (const_cast<TChain*>(this))->LoadTree(fTreeOffset[treenum]);
+         //(const_cast<TChain*>(this))->LoadTree(fTreeOffset[treenum]);
       }
       Long64_t globalentry = fTreeOffset[treenum] + localentry;
       return globalentry;
@@ -2086,7 +2086,6 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
    //By default (opt=""), both the file names of the chain elements and
    //the file names of the TEntryList sublists are expanded to full path name.
    //If opt = "ne", the file names are taken as they are and not expanded
-   //(this is useful in case of TUrls)
 
    if (fEntryList){
       //check, if the chain is the owner of the previous entry list
@@ -2118,111 +2117,31 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
       return;
    }
 
-   TString option = opt;
-   option.ToUpper();
-   Bool_t nexp = option.Contains("NE");
    Int_t ne = fFiles->GetEntries();
    Int_t listfound=0;
-   ULong_t *hashtable = new ULong_t[ne];
-   TString *nametitle = new TString(100);
-   TString filename;
-   //hash the chain elements (treename+filename)
-   for (Int_t ie=0; ie<ne; ie++){
-      (*nametitle)="";
-      nametitle->Append(((TChainElement*)fFiles->UncheckedAt(ie))->GetName());
-      filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
-      TUrl url(filename.Data(), kTRUE);
-      if (!strcmp(url.GetProtocol(), "file") && !nexp){
-         gSystem->ExpandPathName(filename);
-         if (!gSystem->IsAbsoluteFileName(filename))
-            gSystem->PrependPathName(gSystem->pwd(), filename);
-         filename = gSystem->UnixPathName(filename);
-      }
-      nametitle->Append(filename);
-      hashtable[ie]=nametitle->Hash();
-   }
+   TString treename, filename;
 
-   //sort the table???
    TEntryList *templist = 0;
-   ULong_t temphash = 0;
-   Int_t i;
-   TList *elists = elist->GetLists();
-   if (!elists){
-      //the entry list is only for one tree
-      (*nametitle)="";
-      nametitle->Append(elist->GetTreeName());
-      nametitle->Append(elist->GetFileName());
-      temphash = nametitle->Hash();
-      for (i=0; i<ne; i++){
-         if (temphash == hashtable[i]){
-            //found, check if it's the right one
-            filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            TUrl url(filename.Data(), kTRUE);
-            if (!strcmp(url.GetProtocol(), "file") && !nexp){
-               gSystem->ExpandPathName(filename);
-               if (!gSystem->IsAbsoluteFileName(filename))
-                  gSystem->PrependPathName(gSystem->pwd(), filename);
-               filename = gSystem->UnixPathName(filename);
-            }
-            if (!(strcmp(elist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) &&
-                !(strcmp(elist->GetFileName(),filename.Data()))) {
-               break;
-            }
-         }
+   for (Int_t ie = 0; ie<ne; ie++){
+      treename =((TChainElement*)fFiles->UncheckedAt(ie))->GetName();
+      filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
+      templist = elist->GetEntryList(treename.Data(), filename.Data(), opt);
+      if (templist) {
+         listfound++;
+         templist->SetTreeNumber(ie);
       }
-      if (i==ne) {
-         Error("SetEntryList", "No list found for the trees of this chain");
-         delete [] hashtable;
-         fEntryList = 0;
-         return;
-      }
-
-      elist->SetTreeNumber(i);
-      delete [] hashtable;
-      fEntryList = elist;
-      return;
    }
 
-   TIter next(elists);
-   while((templist = (TEntryList*)next())){
-      (*nametitle)="";
-      nametitle->Append(templist->GetTreeName());
-      nametitle->Append(templist->GetFileName());
-      temphash = nametitle->Hash();
-
-      for (i=0; i<ne; i++){
-         if (temphash == hashtable[i]){
-            //found, check if it's the right one
-            filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            TUrl url(filename.Data(), kTRUE);
-            if (!strcmp(url.GetProtocol(), "file") && !nexp){
-               gSystem->ExpandPathName(filename);
-               if (!gSystem->IsAbsoluteFileName(filename))
-                  gSystem->PrependPathName(gSystem->pwd(), filename);
-               filename = gSystem->UnixPathName(filename);
-            }
-            if (!(strcmp(templist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) &&
-                !(strcmp(templist->GetFileName(),filename.Data()))) {
-               break;
-            }
-         }
-      }
-      if (i==ne) i=-1;
-      else listfound++;
-      templist->SetTreeNumber(i);
-   }
-
-   delete [] hashtable;
-   delete nametitle;
    if (listfound == 0){
       Error("SetEntryList", "No list found for the trees in this chain");
       fEntryList = 0;
       return;
    }
    fEntryList = elist;
-   elists = fEntryList->GetLists();
+   TList *elists = elist->GetLists();
    Bool_t shift = kFALSE;
-   next.Reset();
+   TIter next(elists);
+
    //check, if there are sub-lists in the entry list, that don't
    //correspond to any trees in the chain
    while((templist = (TEntryList*)next())){
@@ -2345,10 +2264,29 @@ void TChain::SetEventList(TEventList *evlist)
 
    Int_t nsel = evlist->GetN();
    Long64_t globalentry, localentry;
+   const char *treename;
+   const char *filename;
+   if (fTreeOffset[fNtrees-1]==theBigNumber){
+      //Load all the tree headers if the tree offsets are not known
+      //It is assumed here, that loading the last tree will load all 
+      //previous ones
+      printf("loading trees\n");
+      (const_cast<TChain*>(this))->LoadTree(evlist->GetEntry(evlist->GetN()-1));
+   }
    for (Int_t i=0; i<nsel; i++){
       globalentry = evlist->GetEntry(i);
-      localentry = LoadTree(globalentry);
-      enlist->Enter(localentry, fTree);
+      //add some protection from globalentry<0 here
+      Int_t treenum = 0;
+      while (globalentry>=fTreeOffset[treenum]) 
+         treenum++;
+      treenum--;
+      localentry = globalentry - fTreeOffset[treenum];
+      // printf("globalentry=%lld, treeoffset=%lld, localentry=%lld\n", globalentry, fTreeOffset[treenum], localentry);
+      treename = ((TNamed*)fFiles->At(treenum))->GetName();
+      filename = ((TNamed*)fFiles->At(treenum))->GetTitle();
+      //printf("entering for tree %s %s\n", treename, filename);
+      enlist->SetTree(treename, filename);
+      enlist->Enter(localentry);
    }
    enlist->SetBit(kCanDelete, kTRUE);
    enlist->SetReapplyCut(evlist->GetReapplyCut());
