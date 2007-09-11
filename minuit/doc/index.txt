@@ -3,7 +3,7 @@ BEGIN_HTML
  See:
 <ul>
 <li>The main TMinuit class is documented in class TMinuit.</li>
-<li><a href="ftp://root.cern.ch/root/doc/chapter5.pdf">The Chapter about Fitting Histogram in the Users Guide
+<li><a href="ftp://root.cern.ch/root/doc/5FittingHistograms.pdf">The Chapter about Fitting Histogram in the Users Guide
     </a></li>
 <li><a href="http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html">The MINUIT documentation in CERNLIB
     </a></li>

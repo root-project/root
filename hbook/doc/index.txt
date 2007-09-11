@@ -4,9 +4,9 @@ BEGIN_HTML
 <ul>
 <li><a href="http://root.cern.ch/root/HowtoConvert.html">How to convert Hbook/PAW files to ROOT
       </A></li>
-<li><a href="ftp://root.cern.ch/root/doc/chapter3.pdf">The Chapter about the Histogram classes in the Users Guide
+<li><a href="ftp://root.cern.ch/root/doc/3Histograms.pdf">The Chapter about the Histogram classes in the Users Guide
     </a></li>
-<li><a href="ftp://root.cern.ch/root/doc/chapter5.pdf">The Chapter about Fitting Histogram in the Users Guide
+<li><a href="ftp://root.cern.ch/root/doc/5FittingHistograms.pdf">The Chapter about Fitting Histogram in the Users Guide
     </a></li>
 <li><a href="http://root.cern.ch/root/HowtoHistogram.html">How to use the Histogram classes
     </a></li>

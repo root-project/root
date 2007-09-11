@@ -3,7 +3,7 @@ BEGIN_HTML
  See:
 <ul>
 <li><a href="http://seal.web.cern.ch/seal/MathLibs/MathMore/html/index.html">Online doc for MathMore</a></li>
-<li><a href="ftp://root.cern.ch/root/doc/chapter13.pdf">The Math Chapter in the Users Guide
+<li><a href="ftp://root.cern.ch/root/doc/13MathLibraries.pdf">The Math Chapter in the Users Guide
     </a></li>
 </ul>
 END_HTML
