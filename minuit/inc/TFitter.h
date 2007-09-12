@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name: v5-11-02 $:$Id: TFitter.h,v 1.14 2006/03/20 08:22:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.15 2007/04/12 15:09:53 rdm Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual Double_t  *GetCovarianceMatrix() const;
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const;
    virtual Int_t      GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
+   TMinuit           *GetMinuit() const {return fMinuit;}
    virtual Int_t      GetNumberTotalParameters() const;
    virtual Int_t      GetNumberFreeParameters() const;
    virtual Double_t   GetParError(Int_t ipar) const;
