@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.228 2007/08/30 15:59:32 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.229 2007/08/31 05:11:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -705,26 +705,26 @@ TClass::TClass(const char *name, Version_t cversion,
 //______________________________________________________________________________
 void TClass::ForceReload (TClass* oldcl)
 {
-  // we found at least one equivalent.
-  // let's force a reload
+   // we found at least one equivalent.
+   // let's force a reload
 
-  TClass::RemoveClass(oldcl);
+   TClass::RemoveClass(oldcl);
 
-  if (oldcl->CanIgnoreTObjectStreamer()) {
-    IgnoreTObjectStreamer();
-  }
+   if (oldcl->CanIgnoreTObjectStreamer()) {
+      IgnoreTObjectStreamer();
+   }
 
-  TVirtualStreamerInfo *info;
-  TIter next(oldcl->GetStreamerInfos());
-  while ((info = (TVirtualStreamerInfo*)next())) {
-    info->Clear("build");
-    info->SetClass(this);
-    fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
-  }
-  oldcl->GetStreamerInfos()->Clear();
+   TVirtualStreamerInfo *info;
+   TIter next(oldcl->GetStreamerInfos());
+   while ((info = (TVirtualStreamerInfo*)next())) {
+      info->Clear("build");
+      info->SetClass(this);
+      fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+   }
+   oldcl->GetStreamerInfos()->Clear();
 
-  oldcl->ReplaceWith(this);
-  delete oldcl;
+   oldcl->ReplaceWith(this);
+   delete oldcl;
 }
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
@@ -848,31 +848,31 @@ void TClass::Init(const char *name, Version_t cversion,
    // is different from the original name.
    TString resolvedThis;
    if (strchr (name, '<')) {
-     resolvedThis = TClassEdit::ResolveTypedef (name, kTRUE);
-     if (resolvedThis != name) {
-       if (!fgClassTypedefHash) {
-         fgClassTypedefHash = new THashTable (100, 5);
-         fgClassTypedefHash->SetOwner (kTRUE);
-       }
+      resolvedThis = TClassEdit::ResolveTypedef (name, kTRUE);
+      if (resolvedThis != name) {
+         if (!fgClassTypedefHash) {
+            fgClassTypedefHash = new THashTable (100, 5);
+            fgClassTypedefHash->SetOwner (kTRUE);
+         }
 
-       fgClassTypedefHash->Add (new TNameMapNode (resolvedThis, name));
-       SetBit (kHasNameMapNode);
-     }
+         fgClassTypedefHash->Add (new TNameMapNode (resolvedThis, name));
+         SetBit (kHasNameMapNode);
+      }
 
-     TString resolvedShort =
+      TString resolvedShort =
        TClassEdit::ResolveTypedef
          (TClassEdit::ShortType(name,
                                 TClassEdit::kDropStlDefault).c_str(),
           kTRUE);
-     if (resolvedShort != name) {
-       if (!fgClassShortTypedefHash) {
-         fgClassShortTypedefHash = new THashTable (100, 5);
-         fgClassShortTypedefHash->SetOwner (kTRUE);
-       }
+      if (resolvedShort != name) {
+         if (!fgClassShortTypedefHash) {
+            fgClassShortTypedefHash = new THashTable (100, 5);
+            fgClassShortTypedefHash->SetOwner (kTRUE);
+         }
 
-       fgClassShortTypedefHash->Add (new TNameMapNode (resolvedShort, name));
-       SetBit (kHasNameMapNode);
-     }
+         fgClassShortTypedefHash->Add (new TNameMapNode (resolvedShort, name));
+         SetBit (kHasNameMapNode);
+      }
    }
 
    //In case a class with the same name had been created by TVirtualStreamerInfo
@@ -888,17 +888,17 @@ void TClass::Init(const char *name, Version_t cversion,
       // Check for existing equivalent.
 
       if (resolvedThis != name) {
-        oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedThis);
-        if (oldcl && oldcl != this)
-          ForceReload (oldcl);
+         oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedThis);
+         if (oldcl && oldcl != this)
+            ForceReload (oldcl);
       }
       TIter next( fgClassTypedefHash->GetListForObject (resolvedThis) );
       while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
-        if (resolvedThis != htmp->String()) continue;
-        oldcl = gROOT->GetClass (htmp->fOrigName);
-        if (oldcl && oldcl != this) {
-          ForceReload (oldcl);
-        }
+         if (resolvedThis != htmp->String()) continue;
+         oldcl = gROOT->GetClass (htmp->fOrigName);
+         if (oldcl && oldcl != this) {
+            ForceReload (oldcl);
+         }
       }
    }
    if (fClassInfo) SetTitle(fClassInfo->Title());
@@ -1022,30 +1022,30 @@ TClass::~TClass()
 
    // Remove from the typedef hashtables.
    if (fgClassTypedefHash && TestBit (kHasNameMapNode)) {
-     TString resolvedThis = TClassEdit::ResolveTypedef (GetName(), kTRUE);
-     TIter next (fgClassTypedefHash->GetListForObject (resolvedThis));
-     while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
-       if (resolvedThis == htmp->String() && htmp->fOrigName == GetName()) {
-         fgClassTypedefHash->Remove (htmp);
-         delete htmp;
-         break;
-       }
-     }
+      TString resolvedThis = TClassEdit::ResolveTypedef (GetName(), kTRUE);
+      TIter next (fgClassTypedefHash->GetListForObject (resolvedThis));
+      while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
+         if (resolvedThis == htmp->String() && htmp->fOrigName == GetName()) {
+            fgClassTypedefHash->Remove (htmp);
+            delete htmp;
+            break;
+         }
+      }
    }
    if (fgClassShortTypedefHash && TestBit (kHasNameMapNode)) {
-     TString resolvedShort =
+      TString resolvedShort =
        TClassEdit::ResolveTypedef
          (TClassEdit::ShortType(GetName(),
                                 TClassEdit::kDropStlDefault).c_str(),
           kTRUE);
-     TIter next (fgClassShortTypedefHash->GetListForObject (resolvedShort));
-     while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
-       if (resolvedShort == htmp->String() && htmp->fOrigName == GetName()) {
-         fgClassShortTypedefHash->Remove (htmp);
-         delete htmp;
-         break;
-       }
-     }
+      TIter next (fgClassShortTypedefHash->GetListForObject (resolvedShort));
+      while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
+         if (resolvedShort == htmp->String() && htmp->fOrigName == GetName()) {
+            fgClassShortTypedefHash->Remove (htmp);
+            delete htmp;
+            break;
+         }
+      }
    }
    
 
