@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.188 2007/08/21 16:01:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.189 2007/09/10 14:28:49 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2889,6 +2889,7 @@ Bool_t TGeoManager::InsertPNEId(Int_t uid, Int_t ientry)
       memcpy(&values[index+2], &fValuePNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
       delete [] fValuePNEId;
       fValuePNEId = values;
+      fNPNEId++;
       return kTRUE;
    }   
    // Insert the value in the existing arrays
