@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.160 2007/08/03 17:19:18 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.161 2007/08/30 15:59:32 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -561,8 +561,8 @@ void TCint::UpdateListOfTypes()
    static int last_scratch_count = 0;
    int this_scratch_count = G__scratch_upto(0);
    if (this_scratch_count != last_scratch_count) {
-     last_scratch_count = this_scratch_count;
-     last_typenum = -1;
+      last_scratch_count = this_scratch_count;
+      last_typenum = -1;
    }
 
    // Scan from where we left off last time.
@@ -1472,43 +1472,42 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
 //______________________________________________________________________________
 void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
 {
-  // This does the actual work of UpdateClassInfo.
+   // This does the actual work of UpdateClassInfo.
 
-  Bool_t load = kFALSE;
-  if (strchr(item,'<') && TClass::fgClassShortTypedefHash) {
-    // We have a template which may have duplicates.
+   Bool_t load = kFALSE;
+   if (strchr(item,'<') && TClass::fgClassShortTypedefHash) {
+      // We have a template which may have duplicates.
 
-    TString resolvedItem(
+      TString resolvedItem(
        TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
           TClassEdit::kDropStlDefault).c_str(), kTRUE) );
 
-    if (resolvedItem != item) {
-      TClass* cl= (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
-      if (cl)
-        load = kTRUE;
-    }
-
-    if (!load) {
-      TIter next(TClass::fgClassShortTypedefHash->GetListForObject(resolvedItem));
-
-      while ( TClass::TNameMapNode* htmp =
-              static_cast<TClass::TNameMapNode*> (next()) )
-      {
-        if (resolvedItem == htmp->String()) {
-          TClass* cl = gROOT->GetClass (htmp->fOrigName);
-          if (cl) {
-            // we found at least one equivalent.
-            // let's force a reload
+      if (resolvedItem != item) {
+         TClass* cl= (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
+         if (cl)
             load = kTRUE;
-            break;
-          }
-        }
       }
-    }
-  }
+
+      if (!load) {
+         TIter next(TClass::fgClassShortTypedefHash->GetListForObject(resolvedItem));
+
+         while ( TClass::TNameMapNode* htmp =
+              static_cast<TClass::TNameMapNode*> (next()) ) {
+            if (resolvedItem == htmp->String()) {
+               TClass* cl = gROOT->GetClass (htmp->fOrigName);
+               if (cl) {
+                  // we found at least one equivalent.
+                  // let's force a reload
+                  load = kTRUE;
+                  break;
+               }
+            }
+         }
+      }
+   }
   
-  TClass *cl = gROOT->GetClass(item, load);
-  if (cl) cl->ResetClassInfo(tagnum);
+   TClass *cl = gROOT->GetClass(item, load);
+   if (cl) cl->ResetClassInfo(tagnum);
 }
 
 
