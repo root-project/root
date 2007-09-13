@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.14 2007/08/03 18:18:16 pcanal Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.15 2007/08/03 18:50:13 pcanal Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
-   unsigned long paramcount = mysql_stmt_param_count(fStmt);
+   ULong_t paramcount = mysql_stmt_param_count(fStmt);
 
    if (paramcount>0) {
       fWorkingMode = 1;
