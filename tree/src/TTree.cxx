@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.337 2007/08/10 10:09:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.338 2007/08/17 05:17:26 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3332,6 +3332,9 @@ TLeaf* TTree::FindLeaf(const char* searchname)
          subsearchname = 0;
       } else {
          ++subsearchname;
+         if (subsearchname[0]==0) {
+            subsearchname = 0;
+         }
       }
    }
 
