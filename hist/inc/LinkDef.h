@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.24 2006/11/25 09:07:05 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.25 2007/05/31 09:01:41 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,6 +48,14 @@
 #pragma link C++ class TH3S-;
 #pragma link C++ class TH3I+;
 #pragma link C++ class THLimitsFinder+;
+#pragma link C++ class THnSparse+;
+#pragma link C++ class THnSparseT<TArrayD>+;
+#pragma link C++ class THnSparseT<TArrayF>+;
+#pragma link C++ class THnSparseT<TArrayL>+;
+#pragma link C++ class THnSparseT<TArrayI>+;
+#pragma link C++ class THnSparseT<TArrayS>+;
+#pragma link C++ class THnSparseT<TArrayC>+;
+#pragma link C++ class THnSparseArrayChunk+;
 #pragma link C++ class THStack+;
 #pragma link C++ class TLimit+;
 #pragma link C++ class TLimitDataSource+;
@@ -59,6 +67,14 @@
 #pragma link C++ class TProfile2D-;
 #pragma link C++ class TProfile3D+;
 #pragma link C++ class TVirtualHistPainter+;
+
+#pragma link C++ typedef THnSparseD;
+#pragma link C++ typedef THnSparseF;
+#pragma link C++ typedef THnSparseL;
+#pragma link C++ typedef THnSparseI;
+#pragma link C++ typedef THnSparseS;
+#pragma link C++ typedef THnSparseC;
+
 
 #pragma link C++ function operator*(Float_t,TH1C&);
 #pragma link C++ function operator*(TH1C&, Float_t);

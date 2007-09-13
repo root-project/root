@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.16 2003/11/14 11:17:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.17 2004/04/05 22:05:16 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -44,11 +44,13 @@ public:
    void         Copy(TArrayI &array) const {array.Set(fN,fArray);}
    const Int_t *GetArray() const { return fArray; }
    Int_t       *GetArray() { return fArray; }
+   Double_t     GetAt(Int_t i) const { return At(i); }
    Stat_t       GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void         Reset()           {memset(fArray, 0, fN*sizeof(Int_t));}
    void         Reset(Int_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void         Set(Int_t n);
    void         Set(Int_t n, const Int_t *array);
+   void         SetAt(Double_t v, Int_t i) { AddAt((Int_t)v, i); }
    Int_t       &operator[](Int_t i);
    Int_t        operator[](Int_t i) const;
 

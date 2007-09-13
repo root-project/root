@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.16 2003/11/14 11:17:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL64.h,v 1.1 2006/11/22 14:15:13 rdm Exp $
 // Author: Fons Rademakers   20/11/06
 
 /*************************************************************************
@@ -44,11 +44,13 @@ public:
    void            Copy(TArrayL64 &array) const {array.Set(fN,fArray);}
    const Long64_t *GetArray() const { return fArray; }
    Long64_t       *GetArray() { return fArray; }
+   Double_t        GetAt(Int_t i) const { return At(i); }
    Stat_t          GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void            Reset()           {memset(fArray,  0, fN*sizeof(Long64_t));}
    void            Reset(Long64_t val) {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
    void            Set(Int_t n);
    void            Set(Int_t n, const Long64_t *array);
+   void            SetAt(Double_t v, Int_t i) { AddAt((Long64_t)v, i); }
    Long64_t       &operator[](Int_t i);
    Long64_t        operator[](Int_t i) const;
 

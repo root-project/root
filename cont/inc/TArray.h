@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.9 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.10 2007/02/04 17:39:44 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -48,6 +48,9 @@ public:
 
    Int_t          GetSize() const { return fN; }
    virtual void   Set(Int_t n) = 0;
+
+   virtual Double_t GetAt(Int_t i) const = 0;
+   virtual void   SetAt(Double_t v, Int_t i) = 0;
 
    static TArray *ReadArray(TBuffer &b, const TClass *clReq);
    static void    WriteArray(TBuffer &b, const TArray *a);
