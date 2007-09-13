@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.353 2007/08/27 14:11:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.1 2007/09/13 11:08:35 brun Exp $
 // Author: Axel Naumann, 2007-09-11
 
 /*************************************************************************
@@ -67,12 +67,15 @@ class THnSparse: public TNamed {
    UInt_t     fNdimensions;  // number of dimensions
    Long64_t   fFilledBins;   // number of filled bins
    Double_t   fEntries;      // number of entries, spread over chunks
+   Double_t   fWeightSum;      // sum of weights, spread over chunks
    TObjArray  fAxes;         // axes of the histogram
    TExMap     fBins;         // filled bins
    TExMap     fBinsContinued;// filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
    UInt_t     fChunkSize;    // number of entries for each chunk
    TObjArray  fBinContent;   // array of THnSparseArrayChunk
    THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
+   Double_t   *fIntegral;	//! array with bin weight sums
+   enum {kNoInt, kValidInt, kInvalidInt} fIntegralStatus; //! status of integral
 
  protected:
    UInt_t GetChunkSize() const { return fChunkSize; }
@@ -86,7 +89,10 @@ class THnSparse: public TNamed {
    Long_t Fill(Long_t bin, Double_t w) {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
-      fEntries += w;
+      fEntries += 1;
+	  fWeightSum += w;
+	  if (fIntegralStatus == kValidInt)
+		  fIntegralStatus = kInvalidInt;
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       return bin;
@@ -106,6 +112,7 @@ class THnSparse: public TNamed {
    Long_t Fill(const char* name[], Double_t w = 1.) { return Fill(GetBin(name), w); }
 
    Double_t GetEntries() const { return fEntries; }
+   Double_t GetWeightSum() const { return fWeightSum; }
    Long64_t GetNbins() const { return fFilledBins; }
    UInt_t   GetNdimensions() const { return fNdimensions; }
 
@@ -133,6 +140,9 @@ class THnSparse: public TNamed {
 
    void Reset(Option_t* option = "");
    void Sumw2();
+
+   Double_t	ComputeIntegral();
+   void GetRandom(Double_t *, bool subBinRandom = true);
 
    //void Draw(Option_t* option = "");
 

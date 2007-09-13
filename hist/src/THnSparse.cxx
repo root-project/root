@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.353 2007/08/27 14:11:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.1 2007/09/13 11:08:35 brun Exp $
 // Author: Axel Naumann, 2007-09-11
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TH3D.h"
 #include "TInterpreter.h"
 #include "TMath.h"
+#include "TRandom.h"
 
 //______________________________________________________________________________
 //
@@ -188,7 +189,8 @@ void THnSparseCompactBinCoord::GetCoordFromBuffer(UInt_t* coord) const
 }
 
 //______________________________________________________________________________
-ULong64_t THnSparseCompactBinCoord::GetHash() {
+ULong64_t THnSparseCompactBinCoord::GetHash()
+{
    // Calculate hash for compact bin index of the current bin.
 
    memset(fCoordBuffer, 0, fCoordBufferSize);
@@ -283,7 +285,7 @@ ClassImp(THnSparse);
 
 //______________________________________________________________________________
 THnSparse::THnSparse():
-   fNdimensions(0), fFilledBins(0), fEntries(0), fChunkSize(1024), fCompactCoord(0)
+   fNdimensions(0), fFilledBins(0), fEntries(0), fWeightSum(0), fChunkSize(1024), fCompactCoord(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
 }
@@ -291,8 +293,8 @@ THnSparse::THnSparse():
 //______________________________________________________________________________
 THnSparse::THnSparse(const char* name, const char* title, UInt_t dim,
                      UInt_t* nbins, Double_t* xmin, Double_t* xmax, UInt_t chunksize):
-   TNamed(name, title), fNdimensions(dim), fFilledBins(0), fEntries(0),
-   fAxes(dim), fChunkSize(chunksize), fCompactCoord(0)
+   TNamed(name, title), fNdimensions(dim), fFilledBins(0), fEntries(0), fWeightSum(0),
+   fAxes(dim), fChunkSize(chunksize), fCompactCoord(0), fIntegralStatus(kNoInt)
 {
    // Construct a THnSparse with "dim" dimensions,
    // with chunksize as the size of the chunks.
@@ -309,6 +311,7 @@ THnSparse::~THnSparse() {
    // Destruct a THnSparse
 
    delete fCompactCoord;
+   if (fIntegralStatus != kNoInt) delete [] fIntegral;
 }
 
 //______________________________________________________________________________
@@ -464,7 +467,7 @@ Long_t THnSparse::GetBinIndexForCurrentBin(Bool_t allocate)
    // allocate bin in chunk
    THnSparseArrayChunk *chunk = (THnSparseArrayChunk*) fBinContent.Last();
    Long_t newidx = chunk ? ((Long_t) chunk->GetEntries()) : -1;
-   if (!chunk || newidx == fChunkSize) {
+   if (!chunk || newidx == (Long_t)fChunkSize) {
       chunk = AddChunk();
       newidx = 0;
    }
@@ -567,6 +570,8 @@ TH1D* THnSparse::Projection(UInt_t xDim) const
       h->AddBinContent(coord[xDim], v);
    }
    delete [] coord;
+
+   h->SetEntries(fEntries);
 
    return h;
 }
@@ -681,7 +686,7 @@ THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim) const
       for (UInt_t d = 0; d < ndim; ++d)
          title += GetAxis(dim[d])->GetTitle();
    } else {
-      for (UInt_t d = ndim - 1; d >= 0; --d) {
+      for (Int_t d = ndim - 1; d >= 0; --d) {
          title.Insert(posInsert, GetAxis(dim[d])->GetTitle());
          if (dim > 0)
             title.Insert(posInsert, ", ");
@@ -769,8 +774,59 @@ void THnSparse::Reset(Option_t * /*option = ""*/)
    // Clear the histogram
    fFilledBins = 0;
    fEntries = 0.;
+   fWeightSum = 0.;
    fBins.Clear();
    fBinsContinued.Clear();
    fBinContent.Delete();
+   if (fIntegralStatus != kNoInt) {
+      delete [] fIntegral;
+      fIntegralStatus = kNoInt;
+   }
 }
 
+//______________________________________________________________________________
+Double_t THnSparse::ComputeIntegral()
+{
+   // delete old integral
+   if (fIntegralStatus != kNoInt) {
+      delete [] fIntegral;
+      fIntegralStatus = kNoInt;
+   }
+
+   // allocate and fill integral array
+   fIntegral = new Double_t [GetNbins() + 1];
+   fIntegral[0] = 0.;
+   for (Long64_t i = 0; i < GetNbins(); ++i) {
+      Double_t v = GetBinContent(i);
+      fIntegral[i + 1] = fIntegral[i] + v / fWeightSum;
+   }
+
+   // set status to valid
+   fIntegralStatus = kValidInt;
+   return fIntegral[GetNbins()];
+}
+
+//______________________________________________________________________________
+void THnSparse::GetRandom(Double_t *rand, bool subBinRandom)
+{
+   // check whether the integral array is valid
+   if (fIntegralStatus != kValidInt)
+      ComputeIntegral();
+
+   // generate a random bin
+   Double_t p = gRandom->Rndm();
+   Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
+   UInt_t bin[fNdimensions];
+   GetBinContent(idx, bin);
+
+   // convert bin coordinates to real values
+   for (UInt_t i = 0; i < fNdimensions; i++) {
+      rand[i] = GetAxis(i)->GetBinCenter(bin[i]);
+      
+      // randomize the vector withing a bin
+      if (subBinRandom)
+         rand[i] += (gRandom->Rndm() - 0.5) * GetAxis(i)->GetBinWidth(bin[i]);
+   }
+   
+   return;
+}
