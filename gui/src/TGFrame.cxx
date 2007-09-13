@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.157 2007/07/18 15:10:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.158 2007/08/29 07:16:10 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -86,6 +86,7 @@
 #include "TGButton.h"
 #include "TGSplitter.h"
 #include "TGDNDManager.h"
+#include "TImage.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -1658,7 +1659,12 @@ void TGMainFrame::SetIconName(const char *name)
 const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 {
    // Set window icon pixmap by name. This is typically done via the window
-   // manager.
+   // manager. Icon can be in any image format supported by TImage, e.g.
+   // GIF, XPM, PNG, JPG .. or even PS, PDF (see EImageFileTypes in TImage.h 
+   // for the full list of supported formats).
+   // 
+   // For example,
+   //    main_frame->SetIconPixmap("/home/root/icons/bld_rgb.png");
 
    fIconPixmap = iconName;
    const TGPicture *iconPic = fClient->GetPicture(iconName);
@@ -1668,6 +1674,28 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
       return iconPic;
    } else
       return 0;
+}
+
+//______________________________________________________________________________
+void TGMainFrame::SetIconPixmap(char **xpm_array)
+{
+   // Set window icon by xpm array. That allows to have icons
+   // builtin to the source code.
+   //
+   // For example,
+   //    #include "/home/root/icons/bld_rgb.xpm"
+   //    //bld_rgb.xpm contains char *bld_rgb[] array
+   //    main_frame->SetIconPixmap(bld_rgb);
+
+   TImage *img = TImage::Create();
+   img->SetImageBuffer(xpm_array, TImage::kXpm);
+   Pixmap_t pic = img->GetPixmap();
+   if (pic) {
+      gVirtualX->SetIconPixmap(fId, pic);
+   } else {
+      Warning("SetIconPixmap", "Failed to set window icon from xpm array.");
+   }
+   delete img;
 }
 
 //______________________________________________________________________________
