@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.1 2007/09/13 11:08:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.2 2007/09/13 18:24:10 brun Exp $
 // Author: Axel Naumann, 2007-09-11
 
 /*************************************************************************
@@ -816,7 +816,7 @@ void THnSparse::GetRandom(Double_t *rand, bool subBinRandom)
    // generate a random bin
    Double_t p = gRandom->Rndm();
    Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
-   UInt_t bin[fNdimensions];
+   UInt_t bin[20]; //FIXME in case a user requests more than 20 dimensions ::)
    GetBinContent(idx, bin);
 
    // convert bin coordinates to real values
