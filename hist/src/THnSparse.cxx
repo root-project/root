@@ -1,5 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.2 2007/09/13 18:24:10 brun Exp $
-// Author: Axel Naumann, 2007-09-11
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.3 2007/09/13 18:45:31 brun Exp $
+// Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -68,6 +68,14 @@
 //   cout << hs.GetBinContent(0, coord);
 //   cout <<" is the content of bin [x = " << coord[0] "
 //        << " | y = " << coord[1] << "]" << endl;
+//
+// * Efficiency
+// TH1 and TH2 are generally faster than THnSparse for one and two dimensional
+// distributions. THnSparse becomes competitive for a sparsely filled TH3
+// with large numbers of bins per dimension. The tutorial hist/sparsehist.C
+// shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
+// starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
+// one-dimensional histogram is only reasonable if it has a huge number of bins.
 //
 // * Projections
 // The dimensionality of a THnSparse can be reduced by projecting it to
@@ -248,7 +256,7 @@ THnSparseArrayChunk::THnSparseArrayChunk(UInt_t coordsize, bool errors, TArray* 
 
    fCoordinates = new Char_t[fSingleCoordinateSize * cont->GetSize()];
 
-   if (errors) fSumw2 = new TArrayF(cont->GetSize());
+   if (errors) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -274,7 +282,7 @@ void THnSparseArrayChunk::Sumw2()
 {
    // Turn on support of errors
    if (!fSumw2)
-      fSumw2 = new TArrayF(fContent->GetSize());
+      fSumw2 = new TArrayD(fContent->GetSize());
 }
 
 
@@ -285,7 +293,8 @@ ClassImp(THnSparse);
 
 //______________________________________________________________________________
 THnSparse::THnSparse():
-   fNdimensions(0), fFilledBins(0), fEntries(0), fWeightSum(0), fChunkSize(1024), fCompactCoord(0), fIntegralStatus(kNoInt)
+   fNdimensions(0), fFilledBins(0), fEntries(0), fWeightSum(0), fChunkSize(1024),
+   fCompactCoord(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
 }
@@ -502,6 +511,36 @@ THnSparseCompactBinCoord* THnSparse::GetCompactCoord() const
 }
 
 //______________________________________________________________________________
+void THnSparse::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
+{
+   // Generate an n-dimensional random tuple based on the histogrammed
+   // distribution. If subBinRandom, the returned tuple will be additionally
+   // randomly distributed within the randomized bin, using a flat
+   // distribution.
+
+   // check whether the integral array is valid
+   if (fIntegralStatus != kValidInt)
+      ComputeIntegral();
+
+   // generate a random bin
+   Double_t p = gRandom->Rndm();
+   Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
+   UInt_t bin[20]; //FIXME in case a user requests more than 20 dimensions ::)
+   GetBinContent(idx, bin);
+
+   // convert bin coordinates to real values
+   for (UInt_t i = 0; i < fNdimensions; i++) {
+      rand[i] = GetAxis(i)->GetBinCenter(bin[i]);
+      
+      // randomize the vector withing a bin
+      if (subBinRandom)
+         rand[i] += (gRandom->Rndm() - 0.5) * GetAxis(i)->GetBinWidth(bin[i]);
+   }
+   
+   return;
+}
+
+//______________________________________________________________________________
 Double_t THnSparse::GetSparseFractionBins() const {
    // Return the amount of filled bins over all bins
 
@@ -540,7 +579,7 @@ Double_t THnSparse::GetSparseFractionMem() const {
 }
 
 //______________________________________________________________________________
-TH1D* THnSparse::Projection(UInt_t xDim) const
+TH1D* THnSparse::Projection(UInt_t xDim, Option_t* /*option = ""*/) const
 {
    // Project all bins into a 1-dimensional histogram,
    // keeping only axis "xDim".
@@ -577,7 +616,7 @@ TH1D* THnSparse::Projection(UInt_t xDim) const
 }
 
 //______________________________________________________________________________
-TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim) const
+TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, Option_t* /*option = ""*/) const
 {
    // Project all bins into a 2-dimensional histogram,
    // keeping only axes "xDim" and "yDim".
@@ -620,7 +659,8 @@ TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim) const
 }
 
 //______________________________________________________________________________
-TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim) const
+TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim,
+                            Option_t* /*option = ""*/) const
 {
    // Project all bins into a 3-dimensional histogram,
    // keeping only axes "xDim", "yDim", and "zDim".
@@ -669,7 +709,8 @@ TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim) const
 }
 
 //______________________________________________________________________________
-THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim) const
+THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim,
+                                 Option_t* /*option = ""*/) const
 {
    // Project all bins into a ndim-dimensional histogram,
    // keeping only axes "dim".
@@ -787,6 +828,8 @@ void THnSparse::Reset(Option_t * /*option = ""*/)
 //______________________________________________________________________________
 Double_t THnSparse::ComputeIntegral()
 {
+   // Calculate the integral of the histogram
+
    // delete old integral
    if (fIntegralStatus != kNoInt) {
       delete [] fIntegral;
@@ -804,29 +847,4 @@ Double_t THnSparse::ComputeIntegral()
    // set status to valid
    fIntegralStatus = kValidInt;
    return fIntegral[GetNbins()];
-}
-
-//______________________________________________________________________________
-void THnSparse::GetRandom(Double_t *rand, bool subBinRandom)
-{
-   // check whether the integral array is valid
-   if (fIntegralStatus != kValidInt)
-      ComputeIntegral();
-
-   // generate a random bin
-   Double_t p = gRandom->Rndm();
-   Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
-   UInt_t bin[20]; //FIXME in case a user requests more than 20 dimensions ::)
-   GetBinContent(idx, bin);
-
-   // convert bin coordinates to real values
-   for (UInt_t i = 0; i < fNdimensions; i++) {
-      rand[i] = GetAxis(i)->GetBinCenter(bin[i]);
-      
-      // randomize the vector withing a bin
-      if (subBinRandom)
-         rand[i] += (gRandom->Rndm() - 0.5) * GetAxis(i)->GetBinWidth(bin[i]);
-   }
-   
-   return;
 }

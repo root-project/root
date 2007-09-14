@@ -1,5 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.1 2007/09/13 11:08:35 brun Exp $
-// Author: Axel Naumann, 2007-09-11
+// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.2 2007/09/13 18:24:10 brun Exp $
+// Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -12,17 +12,42 @@
 #ifndef ROOT_THnSparse
 #define ROOT_THnSparse
 
+/*************************************************************************
+
+ THnSparse: histogramming multi-dimensional, sparse distributions in 
+ a memory-efficient way.
+
+*************************************************************************/
+
+
 #ifndef ROOT_TExMap
 #include "TExMap.h"
+#endif
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
+#ifndef ROOT_TArrayD
+#include "TArrayD.h"
+#endif
+
+// needed only for template instantiations of THnSparseT:
 #ifndef ROOT_TArrayF
 #include "TArrayF.h"
 #endif
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TArrayL
+#include "TArrayL.h"
+#endif
+#ifndef ROOT_TArrayI
+#include "TArrayI.h"
+#endif
+#ifndef ROOT_TArrayS
+#include "TArrayS.h"
+#endif
+#ifndef ROOT_TArrayC
+#include "TArrayC.h"
 #endif
 
 class TAxis;
@@ -31,33 +56,33 @@ class TH2D;
 class TH3D;
 
 class THnSparseArrayChunk: public TObject {
-public:
+ public:
    THnSparseArrayChunk():
       fContent(0), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0), 
       fSumw2(0) {}
 
-  THnSparseArrayChunk(UInt_t coordsize, bool errors, TArray* cont);
-  virtual ~THnSparseArrayChunk();
-  TArray   *fContent; // bin content
-  Int_t    fSingleCoordinateSize; // size of a single bin coordinate
-  Int_t    fCoordinatesSize; // size of the bin coordinate buffer
-  Char_t   *fCoordinates;   //[fCoordinatesSize] compact bin coordinate buffer
-  TArrayF  *fSumw2;  // bin errors
+   THnSparseArrayChunk(UInt_t coordsize, bool errors, TArray* cont);
+   virtual ~THnSparseArrayChunk();
+   TArray   *fContent; // bin content
+   Int_t    fSingleCoordinateSize; // size of a single bin coordinate
+   Int_t    fCoordinatesSize; // size of the bin coordinate buffer
+   Char_t   *fCoordinates;   //[fCoordinatesSize] compact bin coordinate buffer
+   TArrayD  *fSumw2;  // bin errors
 
-  void AddBin(ULong_t idx, Char_t* idxbuf);
-  void AddBinContent(ULong_t idx, Double_t v = 1.) {
-     fContent->SetAt(v + fContent->GetAt(idx), idx);
-     if (fSumw2) fSumw2->AddAt(v * v, idx);
-  }
-  void Sumw2();
-  ULong64_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
-  Bool_t Matches(UInt_t idx, const Char_t* idxbuf) const {
-     // Check whether bin at idx batches idxbuf.
-     // If we don't store indexes we trust the caller that it does match,
-     // see comment in THnSparseCompactBinCoord::GetHash().
-     return !fCoordinatesSize <= 4 || 
-        !memcmp(fCoordinates + idx * fCoordinatesSize, idxbuf, fCoordinatesSize); }
-  ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
+   void AddBin(ULong_t idx, Char_t* idxbuf);
+   void AddBinContent(ULong_t idx, Double_t v = 1.) {
+      fContent->SetAt(v + fContent->GetAt(idx), idx);
+      if (fSumw2) fSumw2->AddAt(v * v, idx);
+   }
+   void Sumw2();
+   ULong64_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
+   Bool_t Matches(UInt_t idx, const Char_t* idxbuf) const {
+      // Check whether bin at idx batches idxbuf.
+      // If we don't store indexes we trust the caller that it does match,
+      // see comment in THnSparseCompactBinCoord::GetHash().
+      return fCoordinatesSize <= 4 || 
+         !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
+   ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
 };
 
 class THnSparseCompactBinCoord;
@@ -74,7 +99,7 @@ class THnSparse: public TNamed {
    UInt_t     fChunkSize;    // number of entries for each chunk
    TObjArray  fBinContent;   // array of THnSparseArrayChunk
    THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
-   Double_t   *fIntegral;	//! array with bin weight sums
+   Double_t   *fIntegral;    //! array with bin weight sums
    enum {kNoInt, kValidInt, kInvalidInt} fIntegralStatus; //! status of integral
 
  protected:
@@ -90,9 +115,9 @@ class THnSparse: public TNamed {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
       fEntries += 1;
-	  fWeightSum += w;
-	  if (fIntegralStatus == kValidInt)
-		  fIntegralStatus = kInvalidInt;
+      fWeightSum += w;
+      if (fIntegralStatus == kValidInt)
+         fIntegralStatus = kInvalidInt;
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       return bin;
@@ -133,16 +158,19 @@ class THnSparse: public TNamed {
    Double_t GetSparseFractionBins() const;
    Double_t GetSparseFractionMem() const;
 
-   TH1D* Projection(UInt_t xDim) const;
-   TH2D* Projection(UInt_t xDim, UInt_t yDim) const;
-   TH3D* Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim) const;
-   THnSparse* Projection(UInt_t ndim, UInt_t* dim) const;
+   TH1D*      Projection(UInt_t xDim, Option_t* option = "") const;
+   TH2D*      Projection(UInt_t xDim, UInt_t yDim,
+                         Option_t* option = "") const;
+   TH3D*      Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim,
+                         Option_t* option = "") const;
+   THnSparse* Projection(UInt_t ndim, UInt_t* dim,
+                         Option_t* option = "") const;
 
    void Reset(Option_t* option = "");
    void Sumw2();
 
-   Double_t	ComputeIntegral();
-   void GetRandom(Double_t *, bool subBinRandom = true);
+   Double_t ComputeIntegral();
+   void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
 
    //void Draw(Option_t* option = "");
 
@@ -151,7 +179,7 @@ class THnSparse: public TNamed {
 
 template <class CONT>
 class THnSparseT: public THnSparse {
-public:
+ public:
    THnSparseT() {}
    THnSparseT(const char* name, const char* title, UInt_t dim,
               UInt_t* nbins, Double_t* xmin, Double_t* xmax,
@@ -159,39 +187,15 @@ public:
       THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
 
    TArray* GenerateArray() const { return new CONT(GetChunkSize()); }
-private:
+ private:
    ClassDef(THnSparseT, 1); // Sparse n-dimensional histogram with templated content
 };
 
-#ifndef ROOT_TArrayD
-#include "TArrayD.h"
-#endif
 typedef THnSparseT<TArrayD> THnSparseD;
-
-#ifndef ROOT_TArrayF
-#include "TArrayF.h"
-#endif
 typedef THnSparseT<TArrayF> THnSparseF;
-
-#ifndef ROOT_TArrayL
-#include "TArrayL.h"
-#endif
 typedef THnSparseT<TArrayL> THnSparseL;
-
-#ifndef ROOT_TArrayI
-#include "TArrayI.h"
-#endif
 typedef THnSparseT<TArrayI> THnSparseI;
-
-#ifndef ROOT_TArrayS
-#include "TArrayS.h"
-#endif
 typedef THnSparseT<TArrayS> THnSparseS;
-
-#ifndef ROOT_TArrayC
-#include "TArrayC.h"
-#endif
 typedef THnSparseT<TArrayC> THnSparseC;
-
 
 #endif //  ROOT_THnSparse
