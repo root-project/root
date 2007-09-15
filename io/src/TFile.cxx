@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.214 2007/07/26 22:59:04 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.215 2007/07/27 15:09:22 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2873,7 +2873,7 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
    if (!cached.EndsWith("/"))
       cached += "/";
 
-   if ((gSystem->Chmod(cached, 0700)) < 0) {
+   if (gSystem->AccessPathName(cached, kFileExists)) {
       // try to create it
       gSystem->mkdir(cached, kTRUE);
       if (gSystem->AccessPathName(cached, kFileExists)) {
@@ -2883,6 +2883,8 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
       }
       gSystem->Chmod(cached, 0700);
    }
+   if (gSystem->AccessPathName(cached, kWritePermission))
+      gSystem->Chmod(cached, 0700);
    fgCacheFileDir          = cached;
    fgCacheFileDisconnected = operatedisconnected;
    fgCacheFileForce        = forcecacheread;
