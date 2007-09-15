@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:$:$Id:$
+// @(#)root/thread:$Name:  $:$Id: TAtomicCountGcc.h,v 1.1 2006/11/16 18:07:33 rdm Exp $
 // Author: Fons Rademakers   14/11/06
 
 /*************************************************************************
@@ -28,7 +28,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2)
 #include <bits/atomicity.h>
+#else
+#include <ext/atomicity.h>
+#endif
 
 #if defined(__GLIBCXX__) // g++ 3.4+
 
