@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.4 2007/09/14 11:28:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.5 2007/09/17 11:05:02 brun Exp $
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
@@ -248,8 +248,8 @@ ClassImp(THnSparseArrayChunk);
 
 //______________________________________________________________________________
 THnSparseArrayChunk::THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont):
-      fContent(cont), fSingleCoordinateSize(coordsize), fCoordinatesSize(0),
-      fCoordinates(0), fSumw2(0)
+      fSingleCoordinateSize(coordsize), fCoordinatesSize(0),  fCoordinates(0), fContent(cont), 
+      fSumw2(0)
 {
    // (Default) initialize a chunk. Takes ownership of cont (~THnSparseArrayChunk deletes it),
    // and create an ArrayF for errors if "errors" is true.
@@ -293,8 +293,8 @@ ClassImp(THnSparse);
 
 //______________________________________________________________________________
 THnSparse::THnSparse():
-   fNdimensions(0), fFilledBins(0), fEntries(0), fWeightSum(0), fChunkSize(1024),
-   fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
+   fNdimensions(0), fChunkSize(1024), fFilledBins(0), fEntries(0), 
+   fTsumw(0), fTsumw2(0), fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
 }
@@ -303,8 +303,9 @@ THnSparse::THnSparse():
 THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
                      const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
                      Int_t chunksize):
-   TNamed(name, title), fNdimensions(dim), fFilledBins(0), fEntries(0), fWeightSum(0),
-   fAxes(dim), fChunkSize(chunksize), fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
+   TNamed(name, title), fNdimensions(dim), fChunkSize(chunksize), fFilledBins(0), 
+   fAxes(dim), fEntries(0), fTsumw(0), fTsumw2(0), fTsumwx(dim), fTsumwx2(dim),
+   fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct a THnSparse with "dim" dimensions,
    // with chunksize as the size of the chunks.
@@ -690,6 +691,8 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* /*option = ""*/) c
    }
    delete [] coord;
 
+   h->SetEntries(fEntries);
+
    return h;
 }
 
@@ -739,6 +742,8 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
       h->AddBinContent(bin, v);
    }
    delete [] coord;
+
+   h->SetEntries(fEntries);
 
    return h;
 }
@@ -797,6 +802,8 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    delete [] xmax;
    delete [] coord;
 
+   h->SetEntries(fEntries);
+
    return h;
 }
 
@@ -844,7 +851,7 @@ void THnSparse::Reset(Option_t * /*option = ""*/)
    // Clear the histogram
    fFilledBins = 0;
    fEntries = 0.;
-   fWeightSum = 0.;
+   fTsumw = 0.;
    fBins.Clear();
    fBinsContinued.Clear();
    fBinContent.Delete();
@@ -870,7 +877,7 @@ Double_t THnSparse::ComputeIntegral()
    fIntegral[0] = 0.;
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i);
-      fIntegral[i + 1] = fIntegral[i] + v / fWeightSum;
+      fIntegral[i + 1] = fIntegral[i] + v / fTsumw;
    }
 
    // set status to valid

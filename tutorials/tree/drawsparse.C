@@ -6,7 +6,7 @@
  * the rightmost axis.
  *
  * Run as
- *   .L $ROOTSYS/tutorials/hist/drawsparse.C+
+ *   .L $ROOTSYS/tutorials/tree/drawsparse.C+
  *
  * Axel.Naumann@cern.ch (2007-09-14)
  *********************************************************************/
@@ -44,8 +44,6 @@ TTree* toTree(THnSparse* h)
          branchname += ":";
       TAxis* axis = h->GetAxis(d);
       branchname += axis->GetName();
-      branchname += "_axis";
-      branchname += d;
       branchname += "/D";
    }
    tree->Branch("coord", x, branchname);
@@ -100,6 +98,10 @@ void drawsparse_draw(THnSparse* h)
 void drawsparse()
 {
    // create a THnSparse and draw it.
+
+#ifdef __CINT__
+   printf("For performance reasons we advise to run \".x drawsparse.C+\"\n");
+#endif
 
    const Int_t ndims = 8;
    Int_t bins[ndims] = {10, 10, 5, 30, 10, 4, 18, 12};

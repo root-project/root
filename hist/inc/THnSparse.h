@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.3 2007/09/14 11:28:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.4 2007/09/17 11:05:02 brun Exp $
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
@@ -58,16 +58,17 @@ class TH3D;
 class THnSparseArrayChunk: public TObject {
  public:
    THnSparseArrayChunk():
-      fContent(0), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0), 
-      fSumw2(0) {}
+      fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0), 
+      fContent(0), fSumw2(0) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
    virtual ~THnSparseArrayChunk();
-   TArray   *fContent; // bin content
+
    Int_t    fSingleCoordinateSize; // size of a single bin coordinate
-   Int_t    fCoordinatesSize; // size of the bin coordinate buffer
-   Char_t   *fCoordinates;   //[fCoordinatesSize] compact bin coordinate buffer
-   TArrayD  *fSumw2;  // bin errors
+   Int_t    fCoordinatesSize;      // size of the bin coordinate buffer
+   Char_t  *fCoordinates;          //[fCoordinatesSize] compact bin coordinate buffer
+   TArray  *fContent;              // bin content
+   TArrayD *fSumw2;                // bin errors
 
    void AddBin(ULong_t idx, const Char_t* idxbuf);
    void AddBinContent(ULong_t idx, Double_t v = 1.) {
@@ -82,6 +83,7 @@ class THnSparseArrayChunk: public TObject {
       // see comment in THnSparseCompactBinCoord::GetHash().
       return fCoordinatesSize <= 4 || 
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
+
    ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
 };
 
@@ -89,17 +91,20 @@ class THnSparseCompactBinCoord;
 
 class THnSparse: public TNamed {
  private:
-   Int_t     fNdimensions;  // number of dimensions
+   Int_t      fNdimensions;  // number of dimensions
+   Int_t      fChunkSize;    // number of entries for each chunk
    Long64_t   fFilledBins;   // number of filled bins
-   Double_t   fEntries;      // number of entries, spread over chunks
-   Double_t   fWeightSum;      // sum of weights, spread over chunks
    TObjArray  fAxes;         // axes of the histogram
+   TObjArray  fBinContent;   // array of THnSparseArrayChunk
    TExMap     fBins;         // filled bins
    TExMap     fBinsContinued;// filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
-   Int_t     fChunkSize;    // number of entries for each chunk
-   TObjArray  fBinContent;   // array of THnSparseArrayChunk
+   Double_t   fEntries;      // number of entries, spread over chunks
+   Double_t   fTsumw;        // total sum of weights
+   Double_t   fTsumw2;        // total sum of weights
+   TArrayD    fTsumwx;       // total sum of weight*X for each dimension
+   TArrayD    fTsumwx2;      // total sum of weight*X*X for each dimension
    THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
-   Double_t  *fIntegral;    //! array with bin weight sums
+   Double_t  *fIntegral;     //! array with bin weight sums
    enum {kNoInt, kValidInt, kInvalidInt} fIntegralStatus; //! status of integral
 
  protected:
@@ -115,9 +120,9 @@ class THnSparse: public TNamed {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
       fEntries += 1;
-      fWeightSum += w;
-      if (fIntegralStatus == kValidInt)
-         fIntegralStatus = kInvalidInt;
+      fTsumw += w;
+      fTsumw2 += w*w;
+      fIntegralStatus = kInvalidInt;
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       return bin;
@@ -136,11 +141,20 @@ class THnSparse: public TNamed {
    TObjArray* GetListOfAxes() { return &fAxes; }
    TAxis* GetAxis(Int_t dim) const { return (TAxis*)fAxes[dim]; }
 
-   Long_t Fill(const Double_t *x, Double_t w = 1.) { return Fill(GetBin(x), w); }
-   Long_t Fill(const char* name[], Double_t w = 1.) { return Fill(GetBin(name), w); }
+   Long_t Fill(const Double_t *x, Double_t w = 1.) {
+      for (Int_t d = 0; d < fNdimensions; ++d) {
+         const Double_t xd = x[d];
+         fTsumwx[d]  += w * xd;
+         fTsumwx2[d] += w * xd * xd;
+      }
+      return Fill(GetBin(x), w);
+   }
+   Long_t Fill(const char* name[], Double_t w = 1.) {
+      return Fill(GetBin(name), w);
+   }
 
    Double_t GetEntries() const { return fEntries; }
-   Double_t GetWeightSum() const { return fWeightSum; }
+   Double_t GetWeightSum() const { return fTsumw; }
    Long64_t GetNbins() const { return fFilledBins; }
    Int_t   GetNdimensions() const { return fNdimensions; }
 
@@ -151,7 +165,7 @@ class THnSparse: public TNamed {
    void SetBinContent(const Int_t* x, Double_t v);
    void SetBinError(const Int_t* x, Double_t e);
    void AddBinContent(const Int_t* x, Double_t v = 1.);
-
+   void SetEntries(Double_t entries) { fEntries = entries; }
 
    Double_t GetBinContent(const Int_t *idx) const;
    Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const;
@@ -160,6 +174,11 @@ class THnSparse: public TNamed {
 
    Double_t GetSparseFractionBins() const;
    Double_t GetSparseFractionMem() const;
+
+   Double_t GetSumw() const  { return fTsumw; }
+   Double_t GetSumw2() const { return fTsumw2; }
+   Double_t GetSumwx(Int_t dim) const  { return fTsumwx[dim]; }
+   Double_t GetSumwx2(Int_t dim) const { return fTsumwx2[dim]; }
 
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const;
    TH2D*      Projection(Int_t xDim, Int_t yDim,
