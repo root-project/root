@@ -17,6 +17,10 @@
  * 1000 entries. The filling and reading is repeated until enough
  * statistics have been collected.
  *
+ * tutorials/tree/drawsparse.C shows an example for visualizing a
+ * THnSparse. It creates a TTree which is then drawn using
+ * TParallelCoord.
+ *
  * This macro should be run in compiled mode due to the many nested
  * loops that force CINT to disable its optimization. If run
  * interpreted one would not benchmark THnSparse but CINT.
@@ -42,7 +46,7 @@ class TTimeHists {
 public:
    enum EHist { kHist, kSparse, kNumHist };
    enum ETime { kReal, kCPU, kNumTime };
-   TTimeHists(UInt_t dim, UInt_t bins, Long_t num):
+   TTimeHists(Int_t dim, Int_t bins, Long_t num):
       fValue(0), fDim(dim), fBins(bins), fNum(num),
       fSparse(0), fHist(0), fArray(0) {}
    ~TTimeHists();
@@ -62,8 +66,8 @@ protected:
 
 private:
    Double_t* fValue;
-   UInt_t fDim;
-   UInt_t fBins;
+   Int_t fDim;
+   Int_t fBins;
    Long_t fNum;
    Double_t fTime[2][2];
    THnSparse* fSparse;
@@ -143,7 +147,7 @@ bool TTimeHists::Run()
 
 void TTimeHists::NextValues()
 {
-   for (UInt_t d = 0; d < fDim; ++d)
+   for (Int_t d = 0; d < fDim; ++d)
       fValue[d] = gRandom->Gaus() / 4.;
 }
 
@@ -160,7 +164,7 @@ void TTimeHists::Fill(EHist hist)
       NextValues();
       if (fgDebug > 1) {
          printf("%ld: fill %s", n, hist == kHist? (fDim < 4 ? "hist" : "arr") : "sparse");
-         for (UInt_t d = 0; d < fDim; ++d)
+         for (Int_t d = 0; d < fDim; ++d)
             printf("[%g]", fValue[d]);
          printf("\n");
       }
@@ -172,10 +176,10 @@ void TTimeHists::Fill(EHist hist)
          default:
             {
                Long_t pos = 0;
-               for (UInt_t d = 0; d < fDim; ++d) {
+               for (Int_t d = 0; d < fDim; ++d) {
                   pos *= (fBins + 2);
-                  int ibin = (int)((fValue[d] + 1.) / 2. * fBins + 1);
-                  if (ibin > (int)fBins) ibin = fBins + 1;
+                  Int_t ibin = (Int_t)((fValue[d] + 1.) / 2. * fBins + 1);
+                  if (ibin > fBins) ibin = fBins + 1;
                   if (ibin < 0) ibin = 0;
                   pos += ibin;
                }
@@ -199,9 +203,9 @@ void TTimeHists::SetupHist(EHist hist)
          {
             MemInfo_t meminfo;
             gSystem->GetMemInfo(&meminfo);
-            Long_t size = 1;
-            for (UInt_t d = 0; d < fDim; ++d) {
-               if (size * sizeof(Float_t) > LONG_MAX / (fBins + 2)
+            Int_t size = 1;
+            for (Int_t d = 0; d < fDim; ++d) {
+               if ((Int_t)(size * sizeof(Float_t)) > INT_MAX / (fBins + 2)
                   || meminfo.fMemFree > 0 
                   && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000))
                   throw std::bad_alloc();
@@ -215,10 +219,10 @@ void TTimeHists::SetupHist(EHist hist)
          }
       }
    } else {
-      UInt_t* bins = new UInt_t[fDim];
+      Int_t* bins = new Int_t[fDim];
       Double_t *xmin = new Double_t[fDim];
       Double_t *xmax = new Double_t[fDim];
-      for (UInt_t d = 0; d < fDim; ++d) {
+      for (Int_t d = 0; d < fDim; ++d) {
          bins[d] = fBins;
          xmin[d] = -1.;
          xmax[d] =  1.;
@@ -231,13 +235,13 @@ Double_t TTimeHists::Check(EHist hist)
 {
    // Check bin content of all bins
    Double_t check = 0.;
-   UInt_t* x = new UInt_t[fDim];
-   memset(x, 0, sizeof(UInt_t) * fDim);
+   Int_t* x = new Int_t[fDim];
+   memset(x, 0, sizeof(Int_t) * fDim);
 
    if (hist == kHist) {
       Long_t idx = 0;
       Long_t size = 1;
-      for (UInt_t d = 0; d < fDim; ++d)
+      for (Int_t d = 0; d < fDim; ++d)
          size *= (fBins + 2);
       while (x[0] <= fBins + 1) {
          Double_t v = -1.;
@@ -250,13 +254,13 @@ Double_t TTimeHists::Check(EHist hist)
          else v = fArray[idx];
          Double_t checkx = 0.;
          if (v)
-            for (UInt_t d = 0; d < fDim; ++d)
+            for (Int_t d = 0; d < fDim; ++d)
                checkx += x[d];
          check += checkx * v;
 
          if (fgDebug > 2 || fgDebug > 1 && v) {
             printf("%s%d", fDim < 4 ? "hist" : "arr", fDim);
-            for (UInt_t d = 0; d < fDim; ++d)
+            for (Int_t d = 0; d < fDim; ++d)
                printf("[%d]", x[d]);
             printf(" = %g\n", v);
          }
@@ -264,7 +268,7 @@ Double_t TTimeHists::Check(EHist hist)
          ++x[fDim - 1];
          // Adjust the bin idx
          // no wrapping for dim 0 - it's what we break on!
-         for (UInt_t d = fDim - 1; d > 0; --d) {
+         for (Int_t d = fDim - 1; d > 0; --d) {
             if (x[d] > fBins + 1) {
                x[d] = 0;
                ++x[d - 1];
@@ -276,13 +280,13 @@ Double_t TTimeHists::Check(EHist hist)
       for (Long64_t i = 0; i < fSparse->GetNbins(); ++i) {
          Double_t v = fSparse->GetBinContent(i, x);
          Double_t checkx = 0.;
-         for (UInt_t d = 0; d < fDim; ++d)
+         for (Int_t d = 0; d < fDim; ++d)
             checkx += x[d];
          check += checkx * v;
 
          if (fgDebug > 1) {
             printf("sparse%d", fDim);
-            for (UInt_t d = 0; d < fDim; ++d)
+            for (Int_t d = 0; d < fDim; ++d)
                printf("[%d]", x[d]);
             printf(" = %g\n", v);
          }
@@ -319,9 +323,9 @@ void sparsehist() {
 
    // TTimeHists::SetDebug(2);
    Double_t max = -1.;
-   for (UInt_t dim = 1; dim < 7; ++dim) {
+   for (Int_t dim = 1; dim < 7; ++dim) {
       printf("Processing dimension %d", dim);
-      for (UInt_t bins = 10; bins <= 100; bins += 10) {
+      for (Int_t bins = 10; bins <= 100; bins += 10) {
          TTimeHists timer(dim, bins, /*num*/ 1000);
          timer.Run();
          for (int h = 0; h < TTimeHists::kNumHist; ++h)

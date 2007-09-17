@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.3 2007/09/13 18:45:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.4 2007/09/14 11:28:26 brun Exp $
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 // They take name and title, the number of dimensions, and for each dimension
 // the number of bins, the minimal, and the maximal value on the dimension's
 // axis. A TH2 h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
-//   UInt_t bins[2] = {10, 20};
+//   Int_t bins[2] = {10, 20};
 //   Double_t xmin[2] = {0., -5.};
 //   Double_t xmax[2] = {10., 5.};
 //   THnSparse hs("hs", "hs", 2, bins, min, max);
@@ -62,7 +62,7 @@
 // When iterating over a THnSparse one should only look at filled bins to save
 // processing time. The number of filled bins is returned by
 // THnSparse::GetNbins(); the bin content for each (linear) bin number can
-// be retrieved by THnSparse::GetBinContent(linidx, (UInt_t*)coord).
+// be retrieved by THnSparse::GetBinContent(linidx, (Int_t*)coord).
 // After the call, coord will contain the bin coordinate of each axis for the bin
 // with linear index linidx. A possible call would be
 //   cout << hs.GetBinContent(0, coord);
@@ -112,28 +112,28 @@
 
 class THnSparseCompactBinCoord {
 public:
-   THnSparseCompactBinCoord(UInt_t dim, UInt_t* nbins);
+   THnSparseCompactBinCoord(Int_t dim, const Int_t* nbins);
    ~THnSparseCompactBinCoord();
-   void SetCoord(UInt_t* coord) { memcpy(fCurrentBin, coord, sizeof(UInt_t) * fNdimensions); }
+   void SetCoord(const Int_t* coord) { memcpy(fCurrentBin, coord, sizeof(Int_t) * fNdimensions); }
    ULong64_t GetHash();
-   UInt_t GetSize() const { return fCoordBufferSize; }
-   UInt_t* GetCoord() const { return fCurrentBin; }
+   Int_t GetSize() const { return fCoordBufferSize; }
+   Int_t* GetCoord() const { return fCurrentBin; }
    Char_t* GetBuffer() const { return fCoordBuffer; }
-   void GetCoordFromBuffer(UInt_t* coord) const;
+   void GetCoordFromBuffer(Int_t* coord) const;
 
 protected:
-   UInt_t GetNumBits(UInt_t n) const {
+   Int_t GetNumBits(Int_t n) const {
       // return the number of bits allocated by the number "n"
-      UInt_t r = (n > 0);
+      Int_t r = (n > 0);
       while (n/=2) ++r;
       return r;
    }
 private:
-   UInt_t  fNdimensions;     // number of dimensions
-   UInt_t *fBitOffsets;      //[fNdimensions + 1] bit offset of each axis index
+   Int_t  fNdimensions;     // number of dimensions
+   Int_t *fBitOffsets;      //[fNdimensions + 1] bit offset of each axis index
    Char_t *fCoordBuffer;     // compact buffer of coordinates
-   UInt_t  fCoordBufferSize; // size of fBinCoordBuffer
-   UInt_t *fCurrentBin;      // current coordinates
+   Int_t  fCoordBufferSize; // size of fBinCoordBuffer
+   Int_t *fCurrentBin;      // current coordinates
 };
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -141,17 +141,17 @@ private:
 
 
 //______________________________________________________________________________
-THnSparseCompactBinCoord::THnSparseCompactBinCoord(UInt_t dim, UInt_t* nbins):
+THnSparseCompactBinCoord::THnSparseCompactBinCoord(Int_t dim, const Int_t* nbins):
    fNdimensions(dim), fBitOffsets(0), fCoordBuffer(0), fCoordBufferSize(0)
 {
    // Initialize a THnSparseCompactBinCoord object with "dim" dimensions
    // and "bins" holding the number of bins for each dimension.
 
-   fCurrentBin = new UInt_t[dim];
-   fBitOffsets = new UInt_t[dim + 1];
+   fCurrentBin = new Int_t[dim];
+   fBitOffsets = new Int_t[dim + 1];
 
    int shift = 0;
-   for (UInt_t i = 0; i < dim; ++i) {
+   for (Int_t i = 0; i < dim; ++i) {
       fBitOffsets[i] = shift;
       shift += GetNumBits(nbins[i] + 2);
    }
@@ -172,22 +172,22 @@ THnSparseCompactBinCoord::~THnSparseCompactBinCoord()
 }
 
 //______________________________________________________________________________
-void THnSparseCompactBinCoord::GetCoordFromBuffer(UInt_t* coord) const
+void THnSparseCompactBinCoord::GetCoordFromBuffer(Int_t* coord) const
 {
    // Given the current fCoordBuffer, calculate ("decompact") the bin coordinates,
    // and return it in coord.
 
-   for (UInt_t i = 0; i < fNdimensions; ++i) {
-      const UInt_t offset = fBitOffsets[i] / 8;
-      UInt_t shift = fBitOffsets[i] % 8;
+   for (Int_t i = 0; i < fNdimensions; ++i) {
+      const Int_t offset = fBitOffsets[i] / 8;
+      Int_t shift = fBitOffsets[i] % 8;
       Int_t nbits = fBitOffsets[i + 1] - fBitOffsets[i];
       UChar_t* pbuf = (UChar_t*) fCoordBuffer + offset;
       coord[i] = *pbuf >> shift;
-      UInt_t subst = (UInt_t) -1;
+      Int_t subst = (Int_t) -1;
       subst = subst << nbits;
       nbits -= (8 - shift);
       shift = 8 - shift;
-      for (Int_t n = 0; n * 8 <= nbits; ++n) {
+      for (Int_t n = 0; n * 8 < nbits; ++n) {
          ++pbuf;
          coord[i] += *pbuf << shift;
          shift += 8;
@@ -202,9 +202,9 @@ ULong64_t THnSparseCompactBinCoord::GetHash()
    // Calculate hash for compact bin index of the current bin.
 
    memset(fCoordBuffer, 0, fCoordBufferSize);
-   for (UInt_t i = 0; i < fNdimensions; ++i) {
-      const UInt_t offset = fBitOffsets[i] / 8;
-      const UInt_t shift = fBitOffsets[i] % 8;
+   for (Int_t i = 0; i < fNdimensions; ++i) {
+      const Int_t offset = fBitOffsets[i] / 8;
+      const Int_t shift = fBitOffsets[i] % 8;
       ULong64_t val = fCurrentBin[i];
 
       Char_t* pbuf = fCoordBuffer + offset;
@@ -247,7 +247,7 @@ ULong64_t THnSparseCompactBinCoord::GetHash()
 ClassImp(THnSparseArrayChunk);
 
 //______________________________________________________________________________
-THnSparseArrayChunk::THnSparseArrayChunk(UInt_t coordsize, bool errors, TArray* cont):
+THnSparseArrayChunk::THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont):
       fContent(cont), fSingleCoordinateSize(coordsize), fCoordinatesSize(0),
       fCoordinates(0), fSumw2(0)
 {
@@ -269,7 +269,7 @@ THnSparseArrayChunk::~THnSparseArrayChunk()
 }
 
 //______________________________________________________________________________
-void THnSparseArrayChunk::AddBin(ULong_t idx, Char_t* coordbuf)
+void THnSparseArrayChunk::AddBin(ULong_t idx, const Char_t* coordbuf)
 {
    // Create a new bin in this chunk
 
@@ -294,22 +294,29 @@ ClassImp(THnSparse);
 //______________________________________________________________________________
 THnSparse::THnSparse():
    fNdimensions(0), fFilledBins(0), fEntries(0), fWeightSum(0), fChunkSize(1024),
-   fCompactCoord(0), fIntegralStatus(kNoInt)
+   fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
 }
 
 //______________________________________________________________________________
-THnSparse::THnSparse(const char* name, const char* title, UInt_t dim,
-                     UInt_t* nbins, Double_t* xmin, Double_t* xmax, UInt_t chunksize):
+THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
+                     const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
+                     Int_t chunksize):
    TNamed(name, title), fNdimensions(dim), fFilledBins(0), fEntries(0), fWeightSum(0),
-   fAxes(dim), fChunkSize(chunksize), fCompactCoord(0), fIntegralStatus(kNoInt)
+   fAxes(dim), fChunkSize(chunksize), fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct a THnSparse with "dim" dimensions,
    // with chunksize as the size of the chunks.
 
-   for (UInt_t i = 0; i < fNdimensions; ++i)
-      fAxes.AddAtAndExpand(new TAxis(nbins[i], xmin[i], xmax[i]), i);
+   for (Int_t i = 0; i < fNdimensions; ++i) {
+      TAxis* axis = new TAxis(nbins[i], xmin[i], xmax[i]);
+      TString name("axis");
+      name += i;
+      axis->SetName(name);
+      axis->SetTitle(name);
+      fAxes.AddAtAndExpand(axis, i);
+   }
    fAxes.SetOwner();
 
    fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
@@ -324,7 +331,7 @@ THnSparse::~THnSparse() {
 }
 
 //______________________________________________________________________________
-void THnSparse::AddBinContent(UInt_t* coord, Double_t v)
+void THnSparse::AddBinContent(const Int_t* coord, Double_t v)
 {
    // Add "v" to the content of bin with coordinates "coord"
 
@@ -350,13 +357,41 @@ THnSparseArrayChunk* THnSparse::AddChunk()
 }
 
 //______________________________________________________________________________
-Long_t THnSparse::GetBin(Double_t* x, Bool_t allocate /* = kTRUE */)
+THnSparse* THnSparse::CloneEmpty(const char* name, const char* title, Int_t dim,
+                                 const Int_t* nbins, const Double_t* xmin,
+                                 const Double_t* xmax, Int_t chunksize) const
+{
+   // Create a new THnSparse object that is of the same type as *this,
+   // but with given dimensions.
+
+   THnSparse* ret = (THnSparse*)IsA()->New();
+   ret->SetNameTitle(name, title);
+   ret->fNdimensions = dim;
+   ret->fChunkSize = chunksize;
+   
+   for (Int_t i = 0; i < dim; ++i) {
+      TAxis* axis = new TAxis(nbins[i], xmin[i], xmax[i]);
+      TString name("axis");
+      name += i;
+      axis->SetName(name);
+      axis->SetTitle(name);
+      ret->fAxes.AddAtAndExpand(axis, i);
+   }
+   ret->fAxes.SetOwner();
+
+   ret->fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+
+   return ret;
+}
+
+//______________________________________________________________________________
+Long_t THnSparse::GetBin(const Double_t* x, Bool_t allocate /* = kTRUE */)
 {
    // Get the bin index for the n dimensional tuple x,
    // allocate one if it doesn't exist yet and "allocate" is true.
 
-   UInt_t *coord = GetCompactCoord()->GetCoord();
-   for (UInt_t i = 0; i < fNdimensions; ++i)
+   Int_t *coord = GetCompactCoord()->GetCoord();
+   for (Int_t i = 0; i < fNdimensions; ++i)
       coord[i] = GetAxis(i)->FindBin(x[i]);
 
    return GetBinIndexForCurrentBin(allocate);
@@ -369,15 +404,15 @@ Long_t THnSparse::GetBin(const char* name[], Bool_t allocate /* = kTRUE */)
    // Get the bin index for the n dimensional tuple addressed by "name",
    // allocate one if it doesn't exist yet and "allocate" is true.
 
-   UInt_t *coord = GetCompactCoord()->GetCoord();
-   for (UInt_t i = 0; i < fNdimensions; ++i)
+   Int_t *coord = GetCompactCoord()->GetCoord();
+   for (Int_t i = 0; i < fNdimensions; ++i)
       coord[i] = GetAxis(i)->FindBin(name[i]);
 
    return GetBinIndexForCurrentBin(allocate);
 }
 
 //______________________________________________________________________________
-Long_t THnSparse::GetBin(UInt_t* coord, Bool_t allocate /*= kTRUE*/)
+Long_t THnSparse::GetBin(const Int_t* coord, Bool_t allocate /*= kTRUE*/)
 {
    // Get the bin index for the n dimensional coordinates coord,
    // allocate one if it doesn't exist yet and "allocate" is true.
@@ -386,7 +421,7 @@ Long_t THnSparse::GetBin(UInt_t* coord, Bool_t allocate /*= kTRUE*/)
 }
 
 //______________________________________________________________________________
-Double_t THnSparse::GetBinContent(UInt_t *coord) const {
+Double_t THnSparse::GetBinContent(const Int_t *coord) const {
    // Get content of bin with coordinates "coord"
    GetCompactCoord()->SetCoord(coord);
    Long_t idx = const_cast<THnSparse*>(this)->GetBinIndexForCurrentBin(kFALSE);
@@ -396,7 +431,7 @@ Double_t THnSparse::GetBinContent(UInt_t *coord) const {
 }
 
 //______________________________________________________________________________
-Double_t THnSparse::GetBinContent(Long64_t idx, UInt_t* coord /* = 0 */) const
+Double_t THnSparse::GetBinContent(Long64_t idx, Int_t* coord /* = 0 */) const
 {
    // Return the content of the filled bin number "idx".
    // If coord is non-null, it will contain the bin's coordinates for each axis
@@ -407,7 +442,7 @@ Double_t THnSparse::GetBinContent(Long64_t idx, UInt_t* coord /* = 0 */) const
       idx %= fChunkSize;
       if (chunk && chunk->fContent->GetSize() > idx) {
          if (coord) {
-            UInt_t sizeCompact = GetCompactCoord()->GetSize();
+            Int_t sizeCompact = GetCompactCoord()->GetSize();
             memcpy(GetCompactCoord()->GetBuffer(), chunk->fCoordinates + idx * sizeCompact, sizeCompact);
             GetCompactCoord()->GetCoordFromBuffer(coord);
          }
@@ -415,12 +450,12 @@ Double_t THnSparse::GetBinContent(Long64_t idx, UInt_t* coord /* = 0 */) const
       }
    }
    if (coord)
-      memset(coord, -1, sizeof(UInt_t) * fNdimensions);
+      memset(coord, -1, sizeof(Int_t) * fNdimensions);
    return 0.;
 }
 
 //______________________________________________________________________________
-Double_t THnSparse::GetBinError(UInt_t *coord) const {
+Double_t THnSparse::GetBinError(const Int_t *coord) const {
    // Get error of bin with coordinates "coord"
 
    if (!GetChunk(0) || !GetChunk(0)->fSumw2)
@@ -500,8 +535,8 @@ THnSparseCompactBinCoord* THnSparse::GetCompactCoord() const
    // Return THnSparseCompactBinCoord object.
 
    if (!fCompactCoord) {
-      UInt_t *bins = new UInt_t[fNdimensions];
-      for (UInt_t d = 0; d < fNdimensions; ++d)
+      Int_t *bins = new Int_t[fNdimensions];
+      for (Int_t d = 0; d < fNdimensions; ++d)
          bins[d] = GetAxis(d)->GetNbins();
       const_cast<THnSparse*>(this)->fCompactCoord
          = new THnSparseCompactBinCoord(fNdimensions, bins);
@@ -525,11 +560,11 @@ void THnSparse::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
    // generate a random bin
    Double_t p = gRandom->Rndm();
    Long64_t idx = TMath::BinarySearch(GetNbins() + 1, fIntegral, p);
-   UInt_t bin[20]; //FIXME in case a user requests more than 20 dimensions ::)
+   Int_t bin[20]; //FIXME in case a user requests more than 20 dimensions ::)
    GetBinContent(idx, bin);
 
    // convert bin coordinates to real values
-   for (UInt_t i = 0; i < fNdimensions; i++) {
+   for (Int_t i = 0; i < fNdimensions; i++) {
       rand[i] = GetAxis(i)->GetBinCenter(bin[i]);
       
       // randomize the vector withing a bin
@@ -545,7 +580,7 @@ Double_t THnSparse::GetSparseFractionBins() const {
    // Return the amount of filled bins over all bins
 
    Double_t nbinsTotal = 1.;
-   for (UInt_t d = 0; d < fNdimensions; ++d)
+   for (Int_t d = 0; d < fNdimensions; ++d)
       nbinsTotal *= GetAxis(d)->GetNbins() + 2;
    return fFilledBins / nbinsTotal;
 }
@@ -555,7 +590,7 @@ Double_t THnSparse::GetSparseFractionMem() const {
    // Return the amount of used memory over memory that would be used by a
    // non-sparse n-dimensional histogram. The value is approximate.
 
-   UInt_t arrayElementSize = 0;
+   Int_t arrayElementSize = 0;
    Double_t size = 0.;
    if (fFilledBins) {
       TClass* clArray = GetChunk(0)->fContent->IsA();
@@ -572,14 +607,14 @@ Double_t THnSparse::GetSparseFractionMem() const {
       size += fFilledBins * sizeof(Float_t); /* fSumw2 */
 
    Double_t nbinsTotal = 1.;
-   for (UInt_t d = 0; d < fNdimensions; ++d)
+   for (Int_t d = 0; d < fNdimensions; ++d)
       nbinsTotal *= GetAxis(d)->GetNbins() + 2;
 
    return size / nbinsTotal / arrayElementSize;
 }
 
 //______________________________________________________________________________
-TH1D* THnSparse::Projection(UInt_t xDim, Option_t* /*option = ""*/) const
+TH1D* THnSparse::Projection(Int_t xDim, Option_t* /*option = ""*/) const
 {
    // Project all bins into a 1-dimensional histogram,
    // keeping only axis "xDim".
@@ -602,8 +637,8 @@ TH1D* THnSparse::Projection(UInt_t xDim, Option_t* /*option = ""*/) const
 
    // Bool_t haveErrors = GetChunk(0) && GetChunk(0)->fSumw2;
 
-   UInt_t* coord = new UInt_t[fNdimensions];
-   memset(coord, 0, sizeof(UInt_t) * fNdimensions);
+   Int_t* coord = new Int_t[fNdimensions];
+   memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i, coord);
       h->AddBinContent(coord[xDim], v);
@@ -616,7 +651,7 @@ TH1D* THnSparse::Projection(UInt_t xDim, Option_t* /*option = ""*/) const
 }
 
 //______________________________________________________________________________
-TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, Option_t* /*option = ""*/) const
+TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* /*option = ""*/) const
 {
    // Project all bins into a 2-dimensional histogram,
    // keeping only axes "xDim" and "yDim".
@@ -646,8 +681,8 @@ TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, Option_t* /*option = ""*/)
 
    // Bool_t haveErrors = GetChunk(0) && GetChunk(0)->fSumw2;
 
-   UInt_t* coord = new UInt_t[fNdimensions];
-   memset(coord, 0, sizeof(UInt_t) * fNdimensions);
+   Int_t* coord = new Int_t[fNdimensions];
+   memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i, coord);
       Long_t bin = h->GetBin(coord[xDim], coord[yDim]);
@@ -659,7 +694,7 @@ TH2D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, Option_t* /*option = ""*/)
 }
 
 //______________________________________________________________________________
-TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim,
+TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                             Option_t* /*option = ""*/) const
 {
    // Project all bins into a 3-dimensional histogram,
@@ -696,8 +731,8 @@ TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim,
 
    // Bool_t haveErrors = GetChunk(0) && GetChunk(0)->fSumw2;
 
-   UInt_t* coord = new UInt_t[fNdimensions];
-   memset(coord, 0, sizeof(UInt_t) * fNdimensions);
+   Int_t* coord = new Int_t[fNdimensions];
+   memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i, coord);
       Long_t bin = h->GetBin(coord[xDim], coord[yDim], coord[zDim]);
@@ -709,7 +744,7 @@ TH3D* THnSparse::Projection(UInt_t xDim, UInt_t yDim, UInt_t zDim,
 }
 
 //______________________________________________________________________________
-THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim,
+THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
                                  Option_t* /*option = ""*/) const
 {
    // Project all bins into a ndim-dimensional histogram,
@@ -717,14 +752,14 @@ THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim,
 
    TString name(GetName());
    name += "_";
-   for (UInt_t d = 0; d < ndim; ++d)
+   for (Int_t d = 0; d < ndim; ++d)
       name += GetAxis(dim[d])->GetName();
 
    TString title(GetTitle());
    Ssiz_t posInsert = title.First(';');
    if (posInsert == kNPOS) {
       title += " projection ";
-      for (UInt_t d = 0; d < ndim; ++d)
+      for (Int_t d = 0; d < ndim; ++d)
          title += GetAxis(dim[d])->GetTitle();
    } else {
       for (Int_t d = ndim - 1; d >= 0; --d) {
@@ -735,30 +770,24 @@ THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim,
       title.Insert(posInsert, " projection ");
    }
 
-   UInt_t* bins = new UInt_t[ndim];
+   Int_t* bins = new Int_t[ndim];
    Double_t* xmin = new Double_t[ndim];
    Double_t* xmax = new Double_t[ndim];
-   for (UInt_t d = 0; d < ndim; ++d) {
+   for (Int_t d = 0; d < ndim; ++d) {
       bins[d] = GetAxis(dim[d])->GetNbins();
       xmin[d] = GetAxis(dim[d])->GetXmin();
       xmax[d] = GetAxis(dim[d])->GetXmax();
    }
 
-   TString interpNew;
-   interpNew.Form("new %s((const char*)0x%x,(const char*)0x%x,%d,(UInt_t*)0x%x,(Double_t*)0x%x,(Double_t*)0x%x)",
-                  IsA()->GetName(), name.Data(), title.Data(), bins, xmin, xmax);
-   TInterpreter::EErrorCode interpErr = TInterpreter::kNoError;
-   THnSparse* h = (THnSparse*) gInterpreter->Calc(interpNew, &interpErr);
-   if (interpErr != TInterpreter::kNoError)
-      return 0;
+   THnSparse* h = CloneEmpty(name.Data(), title.Data(), ndim, bins, xmin, xmax, fChunkSize);
 
    // Bool_t haveErrors = GetChunk(0) && GetChunk(0)->fSumw2;
 
-   UInt_t* coord = new UInt_t[fNdimensions];
-   memset(coord, 0, sizeof(UInt_t) * fNdimensions);
+   Int_t* coord = new Int_t[fNdimensions];
+   memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i, coord);
-      for (UInt_t d = 0; d < ndim; ++d)
+      for (Int_t d = 0; d < ndim; ++d)
          bins[d] = coord[dim[d]];
       h->AddBinContent(bins, v);
    }
@@ -772,7 +801,7 @@ THnSparse* THnSparse::Projection(UInt_t ndim, UInt_t* dim,
 }
 
 //______________________________________________________________________________
-void THnSparse::SetBinContent(UInt_t* coord, Double_t v)
+void THnSparse::SetBinContent(const Int_t* coord, Double_t v)
 {
    // Set content of bin with coordinates "coord" to "v"
 
@@ -783,7 +812,7 @@ void THnSparse::SetBinContent(UInt_t* coord, Double_t v)
 }
 
 //______________________________________________________________________________
-void THnSparse::SetBinError(UInt_t* coord, Double_t e)
+void THnSparse::SetBinError(const Int_t* coord, Double_t e)
 {
    // Set error of bin with coordinates "coord" to "v", enable errors if needed
 
