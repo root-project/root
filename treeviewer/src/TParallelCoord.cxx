@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.8 2007/08/17 08:23:03 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoord.cxx,v 1.9 2007/08/23 15:16:32 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************
@@ -360,7 +360,8 @@ void TParallelCoord::Draw(Option_t* option)
    }
    gPad->Clear();
    if (!optcandle) {
-      if (!((TCanvas*)gPad)->GetShowEditor()) {
+      if (gPad && gPad->IsA() == TCanvas::Class()
+         && !((TCanvas*)gPad)->GetShowEditor()) {
          ((TCanvas*)gPad)->ToggleEditor();
          ((TCanvas*)gPad)->ToggleEventStatus();
       }
@@ -396,7 +397,8 @@ void TParallelCoord::Draw(Option_t* option)
       fCandleAxis->Draw();
    }
    
-   ((TCanvas*)gPad)->Selected(gPad,this,1);
+   if (gPad && gPad->IsA() == TCanvas::Class())
+      ((TCanvas*)gPad)->Selected(gPad,this,1);
 }
 
 
