@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.32 2007/07/12 09:59:00 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.33 2007/08/22 19:39:59 pcanal Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -12,8 +12,8 @@
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // A TSelector object is used by the TTree::Draw, TTree::Scan,            //
-// TTree::Loop, TTree::Process to navigate in a TTree and make            //
-// selections. It contains the following main methods:                    //
+// TTree::Process to navigate in a TTree and make selections.             //
+// It contains the following main methods:                                //
 //                                                                        //
 // void TSelector::Init(TTree *t). Called every time a new TTree is       //
 //    attached.                                                           //
