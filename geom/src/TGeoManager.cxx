@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.189 2007/09/10 14:28:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.190 2007/09/12 16:59:59 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1398,8 +1398,8 @@ void TGeoManager::CloseGeometry(Option_t *option)
          fHashVolumes = new THashList(nvol+1);
          fHashGVolumes = new THashList(ngvol+1);
          Int_t i;
-         for (i=0; i<ngvol; i++) fHashGVolumes->AddAt(fGVolumes->At(i),i);
-         for (i=0; i<nvol; i++) fHashVolumes->AddAt(fVolumes->At(i),i);
+         for (i=0; i<ngvol; i++) fHashGVolumes->AddLast(fGVolumes->At(i));
+         for (i=0; i<nvol; i++) fHashVolumes->AddLast(fVolumes->At(i));
       }   
       
       Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
@@ -2470,8 +2470,8 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
       fHashVolumes = new THashList(nvol+1);
       fHashGVolumes = new THashList(ngvol+1);
       Int_t i;
-      for (i=0; i<ngvol; i++) fHashGVolumes->AddAt(fGVolumes->At(i),i);
-      for (i=0; i<nvol; i++) fHashVolumes->AddAt(fVolumes->At(i),i);
+      for (i=0; i<ngvol; i++) fHashGVolumes->AddLast(fGVolumes->At(i));
+      for (i=0; i<nvol; i++) fHashVolumes->AddLast(fVolumes->At(i));
    }   
    TString sname = name;
    sname = sname.Strip();
