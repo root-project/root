@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.5 2007/05/04 20:40:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.h,v 1.6 2007/08/13 14:22:34 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   CloseWindow();
+   virtual void   DeleteWindow();
 
    ClassDef(TGTextEditor,0)  // Simple text editor using TGTextEdit widget
 };
