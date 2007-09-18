@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocInfo.cxx,v 1.2 2007/03/16 15:25:55 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocInfo.cxx,v 1.3 2007/03/19 10:59:41 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -26,8 +26,8 @@ ClassImp(TClassDocInfo);
 const char* TClassDocInfo::GetName() const
 {
    // Get the class name, or (UNKNOWN) is no TClass object was found.
-
-   return fClass ? fClass->GetName() : "(UNKNOWN)";
+   TClass* cl = fClass;
+   return cl ? cl->GetName() : "(UNKNOWN)";
 }
 
 ULong_t TClassDocInfo::Hash() const
