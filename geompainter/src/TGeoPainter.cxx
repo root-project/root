@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.102 2007/08/20 14:00:56 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.103 2007/08/27 07:42:30 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -245,6 +245,7 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
 // Get index of a base color with given light intensity (0,1)
    const Int_t kBCols[8] = {1,2,3,5,4,6,7,1};
    TColor *tcolor = gROOT->GetColor(base);
+   if (!tcolor) tcolor = new TColor(base, 0.5,0.5,0.5);
    Float_t r,g,b;
    tcolor->GetRGB(r,g,b);
    Int_t code = 0;
@@ -1466,6 +1467,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t cop[3]; 
    for (i=0; i<3; i++) cop[i] = cov[i] - dir[i]*dview;
    fGeoManager->InitTrack(cop, dir);
+   fGeoManager->DoBackupState();
    if (fClippingShape) inclipst = inclip = fClippingShape->Contains(cop);
    Int_t px, py;
    Double_t xloc, yloc, modloc;
@@ -1478,8 +1480,8 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t step,steptot;
    Double_t *norm;
    const Double_t *point = fGeoManager->GetCurrentPoint();
-   Double_t ppoint[3];
-   memcpy(ppoint, point, 3*sizeof(Double_t));
+   Double_t *ppoint = (Double_t*)point;
+//   memcpy(ppoint, point, 3*sizeof(Double_t));
    Double_t tosource[3];
    Double_t calf;
    Double_t phi = 0*krad;
@@ -1509,7 +1511,10 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          local[1] = yloc/modloc;
          local[2] = dproj/modloc;
          LocalToMasterVect(local,dir);
-         fGeoManager->InitTrack(cop,dir);
+         fGeoManager->DoRestoreState();
+         fGeoManager->SetCurrentPoint(cop);
+         fGeoManager->SetCurrentDirection(dir);
+//         fGeoManager->InitTrack(cop,dir);
          // current ray pointing to pixel (px,py)
          done = kFALSE;
          norm = 0;
@@ -1603,7 +1608,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
       }
    } 
    delete [] pxy;      
-   if (top != fGeoManager->GetTopVolume()) fGeoManager->SetTopVolume(top);
+//   if (top != fGeoManager->GetTopVolume()) fGeoManager->SetTopVolume(top);
 }
 
 //______________________________________________________________________________
