@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.14 2007/02/02 08:16:48 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.15 2007/03/13 07:55:53 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -22,6 +22,7 @@
 #include "CINTTypedefBuilder.h"
 #include "CINTEnumBuilder.h"
 #include "ROOTClassEnhancer.h"
+#include "CINTSourceFile.h"
 #include <iostream>
 
 using namespace ROOT::Reflex;
@@ -117,6 +118,7 @@ namespace ROOT {
 
       void Cintex::Enable() {
          if ( Instance().fEnabled ) return;
+         ArtificialSourceFile asf;
          //---Declare some extra typdefs to please CINT
          Declare_additional_CINT_typedefs();
          //---Install the callback to fothcoming classes ----//
