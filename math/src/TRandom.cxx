@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TRandom.cxx,v 1.39 2007/02/09 10:15:39 rdm Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom.cxx,v 1.40 2007/03/14 18:41:58 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -122,6 +122,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TMath.h"
 #include "TRandom.h"
 #include "TRandom3.h"
@@ -680,7 +681,7 @@ void TRandom::ReadRandom(const char *filename)
    //
    if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
-   TDirectory *file = (TDirectory*)gDirectory->OpenFile(fntmp,"r");
+   TDirectory *file = (TDirectory*)gROOT->ProcessLine(Form("TFile::Open(\"%s\");",fntmp));
    delete [] fntmp;
    if(file && file->GetFile()) {
       gDirectory->ReadTObject(this,GetName());
@@ -814,7 +815,7 @@ void TRandom::WriteRandom(const char *filename)
    //
    if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
-   TDirectory *file = (TDirectory*)gDirectory->OpenFile(fntmp,"recreate");
+   TDirectory *file = (TDirectory*)gROOT->ProcessLine(Form("TFile::Open(\"%s\",\"recreate\");",fntmp));
    delete [] fntmp;
    if(file && file->GetFile()) {
       gDirectory->WriteTObject(this,GetName());
