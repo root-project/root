@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.3 2007/06/20 14:45:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.4 2007/07/01 16:02:53 rdm Exp $
 // Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************
@@ -160,34 +160,45 @@ TList *TRemoteObject::Browse()
    if (GetName()[0] == '.' && GetName()[1] == '.')
       SetName(gSystem->BaseName(name));
 
-   void *dir = gSystem->OpenDirectory(name);
-
-   if (!dir)
-      return 0;
-
-   while ((file = gSystem->GetDirEntry(dir))) {
-      if (IsItDirectory(file, GetTitle())) {
-         level++;
-         TString sdirpath;
-         if (!strcmp(file, "."))
-            sdirpath = name;
-         else if (!strcmp(file, ".."))
-            sdirpath = gSystem->DirName(name);
-         else {
-            sdirpath =  name;
-            if (!sdirpath.EndsWith("/"))
-               sdirpath += "/";
-            sdirpath += file;
+   TSystemDirectory dir(name, name);
+   TList *files = dir.GetListOfFiles();
+   if (files) {
+      files->Sort();
+      TIter next(files);
+      TSystemFile *file;
+      TString fname;
+      // directories first 
+      while ((file=(TSystemFile*)next())) {
+         fname = file->GetName();
+         if (file->IsDirectory()) {
+            level++;
+            TString sdirpath;
+            if (!strcmp(fname.Data(), "."))
+               sdirpath = name;
+            else if (!strcmp(fname.Data(), ".."))
+               sdirpath = gSystem->DirName(name);
+            else {
+               sdirpath =  name;
+               if (!sdirpath.EndsWith("/"))
+                  sdirpath += "/";
+               sdirpath += fname.Data();
+            }
+            sdir = new TRemoteObject(fname.Data(), sdirpath.Data(), "TSystemDirectory");
+            objects->Add(sdir);
+            level--;
          }
-         sdir = new TRemoteObject(file, sdirpath.Data(), "TSystemDirectory");
-         objects->Add(sdir);
-         level--;
-      } else {
-         sdir = new TRemoteObject(file, gSystem->WorkingDirectory(), "TSystemFile");
-         objects->Add(sdir);
       }
+      // then files... 
+      TIter nextf(files);
+      while ((file=(TSystemFile*)nextf())) {
+         fname = file->GetName();
+         if (!file->IsDirectory()) {
+            sdir = new TRemoteObject(fname.Data(), gSystem->WorkingDirectory(), "TSystemFile");
+            objects->Add(sdir);
+         }
+      }
+      delete files;
    }
-   gSystem->FreeDirectory(dir);
    return objects;
 }
 
