@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.9 2007/09/04 10:43:54 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.10 2007/09/18 09:51:12 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -276,6 +276,12 @@ TGTextEditor::~TGTextEditor()
 {
    // TGTextEditor destructor.
 
+   if (fTimer) delete fTimer;
+   if (fMenuFile) delete fMenuFile;
+   if (fMenuEdit) delete fMenuEdit;
+   if (fMenuSearch) delete fMenuSearch;
+   if (fMenuTools) delete fMenuTools;
+   if (fMenuHelp) delete fMenuHelp;
 }
 
 //______________________________________________________________________________
@@ -283,12 +289,12 @@ void TGTextEditor::DeleteWindow()
 {
    // Delete TGTextEditor Window.
 
-   delete fTimer;
-   delete fMenuFile;
-   delete fMenuEdit;
-   delete fMenuSearch;
-   delete fMenuTools;
-   delete fMenuHelp;
+   delete fTimer; fTimer = 0;
+   delete fMenuFile; fMenuFile = 0;
+   delete fMenuEdit; fMenuEdit = 0;
+   delete fMenuSearch; fMenuSearch = 0;
+   delete fMenuTools; fMenuTools = 0;
+   delete fMenuHelp; fMenuHelp = 0;
    Cleanup();
    TGMainFrame::DeleteWindow();
 }
