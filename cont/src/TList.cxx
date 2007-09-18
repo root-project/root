@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.22 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.23 2007/08/08 13:48:54 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -545,6 +545,47 @@ TObjLink *TList::NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev)
       return new TObjOptLink(obj, prev, opt);
    else
       return new TObjOptLink(obj, opt);
+}
+
+//______________________________________________________________________________
+void TList::RecursiveRemove(TObject *obj)
+{
+   // Remove object from this collection and recursively remove the object
+   // from all other objects (and collections).
+
+   if (!obj) return;
+
+   TObjLink *lnk  = fFirst;
+   TObjLink *next = 0;
+   while (lnk) {
+      next = lnk->Next();
+      TObject *ob = lnk->GetObject();
+      if (ob->TestBit(kNotDeleted)) {
+         if (ob->IsEqual(obj)) {
+            if (lnk == fFirst) {
+               fFirst = next;
+               if (lnk == fLast)
+                  fLast = fFirst;
+               else
+                  fFirst->fPrev = 0;
+               DeleteLink(lnk);
+            } else if (lnk == fLast) {
+               fLast = lnk->Prev();
+               fLast->fNext = 0;
+               DeleteLink(lnk);
+            } else {
+               lnk->Prev()->fNext = next;
+               lnk->Next()->fPrev = lnk->Prev();
+               DeleteLink(lnk);
+            }
+            fSize--;
+            fCache = 0;
+            Changed();
+         } else
+            ob->RecursiveRemove(obj);
+      }
+      lnk = next;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.19 2006/11/11 15:21:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.20 2007/02/06 11:48:48 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    virtual TObject *FindObject(const TObject *obj) const;
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
+   virtual void     RecursiveRemove(TObject *obj);
 
    TObject         *At(Int_t idx) const;
    TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }

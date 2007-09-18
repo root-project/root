@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.33 2007/02/10 15:33:52 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.34 2007/02/12 18:03:44 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -543,6 +543,26 @@ Bool_t TObjArray::OutOfBoundsError(const char *where, Int_t i) const
 
    Error(where, "index %d out of bounds (size: %d, this: 0x%08x)", i, fSize, this);
    return kFALSE;
+}
+
+//______________________________________________________________________________
+void TObjArray::RecursiveRemove(TObject *obj)
+{
+   // Remove object from this collection and recursively remove the object
+   // from all other objects (and collections).
+
+   if (!obj) return;
+
+   for (int i = 0; i < fSize; i++) {
+      if (fCont[i] && fCont[i]->TestBit(kNotDeleted) && fCont[i]->IsEqual(obj)) {
+         fCont[i] = 0;
+         // recalculate array size
+         if (i == fLast)
+            do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+         Changed();
+      } else if (fCont[i] && fCont[i]->TestBit(kNotDeleted))
+         fCont[i]->RecursiveRemove(obj);
+   }
 }
 
 //______________________________________________________________________________

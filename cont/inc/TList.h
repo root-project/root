@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.14 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.15 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual void      AddBefore(TObjLink *before, TObject *obj);
    virtual TObject  *Remove(TObject *obj);
    virtual TObject  *Remove(TObjLink *lnk);
+   virtual void      RecursiveRemove(TObject *obj);
 
    virtual TObject  *At(Int_t idx) const;
    virtual TObject  *After(const TObject *obj) const;
