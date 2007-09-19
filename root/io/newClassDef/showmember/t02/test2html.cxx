@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: test2html.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Id: test2html.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Rene Brun   23/08/96
 
 {

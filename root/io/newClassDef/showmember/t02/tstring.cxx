@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tstring.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id: tstring.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>

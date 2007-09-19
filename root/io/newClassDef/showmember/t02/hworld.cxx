@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.4 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Id: hworld.cxx,v 1.4 2001/04/20 17:56:50 rdm Exp $
 // Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is

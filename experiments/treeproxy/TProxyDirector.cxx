@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.51 2003/05/01 07:42:36 brun Exp $
+// @(#)root/base:$Id: TObject.cxx,v 1.51 2003/05/01 07:42:36 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

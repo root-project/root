@@ -900,7 +900,7 @@ extern "C" void G__cpp_setup_typetabletemplatedict() {
 -1);
    G__setnewtype(-1,"Statistics type (double)",0);
    G__search_typename2("vector<int>",117,G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0gRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
    G__search_typename2("value_type",105,-1,0,
 G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
@@ -929,11 +929,11 @@ G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0g
 G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("random_access_iterator<int,difference_type>",117,G__get_linked_tagnum(&G__templatedictLN_random_access_iteratorlEintcOlonggR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
    G__search_typename2("const_reverse_iterator",117,G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0gRsPgRcLcLreverse_iterator),0,G__get_linked_tagnum(&G__templatedictLN_vectorlEintcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("MyTemplate<constdouble*>",117,G__get_linked_tagnum(&G__templatedictLN_MyTemplatelEconstsPdoublemUgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.19 2002/01/15 00:48:12 rdm Exp $",0);
 }
 
 /*********************************************************

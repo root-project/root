@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: hsimple.cxx,v 1.3 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Id: hsimple.cxx,v 1.3 2001/04/20 17:56:50 rdm Exp $
 // Author: Rene Brun   19/08/96
 
 //*-*-*-*-*-*-*Simple examples with histograms created/filled and saved*-*-*-*

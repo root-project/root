@@ -659,7 +659,7 @@ extern "C" void G__cpp_setup_typetablenamespacedict() {
 -1);
    G__setnewtype(-1,"Statistics type (double)",0);
    G__search_typename2("vector<MySpace::A>",117,G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
    G__search_typename2("value_type",117,G__get_linked_tagnum(&G__namespacedictLN_MySpacecLcLA),0,G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("iterator",85,G__get_linked_tagnum(&G__namespacedictLN_MySpacecLcLA),0,G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgR));
@@ -681,7 +681,7 @@ G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_te
 G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("random_access_iterator<MySpace::A,difference_type>",117,G__get_linked_tagnum(&G__namespacedictLN_random_access_iteratorlEMySpacecLcLAcOlonggR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
    G__search_typename2("const_reverse_iterator",117,G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgRcLcLreverse_iterator),0,G__get_linked_tagnum(&G__namespacedictLN_vectorlEMySpacecLcLAcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
 }

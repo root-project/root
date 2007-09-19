@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id: vmatrix.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////

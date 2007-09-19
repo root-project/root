@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.58 2002/01/25 11:34:50 brun Exp $
+// @(#)root/utils:$Id: rootcint.cxx,v 1.58 2002/01/25 11:34:50 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************

@@ -2146,7 +2146,7 @@ class multimap {
 # 5 "Utilities/Persistency/interface/enums.h" 2
 
 # 1 "/home/wmtan/root/include/TRef.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: TRef.h,v 1.6 2002/03/25 20:21:05 brun Exp $
+// @(#)root/cont:$Id: TRef.h,v 1.6 2002/03/25 20:21:05 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -2172,7 +2172,7 @@ class multimap {
 
 
 # 1 "/home/wmtan/root/include/TObject.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TObject.h,v 1.23 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Id: TObject.h,v 1.23 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2203,7 +2203,7 @@ class multimap {
 
 
 # 1 "/home/wmtan/root/include/Rtypes.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: Rtypes.h,v 1.36 2002/11/11 16:23:15 brun Exp $ */
+/* @(#)root/base:$Id: Rtypes.h,v 1.36 2002/11/11 16:23:15 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2227,7 +2227,7 @@ class multimap {
 
 
 # 1 "/home/wmtan/root/include/RConfig.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: RConfig.h,v 1.48 2003/01/12 11:06:34 rdm Exp $ */
+/* @(#)root/base:$Id: RConfig.h,v 1.48 2003/01/12 11:06:34 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -2825,7 +2825,7 @@ class multimap {
 
 
 # 1 "/home/wmtan/root/include/DllImport.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: DllImport.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Id: DllImport.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2855,7 +2855,7 @@ class multimap {
 
 
 # 1 "/home/wmtan/root/include/Rtypeinfo.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: Rtypeinfo.h,v 1.8 2002/05/10 11:07:21 rdm Exp $
+// @(#)root/base:$Id: Rtypeinfo.h,v 1.8 2002/05/10 11:07:21 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -3504,7 +3504,7 @@ namespace ROOT {
 // The macros below use TGenericClassInfo, so let's ensure it is included
 
 # 1 "/home/wmtan/root/include/TGenericClassInfo.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TGenericClassInfo.h,v 1.4 2002/11/11 16:23:16 brun Exp $
+// @(#)root/base:$Id: TGenericClassInfo.h,v 1.4 2002/11/11 16:23:16 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -3697,7 +3697,7 @@ namespace ROOT {
 
 
 # 1 "/home/wmtan/root/include/Varargs.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: Varargs.h,v 1.2 2001/01/18 11:26:50 rdm Exp $ */
+/* @(#)root/base:$Id: Varargs.h,v 1.2 2001/01/18 11:26:50 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -3754,7 +3754,7 @@ struct va_list {
 
 
 # 1 "/home/wmtan/root/include/TStorage.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TStorage.h,v 1.5 2002/11/15 13:26:29 rdm Exp $
+// @(#)root/base:$Id: TStorage.h,v 1.5 2002/11/15 13:26:29 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3854,7 +3854,7 @@ inline FreeHookFun_t TStorage::GetFreeHook() { return fgFreeHook; }
 
 
 # 1 "/home/wmtan/root/include/Riosfwd.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: Riosfwd.h,v 1.2 2002/09/10 14:54:06 rdm Exp $
+// @(#)root/base:$Id: Riosfwd.h,v 1.2 2002/09/10 14:54:06 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -4670,7 +4670,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/TBuffer.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TBuffer.h,v 1.25 2002/11/28 07:29:36 brun Exp $
+// @(#)root/base:$Id: TBuffer.h,v 1.25 2002/11/28 07:29:36 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -4698,7 +4698,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/Bytes.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: Bytes.h,v 1.9 2002/07/18 13:53:22 rdm Exp $ */
+/* @(#)root/base:$Id: Bytes.h,v 1.9 2002/07/18 13:53:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13957,7 +13957,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TFile.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TFile.h,v 1.25 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/base:$Id: TFile.h,v 1.25 2002/12/10 02:19:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -13982,7 +13982,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TDirectory.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TDirectory.h,v 1.14 2003/01/02 22:36:30 brun Exp $
+// @(#)root/base:$Id: TDirectory.h,v 1.14 2003/01/02 22:36:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -14007,7 +14007,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TNamed.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TNamed.h,v 1.6 2002/11/26 07:58:18 brun Exp $
+// @(#)root/base:$Id: TNamed.h,v 1.6 2002/11/26 07:58:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -14036,7 +14036,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TList.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: TList.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Id: TList.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -14062,7 +14062,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TSeqCollection.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: TSeqCollection.h,v 1.5 2001/01/09 18:33:59 rdm Exp $
+// @(#)root/cont:$Id: TSeqCollection.h,v 1.5 2001/01/09 18:33:59 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -14088,7 +14088,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TCollection.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: TCollection.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Id: TCollection.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -14118,7 +14118,7 @@ class opiRefBase;
 
 
 # 1 "/home/wmtan/root/include/TIterator.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: TIterator.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Id: TIterator.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -14174,7 +14174,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/TString.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TString.h,v 1.21 2002/12/05 15:31:02 rdm Exp $
+// @(#)root/base:$Id: TString.h,v 1.21 2002/12/05 15:31:02 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -14205,7 +14205,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/TMath.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TMath.h,v 1.24 2002/10/10 17:08:52 brun Exp $
+// @(#)root/base:$Id: TMath.h,v 1.24 2002/10/10 17:08:52 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -14743,7 +14743,7 @@ inline Double_t TMath::NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3])
 
 
 # 1 "/home/wmtan/root/include/TRefCnt.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TRefCnt.h,v 1.2 2000/12/13 16:45:35 brun Exp $
+// @(#)root/base:$Id: TRefCnt.h,v 1.2 2000/12/13 16:45:35 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -15764,7 +15764,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/TDatime.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TDatime.h,v 1.6 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Id: TDatime.h,v 1.6 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -15789,7 +15789,7 @@ public:
 
 
 # 1 "/home/wmtan/root/include/Htypes.h" 1
-/* @(#)root/base:$Name: v3-05-00 $:$Id: Htypes.h,v 1.3 2001/10/24 13:47:57 brun Exp $ */
+/* @(#)root/base:$Id: Htypes.h,v 1.3 2001/10/24 13:47:57 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15900,7 +15900,7 @@ inline Bool_t operator>=(const TDatime &d1, const TDatime &d2)
 
 
 # 1 "/home/wmtan/root/include/TUUID.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TUUID.h,v 1.9 2002/08/05 12:07:19 rdm Exp $
+// @(#)root/base:$Id: TUUID.h,v 1.9 2002/08/05 12:07:19 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -15934,7 +15934,7 @@ inline Bool_t operator>=(const TDatime &d1, const TDatime &d2)
 
 
 # 1 "/home/wmtan/root/include/TInetAddress.h" 1
-// @(#)root/net:$Name: v3-05-00 $:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
+// @(#)root/net:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -16195,7 +16195,7 @@ R__EXTERN TDirectory   *gDirectory;
 
 
 # 1 "/home/wmtan/root/include/TCache.h" 1
-// @(#)root/net:$Name: v3-05-00 $:$Id: TCache.h,v 1.4 2001/04/11 11:10:44 brun Exp $
+// @(#)root/net:$Id: TCache.h,v 1.4 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -16240,7 +16240,7 @@ R__EXTERN TDirectory   *gDirectory;
 
 
 # 1 "/home/wmtan/root/include/THashList.h" 1
-// @(#)root/cont:$Name: v3-05-00 $:$Id: THashList.h,v 1.5 2002/08/07 10:58:31 brun Exp $
+// @(#)root/cont:$Id: THashList.h,v 1.5 2002/08/07 10:58:31 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -16532,7 +16532,7 @@ R__EXTERN TFile   *gFile;
 # 16 "Utilities/Persistency/interface/ooRefBase.h" 2
 
 # 1 "/home/wmtan/root/include/TKey.h" 1
-// @(#)root/base:$Name: v3-05-00 $:$Id: TKey.h,v 1.7 2002/04/04 08:58:49 brun Exp $
+// @(#)root/base:$Id: TKey.h,v 1.7 2002/04/04 08:58:49 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************

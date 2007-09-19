@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Aclock.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Id: Aclock.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////

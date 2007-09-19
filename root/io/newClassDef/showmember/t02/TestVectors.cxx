@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: TestVectors.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id: TestVectors.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
 // Author: Peter Malzacher   19/06/99
 
 #ifndef __CINT__

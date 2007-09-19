@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.13 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/test:$Id: Tetris.cxx,v 1.13 2002/01/23 15:48:05 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////

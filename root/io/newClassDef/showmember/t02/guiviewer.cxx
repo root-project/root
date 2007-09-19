@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id: guiviewer.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
