@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.4 2007/07/01 16:02:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRemoteObject.cxx,v 1.5 2007/09/18 10:14:16 rdm Exp $
 // Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************
@@ -127,22 +127,6 @@ void TRemoteObject::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-static Bool_t IsItDirectory(const char *name, const char *dirfile)
-{
-   // Check if name is a directory.
-
-   Long64_t size;
-   Long_t id, flags, modtime;
-
-   gSystem->ChangeDirectory(dirfile);
-   flags = id = size = modtime = 0;
-   gSystem->GetPathInfo(name, &id, &size, &flags, &modtime);
-   Int_t isdir = (Int_t)flags & 2;
-
-   return isdir ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
 TList *TRemoteObject::Browse()
 {
    // Browse OS system directories.
@@ -155,7 +139,6 @@ TList *TRemoteObject::Browse()
    static Int_t level = 0;
    const char *name = GetTitle();
    TRemoteObject *sdir;
-   const char *file;
 
    if (GetName()[0] == '.' && GetName()[1] == '.')
       SetName(gSystem->BaseName(name));
