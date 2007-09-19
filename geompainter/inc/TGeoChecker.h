@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.19 2007/08/20 14:00:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.20 2007/08/21 16:01:25 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -50,7 +50,6 @@ private :
    TStopwatch      *fTimer;           //! Timer
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
-   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE);
    Int_t            PropagateInGeom(Double_t *, Double_t *);
    void             Score(TGeoVolume *, Int_t, Double_t);
    Double_t         TimingPerVolume(TGeoVolume *);
@@ -74,6 +73,7 @@ public:
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    TGeoOverlap     *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
+   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
    //void             ShowPoints(Option_t *option="");

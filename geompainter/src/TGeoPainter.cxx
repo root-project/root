@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.103 2007/08/27 07:42:30 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.104 2007/09/18 13:59:37 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -21,6 +21,7 @@
 #include "TF1.h"
 #include "TPluginManager.h"
 #include "TVirtualPadEditor.h"
+#include "TStopwatch.h"
 
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
@@ -1481,7 +1482,6 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t *norm;
    const Double_t *point = fGeoManager->GetCurrentPoint();
    Double_t *ppoint = (Double_t*)point;
-//   memcpy(ppoint, point, 3*sizeof(Double_t));
    Double_t tosource[3];
    Double_t calf;
    Double_t phi = 0*krad;
@@ -1497,8 +1497,14 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    TPoint *pxy = new TPoint[1];
    TGeoVolume *nextvol;
    Int_t up;
+   Int_t ntotal = pxmax*pymax;
+   Int_t nrays = 0;
+   TStopwatch *timer = new TStopwatch();
+   timer->Start();
    for (px=pxmin; px<pxmax; px++) {
       for (py=pymin; py<pymax; py++) {
+         fChecker->OpProgress("Raytracing",nrays,ntotal,timer);
+         nrays++;
          base_color = 1;
          steptot = 0;
          inclip = inclipst;
@@ -1608,7 +1614,9 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
       }
    } 
    delete [] pxy;      
-//   if (top != fGeoManager->GetTopVolume()) fGeoManager->SetTopVolume(top);
+   timer->Stop();
+   fChecker->OpProgress("Raytracing",nrays,ntotal,timer,kTRUE);
+   delete timer;
 }
 
 //______________________________________________________________________________
