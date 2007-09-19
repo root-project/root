@@ -420,7 +420,8 @@ TObject *TList::FindObject(const char *name) const
    TObjLink *lnk = FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
-      if (obj->GetName() && !strcmp(name, obj->GetName())) return obj;
+      const char *objname = obj->GetName();
+      if (objname && !strcmp(name, objname)) return obj;
       lnk = lnk->Next();
    }
    return 0;
