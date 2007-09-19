@@ -251,7 +251,7 @@ namespace ROOT {
 #endif
 
 // Common part of ClassDef definition.
-// ImplFileLine() is not part of it since CINT uses that as trigger for
+// DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDef_(name,id) \
 private: \
