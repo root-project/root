@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.h,v 1.10 2006/07/04 10:16:52 rdm Exp $
+// @(#)root/treeviewer:$Id: TSessionDialogs.h,v 1.10 2006/07/04 10:16:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

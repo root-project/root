@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.12 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TFriendElement.cxx,v 1.12 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************

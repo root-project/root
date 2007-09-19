@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.114 2006/05/18 10:46:26 brun Exp $
+// @(#)root/win32gdk:$Id: TGWin32.cxx,v 1.114 2006/05/18 10:46:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************

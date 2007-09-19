@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.7 2005/06/25 20:39:41 brun Exp $
+// @(#)root/graf:$Id: TImage.cxx,v 1.7 2005/06/25 20:39:41 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************

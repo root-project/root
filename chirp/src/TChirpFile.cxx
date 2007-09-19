@@ -1,4 +1,4 @@
-// @(#)root/chirp:$Name:  $:$Id: TChirpFile.cxx,v 1.7 2004/02/13 14:26:59 rdm Exp $
+// @(#)root/chirp:$Id: TChirpFile.cxx,v 1.7 2004/02/13 14:26:59 rdm Exp $
 // Author: Dan Bradley   17/12/2002
 
 /*************************************************************************

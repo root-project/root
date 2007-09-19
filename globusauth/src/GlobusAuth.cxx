@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.22 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/globus:$Id: GlobusAuth.cxx,v 1.22 2006/05/10 14:06:06 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableSorter.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Id: TTableSorter.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

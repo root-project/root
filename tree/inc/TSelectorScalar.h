@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.4 2005/10/13 15:00:21 brun Exp $
+// @(#)root/tree:$Id: TSelectorScalar.h,v 1.4 2005/10/13 15:00:21 brun Exp $
 // Author: Maarten Ballintijn   13/02/2005
 
 /*************************************************************************

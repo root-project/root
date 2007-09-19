@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.3 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/base:$Id: TVirtualProofMgr.h,v 1.3 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************

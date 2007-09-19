@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.25 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id: TObjArray.cxx,v 1.25 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************

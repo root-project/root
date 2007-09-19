@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Id: TLorentzRotation.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*

@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.20 2006/04/11 17:29:30 rdm Exp $
+// @(#)root/rootx:$Id: rootx.cxx,v 1.20 2006/04/11 17:29:30 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////

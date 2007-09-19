@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.67 2006/05/26 09:09:59 brun Exp $
+// @(#)root/geom:$Id: TGeoTube.cxx,v 1.67 2006/05/26 09:09:59 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 

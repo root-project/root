@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/gl:$Id: TGLQuadric.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************

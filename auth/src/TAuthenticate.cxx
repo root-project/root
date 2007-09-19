@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name: v5-12-00-patches $:$Id: TAuthenticate.cxx,v 1.14 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/auth:$Id: TAuthenticate.cxx,v 1.14 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************

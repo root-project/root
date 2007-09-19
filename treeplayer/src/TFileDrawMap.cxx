@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.6 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Id: TFileDrawMap.cxx,v 1.6 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************

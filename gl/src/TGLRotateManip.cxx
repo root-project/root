@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.6 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Id: TGLRotateManip.cxx,v 1.6 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TMCParticle6.cxx,v 1.1 2000/07/01 08:37:43 rdm Exp $
+// @(#)root/pythia6:$Id: TMCParticle6.cxx,v 1.1 2000/07/01 08:37:43 rdm Exp $
 // Author: Piotr Golonka   17/09/97
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

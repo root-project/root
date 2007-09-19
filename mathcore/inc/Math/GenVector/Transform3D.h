@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.12 2006/04/13 10:38:30 moneta Exp $
+// @(#)root/mathcore:$Id: Transform3D.h,v 1.12 2006/04/13 10:38:30 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************

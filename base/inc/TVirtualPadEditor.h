@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPadEditor.h,v 1.0 2003/11/25
+// @(#)root/base:$Id: TVirtualPadEditor.h,v 1.0 2003/11/25
 // Author: Rene Brun   25/11/03
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.11 2006/05/16 06:18:27 brun Exp $
+// @(#)root/eg:$Id: TDatabasePDG.h,v 1.11 2006/05/16 06:18:27 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************

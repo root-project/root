@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: NegativeG2LineSearch.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Id: NegativeG2LineSearch.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

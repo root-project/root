@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.7 2006/05/09 10:24:26 brun Exp $
+// @(#)root/alien:$Id: TAlienCollection.cxx,v 1.7 2006/05/09 10:24:26 brun Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************

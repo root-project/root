@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TBranchBrowsable.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************

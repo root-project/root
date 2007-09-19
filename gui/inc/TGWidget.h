@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.5 2002/09/13 01:37:45 rdm Exp $
+// @(#)root/gui:$Id: TGWidget.h,v 1.5 2002/09/13 01:37:45 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************

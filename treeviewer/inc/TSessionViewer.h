@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.32 2006/06/02 23:32:40 rdm Exp $
+// @(#)root/treeviewer:$Id: TSessionViewer.h,v 1.32 2006/06/02 23:32:40 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

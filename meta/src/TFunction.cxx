@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.13 2005/06/07 16:18:32 brun Exp $
+// @(#)root/meta:$Id: TFunction.cxx,v 1.13 2005/06/07 16:18:32 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************

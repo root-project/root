@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riosfwd.h,v 1.3 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Id: Riosfwd.h,v 1.3 2004/08/02 08:52:53 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************

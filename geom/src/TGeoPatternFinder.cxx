@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.18 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Id: TGeoPatternFinder.cxx,v 1.18 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************

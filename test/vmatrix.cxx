@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.29 2005/12/22 09:54:37 brun Exp $
+// @(#)root/test:$Id: vmatrix.cxx,v 1.29 2005/12/22 09:54:37 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Id: TGColorDialog.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************

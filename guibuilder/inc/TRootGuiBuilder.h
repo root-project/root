@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.13 2006/06/14 10:22:37 antcheva Exp $
+// @(#)root/guibuilder:$Id: TRootGuiBuilder.h,v 1.13 2006/06/14 10:22:37 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

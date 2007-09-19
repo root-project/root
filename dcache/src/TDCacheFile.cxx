@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.29 2006/04/10 13:48:39 rdm Exp $
+// @(#)root/dcache:$Id: TDCacheFile.cxx,v 1.29 2006/04/10 13:48:39 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004

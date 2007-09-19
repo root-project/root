@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPadView3D.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Id: TPadView3D.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************

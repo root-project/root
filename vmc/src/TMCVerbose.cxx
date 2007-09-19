@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.4 2005/09/04 09:25:01 brun Exp $
+// @(#)root/vmc:$Id: TMCVerbose.cxx,v 1.4 2005/09/04 09:25:01 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "Riostream.h"

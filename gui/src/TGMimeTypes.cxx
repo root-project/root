@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.7 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/gui:$Id: TGMimeTypes.cxx,v 1.7 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.11 2006/05/24 14:49:21 brun Exp $
+// @(#)root/ged:$Id: TGedFrame.cxx,v 1.11 2006/05/24 14:49:21 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************

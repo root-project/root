@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.23 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Id: TStorage.cxx,v 1.23 2006/05/18 07:34:25 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************

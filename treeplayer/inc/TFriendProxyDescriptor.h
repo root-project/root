@@ -1,4 +1,4 @@
-// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
+// @(#)rooeeplayer:$Id: TFriendProxyDescriptor.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

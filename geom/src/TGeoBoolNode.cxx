@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.26 2006/03/24 15:11:23 brun Exp $
+// @(#):$Id: TGeoBoolNode.cxx,v 1.26 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 

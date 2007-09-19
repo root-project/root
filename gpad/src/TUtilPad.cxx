@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.4 2004/09/15 14:56:35 brun Exp $
+// @(#)root/gpad:$Id: TUtilPad.cxx,v 1.4 2004/09/15 14:56:35 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************

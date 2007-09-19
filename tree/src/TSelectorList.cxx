@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSelectorList.cxx,v 1.1 2005/11/08 17:22:09 rdm Exp $
+// @(#)root/cont:$Id: TSelectorList.cxx,v 1.1 2005/11/08 17:22:09 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************

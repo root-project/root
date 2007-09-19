@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxyDescriptor.cxx,v 1.2 2004/08/25 15:37:10 rdm Exp $
+// @(#)root/base:$Id: TFriendProxyDescriptor.cxx,v 1.2 2004/08/25 15:37:10 rdm Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.9 2004/07/17 23:21:50 rdm Exp $
+// @(#)root/net:$Id: TInetAddress.h,v 1.9 2004/07/17 23:21:50 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************

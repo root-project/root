@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.6 2005/05/02 10:57:32 rdm Exp $
+// @(#)root/tree:$Id: TVirtualTreePlayer.cxx,v 1.6 2005/05/02 10:57:32 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************

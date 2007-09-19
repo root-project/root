@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************

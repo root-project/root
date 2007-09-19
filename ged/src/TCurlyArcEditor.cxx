@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Id: TCurlyArcEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************

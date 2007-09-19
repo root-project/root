@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPadEditorOld.cxx,v 1.0 2003/11/26
+// @(#)root/gpad:$Id: TPadEditorOld.cxx,v 1.0 2003/11/26
 // Author: Ilka Antcheva   26/11/2003
 
 /*************************************************************************

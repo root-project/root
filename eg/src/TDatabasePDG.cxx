@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.23 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Id: TDatabasePDG.cxx,v 1.23 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG

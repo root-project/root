@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.61 2005/10/27 13:28:20 rdm Exp $
+// @(#)root/tutorials:$Id: guitest.C,v 1.61 2005/10/27 13:28:20 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like

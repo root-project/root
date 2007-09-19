@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.13 2006/05/13 11:00:50 brun Exp $
+// @(#)root/meta:$Id: TDataMember.h,v 1.13 2006/05/13 11:00:50 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/fumili:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
+/* @(#)root/fumili:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableIter.h,v 1.4 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id: TTableIter.h,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/12/99
 
 /*************************************************************************

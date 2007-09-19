@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLClassInfo.h,v 1.4 2006/05/22 08:55:57 brun Exp $
+// @(#)root/sql:$Id: TSQLClassInfo.h,v 1.4 2006/05/22 08:55:57 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************

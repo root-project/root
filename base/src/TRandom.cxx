@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.32 2006/05/26 16:38:56 brun Exp $
+// @(#)root/base:$Id: TRandom.cxx,v 1.32 2006/05/26 16:38:56 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************

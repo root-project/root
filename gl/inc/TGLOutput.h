@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.5 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Id: TGLOutput.h,v 1.5 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************

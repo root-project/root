@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.4 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Id: CINTVariableBuilder.cxx,v 1.4 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

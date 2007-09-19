@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.1 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Id: TVirtualIsAProxy.h,v 1.1 2005/05/27 16:42:58 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************

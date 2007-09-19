@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TChair.h,v 1.5 2006/07/03 16:10:46 brun Exp $
+// @(#)root/table:$Id: TChair.h,v 1.5 2006/07/03 16:10:46 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Id: TAttMarkerEditor.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************

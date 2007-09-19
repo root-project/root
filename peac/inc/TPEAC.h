@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Id:$
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 

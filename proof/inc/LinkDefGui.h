@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDefGui.h,v 1.1 2004/05/13 11:38:17 rdm Exp $ */
+/* @(#)root/proof:$Id: LinkDefGui.h,v 1.1 2004/05/13 11:38:17 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

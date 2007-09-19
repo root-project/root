@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilPad.h,v 1.1 2002/09/15 19:41:51 brun Exp $
+// @(#)root/base:$Id: TVirtualUtilPad.h,v 1.1 2002/09/15 19:41:51 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************

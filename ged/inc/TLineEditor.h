@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.1 2006/04/25 08:14:20 antcheva Exp $
+// @(#)root/ged:$Id: TLineEditor.h,v 1.1 2006/04/25 08:14:20 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************

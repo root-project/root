@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.10 2006/05/23 04:47:39 brun Exp $
+// @(#)root/hist:$Id: TPolyMarker.h,v 1.10 2006/05/23 04:47:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

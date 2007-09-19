@@ -1,4 +1,4 @@
-/* @(#)root/postscript:$Name:  $:$Id: LinkDef.h,v 1.4 2004/02/13 17:04:35 brun Exp $ */
+/* @(#)root/postscript:$Id: LinkDef.h,v 1.4 2004/02/13 17:04:35 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

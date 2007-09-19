@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.9 2004/10/29 18:03:11 brun Exp $
+// @(#)root/utils:$Id: RStl.cxx,v 1.9 2004/10/29 18:03:11 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************

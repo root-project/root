@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-12-00-patches $:$Id: TClass.cxx,v 1.194 2006/07/07 14:59:30 brun Exp $
+// @(#)root/meta:$Id: TClass.cxx,v 1.194 2006/07/07 14:59:30 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************

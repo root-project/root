@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGuiFactory.cxx,v 1.4 2002/09/15 19:45:59 brun Exp $
+// @(#)root/base:$Id: TGuiFactory.cxx,v 1.4 2002/09/15 19:45:59 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************

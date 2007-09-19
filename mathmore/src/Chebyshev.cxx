@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.4 2005/10/18 10:11:51 moneta Exp $
+// @(#)root/mathmore:$Id: Chebyshev.cxx,v 1.4 2005/10/18 10:11:51 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 

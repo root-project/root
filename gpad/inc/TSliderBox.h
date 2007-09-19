@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.h,v 1.3 2006/05/23 04:47:37 brun Exp $
+// @(#)root/gpad:$Id: TSliderBox.h,v 1.3 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************

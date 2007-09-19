@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
+// @(#):$Id: TGeoTubeEditor.cxx,v 1.4 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************

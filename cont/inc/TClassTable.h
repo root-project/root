@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.10 2005/09/18 13:07:40 rdm Exp $
+// @(#)root/cont:$Id: TClassTable.h,v 1.10 2005/09/18 13:07:40 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************

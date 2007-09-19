@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.14 2006/05/10 07:47:08 brun Exp $
+// @(#)root/rpdutils:$Id: net.cxx,v 1.14 2006/05/10 07:47:08 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************

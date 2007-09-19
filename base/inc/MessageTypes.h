@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.31 2006/06/21 16:18:26 rdm Exp $ */
+/* @(#)root/base:$Id: MessageTypes.h,v 1.31 2006/06/21 16:18:26 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

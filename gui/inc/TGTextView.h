@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.16 2006/06/09 15:33:05 antcheva Exp $
+// @(#)root/gui:$Id: TGTextView.h,v 1.16 2006/06/09 15:33:05 antcheva Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************

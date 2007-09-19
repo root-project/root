@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.5 2006/05/15 06:31:19 brun Exp $
+// @(#)root/pythia:$Id: TPythia.cxx,v 1.5 2006/05/15 06:31:19 brun Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofd:$Id: XrdProofServProxy.h,v 1.3 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************

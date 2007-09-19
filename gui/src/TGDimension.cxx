@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.2 2000/06/27 15:12:23 rdm Exp $
+// @(#)root/gui:$Id: TGDimension.cxx,v 1.2 2000/06/27 15:12:23 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.4 2005/09/24 11:33:41 rdm Exp $
+// @(#)root/tree:$Id: TQueryResult.cxx,v 1.4 2005/09/24 11:33:41 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************

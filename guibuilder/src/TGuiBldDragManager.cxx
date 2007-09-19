@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.50 2006/07/04 09:21:56 antcheva Exp $
+// @(#)root/guibuilder:$Id: TGuiBldDragManager.cxx,v 1.50 2006/07/04 09:21:56 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPadEditor.cxx,v 1.0 2003/11/25
+// @(#)root/base:$Id: TVirtualPadEditor.cxx,v 1.0 2003/11/25
 // Author: Ilka Antcheva   25/11/03
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.6 2005/04/15 12:39:34 brun Exp $
+// @(#)root/foam:$Id: TFoam.h,v 1.6 2005/04/15 12:39:34 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoam

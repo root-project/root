@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.2 2000/11/21 20:20:30 brun Exp $
+// @(#)root/gpad:$Id: TClassTree.h,v 1.2 2000/11/21 20:20:30 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************

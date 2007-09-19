@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.5 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/xml:$Id: TKeyXML.h,v 1.5 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************

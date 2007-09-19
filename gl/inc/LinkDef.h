@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 
+// @(#)root/gl:$Id: LinkDef.h,v 1.1.1.1 
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

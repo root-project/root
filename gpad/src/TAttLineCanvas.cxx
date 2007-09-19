@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttLineCanvas.cxx,v 1.2 2001/05/28 06:20:52 brun Exp $
+// @(#)root/gpad:$Id: TAttLineCanvas.cxx,v 1.2 2001/05/28 06:20:52 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************

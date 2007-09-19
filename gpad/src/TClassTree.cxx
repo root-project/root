@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Id: TClassTree.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************

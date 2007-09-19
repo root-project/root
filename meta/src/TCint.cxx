@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-12-00-patches $:$Id: TCint.cxx,v 1.123 2006/06/14 18:15:30 pcanal Exp $
+// @(#)root/meta:$Id: TCint.cxx,v 1.123 2006/06/14 18:15:30 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************

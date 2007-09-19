@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.23 2006/05/23 04:47:37 brun Exp $
+// @(#)root/geom:$Id: TGeoPcon.h,v 1.23 2006/05/23 04:47:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************

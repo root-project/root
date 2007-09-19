@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.6 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/tree:$Id: TChainProof.cxx,v 1.6 2006/07/04 23:45:50 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************

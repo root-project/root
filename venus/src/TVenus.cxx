@@ -1,4 +1,4 @@
-// @(#)root/venus:$Name:  $:$Id: TVenus.cxx,v 1.2 2006/05/13 20:26:35 brun Exp $
+// @(#)root/venus:$Id: TVenus.cxx,v 1.2 2006/05/13 20:26:35 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************

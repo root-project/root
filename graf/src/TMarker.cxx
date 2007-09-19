@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.14 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Id: TMarker.cxx,v 1.14 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************

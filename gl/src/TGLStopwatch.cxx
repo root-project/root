@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.6 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Id: TGLStopwatch.cxx,v 1.6 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

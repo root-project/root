@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.9 2004/09/03 13:41:34 brun Exp $
+// @(#)root/test:$Id: vlazy.cxx,v 1.9 2004/09/03 13:41:34 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //

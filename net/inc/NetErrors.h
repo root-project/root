@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.h,v 1.6 2004/11/05 13:55:13 rdm Exp $
+// @(#)root/net:$Id: NetErrors.h,v 1.6 2004/11/05 13:55:13 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************

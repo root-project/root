@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.4 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Id: TArrowEditor.h,v 1.4 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka  Antcheva 20/10/04
 
 /*************************************************************************

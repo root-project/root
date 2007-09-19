@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.52 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Id: TSlave.cxx,v 1.52 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************

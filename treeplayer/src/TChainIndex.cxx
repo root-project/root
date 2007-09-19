@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/tree:$Id: TChainIndex.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************

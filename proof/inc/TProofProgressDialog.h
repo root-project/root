@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.9 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/proof:$Id: TProofProgressDialog.h,v 1.9 2005/12/12 12:54:27 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************

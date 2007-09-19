@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Id: TSQLStatement.cxx,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************

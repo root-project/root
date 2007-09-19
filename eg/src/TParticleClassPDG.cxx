@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.3 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Id: TParticleClassPDG.cxx,v 1.3 2005/09/04 11:42:05 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"

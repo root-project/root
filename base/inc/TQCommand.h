@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.3 2004/10/13 15:46:37 rdm Exp $
+// @(#)root/base:$Id: TQCommand.h,v 1.3 2004/10/13 15:46:37 rdm Exp $
 // Author: Valeriy Onuchin   04/27/2004
 
 /*************************************************************************

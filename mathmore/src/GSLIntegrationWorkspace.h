@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrationWorkspace.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Id: GSLIntegrationWorkspace.hv 1.0 2005/06/23 12:00:00 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

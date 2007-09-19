@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.12 2005/09/21 17:23:36 brun Exp $
+// @(#)root/rpdutils:$Id: globus.cxx,v 1.12 2005/09/21 17:23:36 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************

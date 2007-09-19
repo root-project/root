@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.3 2002/09/10 16:14:58 brun Exp $
+// @(#)root/new:$Id: MemCheck.cxx,v 1.3 2002/09/10 16:14:58 brun Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************

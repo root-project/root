@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.3 2002/06/13 13:42:54 rdm Exp $
+// @(#)root/base:$Id: TStopwatch.h,v 1.3 2002/06/13 13:42:54 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************

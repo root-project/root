@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.8 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Id: TVirtualMCGeometry.h,v 1.8 2006/05/13 20:57:20 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Id: daemon.cxx,v 1.5 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 

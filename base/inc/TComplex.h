@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.5 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Id: TComplex.h,v 1.5 2005/11/21 11:17:18 rdm Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************

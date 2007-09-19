@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJobStatus.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/net:$Id: TGridJobStatus.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************

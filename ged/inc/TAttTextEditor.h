@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Id: TAttTextEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.1 2006/06/27 14:36:27 brun Exp $
+// @(#)root/base:$Id: TFileCacheWrite.h,v 1.1 2006/06/27 14:36:27 brun Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************

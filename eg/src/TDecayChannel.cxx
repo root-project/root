@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDecayChannel.cxx,v 1.4 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Id: TDecayChannel.cxx,v 1.4 2005/09/04 11:42:05 brun Exp $
 // Author: P.Murat   15/02/2001
 
 /*************************************************************************

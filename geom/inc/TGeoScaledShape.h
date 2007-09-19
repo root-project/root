@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.2 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id: TGeoScaledShape.h,v 1.2 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   26/09/05
    
 /*************************************************************************

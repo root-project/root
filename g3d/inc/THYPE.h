@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THYPE.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Id: THYPE.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// @(#)root/g3d:$Name:  $:$Id: THYPE.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Id: THYPE.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 #ifndef ROOT_THYPE

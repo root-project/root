@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.9 2006/03/20 08:22:40 brun Exp $
+// @(#)root/fumili:$Id: TFumili.h,v 1.9 2006/03/20 08:22:40 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////

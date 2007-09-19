@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.17 2006/04/23 21:48:03 rdm Exp $ */
+/* @(#)root/base:$Id: Bytes.h,v 1.17 2006/04/23 21:48:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

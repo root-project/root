@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.8 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/net:$Id: TMonitor.h,v 1.8 2005/12/09 15:12:19 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.58 2005/08/11 15:12:09 brun Exp $
+// @(#)root/test:$Id: guitest.cxx,v 1.58 2005/08/11 15:12:09 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.

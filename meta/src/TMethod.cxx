@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.8 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/meta:$Id: TMethod.cxx,v 1.8 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************

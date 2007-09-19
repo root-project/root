@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.15 2003/11/25 13:17:33 brun Exp $
+// @(#)root/treeviewer:$Id: TTreeViewer.h,v 1.15 2003/11/25 13:17:33 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************

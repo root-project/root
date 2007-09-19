@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.79 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Id: TProfile.cxx,v 1.79 2006/05/17 16:37:26 couet Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************

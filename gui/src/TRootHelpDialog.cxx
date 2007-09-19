@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.9 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Id: TRootHelpDialog.cxx,v 1.9 2006/05/26 09:16:29 brun Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************

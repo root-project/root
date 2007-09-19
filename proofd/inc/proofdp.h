@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.3 2001/01/26 16:44:35 rdm Exp $
+// @(#)root/proofd:$Id: proofdp.h,v 1.3 2001/01/26 16:44:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TException.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Id: TException.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.153 2006/05/26 17:11:28 rdm Exp $
+// @(#)root/unix:$Id: TUnixSystem.cxx,v 1.153 2006/05/26 17:11:28 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: makemsi.cxx,v 1.1 2006/05/11 12:06:44 brun Exp $
+// @(#)root/winnt:$Id: makemsi.cxx,v 1.1 2006/05/11 12:06:44 brun Exp $
 // Author: Axel Naumann 2006-05-09
 
 /*************************************************************************

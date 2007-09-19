@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.52 2006/05/14 20:05:37 brun Exp $
+// @(#)root/minuit:$Id: TMinuit.cxx,v 1.52 2006/05/14 20:05:37 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************

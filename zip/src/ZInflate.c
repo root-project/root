@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.5 2004/12/09 15:56:59 brun Exp $ */
+/* @(#)root/zip:$Id: ZInflate.c,v 1.5 2004/12/09 15:56:59 brun Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>

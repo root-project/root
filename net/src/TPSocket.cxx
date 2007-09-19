@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.22 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Id: TPSocket.cxx,v 1.22 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************

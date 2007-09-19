@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLObject.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Id: TGLObject.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************

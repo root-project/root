@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.6 2004/10/05 10:28:24 brun Exp $ */
+/* @(#)root/histpainter:$Id: Hoption.h,v 1.6 2004/10/05 10:28:24 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

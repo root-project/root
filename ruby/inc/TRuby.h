@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: TRuby.h,v 1.0 2004/04/27 14:44:02 brun Exp $
+// @(#)root/ruby:$Id: TRuby.h,v 1.0 2004/04/27 14:44:02 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 #ifndef ROOT_TRuby

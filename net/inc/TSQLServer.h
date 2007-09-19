@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.5 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Id: TSQLServer.h,v 1.5 2006/06/02 14:02:03 brun Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************

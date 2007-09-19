@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.4 2006/05/13 19:34:41 brun Exp $
+// @(#)root/treeviewer:$Id: TPaveVar.h,v 1.4 2006/05/13 19:34:41 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************

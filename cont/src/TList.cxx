@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.20 2006/05/26 09:04:52 brun Exp $
+// @(#)root/cont:$Id: TList.cxx,v 1.20 2006/05/26 09:04:52 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.8 2006/05/22 11:13:33 brun Exp $
+// @(#)root/net:$Id: TWebFile.h,v 1.8 2006/05/22 11:13:33 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************

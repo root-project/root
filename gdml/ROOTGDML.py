@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTGDML.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Id: ROOTGDML.py,v 1.2 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *

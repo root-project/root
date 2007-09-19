@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLFaceSet.h $
+// @(#)root/gl:$Id: TGLFaceSet.h $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history

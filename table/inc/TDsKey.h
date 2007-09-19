@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TDsKey.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/table:$Id: TDsKey.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
 // Author: Victor Perevoztchikov (perev@bnl.gov)   01/03/2001
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLTableInfo.h,v 1.1 2006/05/31 12:35:46 brun Exp $
+// @(#)root/net:$Id: TSQLTableInfo.h,v 1.1 2006/05/31 12:35:46 brun Exp $
 // Author: Sergey Linev   31/05/2006
 
 /*************************************************************************

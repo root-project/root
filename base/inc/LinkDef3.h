@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.24 2005/12/10 16:51:57 rdm Exp $ */
+/* @(#)root/base:$Id: LinkDef3.h,v 1.24 2005/12/10 16:51:57 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.4 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Id: TDecompSparse.h,v 1.4 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Apr 2004
 
 /*************************************************************************

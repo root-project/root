@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.11 2003/08/22 15:13:18 brun Exp $
+// @(#)root/meta:$Id: TMethodCall.h,v 1.11 2003/08/22 15:13:18 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************

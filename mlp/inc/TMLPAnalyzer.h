@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.5 2005/02/03 07:29:32 brun Exp $
+// @(#)root/mlp:$Id: TMLPAnalyzer.h,v 1.5 2005/02/03 07:29:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************

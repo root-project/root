@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassGenerator.h,v 1.1 2003/06/25 15:12:47 brun Exp $
+// @(#)root/base:$Id: TClassGenerator.h,v 1.1 2003/06/25 15:12:47 brun Exp $
 // Author: Philippe Canal 24/06/2003
 
 /*************************************************************************

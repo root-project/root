@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:  $:$Id: processes.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Id: processes.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
 # Author: Witold Pokorski   05/06/2006
 #
 from units import *

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.8 2005/11/18 21:20:14 brun Exp $
+// @(#)root/vmc:$Id: TGeoMCGeometry.h,v 1.8 2005/11/18 21:20:14 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry

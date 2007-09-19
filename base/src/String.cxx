@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.2 2005/06/01 15:40:08 pcanal Exp $
+// @(#)root/base:$Id: String.cxx,v 1.2 2005/06/01 15:40:08 pcanal Exp $
 // Author: Philippe Canal 03/09/2003
 
 /*************************************************************************

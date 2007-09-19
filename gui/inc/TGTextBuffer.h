@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextBuffer.h,v 1.3 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/gui:$Id: TGTextBuffer.h,v 1.3 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   05/05/98
 
 /*************************************************************************

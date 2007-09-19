@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.h,v 1.2 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Id: CsgOps.h,v 1.2 2005/11/24 12:29:12 couet Exp $
 // Author:  Timur Pocheptsov  01/04/2005
    
 #ifndef ROOT_CsgOps

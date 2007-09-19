@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TControlBarImp.h,v 1.4 2003/08/05 21:15:06 brun Exp $
+// @(#)root/base:$Id: TControlBarImp.h,v 1.4 2003/08/05 21:15:06 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.cxx,v 1.3 2006/06/02 12:48:21 brun Exp $
+// @(#)root/quadp:$Id: TQpProbBase.cxx,v 1.3 2006/06/02 12:48:21 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

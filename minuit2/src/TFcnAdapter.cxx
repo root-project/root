@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.4 2006/01/25 12:20:49 moneta Exp $
+// @(#)root/minuit2:$Id: TFcnAdapter.cxx,v 1.4 2006/01/25 12:20:49 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

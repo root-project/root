@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.30 2005/12/02 17:43:04 brun Exp $
+// @(#)root/test:$Id: MainEvent.cxx,v 1.30 2005/12/02 17:43:04 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////

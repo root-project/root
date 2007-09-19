@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.7 2006/05/18 13:31:59 brun Exp $
+// @(#)root/physics:$Id: TVector2.cxx,v 1.7 2006/05/18 13:31:59 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************

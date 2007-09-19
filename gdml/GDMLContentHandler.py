@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.3
 # -*- Mode: Python -*-
-# @(#)root/gdml:$Name:$:$Id:$
+# @(#)root/gdml:$Id:$
 # Author: Witold Pokorski   05/06/2006
 #
 import processes

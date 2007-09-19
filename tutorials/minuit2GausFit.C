@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2GausFit.Cv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Id: minuit2GausFit.Cv 1.0 2005/06/23 12:00:00 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

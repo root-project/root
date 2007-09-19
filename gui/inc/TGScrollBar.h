@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.14 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Id: TGScrollBar.h,v 1.14 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************

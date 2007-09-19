@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.9 2005/09/02 10:20:45 brun Exp $
+// @(#)root/graf:$Id: TAttImage.cxx,v 1.9 2005/09/02 10:20:45 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************

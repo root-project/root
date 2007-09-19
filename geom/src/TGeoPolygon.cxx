@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.6 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id: TGeoPolygon.cxx,v 1.6 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.19 2006/04/06 11:15:38 antcheva Exp $
+// @(#)root/gui:$Id: TGToolBar.cxx,v 1.19 2006/04/06 11:15:38 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************

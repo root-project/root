@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/base:$Id: TPluginManager.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************

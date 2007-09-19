@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttBBox.h,v 1.5 2006/05/13 11:00:50 brun Exp $
+// @(#)root/base:$Id: TAttBBox.h,v 1.5 2006/05/13 11:00:50 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************

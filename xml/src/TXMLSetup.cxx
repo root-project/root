@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.9 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/xml:$Id: TXMLSetup.cxx,v 1.9 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************

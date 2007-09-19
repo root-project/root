@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.27 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Id: TGenCollectionProxy.cxx,v 1.27 2006/04/19 08:22:22 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

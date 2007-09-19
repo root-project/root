@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.9 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Id: LorentzVector.h,v 1.9 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************

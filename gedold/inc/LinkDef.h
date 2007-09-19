@@ -1,4 +1,4 @@
-// @(#)root/gedold:$Name:  $:$Id: LinkDef.h,v 1.0 2003/11/26 11:33:48 
+// @(#)root/gedold:$Id: LinkDef.h,v 1.0 2003/11/26 11:33:48 
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

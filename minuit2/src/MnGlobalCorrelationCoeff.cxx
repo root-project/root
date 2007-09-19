@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnGlobalCorrelationCoeff.cxx,v 1.2 2006/04/13 08:39:23 moneta Exp $
+// @(#)root/minuit2:$Id: MnGlobalCorrelationCoeff.cxx,v 1.2 2006/04/13 08:39:23 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

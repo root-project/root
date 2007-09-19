@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.8 2003/09/04 23:19:31 rdm Exp $
+// @(#)root/base:$Id: Stringio.cxx,v 1.8 2003/09/04 23:19:31 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

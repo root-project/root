@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassStreamer.h,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Id: TClassStreamer.h,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Victor Perev and Philippe Canal   08/05/02
 
 /*************************************************************************

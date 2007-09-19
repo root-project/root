@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.19 2006/02/16 19:03:54 pcanal Exp $
+// @(#)root/utils:$Id: rlibmap.cxx,v 1.19 2006/02/16 19:03:54 pcanal Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************

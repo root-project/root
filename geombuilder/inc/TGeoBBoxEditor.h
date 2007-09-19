@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBBoxEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
+// @(#):$Id: TGeoBBoxEditor.h,v 1.1 2006/06/13 15:27:11 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

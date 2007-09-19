@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLResult.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/mysql:$Id: TMySQLResult.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************

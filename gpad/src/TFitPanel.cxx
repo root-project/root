@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.7 2004/07/20 07:23:34 brun Exp $
+// @(#)root/gpad:$Id: TFitPanel.cxx,v 1.7 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************

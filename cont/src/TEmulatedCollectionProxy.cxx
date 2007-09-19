@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.22 2006/02/23 18:55:30 pcanal Exp $
+// @(#)root/cont:$Id: TEmulatedCollectionProxy.cxx,v 1.22 2006/02/23 18:55:30 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

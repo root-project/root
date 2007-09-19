@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.18 2006/05/11 10:35:08 brun Exp $
+// @(#)root/base:$Id: TApplication.h,v 1.18 2006/05/11 10:35:08 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************

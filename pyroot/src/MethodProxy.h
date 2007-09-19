@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.3 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Id: MethodProxy.h,v 1.3 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_METHODPROXY_H

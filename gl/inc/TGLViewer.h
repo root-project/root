@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.28 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Id: TGLViewer.h,v 1.28 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

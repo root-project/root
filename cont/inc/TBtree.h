@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.9 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Id: TBtree.h,v 1.9 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************

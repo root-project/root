@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.7 2006/05/13 11:00:50 brun Exp $
+// @(#)root/cont:$Id: TExMap.h,v 1.7 2006/05/13 11:00:50 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************

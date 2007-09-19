@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TASPluginGS.cxx,v 1.1 2005/07/05 12:36:05 brun Exp $
+// @(#)root/graf:$Id: TASPluginGS.cxx,v 1.1 2005/07/05 12:36:05 brun Exp $
 //  Author: Valeriy Onuchin   23/06/05
 
 /*************************************************************************

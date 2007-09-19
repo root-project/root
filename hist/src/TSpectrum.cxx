@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.47 2006/06/26 10:51:00 brun Exp $
+// @(#)root/hist:$Id: TSpectrum.cxx,v 1.47 2006/06/26 10:51:00 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________

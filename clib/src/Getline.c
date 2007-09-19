@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.32 2005/04/18 16:05:48 rdm Exp $ */
+/* @(#)root/clib:$Id: Getline.c,v 1.32 2005/04/18 16:05:48 rdm Exp $ */
 /* Author: */
 
 /*

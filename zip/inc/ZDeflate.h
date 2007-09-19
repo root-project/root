@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Deflate.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
+/* @(#)root/zip:$Id: Deflate.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
 /* Author: */
 /*
 

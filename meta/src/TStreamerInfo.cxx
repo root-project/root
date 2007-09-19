@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-12-00-patches $:$Id: TStreamerInfo.cxx,v 1.239 2006/05/29 13:24:09 brun Exp $
+// @(#)root/meta:$Id: TStreamerInfo.cxx,v 1.239 2006/05/29 13:24:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

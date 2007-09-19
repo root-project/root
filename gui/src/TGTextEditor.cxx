@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.4 2006/06/21 09:21:47 antcheva Exp $
+// @(#)root/gui:$Id: TGTextEditor.cxx,v 1.4 2006/06/21 09:21:47 antcheva Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************

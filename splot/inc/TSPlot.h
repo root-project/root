@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.3 2005/12/09 17:46:03 brun Exp $
+// @(#)root/splot:$Id: TSPlot.h,v 1.3 2005/12/09 17:46:03 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005
 
 /**********************************************************************

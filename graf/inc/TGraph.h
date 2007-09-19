@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.54 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Id: TGraph.h,v 1.54 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Id: TGLDisplayListCache.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

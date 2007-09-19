@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.22 2005/11/24 12:29:12 couet Exp $
+// @(#)root/base:$Id: TGLKernel.h,v 1.22 2005/11/24 12:29:12 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************

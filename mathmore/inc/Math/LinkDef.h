@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.3 2005/09/19 18:14:01 brun Exp $
+// @(#)root/mathmore:$Id: LinkDef.h,v 1.3 2005/09/19 18:14:01 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 

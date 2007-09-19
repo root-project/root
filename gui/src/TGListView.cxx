@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-12-00-patches $:$Id: TGListView.cxx,v 1.38 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id: TGListView.cxx,v 1.38 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************

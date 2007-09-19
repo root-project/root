@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.9 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Id: TNeuron.h,v 1.9 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************

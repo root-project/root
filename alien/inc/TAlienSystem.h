@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAlienSystem.h,v 1.1 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/base:$Id: TAlienSystem.h,v 1.1 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters  15/05/2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
+// @(#)root/hist:$Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************

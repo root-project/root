@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.4 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Id: MatrixInversion.icc,v 1.4 2006/06/08 15:23:34 moneta Exp $
 // Authors: CLHEP authors, L. Moneta    2006  
 
 #include "Math/SVector.h"

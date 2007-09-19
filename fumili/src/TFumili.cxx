@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.32 2006/05/13 17:03:46 brun Exp $
+// @(#)root/fumili:$Id: TFumili.cxx,v 1.32 2006/05/13 17:03:46 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________

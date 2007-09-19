@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.16 2006/02/06 16:15:13 couet Exp $
+// @(#)root/base:$Id: TVirtualX.cxx,v 1.16 2006/02/06 16:15:13 couet Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************

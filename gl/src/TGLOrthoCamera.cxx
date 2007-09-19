@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.12 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Id: TGLOrthoCamera.cxx,v 1.12 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

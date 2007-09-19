@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Application.h,v 1.4 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/winnt:$Id: TWin32Application.h,v 1.4 2001/10/02 09:07:43 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: CintLDAP.h,v 1.3 2002/12/09 15:13:40 rdm Exp $
+// @(#)root/ldap:$Id: CintLDAP.h,v 1.3 2002/12/09 15:13:40 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************

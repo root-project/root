@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.12 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Id: TGSlider.h,v 1.12 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************

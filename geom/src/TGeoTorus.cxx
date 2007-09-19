@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.32 2006/03/03 14:26:15 brun Exp $
+// @(#)root/geom:$Id: TGeoTorus.cxx,v 1.32 2006/03/03 14:26:15 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************

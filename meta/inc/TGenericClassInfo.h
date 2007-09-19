@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.8 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/base:$Id: TGenericClassInfo.h,v 1.8 2005/05/27 16:42:58 pcanal Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.h,v 1.1 2005/05/27 13:47:37 rdm Exp $
+// @(#)root/proof:$Id: TFileMerger.h,v 1.1 2005/05/27 13:47:37 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.8 2006/08/14 12:51:40 brun Exp $
+// @(#)root/tree:$Id: TTreeCache.cxx,v 1.8 2006/08/14 12:51:40 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************

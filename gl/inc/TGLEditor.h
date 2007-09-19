@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.18 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Id: TGLEditor.h,v 1.18 2006/01/26 11:59:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************

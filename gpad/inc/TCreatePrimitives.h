@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCreatePrimitives.h,v 1.0
+// @(#)root/gpad:$Id: TCreatePrimitives.h,v 1.0
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

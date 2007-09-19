@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.12 2006/06/22 08:18:57 brun Exp $
+// @(#)root/oracle:$Id: TOracleServer.cxx,v 1.12 2006/06/22 08:18:57 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

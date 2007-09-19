@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
+// @(#)root/ldap:$Id: TLDAPAttribute.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************

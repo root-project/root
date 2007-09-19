@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/base:$Id: TFileInfo.h,v 1.6 2006/05/15 11:01:13 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************

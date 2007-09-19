@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.25 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Id: TVirtualTreePlayer.h,v 1.25 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************

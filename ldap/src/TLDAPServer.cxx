@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
+// @(#)root/ldap:$Id: TLDAPServer.cxx,v 1.3 2006/05/14 08:05:00 brun Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************

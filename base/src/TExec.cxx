@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.7 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Id: TExec.cxx,v 1.7 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************

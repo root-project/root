@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.18 2006/05/23 10:49:44 brun Exp $
+// @(#)root/graf:$Id: TPaveLabel.cxx,v 1.18 2006/05/23 10:49:44 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************

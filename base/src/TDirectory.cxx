@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.85 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Id: TDirectory.cxx,v 1.85 2006/06/20 18:17:34 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************

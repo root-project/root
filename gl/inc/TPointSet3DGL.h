@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.3 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Id: TPointSet3DGL.h,v 1.3 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************

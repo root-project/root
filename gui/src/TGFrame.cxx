@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.136 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id: TGFrame.cxx,v 1.136 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************

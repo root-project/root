@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.196 2006/06/06 16:42:17 pcanal Exp $
+// @(#)root/treeplayer:$Id: TTreeFormula.cxx,v 1.196 2006/06/06 16:42:17 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************

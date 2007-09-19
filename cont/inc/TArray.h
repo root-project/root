@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.8 2006/05/11 10:35:08 brun Exp $
+// @(#)root/cont:$Id: TArray.h,v 1.8 2006/05/11 10:35:08 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************

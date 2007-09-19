@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: geant3tasks.C,v 1.0 2000/09/05 09:21:22 brun Exp $
+// @(#)root/tutorials:$Id: geant3tasks.C,v 1.0 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   02/09/2000
 void geant3tasks()
 {

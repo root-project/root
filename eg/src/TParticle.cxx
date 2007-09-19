@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Id: TParticle.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"

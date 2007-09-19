@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.4 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Id: ClassMethodHolder.cxx,v 1.4 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings

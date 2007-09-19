@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.26 2006/06/28 09:30:58 antcheva Exp $
+// @(#)root/qt:$Id: GQtGUI.cxx,v 1.26 2006/06/28 09:30:58 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************

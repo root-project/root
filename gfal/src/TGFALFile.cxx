@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.5 2006/05/01 16:36:40 rdm Exp $
+// @(#)root/gfal:$Id: TGFALFile.cxx,v 1.5 2006/05/01 16:36:40 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************

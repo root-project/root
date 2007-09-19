@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
+// @(#)root/auth:$Id: TRootSecContext.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
 // Author: G. Ganis   08/07/2005
 
 /*************************************************************************

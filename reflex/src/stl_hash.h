@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: stl_hash.h,v 1.6 2006/03/15 23:12:04 pcanal Exp $
+// @(#)root/reflex:$Id: stl_hash.h,v 1.6 2006/03/15 23:12:04 pcanal Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

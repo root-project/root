@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Id: TFileCacheRead.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************

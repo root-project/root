@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.6 2005/04/11 08:40:59 brun Exp $
+// @(#)root/gpad:$Id: TViewer3DPad.h,v 1.6 2005/04/11 08:40:59 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAtt3D.cxx,v 1.2 2006/04/07 08:43:59 brun Exp $
+// @(#)root/base:$Id: TAtt3D.cxx,v 1.2 2006/04/07 08:43:59 brun Exp $
 // Author: Fons Rademakers   08/09/99
 
 /*************************************************************************

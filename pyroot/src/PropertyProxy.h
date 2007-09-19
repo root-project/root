@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.4 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Id: PropertyProxy.h,v 1.4 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H

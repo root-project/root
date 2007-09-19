@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.36 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/rfio:$Id: TRFIOFile.cxx,v 1.36 2006/07/24 16:26:28 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************

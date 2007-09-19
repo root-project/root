@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h $
+// @(#)root/ged:$Id: TCurlyArcEditor.h $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************

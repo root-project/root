@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.6 2006/03/20 13:34:03 antcheva Exp $
+// @(#)root/gui:$Id: TGMdiMenu.h,v 1.6 2006/03/20 13:34:03 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.5 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Id: TDrawFeedback.h,v 1.5 2005/09/16 08:48:38 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************

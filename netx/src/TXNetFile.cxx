@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.34 2006/06/29 22:15:37 rdm Exp $
+// @(#)root/netx:$Id: TXNetFile.cxx,v 1.34 2006/06/29 22:15:37 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************

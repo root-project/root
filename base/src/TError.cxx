@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.12 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/base:$Id: TError.cxx,v 1.12 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************

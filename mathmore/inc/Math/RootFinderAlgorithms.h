@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Id: RootFinderAlgorithms.h,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

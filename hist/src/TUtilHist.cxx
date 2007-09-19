@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TUtilHist.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
+// @(#)root/hist:$Id: TUtilHist.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************

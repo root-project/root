@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Id: GSLRootFinder.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

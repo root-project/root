@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TGraph2D.cxx,v 1.00
+// @(#)root/hist:$Id: TGraph2D.cxx,v 1.00
 // Author: Olivier Couet
 
 /*************************************************************************

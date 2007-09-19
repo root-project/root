@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.14 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Id: TRootContextMenu.cxx,v 1.14 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************

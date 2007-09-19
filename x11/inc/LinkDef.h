@@ -1,4 +1,4 @@
-/* @(#)root/x11:$Name:  $:$Id: LinkDef.h,v 1.2 2004/08/09 15:35:52 brun Exp $ */
+/* @(#)root/x11:$Id: LinkDef.h,v 1.2 2004/08/09 15:35:52 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

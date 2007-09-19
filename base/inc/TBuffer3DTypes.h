@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer3DTypes.h,v 1.3 2005/03/18 08:03:27 brun Exp $
+// @(#)root/base:$Id: TBuffer3DTypes.h,v 1.3 2005/03/18 08:03:27 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************

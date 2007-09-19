@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.h,v 1.4 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/krb5auth:$Id: Krb5Auth.h,v 1.4 2003/11/07 03:29:41 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************

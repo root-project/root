@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.14 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Id: TGenericClassInfo.cxx,v 1.14 2005/11/16 20:10:45 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************

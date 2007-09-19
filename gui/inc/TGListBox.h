@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.32 2006/06/01 09:12:48 antcheva Exp $
+// @(#)root/gui:$Id: TGListBox.h,v 1.32 2006/06/01 09:12:48 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.26 2006/07/01 11:39:37 rdm Exp $
+// @(#)root/proof:$Id: TEventIter.cxx,v 1.26 2006/07/01 11:39:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************

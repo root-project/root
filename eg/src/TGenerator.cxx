@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.11 2006/05/16 06:18:27 brun Exp $
+// @(#)root/eg:$Id: TGenerator.cxx,v 1.11 2006/05/16 06:18:27 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************

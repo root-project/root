@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.29 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Id: Converters.cxx,v 1.29 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

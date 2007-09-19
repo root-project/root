@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.13 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Id: TVirtualMutex.h,v 1.13 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************

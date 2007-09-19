@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: test_Reflex_generate.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Id: test_Reflex_generate.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"

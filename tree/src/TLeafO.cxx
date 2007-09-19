@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.2 2005/02/11 18:40:09 rdm Exp $
+// @(#)root/tree:$Id: TLeafO.cxx,v 1.2 2005/02/11 18:40:09 rdm Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************

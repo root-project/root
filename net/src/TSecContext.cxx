@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v5-12-00-patches $:$Id: TSecContext.cxx,v 1.13 2006/05/24 15:10:46 brun Exp $
+// @(#)root/net:$Id: TSecContext.cxx,v 1.13 2006/05/24 15:10:46 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************

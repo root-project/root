@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TAttParticle.cxx,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Id: TAttParticle.cxx,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   29/09/95
 
 /*************************************************************************

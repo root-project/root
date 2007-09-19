@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TCL.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Id: TCL.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************

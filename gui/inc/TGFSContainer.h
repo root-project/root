@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.14 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Id: TGFSContainer.h,v 1.14 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************

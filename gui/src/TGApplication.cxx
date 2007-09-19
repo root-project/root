@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.11 2006/02/28 16:48:17 rdm Exp $
+// @(#)root/gui:$Id: TGApplication.cxx,v 1.11 2006/02/28 16:48:17 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************

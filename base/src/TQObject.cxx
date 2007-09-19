@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.47 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Id: TQObject.cxx,v 1.47 2006/04/19 08:22:22 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

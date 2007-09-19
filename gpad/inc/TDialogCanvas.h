@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.6 2003/03/05 07:16:07 brun Exp $
+// @(#)root/gpad:$Id: TDialogCanvas.h,v 1.6 2003/03/05 07:16:07 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************

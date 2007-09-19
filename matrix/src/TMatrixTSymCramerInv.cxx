@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
+// @(#)root/base:$Id: TMatrixTSymCramerInv.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************

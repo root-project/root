@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.7 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Id: TGMsgBox.h,v 1.7 2006/05/23 04:47:38 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************

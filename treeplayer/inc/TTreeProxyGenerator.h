@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.3 2004/07/20 09:40:19 brun Exp $
+// @(#)root/treeplayer:$Id: TTreeProxyGenerator.h,v 1.3 2004/07/20 09:40:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
