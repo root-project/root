@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.5 2007/09/17 11:05:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THnSparse.cxx,v 1.6 2007/09/17 18:38:45 brun Exp $
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
@@ -248,7 +248,7 @@ ClassImp(THnSparseArrayChunk);
 
 //______________________________________________________________________________
 THnSparseArrayChunk::THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont):
-      fSingleCoordinateSize(coordsize), fCoordinatesSize(0),  fCoordinates(0), fContent(cont), 
+      fSingleCoordinateSize(coordsize), fCoordinatesSize(0),  fCoordinates(0), fContent(cont),
       fSumw2(0)
 {
    // (Default) initialize a chunk. Takes ownership of cont (~THnSparseArrayChunk deletes it),
@@ -293,7 +293,7 @@ ClassImp(THnSparse);
 
 //______________________________________________________________________________
 THnSparse::THnSparse():
-   fNdimensions(0), fChunkSize(1024), fFilledBins(0), fEntries(0), 
+   fNdimensions(0), fChunkSize(1024), fFilledBins(0), fEntries(0),
    fTsumw(0), fTsumw2(0), fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
@@ -303,7 +303,7 @@ THnSparse::THnSparse():
 THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
                      const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
                      Int_t chunksize):
-   TNamed(name, title), fNdimensions(dim), fChunkSize(chunksize), fFilledBins(0), 
+   TNamed(name, title), fNdimensions(dim), fChunkSize(chunksize), fFilledBins(0),
    fAxes(dim), fEntries(0), fTsumw(0), fTsumw2(0), fTsumwx(dim), fTsumwx2(dim),
    fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
@@ -369,7 +369,7 @@ THnSparse* THnSparse::CloneEmpty(const char* name, const char* title, Int_t dim,
    ret->SetNameTitle(name, title);
    ret->fNdimensions = dim;
    ret->fChunkSize = chunksize;
-   
+
    for (Int_t i = 0; i < dim; ++i) {
       TAxis* axis = new TAxis(nbins[i], xmin[i], xmax[i]);
       TString name("axis");
@@ -567,12 +567,12 @@ void THnSparse::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
    // convert bin coordinates to real values
    for (Int_t i = 0; i < fNdimensions; i++) {
       rand[i] = GetAxis(i)->GetBinCenter(bin[i]);
-      
+
       // randomize the vector withing a bin
       if (subBinRandom)
          rand[i] += (gRandom->Rndm() - 0.5) * GetAxis(i)->GetBinWidth(bin[i]);
    }
-   
+
    return;
 }
 
@@ -872,13 +872,46 @@ Double_t THnSparse::ComputeIntegral()
       fIntegralStatus = kNoInt;
    }
 
-   // allocate and fill integral array
+   // check number of bins
+   if (GetNbins() == 0) {
+	   Error("ComputeIntegral", "The histogram must have at least one bin.");
+	   return 0.;
+   }
+
+   // allocate integral array
    fIntegral = new Double_t [GetNbins() + 1];
    fIntegral[0] = 0.;
+
+   // fill integral array with contents of regular bins (non over/underflow)
+   Int_t* coord = new Int_t[fNdimensions];
    for (Long64_t i = 0; i < GetNbins(); ++i) {
-      Double_t v = GetBinContent(i);
-      fIntegral[i + 1] = fIntegral[i] + v / fTsumw;
+      Double_t v = GetBinContent(i, coord);
+
+	  // check whether the bin is regular
+	  bool regularBin = true;
+	  for (Int_t dim = 0; dim < fNdimensions; dim++)
+		  if (coord[dim] < 1 || coord[dim] > GetAxis(dim)->GetNbins()) {
+			  regularBin = false;
+			  break;
+		  }
+
+	  // if outlayer, count it with zero weight
+	  if (!regularBin) v = 0.;
+
+	  fIntegral[i + 1] = fIntegral[i] + v;
    }
+   delete [] coord;
+
+   // check sum of weights
+   if (fIntegral[GetNbins()] == 0.) {
+	   Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
+	   delete [] fIntegral;
+	   return 0.;
+   }
+
+   // normalize the integral array
+   for (Long64_t i = 0; i <= GetNbins(); ++i)
+      fIntegral[i] = fIntegral[i] / fIntegral[GetNbins()];
 
    // set status to valid
    fIntegralStatus = kValidInt;
