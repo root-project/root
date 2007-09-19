@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TFriendProxy.cxx,v 1.5 2007/05/12 13:48:24 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

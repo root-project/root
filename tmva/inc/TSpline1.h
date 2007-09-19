@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSpline1.h,v 1.10 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

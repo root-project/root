@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: GenVectorIO.h,v 1.2 2005/09/19 15:50:04 brun Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TGuiFactory.cxx,v 1.5 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************

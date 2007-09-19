@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.20 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

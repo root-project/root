@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TGeoMCGeometry.h,v 1.11 2006/08/28 07:44:19 brun Exp $
+// @(#)root/vmc:$Id$
 // Authors: Al;ice collaboration 25/06/2002
 
 /*************************************************************************

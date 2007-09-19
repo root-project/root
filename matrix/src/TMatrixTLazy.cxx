@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Id: TMatrixTLazy.cxx,v 1.4 2006/05/22 04:53:26 brun Exp $
+// @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************

@@ -1,7 +1,7 @@
 #ifndef ROOT_TQtClientGuard
 #define ROOT_TQtClientGuard
  
-// @(#)root/qt:$Id: TQtClientGuard.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************

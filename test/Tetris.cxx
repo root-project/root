@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: Tetris.cxx,v 1.21 2003/11/11 11:04:25 brun Exp $
+// @(#)root/test:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////

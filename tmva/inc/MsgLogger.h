@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.h,v 1.8 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id$
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************

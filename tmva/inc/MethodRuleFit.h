@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -25,7 +25,7 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- * $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $    
+ * $Id$    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodRuleFit

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.49 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************

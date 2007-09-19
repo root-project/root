@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Id: TSpectrum.h,v 1.2 2006/10/02 10:58:42 brun Exp $
+// @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************

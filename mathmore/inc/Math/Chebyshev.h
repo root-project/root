@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: Chebyshev.h,v 1.3 2005/09/19 15:50:04 brun Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

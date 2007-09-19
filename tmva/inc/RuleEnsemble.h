@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.h,v 1.6 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************

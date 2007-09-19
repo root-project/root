@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Id: LinkDef2.h,v 1.19 2006/01/23 16:27:04 antcheva Exp $ */
+/* @(#)root/gui:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Id: error.cxx,v 1.4 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/rpdutils:$Id$
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 

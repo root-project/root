@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Pythonize.cxx,v 1.48 2006/12/12 09:15:01 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings

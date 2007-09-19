@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofQueryResult.h,v 1.2 2006/08/05 11:14:25 brun Exp $
+// @(#)root/proof:$Id$
 // Author: G Ganis Aug 2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: TTreeViewer.cxx,v 1.55 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/treeviewer:$Id$
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************

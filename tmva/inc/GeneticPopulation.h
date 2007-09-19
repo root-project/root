@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticPopulation.h,v 1.12 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id$    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

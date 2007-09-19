@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TColumnView.cxx,v 1.4 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************

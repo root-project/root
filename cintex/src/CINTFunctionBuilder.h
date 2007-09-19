@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: CINTFunctionBuilder.h,v 1.4 2005/12/12 09:12:27 roiser Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

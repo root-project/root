@@ -1,4 +1,4 @@
-// @(#)root/meta:$Id: TStreamerInfoReadBuffer.cxx,v 1.40 2006/02/09 20:44:00 pcanal Exp $
+// @(#)root/meta:$Id$
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

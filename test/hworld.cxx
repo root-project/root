@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: hworld.cxx,v 1.6 2005/04/23 11:01:34 brun Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is

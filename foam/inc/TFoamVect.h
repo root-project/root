@@ -1,4 +1,4 @@
-// @(#)root/foam:$Id: TFoamVect.h,v 1.7 2005/04/15 12:39:34 brun Exp $
+// @(#)root/foam:$Id$
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamVect

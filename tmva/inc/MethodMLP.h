@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.h,v 1.23 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************

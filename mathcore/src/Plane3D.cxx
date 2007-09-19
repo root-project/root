@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Plane3D.cxx,v 1.4 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************

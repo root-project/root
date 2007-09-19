@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Id: MatrixRepresentationsStatic.h,v 1.8 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Id$
 // Authors: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic

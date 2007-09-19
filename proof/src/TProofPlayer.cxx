@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofPlayer.cxx,v 1.97 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************

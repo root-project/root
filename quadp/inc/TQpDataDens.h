@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Id: TQpDataDens.h,v 1.6 2006/06/03 05:42:18 brun Exp $
+// @(#)root/quadp:$Id$
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

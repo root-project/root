@@ -1,4 +1,4 @@
-/* @(#)root/winnt:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $ */
+/* @(#)root/winnt:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

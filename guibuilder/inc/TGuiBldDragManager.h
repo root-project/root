@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Id: TGuiBldDragManager.h,v 1.13 2006/05/28 20:15:09 brun Exp $
+// @(#)root/guibuilder:$Id$
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

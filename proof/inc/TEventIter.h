@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TEventIter.h,v 1.15 2006/04/11 17:51:08 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************

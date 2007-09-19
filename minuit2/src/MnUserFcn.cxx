@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: MnUserFcn.cxx,v 1.2 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

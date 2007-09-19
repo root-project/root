@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: vmatrix.cxx,v 1.30 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////

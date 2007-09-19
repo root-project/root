@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.21 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -71,7 +71,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN.h,v 1.21 2006/11/16 22:51:58 helgevoss Exp $    
+ * $Id$    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.cxx,v 1.15 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

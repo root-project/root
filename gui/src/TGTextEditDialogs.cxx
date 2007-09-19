@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGTextEditDialogs.cxx,v 1.15 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************

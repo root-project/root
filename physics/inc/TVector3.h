@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TVector3.h,v 1.15 2005/04/28 13:49:22 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************

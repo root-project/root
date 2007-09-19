@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: TLegendEntry.h,v 1.4 2005/11/18 16:55:07 couet Exp $
+// @(#)root/graf:$Id$
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************

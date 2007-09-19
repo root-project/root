@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id: TQtClientWidget.h,v 1.44 2006/05/05 01:16:54 fine Exp $
+// @(#)root/qt:$Id$
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *

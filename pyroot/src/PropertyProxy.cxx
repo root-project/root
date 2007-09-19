@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: PropertyProxy.cxx,v 1.12 2006/11/30 23:18:32 pcanal Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: PropertyListImpl.h,v 1.3 2006/09/14 13:38:25 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

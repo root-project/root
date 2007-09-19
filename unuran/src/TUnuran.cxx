@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Id: src/TUnuran.cxx,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/unuran:$Id$
 // Author: L. Moneta Tue Sep 26 16:25:09 2006
 
 /**********************************************************************

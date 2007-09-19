@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id: TBufferSQL.cxx,v 1.2 2005/08/16 13:46:46 pcanal Exp $
+// @(#)root/tree:$Id$
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************

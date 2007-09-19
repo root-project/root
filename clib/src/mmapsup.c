@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: mmapsup.c,v 1.2 2005/04/18 16:05:48 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Support for an sbrk-like function that uses mmap.

@@ -1,4 +1,4 @@
-/* @(#)root/xml:$Id: LinkDef.h,v 1.6 2004/06/29 14:45:38 brun Exp $ */
+/* @(#)root/xml:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *

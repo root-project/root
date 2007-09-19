@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Event.cxx,v 1.29 2006/11/16 22:51:58 helgevoss Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

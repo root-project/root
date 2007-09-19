@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.h,v 1.31 2006/11/02 15:44:49 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************

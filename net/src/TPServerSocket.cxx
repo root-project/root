@@ -1,4 +1,4 @@
-// @(#)root/net:$Id: TPServerSocket.cxx,v 1.7 2005/06/23 06:24:27 brun Exp $
+// @(#)root/net:$Id$
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************

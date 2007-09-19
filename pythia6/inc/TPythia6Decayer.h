@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Id: TPythia6Decayer.h,v 1.3 2006/04/25 15:56:06 rdm Exp $
+// @(#)root/pythia6:$Id$
 // Author: Christian Holm Christensen   22/04/06
 
 /*************************************************************************

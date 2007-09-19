@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: PdfFuncMathMore.cxx,v 1.1 2006/12/07 11:07:03 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 

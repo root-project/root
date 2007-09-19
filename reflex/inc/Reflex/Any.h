@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: Any.h,v 1.10 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.

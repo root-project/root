@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoCompositeShape.cxx,v 1.36 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************

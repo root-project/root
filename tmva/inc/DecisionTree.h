@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.h,v 1.36 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

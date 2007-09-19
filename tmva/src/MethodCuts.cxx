@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.73 2006/11/17 14:59:23 stelzer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

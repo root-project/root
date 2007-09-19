@@ -1,4 +1,4 @@
-// @(#)$Id: LinkDef.h,v 1.6 2006/09/25 13:44:45 rdm Exp $
+// @(#)$Id$
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

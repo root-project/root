@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTree.cxx,v 1.24 2006/11/17 14:59:23 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: BinarySearchTree.cxx,v 1.24 2006/11/17 14:59:23 stelzer Exp $        
+ * $Id$        
  **********************************************************************************/
       
 //_______________________________________________________________________

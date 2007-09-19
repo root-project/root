@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TLimit.cxx,v 1.20 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/hist:$Id$
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////

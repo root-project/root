@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: LinkDef.h,v 1.2 2001/06/22 16:10:16 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

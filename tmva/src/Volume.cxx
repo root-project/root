@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Volume.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Volume.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $        
+ * $Id$        
  **********************************************************************************/
 
 #include "TMVA/Volume.h"

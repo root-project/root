@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TPluginManager.h,v 1.8 2006/05/30 15:27:52 brun Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************

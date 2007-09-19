@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.82 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

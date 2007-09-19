@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TSemaphore.cxx,v 1.5 2006/06/01 16:28:18 rdm Exp $
+// @(#)root/thread:$Id$
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************

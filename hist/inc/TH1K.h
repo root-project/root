@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TH1K.h,v 1.5 2006/05/16 16:50:02 couet Exp $
+// @(#)root/hist:$Id$
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************

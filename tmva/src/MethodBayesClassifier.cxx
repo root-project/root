@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.cxx,v 1.5 2006/11/17 00:21:35 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Marcin .... 
 
 /**********************************************************************************

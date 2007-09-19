@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id: TVirtualTreePlayer.cxx,v 1.8 2006/07/19 18:01:38 pcanal Exp $
+// @(#)root/tree:$Id$
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGColorSelect.cxx,v 1.22 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************

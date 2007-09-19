@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TDSetProxy.h,v 1.1 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn  12/03/02
 
 /*************************************************************************

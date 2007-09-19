@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: tcollbm.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Nikolay Root   05/07/98
 
 #include <stdlib.h>

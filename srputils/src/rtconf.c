@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Id: rtconf.c,v 1.4 2003/10/13 16:55:11 rdm Exp $ */
+/* @(#)root/srputils:$Id$ */
 /*
  * Copyright (c) 1997-1999  The Stanford SRP Authentication Project
  * All Rights Reserved.

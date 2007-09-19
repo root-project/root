@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

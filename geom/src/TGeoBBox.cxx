@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoBBox.cxx,v 1.50 2006/07/03 16:10:44 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Id$// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 

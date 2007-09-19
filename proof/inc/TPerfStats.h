@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TPerfStats.h,v 1.3 2006/08/28 13:35:32 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

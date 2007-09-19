@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TBranchProxyDescriptor.cxx,v 1.9 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

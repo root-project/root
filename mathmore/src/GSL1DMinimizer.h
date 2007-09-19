@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: GSL1DMinimizer.h,v 1.1 2006/10/05 15:23:42 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005
  /**********************************************************************
   *                                                                    *

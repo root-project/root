@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPython.cxx,v 1.16 2006/06/16 18:18:04 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

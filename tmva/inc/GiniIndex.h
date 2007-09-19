@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GiniIndex.h,v 1.9 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

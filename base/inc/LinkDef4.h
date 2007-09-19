@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: LinkDef4.h,v 1.1 2004/06/03 21:05:24 brun Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun, Fons Rademakers and al.           *

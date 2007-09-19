@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Id: TQpSolverBase.h,v 1.5 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/quadp:$Id$
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

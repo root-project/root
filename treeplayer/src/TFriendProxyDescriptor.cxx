@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TFriendProxyDescriptor.cxx,v 1.4 2007/02/01 16:05:36 brun Exp $
+// @(#)root/base:$Id$
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

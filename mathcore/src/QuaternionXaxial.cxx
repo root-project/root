@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: QuaternionXaxial.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Mark Fischler Tues July 19,  2005
 //
-// Last update: $Id: QuaternionXaxial.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
+// Last update: $Id$
 //
 #include "Math/GenVector/Quaternion.h"
 

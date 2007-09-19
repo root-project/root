@@ -1,4 +1,4 @@
-// @(#)root/castor:$Id: TCastorFile.h,v 1.1 2006/09/19 16:15:47 rdm Exp $
+// @(#)root/castor:$Id$
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************

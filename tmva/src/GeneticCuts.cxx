@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.17 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

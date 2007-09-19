@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: getpagesize.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 #ifdef WIN32
 #include <windows.h>

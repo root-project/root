@@ -1,4 +1,4 @@
-// @(#)root/net:$Id: TGridJobStatus.cxx,v 1.2 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/net:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Id: x3d.c,v 1.10 2003/07/05 20:37:06 brun Exp $ */
+/* @(#)root/x3d:$Id$ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla

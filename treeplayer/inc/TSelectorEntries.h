@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TSelectorEntries.h,v 1.2 2006/09/29 15:40:08 brun Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id: TPostScript.cxx,v 1.67 2006/09/19 14:27:39 couet Exp $
+// @(#)root/postscript:$Id$
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************

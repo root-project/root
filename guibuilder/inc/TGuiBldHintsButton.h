@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Id: TGuiBldHintsButton.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Id$
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

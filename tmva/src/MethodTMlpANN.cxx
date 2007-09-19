@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *

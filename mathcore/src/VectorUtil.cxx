@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: VectorUtil.cxx,v 1.1 2006/08/22 09:45:32 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2006  
 
  /**********************************************************************

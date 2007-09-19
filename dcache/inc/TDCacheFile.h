@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Id: TDCacheFile.h,v 1.9.14.1 2007/07/06 10:48:31 pcanal Exp $
+// @(#)root/dcache:$Id$
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004

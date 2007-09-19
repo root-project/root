@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Boostfwd.h,v 1.4 2005/11/16 19:30:47 marafino Exp $
+// @(#)root/mathcore:$Id$
 // Authors: M. Fischler   2005  
 
 #ifndef ROOT_Math_GenVector_Boostfwd 

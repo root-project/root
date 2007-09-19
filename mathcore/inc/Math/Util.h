@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: inc/Math/Util.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Tue Nov 14 15:44:38 2006
 
 /**********************************************************************

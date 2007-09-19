@@ -1,4 +1,4 @@
-// @(#)root/x11:$Id: TGX11.h,v 1.28 2006/02/06 16:34:43 couet Exp $
+// @(#)root/x11:$Id$
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************

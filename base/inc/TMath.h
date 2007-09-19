@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TMath.h,v 1.68 2006/03/13 22:12:35 rdm Exp $
+// @(#)root/base:$Id$
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************

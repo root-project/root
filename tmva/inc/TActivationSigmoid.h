@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationSigmoid.h,v 1.9 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************

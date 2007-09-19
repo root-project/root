@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.8 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TLorentzRotation.cxx,v 1.5 2006/05/17 06:49:58 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Peter Malzacher   19/06/99
 
 //______________________________________________________________________________

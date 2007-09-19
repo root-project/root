@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.3 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id$    
 // Author: Abhishek Narain
 
 /**********************************************************************************

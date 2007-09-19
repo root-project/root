@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TVirtualPerfStats.cxx,v 1.4 2006/05/19 07:30:04 brun Exp $
+// @(#)root/base:$Id$
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

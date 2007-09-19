@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: PyRootType.cxx,v 1.6 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

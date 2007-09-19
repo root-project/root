@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TWin32Condition.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
+// @(#)root/thread:$Id$
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************

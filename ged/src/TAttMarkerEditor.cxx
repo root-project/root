@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TAttMarkerEditor.cxx,v 1.10 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Id$
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************

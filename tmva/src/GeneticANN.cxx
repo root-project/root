@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticANN.cxx,v 1.5 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Matt Jachowski, Helge Voss
 
 /**********************************************************************************

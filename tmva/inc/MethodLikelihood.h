@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.h,v 1.23 2006/11/17 14:59:24 stelzer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

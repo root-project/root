@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: RootWrapper.cxx,v 1.50 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

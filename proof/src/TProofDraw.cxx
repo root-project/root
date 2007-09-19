@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofDraw.cxx,v 1.23 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////

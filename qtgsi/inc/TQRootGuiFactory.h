@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Id: TQRootGuiFactory.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Id$
 // Author: Denis Bertini  01/11/2000
 
 /*************************************************************************

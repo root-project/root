@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.85 2006/11/17 14:59:23 stelzer Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

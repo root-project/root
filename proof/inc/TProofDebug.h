@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofDebug.h,v 1.6 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn 19/6/2002
 
 /*************************************************************************

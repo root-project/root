@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofResourcesStatic.cxx,v 1.6 2006/03/31 07:42:20 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************

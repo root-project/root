@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: TGraphPolar.cxx,v 1.5 2006/11/15 17:54:16 couet Exp $
+// @(#)root/graf:$Id$
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************

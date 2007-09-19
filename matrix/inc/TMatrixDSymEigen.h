@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Id: TMatrixDSymEigen.h,v 1.5 2005/12/22 08:41:31 brun Exp $
+// @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************

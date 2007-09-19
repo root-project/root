@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1

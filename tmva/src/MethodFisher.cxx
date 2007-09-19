@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.60 2006/11/20 13:20:16 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
+// Last update: $Id$
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TGenPhaseSpace.h,v 1.3 2005/09/03 13:37:17 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 ///////////////////////////////////////////////////////////////////////////////

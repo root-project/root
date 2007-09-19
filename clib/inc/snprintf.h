@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: snprintf.h,v 1.2 2002/07/09 15:29:54 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: Fons Rademakers  10/12/2000 */
 
 /*

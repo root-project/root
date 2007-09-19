@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TTreeFormula.h,v 1.53 2006/09/07 07:31:34 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************

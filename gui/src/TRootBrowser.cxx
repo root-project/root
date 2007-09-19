@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootBrowser.cxx,v 1.102 2006/10/12 16:08:37 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************

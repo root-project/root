@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: KeySymbols.h,v 1.1 2000/10/21 09:12:09 rdm Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

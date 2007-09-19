@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLScene.cxx,v 1.44 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 

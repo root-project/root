@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TMCParticleType.h,v 1.1 2003/09/23 14:01:15 brun Exp $
+// @(#)root/vmc:$Id$
 // Author: Alice collaboration
 
 /*************************************************************************

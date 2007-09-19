@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PtEtaPhiM4D.h,v 1.8 2007/05/22 13:35:16 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 21 2005
 //   Similar to PtEtaPhiMSystem by moneta
 // 
-// Last update: $Id: PtEtaPhiM4D.h,v 1.8 2007/05/22 13:35:16 moneta Exp $
+// Last update: $Id$
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1

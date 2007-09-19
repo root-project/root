@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: NameLookup.cxx,v 1.14 2006/11/09 08:01:04 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

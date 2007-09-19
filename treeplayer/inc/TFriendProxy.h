@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TFriendProxy.h,v 1.3 2004/06/28 16:38:00 brun Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************

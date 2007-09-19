@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
+ * $Id$
  **********************************************************************************/
 
 //_______________________________________________________________________

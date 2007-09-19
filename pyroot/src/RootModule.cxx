@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: RootModule.cxx,v 1.28 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

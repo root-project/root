@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TWin32Thread.cxx,v 1.5 2005/11/04 09:17:05 brun Exp $
+// @(#)root/thread:$Id$
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************

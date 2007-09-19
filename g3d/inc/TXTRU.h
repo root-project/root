@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Id: TXTRU.h,v 1.7 2005/03/09 18:19:25 brun Exp $
+//@@(#)root/g3d:$Id$
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.7 2005/03/09 18:19:25 brun Exp $
+// $Id$
 //
 // TXTRU
 //

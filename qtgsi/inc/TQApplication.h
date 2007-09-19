@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Id: TQApplication.h,v 1.1 2006/04/11 16:33:45 rdm Exp $
+// @(#)root/qtgsi:$Id$
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoSphere.cxx,v 1.49 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: ConstructorHolder.h,v 1.3 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TCONSTRUCTORHOLDER_H

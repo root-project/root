@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TView.h,v 1.17 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************

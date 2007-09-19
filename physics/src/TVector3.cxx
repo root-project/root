@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TVector3.cxx,v 1.9 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and

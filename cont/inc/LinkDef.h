@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Id: LinkDef.h,v 1.14 2005/10/21 22:01:35 pcanal Exp $ */
+/* @(#)root/cont:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TPacketizerProgressive.h,v 1.2 2005/09/18 23:44:11 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************

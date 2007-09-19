@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Id: TSpectrumTransform.h,v 1.2 2006/09/28 23:20:53 rdm Exp $
+// @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   25/09/06
 
 /*************************************************************************

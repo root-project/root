@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TLineEditor.cxx,v 1.3 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Id$
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************

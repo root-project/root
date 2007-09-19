@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TRandom.cxx,v 1.33 2006/05/28 06:15:54 brun Exp $
+// @(#)root/base:$Id$
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************

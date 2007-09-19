@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: GSLFunctionWrapper.h,v 1.7 2006/12/06 15:16:02 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

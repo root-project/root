@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLLegoPainter.cxx,v 1.7 2006/11/22 16:19:55 couet Exp $
+// @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************

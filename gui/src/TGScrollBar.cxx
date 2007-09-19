@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGScrollBar.cxx,v 1.22 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************

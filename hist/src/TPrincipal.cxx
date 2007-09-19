@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
+// @(#)root/hist:$Id$
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,7 +667,7 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
+// $Id$
 // $Date: 2006/05/23 04:47:40 $
 // $Author: brun $
 

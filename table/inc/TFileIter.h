@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TFileIter.h,v 1.6 2005/09/08 05:33:41 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************

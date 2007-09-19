@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TTableDescriptor.h,v 1.7 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

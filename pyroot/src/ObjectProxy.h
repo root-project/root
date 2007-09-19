@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: ObjectProxy.h,v 1.4 2005/08/31 21:30:34 pcanal Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_OBJECTPROXY_H

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Functor.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Mon Nov 13 15:58:13 2006
 
 /**********************************************************************

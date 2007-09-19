@@ -1,4 +1,4 @@
-/* @(#)root/rootd:$Id: rootdp.h,v 1.7 2003/08/29 10:41:28 rdm Exp $ */
+/* @(#)root/rootd:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

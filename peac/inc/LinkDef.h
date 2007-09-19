@@ -1,4 +1,4 @@
-/* @(#)root/peac:$Id: LinkDef.h,v 1.1.2.7 2004/11/04 19:26:01 maartenb Exp $ */
+/* @(#)root/peac:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

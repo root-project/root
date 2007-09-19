@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: BoostZ.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_BoostZ

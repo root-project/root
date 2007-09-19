@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Id: TGX11TTF.h,v 1.3 2003/01/20 08:44:47 brun Exp $
+// @(#)root/x11ttf:$Id$
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 

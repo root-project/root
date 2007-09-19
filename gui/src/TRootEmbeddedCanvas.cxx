@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootEmbeddedCanvas.cxx,v 1.25 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************

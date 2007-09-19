@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationTanh.cxx,v 1.7 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Id: LinkDef.h,v 1.8 2006/04/07 08:43:59 brun Exp $ */
+/* @(#)root/g3d:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

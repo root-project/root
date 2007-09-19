@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVAnalysis.C,v 1.63 2006/11/19 00:43:59 stelzer Exp $
+// @(#)root/tmva $Id$
 /**********************************************************************************
  * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
  * Package   : TMVA                                                               *

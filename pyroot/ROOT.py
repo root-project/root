@@ -1,5 +1,5 @@
 from __future__ import generators
-# @(#)root/pyroot:$Id: ROOT.py,v 1.44 2006/10/17 06:09:15 brun Exp $
+# @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 09/22/06

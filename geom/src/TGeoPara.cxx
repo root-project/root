@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoPara.cxx,v 1.29 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Quaternion.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1

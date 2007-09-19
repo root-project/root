@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PositionVector3Dfwd.h,v 1.3 2007/05/22 13:35:16 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_GenVector_PositionVector3Dfwd 

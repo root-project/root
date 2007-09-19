@@ -1,4 +1,4 @@
-/* @(#)root/table:$Id: Ttypes.h,v 1.9 2005/05/27 16:42:58 pcanal Exp $ */
+/* @(#)root/table:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

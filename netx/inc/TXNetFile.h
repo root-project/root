@@ -1,4 +1,4 @@
-// @(#)root/netx:$Id: TXNetFile.h,v 1.10 2006/06/09 13:38:46 rdm Exp $
+// @(#)root/netx:$Id$
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

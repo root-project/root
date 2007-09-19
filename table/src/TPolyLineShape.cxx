@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TPolyLineShape.cxx,v 1.7 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/table:$Id$
 // Author: Valeri Fine 1999
 
 /*************************************************************************

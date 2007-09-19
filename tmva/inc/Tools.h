@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.h,v 1.28 2006/11/20 13:20:17 stelzer Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

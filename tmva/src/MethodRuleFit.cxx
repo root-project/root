@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.43 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************

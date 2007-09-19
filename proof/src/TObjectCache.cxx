@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TObjectCache.cxx,v 1.2 2006/06/01 16:25:12 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: M. Biskup, G. Ganis  2/4/06
 
 /*************************************************************************

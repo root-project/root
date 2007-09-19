@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TSelectorEntries.cxx,v 1.2 2006/09/18 15:13:51 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************

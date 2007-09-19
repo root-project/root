@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGFSContainer.cxx,v 1.35 2007/01/10 17:43:14 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Id: TMultiLayerPerceptron.h,v 1.11 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/mlp:$Id$
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************

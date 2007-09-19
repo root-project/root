@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: LAVector.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

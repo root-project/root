@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TAdaptivePacketizer.cxx,v 1.1 2006/12/12 11:20:49 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************

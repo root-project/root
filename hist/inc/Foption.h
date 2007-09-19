@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Id: Foption.h,v 1.5 2005/06/23 10:04:08 brun Exp $ */
+/* @(#)root/hist:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

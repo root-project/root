@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPyClassGenerator.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyClassGenerator

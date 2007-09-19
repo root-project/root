@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id: TGQt.cxx,v 1.34 2006/10/30 17:15:22 antcheva Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -670,7 +670,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.140 2006/12/12 03:03:42 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id$ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;

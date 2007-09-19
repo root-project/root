@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TGenCollectionProxy.cxx,v 1.28 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Id$
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

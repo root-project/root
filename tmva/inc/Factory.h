@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.h,v 1.27 2006/11/17 14:59:23 stelzer Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

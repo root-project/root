@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TApplicationImp.h,v 1.3 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************

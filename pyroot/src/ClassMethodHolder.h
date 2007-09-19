@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: ClassMethodHolder.h,v 1.5 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_TCLASSMETHODHOLDER_H

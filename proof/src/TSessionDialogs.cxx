@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TSessionDialogs.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TBranchProxyDirector.h,v 1.6 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Philippe Canal 13/05/2003
 
 /*************************************************************************

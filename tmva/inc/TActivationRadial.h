@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationRadial.h,v 1.5 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski
 
 /**********************************************************************************

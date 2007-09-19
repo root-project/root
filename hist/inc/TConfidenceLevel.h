@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TConfidenceLevel.h,v 1.1 2002/09/06 19:57:59 brun Exp $
+// @(#)root/hist:$Id$
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TConfidenceLevel

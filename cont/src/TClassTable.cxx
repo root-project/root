@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TClassTable.cxx,v 1.37 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id$
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************

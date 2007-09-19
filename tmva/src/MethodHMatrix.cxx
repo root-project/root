@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.36 2006/11/17 14:59:24 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

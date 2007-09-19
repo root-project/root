@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# @(#)root/tmva $Id: TMVAnalysis.py,v 1.3 2006/11/15 11:00:51 andreas.hoecker Exp $
+# @(#)root/tmva $Id$
 # ------------------------------------------------------------------------------ #
 # Project      : TMVA - a Root-integrated toolkit for multivariate data analysis #
 # Package      : TMVA                                                            #

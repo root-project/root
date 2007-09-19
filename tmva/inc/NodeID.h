@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: NodeID.h,v 1.6 2006/10/10 08:31:00 rdm Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************

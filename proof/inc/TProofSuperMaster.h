@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofSuperMaster.h,v 1.4 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************

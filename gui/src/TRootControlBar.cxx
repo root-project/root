@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootControlBar.cxx,v 1.10 2006/03/28 16:23:08 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************

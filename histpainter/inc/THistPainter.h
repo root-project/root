@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Id: THistPainter.h,v 1.29 2006/11/25 09:02:22 brun Exp $
+// @(#)root/histpainter:$Id$
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputSqSum.h,v 1.8 2006/11/14 14:19:17 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************

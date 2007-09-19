@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: SpecFunc.h,v 1.3 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/mathcore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************

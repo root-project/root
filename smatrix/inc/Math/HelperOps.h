@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Id: HelperOps.h,v 1.12 2006/07/03 14:30:44 moneta Exp $
+// @(#)root/smatrix:$Id$
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TSynapse.h,v 1.13 2006/10/15 22:34:22 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************
