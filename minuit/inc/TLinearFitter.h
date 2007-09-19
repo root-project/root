@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.14 2006/08/08 16:02:44 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.15 2006/09/15 15:16:57 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -173,8 +173,6 @@ private:
    TVectorD     fAtbTemp2;       //!
    TVectorD     fAtbTemp3;       //!
 
-   Bool_t       *fFixedParams;   //array of fixed/released params
-
    TObjArray    fFunctions;      //array of basis functions
    TVectorD     fY;              //the values being fit
    Double_t     fY2;             //sum of square of y, used for chisquare
@@ -199,6 +197,8 @@ private:
    Bool_t       fRobust;         //true when performing a robust fit
    TBits        fFitsample;      //indices of points, used in the robust fit
 
+   Bool_t       *fFixedParams;   //[fNfixed] array of fixed/released params
+
    void AddToDesign(Double_t *x, Double_t y, Double_t e);
    void ComputeTValues();
    Int_t GraphLinearFitter(Double_t h);
@@ -222,6 +222,7 @@ public:
    virtual ~TLinearFitter();
 
    TLinearFitter& operator=(const TLinearFitter& tlf);
+   virtual void       Add(TLinearFitter *tlf);
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
    virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=0);
 
@@ -244,13 +245,14 @@ public:
    virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
    virtual void       GetParameters(TVectorD &vpar);
    virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
-   virtual Int_t     GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const;
+   virtual Int_t      GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const;
    virtual const char *GetParName(Int_t ipar) const;
    virtual Double_t   GetParError(Int_t ipar) const;
    virtual Double_t   GetParTValue(Int_t ipar);
    virtual Double_t   GetParSignificance(Int_t ipar);
    virtual void       GetFitSample(TBits& bits);
    virtual Bool_t     IsFixed(Int_t ipar) const {return fFixedParams[ipar];}
+   virtual Int_t      Merge(TCollection *list);
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;
    virtual void       ReleaseParameter(Int_t ipar);
    virtual void       SetDim(Int_t n);
@@ -260,7 +262,6 @@ public:
    virtual Bool_t     UpdateMatrix();
 
    //dummy functions for TVirtualFitter:
-
    virtual Double_t  Chisquare(Int_t /*npar*/, Double_t * /*params*/) const {return 0;}
    virtual Int_t     GetErrors(Int_t /*ipar*/,Double_t & /*eplus*/, Double_t & /*eminus*/, Double_t & /*eparab*/, Double_t & /*globcc*/) const {return 0;}
 

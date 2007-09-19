@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.37 2007/02/03 19:36:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.38 2007/07/27 18:03:55 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -187,6 +187,22 @@ ClassImp(TLinearFitter)
 
 //______________________________________________________________________________
 TLinearFitter::TLinearFitter()
+   :TVirtualFitter(),
+    fParams(),
+    fParCovar(),
+    fTValues(),
+    fDesign(),
+    fDesignTemp(),
+    fDesignTemp2(),
+    fDesignTemp3(),
+    fAtb(),
+    fAtbTemp(),
+    fAtbTemp2(),
+    fAtbTemp3(),
+    fFunctions(),
+    fY(),
+    fX(),
+    fE()
 {
    //default c-tor, input data is stored
    //If you don't want to store the input data,
@@ -195,6 +211,7 @@ TLinearFitter::TLinearFitter()
    fChisquare=0;
    fNpoints=0;
    fY2=0;
+   fY2Temp=0;
    fNfixed=0;
    fIsSet=kFALSE;
    fFormula=0;
@@ -400,6 +417,55 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fFitsample=tlf.fFitsample;
    } 
    return *this;
+}
+
+//______________________________________________________________________________
+void TLinearFitter::Add(TLinearFitter *tlf)
+{
+//Add another linear fitter to this linear fitter. Points and Design matrices
+//are added, but the previos fitting results (if any) are deleted.
+//Fitters must have same formulas (this is not checked). Fixed parameters are not changed
+
+   fParams.Zero();
+   fParCovar.Zero();
+   fTValues.Zero();
+   fParSign.Zero();
+
+   fDesign += tlf->fDesign;
+
+   fDesignTemp += tlf->fDesignTemp;
+   fDesignTemp2 += tlf->fDesignTemp2;
+   fDesignTemp3 += tlf->fDesignTemp3;
+   fAtb += tlf->fAtb;
+   fAtbTemp += tlf->fAtbTemp;
+   fAtbTemp2 += tlf->fAtbTemp2;
+   fAtbTemp3 += tlf->fAtbTemp3;
+
+   if (fStoreData){
+      printf("copying points\n");
+      Int_t size=fY.GetNoElements();
+      Int_t newsize = fNpoints+tlf->fNpoints;
+      if (size<newsize){
+         fY.ResizeTo(newsize);
+         fE.ResizeTo(newsize);
+         fX.ResizeTo(newsize, fNdim);
+      }
+      for (Int_t i=fNpoints; i<newsize; i++){
+         fY(i)=tlf->fY(i-fNpoints);
+         fE(i)=tlf->fE(i-fNpoints);
+         for (Int_t j=0; j<fNdim; j++){
+            fX(i,j)=tlf->fX(i-fNpoints, j);
+         }
+      }
+   }
+   fY2 += tlf->fY2;
+   fY2Temp += tlf->fY2Temp;
+   fNpoints += tlf->fNpoints;  
+   //fInputFunction=(TFormula*)tlf.fInputFunction->Clone();
+
+   fChisquare=0;
+   fH=0;
+   fRobust=0;   
 }
 
 //______________________________________________________________________________
@@ -730,24 +796,24 @@ Int_t TLinearFitter::Eval()
       }
    }
    //
-
-   fDesignTemp2+=fDesignTemp3;
-   fDesignTemp+=fDesignTemp2;
-   fDesign+=fDesignTemp;
-   fDesignTemp3.Zero();
-   fDesignTemp2.Zero();
-   fDesignTemp.Zero();
-   fAtbTemp2+=fAtbTemp3;
-   fAtbTemp+=fAtbTemp2;
-   fAtb+=fAtbTemp;
-   fAtbTemp3.Zero();
-   fAtbTemp2.Zero();
-   fAtbTemp.Zero();
-
-   fY2+=fY2Temp;
-   fY2Temp=0;
-
-   //fixing fixed parameters, if there are any
+   if (fDesignTemp3.GetNrows()>0){
+      fDesignTemp2+=fDesignTemp3;
+      fDesignTemp+=fDesignTemp2;
+      fDesign+=fDesignTemp;
+      fDesignTemp3.Zero();
+      fDesignTemp2.Zero();
+      fDesignTemp.Zero();
+      fAtbTemp2+=fAtbTemp3;
+      fAtbTemp+=fAtbTemp2;
+      fAtb+=fAtbTemp;
+      fAtbTemp3.Zero();
+      fAtbTemp2.Zero();
+      fAtbTemp.Zero();
+      
+      fY2+=fY2Temp;
+      fY2Temp=0;
+      }
+//fixing fixed parameters, if there are any
    Int_t i, ii, j=0;
    if (fNfixed>0){
       for (ii=0; ii<fNfunctions; ii++)
@@ -1243,6 +1309,23 @@ void TLinearFitter::GetFitSample(TBits &bits)
       bits.SetBitNumber(i, fFitsample.TestBitNumber(i));
 
 }
+
+//______________________________________________________________________________
+Int_t TLinearFitter::Merge(TCollection *list)
+{
+   if (!list) return -1;
+   TIter next(list);
+   TLinearFitter *lfit = 0;
+   while ((lfit = (TLinearFitter*)next())) {
+      if (!lfit->InheritsFrom(TLinearFitter::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",lfit->ClassName(),this->ClassName());
+         return -1;
+      }
+      Add(lfit);
+   }
+   return 0;   
+}
+
 //______________________________________________________________________________
 void TLinearFitter::SetDim(Int_t ndim)
 {
@@ -1419,12 +1502,15 @@ void TLinearFitter::SetFormula(TFormula *function)
    fY2=0;
    for (Int_t i=0; i<size; i++)
       fFixedParams[i]=0;
-   //check if any parameters are fixed
-   Double_t al,bl;
-   for (Int_t i=0;i<fNfunctions;i++) {
-      ((TF1*)function)->GetParLimits(i,al,bl);
-      if (al*bl != 0 && al >= bl) {
-         FixParameter(i, function->GetParameter(i));
+   //check if any parameters are fixed (not for pure TFormula)
+
+   if (function->InheritsFrom(TF1::Class())){
+      Double_t al,bl;
+      for (Int_t i=0;i<fNfunctions;i++) {
+         ((TF1*)function)->GetParLimits(i,al,bl);
+         if (al*bl !=0 && al >= bl) {
+            FixParameter(i, function->GetParameter(i));
+         }
       }
    }
 
