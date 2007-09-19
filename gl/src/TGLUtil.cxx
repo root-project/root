@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.40 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Id: TGLUtil.cxx,v 1.40 2007/06/11 19:56:34 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

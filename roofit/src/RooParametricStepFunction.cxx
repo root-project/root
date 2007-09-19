@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- * @(#)root/roofit:$Name:  $:$Id: RooParametricStepFunction.cxx,v 1.9 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooParametricStepFunction.cxx,v 1.9 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *

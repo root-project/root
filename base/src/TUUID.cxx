@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.21 2007/02/10 12:21:05 brun Exp $
+// @(#)root/base:$Id: TUUID.cxx,v 1.21 2007/02/10 12:21:05 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************

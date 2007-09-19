@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoManagerEditor.cxx,v 1.8 2006/09/27 08:48:18 rdm Exp $
+// @(#):$Id: TGeoManagerEditor.cxx,v 1.8 2006/09/27 08:48:18 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************

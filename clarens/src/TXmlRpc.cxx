@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Name: PROOF_MLM $:$Id: TXmlRpc.cxx,v 1.1.2.8 2004/11/07 22:02:31 maartenb Exp $
+// @(#)root/clarens:$Id: TXmlRpc.cxx,v 1.1.2.8 2004/11/07 22:02:31 maartenb Exp $
 // Author: Maarten Ballintijn   25/10/2004
 
 /*************************************************************************

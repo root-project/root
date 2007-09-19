@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.10 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Id: TVirtualMCGeometry.h,v 1.10 2006/08/24 16:31:21 rdm Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************

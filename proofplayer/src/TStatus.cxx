@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TStatus.cxx,v 1.4 2007/02/01 16:20:34 brun Exp $
+// @(#)root/proofplayer:$Id: TStatus.cxx,v 1.4 2007/02/01 16:20:34 brun Exp $
 // Author: Maarten Ballintijn   7/06/2004
 
 /*************************************************************************

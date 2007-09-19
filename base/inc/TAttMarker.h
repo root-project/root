@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.h,v 1.6 2007/02/04 17:39:44 brun Exp $
+// @(#)root/base:$Id: TAttMarker.h,v 1.6 2007/02/04 17:39:44 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************

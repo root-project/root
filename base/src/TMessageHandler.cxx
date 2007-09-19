@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.6 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Id: TMessageHandler.cxx,v 1.6 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************

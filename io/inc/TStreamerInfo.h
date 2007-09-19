@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.h,v 1.68 2007/02/08 15:09:08 pcanal Exp $
+// @(#)root/io:$Id: TStreamerInfo.h,v 1.68 2007/02/08 15:09:08 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.6 2006/04/07 20:18:42 brun Exp $ */
+/* @(#)root/eg:$Id: Hepevt.h,v 1.6 2006/04/07 20:18:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

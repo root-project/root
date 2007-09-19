@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.286 2007/08/29 16:28:53 couet Exp $
+// @(#)root/histpainter:$Id: THistPainter.cxx,v 1.286 2007/08/29 16:28:53 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************

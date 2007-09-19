@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.cxx,v 1.4 2006/04/13 09:46:06 brun Exp $
+// @(#)root/qtgsi:$Id: TQRootDialog.cxx,v 1.4 2006/04/13 09:46:06 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************

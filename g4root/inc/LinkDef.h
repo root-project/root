@@ -1,4 +1,4 @@
-/* @(#)root/g4root:$Name:  $:$Id: LinkDef.h,v 1.1 2006/11/22 17:14:01 brun Exp $ */
+/* @(#)root/g4root:$Id: LinkDef.h,v 1.1 2006/11/22 17:14:01 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.7 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/tree:$Id: TChainElement.cxx,v 1.7 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************

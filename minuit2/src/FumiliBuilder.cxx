@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.8 2007/02/13 12:14:29 moneta Exp $
+// @(#)root/minuit2:$Id: FumiliBuilder.cxx,v 1.8 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

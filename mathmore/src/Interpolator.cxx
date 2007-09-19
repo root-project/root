@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Interpolator.cxx,v 1.3 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Id: Interpolator.cxx,v 1.3 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************

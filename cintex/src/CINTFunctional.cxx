@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.21 2006/12/07 14:54:59 roiser Exp $
+// @(#)root/cintex:$Id: CINTFunctional.cxx,v 1.21 2006/12/07 14:54:59 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

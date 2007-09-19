@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.5 2007/02/03 17:21:00 brun Exp $
+// @(#)root/ged:$Id: TAxisEditor.h,v 1.5 2007/02/03 17:21:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************

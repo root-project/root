@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.6 2007/07/27 15:08:32 rdm Exp $
+// @(#)root/castor:$Id: TCastorFile.cxx,v 1.6 2007/07/27 15:08:32 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 

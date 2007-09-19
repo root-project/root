@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.4 2007/02/18 14:56:42 brun Exp $
+// @(#)root/base:$Id: TVirtualFFT.h,v 1.4 2007/02/18 14:56:42 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 #ifndef ROOT_TVirtualFFT

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mvalloc.c,v 1.2 2000/10/02 11:10:51 rdm Exp $ */
+/* @(#)root/clib:$Id: mvalloc.c,v 1.2 2000/10/02 11:10:51 rdm Exp $ */
 /* Author: */
 
 /* Allocate memory on a page boundary.

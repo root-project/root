@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.29 2007/01/12 16:03:15 brun Exp $
+// @(#)root/g3d:$Id: TPolyLine3D.cxx,v 1.29 2007/01/12 16:03:15 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************

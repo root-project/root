@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.10 2007/01/22 05:58:29 brun Exp $
+// @(#)root/xml:$Id: TKeyXML.cxx,v 1.10 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************

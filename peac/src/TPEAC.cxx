@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:  $:$Id: TPEAC.cxx,v 1.2 2006/08/09 07:15:42 rdm Exp $
+// @(#)root/peac:$Id: TPEAC.cxx,v 1.2 2006/08/09 07:15:42 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 

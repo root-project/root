@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.64 2007/02/19 18:51:48 brun Exp $
+// @(#)root/base:$Id: TBuffer.h,v 1.64 2007/02/19 18:51:48 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************

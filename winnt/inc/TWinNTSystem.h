@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.46 2007/02/21 09:52:14 brun Exp $
+// @(#)root/winnt:$Id: TWinNTSystem.h,v 1.46 2007/02/21 09:52:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

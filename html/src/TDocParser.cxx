@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.15 2007/06/21 20:07:28 axel Exp $
+// @(#)root/html:$Id: TDocParser.cxx,v 1.15 2007/06/21 20:07:28 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************

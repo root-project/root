@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.14 2006/07/03 16:10:44 brun Exp $
+// @(#)root/base:$Id: TGeoTorus.h,v 1.14 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************

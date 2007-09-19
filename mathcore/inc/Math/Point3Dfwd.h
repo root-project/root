@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.4 2005/12/08 15:57:00 moneta Exp $
+// @(#)root/mathcore:$Id: Point3Dfwd.h,v 1.4 2005/12/08 15:57:00 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

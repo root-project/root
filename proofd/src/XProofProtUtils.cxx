@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.10 2006/12/12 21:44:58 rdm Exp $
+// @(#)root/proofd:$Id: XProofProtUtils.cxx,v 1.10 2006/12/12 21:44:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************

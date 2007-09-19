@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMathBase.cxx,v 1.121 2007/02/08 09:07:50 brun Exp $
+// @(#)root/base:$Id: TMathBase.cxx,v 1.121 2007/02/08 09:07:50 brun Exp $
 // Authors: Rene Brun 08/02/2007
 
 /*************************************************************************

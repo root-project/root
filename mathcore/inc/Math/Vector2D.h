@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Vector3D.h,v 1.2 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Id: Vector3D.h,v 1.2 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_ROOT_Math_Vector2D  

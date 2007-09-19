@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.6 2005/05/02 21:30:27 brun Exp $
+// @(#)root/graf:$Id: TTF.h,v 1.6 2005/05/02 21:30:27 brun Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 

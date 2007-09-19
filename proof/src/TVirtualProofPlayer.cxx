@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
+// @(#)root/proof:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************

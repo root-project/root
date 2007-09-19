@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.10 2006/06/27 09:14:00 antcheva Exp $
+// @(#)root/qt:$Id: TQtApplication.cxx,v 1.10 2006/06/27 09:14:00 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************

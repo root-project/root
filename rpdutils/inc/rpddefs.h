@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/12 07:08:36 rdm Exp $
+// @(#)root/rpdutils:$Id: rpddefs.h,v 1.1 2004/10/12 07:08:36 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************

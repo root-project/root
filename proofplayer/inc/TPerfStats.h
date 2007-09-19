@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPerfStats.h,v 1.7 2007/06/21 08:50:47 rdm Exp $
+// @(#)root/proofplayer:$Id: TPerfStats.h,v 1.7 2007/06/21 08:50:47 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

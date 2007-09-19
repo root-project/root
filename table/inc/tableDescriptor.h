@@ -1,4 +1,4 @@
-/* @(#)root/table:$Name:  $:$Id: tableDescriptor.h,v 1.2 2003/01/27 20:41:36 brun Exp $ */
+/* @(#)root/table:$Id: tableDescriptor.h,v 1.2 2003/01/27 20:41:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

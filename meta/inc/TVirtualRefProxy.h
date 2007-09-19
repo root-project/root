@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.3 2006/06/29 06:50:42 brun Exp $
+// @(#)root/meta: $Id: TVirtualRefProxy.h,v 1.3 2006/06/29 06:50:42 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************

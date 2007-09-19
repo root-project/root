@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TApplicationRemote.cxx,v 1.14 2007/07/10 14:14:33 rdm Exp $
+// @(#)root/net:$Id: TApplicationRemote.cxx,v 1.14 2007/07/10 14:14:33 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************

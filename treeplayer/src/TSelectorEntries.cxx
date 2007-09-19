@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.cxx,v 1.3 2006/09/29 15:40:08 brun Exp $
+// @(#)root/treeplayer:$Id: TSelectorEntries.cxx,v 1.3 2006/09/29 15:40:08 brun Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************

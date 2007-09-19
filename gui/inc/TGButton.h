@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.51 2007/07/19 07:45:41 antcheva Exp $
+// @(#)root/gui:$Id: TGButton.h,v 1.51 2007/07/19 07:45:41 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************

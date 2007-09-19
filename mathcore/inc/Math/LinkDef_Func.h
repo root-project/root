@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.4 2006/12/06 17:51:13 moneta Exp $
+// @(#)root/mathcore:$Id: LinkDef_Func.h,v 1.4 2006/12/06 17:51:13 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

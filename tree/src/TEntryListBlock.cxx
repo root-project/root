@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.9 2007/05/29 13:16:31 brun Exp $
+// @(#)root/tree:$Id: TEntryListBlock.cxx,v 1.9 2007/05/29 13:16:31 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************

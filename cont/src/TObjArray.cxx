@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.34 2007/02/12 18:03:44 brun Exp $
+// @(#)root/cont:$Id: TObjArray.cxx,v 1.34 2007/02/12 18:03:44 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************

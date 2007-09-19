@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TRealData.cxx,v 1.7 2007/01/24 21:28:41 pcanal Exp $
+// @(#)root/meta:$Id: TRealData.cxx,v 1.7 2007/01/24 21:28:41 pcanal Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************

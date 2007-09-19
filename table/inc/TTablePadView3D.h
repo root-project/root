@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTablePadView3D.h,v 1.3 2007/02/04 17:39:44 brun Exp $
+// @(#)root/table:$Id: TTablePadView3D.h,v 1.3 2007/02/04 17:39:44 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************

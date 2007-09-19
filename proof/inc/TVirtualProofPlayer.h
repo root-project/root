@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.4 2007/07/03 16:26:43 ganis Exp $
+// @(#)root/proof:$Id: TVirtualProofPlayer.h,v 1.4 2007/07/03 16:26:43 ganis Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************

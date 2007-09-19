@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.cxx,v 1.15 2007/06/06 08:25:34 brun Exp $
+// @(#)root/proofplayer:$Id: TFileMerger.cxx,v 1.15 2007/06/06 08:25:34 brun Exp $
 // Author: Andreas Peters + Fons Rademakers + Rene Brun  26/5/2005
 
 /*************************************************************************

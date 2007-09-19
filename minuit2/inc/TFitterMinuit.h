@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.7 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Id: TFitterMinuit.h,v 1.7 2006/07/05 08:32:39 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

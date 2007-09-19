@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.19 2006/12/12 15:03:05 brun Exp $
+// @(#)root/qt:$Id: TQtClientFilter.cxx,v 1.19 2006/12/12 15:03:05 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************

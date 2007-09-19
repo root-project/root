@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.15 2006/11/07 15:45:30 antcheva Exp $
+// @(#)root/gui:$Id: TGDockableFrame.cxx,v 1.15 2006/11/07 15:45:30 antcheva Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************

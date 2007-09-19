@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.17 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/srputils:$Id: SRPAuth.cxx,v 1.17 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************

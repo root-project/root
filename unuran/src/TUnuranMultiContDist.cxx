@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.cxx,v 1.1 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Id: TUnuranMultiContDist.cxx,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************

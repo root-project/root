@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.11 2007/03/19 15:14:09 rdm Exp $
+// @(#)root/proof:$Id: TProofMgr.cxx,v 1.11 2007/03/19 15:14:09 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************

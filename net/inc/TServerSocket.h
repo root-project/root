@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.10 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/net:$Id: TServerSocket.h,v 1.10 2006/05/26 15:13:02 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************

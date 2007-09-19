@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.h,v 1.2 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Id: TXMLPlayer.h,v 1.2 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************

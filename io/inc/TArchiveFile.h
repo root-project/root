@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TArchiveFile.h,v 1.1 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/io:$Id: TArchiveFile.h,v 1.1 2004/07/07 23:25:33 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.12 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Id: TGProgressBar.h,v 1.12 2006/05/28 20:07:59 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************

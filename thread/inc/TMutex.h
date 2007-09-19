@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.9 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Id: TMutex.h,v 1.9 2006/05/23 04:47:41 brun Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************

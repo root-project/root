@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.229 2007/08/31 05:11:05 pcanal Exp $
+// @(#)root/meta:$Id: TClass.cxx,v 1.229 2007/08/31 05:11:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************

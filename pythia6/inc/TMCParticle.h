@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TMCParticle6.h,v 1.3 2006/05/23 04:47:40 brun Exp $
+// @(#)root/pythia6:$Id: TMCParticle6.h,v 1.3 2006/05/23 04:47:40 brun Exp $
 // Author: Piotr Golonka   17/09/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.14 2006/12/12 14:03:04 couet Exp $
+// @(#)root/gpad:$Id: TButton.cxx,v 1.14 2006/12/12 14:03:04 couet Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************

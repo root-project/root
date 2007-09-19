@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.20 2007/04/27 11:07:35 couet Exp $
+// @(#)root/graf:$Id: TImage.h,v 1.20 2007/04/27 11:07:35 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************

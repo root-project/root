@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMemberInspector.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Id: TMemberInspector.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/07/96
 
 /*************************************************************************

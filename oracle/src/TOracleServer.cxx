@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.17 2006/12/12 11:29:45 rdm Exp $
+// @(#)root/oracle:$Id: TOracleServer.cxx,v 1.17 2006/12/12 11:29:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

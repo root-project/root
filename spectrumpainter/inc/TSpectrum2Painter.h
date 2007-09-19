@@ -1,4 +1,4 @@
-// @(#)root/spectrumpainter:$Name:  $:$Id: TSpectrum2Painter.h,v 1.0
+// @(#)root/spectrumpainter:$Id: TSpectrum2Painter.h,v 1.0
 // Author: Miroslav Morhac 29/09/06 
 
 /*************************************************************************

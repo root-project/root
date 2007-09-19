@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer3D.h,v 1.00 
+// @(#)root/base:$Id: TBuffer3D.h,v 1.00 
 // Author: Olivier Couet   05/05/04
 
 /*************************************************************************

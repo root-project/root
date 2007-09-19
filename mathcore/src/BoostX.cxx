@@ -1,4 +1,4 @@
-       // @(#)root/mathcore:$Name:  $:$Id: BoostX.cxx,v 1.6 2006/06/22 08:36:27 moneta Exp $
+       // @(#)root/mathcore:$Id: BoostX.cxx,v 1.6 2006/06/22 08:36:27 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************

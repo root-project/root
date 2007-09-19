@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.11 2007/01/29 10:53:16 brun Exp $
+// @(#)root/io:$Id: TEmulatedMapProxy.cxx,v 1.11 2007/01/29 10:53:16 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

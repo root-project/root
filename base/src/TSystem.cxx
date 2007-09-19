@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.174 2007/07/17 14:03:34 rdm Exp $
+// @(#)root/base:$Id: TSystem.cxx,v 1.174 2007/07/17 14:03:34 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

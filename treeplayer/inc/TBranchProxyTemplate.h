@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyTemplate.h,v 1.8 2007/08/03 13:33:49 pcanal Exp $
+// @(#)root/treeplayer:$Id: TBranchProxyTemplate.h,v 1.8 2007/08/03 13:33:49 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************

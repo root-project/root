@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.7 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/hist:$Id: TConfidenceLevel.cxx,v 1.7 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////

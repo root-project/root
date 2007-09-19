@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.73 2007/07/19 07:46:07 antcheva Exp $
+// @(#)root/gui:$Id: TGMenu.cxx,v 1.73 2007/07/19 07:46:07 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Id: TGLPolyMarker.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TIndexTable.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id: TIndexTable.cxx,v 1.4 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************

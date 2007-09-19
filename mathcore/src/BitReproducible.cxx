@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Id: BitReproducible.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/BitReproducible.h"

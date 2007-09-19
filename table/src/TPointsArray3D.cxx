@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TPointsArray3D.cxx,v 1.7 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Id: TPointsArray3D.cxx,v 1.7 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************

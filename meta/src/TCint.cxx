@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.161 2007/08/30 15:59:32 pcanal Exp $
+// @(#)root/meta:$Id: TCint.cxx,v 1.161 2007/08/30 15:59:32 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************

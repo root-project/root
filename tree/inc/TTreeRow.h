@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.h,v 1.2 2001/09/24 00:42:17 rdm Exp $
+// @(#)root/tree:$Id: TTreeRow.h,v 1.2 2001/09/24 00:42:17 rdm Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************

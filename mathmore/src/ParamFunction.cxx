@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.4 2006/11/23 17:28:57 moneta Exp $
+// @(#)root/mathmore:$Id: ParamFunction.cxx,v 1.4 2006/11/23 17:28:57 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

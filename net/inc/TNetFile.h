@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.27 2006/05/31 15:26:06 brun Exp $
+// @(#)root/net:$Id: TNetFile.h,v 1.27 2006/05/31 15:26:06 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************

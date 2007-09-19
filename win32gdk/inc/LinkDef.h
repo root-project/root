@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Name:  $:$Id: LinkDef.h,v 1.3 2005/08/17 09:10:44 brun Exp $ */
+/* @(#)root/win32gdk:$Id: LinkDef.h,v 1.3 2005/08/17 09:10:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

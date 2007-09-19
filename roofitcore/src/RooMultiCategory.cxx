@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooMultiCategory.cxx,v 1.11 2007/05/11 09:11:58 verkerke Exp $
+ * @(#)root/roofitcore:$Id: RooMultiCategory.cxx,v 1.11 2007/05/11 09:11:58 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

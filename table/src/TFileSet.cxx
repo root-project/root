@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TFileSet.cxx,v 1.6 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Id: TFileSet.cxx,v 1.6 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************

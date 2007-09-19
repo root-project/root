@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualStreamerInfo.cxx,v 1.2 2007/06/15 12:35:04 brun Exp $
+// @(#)root/base:$Id: TVirtualStreamerInfo.cxx,v 1.2 2007/06/15 12:35:04 brun Exp $
 // Author: Rene Brun   05/02/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *

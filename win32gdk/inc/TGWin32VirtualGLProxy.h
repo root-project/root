@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.21 2006/10/24 14:20:41 brun Exp $
+// @(#)root/win32gdk:$Id: TGWin32VirtualGLProxy.h,v 1.21 2006/10/24 14:20:41 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************

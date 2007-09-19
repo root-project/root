@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.4 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TTreeRow.cxx,v 1.4 2005/11/11 22:16:04 pcanal Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************

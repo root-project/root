@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPosDef.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Id: MnPosDef.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

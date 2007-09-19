@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: UnaryOperators.h,v 1.4 2006/06/08 15:23:34 moneta Exp $
+// @(#)root/smatrix:$Id: UnaryOperators.h,v 1.4 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_UnaryOperators

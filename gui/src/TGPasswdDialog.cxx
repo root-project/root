@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPasswdDialog.cxx,v 1.1 2005/10/14 10:56:07 rdm Exp $
+// @(#)root/gui:$Id: TGPasswdDialog.cxx,v 1.1 2005/10/14 10:56:07 rdm Exp $
 // Author: G. Ganis  10/10/2005
 
 /*************************************************************************

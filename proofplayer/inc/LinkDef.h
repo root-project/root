@@ -1,4 +1,4 @@
-/* @(#)root/proofplayer:$Name:  $:$Id: LinkDef.h,v 1.9 2007/07/11 15:35:04 rdm Exp $ */
+/* @(#)root/proofplayer:$Id: LinkDef.h,v 1.9 2007/07/11 15:35:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

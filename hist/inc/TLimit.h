@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.10 2006/10/15 06:23:48 brun Exp $
+// @(#)root/hist:$Id: TLimit.h,v 1.10 2006/10/15 06:23:48 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit

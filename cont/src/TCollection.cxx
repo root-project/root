@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.38 2007/03/22 20:07:36 rdm Exp $
+// @(#)root/cont:$Id: TCollection.cxx,v 1.38 2007/03/22 20:07:36 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************

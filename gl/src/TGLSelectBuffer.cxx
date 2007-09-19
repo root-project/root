@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSelectBuffer.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
+// @(#)root/gl:$Id: TGLSelectBuffer.cxx,v 1.1 2007/06/11 19:56:34 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

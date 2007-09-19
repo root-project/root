@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVersionCheck.h,v 1.3 2007/05/10 18:16:58 rdm Exp $
+// @(#)root/base:$Id: TVersionCheck.h,v 1.3 2007/05/10 18:16:58 rdm Exp $
 // Author: Fons Rademakers   9/5/2007
 
 /*************************************************************************

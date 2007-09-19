@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.7 2007/02/06 15:39:54 antcheva Exp $
+// @(#)root/ged:$Id: TF1Editor.h,v 1.7 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************

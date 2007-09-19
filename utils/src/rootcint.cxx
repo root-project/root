@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.260 2007/07/30 20:08:25 pcanal Exp $
+// @(#)root/utils:$Id: rootcint.cxx,v 1.260 2007/07/30 20:08:25 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************

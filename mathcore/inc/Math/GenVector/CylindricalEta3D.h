@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.7 2006/03/06 14:40:11 moneta Exp $
+// @(#)root/mathcore:$Id: CylindricalEta3D.h,v 1.7 2006/03/06 14:40:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

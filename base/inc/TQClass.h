@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQClass.h,v 1.1 2006/03/20 21:42:28 pcanal Exp $
+// @(#)root/base:$Id: TQClass.h,v 1.1 2006/03/20 21:42:28 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

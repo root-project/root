@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TGraphPainter.h,v 1.00
+// @(#)root/histpainter:$Id: TGraphPainter.h,v 1.00
 // Author: Olivier Couet
 
 /*************************************************************************

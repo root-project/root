@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFileStager.h,v 1.3 2007/03/30 16:44:33 rdm Exp $
+// @(#)root/net:$Id: TFileStager.h,v 1.3 2007/03/30 16:44:33 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************

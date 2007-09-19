@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.6 2003/08/23 14:51:25 brun Exp $
+// @(#)root/win32gdk:$Id: TGWin32ProxyDefs.h,v 1.6 2003/08/23 14:51:25 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 

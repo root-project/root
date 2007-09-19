@@ -1,4 +1,4 @@
-/* @(#)root/spectrumpainter:$Name:  $:$Id: LinkDef.h,v 1.6 2005/05/24 09:41:18 brun Exp $ */
+/* @(#)root/spectrumpainter:$Id: LinkDef.h,v 1.6 2005/05/24 09:41:18 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

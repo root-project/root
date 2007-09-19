@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.cxx,v 1.15 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Id: MemberBase.cxx,v 1.15 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

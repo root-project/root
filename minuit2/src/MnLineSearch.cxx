@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.7 2007/03/01 08:12:57 brun Exp $
+// @(#)root/minuit2:$Id: MnLineSearch.cxx,v 1.7 2007/03/01 08:12:57 brun Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

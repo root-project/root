@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.15 2007/06/21 19:14:21 pcanal Exp $
+// @(#)root/tree:$Id: TTreeIndex.cxx,v 1.15 2007/06/21 19:14:21 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.6 2006/08/13 14:21:49 moneta Exp $
+// @(#)root/test:$Id: stressVector.cxx,v 1.6 2006/08/13 14:21:49 moneta Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //

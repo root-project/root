@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.6 2006/05/13 17:28:15 brun Exp $
+// @(#)root/hbook:$Id: THbookBranch.h,v 1.6 2006/05/13 17:28:15 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************

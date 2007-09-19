@@ -1,4 +1,4 @@
-/* @(#)root/reflex:$Name:  $:$Id: LinkDef.h,v 1.2 2007/04/26 13:47:05 axel Exp $ */
+/* @(#)root/reflex:$Id: LinkDef.h,v 1.2 2007/04/26 13:47:05 axel Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *

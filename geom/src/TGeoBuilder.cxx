@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBuilder.cxx,v 1.180 2007/05/25 12:28:38 brun Exp $
+// @(#)root/geom:$Id: TGeoBuilder.cxx,v 1.180 2007/05/25 12:28:38 brun Exp $
 // Author: Mihaela Gheata   30/05/07
 
 /*************************************************************************

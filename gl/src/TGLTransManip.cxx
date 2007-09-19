@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLTransManip.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
+// @(#)root/gl:$Id: TGLTransManip.cxx,v 1.1.1.1 2007/04/04 16:01:45 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.3 2006/04/19 09:11:57 brun Exp $
+// @(#)root/geom:$Id: TGeoHelix.cxx,v 1.3 2006/04/19 09:11:57 brun Exp $
 // Author: Andrei Gheata   28/04/04
 
 /*************************************************************************

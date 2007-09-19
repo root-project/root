@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.14 2007/08/13 14:05:59 brun Exp $
+// @(#)root/geom:$Id: TGeoVoxelFinder.h,v 1.14 2007/08/13 14:05:59 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************

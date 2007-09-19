@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.cxx,v 1.52 2007/09/07 21:12:02 ganis Exp $
+// @(#)root/proofplayer:$Id: TPacketizer.cxx,v 1.52 2007/09/07 21:12:02 ganis Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************

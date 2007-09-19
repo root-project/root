@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.23 2006/12/11 06:01:05 brun Exp $
+// @(#)root/pyroot:$Id: Converters.h,v 1.23 2006/12/11 06:01:05 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H

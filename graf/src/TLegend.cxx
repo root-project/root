@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.35 2007/06/05 20:07:46 brun Exp $
+// @(#)root/graf:$Id: TLegend.cxx,v 1.35 2007/06/05 20:07:46 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************

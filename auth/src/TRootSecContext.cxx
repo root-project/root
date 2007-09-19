@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.3 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/auth:$Id: TRootSecContext.cxx,v 1.3 2006/04/19 08:22:22 rdm Exp $
 // Author: G. Ganis   08/07/2005
 
 /*************************************************************************

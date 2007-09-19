@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.20 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Id: TInspectCanvas.cxx,v 1.20 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************

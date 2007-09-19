@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOverlay.h,v 1.1 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Id: TGLOverlay.h,v 1.1 2007/06/11 19:56:33 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

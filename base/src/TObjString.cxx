@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Id: TObjString.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************

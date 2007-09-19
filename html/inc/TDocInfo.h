@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.3 2007/03/16 15:25:55 axel Exp $
+// @(#)root/html:$Id: TDocInfo.h,v 1.3 2007/03/16 15:25:55 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************

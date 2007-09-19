@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.93 2006/11/24 14:24:53 rdm Exp $ */
+/* @(#)root/base:$Id: RConfig.h,v 1.93 2006/11/24 14:24:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

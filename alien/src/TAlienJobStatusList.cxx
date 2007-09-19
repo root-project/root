@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.cxx,v 1.1 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Id: TAlienJobStatusList.cxx,v 1.1 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************

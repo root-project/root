@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.10 2006/06/02 07:21:20 brun Exp $
+// @(#)root/geom:$Id: TGeoMedium.h,v 1.10 2006/06/02 07:21:20 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************

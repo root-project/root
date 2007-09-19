@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLWidget.h,v 1.6 2007/06/18 07:54:16 brun Exp $
+// @(#)root/gl:$Id: TGLWidget.h,v 1.6 2007/06/18 07:54:16 brun Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************

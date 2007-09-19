@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.38 2007/07/27 18:03:55 brun Exp $
+// @(#)root/minuit:$Id: TLinearFitter.cxx,v 1.38 2007/07/27 18:03:55 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************

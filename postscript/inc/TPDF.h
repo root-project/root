@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPDF.h,v 1.0
+// @(#)root/postscript:$Id: TPDF.h,v 1.0
 // Author: Olivier Couet
 
 /*************************************************************************

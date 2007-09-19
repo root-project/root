@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TFunctionParametersDialog.cxx,v 1.5 2007/02/01 14:58:44 brun Exp $
+// @(#)root/ged:$Id: TFunctionParametersDialog.cxx,v 1.5 2007/02/01 14:58:44 brun Exp $
 // Author: Ilka Antcheva   08/05/06
 
 /*************************************************************************

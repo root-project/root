@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFileCacheRead.cxx,v 1.7 2007/01/12 16:03:15 brun Exp $
+// @(#)root/io:$Id: TFileCacheRead.cxx,v 1.7 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************

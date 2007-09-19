@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hparam.h,v 1.2 2000/06/13 09:52:03 brun Exp $ */
+/* @(#)root/histpainter:$Id: Hparam.h,v 1.2 2000/06/13 09:52:03 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

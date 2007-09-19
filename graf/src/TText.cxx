@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.23 2007/01/30 08:50:56 couet Exp $
+// @(#)root/graf:$Id: TText.cxx,v 1.23 2007/01/30 08:50:56 couet Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************

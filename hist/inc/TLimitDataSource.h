@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.6 2005/11/29 06:16:16 brun Exp $
+// @(#)root/hist:$Id: TLimitDataSource.h,v 1.6 2005/11/29 06:16:16 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimitDataSource

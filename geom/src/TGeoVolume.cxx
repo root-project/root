@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.103 2007/08/20 08:49:08 brun Exp $
+// @(#)root/geom:$Id: TGeoVolume.cxx,v 1.103 2007/08/20 08:49:08 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 

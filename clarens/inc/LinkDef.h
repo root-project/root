@@ -1,4 +1,4 @@
-/* @(#)root/clarens:$Name: PROOF_MLM $:$Id: LinkDef.h,v 1.1.2.6 2004/11/07 20:00:15 maartenb Exp $ */
+/* @(#)root/clarens:$Id: LinkDef.h,v 1.1.2.6 2004/11/07 20:00:15 maartenb Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

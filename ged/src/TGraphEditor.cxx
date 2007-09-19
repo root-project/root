@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.22 2007/02/03 18:12:31 brun Exp $
+// @(#)root/ged:$Id: TGraphEditor.cxx,v 1.22 2007/02/03 18:12:31 brun Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************

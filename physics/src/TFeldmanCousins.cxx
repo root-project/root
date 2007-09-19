@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.12 2006/12/12 14:14:15 couet Exp $
+// @(#)root/physics:$Id: TFeldmanCousins.cxx,v 1.12 2006/12/12 14:14:15 couet Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************

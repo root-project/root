@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.4 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Id: TTime.h,v 1.4 2005/11/16 20:02:34 pcanal Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************

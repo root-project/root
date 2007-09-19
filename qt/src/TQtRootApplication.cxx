@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.cxx,v 1.2 2005/12/09 21:19:53 fine Exp $
+// @(#)root/gui:$Id: TQtRootApplication.cxx,v 1.2 2005/12/09 21:19:53 fine Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************

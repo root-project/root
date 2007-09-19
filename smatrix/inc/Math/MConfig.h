@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MConfig.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Id: MConfig.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MConfig_

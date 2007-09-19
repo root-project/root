@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Id: ProbFuncMathCore.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 

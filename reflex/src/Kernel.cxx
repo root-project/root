@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.22 2006/11/24 13:21:14 roiser Exp $
+// @(#)root/reflex:$Id: Kernel.cxx,v 1.22 2006/11/24 13:21:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

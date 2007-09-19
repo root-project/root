@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLStatement.cxx,v 1.2 2007/06/08 09:45:02 rdm Exp $
+// @(#)root/pgsql:$Id: TPgSQLStatement.cxx,v 1.2 2007/06/08 09:45:02 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************

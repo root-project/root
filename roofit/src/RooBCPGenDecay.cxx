@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooBCPGenDecay.cxx,v 1.18 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooBCPGenDecay.cxx,v 1.18 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:

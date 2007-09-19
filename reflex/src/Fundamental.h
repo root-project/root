@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Fundamental.h,v 1.5 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Id: Fundamental.h,v 1.5 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

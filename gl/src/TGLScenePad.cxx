@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScenePad.cxx,v 1.2 2007/08/02 14:47:45 rdm Exp $
+// @(#)root/gl:$Id: TGLScenePad.cxx,v 1.2 2007/08/02 14:47:45 rdm Exp $
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************

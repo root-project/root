@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBits.cxx,v 1.19 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id: TBits.cxx,v 1.19 2005/11/16 20:07:50 pcanal Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.

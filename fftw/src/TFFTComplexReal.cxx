@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.4 2006/10/27 16:21:11 brun Exp $
+// @(#)root/fft:$Id: TFFTComplexReal.cxx,v 1.4 2006/10/27 16:21:11 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************

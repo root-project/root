@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.4 2004/05/10 12:09:45 brun Exp $
+// @(#)root/gui:$Id: TRootApplication.h,v 1.4 2004/05/10 12:09:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************

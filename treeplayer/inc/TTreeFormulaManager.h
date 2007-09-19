@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.8 2003/12/16 18:55:49 brun Exp $
+// @(#)root/treeplayer:$Id: TTreeFormulaManager.h,v 1.8 2003/12/16 18:55:49 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************

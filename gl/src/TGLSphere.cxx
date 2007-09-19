@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSphere.cxx,v 1.2 2007/05/10 11:17:47 mtadel Exp $
+// @(#)root/gl:$Id: TGLSphere.cxx,v 1.2 2007/05/10 11:17:47 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history

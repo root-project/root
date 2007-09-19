@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.4 2006/05/16 09:37:57 brun Exp $
+// @(#)root/odbc:$Id: TODBCRow.cxx,v 1.4 2006/05/16 09:37:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************

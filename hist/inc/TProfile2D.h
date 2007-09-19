@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.30 2007/06/12 15:29:23 moneta Exp $
+// @(#)root/hist:$Id: TProfile2D.h,v 1.30 2007/06/12 15:29:23 moneta Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.13 2006/07/03 14:30:45 moneta Exp $
+// @(#)root/smatrix:$Id: SVector.h,v 1.13 2006/07/03 14:30:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector

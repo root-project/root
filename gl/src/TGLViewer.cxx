@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.75 2007/08/19 10:07:49 rdm Exp $
+// @(#)root/gl:$Id: TGLViewer.cxx,v 1.75 2007/08/19 10:07:49 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

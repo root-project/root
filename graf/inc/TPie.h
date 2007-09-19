@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.6 2007/01/24 17:06:21 couet Exp $
+// @(#)root/graf:$Id: TPie.h,v 1.6 2007/01/24 17:06:21 couet Exp $
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.11 2007/02/18 15:35:39 rdm Exp $
+// @(#)root/alien:$Id: TAlienResult.h,v 1.11 2007/02/18 15:35:39 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************

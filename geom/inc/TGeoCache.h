@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.27 2007/05/25 12:28:38 brun Exp $
+// @(#)root/geom:$Id: TGeoCache.h,v 1.27 2007/05/25 12:28:38 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************

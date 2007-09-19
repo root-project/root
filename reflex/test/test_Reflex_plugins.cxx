@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: main.cpp,v 1.3 2006/11/27 17:36:29 mato Exp $
+// @(#)root/reflex:$Id: main.cpp,v 1.3 2006/11/27 17:36:29 mato Exp $
 // Author: Pere Mato 2006
 
 // CppUnit include file

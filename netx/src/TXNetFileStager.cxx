@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.4 2007/05/03 11:52:08 rdm Exp $
+// @(#)root/net:$Id: TXNetFileStager.cxx,v 1.4 2007/05/03 11:52:08 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************

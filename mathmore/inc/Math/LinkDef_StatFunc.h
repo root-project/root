@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef_StatFunc.h,v 1.2 2006/01/23 15:52:59 moneta Exp $
+// @(#)root/mathmore:$Id: LinkDef_StatFunc.h,v 1.2 2006/01/23 15:52:59 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.10 2005/05/25 14:25:17 brun Exp $
+// @(#)root/base:$Id: TViewer3DPad.cxx,v 1.10 2005/05/25 14:25:17 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************

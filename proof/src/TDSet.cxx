@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.18 2007/08/02 16:00:03 rdm Exp $
+// @(#)root/proof:$Id: TDSet.cxx,v 1.18 2007/08/02 16:00:03 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************

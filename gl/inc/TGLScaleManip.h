@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Id: TGLScaleManip.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************

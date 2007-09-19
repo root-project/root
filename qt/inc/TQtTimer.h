@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.h,v 1.5 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Id: TQtTimer.h,v 1.5 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valery Fine  09/08/2004
 
 /*************************************************************************

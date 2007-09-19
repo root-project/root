@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TAtomicCountGcc.h,v 1.1 2006/11/16 18:07:33 rdm Exp $
+// @(#)root/thread:$Id: TAtomicCountGcc.h,v 1.1 2006/11/16 18:07:33 rdm Exp $
 // Author: Fons Rademakers   14/11/06
 
 /*************************************************************************

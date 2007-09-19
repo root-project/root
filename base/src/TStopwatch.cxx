@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.15 2007/01/12 10:28:53 brun Exp $
+// @(#)root/base:$Id: TStopwatch.cxx,v 1.15 2007/01/12 10:28:53 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************

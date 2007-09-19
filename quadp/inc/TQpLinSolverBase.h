@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.h,v 1.5 2006/06/03 05:42:19 brun Exp $
+// @(#)root/quadp:$Id: TQpLinSolverBase.h,v 1.5 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

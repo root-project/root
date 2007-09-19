@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DDistances.cxx,v 1.5 2007/05/29 13:15:29 brun Exp $
+// @(#)root/mathcore:$Id: 3DDistances.cxx,v 1.5 2007/05/29 13:15:29 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

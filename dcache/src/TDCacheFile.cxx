@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.30 2006/06/27 14:36:27 brun Exp $
+// @(#)root/dcache:$Id: TDCacheFile.cxx,v 1.30 2006/06/27 14:36:27 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004

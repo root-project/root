@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManipSet.cxx,v 1.2 2007/06/12 14:50:57 brun Exp $
+// @(#)root/gl:$Id: TGLManipSet.cxx,v 1.2 2007/06/12 14:50:57 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

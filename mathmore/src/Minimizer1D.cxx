@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
  /**********************************************************************
   *                                                                    *

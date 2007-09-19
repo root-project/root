@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef_SpecFunc.h,v 1.3 2006/03/01 12:15:24 moneta Exp $
+// @(#)root/mathmore:$Id: LinkDef_SpecFunc.h,v 1.3 2006/03/01 12:15:24 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #ifdef __CINT__

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooGlobalFunc.cxx,v 1.15 2007/07/12 20:30:28 wouter Exp $
+ * @(#)root/roofitcore:$Id: RooGlobalFunc.cxx,v 1.15 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

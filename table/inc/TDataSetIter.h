@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.6 2006/08/24 16:37:12 rdm Exp $
+// @(#)root/table:$Id: TDataSetIter.h,v 1.6 2006/08/24 16:37:12 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************

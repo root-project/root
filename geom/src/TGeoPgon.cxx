@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.64 2007/08/13 16:00:32 brun Exp $
+// @(#)root/geom:$Id: TGeoPgon.cxx,v 1.64 2007/08/13 16:00:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 

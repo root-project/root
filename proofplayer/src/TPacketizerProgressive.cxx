@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.13 2007/09/07 21:12:02 ganis Exp $
+// @(#)root/proofplayer:$Id: TPacketizerProgressive.cxx,v 1.13 2007/09/07 21:12:02 ganis Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************

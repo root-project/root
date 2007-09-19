@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.6 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Id: TAttPad.h,v 1.6 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************

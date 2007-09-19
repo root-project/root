@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.10 2006/02/28 10:57:12 brun Exp $
+// @(#)root/geom:$Id: TGeoOverlap.cxx,v 1.10 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************

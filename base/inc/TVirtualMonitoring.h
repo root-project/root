@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMonitoring.h,v 1.3 2007/02/22 11:51:50 brun Exp $
+// @(#)root/base:$Id: TVirtualMonitoring.h,v 1.3 2007/02/22 11:51:50 brun Exp $
 // Author: Andreas-Joachim Peters   15/05/2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewerBase.h,v 1.3 2007/07/23 15:08:39 rdm Exp $
+// @(#)root/gl:$Id: TGLViewerBase.h,v 1.3 2007/07/23 15:08:39 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

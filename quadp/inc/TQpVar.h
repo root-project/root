@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.7 2006/06/28 05:17:13 brun Exp $
+// @(#)root/quadp:$Id: TQpVar.h,v 1.7 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

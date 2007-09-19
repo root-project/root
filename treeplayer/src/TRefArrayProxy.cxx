@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TRefArrayProxy.cxx,v 1.1 2006/06/28 10:03:14 pcanal Exp $
+// @(#)root/meta:$Id: TRefArrayProxy.cxx,v 1.1 2006/06/28 10:03:14 pcanal Exp $
 // Author: Markus Frank  10/02/2006
 
 /*************************************************************************

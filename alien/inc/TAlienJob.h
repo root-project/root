@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJob.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Id: TAlienJob.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************

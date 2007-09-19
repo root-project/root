@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDNDManager.cxx,v 1.4 2007/04/22 15:48:59 brun Exp $
+// @(#)root/gui:$Id: TGDNDManager.cxx,v 1.4 2007/04/22 15:48:59 brun Exp $
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************

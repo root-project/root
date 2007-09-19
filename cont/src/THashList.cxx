@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.9 2007/09/05 22:48:32 rdm Exp $
+// @(#)root/cont:$Id: THashList.cxx,v 1.9 2007/09/05 22:48:32 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.8 2004/01/10 10:52:29 brun Exp $
+// @(#)root/meta:$Id: TBaseClass.h,v 1.8 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************

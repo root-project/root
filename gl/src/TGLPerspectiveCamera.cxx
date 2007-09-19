@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Id: TGLPerspectiveCamera.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

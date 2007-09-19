@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TPDGCode.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Id: TPDGCode.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Andreas Morsch 13/04/2002
 
 /*************************************************************************

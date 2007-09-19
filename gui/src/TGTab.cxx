@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.41 2006/11/10 17:00:23 antcheva Exp $
+// @(#)root/gui:$Id: TGTab.cxx,v 1.41 2006/11/10 17:00:23 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFuncMathCore.h,v 1.1 2006/12/07 11:07:03 moneta Exp $
+// @(#)root/mathcore:$Id: DistFuncMathCore.h,v 1.1 2006/12/07 11:07:03 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************

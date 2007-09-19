@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.173 2007/07/10 07:55:43 rdm Exp $
+// @(#)root/winnt:$Id: TWinNTSystem.cxx,v 1.173 2007/07/10 07:55:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

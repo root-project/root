@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TEventIter.h,v 1.21 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Id: TEventIter.h,v 1.21 2007/07/13 13:22:57 ganis Exp $
 // Author: Maarten Ballintijn   07/01/02
 // Modified: Long Tran-Thanh    04/09/07  (Addition of TEventIterUnit)
 

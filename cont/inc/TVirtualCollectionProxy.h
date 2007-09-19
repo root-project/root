@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.12 2007/02/18 14:56:42 brun Exp $
+// @(#)root/cont:$Id: TVirtualCollectionProxy.h,v 1.12 2007/02/18 14:56:42 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************

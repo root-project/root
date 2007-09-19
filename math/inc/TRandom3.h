@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TRandom3.h,v 1.5 2006/06/15 09:59:22 brun Exp $
+// @(#)root/math:$Id: TRandom3.h,v 1.5 2006/06/15 09:59:22 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 /*************************************************************************

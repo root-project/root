@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// @(#)root/mathcore:$Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
 // Authors: J. Palacios, L. Moneta    2007  
 
  /**********************************************************************

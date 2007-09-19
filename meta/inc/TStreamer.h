@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStreamer.h,Exp $
+// @(#)root/base:$Id: TStreamer.h,Exp $
 // Author: Victor Perev and Philippe Canal   08/05/02
 
 /*************************************************************************

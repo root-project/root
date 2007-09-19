@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.11 2007/01/12 16:03:16 brun Exp $
+// @(#):$Id: TGeoHalfSpace.cxx,v 1.11 2007/01/12 16:03:16 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.9 2006/06/06 08:33:31 rdm Exp $
+// @(#)root/new:$Id: NewDelete.cxx,v 1.9 2006/06/06 08:33:31 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************

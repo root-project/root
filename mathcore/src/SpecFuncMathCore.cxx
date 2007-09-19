@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: SpecFuncMathCore.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Id: SpecFuncMathCore.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

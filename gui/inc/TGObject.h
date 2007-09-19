@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.6 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gui:$Id: TGObject.h,v 1.6 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************

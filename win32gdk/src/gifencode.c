@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Name:$:$Id:$ */
+/* @(#)root/win32gdk:$Id:$ */
 /* Author: E.Chernyaev   19/01/94*/
 #include <stdio.h>
 #include <stdlib.h>

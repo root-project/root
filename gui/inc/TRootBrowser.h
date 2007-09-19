@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.21 2005/12/13 16:03:42 brun Exp $
+// @(#)root/gui:$Id: TRootBrowser.h,v 1.21 2005/12/13 16:03:42 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************

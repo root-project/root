@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRnrCtx.cxx,v 1.2 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Id: TGLRnrCtx.cxx,v 1.2 2007/06/18 07:02:16 brun Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

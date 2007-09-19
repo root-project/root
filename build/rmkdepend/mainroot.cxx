@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.6 2006/08/21 12:31:37 rdm Exp $
+// @(#)root/build:$Id: mainroot.cxx,v 1.6 2006/08/21 12:31:37 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************

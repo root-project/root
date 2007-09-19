@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.10 2006/08/31 12:28:44 rdm Exp $
+// @(#)root/treeplayer:$Id: TBranchProxyDescriptor.cxx,v 1.10 2006/08/31 12:28:44 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

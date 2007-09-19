@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.h,v 1.2 2005/11/21 08:49:48 couet Exp $
+// @(#)root/graf:$Id: TGraphQQ.h,v 1.2 2005/11/21 08:49:48 couet Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************

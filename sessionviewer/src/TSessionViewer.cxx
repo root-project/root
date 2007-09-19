@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.14 2007/08/02 16:10:23 rdm Exp $
+// @(#)root/sessionviewer:$Id: TSessionViewer.cxx,v 1.14 2007/08/02 16:10:23 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

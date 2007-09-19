@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPoints3DABC.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Id: TPoints3DABC.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************

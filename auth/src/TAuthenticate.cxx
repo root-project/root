@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.20 2007/03/08 11:41:27 rdm Exp $
+// @(#)root/auth:$Id: TAuthenticate.cxx,v 1.20 2007/03/08 11:41:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************

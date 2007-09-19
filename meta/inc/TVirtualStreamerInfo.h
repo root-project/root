@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.5 2007/02/27 19:00:17 pcanal Exp $
+// @(#)root/meta:$Id: TVirtualStreamerInfo.h,v 1.5 2007/02/27 19:00:17 pcanal Exp $
 // Author: Rene Brun   05/02/2007
 
 /*************************************************************************

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooBDecay.cxx,v 1.14 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooBDecay.cxx,v 1.14 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

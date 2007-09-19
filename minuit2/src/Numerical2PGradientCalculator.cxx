@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.4 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Id: Numerical2PGradientCalculator.cxx,v 1.4 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.9 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/gui:$Id: TGResourcePool.cxx,v 1.9 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************

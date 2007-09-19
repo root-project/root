@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.5 2006/10/27 16:21:11 brun Exp $
+// @(#)root/base:$Id: TVirtualFFT.cxx,v 1.5 2006/10/27 16:21:11 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 /*************************************************************************

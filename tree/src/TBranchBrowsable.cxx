@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.14 2007/02/22 15:40:02 brun Exp $
+// @(#)root/tree:$Id: TBranchBrowsable.cxx,v 1.14 2007/02/22 15:40:02 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************

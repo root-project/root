@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooNumConvPdf.cxx,v 1.2 2007/05/14 14:38:04 wouter Exp $
+ * @(#)root/roofitcore:$Id: RooNumConvPdf.cxx,v 1.2 2007/05/14 14:38:04 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

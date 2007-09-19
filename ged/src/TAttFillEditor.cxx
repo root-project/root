@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.13 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Id: TAttFillEditor.cxx,v 1.13 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************

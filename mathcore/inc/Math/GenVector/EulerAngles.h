@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.13 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Id: EulerAngles.h,v 1.13 2006/11/10 11:04:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

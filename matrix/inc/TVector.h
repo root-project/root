@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.25 2004/01/29 16:03:33 brun Exp $
+// @(#)root/matrix:$Id: TVector.h,v 1.25 2004/01/29 16:03:33 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************

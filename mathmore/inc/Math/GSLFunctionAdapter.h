@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionAdapter.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Id: GSLFunctionAdapter.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

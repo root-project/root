@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TQuaternion.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Id: TQuaternion.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
 // Author: Eric Anciant 28/06/2005
 
 

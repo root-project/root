@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TGraphDelaunay.cxx,v 1.00
+// @(#)root/hist:$Id: TGraphDelaunay.cxx,v 1.00
 // Author: Olivier Couet, Luke Jones (Royal Holloway, University of London)
 
 /*************************************************************************

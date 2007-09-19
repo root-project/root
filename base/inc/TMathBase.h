@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.5 2007/02/08 09:07:50 brun Exp $
+// @(#)root/base:$Id: TMathBase.h,v 1.5 2007/02/08 09:07:50 brun Exp $
 // Authors: Rene Brun, Fons Rademakers   29/07/95
 
 /*************************************************************************

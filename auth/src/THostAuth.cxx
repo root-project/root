@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
+// @(#)root/auth:$Id: THostAuth.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************

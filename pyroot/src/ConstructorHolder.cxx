@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.15 2006/12/09 06:11:46 brun Exp $
+// @(#)root/pyroot:$Id: ConstructorHolder.cxx,v 1.15 2006/12/09 06:11:46 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

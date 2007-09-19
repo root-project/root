@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
+// @(#)root/gl:$Id: TArcBall.cxx,v 1.1.1.1 2007/04/04 16:01:44 mtadel Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLWriter.h,v 1.1 2007/07/09 15:24:14 rdm Exp $
+// @(#)root/net:$Id: TSQLWriter.h,v 1.1 2007/07/09 15:24:14 rdm Exp $
 // Author: J.F. Grosse-Oetringhaus, G.Ganis
 
 /*************************************************************************

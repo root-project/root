@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.3 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Id: TFumiliFCN.h,v 1.3 2006/04/26 10:40:09 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

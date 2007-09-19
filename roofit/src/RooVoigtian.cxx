@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooVoigtian.cxx,v 1.13 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooVoigtian.cxx,v 1.13 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *

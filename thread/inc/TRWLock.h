@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.3 2006/05/23 08:41:51 brun Exp $
+// @(#)root/thread:$Id: TRWLock.h,v 1.3 2006/05/23 08:41:51 brun Exp $
 // Author: Fons Rademakers   04/01/2000
 
 /*************************************************************************

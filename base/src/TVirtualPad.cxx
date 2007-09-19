@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.7 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Id: TVirtualPad.cxx,v 1.7 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************

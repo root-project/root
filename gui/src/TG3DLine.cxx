@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.6 2006/06/01 11:38:15 antcheva Exp $
+// @(#)root/gui:$Id: TG3DLine.cxx,v 1.6 2006/06/01 11:38:15 antcheva Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************

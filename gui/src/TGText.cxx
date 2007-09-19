@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.21 2007/04/20 12:15:28 brun Exp $
+// @(#)root/gui:$Id: TGText.cxx,v 1.21 2007/04/20 12:15:28 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************

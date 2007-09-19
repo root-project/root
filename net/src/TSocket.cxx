@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.42 2007/04/24 12:58:35 rdm Exp $
+// @(#)root/net:$Id: TSocket.cxx,v 1.42 2007/04/24 12:58:35 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************

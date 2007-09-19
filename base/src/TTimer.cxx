@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.16 2007/02/05 10:38:04 rdm Exp $
+// @(#)root/base:$Id: TTimer.cxx,v 1.16 2007/02/05 10:38:04 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************

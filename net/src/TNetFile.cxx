@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.85 2006/09/04 00:45:03 rdm Exp $
+// @(#)root/net:$Id: TNetFile.cxx,v 1.85 2006/09/04 00:45:03 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.5 2006/09/29 10:55:57 brun Exp $
+// @(#)root/physics:$Id: TOracleServer.h,v 1.5 2006/09/29 10:55:57 brun Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

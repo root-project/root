@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.15 2007/01/29 15:10:48 brun Exp $
+// @(#)root/asimage:$Id: TASPaletteEditor.cxx,v 1.15 2007/01/29 15:10:48 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************

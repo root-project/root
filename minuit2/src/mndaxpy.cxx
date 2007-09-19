@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mndaxpy.cxx,v 1.2 2005/12/10 11:52:39 moneta Exp $
+// @(#)root/minuit2:$Id: mndaxpy.cxx,v 1.2 2005/12/10 11:52:39 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

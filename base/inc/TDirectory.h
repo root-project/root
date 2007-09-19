@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.44 2007/05/07 09:40:41 brun Exp $
+// @(#)root/base:$Id: TDirectory.h,v 1.44 2007/05/07 09:40:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************

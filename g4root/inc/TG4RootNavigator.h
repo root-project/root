@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.h,v 1.3 2007/04/23 09:03:03 brun Exp $
+// @(#)root/g4root:$Id: TG4RootNavigator.h,v 1.3 2007/04/23 09:03:03 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************

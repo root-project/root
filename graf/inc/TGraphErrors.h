@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.25 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Id: TGraphErrors.h,v 1.25 2006/05/23 04:47:37 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************

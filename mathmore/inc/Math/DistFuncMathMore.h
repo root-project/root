@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: DistFuncMathMore.h,v 1.1 2006/12/07 11:07:55 moneta Exp $
+// @(#)root/mathmore:$Id: DistFuncMathMore.h,v 1.1 2006/12/07 11:07:55 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************

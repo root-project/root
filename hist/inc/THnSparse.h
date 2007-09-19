@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THnSparse.h,v 1.4 2007/09/17 11:05:02 brun Exp $
+// @(#)root/hist:$Id: THnSparse.h,v 1.4 2007/09/17 11:05:02 brun Exp $
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************

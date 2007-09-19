@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.33 2006/09/15 12:33:35 brun Exp $
+// @(#)root/hist:$Id: TFormula.h,v 1.33 2006/09/15 12:33:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************

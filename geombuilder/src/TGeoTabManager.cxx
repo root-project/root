@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.11 2007/01/30 11:49:13 brun Exp $
+// @(#):$Id: TGeoTabManager.cxx,v 1.11 2007/01/30 11:49:13 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************

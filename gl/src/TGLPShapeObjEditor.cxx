@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPShapeObjEditor.cxx,v 1.5 2007/06/12 10:22:49 brun Exp $
+// @(#)root/gl:$Id: TGLPShapeObjEditor.cxx,v 1.5 2007/06/12 10:22:49 brun Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include <cstring>

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRemoteObject.h,v 1.2 2007/06/19 13:50:21 rdm Exp $
+// @(#)root/base:$Id: TRemoteObject.h,v 1.2 2007/06/19 13:50:21 rdm Exp $
 // Author: Bertrand Bellenot   19/06/2007
 
 /*************************************************************************

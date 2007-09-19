@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.12 2007/01/12 16:03:17 brun Exp $
+// @(#)root/vmc:$Id: TGeoMCGeometry.cxx,v 1.12 2007/01/12 16:03:17 brun Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooNonCPEigenDecay.cxx,v 1.24 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooNonCPEigenDecay.cxx,v 1.24 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *

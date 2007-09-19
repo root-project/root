@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.3 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Id: TGXYLayout.h,v 1.3 2006/05/23 04:47:38 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************

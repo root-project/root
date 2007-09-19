@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.6 2006/06/08 15:23:33 moneta Exp $
+// @(#)root/smatrix:$Id: BinaryOperators.h,v 1.6 2006/06/08 15:23:33 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators

@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLDocument.cxx,v 1.1 2005/05/11 13:19:50 rdm Exp $
+// @(#)root/xmlparser:$Id: TXMLDocument.cxx,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************

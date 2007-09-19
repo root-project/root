@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.20 2006/12/21 14:08:38 brun Exp $
+// @(#)root/base:$Id: TAttText.cxx,v 1.20 2006/12/21 14:08:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

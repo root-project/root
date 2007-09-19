@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
+// @(#)root/matrix:$Id: TQpProbDens.cxx,v 1.7 2006/06/23 05:02:55 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************

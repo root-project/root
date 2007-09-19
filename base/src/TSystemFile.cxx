@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.7 2005/05/30 10:21:14 rdm Exp $
+// @(#)root/base:$Id: TSystemFile.cxx,v 1.7 2005/05/30 10:21:14 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************

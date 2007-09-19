@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.3 2007/07/02 14:31:27 axel Exp $
+// @(#)root/html:$Id: TDocOutput.h,v 1.3 2007/07/02 14:31:27 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************

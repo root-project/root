@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Name:  $:$Id: RooWorkspace.cxx,v 1.3 2007/07/21 21:32:52 wouter Exp $
+ * @(#)root/roofitcore:$Id: RooWorkspace.cxx,v 1.3 2007/07/21 21:32:52 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *

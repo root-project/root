@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.8 2006/10/19 19:37:29 pcanal Exp $
+// @(#)root/io:$Id: TFileCacheWrite.cxx,v 1.8 2006/10/19 19:37:29 pcanal Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************

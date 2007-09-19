@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: RRemoteProtocol.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
+// @(#)root/net:$Id: RRemoteProtocol.h,v 1.2 2007/05/10 17:31:08 rdm Exp $
 // Author: G. Ganis  10/5/2007
 
 /*************************************************************************

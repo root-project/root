@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.14 2007/06/11 19:56:33 brun Exp $
+// @(#)root/base:$Id: TVirtualViewer3D.h,v 1.14 2007/06/11 19:56:33 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.23 2007/05/04 17:32:45 pcanal Exp $
+// @(#)root/tree:$Id: TLeafI.cxx,v 1.23 2007/05/04 17:32:45 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookKey.cxx,v 1.1 2002/02/20 16:57:31 brun Exp $
+// @(#)root/hbook:$Id: THbookKey.cxx,v 1.1 2002/02/20 16:57:31 brun Exp $
 // Author: Rene Brun   20/02/2002
 
 /*************************************************************************

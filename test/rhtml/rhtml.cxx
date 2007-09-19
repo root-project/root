@@ -1,4 +1,4 @@
-// @(#)root/test/rhtml/:$Name:  $:$Id: rhtml.cxx,v 1.2 2007/05/16 07:45:58 brun Exp $
+// @(#)root/test/rhtml/:$Id: rhtml.cxx,v 1.2 2007/05/16 07:45:58 brun Exp $
 // Author: Bertrand Bellenot   09/05/2007
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.4 2005/09/04 09:51:19 brun Exp $
+// @(#)root/physics:$Id: TRobustEstimator.h,v 1.4 2005/09/04 09:51:19 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 

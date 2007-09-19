@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.13 2007/05/14 13:28:06 antcheva Exp $
+// @(#)root/gui:$Id: TGButtonGroup.h,v 1.13 2007/05/14 13:28:06 antcheva Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************

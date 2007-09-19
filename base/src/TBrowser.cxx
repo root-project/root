@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.24 2007/03/30 07:55:27 rdm Exp $
+// @(#)root/base:$Id: TBrowser.cxx,v 1.24 2007/03/30 07:55:27 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************

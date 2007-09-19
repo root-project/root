@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.6 2006/09/27 08:49:14 rdm Exp $
+// @(#)root/g3d:$Id: TPointSet3D.cxx,v 1.6 2006/09/27 08:49:14 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************

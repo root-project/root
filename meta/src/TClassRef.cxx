@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.8 2007/01/29 15:10:49 brun Exp $
+// @(#)root/meta:$Id: TClassRef.cxx,v 1.8 2007/01/29 15:10:49 brun Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************

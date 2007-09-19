@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1Helper.cxx,v 1.2 2007/06/20 08:30:20 moneta Exp $
+// @(#)root/hist:$Id: TF1Helper.cxx,v 1.2 2007/06/20 08:30:20 moneta Exp $
 // Author: Lorenzo Moneta 12/06/07
 
 /**********************************************************************

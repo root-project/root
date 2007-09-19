@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLParametric.h,v 1.2 2007/06/11 19:56:33 brun Exp $
+// @(#)root/gl:$Id: TGLParametric.h,v 1.2 2007/06/11 19:56:33 brun Exp $
 // Author:  Timur Pocheptsov  26/01/2007
 
 /*************************************************************************

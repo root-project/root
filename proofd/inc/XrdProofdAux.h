@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdAux.h,v 1.2 2007/06/21 07:41:05 ganis Exp $
+// @(#)root/proofd:$Id: XrdProofdAux.h,v 1.2 2007/06/21 07:41:05 ganis Exp $
 // Author: G. Ganis  June 2007
 
 /*************************************************************************

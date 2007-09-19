@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.37 2006/12/01 16:08:19 roiser Exp $
+// @(#)root/reflex:$Id: test_Reflex_simple2.cxx,v 1.37 2006/12/01 16:08:19 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file

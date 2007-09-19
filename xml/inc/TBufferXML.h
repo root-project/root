@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.6 2007/01/19 16:48:00 brun Exp $
+// @(#)root/xml:$Id: TBufferXML.h,v 1.6 2007/01/19 16:48:00 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************

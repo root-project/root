@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.11 2007/01/12 16:03:15 brun Exp $
+// @(#)root/cont:$Id: TObjectTable.cxx,v 1.11 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************

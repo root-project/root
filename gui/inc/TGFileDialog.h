@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.10 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/gui:$Id: TGFileDialog.h,v 1.10 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************

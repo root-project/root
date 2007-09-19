@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Util.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Id: Util.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Author: L. Moneta Tue Nov 14 15:44:38 2006
 
 /**********************************************************************

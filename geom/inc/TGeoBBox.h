@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.24 2007/04/23 08:58:53 brun Exp $
+// @(#)root/geom:$Id: TGeoBBox.h,v 1.24 2007/04/23 08:58:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************

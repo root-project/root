@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Name:  $:$Id: RooDstD0BG.cxx,v 1.19 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id: RooDstD0BG.cxx,v 1.19 2007/05/11 09:13:47 verkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *

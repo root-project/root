@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Tailor.h,v 1.2 2004/03/17 17:34:01 brun Exp $ */
+/* @(#)root/zip:$Id: Tailor.h,v 1.2 2004/03/17 17:34:01 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

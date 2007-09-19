@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliMinimizer.cxx,v 1.3 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Id: FumiliMinimizer.cxx,v 1.3 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

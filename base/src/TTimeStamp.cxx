@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.22 2006/10/12 08:38:39 rdm Exp $
+// @(#)root/base:$Id: TTimeStamp.cxx,v 1.22 2006/10/12 08:38:39 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************

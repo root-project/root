@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSpeedo.cxx
+// @(#)root/gui:$Id: TGSpeedo.cxx
 // Author: Bertrand Bellenot   26/10/06
 
 /*************************************************************************

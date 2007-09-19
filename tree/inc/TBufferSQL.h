@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.4 2005/11/21 18:18:44 rdm Exp $
+// @(#)root/tree:$Id: TBufferSQL.h,v 1.4 2005/11/21 18:18:44 rdm Exp $
 // Author: Philippe Canal 2005
 
 /*************************************************************************

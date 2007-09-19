@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Id: BinaryOpPolicy.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
 // Authors: J. Palacios    2006  
 #ifndef ROOT_Math_BinaryOpPolicy 
 #define ROOT_Math_BinaryOpPolicy 1

@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.18 2007/09/09 16:10:01 ganis Exp $
+// @(#)root/proofplayer:$Id: TAdaptivePacketizer.cxx,v 1.18 2007/09/09 16:10:01 ganis Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************

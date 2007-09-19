@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.40 2007/02/10 07:36:56 pcanal Exp $
+// @(#)root/treeplayer:$Id: TTreePlayer.h,v 1.40 2007/02/10 07:36:56 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************

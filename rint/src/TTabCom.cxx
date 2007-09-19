@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.45 2007/03/16 16:02:23 pcanal Exp $
+// @(#)root/rint:$Id: TTabCom.cxx,v 1.45 2007/03/16 16:02:23 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003

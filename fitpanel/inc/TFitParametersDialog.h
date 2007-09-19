@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.7 2006/12/10 22:24:00 brun Exp $
+// @(#)root/fitpanel:$Id: TFitParametersDialog.h,v 1.7 2006/12/10 22:24:00 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************

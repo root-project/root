@@ -1,4 +1,4 @@
-/* @(#)root/gfal:$Name:  $:$Id: LinkDef.h,v 1.3 2003/09/21 21:38:30 rdm Exp $ */
+/* @(#)root/gfal:$Id: LinkDef.h,v 1.3 2003/09/21 21:38:30 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *

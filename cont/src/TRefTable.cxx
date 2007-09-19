@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.14 2007/01/28 18:30:18 brun Exp $
+// @(#)root/cont:$Id: TRefTable.cxx,v 1.14 2007/01/28 18:30:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************

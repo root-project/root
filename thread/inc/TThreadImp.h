@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThreadImp.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Id: TThreadImp.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
 // Author: Victor Perev   10/08/97
 
 /*************************************************************************

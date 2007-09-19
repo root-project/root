@@ -1,4 +1,4 @@
-// @(#)$Name:  $:$Id: LinkDef.h,v 1.7 2006/09/26 08:06:17 rdm Exp $
+// @(#)$Id: LinkDef.h,v 1.7 2006/09/26 08:06:17 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

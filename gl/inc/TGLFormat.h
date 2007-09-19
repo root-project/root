@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLFormat.h,v 1.3 2007/06/12 20:29:00 rdm Exp $
+// @(#)root/gl:$Id: TGLFormat.h,v 1.3 2007/06/12 20:29:00 rdm Exp $
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************

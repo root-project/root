@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.6 2004/05/07 09:51:58 brun Exp $
+// @(#)root/net:$Id: TMessage.cxx,v 1.6 2004/05/07 09:51:58 brun Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************

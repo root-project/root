@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.223 2007/04/23 17:34:14 pcanal Exp $
+// @(#)root/tree:$Id: TBranchElement.cxx,v 1.223 2007/04/23 17:34:14 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.16 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Id: TVirtualFitter.cxx,v 1.16 2006/05/26 09:01:58 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.6 2007/07/04 09:05:40 brun Exp $
+// @(#)root/gui:$Id: TGImageMap.h,v 1.6 2007/07/04 09:05:40 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************

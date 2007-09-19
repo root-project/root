@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.13 2005/09/04 08:28:39 brun Exp $
+// @(#)root/base:$Id: TVirtualPS.cxx,v 1.13 2005/09/04 08:28:39 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************

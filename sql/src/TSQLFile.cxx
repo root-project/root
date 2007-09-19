@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.17 2007/02/05 18:11:29 brun Exp $
+// @(#)root/sql:$Id: TSQLFile.cxx,v 1.17 2007/02/05 18:11:29 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.5 2005/11/21 17:26:31 couet Exp $
+// @(#)root/gpad:$Id: TAttCanvas.h,v 1.5 2005/11/21 17:26:31 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

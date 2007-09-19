@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TPgSQLStatement.h,v 1.3 2007/06/08 09:45:02 rdm Exp $
+// @(#)root/mysql:$Id: TPgSQLStatement.h,v 1.3 2007/06/08 09:45:02 rdm Exp $
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************

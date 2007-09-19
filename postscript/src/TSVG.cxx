@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.16 2005/11/10 11:11:46 couet Exp $
+// @(#)root/postscript:$Id: TSVG.cxx,v 1.16 2005/11/10 11:11:46 couet Exp $
 // Author: Olivier Couet
 
 /*************************************************************************

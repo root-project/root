@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoConeEditor.h,v 1.3 2006/07/14 20:00:52 brun Exp $
+// @(#):$Id: TGeoConeEditor.h,v 1.3 2006/07/14 20:00:52 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

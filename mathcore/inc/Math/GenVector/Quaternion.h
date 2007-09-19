@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.11 2007/05/25 10:46:29 moneta Exp $
+// @(#)root/mathcore:$Id: Quaternion.h,v 1.11 2007/05/25 10:46:29 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.8 2006/06/26 09:39:35 brun Exp $
+// @(#)root/gui:$Id: TGToolTip.h,v 1.8 2006/06/26 09:39:35 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: LinkDef.h,v 1.0 2003/11/25
+// @(#)root/fitpanel:$Id: LinkDef.h,v 1.0 2003/11/25
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *

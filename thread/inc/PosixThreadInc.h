@@ -1,4 +1,4 @@
-/* @(#)root/thread:$Name:  $:$Id: PosixThreadInc.h,v 1.6 2004/02/13 16:49:00 rdm Exp $ */
+/* @(#)root/thread:$Id: PosixThreadInc.h,v 1.6 2004/02/13 16:49:00 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.8 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Id: TEllipse.h,v 1.8 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************

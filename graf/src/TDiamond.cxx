@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Id: TDiamond.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************

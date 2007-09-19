@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.8 2006/12/11 15:06:37 moneta Exp $
+// @(#)root/mathmore:$Id: GSLRndmEngines.cxx,v 1.8 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

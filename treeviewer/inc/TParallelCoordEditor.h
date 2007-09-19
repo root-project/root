@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TParallelCoordEditor.h,v 1.2 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeviewer:$Id: TParallelCoordEditor.h,v 1.2 2007/08/09 09:10:38 brun Exp $
 // Author: Bastien Dalla Piazza  02/08/2007
 
 /*************************************************************************

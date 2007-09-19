@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.13 2007/01/03 14:43:10 brun Exp $
+// @(#)root/physics:$Id: TRotation.cxx,v 1.13 2007/01/03 14:43:10 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 //______________________________________________________________________________

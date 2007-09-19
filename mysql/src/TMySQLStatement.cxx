@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.cxx,v 1.15 2007/08/03 18:50:13 pcanal Exp $
+// @(#)root/mysql:$Id: TMySQLStatement.cxx,v 1.15 2007/08/03 18:50:13 pcanal Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************

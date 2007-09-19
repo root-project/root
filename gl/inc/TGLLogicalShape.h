@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.17 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Id: TGLLogicalShape.h,v 1.17 2007/06/18 07:02:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.16 2007/05/17 22:19:34 pcanal Exp $
+// @(#)root/tree:$Id: TSelectorCint.h,v 1.16 2007/05/17 22:19:34 pcanal Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************

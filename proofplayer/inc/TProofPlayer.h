@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.48 2007/07/11 15:35:04 rdm Exp $
+// @(#)root/proofplayer:$Id: TProofPlayer.h,v 1.48 2007/07/11 15:35:04 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************

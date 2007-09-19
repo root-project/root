@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.12 2006/11/10 11:04:41 moneta Exp $
+// @(#)root/mathcore:$Id: AxisAngle.h,v 1.12 2006/11/10 11:04:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************

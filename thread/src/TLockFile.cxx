@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TLockFile.cxx,v 1.1 2007/06/22 08:55:26 rdm Exp $
+// @(#)root/thread:$Id: TLockFile.cxx,v 1.1 2007/06/22 08:55:26 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus, 04.06.07
 
 /*************************************************************************

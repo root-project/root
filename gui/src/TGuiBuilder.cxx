@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.10 2007/02/21 17:13:05 brun Exp $
+// @(#)root/gui:$Id: TGuiBuilder.cxx,v 1.10 2007/02/21 17:13:05 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************

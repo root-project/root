@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.37 2007/01/30 11:49:14 brun Exp $
+// @(#)root/graf:$Id: TMultiGraph.cxx,v 1.37 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

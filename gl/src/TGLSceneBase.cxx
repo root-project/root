@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneBase.cxx,v 1.2 2007/07/23 15:06:24 rdm Exp $
+// @(#)root/gl:$Id: TGLSceneBase.cxx,v 1.2 2007/07/23 15:06:24 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 
 /*************************************************************************

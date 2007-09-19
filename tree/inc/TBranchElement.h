@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.58 2007/04/23 17:34:14 pcanal Exp $
+// @(#)root/tree:$Id: TBranchElement.h,v 1.58 2007/04/23 17:34:14 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************

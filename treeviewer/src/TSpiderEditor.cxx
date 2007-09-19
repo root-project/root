@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSpiderEditor.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
+// @(#)root/treeviewer:$Id: TSpiderEditor.cxx,v 1.1 2007/07/24 20:00:46 brun Exp $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************

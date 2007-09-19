@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.3 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Id: TPrimary.cxx,v 1.3 2006/05/15 07:27:03 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************

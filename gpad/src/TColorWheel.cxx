@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.6 2007/03/12 13:38:27 brun Exp $
+// @(#)root/gpad:$Id: TColorWheel.cxx,v 1.6 2007/03/12 13:38:27 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************

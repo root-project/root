@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.55 2007/08/02 14:48:04 rdm Exp $
+// @(#)root/gl:$Id: TGLScene.cxx,v 1.55 2007/08/02 14:48:04 rdm Exp $
 // Author:  Matevz Tadel, Feb 2007
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov

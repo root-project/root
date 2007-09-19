@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TBinomialEfficiencyFitter.cxx,v 1.6 2007/08/04 17:31:40 brun Exp $
+// @(#)root/hist:$Id: TBinomialEfficiencyFitter.cxx,v 1.6 2007/08/04 17:31:40 brun Exp $
 // Author: Frank Filthaut, Rene Brun   30/05/2007
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gt:$Name:  $:$Id: TQtRootSlot.cxx,v 1.10 2007/01/25 20:48:47 fine Exp $
+// @(#)root/gt:$Id: TQtRootSlot.cxx,v 1.10 2007/01/25 20:48:47 fine Exp $
 // Author: Valery Fine      18/01/2007
 
 /****************************************************************************

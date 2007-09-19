@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id: TGTableLayout.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
