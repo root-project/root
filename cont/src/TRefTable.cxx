@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.11 2006/04/25 16:36:00 pcanal Exp $
+// @(#)root/cont:$Id: TRefTable.cxx,v 1.11 2006/04/25 16:36:00 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************

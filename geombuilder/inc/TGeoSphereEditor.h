@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoSphereEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
+// @(#):$Id: TGeoSphereEditor.h,v 1.2 2006/06/23 16:00:13 brun Exp $
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

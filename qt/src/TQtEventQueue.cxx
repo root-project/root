@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.cxx,v 1.4 2005/07/08 06:43:09 brun Exp $
+// @(#)root/qt:$Id: TQtEventQueue.cxx,v 1.4 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.22 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Id: TDataType.cxx,v 1.22 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************

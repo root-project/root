@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-14-00-patches $:$Id: Executors.cxx,v 1.22 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Id: Executors.cxx,v 1.22 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

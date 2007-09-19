@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.4 2004/01/27 13:41:53 brun Exp $
+// @(#)root/hist:$Id: TLimitDataSource.cxx,v 1.4 2004/01/27 13:41:53 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////

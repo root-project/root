@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.11 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Id: TGLBoundingBox.h,v 1.11 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

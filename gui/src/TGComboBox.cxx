@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.48 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Id: TGComboBox.cxx,v 1.48 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************

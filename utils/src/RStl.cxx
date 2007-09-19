@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.10 2005/11/11 23:58:34 pcanal Exp $
+// @(#)root/utils:$Id: RStl.cxx,v 1.10 2005/11/11 23:58:34 pcanal Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************

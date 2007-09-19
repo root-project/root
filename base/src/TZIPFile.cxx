@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.4 2004/09/30 10:14:30 rdm Exp $
+// @(#)root/base:$Id: TZIPFile.cxx,v 1.4 2004/09/30 10:14:30 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************

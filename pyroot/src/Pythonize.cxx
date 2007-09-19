@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-14-00-patches $:$Id: Pythonize.cxx,v 1.48 2006/12/12 09:15:01 brun Exp $
+// @(#)root/pyroot:$Id: Pythonize.cxx,v 1.48 2006/12/12 09:15:01 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings

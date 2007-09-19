@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
+// @(#)root/mathcore:$Id: IFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 

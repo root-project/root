@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: ROOTClassEnhancer.cxx,v 1.17.2.1 2006/12/20 20:09:31 pcanal Exp $
+// @(#)root/cintex:$Id: ROOTClassEnhancer.cxx,v 1.17.2.1 2006/12/20 20:09:31 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

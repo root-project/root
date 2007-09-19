@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.156.2.1 2007/01/16 14:40:27 rdm Exp $
+# @(#)root/config:$Id: rootrc.in,v 1.156.2.1 2007/01/16 14:40:27 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see

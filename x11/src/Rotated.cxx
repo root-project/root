@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: Rotated.cxx,v 1.5 2005/11/11 15:29:46 couet Exp $
+// @(#)root/x11:$Id: Rotated.cxx,v 1.5 2005/11/11 15:29:46 couet Exp $
 // Author: O.Couet   17/11/93
 
 #ifndef _XVERTEXT_INCLUDED_

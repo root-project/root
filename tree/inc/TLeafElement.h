@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.10 2002/01/02 21:47:09 brun Exp $
+// @(#)root/tree:$Id: TLeafElement.h,v 1.10 2002/01/02 21:47:09 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************

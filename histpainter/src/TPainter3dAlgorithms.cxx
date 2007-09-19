@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.31 2006/03/01 14:19:00 couet Exp $
+// @(#)root/histpainter:$Id: TPainter3dAlgorithms.cxx,v 1.31 2006/03/01 14:19:00 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************

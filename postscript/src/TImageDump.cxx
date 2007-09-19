@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.26 2006/10/27 10:35:21 brun Exp $
+// @(#)root/postscript:$Id: TImageDump.cxx,v 1.26 2006/10/27 10:35:21 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************

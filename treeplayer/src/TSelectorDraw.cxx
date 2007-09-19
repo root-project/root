@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
+// @(#)root/treeplayer:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************

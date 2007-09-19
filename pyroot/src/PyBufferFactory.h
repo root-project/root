@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.7 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Id: PyBufferFactory.h,v 1.7 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TPYBUFFERFACTORY_H

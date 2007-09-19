@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/splot:$Id: TSPlot.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************

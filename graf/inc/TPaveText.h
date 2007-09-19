@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.8 2006/09/21 20:02:20 brun Exp $
+// @(#)root/graf:$Id: TPaveText.h,v 1.8 2006/09/21 20:02:20 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************

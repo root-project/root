@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTScopeBuilder.cxx,v 1.8.6.1 2007/03/07 09:33:35 rdm Exp $
+// @(#)root/cintex:$Id: CINTScopeBuilder.cxx,v 1.8.6.1 2007/03/07 09:33:35 rdm Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.11 2005/01/05 01:25:19 rdm Exp $
+// @(#)root/thread:$Id: TPosixThread.cxx,v 1.11 2005/01/05 01:25:19 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************

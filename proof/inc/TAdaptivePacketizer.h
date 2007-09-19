@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.99 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Id: TProof.h,v 1.99 2006/12/11 13:24:49 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************

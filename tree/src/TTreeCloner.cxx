@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.12.4.1 2007/08/06 21:51:20 pcanal Exp $
+// @(#)root/tree:$Id: TTreeCloner.cxx,v 1.12.4.1 2007/08/06 21:51:20 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************

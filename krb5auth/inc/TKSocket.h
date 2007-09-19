@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: TKSocket.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/krb5auth:$Id: TKSocket.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn   27/10/2003
 
 #ifndef ROOT_TKSocket

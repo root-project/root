@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TException.h,v 1.3 2005/09/03 04:16:27 pcanal Exp $
+// @(#)root/base:$Id: TException.h,v 1.3 2005/09/03 04:16:27 pcanal Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: v5-14-00-patches $:$Id: test_Reflex_unit.cxx,v 1.22.2.1 2007/01/10 10:55:35 roiser Exp $
+// @(#)root/reflex:$Id: test_Reflex_unit.cxx,v 1.22.2.1 2007/01/10 10:55:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file

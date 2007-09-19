@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rootd.h,v 1.2 2001/02/22 09:43:25 rdm Exp $
+// @(#)root/rpdutils:$Id: rootd.h,v 1.2 2001/02/22 09:43:25 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************

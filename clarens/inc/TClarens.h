@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Name: PROOF_MLM $:$Id: TClarens.h,v 1.1.2.5 2004/11/07 22:09:13 maartenb Exp $
+// @(#)root/clarens:$Id: TClarens.h,v 1.1.2.5 2004/11/07 22:09:13 maartenb Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 

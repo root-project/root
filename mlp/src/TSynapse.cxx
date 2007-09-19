@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.5 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Id: TSynapse.cxx,v 1.5 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 /*************************************************************************

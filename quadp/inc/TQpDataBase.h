@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataBase.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/quadp:$Id: TQpDataBase.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

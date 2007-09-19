@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassMenuItem.h,v 1.2 2006/05/12 12:25:45 brun Exp $
+// @(#)root/meta:$Id: TClassMenuItem.h,v 1.2 2006/05/12 12:25:45 brun Exp $
 // Author: Damir Buskulic   23/11/2001
 
 /*************************************************************************

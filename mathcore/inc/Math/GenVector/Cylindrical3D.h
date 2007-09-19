@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.5 2007/06/14 15:40:52 moneta Exp $
+// @(#)root/mathcore:$Id: Cylindrical3D.h,v 1.5 2007/06/14 15:40:52 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

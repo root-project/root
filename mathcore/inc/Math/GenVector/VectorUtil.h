@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.9 2006/08/22 09:45:32 moneta Exp $
+// @(#)root/mathcore:$Id: VectorUtil.h,v 1.9 2006/08/22 09:45:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 

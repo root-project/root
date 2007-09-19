@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
+// @(#)root/mathcore:$Id: 3DConversions.cxx,v 1.6 2006/08/16 10:29:59 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

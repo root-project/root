@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.6 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TNtupleD.cxx,v 1.6 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/08/2001
 
 /*************************************************************************

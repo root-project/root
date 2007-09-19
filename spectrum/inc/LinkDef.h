@@ -1,4 +1,4 @@
-/* @(#)root/spectrum:$Name:  $:$Id: LinkDef.h,v 1.1 2006/09/28 19:29:30 brun Exp $ */
+/* @(#)root/spectrum:$Id: LinkDef.h,v 1.1 2006/09/28 19:29:30 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

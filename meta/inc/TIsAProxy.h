@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.4 2006/05/15 11:01:14 rdm Exp $
+// @(#)root/meta:$Id: TIsAProxy.h,v 1.4 2006/05/15 11:01:14 rdm Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************

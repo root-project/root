@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.3 2004/10/12 07:08:36 rdm Exp $
+// @(#)root/auth:$Id: DaemonUtils.h,v 1.3 2004/10/12 07:08:36 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************

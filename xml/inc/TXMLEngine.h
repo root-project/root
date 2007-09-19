@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.12 2006/06/22 08:21:22 brun Exp $
+// @(#)root/xml:$Id: TXMLEngine.h,v 1.12 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************

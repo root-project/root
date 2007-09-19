@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.9 2006/05/11 10:35:08 brun Exp $ */
+/* @(#)root/base:$Id: GuiTypes.h,v 1.9 2006/05/11 10:35:08 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

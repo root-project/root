@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.1 2006/06/26 16:17:05 rdm Exp $
+// @(#)root/monalisa:$Id: TMonaLisaWriter.h,v 1.1 2006/06/26 16:17:05 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************

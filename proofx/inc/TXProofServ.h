@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.9 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofx:$Id: TXProofServ.h,v 1.9 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************

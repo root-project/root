@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.2 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Id: TCurlyLineEditor.h,v 1.2 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************

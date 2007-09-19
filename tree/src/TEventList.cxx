@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.14 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TEventList.cxx,v 1.14 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************

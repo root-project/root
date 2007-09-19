@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.23 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Id: Utility.h,v 1.23 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H

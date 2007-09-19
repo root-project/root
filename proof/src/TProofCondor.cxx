@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.8 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Id: TProofCondor.cxx,v 1.8 2006/05/15 09:45:03 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************

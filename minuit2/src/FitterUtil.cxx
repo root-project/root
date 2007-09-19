@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FitterUtil.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Id: FitterUtil.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.h,v 1.2 2000/06/13 11:27:03 brun Exp $
+// @(#)root/gpad:$Id: TGroupButton.h,v 1.2 2000/06/13 11:27:03 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************

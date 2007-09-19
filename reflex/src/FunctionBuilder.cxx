@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.12 2006/09/12 13:06:46 roiser Exp $
+// @(#)root/reflex:$Id: FunctionBuilder.cxx,v 1.12 2006/09/12 13:06:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

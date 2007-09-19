@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.15 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Id: TGenericClassInfo.cxx,v 1.15 2006/05/23 04:47:40 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************

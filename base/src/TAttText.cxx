@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.18 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Id: TAttText.cxx,v 1.18 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

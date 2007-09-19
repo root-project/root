@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.12 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Id: ObjectProxy.cxx,v 1.12 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

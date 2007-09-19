@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.28 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Id: TPolyLine.cxx,v 1.28 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

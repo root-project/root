@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSelectorList.cxx,v 1.2 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/cont:$Id: TSelectorList.cxx,v 1.2 2005/11/11 22:16:04 pcanal Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************

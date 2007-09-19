@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.5 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Id: TMCVerbose.cxx,v 1.5 2006/05/13 20:57:20 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 /*************************************************************************

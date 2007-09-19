@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench.C,v 1.2 2006/05/29 10:16:54 moneta Exp $
+// @(#)root/minuit2:$Id: minuit2FitBench.C,v 1.2 2006/05/29 10:16:54 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

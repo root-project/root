@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.9 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Id: TPython.h,v 1.9 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython

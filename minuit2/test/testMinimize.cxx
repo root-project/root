@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testMinimize.cxx,v 1.1 2005/10/27 17:22:16 moneta Exp $
+// @(#)root/minuit2:$Id: testMinimize.cxx,v 1.1 2005/10/27 17:22:16 moneta Exp $
 // Author: L. Moneta    12/2005  
 /**
    test of a pure minimization passing a user FCN class directly to the 

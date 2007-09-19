@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.11 2006/09/26 06:42:42 antcheva Exp $
+// @(#)root/ged:$Id: TGedEditor.h,v 1.11 2006/09/26 06:42:42 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************

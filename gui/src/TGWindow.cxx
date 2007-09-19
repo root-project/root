@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Id: TGWindow.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************

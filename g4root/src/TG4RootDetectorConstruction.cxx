@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
+// @(#)root/g4root:$Id: TG4RootDetectorConstruction.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************

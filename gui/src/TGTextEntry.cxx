@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.48 2006/10/18 15:20:56 antcheva Exp $
+// @(#)root/gui:$Id: TGTextEntry.cxx,v 1.48 2006/10/18 15:20:56 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.5 2006/08/22 09:45:32 moneta Exp $
+# @(#)root/mathcore:$Id: src_Makefile.am,v 1.5 2006/08/22 09:45:32 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .

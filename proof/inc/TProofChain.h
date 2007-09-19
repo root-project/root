@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
+// @(#)root/proof:$Id: TProofChain.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************

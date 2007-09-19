@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3Dfwd.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Id: Polar3Dfwd.hv 1.0 2005/06/23 12:00:00 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_GenVector_Polar3Dfwd 

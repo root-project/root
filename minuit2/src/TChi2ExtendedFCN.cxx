@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFCN.cxx,v 1.4 2005/11/05 15:17:35 moneta Exp $
+// @(#)root/minuit2:$Id: TChi2ExtendedFCN.cxx,v 1.4 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

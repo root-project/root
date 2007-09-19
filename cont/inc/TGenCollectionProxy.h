@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.10 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Id: TGenCollectionProxy.h,v 1.10 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

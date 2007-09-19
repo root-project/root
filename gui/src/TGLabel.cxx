@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Id: TGLabel.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************

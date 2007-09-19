@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-14-00-patches $:$Id: TCint.h,v 1.31 2006/12/05 10:55:29 brun Exp $
+// @(#)root/meta:$Id: TCint.h,v 1.31 2006/12/05 10:55:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************

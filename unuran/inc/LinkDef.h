@@ -1,4 +1,4 @@
-/* @(#)root/minuit:$Name:  $:$Id: LinkDef.h,v 1.3 2005/03/04 09:06:37 brun Exp $ */
+/* @(#)root/minuit:$Id: LinkDef.h,v 1.3 2005/03/04 09:06:37 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

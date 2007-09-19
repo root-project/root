@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
+// @(#)root/thread:$Id: TWin32Mutex.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
 // Author: Bertrand Bellenot   23/10/04
 
 /*************************************************************************

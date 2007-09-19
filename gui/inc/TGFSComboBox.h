@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.9 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Id: TGFSComboBox.h,v 1.9 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************

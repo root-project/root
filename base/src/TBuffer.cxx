@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.96 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Id: TBuffer.cxx,v 1.96 2006/05/18 07:34:25 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************

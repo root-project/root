@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.5 2006/03/20 22:44:19 brun Exp $
+// @(#)root/ruby:$Id: drr.cxx,v 1.5 2006/03/20 22:44:19 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root

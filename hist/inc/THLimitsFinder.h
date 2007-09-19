@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.4 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Id: THLimitsFinder.h,v 1.4 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************

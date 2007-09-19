@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.26 2006/05/13 18:02:56 brun Exp $
+// @(#)root/main:$Id: h2root.cxx,v 1.26 2006/05/13 18:02:56 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file

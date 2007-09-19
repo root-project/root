@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.cxx,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
+// @(#)root/net:$Id: TGridResult.cxx,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************

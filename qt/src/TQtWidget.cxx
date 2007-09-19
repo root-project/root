@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.25 2006/12/12 20:12:47 brun Exp $
+// @(#)root/qt:$Id: TQtWidget.cxx,v 1.25 2006/12/12 20:12:47 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************

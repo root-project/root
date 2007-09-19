@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.9 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id: TBtree.cxx,v 1.9 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************

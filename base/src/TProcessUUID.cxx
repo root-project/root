@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TProcessUUID.cxx,v 1.1 2002/07/09 21:17:02 brun Exp $
+// @(#)root/base:$Id: TProcessUUID.cxx,v 1.1 2002/07/09 21:17:02 brun Exp $
 // Author: Rene Brun    06/07/2002
 
 /*************************************************************************

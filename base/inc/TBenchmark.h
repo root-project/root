@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.7 2006/05/14 08:19:30 brun Exp $
+// @(#)root/base:$Id: TBenchmark.h,v 1.7 2006/05/14 08:19:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************

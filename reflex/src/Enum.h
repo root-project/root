@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.10 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Id: Enum.h,v 1.10 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

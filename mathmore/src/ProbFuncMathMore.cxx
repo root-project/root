@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.cxx,v 1.4 2006/12/06 17:53:47 moneta Exp $
+// @(#)root/mathmore:$Id: ProbFuncMathMore.cxx,v 1.4 2006/12/06 17:53:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 

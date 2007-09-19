@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.6 2002/11/24 14:07:33 brun Exp $
+// @(#)root/base:$Id: TRealData.h,v 1.6 2002/11/24 14:07:33 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************

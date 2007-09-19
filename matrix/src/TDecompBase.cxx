@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.24 2006/06/02 05:11:20 brun Exp $
+// @(#)root/matrix:$Id: TDecompBase.cxx,v 1.24 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************

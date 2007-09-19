@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Id: Polynomial.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

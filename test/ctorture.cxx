@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: ctorture.cxx,v 1.54 2004/02/09 21:00:57 brun Exp $
+// @(#)root/test:$Id: ctorture.cxx,v 1.54 2004/02/09 21:00:57 brun Exp $
 // Author: Federico Carminati    22/04/2004
 
 // test program for the class TComplex

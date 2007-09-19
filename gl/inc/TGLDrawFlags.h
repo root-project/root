@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.3 2006/05/08 14:01:08 rdm Exp $
+// @(#)root/gl:$Id: TGLDrawFlags.h,v 1.3 2006/05/08 14:01:08 rdm Exp $
 // Author:  Richard Maunder  27/01/2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.16 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id: TGNumberEntry.h,v 1.16 2006/07/03 16:10:45 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************

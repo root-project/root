@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.5 2006/10/19 19:36:54 pcanal Exp $
+// @(#)root/base:$Id: TFileCacheRead.cxx,v 1.5 2006/10/19 19:36:54 pcanal Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************

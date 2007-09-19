@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.5 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Id: TSlider.cxx,v 1.5 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************

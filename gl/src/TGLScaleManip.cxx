@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.cxx $
+// @(#)root/gl:$Id: TGLScaleManip.cxx $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************

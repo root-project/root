@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.5 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Id: TCondor.h,v 1.5 2005/06/22 20:18:11 brun Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************

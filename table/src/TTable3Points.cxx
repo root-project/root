@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable3Points.cxx,v 1.3 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id: TTable3Points.cxx,v 1.3 2006/05/20 14:06:09 brun Exp $
 // Author: Valery Fine   10/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

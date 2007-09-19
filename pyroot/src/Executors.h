@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.8 2005/12/05 17:40:54 brun Exp $
+// @(#)root/pyroot:$Id: Executors.h,v 1.8 2005/12/05 17:40:54 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H

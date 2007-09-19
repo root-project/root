@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.9 2006/10/19 10:58:25 brun Exp $
+// @(#)root/gpad:$Id: TPaveClass.cxx,v 1.9 2006/10/19 10:58:25 brun Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

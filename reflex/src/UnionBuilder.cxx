@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Id: UnionBuilder.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

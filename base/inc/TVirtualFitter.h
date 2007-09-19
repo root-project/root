@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.17 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Id: TVirtualFitter.h,v 1.17 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************

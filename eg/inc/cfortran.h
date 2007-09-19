@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: cfortran.h,v 1.3 2001/07/25 09:59:49 rdm Exp $ */
+/* @(#)root/eg:$Id: cfortran.h,v 1.3 2001/07/25 09:59:49 rdm Exp $ */
 
 /* Few changes made for ROOT. Search for string "ROOT" to see which. */
 

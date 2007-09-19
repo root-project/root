@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.15 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Id: TGLDrawable.cxx,v 1.15 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

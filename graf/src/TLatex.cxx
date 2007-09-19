@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.62 2006/11/15 18:04:08 couet Exp $
+// @(#)root/graf:$Id: TLatex.cxx,v 1.62 2006/11/15 18:04:08 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************

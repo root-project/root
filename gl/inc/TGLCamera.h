@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.22 2006/08/28 18:28:33 brun Exp $
+// @(#)root/gl:$Id: TGLCamera.h,v 1.22 2006/08/28 18:28:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

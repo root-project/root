@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.14 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Id: TH1Editor.h,v 1.14 2006/06/23 15:19:21 antcheva Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.3 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Id: TSessionViewer.cxx,v 1.3 2006/11/28 12:10:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

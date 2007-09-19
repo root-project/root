@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Id: TPavesText.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************

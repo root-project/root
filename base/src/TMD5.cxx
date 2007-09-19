@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.17 2006/11/30 23:19:47 pcanal Exp $
+// @(#)root/base:$Id: TMD5.cxx,v 1.17 2006/11/30 23:19:47 pcanal Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************

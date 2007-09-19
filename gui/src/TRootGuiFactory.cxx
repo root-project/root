@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.cxx,v 1.2 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/gui:$Id: TRootGuiFactory.cxx,v 1.2 2001/10/02 09:07:43 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************

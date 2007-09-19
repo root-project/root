@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.5 2002/04/02 15:44:15 rdm Exp $
+// @(#)root/pgsql:$Id: TPgSQLServer.cxx,v 1.5 2002/04/02 15:44:15 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************

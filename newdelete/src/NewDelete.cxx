@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.8 2006/05/18 21:25:26 pcanal Exp $
+// @(#)root/new:$Id: NewDelete.cxx,v 1.8 2006/05/18 21:25:26 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************

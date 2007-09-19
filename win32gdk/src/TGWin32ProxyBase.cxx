@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.19 2005/10/27 06:55:09 brun Exp $
+// @(#)root/win32gdk:$Id: TGWin32ProxyBase.cxx,v 1.19 2005/10/27 06:55:09 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************

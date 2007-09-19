@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Demangle.c,v 1.4 2002/12/03 11:20:10 rdm Exp $ */
+/* @(#)root/clib:$Id: Demangle.c,v 1.4 2002/12/03 11:20:10 rdm Exp $ */
 /* Author: */
 
 /* Demangler for GNU C++

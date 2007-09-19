@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.18 2005/11/17 09:38:55 couet Exp $
+// @(#)root/graf:$Id: TGraphBentErrors.cxx,v 1.18 2005/11/17 09:38:55 couet Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************

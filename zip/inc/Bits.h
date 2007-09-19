@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.11 2006/06/25 14:08:35 pcanal Exp $ */
+/* @(#)root/zip:$Id: Bits.h,v 1.11 2006/06/25 14:08:35 pcanal Exp $ */
 /* Author: */
 /*
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.16 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Id: TContextMenu.cxx,v 1.16 2006/07/09 05:27:53 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************

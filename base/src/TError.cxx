@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.13 2005/12/08 17:37:48 pcanal Exp $
+// @(#)root/base:$Id: TError.cxx,v 1.13 2005/12/08 17:37:48 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************

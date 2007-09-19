@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.4 2005/06/22 20:18:11 brun Exp $
+// @(#)root/cont:$Id: TSeqCollection.cxx,v 1.4 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

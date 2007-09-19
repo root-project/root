@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.3 2006/03/06 12:43:04 antcheva Exp $
+// @(#)root/gui:$Id: TGTripleSlider.h,v 1.3 2006/03/06 12:43:04 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************

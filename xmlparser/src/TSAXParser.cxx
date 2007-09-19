@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.5 2006/01/17 17:42:36 rdm Exp $
+// @(#)root/xmlparser:$Id: TSAXParser.cxx,v 1.5 2006/01/17 17:42:36 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************

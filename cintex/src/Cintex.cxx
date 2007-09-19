@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.14 2007/02/02 08:16:48 brun Exp $
+// @(#)root/cintex:$Id: Cintex.cxx,v 1.14 2007/02/02 08:16:48 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

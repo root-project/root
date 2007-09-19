@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.h,v 1.2 2005/09/03 13:37:17 brun Exp $
+// @(#)root/physics:$Id: TLorentzRotation.h,v 1.2 2005/09/03 13:37:17 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************

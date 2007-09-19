@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RStipples.h,v 1.4 2005/07/15 00:30:58 rdm Exp $ */
+/* @(#)root/base:$Id: RStipples.h,v 1.4 2005/07/15 00:30:58 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

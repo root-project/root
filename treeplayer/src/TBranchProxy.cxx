@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.9 2007/02/01 15:26:19 brun Exp $
+// @(#)root/base:$Id: TBranchProxy.cxx,v 1.9 2007/02/01 15:26:19 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

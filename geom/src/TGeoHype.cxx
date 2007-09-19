@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.12 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id: TGeoHype.cxx,v 1.12 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************

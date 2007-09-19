@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.48 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Id: TGCanvas.cxx,v 1.48 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************

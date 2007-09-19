@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.5 2006/11/29 11:38:26 brun Exp $ */
+/* @(#)root/gdml:$Id: TGDMLParse.h,v 1.5 2006/11/29 11:38:26 brun Exp $ */
 // Authors: Ben Lloyd 09/11/06
 
 /*************************************************************************

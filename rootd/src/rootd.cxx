@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name: v5-14-00-patches $:$Id: rootd.cxx,v 1.125 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/rootd:$Id: rootd.cxx,v 1.125 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************

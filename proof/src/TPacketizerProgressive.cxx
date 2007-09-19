@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.6 2006/07/26 14:18:04 rdm Exp $
+// @(#)root/proof:$Id: TPacketizerProgressive.cxx,v 1.6 2006/07/26 14:18:04 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************

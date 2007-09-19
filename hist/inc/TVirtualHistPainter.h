@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.14 2006/04/10 06:55:14 brun Exp $
+// @(#)root/hist:$Id: TVirtualHistPainter.h,v 1.14 2006/04/10 06:55:14 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************

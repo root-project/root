@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Id: TControlBar.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************

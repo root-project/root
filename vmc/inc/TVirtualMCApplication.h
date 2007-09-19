@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.5 2006/06/26 15:35:38 brun Exp $
+// @(#)root/vmc:$Id: TVirtualMCApplication.h,v 1.5 2006/06/26 15:35:38 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 /*************************************************************************

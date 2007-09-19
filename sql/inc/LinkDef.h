@@ -1,4 +1,4 @@
-/* @(#)root/sql:$Name:  $:$Id: LinkDef.h,v 1.3 2006/02/01 18:57:41 pcanal Exp $ */
+/* @(#)root/sql:$Id: LinkDef.h,v 1.3 2006/02/01 18:57:41 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

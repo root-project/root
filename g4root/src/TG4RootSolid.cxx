@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootSolid.cxx,v 1.1 2006/11/22 17:14:01 brun Exp $
+// @(#)root/g4root:$Id: TG4RootSolid.cxx,v 1.1 2006/11/22 17:14:01 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************

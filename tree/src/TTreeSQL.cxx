@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.8 2006/02/07 15:25:52 pcanal Exp $
+// @(#)root/tree:$Id: TTreeSQL.cxx,v 1.8 2006/02/07 15:25:52 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************

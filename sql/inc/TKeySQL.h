@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.h,v 1.4 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Id: TKeySQL.h,v 1.4 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************

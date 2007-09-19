@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.2 2005/09/06 09:34:33 brun Exp $
+// @(#)root/auth:$Id: DaemonUtils.cxx,v 1.2 2005/09/06 09:34:33 brun Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************

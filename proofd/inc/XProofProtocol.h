@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.5 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Id: XProofProtocol.h,v 1.5 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol

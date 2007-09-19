@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.52 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Id: TGClient.cxx,v 1.52 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************

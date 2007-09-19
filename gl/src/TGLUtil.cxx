@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.32 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Id: TGLUtil.cxx,v 1.32 2006/11/24 10:45:13 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

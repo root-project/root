@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.13 2006/10/05 21:04:38 rdm Exp $
+// @(#)root/base:$Id: TRegexp.cxx,v 1.13 2006/10/05 21:04:38 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

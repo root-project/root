@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.30 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Id: TPolyMarker3D.cxx,v 1.30 2006/07/03 16:10:43 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************

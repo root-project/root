@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCOptical.h,v 1.2 2005/05/19 08:58:54 brun Exp $
+// @(#)root/vmc:$Id: TMCOptical.h,v 1.2 2005/05/19 08:58:54 brun Exp $
 // Author: Alice collaboration
 
 /*************************************************************************

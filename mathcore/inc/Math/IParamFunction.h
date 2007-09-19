@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.3 2006/11/23 17:24:38 moneta Exp $
+// @(#)root/mathcore:$Id: IParamFunction.h,v 1.3 2006/11/23 17:24:38 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:20:07 2006
 
 /**********************************************************************

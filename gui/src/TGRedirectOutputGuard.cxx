@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGRedirectOutputGuard.cxx,v 1.1 2005/10/11 12:39:36 rdm Exp $
+// @(#)root/gui:$Id: TGRedirectOutputGuard.cxx,v 1.1 2005/10/11 12:39:36 rdm Exp $
 // Author: G. Ganis   10/10/2005
 
 /*************************************************************************

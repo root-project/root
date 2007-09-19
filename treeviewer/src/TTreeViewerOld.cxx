@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.5 2005/09/18 13:19:22 rdm Exp $
+// @(#)root/treeviewer:$Id: TTreeViewerOld.cxx,v 1.5 2005/09/18 13:19:22 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************

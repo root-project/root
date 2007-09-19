@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.14 2006/08/10 06:33:54 brun Exp $
+// @(#)root/gui:$Id: TGDoubleSlider.h,v 1.14 2006/08/10 06:33:54 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************

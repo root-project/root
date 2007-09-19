@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.14 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id: TMap.cxx,v 1.14 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************

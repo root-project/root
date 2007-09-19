@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.3 2002/07/16 17:20:17 brun Exp $
+// @(#)root/hist:$Id: TVirtualHistPainter.cxx,v 1.3 2002/07/16 17:20:17 brun Exp $
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

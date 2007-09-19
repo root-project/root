@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.12 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Id: PyBufferFactory.cxx,v 1.12 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

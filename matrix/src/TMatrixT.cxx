@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.21 2006/08/30 12:54:13 brun Exp $
+// @(#)root/matrix:$Id: TMatrixT.cxx,v 1.21 2006/08/30 12:54:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************

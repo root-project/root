@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRefCnt.h,v 1.4 2006/05/15 11:01:13 rdm Exp $
+// @(#)root/base:$Id: TRefCnt.h,v 1.4 2006/05/15 11:01:13 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

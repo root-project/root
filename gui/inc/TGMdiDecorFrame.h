@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.h,v 1.4 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Id: TGMdiDecorFrame.h,v 1.4 2004/09/08 16:03:57 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************

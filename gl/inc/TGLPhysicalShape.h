@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.14 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Id: TGLPhysicalShape.h,v 1.14 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 

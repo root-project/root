@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Id: Plane3D.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************

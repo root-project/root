@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.18 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Id: TGShutter.cxx,v 1.18 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************

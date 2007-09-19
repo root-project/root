@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranDistr.h,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Id: TUnuranDistr.h,v 1.1 2006/11/15 17:40:36 brun Exp $
 // Author: L. Moneta Wed Sep 27 11:53:27 2006
 
 /**********************************************************************

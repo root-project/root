@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.h,v 1.2 2004/08/24 10:41:58 brun Exp $
+// @(#)root/tree:$Id: TBranchRef.h,v 1.2 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************

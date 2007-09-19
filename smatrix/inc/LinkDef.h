@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name: v5-14-00-patches $:$Id: LinkDef.h,v 1.11 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Id: LinkDef.h,v 1.11 2006/06/30 14:45:46 moneta Exp $
 // Authors: L. Moneta    2005  
 
 

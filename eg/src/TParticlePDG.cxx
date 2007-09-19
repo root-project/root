@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.11 2006/05/24 14:40:29 brun Exp $
+// @(#)root/eg:$Id: TParticlePDG.cxx,v 1.11 2006/05/24 14:40:29 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************

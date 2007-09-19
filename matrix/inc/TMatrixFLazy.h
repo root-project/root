@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.h,v 1.4 2004/01/26 20:57:35 brun Exp $
+// @(#)root/matrix:$Id: TMatrixFLazy.h,v 1.4 2004/01/26 20:57:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************

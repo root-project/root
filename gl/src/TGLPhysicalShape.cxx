@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.23 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Id: TGLPhysicalShape.cxx,v 1.23 2006/04/07 09:20:43 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

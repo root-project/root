@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TVirtualMCDecayer.cxx,v 1.1 2006/05/23 06:53:46 brun Exp $
+// @(#)root/eg:$Id: TVirtualMCDecayer.cxx,v 1.1 2006/05/23 06:53:46 brun Exp $
 // Author: andreas.morsch@cern.ch 13/04/2002
 
 /*************************************************************************

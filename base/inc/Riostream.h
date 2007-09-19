@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.3 2003/04/14 14:13:19 rdm Exp $
+// @(#)root/base:$Id: Riostream.h,v 1.3 2003/04/14 14:13:19 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************

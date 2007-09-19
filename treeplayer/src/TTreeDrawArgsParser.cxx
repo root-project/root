@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
+// @(#)root/treeplayer:$Id: TTreeDrawArgsParser.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************

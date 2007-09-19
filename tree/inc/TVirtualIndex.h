@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.3 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/tree:$Id: TVirtualIndex.h,v 1.3 2005/06/13 19:19:07 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************

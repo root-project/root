@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.11 2004/02/04 17:12:44 brun Exp $ */
+/* @(#)root/matrix:$Id: LinkDef.h,v 1.11 2004/02/04 17:12:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

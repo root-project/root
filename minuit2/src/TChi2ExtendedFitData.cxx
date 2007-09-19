@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Id: TChi2ExtendedFitData.cxx,v 1.4 2006/04/26 10:40:09 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

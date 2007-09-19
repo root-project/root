@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.7 2003/10/07 13:41:33 brun Exp $
+// @(#)root/gpad:$Id: TControlBar.h,v 1.7 2003/10/07 13:41:33 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************

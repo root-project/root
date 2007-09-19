@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.9 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Id: TSystemDirectory.h,v 1.9 2006/05/23 04:47:35 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.9 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Id: TPerfStats.cxx,v 1.9 2006/11/15 17:45:55 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.13 2006/06/15 09:14:16 brun Exp $
+// @(#)root/base:$Id: TRandom3.cxx,v 1.13 2006/06/15 09:14:16 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////

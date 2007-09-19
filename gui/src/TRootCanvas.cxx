@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.109 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Id: TRootCanvas.cxx,v 1.109 2006/10/13 07:52:00 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name: v5-14-00-patches $:$Id: TChainIndex.h,v 1.2 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Id: TChainIndex.h,v 1.2 2005/09/03 02:21:32 pcanal Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.11 2006/08/05 20:04:47 brun Exp $
+// @(#)root/main:$Id: pmain.cxx,v 1.11 2006/08/05 20:04:47 brun Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************

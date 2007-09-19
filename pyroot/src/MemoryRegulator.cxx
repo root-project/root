@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.13 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Id: MemoryRegulator.cxx,v 1.13 2006/07/01 21:19:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Id: TFriendElement.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************

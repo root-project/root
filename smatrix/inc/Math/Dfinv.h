@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfinv.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Id: Dfinv.hv 1.0 2005/11/24 12:00:00 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfinv

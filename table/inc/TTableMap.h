@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.5 2005/09/08 05:33:41 brun Exp $
+// @(#)root/table:$Id: TTableMap.h,v 1.5 2005/09/08 05:33:41 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************

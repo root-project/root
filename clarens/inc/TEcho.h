@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Name: PROOF_MLM $:$Id: TEcho.h,v 1.1.2.4 2004/10/26 21:56:55 maartenb Exp $
+// @(#)root/clarens:$Id: TEcho.h,v 1.1.2.4 2004/10/26 21:56:55 maartenb Exp $
 // Author: Maarten Ballintijn    25/10/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.6 2005/04/11 08:40:59 brun Exp $ */
+/* @(#)root/gpad:$Id: LinkDef.h,v 1.6 2005/04/11 08:40:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

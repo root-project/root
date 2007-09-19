@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TStyleDialog.h,v 1.0 2005/09/08
+// @(#)root/ged:$Id: TStyleDialog.h,v 1.0 2005/09/08
 // Author: Denis Favre-Miville   08/09/05
 
 /*************************************************************************

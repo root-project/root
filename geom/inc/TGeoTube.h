@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.26 2005/11/18 16:07:58 brun Exp $
+// @(#)root/base:$Id: TGeoTube.h,v 1.26 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************

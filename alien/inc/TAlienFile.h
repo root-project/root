@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.16 2006/09/05 16:57:17 brun Exp $
+// @(#)root/alien:$Id: TAlienFile.h,v 1.16 2006/09/05 16:57:17 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************

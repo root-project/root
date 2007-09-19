@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjectSpy.cxx,v 1.1 2006/08/18 17:34:46 rdm Exp $
+// @(#)root/base:$Id: TObjectSpy.cxx,v 1.1 2006/08/18 17:34:46 rdm Exp $
 // Author: Matevz Tadel   16/08/2006
 
 /*************************************************************************

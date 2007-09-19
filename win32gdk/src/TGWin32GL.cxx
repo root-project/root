@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.15 2006/08/31 13:42:14 couet Exp $
+// @(#)root/win32gdk:$Id: TGWin32GL.cxx,v 1.15 2006/08/31 13:42:14 couet Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************

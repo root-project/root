@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: eta.h,v 1.1 2007/06/14 15:40:52 moneta Exp $
+// @(#)root/mathcore:$Id: eta.h,v 1.1 2007/06/14 15:40:52 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

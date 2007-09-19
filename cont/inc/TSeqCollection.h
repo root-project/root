@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.6 2003/09/01 12:19:20 rdm Exp $
+// @(#)root/cont:$Id: TSeqCollection.h,v 1.6 2003/09/01 12:19:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************

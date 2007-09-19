@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-14-00-patches $:$Id: TObjArray.cxx,v 1.29 2006/11/11 15:21:30 brun Exp $
+// @(#)root/cont:$Id: TObjArray.cxx,v 1.29 2006/11/11 15:21:30 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************

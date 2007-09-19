@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.7 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Id: PyROOT.h,v 1.7 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H

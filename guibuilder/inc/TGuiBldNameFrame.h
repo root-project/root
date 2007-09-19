@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.h,v 1.1 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Id: TGuiBldNameFrame.h,v 1.1 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

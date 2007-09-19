@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.43 2006/07/03 08:11:33 brun Exp $
+// @(#)root/tree:$Id: TBasket.cxx,v 1.43 2006/07/03 08:11:33 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

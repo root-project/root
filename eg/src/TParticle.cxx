@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.16 2006/05/24 14:40:29 brun Exp $
+// @(#)root/eg:$Id: TParticle.cxx,v 1.16 2006/05/24 14:40:29 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************

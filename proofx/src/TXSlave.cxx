@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofx:$Id: TXSlave.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.6 2006/11/06 14:45:39 moneta Exp $
+// @(#)root/mathcore:$Id: LinkDef_Rotation.h,v 1.6 2006/11/06 14:45:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // rotation functions

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TASImagePlugin.h,v 1.7 2005/06/21 17:09:26 brun Exp $
+// @(#)root/graf:$Id: TASImagePlugin.h,v 1.7 2005/06/21 17:09:26 brun Exp $
 // Author: Valeriy Onuchin   23/06/05
 
 /*************************************************************************

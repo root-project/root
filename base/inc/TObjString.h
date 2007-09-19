@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObjString.h,v 1.4 2003/02/10 10:57:40 rdm Exp $
+// @(#)root/base:$Id: TObjString.h,v 1.4 2003/02/10 10:57:40 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************

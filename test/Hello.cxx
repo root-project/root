@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.6 2004/08/04 04:34:08 brun Exp $
+// @(#)root/test:$Id: Hello.cxx,v 1.6 2004/08/04 04:34:08 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////

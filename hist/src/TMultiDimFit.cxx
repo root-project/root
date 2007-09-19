@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.28 2006/09/22 09:09:47 brun Exp $
+// @(#)root/hist:$Id: TMultiDimFit.cxx,v 1.28 2006/09/22 09:09:47 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________

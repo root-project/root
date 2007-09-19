@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJob.cxx,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/net:$Id: TGridJob.cxx,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************

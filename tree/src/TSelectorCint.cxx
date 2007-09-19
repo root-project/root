@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.22 2006/07/04 23:35:37 rdm Exp $
+// @(#)root/tree:$Id: TSelectorCint.cxx,v 1.22 2006/07/04 23:35:37 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************

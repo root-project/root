@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.15 2006/05/13 11:00:50 brun Exp $
+// @(#)root/cont:$Id: TCollectionProxy.h,v 1.15 2006/05/13 11:00:50 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

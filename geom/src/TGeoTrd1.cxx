@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.34 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Id: TGeoTrd1.cxx,v 1.34 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 

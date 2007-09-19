@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.20 2006/10/13 07:33:16 brun Exp $
+// @(#)root/mysql:$Id: TMySQLServer.cxx,v 1.20 2006/10/13 07:33:16 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************

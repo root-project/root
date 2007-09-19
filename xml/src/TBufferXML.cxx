@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.12 2006/05/09 10:24:27 brun Exp $
+// @(#)root/:$Id: TBufferXML.cxx,v 1.12 2006/05/09 10:24:27 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************

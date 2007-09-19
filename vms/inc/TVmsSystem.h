@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.5 2001/02/03 14:46:42 rdm Exp $
+// @(#)root/vms:$Id: TVmsSystem.h,v 1.5 2001/02/03 14:46:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

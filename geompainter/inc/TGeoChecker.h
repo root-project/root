@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.16 2006/02/28 10:57:12 brun Exp $
+// @(#)root/geom:$Id: TGeoChecker.h,v 1.16 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************

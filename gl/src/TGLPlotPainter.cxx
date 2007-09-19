@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.10 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Id: TGLPlotPainter.cxx,v 1.10 2006/11/24 10:45:13 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************

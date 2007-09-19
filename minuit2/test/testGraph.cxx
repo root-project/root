@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
+// @(#)root/minuit2:$Id: testGraph.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

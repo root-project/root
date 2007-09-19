@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Rtypeinfo.h,v 1.7 2002/05/09 22:56:28 rdm Exp $
+// @(#)root/base:$Id: Rtypeinfo.h,v 1.7 2002/05/09 22:56:28 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************

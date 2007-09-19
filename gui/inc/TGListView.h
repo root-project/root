@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.30 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Id: TGListView.h,v 1.30 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************

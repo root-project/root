@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.16 2006/12/06 05:53:33 brun Exp $
+// @(#)root/table:$Id: TVolume.cxx,v 1.16 2006/12/06 05:53:33 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************

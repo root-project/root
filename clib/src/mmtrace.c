@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmtrace.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Id: mmtrace.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /* More debugging hooks for `mmalloc'.

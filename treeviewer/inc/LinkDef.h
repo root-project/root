@@ -1,4 +1,4 @@
-/* @(#)root/treeviewer:$Name:  $:$Id: LinkDef.h,v 1.10 2006/07/04 10:16:52 rdm Exp $ */
+/* @(#)root/treeviewer:$Id: LinkDef.h,v 1.10 2006/07/04 10:16:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.4 2006/10/05 21:06:35 rdm Exp $ */
+/* @(#)root/base:$Id: Varargs.h,v 1.4 2006/10/05 21:06:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

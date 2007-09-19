@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************

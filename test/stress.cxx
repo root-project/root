@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.64 2006/06/15 10:38:22 brun Exp $
+// @(#)root/test:$Id: stress.cxx,v 1.64 2006/06/15 10:38:22 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////

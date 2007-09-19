@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.25 2006/11/27 13:04:42 rdm Exp $
+// @(#)root/meta:$Id: TInterpreter.h,v 1.25 2006/11/27 13:04:42 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************

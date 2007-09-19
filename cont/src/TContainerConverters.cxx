@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.5 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/cony:$Id: TContainerConverters.cxx,v 1.5 2006/03/20 21:43:41 pcanal Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************

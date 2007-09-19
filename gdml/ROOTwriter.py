@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.6 2006/08/07 15:31:36 brun Exp $
+# @(#)root/gdml:$Id: ROOTwriter.py,v 1.6 2006/08/07 15:31:36 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *

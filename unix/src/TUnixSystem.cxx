@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name: v5-14-00-patches $:$Id: TUnixSystem.cxx,v 1.173 2006/12/06 10:20:06 rdm Exp $
+// @(#)root/unix:$Id: TUnixSystem.cxx,v 1.173 2006/12/06 10:20:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************

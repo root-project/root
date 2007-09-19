@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.33 2006/08/31 13:42:14 couet Exp $
+// @(#)root/base:$Id: TVirtualGL.h,v 1.33 2006/08/31 13:42:14 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.4 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Id: TFormulaPrimitive.cxx,v 1.4 2006/05/17 16:37:25 couet Exp $
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************

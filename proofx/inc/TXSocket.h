@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.11 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofx:$Id: TXSocket.h,v 1.11 2006/11/20 15:56:36 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************

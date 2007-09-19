@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Id: TVirtualGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.25 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/cont:$Id: TRefArray.cxx,v 1.25 2006/10/11 10:26:23 rdm Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************

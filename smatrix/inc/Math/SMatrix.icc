@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.25 2006/07/03 14:30:45 moneta Exp $
+// @(#)root/smatrix:$Id: SMatrix.icc,v 1.25 2006/07/03 14:30:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: dir_manip.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
+// @(#)root/reflex:$Id: dir_manip.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: inc/Math/WrappedParamFunction.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Id: inc/Math/WrappedParamFunction.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
 // Author: L. Moneta Thu Nov 23 10:38:32 2006
 
 /**********************************************************************

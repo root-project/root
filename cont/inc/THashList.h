@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.7 2006/05/23 04:47:36 brun Exp $
+// @(#)root/cont:$Id: THashList.h,v 1.7 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************

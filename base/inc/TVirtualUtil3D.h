@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtil3D.h,v 1.1 2002/09/14 16:19:13 brun Exp $
+// @(#)root/base:$Id: TVirtualUtil3D.h,v 1.1 2002/09/14 16:19:13 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************

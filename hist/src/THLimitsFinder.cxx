@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.9 2005/08/29 10:45:07 brun Exp $
+// @(#)root/hist:$Id: THLimitsFinder.cxx,v 1.9 2005/08/29 10:45:07 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

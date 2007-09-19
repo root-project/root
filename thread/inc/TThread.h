@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.12 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Id: TThread.h,v 1.12 2006/05/23 04:47:41 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************

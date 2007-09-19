@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.6 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Id: TRootControlBar.h,v 1.6 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************

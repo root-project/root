@@ -1,4 +1,4 @@
-// @(#)root/geombuilder:$Name:  $:$Id: TGeoGedFrame.cxx,v 1.3 2006/09/27 08:48:18 rdm Exp $
+// @(#)root/geombuilder:$Id: TGeoGedFrame.cxx,v 1.3 2006/09/27 08:48:18 rdm Exp $
 // Author: Matevz Tadel   25/09/2006
 
 #include "TGeoGedFrame.h"

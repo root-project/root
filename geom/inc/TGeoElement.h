@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.10 2006/09/15 10:23:07 brun Exp $
+// @(#)root/geom:$Id: TGeoElement.h,v 1.10 2006/09/15 10:23:07 brun Exp $
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************

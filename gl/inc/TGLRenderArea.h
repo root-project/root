@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.h,v 1.5 2005/05/25 14:25:16 brun Exp $
+// @(#)root/gl:$Id: TGLRenderArea.h,v 1.5 2005/05/25 14:25:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************

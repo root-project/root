@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.54 2006/03/13 15:18:56 rdm E
+// @(#)root/asimage:$Id: TASImage.cxx,v 1.54 2006/03/13 15:18:56 rdm E
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPolyUtils.cxx,v 1.17 2005/01/31 17:20:30 brun Exp $
+// @(#)root/asimage:$Id: TASPolyUtils.cxx,v 1.17 2005/01/31 17:20:30 brun Exp $
 // Author: Valeriy Onuchin  20/04/2005
 
 /*************************************************************************

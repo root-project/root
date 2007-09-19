@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.30 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Id: Utility.cxx,v 1.30 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

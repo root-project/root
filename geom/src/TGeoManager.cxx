@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.167 2006/11/22 16:02:10 brun Exp $
+// @(#)root/geom:$Id: TGeoManager.cxx,v 1.167 2006/11/22 16:02:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************

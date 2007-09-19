@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name: v5-14-00-patches $:$Id: TRFIOFile.h,v 1.15 2006/08/26 16:37:44 rdm Exp $
+// @(#)root/rfio:$Id: TRFIOFile.h,v 1.15 2006/08/26 16:37:44 rdm Exp $
 // Author: Fons Rademakers  20/01/99 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************

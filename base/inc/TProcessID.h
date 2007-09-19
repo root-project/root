@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.12 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Id: TProcessID.h,v 1.12 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************

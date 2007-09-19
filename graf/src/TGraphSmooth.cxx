@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.11 2006/08/24 16:36:42 rdm Exp $
+// @(#)root/graf:$Id: TGraphSmooth.cxx,v 1.11 2006/08/24 16:36:42 rdm Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /*************************************************************************

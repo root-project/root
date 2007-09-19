@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.38 2006/10/08 15:28:01 brun Exp $
+// @(#)root/mlp:$Id: TMultiLayerPerceptron.cxx,v 1.38 2006/10/08 15:28:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************

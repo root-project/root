@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.9 2006/06/25 14:14:10 pcanal Exp $
+// @(#)root/tree:$Id: TChainElement.h,v 1.9 2006/06/25 14:14:10 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************

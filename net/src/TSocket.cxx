@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v5-14-00-patches $:$Id: TSocket.cxx,v 1.40 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/net:$Id: TSocket.cxx,v 1.40 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************

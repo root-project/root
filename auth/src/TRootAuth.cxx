@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.3 2005/09/06 09:34:34 brun Exp $
+// @(#)root/auth:$Id: TRootAuth.cxx,v 1.3 2005/09/06 09:34:34 brun Exp $
 // Author: Gerardo Ganis   08/07/05
 
 /*************************************************************************

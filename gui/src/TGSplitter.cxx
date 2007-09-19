@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.13 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Id: TGSplitter.cxx,v 1.13 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************

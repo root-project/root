@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.15 2006/08/30 14:45:44 antcheva Exp $
+// @(#)root/qt:$Id: TQtWidget.h,v 1.15 2006/08/30 14:45:44 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************

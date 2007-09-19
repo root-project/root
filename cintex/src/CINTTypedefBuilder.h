@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.h,v 1.6 2007/01/13 19:53:41 brun Exp $
+// @(#)root/cintex:$Id: CINTTypedefBuilder.h,v 1.6 2007/01/13 19:53:41 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

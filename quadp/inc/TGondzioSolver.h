@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.h,v 1.3 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Id: TGondzioSolver.h,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

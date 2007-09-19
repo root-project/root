@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name: v5-14-00-patches $:$Id: proofd.cxx,v 1.88 2006/11/20 16:17:06 rdm Exp $
+// @(#)root/proofd:$Id: proofd.cxx,v 1.88 2006/11/20 16:17:06 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************

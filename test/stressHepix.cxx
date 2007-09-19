@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressHepix.cxx,v 1.7 2006/11/01 14:03:49 rdm Exp $
+// @(#)root/test:$Id: stressHepix.cxx,v 1.7 2006/11/01 14:03:49 rdm Exp $
 // Author: Rene Brun   12/09/2006
 
 ///////////////////////////////////////////////////////////////////////////////

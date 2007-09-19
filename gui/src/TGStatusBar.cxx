@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.21 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Id: TGStatusBar.cxx,v 1.21 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXHandler.cxx,v 1.2 2006/06/01 16:27:44 rdm Exp $
+// @(#)root/proofx:$Id: TXHandler.cxx,v 1.2 2006/06/01 16:27:44 rdm Exp $
 // Author: G. Ganis Mar 2006
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.18 2005/11/11 16:12:18 couet Exp $
+// @(#)root/x3d:$Id: TViewerX3D.cxx,v 1.18 2005/11/11 16:12:18 couet Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

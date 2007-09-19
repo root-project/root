@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.7 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Id: TBrowserImp.h,v 1.7 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: LinkDef.h,v 1.1 2006/11/17 17:40:02 brun Exp $ */
+/* @(#)root/gdml:$Id: LinkDef.h,v 1.1 2006/11/17 17:40:02 brun Exp $ */
 /* Authors: Ben Lloyd 09/11/06 ben.lloyd@cern.ch */
 
 /*************************************************************************

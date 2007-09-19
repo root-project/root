@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name: v5-14-00-patches $:$Id: globus.cxx,v 1.13 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/rpdutils:$Id: globus.cxx,v 1.13 2006/05/26 15:13:02 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************

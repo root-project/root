@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.4 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Id: TGLSAFrame.cxx,v 1.4 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************

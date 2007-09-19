@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodArg.h,v 1.3 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Id: TMethodArg.h,v 1.3 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************

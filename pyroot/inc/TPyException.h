@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.3 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Id: TPyException.h,v 1.3 2005/05/06 10:08:53 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException

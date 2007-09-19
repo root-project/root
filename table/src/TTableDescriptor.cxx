@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
+// @(#)root/table:$Id: TTableDescriptor.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

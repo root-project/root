@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.12 2006/06/20 07:57:54 antcheva Exp $ */
+/* @(#)root/gui:$Id: LinkDef3.h,v 1.12 2006/06/20 07:57:54 antcheva Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

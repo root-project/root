@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.23 2006/07/27 12:18:17 rdm Exp $
+// @(#)root/asimage:$Id: TASImage.h,v 1.23 2006/07/27 12:18:17 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************

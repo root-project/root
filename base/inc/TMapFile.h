@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Id: TMapFile.h,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:  $:$Id: TProofStartupDialog.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/peac:$Id: TProofStartupDialog.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-14-00-patches $:$Id: TObject.cxx,v 1.81 2006/10/20 21:07:40 brun Exp $
+// @(#)root/base:$Id: TObject.cxx,v 1.81 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************

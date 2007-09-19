@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CoordinateSystemTags.h,v 1.1 2005/12/05 08:40:34 moneta Exp $
+// @(#)root/mathcore:$Id: CoordinateSystemTags.h,v 1.1 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

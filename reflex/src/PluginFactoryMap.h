@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: $
+// @(#)root/reflex:$Id: $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

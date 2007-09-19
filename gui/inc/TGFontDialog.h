@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.5 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Id: TGFontDialog.h,v 1.5 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************

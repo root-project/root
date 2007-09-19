@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.1 2006/05/18 16:12:09 couet Exp $
+// @(#)root/graf:$Id: TGraphPolar.h,v 1.1 2006/05/18 16:12:09 couet Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************

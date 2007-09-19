@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.14 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Id: TSpline.h,v 1.14 2006/05/23 04:47:37 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************

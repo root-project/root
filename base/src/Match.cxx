@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.5 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/base:$Id: Match.cxx,v 1.5 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
