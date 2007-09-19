@@ -1,8 +1,0 @@
- *.dll *.def *.exp *.lib *.pdb *.log *.d 
- *.dll 
- test.root 
-*.manifest
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

@@ -1,7 +1,0 @@
- Event.root Event.new.split0.root EventDict* 
- *.dll *.def *.exp *.lib *.pdb *.log *.d 
- result Event *.dylib
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

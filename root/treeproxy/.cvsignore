@@ -1,6 +1,0 @@
-*.clog *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
-generatedSel.h red.h val3dimSel.h
-*.manifest
-withfriend*
-.root_hist
-rootmap_* *.rootmap

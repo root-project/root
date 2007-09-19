@@ -1,7 +1,0 @@
- little.root 
- *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
- t01.out 
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

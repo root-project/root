@@ -1,9 +1,0 @@
-*.def *.exp *.lib *.pdb *.log *Dict.*
- *.dll 
-FooDict.h
-reader writer file.root FooDict*
-*.manifest
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

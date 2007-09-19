@@ -1,5 +1,0 @@
-*.def *.exp *.lib *.pdb *.log *Dict?.*
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

@@ -1,8 +1,0 @@
-*.log *.d *.dll *.so *.exp *.lib *.pdb 
-*.def
-*.root
-*.manifest
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

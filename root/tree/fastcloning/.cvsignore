@@ -1,5 +1,0 @@
- *.manifest *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk  *.clog *.dylib .gdb_history
-one two merged copiedEvent* Event.h
-.root_hist
-rootmap_*
-*.rootmap

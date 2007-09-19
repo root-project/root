@@ -1,9 +1,0 @@
-*.log
- *.dll *.def *.exp *.lib *.pdb *.log *.d 
-*Dict.*
-*Dict2.*
-*.manifest
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

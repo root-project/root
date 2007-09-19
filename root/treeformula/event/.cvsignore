@@ -1,6 +1,0 @@
- *.dll *.def *.exp *.lib *.pdb *.log *.d 
- Event.root EventDict* Event *.dylib 
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

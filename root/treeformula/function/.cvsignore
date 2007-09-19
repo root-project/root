@@ -1,7 +1,0 @@
-testFormulaFuncCall.output
- *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk  *.clog
-prova.root
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap

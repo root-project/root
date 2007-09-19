@@ -1,6 +1,0 @@
-*.def *.so *.dll *.exp *.lib *.pdb idDict*
- *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
-*.manifest
-.root_hist
-rootmap_*
-*.rootmap
