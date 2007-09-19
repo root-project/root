@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TGenCollectionStreamer.h,v 1.2 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Id$
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: RotationZ.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationZ.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_RotationZ 
 #define ROOT_Math_GenVector_RotationZ  1

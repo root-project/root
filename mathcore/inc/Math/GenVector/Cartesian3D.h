@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Cartesian3D.h,v 1.4 2005/12/09 17:53:39 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

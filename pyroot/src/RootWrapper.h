@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: RootWrapper.h,v 1.10 2006/04/06 05:38:31 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H

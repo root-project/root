@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TDataSetIter.h,v 1.4 2005/09/09 04:57:59 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 // ***********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TPacketizerProgressive.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Id$
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************

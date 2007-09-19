@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: CINTUtils.cxx,v 1.8 2006/06/13 08:19:01 brun Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

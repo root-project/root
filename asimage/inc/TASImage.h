@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Id: TASImage.h,v 1.20 2006/05/28 20:07:59 brun Exp $
+// @(#)root/asimage:$Id$
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************

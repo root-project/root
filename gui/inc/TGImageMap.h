@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGImageMap.h,v 1.4 2004/07/08 10:02:30 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************

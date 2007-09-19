@@ -1,4 +1,4 @@
-/* @(#)root/physics:$Id: LinkDef.h,v 1.7 2005/06/28 07:16:00 brun Exp $ */
+/* @(#)root/physics:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TClassEdit.cxx,v 1.20 2006/03/29 22:18:49 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 

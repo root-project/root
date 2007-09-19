@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGDoubleSlider.cxx,v 1.14 2006/01/25 10:34:42 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************

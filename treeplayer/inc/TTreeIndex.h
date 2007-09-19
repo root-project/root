@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TTreeIndex.h,v 1.4 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************

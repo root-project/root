@@ -1,7 +1,7 @@
-// @(#)root/g3d:$Id: TPoints3DABC.cxx,v 1.4 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   04/05/99
 
-// @(#)root/g3d:$Id: TPoints3DABC.cxx,v 1.4 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 #include "TPoints3DABC.h"

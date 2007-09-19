@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id: TImageDump.cxx,v 1.17 2006/05/29 12:41:18 couet Exp $
+// @(#)root/postscript:$Id$
 // Author: Valeriy Onuchin
 
 /*************************************************************************

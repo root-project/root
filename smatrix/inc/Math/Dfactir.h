@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Id: Dfactir.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Id$
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfactir

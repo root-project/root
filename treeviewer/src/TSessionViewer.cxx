@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: TSessionViewer.cxx,v 1.69 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/treeviewer:$Id$
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootHelpDialog.h,v 1.2 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************

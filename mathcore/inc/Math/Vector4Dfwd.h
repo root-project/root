@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Vector4Dfwd.h,v 1.2 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

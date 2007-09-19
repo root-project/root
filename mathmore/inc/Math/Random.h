@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: Random.h,v 1.3 2006/05/31 09:56:21 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

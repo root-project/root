@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TFeldmanCousins.h,v 1.5 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/physics:$Id$
 // Author: Adrian Bevan  2001
 
 /*************************************************************************

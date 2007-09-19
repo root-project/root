@@ -1,4 +1,4 @@
-// @(#)root/eg:$Id: TVirtualMCDecayer.h,v 1.2 2006/04/24 07:56:53 brun Exp $
+// @(#)root/eg:$Id$
 // Author: Andreas Morsch  13/04/2002
    
 #ifndef ROOT_TVirtualMCDecayer

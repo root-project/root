@@ -1,4 +1,4 @@
-/* @(#)build/win:$Id: w32pragma.h,v 1.4 2006/03/23 10:31:21 rdm Exp $ */
+/* @(#)build/win:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

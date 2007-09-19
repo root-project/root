@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofLimitsFinder.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************

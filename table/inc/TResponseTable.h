@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $Id: TResponseTable.h,v 1.1 2003/01/27 20:41:36 brun Exp $
+// @(#)root/table:$Name:  $Id$
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 
 #include "TGenericTable.h"

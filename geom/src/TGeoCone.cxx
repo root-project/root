@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoCone.cxx,v 1.55 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 

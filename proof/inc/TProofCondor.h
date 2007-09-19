@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofCondor.h,v 1.1 2005/06/22 20:25:28 brun Exp $
+// @(#)root/proof:$Id$
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************

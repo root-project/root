@@ -2,7 +2,7 @@
 #ifndef ROOT_TQtEventQueue
 #define ROOT_TQtEventQueue
 
-// @(#)root/qt:$Id: TQtEventQueue.h,v 1.3 2005/03/08 05:48:55 brun Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Id: TWin32SplashThread.h,v 1.1 2004/01/14 11:42:21 rdm Exp $
+// @(#)root/winnt:$Id$
 // Author: Bertrand Bellenot 14/01/04
 
 /*************************************************************************

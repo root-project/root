@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Id: TGX11TTF.cxx,v 1.12 2003/06/04 11:03:59 rdm Exp $
+// @(#)root/x11ttf:$Id$
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 

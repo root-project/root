@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TVirtualMCStack.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Id$
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCStack.h"

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofDraw.h,v 1.14 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw

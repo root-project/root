@@ -1,4 +1,4 @@
-/* @(#)root/net:$Id: LinkDef.h,v 1.20 2006/06/02 14:02:03 brun Exp $ */
+/* @(#)root/net:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

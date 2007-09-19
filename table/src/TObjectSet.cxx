@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TObjectSet.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************

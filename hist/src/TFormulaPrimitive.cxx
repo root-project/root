@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TFormulaPrimitive.cxx,v 1.3 2005/07/18 20:25:53 pcanal Exp $
+// @(#)root/hist:$Id$
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************

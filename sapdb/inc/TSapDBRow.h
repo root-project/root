@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Id: TSapDBRow.h,v 1.1 2001/08/24 16:41:19 rdm Exp $
+// @(#)root/sapdb:$Id$
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************

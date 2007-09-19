@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $Id: TGenericTable.h,v 1.4 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $Id$
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 
 #ifndef ROOT_TGenericTable

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TCollectionProxy.cxx,v 1.6 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Id$
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

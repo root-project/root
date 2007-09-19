@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TVirtualProof.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************

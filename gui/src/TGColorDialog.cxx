@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGColorDialog.cxx,v 1.22 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************

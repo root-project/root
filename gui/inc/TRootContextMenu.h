@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootContextMenu.h,v 1.4 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************

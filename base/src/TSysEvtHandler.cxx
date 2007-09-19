@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TSysEvtHandler.cxx,v 1.4 2004/04/20 09:27:03 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************

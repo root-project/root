@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: Tools.h,v 1.10 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

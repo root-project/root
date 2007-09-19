@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Id: TClSession.cxx,v 1.2 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/clarens:$Id$
 // Author: Maarten Ballintijn   25/10/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: GLConstants.h,v 1.3 2004/08/16 10:00:45 brun Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

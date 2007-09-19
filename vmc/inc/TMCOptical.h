@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TMCOptical.h,v 1.1 2005/05/17 12:49:05 brun Exp $
+// @(#)root/vmc:$Id$
 // Author: Alice collaboration  
 
 #ifndef ROOT_TMCOptical

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Id: TQpLinSolverDens.cxx,v 1.6 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Id$
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: MnMigrad.h,v 1.11.6.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TCondor.cxx,v 1.10 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************

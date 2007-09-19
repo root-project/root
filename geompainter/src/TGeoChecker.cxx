@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoChecker.cxx,v 1.44 2006/03/22 11:18:13 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 

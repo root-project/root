@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofLimitsFinder.h,v 1.2 2003/03/04 17:29:29 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPyClassGenerator.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings

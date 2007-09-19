@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGedPatternSelect.h,v 1.6 2006/06/14 13:57:28 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************

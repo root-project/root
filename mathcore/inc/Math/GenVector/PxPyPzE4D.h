@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PxPyPzE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzE4D by moneta)
 // 
-// Last update: $Id: PxPyPzE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id$
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzE4D 
 #define ROOT_Math_GenVector_PxPyPzE4D  1

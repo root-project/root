@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Id: TMCParticle.h,v 1.2 2000/12/13 15:13:53 brun Exp $
+// @(#)root/pythia:$Id$
 // Author: Piotr Golonka   17/09/97
 
 /*************************************************************************

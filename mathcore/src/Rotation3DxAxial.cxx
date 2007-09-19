@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Rotation3DxAxial.cxx,v 1.3 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/Rotation3D.h"

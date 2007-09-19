@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TChainIndex.h,v 1.1 2005/06/24 20:25:11 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************

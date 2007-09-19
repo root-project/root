@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TConfidenceLevel.cxx,v 1.6 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Id$
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////

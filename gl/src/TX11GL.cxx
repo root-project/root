@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Id: TX11GL.cxx,v 1.19 2006/06/06 11:49:01 couet Exp $
+// @(#)root/gx11:$Id$
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************

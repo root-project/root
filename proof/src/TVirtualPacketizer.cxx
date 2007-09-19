@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TVirtualPacketizer.cxx,v 1.6 2003/05/06 08:23:43 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************

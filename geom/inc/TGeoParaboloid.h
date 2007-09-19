@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoParaboloid.h,v 1.8 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************

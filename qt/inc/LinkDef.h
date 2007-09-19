@@ -1,4 +1,4 @@
-/* @(#)root/qt:$Id: LinkDef.h,v 1.10 2006/03/15 19:18:48 fine Exp $*/
+/* @(#)root/qt:$Id$*/
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *

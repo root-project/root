@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPyReturn.h,v 1.5 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyReturn

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Id: LinkDef3.h,v 1.11 2005/10/14 10:56:07 rdm Exp $ */
+/* @(#)root/gui:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

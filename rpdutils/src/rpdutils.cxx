@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Id: rpdutils.cxx,v 1.91 2006/03/22 21:57:17 rdm Exp $
+// @(#)root/rpdutils:$Id$
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************

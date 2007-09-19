@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Id: TLinearFitter.cxx,v 1.27 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/minuit:$Id$
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************

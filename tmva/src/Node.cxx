@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

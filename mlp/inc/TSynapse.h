@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Id: TSynapse.h,v 1.2 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Id$
 // Author: Christophe.Delaere@cern.ch   20/07/2003
 
 /*************************************************************************

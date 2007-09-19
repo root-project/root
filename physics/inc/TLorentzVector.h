@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TLorentzVector.h,v 1.13 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TTableSorter.h,v 1.4 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

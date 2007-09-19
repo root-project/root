@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: DavidonErrorUpdator.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

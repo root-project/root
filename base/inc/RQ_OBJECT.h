@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: RQ_OBJECT.h,v 1.12 2005/03/13 15:05:31 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

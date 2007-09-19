@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TCollection.cxx,v 1.32 2006/02/19 21:02:35 pcanal Exp $
+// @(#)root/cont:$Id$
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************

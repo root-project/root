@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Id: rpasswd.c,v 1.2 2000/11/27 10:49:30 rdm Exp $ */
+/* @(#)root/srputils:$Id$ */
 /*
  * Create a private SRP passwd file.
  */

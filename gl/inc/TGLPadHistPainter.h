@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLPadHistPainter.h,v 1.1 2006/06/14 10:00:00 couet Exp $
+// @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************

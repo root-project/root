@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -29,7 +29,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodTMlpANN.h,v 1.7 2006/05/23 09:53:10 stelzer Exp $ 
+ * $Id$ 
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodTMlpANN

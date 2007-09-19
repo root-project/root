@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Id: LinkDef.h,v 1.13 2005/03/20 19:35:50 brun Exp $ */
+/* @(#)root/cont:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

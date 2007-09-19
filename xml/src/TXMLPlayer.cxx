@@ -1,4 +1,4 @@
-// @(#)root/xml:$Id: TXMLPlayer.cxx,v 1.10 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Id$
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************

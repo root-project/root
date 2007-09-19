@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MisClassificationError.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -28,7 +28,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MisClassificationError.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $  
+ * $Id$  
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MisClassificationError

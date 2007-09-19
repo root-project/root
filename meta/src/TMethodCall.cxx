@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Id: TMethodCall.cxx,v 1.24 2005/11/16 20:10:45 pcanal Exp $
+// @(#)Root/meta:$Id$
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGButtonGroup.h,v 1.11 2004/09/15 17:37:29 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.3 2006/05/31 14:01:33 rdm Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Node.h,v 1.3 2006/05/31 14:01:33 rdm Exp $    
+ * $Id$    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Node

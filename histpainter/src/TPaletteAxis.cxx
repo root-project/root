@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Id: TPaletteAxis.cxx,v 1.17 2006/04/28 08:43:05 couet Exp $
+// @(#)root/histpainter:$Id$
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************

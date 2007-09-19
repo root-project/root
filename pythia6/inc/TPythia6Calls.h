@@ -1,4 +1,4 @@
-/* @(#)root/pythia6:$Id: TPythia6Calls.h,v 1.2 2002/11/13 17:40:59 brun Exp $ */
+/* @(#)root/pythia6:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

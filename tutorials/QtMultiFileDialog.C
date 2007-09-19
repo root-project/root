@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id: TGQt.h,v 1.49 2006/01/06 20:33:50 fine Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
 #  include <qapplication.h> 

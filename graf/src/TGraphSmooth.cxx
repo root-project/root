@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: TGraphSmooth.cxx,v 1.9 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Id$
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************

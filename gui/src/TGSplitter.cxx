@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGSplitter.cxx,v 1.12 2006/06/13 14:50:35 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************

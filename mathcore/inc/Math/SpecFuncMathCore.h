@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: SpecFuncMathCore.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Id$
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

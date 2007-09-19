@@ -1,4 +1,4 @@
-// @(#)root/sql:$Id: TBufferSQL2.h,v 1.7 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Id$
 // Author: Sergey Linev  20/11/2005
 
 

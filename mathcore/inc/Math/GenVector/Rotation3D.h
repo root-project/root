@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1

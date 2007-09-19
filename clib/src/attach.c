@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: attach.c,v 1.2 2002/01/22 18:17:01 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Initialization for access to a mmap'd malloc managed region.

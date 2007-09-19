@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLPerspectiveCamera.h,v 1.8 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

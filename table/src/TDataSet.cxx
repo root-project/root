@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TDataSet.cxx,v 1.14 2006/06/23 04:59:33 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************

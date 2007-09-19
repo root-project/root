@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: LinkDef_Func.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #ifdef __CINT__

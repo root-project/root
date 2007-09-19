@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGTextEditor.h,v 1.1 2006/06/20 07:58:33 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************

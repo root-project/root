@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootControlBar.h,v 1.5 2003/07/21 12:42:36 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************

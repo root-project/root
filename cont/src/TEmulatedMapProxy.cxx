@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TEmulatedMapProxy.cxx,v 1.8 2006/02/09 20:41:12 pcanal Exp $
+// @(#)root/cont:$Id$
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

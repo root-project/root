@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TQClass.h,v 1.26 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

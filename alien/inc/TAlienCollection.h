@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id: TAlienCollection.h,v 1.2 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Id$
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************

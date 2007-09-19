@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: vvector.cxx,v 1.19 2004/03/22 16:13:24 brun Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////

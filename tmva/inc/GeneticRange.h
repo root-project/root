@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: TChi2ExtendedFitData.h,v 1.2 2005/11/05 15:17:34 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

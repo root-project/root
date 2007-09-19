@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TOrdCollection.h,v 1.5 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Id$
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************

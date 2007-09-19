@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Id: TPythia6Decayer.h,v 1.2 2006/04/24 07:56:53 brun Exp $
+// @(#)root/pythia6:$Id$
 // Author: Christian Holm Christensen   22/04/06
 
 /*************************************************************************

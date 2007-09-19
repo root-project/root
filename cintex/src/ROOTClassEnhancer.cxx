@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: ROOTClassEnhancer.cxx,v 1.12 2006/07/03 10:27:23 roiser Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

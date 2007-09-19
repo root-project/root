@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Id: netpar.cxx,v 1.11 2005/09/05 13:37:02 brun Exp $
+// @(#)root/rpdutils:$Id$
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************

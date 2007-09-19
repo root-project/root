@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Id: TMatrixTBase.h,v 1.10 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************

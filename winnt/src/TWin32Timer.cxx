@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Id: TWin32Timer.cxx,v 1.4 2002/06/20 21:02:52 brun Exp $
+// @(#)root/winnt:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>

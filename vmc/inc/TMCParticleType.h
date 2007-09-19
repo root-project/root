@@ -1,4 +1,4 @@
-// @(#)root/mc:$Id: TMCParticleType.h,v 1.4 2003/02/26 13:30:14 brun Exp $
+// @(#)root/mc:$Id$
 // Author: Alice collaboration  
 
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. */

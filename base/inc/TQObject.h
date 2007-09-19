@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TQObject.h,v 1.29 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

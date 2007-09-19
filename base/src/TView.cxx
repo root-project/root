@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TView.cxx,v 1.39 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Id$
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************

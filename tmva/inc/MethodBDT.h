@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.h,v 1.11 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

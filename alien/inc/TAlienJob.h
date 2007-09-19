@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id: TAlienJob.h,v 1.4 2004/10/28 08:58:54 jgrosseo Exp $
+// @(#)root/alien:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************

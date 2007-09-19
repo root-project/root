@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TCondition.cxx,v 1.9 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Id$
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************

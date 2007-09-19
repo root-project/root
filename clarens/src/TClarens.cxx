@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Id: TClarens.cxx,v 1.1.2.5 2004/11/07 20:00:16 maartenb Exp $
+// @(#)root/clarens:$Id$
 // Author: Maarten Ballintijn   21/10/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TFormulaPrimitive.h,v 1.26 2004/08/11 07:59:20 brun Exp $
+// @(#)root/hist:$Id$
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************

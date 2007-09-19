@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Id: TKSocket.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
+// @(#)root/krb5auth:$Id$
 // Author: Maarten Ballintijn   27/10/2003
 
 #include <stdlib.h>

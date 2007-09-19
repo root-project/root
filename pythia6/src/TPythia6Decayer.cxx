@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Id: TPythia6Decayer.cxx,v 1.3 2006/05/11 10:12:36 brun Exp $
+// @(#)root/pythia6:$Id$
 // Author: Christian Holm Christensen   22/04/06
 // Much of this code has been lifted from AliROOT.
 

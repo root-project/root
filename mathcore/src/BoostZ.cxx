@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: BoostZ.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************

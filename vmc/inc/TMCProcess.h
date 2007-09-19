@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TMCProcess.h,v 1.4 2003/02/26 13:30:14 brun Exp $
+// @(#)root/vmc:$Id$
 // Author: Alice collaboration  
 
 #ifndef ROOT_TMCProcess

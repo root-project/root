@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGMdiMainFrame.cxx,v 1.21 2006/05/11 12:50:07 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************

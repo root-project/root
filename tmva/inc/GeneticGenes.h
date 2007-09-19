@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id$    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

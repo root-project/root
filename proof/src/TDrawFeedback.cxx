@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TDrawFeedback.cxx,v 1.9 2005/06/07 20:28:32 brun Exp $
+// @(#)root/proof:$Id$
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************

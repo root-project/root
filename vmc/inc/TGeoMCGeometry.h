@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TGeoMCGeometry.h,v 1.8 2005/11/18 21:20:14 brun Exp $
+// @(#)root/vmc:$Id$
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.8 2005/11/18 21:20:14 brun Exp $ */
+/* $Id$ */
 
 //
 // Class TGeoMCGeometry

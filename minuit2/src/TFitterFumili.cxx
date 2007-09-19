@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: TFitterFumili.cxx,v 1.5 2006/05/29 10:18:06 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

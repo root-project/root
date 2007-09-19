@@ -1,4 +1,4 @@
-// @(#)root/eg:$Id: TVirtualMCDecayer.cxx,v 1.3 2006/04/23 20:40:23 brun Exp $
+// @(#)root/eg:$Id$
 // Author: andreas.morsch@cern.ch 13/04/2002
 
 // This is an abstract base class !

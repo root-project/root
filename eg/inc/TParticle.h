@@ -1,4 +1,4 @@
-// @(#)root/eg:$Id: TParticle.h,v 1.15 2006/05/15 07:27:03 brun Exp $
+// @(#)root/eg:$Id$
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************

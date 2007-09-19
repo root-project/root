@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Reader.h,v 1.2 2006/05/23 13:03:15 brun Exp $        
+ * $Id$        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Reader

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id: TQMimeTypes.cxx,v 1.4 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *

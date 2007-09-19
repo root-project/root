@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TQConnection.cxx,v 1.20 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************

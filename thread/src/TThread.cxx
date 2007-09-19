@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TThread.cxx,v 1.45 2006/06/14 18:15:30 pcanal Exp $
+// @(#)root/thread:$Id$
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************

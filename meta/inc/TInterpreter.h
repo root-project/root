@@ -1,4 +1,4 @@
-// @(#)root/meta:$Id: TInterpreter.h,v 1.23 2005/11/16 20:09:16 pcanal Exp $
+// @(#)root/meta:$Id$
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************

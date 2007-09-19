@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: VectorUtil_Cint.h,v 1.4 2005/12/05 08:40:34 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Types.h,v 1.4 2006/05/22 08:04:39 andreas.hoecker Exp $        
+ * $Id$        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Types

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TGedToolBox.cxx,v 1.7 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/ged:$Id$
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************

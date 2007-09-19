@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: Buttons.h,v 1.2 2004/02/18 20:13:42 brun Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: ConstructorHolder.cxx,v 1.8 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

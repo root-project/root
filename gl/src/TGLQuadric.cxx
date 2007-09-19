@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLQuadric.cxx $
+// @(#)root/gl:$Id$
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *

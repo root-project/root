@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Id: LinkDef.h,v 1.32 2005/12/10 16:51:57 rdm Exp $ */
+/* @(#)root/proof:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

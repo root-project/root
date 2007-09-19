@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id: TAlienResult.cxx,v 1.11 2005/12/09 18:36:52 rdm Exp $
+// @(#)root/alien:$Id$
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************

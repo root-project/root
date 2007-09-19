@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TVirtualMCGeometry.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Id$
 // Authors: ... 25/06/2002
 
 #include "TVirtualMCGeometry.h"

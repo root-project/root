@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TMatrixTCramerInv.cxx,v 1.3 2006/05/22 04:53:26 brun Exp $
+// @(#)root/base:$Id$
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TVirtualProofMgr.cxx,v 1.8 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/base:$Id$
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************

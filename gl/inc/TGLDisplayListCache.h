@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLDisplayListCache.h,v 1.7 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************

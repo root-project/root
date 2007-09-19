@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: mmconfig.h,v 1.2 2004/08/02 08:52:53 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

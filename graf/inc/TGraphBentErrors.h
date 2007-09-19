@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: TGraphBentErrors.h,v 1.9 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Id$
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************

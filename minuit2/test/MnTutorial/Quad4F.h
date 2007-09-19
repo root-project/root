@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: Quad4F.hv 1.0 2005/11/29 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

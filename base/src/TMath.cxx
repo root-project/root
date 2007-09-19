@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TMath.cxx,v 1.114 2006/04/25 06:19:35 brun Exp $
+// @(#)root/base:$Id$
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************

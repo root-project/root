@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TVirtualMCStack.h,v 1.4 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Id$
 // Authors: Ivana Hrivnacova 13/04/2002
 
 #ifndef ROOT_TVirtualMCStack

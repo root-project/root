@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Converters.h,v 1.17 2005/12/03 04:00:15 pcanal Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGButtonGroup.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************

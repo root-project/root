@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Id: Krb5Auth.cxx,v 1.28 2005/09/18 12:44:04 rdm Exp $
+// @(#)root/krb5auth:$Id$
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************

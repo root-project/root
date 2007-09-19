@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TVirtualPerfStats.h,v 1.1 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

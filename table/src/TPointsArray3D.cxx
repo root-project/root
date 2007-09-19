@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TPointsArray3D.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************

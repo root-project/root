@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: RConfig.h,v 1.90 2006/06/14 18:09:38 pcanal Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

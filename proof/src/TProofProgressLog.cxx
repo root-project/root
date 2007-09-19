@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofProgressLog.cxx,v 1.1 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: G Ganis, Jul 2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/meta: $Id: TVirtualRefProxy.h,v 1.2 2006/06/28 10:39:46 pcanal Exp $
+// @(#)root/meta: $Id$
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************

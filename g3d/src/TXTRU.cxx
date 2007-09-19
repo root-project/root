@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Id: TXTRU.cxx,v 1.19 2005/08/30 09:11:39 brun Exp $
+// @@(#)root/g3d:$Id$
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"

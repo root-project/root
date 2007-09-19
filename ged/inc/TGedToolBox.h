@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGedToolBox.h,v 1.2 2004/02/22 11:50:29 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Marek Biskup, Ilka Antcheva   21/07/2003
 
 /*************************************************************************

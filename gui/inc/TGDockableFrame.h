@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGDockableFrame.h,v 1.7 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************

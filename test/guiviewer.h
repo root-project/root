@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: guiviewer.h,v 1.2 2001/05/09 13:09:12 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Brett Viren   04/15/2001
 
 #ifndef ROOT_TGFrame

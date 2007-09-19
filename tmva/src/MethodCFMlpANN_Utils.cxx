@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.8 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,7 +44,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN_Utils.cxx,v 1.8 2006/05/23 09:53:10 stelzer Exp $ 
+ * $Id$ 
  **********************************************************************************/
 
 //_______________________________________________________________________

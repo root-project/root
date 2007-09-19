@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: ProbFuncMathCore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Id$
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 #ifndef ROOT_Math_ProbFuncMathCore

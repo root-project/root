@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Id: TXProofServ.cxx,v 1.9 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Id$
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TVirtualMC.h,v 1.18 2006/05/23 04:47:42 brun Exp $
+// @(#)root/vmc:$Id$
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC

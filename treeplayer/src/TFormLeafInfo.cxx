@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TFormLeafInfo.cxx,v 1.30 2006/05/26 09:23:46 brun Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************

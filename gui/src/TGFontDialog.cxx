@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGFontDialog.cxx,v 1.18 2006/06/30 14:08:36 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************

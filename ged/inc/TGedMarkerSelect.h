@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TGedMarkerSelect.h,v 1.6 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Id$
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TAttTextEditor.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/ged:$Id$
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************

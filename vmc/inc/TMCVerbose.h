@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TMCVerbose.h,v 1.3 2005/05/17 12:44:52 brun Exp $
+// @(#)root/vmc:$Id$
 // Author: Ivana Hrivnacova; 24/02/2003
 
 #ifndef ROOT_TMCVerbose

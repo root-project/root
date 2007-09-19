@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TRotation.h,v 1.4 2005/09/03 13:37:17 brun Exp $
+// @(#)root/physics:$Id$
 // Author: Peter Malzacher   19/06/99
 
 /*************************************************************************

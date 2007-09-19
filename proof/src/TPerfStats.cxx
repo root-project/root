@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TPerfStats.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Id$
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************

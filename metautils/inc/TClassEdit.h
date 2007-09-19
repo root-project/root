@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TClassEdit.h,v 1.11 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 

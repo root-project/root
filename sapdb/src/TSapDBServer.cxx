@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Id: TSapDBServer.cxx,v 1.2 2003/08/06 21:31:24 rdm Exp $
+// @(#)root/sapdb:$Id$
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************

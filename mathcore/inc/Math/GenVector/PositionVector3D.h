@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PositionVector3D.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Id: TGenerator.h,v 1.9 2006/05/26 09:07:18 brun Exp $
+// @(#)root/eg:$Id$
 // -*- mode: C++ -*-
 // Author: Ola Nordmann   21/09/95
 
