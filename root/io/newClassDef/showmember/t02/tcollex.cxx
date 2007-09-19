@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: tcollex.cxx,v 1.7 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>

@@ -1364,7 +1364,7 @@ extern "C" void G__cpp_setup_typetableEventDict() {
 -1);
    G__setnewtype(-1,"Statistics type (double)",0);
    G__search_typename2("map<const type_info*,TClass*>",117,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("key_type",85,G__get_linked_tagnum(&G__EventDictLN_type_info),0,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("mapped_type",85,G__get_linked_tagnum(&G__EventDictLN_TClass),0,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR));
@@ -1382,7 +1382,7 @@ G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEco
 G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("bidirectional_iterator<TClass*,difference_type>",117,G__get_linked_tagnum(&G__EventDictLN_bidirectional_iteratorlETClassmUcOlonggR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.21 2002/01/27 15:53:40 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("const_iterator",117,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgRcLcLiterator),0,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("const_reverse_iterator",117,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgRcLcLreverse_iterator),0,G__get_linked_tagnum(&G__EventDictLN_maplEconstsPtype_infomUcOTClassmUcOlesslEconstsPtype_infomUgRcO__malloc_alloc_templatelE0gRsPgR));

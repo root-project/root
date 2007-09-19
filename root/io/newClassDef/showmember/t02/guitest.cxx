@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: guitest.cxx,v 1.22 2001/12/05 10:59:57 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.

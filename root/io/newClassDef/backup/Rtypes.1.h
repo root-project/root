@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id: Rtypes.h,v 1.13 2002/01/10 10:21:31 rdm Exp $ */
+/* @(#)root/base:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

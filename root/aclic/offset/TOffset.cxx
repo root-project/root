@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TOffset.cxx,v 1.3 2002/11/27 18:48:35 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Victor Perev   08/05/02
 
 

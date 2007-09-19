@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: vlazy.cxx,v 1.6 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Fons Rademakers   14/11/97
 
 //

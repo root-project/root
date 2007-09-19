@@ -836,16 +836,16 @@ extern "C" void G__cpp_setup_typetableDict() {
 -1);
    G__setnewtype(-1,"Statistics type (double)",0);
    G__search_typename2("vector<int>",117,G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("value_type",105,-1,0,
 G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("vector_type",117,G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR),0,G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("__normal_iterator<int*,vector_type>",117,G__get_linked_tagnum(&G__DictLN___normal_iteratorlEintmUcOvectorlEintcOallocatorlEintgRsPgRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("iterator<std::iterator_traits<int*>::iterator_category,std::iterator_traits<int*>::value_type,std::iterator_traits<int*>::difference_type,std::iterator_traits<int*>::pointer,std::iterator_traits<int*>::reference>",117,G__get_linked_tagnum(&G__DictLN_iteratorlErandom_access_iterator_tagcOintcOlongcOintmUcOintaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("value_type",105,-1,0,
 G__get_linked_tagnum(&G__DictLN_iteratorlErandom_access_iterator_tagcOintcOlongcOintmUcOintaNgR));
    G__setnewtype(-1,NULL,0);
@@ -901,7 +901,7 @@ G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR));
 G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR));
    G__setnewtype(-1,NULL,0);
    G__search_typename2("random_access_iterator<int,difference_type>",117,G__get_linked_tagnum(&G__DictLN_random_access_iteratorlEintcOlonggR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Id$",0);
    G__search_typename2("const_reverse_iterator",117,G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgRcLcLreverse_iterator),0,G__get_linked_tagnum(&G__DictLN_vectorlEintcOallocatorlEintgRsPgR));
    G__setnewtype(-1,NULL,0);
 }
