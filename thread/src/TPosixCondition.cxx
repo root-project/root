@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TPosixCondition.cxx,v 1.2 2004/10/11 12:34:51 rdm Exp $
+// @(#)root/thread:$Id$
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************

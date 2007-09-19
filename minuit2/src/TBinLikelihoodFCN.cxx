@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: TBinLikelihoodFCN.cxx,v 1.6 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TFormLeafInfo.h,v 1.9 2006/06/28 10:03:14 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************

@@ -1,5 +1,5 @@
 // ver. 09.05.2007 wprowadzone wagi ( ale bez konkretnych poprawek )
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.10 2007/06/19 13:26:21 brun Exp $    
+// @(#)root/tmva $Id$    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************

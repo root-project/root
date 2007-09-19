@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: TTVLVContainer.cxx,v 1.12 2005/08/30 11:13:22 brun Exp $
+// @(#)root/treeviewer:$Id$
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************

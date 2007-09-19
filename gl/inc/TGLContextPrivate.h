@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLContextPrivate.h,v 1.5 2007/06/18 10:58:33 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov, Matevz Tadel, June 2007
 
 #ifndef ROOT_TGLContextPrivate

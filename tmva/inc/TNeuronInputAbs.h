@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputAbs.h,v 1.8 2007/04/19 06:53:01 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************

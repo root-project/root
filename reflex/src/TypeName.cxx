@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: TypeName.cxx,v 1.20 2006/10/24 19:34:07 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

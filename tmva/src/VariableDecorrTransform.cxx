@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableDecorrTransform.cxx,v 1.25 2007/06/04 22:52:00 stelzer Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Id: Win32Splash.cxx,v 1.15 2005/03/16 06:22:37 brun Exp $
+// @(#)root/winnt:$Id$
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************

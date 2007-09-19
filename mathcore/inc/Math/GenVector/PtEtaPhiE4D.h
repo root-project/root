@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PtEtaPhiE4D.h,v 1.6 2007/02/07 16:00:56 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
 // 
-// Last update: $Id: PtEtaPhiE4D.h,v 1.6 2007/02/07 16:00:56 moneta Exp $
+// Last update: $Id$
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1

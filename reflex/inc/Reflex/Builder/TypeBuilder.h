@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: TypeBuilder.h,v 1.15 2007/01/24 09:33:02 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

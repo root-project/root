@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TTablePadView3D.cxx,v 1.4 2006/05/18 07:34:25 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************

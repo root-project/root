@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MinuitFitter.cxx,v 1.2 2007/06/20 09:41:24 brun Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andraes Hoecker
 
 /**********************************************************************************

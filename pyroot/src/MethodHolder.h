@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: MethodHolder.h,v 1.24 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H

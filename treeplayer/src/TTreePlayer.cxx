@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TTreePlayer.cxx,v 1.246 2007/08/09 09:10:38 brun Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGInputDialog.cxx,v 1.0 2006/07/19 11:13:18 dgmaline Exp $
+// @(#)root/gui:$Id$
 // Author: David Gonzalez Maline  19/07/2006
 
 /*************************************************************************

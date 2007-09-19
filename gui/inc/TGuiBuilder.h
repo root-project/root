@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGuiBuilder.h,v 1.2 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************

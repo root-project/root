@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: DisplacementVector2D.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

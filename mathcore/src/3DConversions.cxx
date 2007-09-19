@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: 3DConversions.cxx,v 1.9 2007/05/25 10:46:29 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DConversions.cxx,v 1.9 2007/05/25 10:46:29 moneta Exp $
+// Last update: $Id$
 //
 
 // TODO - For now, all conversions are grouped in this one compilation unit.

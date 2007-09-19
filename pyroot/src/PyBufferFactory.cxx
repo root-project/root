@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: PyBufferFactory.cxx,v 1.15 2007/06/14 05:12:03 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

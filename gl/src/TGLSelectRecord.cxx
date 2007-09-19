@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLSelectRecord.cxx,v 1.1 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************

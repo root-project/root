@@ -1,4 +1,4 @@
-/* @(#)root/thread:$Id: LinkDef.h,v 1.4 2006/11/16 18:07:33 rdm Exp $ */
+/* @(#)root/thread:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

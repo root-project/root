@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: keys.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Access for application keys in mmap'd malloc managed region.

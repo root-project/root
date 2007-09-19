@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id: TBasket.cxx,v 1.47 2007/03/28 09:39:26 pcanal Exp $
+// @(#)root/tree:$Id$
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

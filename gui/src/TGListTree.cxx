@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGListTree.cxx,v 1.66 2007/08/29 07:16:10 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************

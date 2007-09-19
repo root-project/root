@@ -1,4 +1,4 @@
-// @(#)root/splot:$Id: TSPlot.cxx,v 1.8 2006/05/09 10:24:27 brun Exp $
+// @(#)root/splot:$Id$
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************

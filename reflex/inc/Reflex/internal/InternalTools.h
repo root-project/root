@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: InternalTools.h,v 1.4 2006/08/09 16:44:08 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

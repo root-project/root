@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSVM.h,v 1.8 2007/04/21 14:20:46 brun Exp $    
+// @(#)root/tmva $Id$    
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************

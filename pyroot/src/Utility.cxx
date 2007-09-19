@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Utility.cxx,v 1.31 2006/10/17 06:09:16 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings

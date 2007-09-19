@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticGenes.cxx,v 1.12 2007/04/19 06:53:01 brun Exp $    
+// @(#)root/tmva $Id$    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

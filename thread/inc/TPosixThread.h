@@ -1,4 +1,4 @@
-// @(#)root/thread:$Id: TPosixThread.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Id$
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************

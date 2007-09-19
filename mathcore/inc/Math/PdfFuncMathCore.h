@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PdfFuncMathCore.h,v 1.1 2006/12/08 16:42:52 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

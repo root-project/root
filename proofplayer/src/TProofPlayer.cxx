@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Id: TProofPlayer.cxx,v 1.115 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Id$
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************

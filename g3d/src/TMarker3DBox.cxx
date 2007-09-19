@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Id: TMarker3DBox.cxx,v 1.23 2007/02/06 14:44:54 brun Exp $
+// @(#)root/g3d:$Id$
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 

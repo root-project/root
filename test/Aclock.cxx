@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: Aclock.cxx,v 1.3 2004/02/19 07:24:38 brun Exp $
+// @(#)root/test:$Id$
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////

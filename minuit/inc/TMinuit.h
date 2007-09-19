@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Id: TMinuit.h,v 1.9 2006/05/13 21:49:17 brun Exp $
+// @(#)root/minuit:$Id$
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************

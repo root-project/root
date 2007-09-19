@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: PositionVector2D.h,v 1.8 2006/11/10 11:04:42 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

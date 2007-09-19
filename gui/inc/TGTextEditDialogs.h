@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGTextEditDialogs.h,v 1.8 2007/01/17 13:59:15 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************

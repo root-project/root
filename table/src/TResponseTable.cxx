@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $Id: TResponseTable.cxx,v 1.4 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $Id$
 // Author: Valery Fine(fine@bnl.gov)   03/04/2002
 
 /*************************************************************************

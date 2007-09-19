@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TFunctionParametersDialog.h,v 1.4 2007/02/03 17:44:59 brun Exp $
+// @(#)root/ged:$Id$
 // Author: Ilka Antcheva 08/05/06
 
 /*************************************************************************

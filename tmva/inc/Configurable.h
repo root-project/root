@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Configurable.h,v 1.9 2007/06/12 12:50:11 stelzer Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

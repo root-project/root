@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: LorentzVector.h,v 1.12 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.12 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1

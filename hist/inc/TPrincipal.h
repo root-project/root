@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TPrincipal.h,v 1.12 2006/05/17 09:37:20 couet Exp $
+// @(#)root/hist:$Id$
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************

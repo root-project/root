@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Id: LinkDef.h,v 1.37 2006/11/27 14:14:24 rdm Exp $ */
+/* @(#)root/tree:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

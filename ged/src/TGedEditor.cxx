@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TGedEditor.cxx,v 1.43 2007/08/26 16:51:48 rdm Exp $
+// @(#)root/ged:$Id$
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************

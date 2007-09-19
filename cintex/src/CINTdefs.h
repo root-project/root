@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: CINTdefs.h,v 1.6 2005/11/18 08:57:09 roiser Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

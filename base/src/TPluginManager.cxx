@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TPluginManager.cxx,v 1.42 2007/08/10 10:49:04 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************

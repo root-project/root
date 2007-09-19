@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricEuler.cxx,v 1.4 2007/06/20 10:18:08 brun Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************

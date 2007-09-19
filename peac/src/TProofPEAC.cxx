@@ -1,4 +1,4 @@
-// @(#)root/peac:$Id: TProofPEAC.cxx,v 1.4 2006/02/28 16:49:36 rdm Exp $
+// @(#)root/peac:$Id$
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 

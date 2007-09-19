@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TMultiDimFit.h,v 1.9 2006/09/22 09:09:47 brun Exp $
+// @(#)root/hist:$Id$
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TOracleRow.h,v 1.2 2005/04/25 17:21:11 rdm Exp $
+// @(#)root/physics:$Id$
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

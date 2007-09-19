@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: ClassMethodHolder.cxx,v 1.6 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings

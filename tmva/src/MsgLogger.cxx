@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.cxx,v 1.6 2007/06/19 13:26:21 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************

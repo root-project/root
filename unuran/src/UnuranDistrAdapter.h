@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Id: UnuranDistrAdapter.h,v 1.2 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Id$
 // Author: L. Moneta Wed Sep 27 11:22:07 2006
 
 /**********************************************************************

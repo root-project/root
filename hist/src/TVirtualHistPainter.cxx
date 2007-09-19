@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: TVirtualHistPainter.cxx,v 1.4 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Id$
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

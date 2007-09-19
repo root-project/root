@@ -1,4 +1,4 @@
-// @(#)root/html:$Id: THtml.cxx,v 1.142 2007/08/12 14:14:33 axel Exp $
+// @(#)root/html:$Id$
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************

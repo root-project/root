@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id: RooCBShape.cxx,v 1.16 2007/05/11 09:13:47 verkerke Exp $
+ * @(#)root/roofit:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 
 
 static const char rcsid[] =
-"$Id: RooCBShape.cxx,v 1.16 2007/05/11 09:13:47 verkerke Exp $";
+"$Id$";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,

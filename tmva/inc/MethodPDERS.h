@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.10 2007/04/19 06:53:01 brun Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************

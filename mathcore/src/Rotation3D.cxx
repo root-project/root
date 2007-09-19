@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Rotation3D.cxx,v 1.12 2007/05/25 10:46:29 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

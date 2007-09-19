@@ -1,4 +1,4 @@
-// @(#)root/netx:$Id: TXNetFile.cxx,v 1.48 2007/05/29 13:48:17 ganis Exp $
+// @(#)root/netx:$Id$
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************

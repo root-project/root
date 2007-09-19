@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Id: TNeuron.cxx,v 1.21 2006/11/27 17:10:33 brun Exp $
+// @(#)root/mlp:$Id$
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************

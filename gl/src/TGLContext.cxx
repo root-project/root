@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLContext.cxx,v 1.4 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov, Jun 2007
 
 /*************************************************************************

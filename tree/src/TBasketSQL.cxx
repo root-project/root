@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id: TBasketSQL.cxx,v 1.1 2005/08/15 21:29:58 pcanal Exp $
+// @(#)root/tree:$Id$
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************

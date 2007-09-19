@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Id: TFitEditor.cxx,v 1.33 2007/07/03 08:10:56 antcheva Exp $
+// @(#)root/fitpanel:$Id$
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************

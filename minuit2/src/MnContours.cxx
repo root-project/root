@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: MnContours.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

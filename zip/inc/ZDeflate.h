@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Id: ZDeflate.h,v 1.1 2004/03/17 18:57:15 brun Exp $ */
+/* @(#)root/zip:$Id$ */
 /* Author: */
 /*
 

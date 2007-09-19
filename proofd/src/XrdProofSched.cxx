@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Id: XrdProofSched.cxx,v 1.4 2007/07/16 10:14:52 ganis Exp $
+// @(#)root/proofd:$Id$
 // Author: G. Ganis  September 2007
 
 /*************************************************************************

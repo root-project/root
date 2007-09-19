@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TVirtualGeoPainter.h,v 1.38 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************

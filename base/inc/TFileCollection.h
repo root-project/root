@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TFileCollection.h,v 1.2 2007/08/08 08:51:27 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus  01/06/07
 
 /*************************************************************************

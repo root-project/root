@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TRootHelpDialog.cxx,v 1.10 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************

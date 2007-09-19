@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: IFunctionfwd.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Tue Nov 14 14:38:48 2006
 
 /**********************************************************************

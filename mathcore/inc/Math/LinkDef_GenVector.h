@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: LinkDef_GenVector.h,v 1.13 2007/05/25 10:46:28 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 

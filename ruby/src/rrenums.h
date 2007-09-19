@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Id: rrenums.h,v 1.1 2004/05/30 18:17:00 brun Exp $
+// @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 
 /* 

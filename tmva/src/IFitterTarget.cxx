@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IFitterTarget.cxx,v 1.2 2007/05/31 14:17:46 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************

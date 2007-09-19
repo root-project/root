@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id: RooEffProd.cxx,v 1.3 2007/05/11 10:14:56 verkerke Exp $
+ * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU                                            *
  *                                                                           *

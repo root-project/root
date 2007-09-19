@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id: TOrdCollection.cxx,v 1.13 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Id$
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************

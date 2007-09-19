@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Utility.h,v 1.24 2006/12/11 06:01:05 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H

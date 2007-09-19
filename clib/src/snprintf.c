@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Id: snprintf.c,v 1.9 2006/06/14 18:09:38 pcanal Exp $ */
+/* @(#)root/clib:$Id$ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*

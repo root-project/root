@@ -1,4 +1,4 @@
-// @(#)root/math:$Id: TRandom2.cxx,v 1.12 2007/01/12 09:27:32 brun Exp $
+// @(#)root/math:$Id$
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////

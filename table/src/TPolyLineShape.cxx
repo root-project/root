@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TPolyLineShape.cxx,v 1.9 2007/01/12 16:03:17 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valeri Fine 1999
 
 /*************************************************************************

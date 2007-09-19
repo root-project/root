@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: PyCallable.h,v 1.4 2006/03/24 06:04:09 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_PYCALLABLE_H

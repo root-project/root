@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Id: LinkDef.h,v 1.21 2006/09/17 19:06:35 pcanal Exp $ */
+/* @(#)root/treeplayer:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

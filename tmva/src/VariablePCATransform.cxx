@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariablePCATransform.cxx,v 1.25 2007/06/04 20:07:05 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TTreeProxyGenerator.cxx,v 1.36 2007/08/03 13:33:49 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

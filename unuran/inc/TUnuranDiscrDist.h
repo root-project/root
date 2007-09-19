@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Id: TUnuranDiscrDist.h,v 1.2 2007/03/12 08:49:24 moneta Exp $
+// @(#)root/unuran:$Id$
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/io:$Id: TEmulatedCollectionProxy.h,v 1.4 2006/02/09 20:39:16 pcanal Exp $
+// @(#)root/io:$Id$
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

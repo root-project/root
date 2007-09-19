@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Point2D.h,v 1.2 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_Point2D  

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $Id: TGenericTable.cxx,v 1.6 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $Id$
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 
 /*************************************************************************

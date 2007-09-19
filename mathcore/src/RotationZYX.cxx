@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: RotationZYX.cxx,v 1.7 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta, May 23 2007
 //
-// Last update: $Id: RotationZYX.cxx,v 1.7 2006/06/22 08:36:27 moneta Exp $
+// Last update: $Id$
 //
 #include "Math/GenVector/RotationZYX.h"
 

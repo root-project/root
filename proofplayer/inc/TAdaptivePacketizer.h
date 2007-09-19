@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Id: TAdaptivePacketizer.h,v 1.6 2007/06/05 05:47:25 ganis Exp $
+// @(#)root/proofplayer:$Id$
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************

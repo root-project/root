@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableIdentityTransform.cxx,v 1.14 2007/06/01 15:52:01 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGStatusBar.cxx,v 1.22 2006/09/25 08:26:42 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************

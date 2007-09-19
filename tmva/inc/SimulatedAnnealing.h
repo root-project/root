@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealing.h,v 1.6 2007/06/15 23:23:05 andreas.hoecker Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

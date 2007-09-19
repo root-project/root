@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: $
+// @(#)root/reflex:$Id$
 
 #include "Reflex/DictionaryGenerator.h"
 

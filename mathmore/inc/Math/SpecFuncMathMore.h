@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: SpecFuncMathMore.h,v 1.5 2006/06/12 13:06:48 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 

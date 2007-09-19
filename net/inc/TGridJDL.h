@@ -1,4 +1,4 @@
-// @(#)root/net:$Id: TGridJDL.h,v 1.2 2006/05/16 06:28:23 brun Exp $
+// @(#)root/net:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: TSpider.cxx,v 1.3 2007/08/10 10:00:31 brun Exp $
+// @(#)root/treeviewer:$Id$
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************

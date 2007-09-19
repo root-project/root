@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Executors.cxx,v 1.25 2007/02/09 18:04:03 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

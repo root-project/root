@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: MnFunctionCross.cxx,v 1.3 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************

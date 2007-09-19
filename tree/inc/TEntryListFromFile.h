@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id: TEntryListFromFile.h,v 1.2 2007/03/16 18:16:56 brun Exp $
+// @(#)root/tree:$Id$
 // Author: Anna Kreshuk 17/03/2007
 
 /*************************************************************************

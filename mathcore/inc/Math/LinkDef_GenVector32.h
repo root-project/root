@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: LinkDef_GenVector.h,v 1.8 2006/04/11 15:41:07 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // Linkdef for Doublr32_t types

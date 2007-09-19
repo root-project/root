@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: HelpText.cxx,v 1.11 2005/12/06 17:32:28 rdm Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"

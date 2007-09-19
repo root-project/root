@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id: Haxis.cxx,v 1.5 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Id$
 // Author: Rene Brun   18/05/95
 
 #include <string.h>

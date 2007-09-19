@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Id: WidgetMessageTypes.h,v 1.11 2004/09/01 14:35:33 rdm Exp $ */
+/* @(#)root/gui:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

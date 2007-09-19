@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: ReneTest.cppv 1.0 2005/11/29 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -7,7 +7,7 @@
  *                                                                    *
  **********************************************************************/
 
-// $Id: ReneTest.cpp,v 1.12.4.3 2005/11/29 09:51:40 moneta Exp $
+// $Id$
 #ifdef _WIN32 
   #define _USE_MATH_DEFINES
 #endif

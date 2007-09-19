@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.cxx,v 1.13 2007/04/19 06:53:02 brun Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

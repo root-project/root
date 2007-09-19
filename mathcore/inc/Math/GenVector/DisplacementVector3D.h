@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: DisplacementVector3D.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.9 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id$
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 

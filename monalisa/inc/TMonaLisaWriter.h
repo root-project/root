@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Id: TMonaLisaWriter.h,v 1.4 2007/02/22 11:51:50 brun Exp $
+// @(#)root/monalisa:$Id$
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************

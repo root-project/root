@@ -1,4 +1,4 @@
-// @(#)root/io:$Id: TGenCollectionStreamer.cxx,v 1.14 2007/02/08 15:09:08 pcanal Exp $
+// @(#)root/io:$Id$
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

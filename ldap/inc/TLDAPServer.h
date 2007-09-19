@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Id: TLDAPServer.h,v 1.2 2006/04/25 10:30:20 rdm Exp $
+// @(#)root/ldap:$Id$
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************

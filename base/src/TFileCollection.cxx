@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TFileCollection.cxx,v 1.1 2007/08/07 00:29:26 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Gerhard Erich Bruckner, Jan Fiete Grosse-Oetringhaus  04/06/07
 
 /*************************************************************************

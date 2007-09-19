@@ -1,4 +1,4 @@
-// @(#)root/foam:$Id: TFoam.cxx,v 1.17 2006/11/08 12:06:12 brun Exp $
+// @(#)root/foam:$Id$
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________

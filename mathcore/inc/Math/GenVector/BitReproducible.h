@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: BitReproducible.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: fischler  at Mon Jun 25  2005
 //
-// Last update: $Id: BitReproducible.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1

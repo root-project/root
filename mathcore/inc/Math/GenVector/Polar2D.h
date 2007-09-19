@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: Polar2D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar2D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id$
 // 
 #ifndef ROOT_Math_GenVector_Polar2D 
 #define ROOT_Math_GenVector_Polar2D  1

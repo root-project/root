@@ -1,4 +1,4 @@
-// @(#)root/io:$Id: TContainerConverters.h,v 1.2 2007/02/07 08:51:41 brun Exp $
+// @(#)root/io:$Id$
 // Author: Philippe Canal 11/11/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: GSLRootHelper.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************

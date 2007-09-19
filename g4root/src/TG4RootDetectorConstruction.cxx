@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Id: TG4RootDetectorConstruction.cxx,v 1.5 2007/02/23 11:12:38 brun Exp $
+// @(#)root/g4root:$Id$
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************

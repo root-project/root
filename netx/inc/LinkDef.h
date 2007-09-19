@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Id: LinkDef.h,v 1.5 2005/10/27 16:36:38 rdm Exp $ */
+/* @(#)root/netx:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *

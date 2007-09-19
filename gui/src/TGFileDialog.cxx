@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGFileDialog.cxx,v 1.40 2007/06/12 08:15:20 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGTripleSlider.cxx,v 1.5 2006/07/19 12:58:52 rdm Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************

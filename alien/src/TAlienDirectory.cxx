@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id: TAlienDirectory.cxx,v 1.3 2005/08/18 17:46:31 rdm Exp $
+// @(#)root/alien:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************

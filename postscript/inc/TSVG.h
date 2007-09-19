@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id: TSVG.h,v 1.1 2002/02/14 18:01:59 brun Exp $
+// @(#)root/postscript:$Id$
 // Author: Olivier Couet
 
 /*************************************************************************

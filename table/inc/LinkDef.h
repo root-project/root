@@ -1,4 +1,4 @@
-/* @(#)root/table:$Id: LinkDef.h,v 1.5 2006/07/11 09:05:02 rdm Exp $ */
+/* @(#)root/table:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

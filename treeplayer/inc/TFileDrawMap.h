@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TFileDrawMap.h,v 1.3 2003/12/30 13:16:51 brun Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************

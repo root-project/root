@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TVirtualGeoTrack.cxx,v 1.2 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************

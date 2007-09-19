@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Id: ROOTwriter.py,v 1.7 2006/11/17 17:40:02 brun Exp $
+# @(#)root/gdml:$Id$
 # Author: Witold Pokorski   05/06/2006
 
 from math import *

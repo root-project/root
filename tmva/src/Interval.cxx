@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Interval.cxx,v 1.12 2007/05/31 14:17:46 andreas.hoecker Exp $    
+// @(#)root/tmva $Id$    
 // Author: Peter Speckmayer
 
 /**********************************************************************************

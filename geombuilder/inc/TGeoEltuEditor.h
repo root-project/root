@@ -1,4 +1,4 @@
-// @(#):$Id: TGeoEltuEditor.h,v 1.1 2006/06/23 16:00:13 brun Exp $
+// @(#):$Id$
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

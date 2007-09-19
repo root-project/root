@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TMatrixTSymCramerInv.cxx,v 1.5 2006/08/01 15:21:12 pcanal Exp $
+// @(#)root/base:$Id$
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************

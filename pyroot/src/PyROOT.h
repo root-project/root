@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: PyROOT.h,v 1.10 2007/06/14 05:12:03 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Config.cxx,v 1.13 2007/05/31 14:17:46 andreas.hoecker Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: FunctionMember.h,v 1.8 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

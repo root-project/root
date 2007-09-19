@@ -1,4 +1,4 @@
-// @(#)root/sql:$Id: TBufferSQL2.h,v 1.11 2007/01/20 09:34:58 brun Exp $
+// @(#)root/sql:$Id$
 // Author: Sergey Linev  20/11/2005
 
 

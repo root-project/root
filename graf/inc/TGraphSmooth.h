@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: TGraphSmooth.h,v 1.3 2005/11/18 16:55:06 couet Exp $
+// @(#)root/graf:$Id$
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************

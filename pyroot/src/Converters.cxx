@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: Converters.cxx,v 1.42 2007/03/10 08:36:55 rdm Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLLogicalShape.cxx,v 1.16 2007/06/18 07:02:16 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Richard Maunder  25/05/2005
 
 

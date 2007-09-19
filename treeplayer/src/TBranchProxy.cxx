@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TBranchProxy.cxx,v 1.10 2007/07/23 17:07:48 pcanal Exp $
+// @(#)root/base:$Id$
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************

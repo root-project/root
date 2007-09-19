@@ -1,4 +1,4 @@
-/* @(#)root/minuit:$Id: LinkDef.h,v 1.2 2007/03/08 09:31:54 moneta Exp $ */
+/* @(#)root/minuit:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

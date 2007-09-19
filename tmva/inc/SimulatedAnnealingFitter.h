@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingFitter.h,v 1.5 2007/05/31 14:17:49 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker
 
 /**********************************************************************************

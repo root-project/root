@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Id: TMySQLServer.cxx,v 1.21 2006/11/22 10:08:00 rdm Exp $
+// @(#)root/mysql:$Id$
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************

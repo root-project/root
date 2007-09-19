@@ -1,4 +1,4 @@
-// @(#)root/physics:$Id: TLorentzVector.cxx,v 1.11 2006/07/28 15:15:01 rdm Exp $
+// @(#)root/physics:$Id$
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()

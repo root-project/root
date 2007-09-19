@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricManhattan.h,v 1.3 2007/06/15 23:23:05 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************

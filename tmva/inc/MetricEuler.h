@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MetricEuler.h,v 1.1 2007/06/13 09:53:32 speckmayer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Peter Speckmayer
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: HelpTextTV.h,v 1.3 2001/02/22 14:45:17 brun Exp $
+// @(#)root/treeviewer:$Id$
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************

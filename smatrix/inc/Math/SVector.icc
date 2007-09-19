@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Id: SVector.icc,v 1.12 2006/08/11 13:19:58 moneta Exp $
+// @(#)root/smatrix:$Id$
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector_icc

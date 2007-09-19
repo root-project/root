@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: J. Palacios, L. Moneta    2007  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Lorenzo Moneta, Wed. May 22, 2007
 //
-// Last update: $Id: RotationZYX.h,v 1.13 2006/12/01 13:42:33 moneta Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_RotationZYX 
 #define ROOT_Math_GenVector_RotationZYX  1

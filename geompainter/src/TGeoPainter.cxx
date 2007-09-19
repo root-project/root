@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Id: TGeoPainter.cxx,v 1.104 2007/09/18 13:59:37 brun Exp $
+// @(#)root/geompainter:$Id$
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

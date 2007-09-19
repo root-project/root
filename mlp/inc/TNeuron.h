@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Id: TNeuron.h,v 1.10 2006/01/09 18:05:57 pcanal Exp $
+// @(#)root/mlp:$Id$
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************

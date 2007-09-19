@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.h,v 1.11 2007/04/21 14:42:43 brun Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id: complex_quartic.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005
 
 /* poly/zsolve_quartic.c

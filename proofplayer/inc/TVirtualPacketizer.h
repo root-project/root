@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Id: TVirtualPacketizer.h,v 1.11 2007/07/13 13:22:57 ganis Exp $
+// @(#)root/proofplayer:$Id$
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************

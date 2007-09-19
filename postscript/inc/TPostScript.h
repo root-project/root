@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id: TPostScript.h,v 1.6 2004/01/28 15:49:07 brun Exp $
+// @(#)root/postscript:$Id$
 // Author: O.Couet   16/07/99
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: TAttLineEditor.cxx,v 1.13 2007/01/22 18:01:16 antcheva Exp $
+// @(#)root/ged:$Id$
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************

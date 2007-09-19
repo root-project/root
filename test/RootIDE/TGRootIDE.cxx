@@ -1,4 +1,4 @@
-// @(#)root/test/RootIDE/:$Id: TGRootIDE.cxx,v 1.2 2007/06/22 13:30:53 brun Exp $
+// @(#)root/test/RootIDE/:$Id$
 // Author: Bertrand Bellenot   20/04/2007
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoPatternFinder.h,v 1.15 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************

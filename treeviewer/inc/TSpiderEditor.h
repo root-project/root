@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id: TSpiderEditor.h,v 1.2 2007/07/20 14:37:37 rdm Exp $
+// @(#)root/treeviewer:$Id$
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************

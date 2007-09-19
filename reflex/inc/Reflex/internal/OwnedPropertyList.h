@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: OwnedPropertyList.h,v 1.1 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

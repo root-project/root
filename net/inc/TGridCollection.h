@@ -1,4 +1,4 @@
-// @(#)root/net:$Id: TGridCollection.h,v 1.5 2007/03/20 16:17:22 rdm Exp $
+// @(#)root/net:$Id$
 // Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPyException.cxx,v 1.6 2007/02/07 06:08:13 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Scott Snyder, Apr 2004
 
 // Bindings

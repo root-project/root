@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TMCProcess.h,v 1.2 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Id$
 // Author: Alice collaboration
 
 /*************************************************************************

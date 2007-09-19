@@ -1,4 +1,4 @@
-// @(#)root/test:$Id: eventa.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Id$
 // Author: Rene Brun   10/01/97
 
 {

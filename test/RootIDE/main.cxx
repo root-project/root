@@ -1,4 +1,4 @@
-// @(#)root/test/RootIDE/:$Id: main.cxx,v 1.1 2007/06/22 08:18:49 brun Exp $
+// @(#)root/test/RootIDE/:$Id$
 // Author: Bertrand Bellenot   20/04/2007
 
 /*************************************************************************

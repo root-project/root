@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id: TGQt.cxx,v 1.45 2007/08/27 16:05:17 antcheva Exp $
+// @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -729,7 +729,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.45 2007/08/27 16:05:17 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id$ this=%p\n",this);
 #if QT_VERSION >= 0x40000
 #ifndef R__QTWIN32
    extern void qt_x11_set_global_double_buffer(bool);

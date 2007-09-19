@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: CINTEnumBuilder.cxx,v 1.12 2007/07/27 09:14:55 axel Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

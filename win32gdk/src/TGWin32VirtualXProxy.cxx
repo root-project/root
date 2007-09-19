@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Id: TGWin32VirtualXProxy.cxx,v 1.12 2007/02/01 16:24:14 brun Exp $
+// @(#)root/win32gdk:$Id$
 // Author: Valeriy Onuchin  08/08/2003
 
 

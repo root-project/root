@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Id: LinkDef.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Id$
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

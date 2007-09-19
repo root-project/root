@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoNavigator.cxx,v 1.1 2007/06/08 15:46:30 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Mihaela Gheata   30/05/07
 
 /*************************************************************************

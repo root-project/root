@@ -1,4 +1,4 @@
-/* @(#)root/sessionviewer:$Id: LinkDefGui.h,v 1.3 2006/11/17 15:50:17 rdm Exp $ */
+/* @(#)root/sessionviewer:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Id: TPgSQLRow.h,v 1.2 2001/08/24 16:34:18 rdm Exp $
+// @(#)root/pgsql:$Id$
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************

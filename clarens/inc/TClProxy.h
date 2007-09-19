@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Id: TClProxy.h,v 1.1.2.4 2004/11/07 20:00:15 maartenb Exp $
+// @(#)root/clarens:$Id$
 // Author: Maarten Ballintijn    26/10/2004
 
 /*************************************************************************

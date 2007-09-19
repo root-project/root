@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: 3DDistances.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -13,7 +13,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DDistances.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id$
 //
 #ifndef ROOT_Math_GenVector_3DDistances 
 #define ROOT_Math_GenVector_3DDistances  1

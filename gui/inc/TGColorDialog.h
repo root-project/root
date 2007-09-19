@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGColorDialog.h,v 1.8 2007/03/17 12:03:00 brun Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 

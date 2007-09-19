@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Id: XrdProofPhyConn.cxx,v 1.14 2007/07/16 10:27:57 ganis Exp $
+// @(#)root/proofd:$Id$
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************

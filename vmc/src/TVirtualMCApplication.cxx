@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: TVirtualMCApplication.cxx,v 1.5 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Id$
 // Author: Ivana Hrivnacova, 27/03/2002
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: KDEKernel.cxx,v 1.16 2007/06/15 23:23:04 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Asen Christov
 
 /**********************************************************************************

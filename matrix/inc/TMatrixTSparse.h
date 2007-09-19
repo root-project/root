@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Id: TMatrixTSparse.h,v 1.7 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************

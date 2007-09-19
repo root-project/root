@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: TGeoPhysicalNode.cxx,v 1.26 2007/03/02 08:52:03 brun Exp $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************

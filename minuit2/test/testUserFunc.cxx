@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id: testUserFunc.cxx,v 1.3 2006/10/27 15:04:07 moneta Exp $
+// @(#)root/minuit2:$Id$
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************

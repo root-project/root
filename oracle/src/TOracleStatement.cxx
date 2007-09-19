@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Id: TOracleStatement.cxx,v 1.6 2006/09/05 13:37:08 brun Exp $
+// @(#)root/oracle:$Id$
 // Author: Sergey Linev   6/02/2006
 
 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: WrappedParamFunction.h,v 1.1 2006/12/06 15:08:52 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Thu Nov 23 10:38:32 2006
 
 /**********************************************************************

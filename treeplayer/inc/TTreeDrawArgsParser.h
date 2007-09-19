@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id: TTreeDrawArgsParser.h,v 1.3 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Id$
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************

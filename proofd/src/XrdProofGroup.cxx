@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Id: XrdProofGroup.cxx,v 1.4 2007/06/21 17:30:21 brun Exp $
+// @(#)root/proofd:$Id$
 // Author: Gerardo Ganis  June 2007
 
 /*************************************************************************

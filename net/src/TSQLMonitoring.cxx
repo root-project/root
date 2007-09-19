@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Id: TSQLWriter.cxx,v 1.1 2007/07/09 15:24:14 rdm Exp $
+// @(#)root/proofplayer:$Id$
 // Author: J.F. Grosse-Oetringhaus, G.Ganis
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Id: TView3D.cxx,v 1.1 2007/02/18 14:58:16 brun Exp $
+// @(#)root/g3d:$Id$
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************

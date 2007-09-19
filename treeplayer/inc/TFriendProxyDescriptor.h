@@ -1,4 +1,4 @@
-// @(#)rooeeplayer:$Id: TFriendProxyDescriptor.h,v 1.4 2006/05/23 08:37:42 brun Exp $
+// @(#)rooeeplayer:$Id$
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************

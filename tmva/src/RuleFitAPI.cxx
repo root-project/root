@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitAPI.cxx,v 1.12 2007/06/01 15:52:00 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************

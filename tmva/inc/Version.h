@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Version.h,v 1.20 2007/06/18 22:06:33 andreas.hoecker Exp $   
+// @(#)root/tmva $Id$   
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TIndexTable.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************

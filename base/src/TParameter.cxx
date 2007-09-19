@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TParameter.cxx,v 1.1 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/base:$Id$
 // Author: Maarten Ballintijn   21/06/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Id: LinkDef.h,v 1.5 2005/05/24 09:27:25 brun Exp $ */
+/* @(#)root/histpainter:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTreeNode.cxx,v 1.6 2007/04/21 14:20:46 brun Exp $    
+// @(#)root/tmva $Id$    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************

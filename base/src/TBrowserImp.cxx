@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TBrowserImp.cxx,v 1.2 2004/06/25 10:10:11 brun Exp $
+// @(#)root/base:$Id$
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************

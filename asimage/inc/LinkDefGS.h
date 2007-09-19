@@ -1,4 +1,4 @@
-/* @(#)root/asimage:$Id: LinkDefGS.h,v 1.1 2005/04/29 16:16:34 brun Exp $ */
+/* @(#)root/asimage:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

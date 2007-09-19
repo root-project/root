@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Id: CINTFunctional.h,v 1.4 2006/02/09 20:36:54 pcanal Exp $
+// @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.

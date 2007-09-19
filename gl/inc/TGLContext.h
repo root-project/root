@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLContext.h,v 1.7 2007/06/18 10:58:33 brun Exp $
+// @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov, Jun 2007
 
 #include <utility>

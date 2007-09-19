@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TTablePoints.h,v 1.4 2007/01/12 16:03:17 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************

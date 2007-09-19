@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id: TProofNodeInfo.cxx,v 1.2 2006/03/16 08:49:28 rdm Exp $
+// @(#)root/proof:$Id$
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************

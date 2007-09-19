@@ -1,8 +1,8 @@
-// @(#)root/qt:$Id: TQtRootSlot.h,v 1.11 2007/01/25 20:48:47 fine Exp $
+// @(#)root/qt:$Id$
 // Author: Valery Fine      18/01/2007
 
 /****************************************************************************
-** $Id: TQtRootSlot.h,v 1.11 2007/01/25 20:48:47 fine Exp $
+** $Id$
 **
 ** Copyright (C) 2007 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.

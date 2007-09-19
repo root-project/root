@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Id: TQpResidual.h,v 1.5 2006/06/03 05:42:19 brun Exp $
+// @(#)root/quadp:$Id$
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

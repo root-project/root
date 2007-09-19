@@ -1,4 +1,4 @@
-// @(#)root/netx:$Id: TXNetSystem.h,v 1.7 2007/03/08 12:09:09 rdm Exp $
+// @(#)root/netx:$Id$
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************

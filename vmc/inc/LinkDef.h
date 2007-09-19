@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id: LinkDef.h,v 1.4 2005/05/19 09:03:48 brun Exp $
+// @(#)root/vmc:$Id$
 #ifdef __CINT__
 
 #pragma link off all globals;

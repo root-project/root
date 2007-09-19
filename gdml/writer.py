@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Id: writer.py,v 1.5 2007/01/23 15:20:15 brun Exp $
+# @(#)root/gdml:$Id$
 # Author: Witold Pokorski   05/06/2006
 # This is the application-independent part of the GDML 'writer' implementation.
 # It contains the 'writeFile' method (at the end of the file) which does the actual

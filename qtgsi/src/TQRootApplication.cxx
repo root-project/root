@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Id: TQRootApplication.cxx,v 1.3 2006/04/13 09:09:00 brun Exp $
+// @(#)root/qtgsi:$Id$
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************

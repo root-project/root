@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Id: TGuiBldHintsEditor.h,v 1.2 2004/09/21 10:09:18 brun Exp $
+// @(#)root/guibuilder:$Id$
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************

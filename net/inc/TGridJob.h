@@ -1,4 +1,4 @@
-// @(#)root/net:$Id: TGridJob.h,v 1.3 2007/05/11 14:23:34 rdm Exp $
+// @(#)root/net:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************

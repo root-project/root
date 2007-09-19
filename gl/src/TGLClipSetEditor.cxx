@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLClipSetEditor.cxx,v 1.1 2007/07/23 15:01:36 rdm Exp $
+// @(#)root/gl:$Id$
 // Author:  Matevz Tadel, Jun 2007
 
 /*************************************************************************

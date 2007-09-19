@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: LinkDef2.h,v 1.1 2003/09/09 16:56:48 brun Exp $
+// @(#)root/geom:$Id$
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

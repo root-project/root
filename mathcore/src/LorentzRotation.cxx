@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id: LorentzRotation.cxx,v 1.9 2006/11/07 16:24:11 moneta Exp $
+// @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: CollectionProxy.h,v 1.16 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

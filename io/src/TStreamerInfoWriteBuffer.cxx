@@ -1,4 +1,4 @@
-// @(#)root/io:$Id: TStreamerInfoWriteBuffer.cxx,v 1.27 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Id$
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

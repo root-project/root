@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Id: TGX11TTF.cxx,v 1.18 2007/03/28 14:33:06 rdm Exp $
+// @(#)root/x11ttf:$Id$
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98

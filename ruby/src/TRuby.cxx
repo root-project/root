@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Id: TRuby.cxx,v 1.2 2004/05/31 16:44:25 brun Exp $
+// @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 //
 // Interface for the Ruby shell.

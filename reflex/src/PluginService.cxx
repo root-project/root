@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: PluginService.cxx,v 1.3 2006/12/01 09:09:37 roiser Exp $
+// @(#)root/reflex:$Id$
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

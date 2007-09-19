@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id: TPyReturn.cxx,v 1.6 2005/06/25 04:25:46 brun Exp $
+// @(#)root/pyroot:$Id$
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings

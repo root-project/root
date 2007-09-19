@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.7 2006/11/23 17:43:39 rdm Exp $
+// @(#)root/tmva $Id$
 // Author: Matt Jachowski 
 
 /**********************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Id: TProofProgressLog.cxx,v 1.2 2006/06/13 20:48:54 rdm Exp $
+// @(#)root/sessionviewer:$Id$
 // Author: G Ganis, Jul 2005
 
 /*************************************************************************

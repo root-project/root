@@ -1,4 +1,4 @@
-// @(#)root/table:$Id: TVolumeView.cxx,v 1.23 2007/02/18 16:50:28 brun Exp $
+// @(#)root/table:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************

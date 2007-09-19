@@ -1,4 +1,4 @@
-// @(#):$Id: TGeoMaterialEditor.h,v 1.2 2006/09/25 13:45:17 rdm Exp $
+// @(#):$Id$
 // Author: M.Gheata 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *

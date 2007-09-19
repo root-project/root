@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Id: TDCacheFile.h,v 1.9 2005/01/14 10:21:05 rdm Exp $
+// @(#)root/dcache:$Id$
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004

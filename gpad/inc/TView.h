@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Id: TView.h,v 1.2 2007/02/18 14:58:16 brun Exp $
+// @(#)root/gpad:$Id$
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************

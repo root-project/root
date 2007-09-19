@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id: Kernel.h,v 1.30 2007/07/02 07:10:54 axel Exp $
+// @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

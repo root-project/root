@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Id: TMehrotraSolver.cxx,v 1.6 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Id$
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************

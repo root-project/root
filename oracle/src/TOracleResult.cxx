@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Id: TOracleResult.cxx,v 1.6 2006/04/12 20:53:45 rdm Exp $
+// @(#)root/oracle:$Id$
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************

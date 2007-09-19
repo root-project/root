@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MCFitter.h,v 1.14 2007/06/07 13:19:11 speckmayer Exp $ 
+// @(#)root/tmva $Id$ 
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************

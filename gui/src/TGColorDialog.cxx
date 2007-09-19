@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id: TGColorDialog.cxx,v 1.27 2007/04/16 14:47:40 antcheva Exp $
+// @(#)root/gui:$Id$
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 

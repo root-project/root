@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Id: TSessionLogView.cxx,v 1.2 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/sessionviewer:$Id$
 // Author: Bertrand Bellenot, Gerri Ganis 15/09/2005
 
 /*************************************************************************

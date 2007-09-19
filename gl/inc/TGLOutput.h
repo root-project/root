@@ -1,4 +1,4 @@
-// @(#)root/gl:$Id: TGLOutput.h,v 1.1.1.1 2007/04/04 16:01:43 mtadel Exp $
+// @(#)root/gl:$Id$
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
