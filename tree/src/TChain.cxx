@@ -79,6 +79,15 @@ TChain::TChain()
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
+   fTreeOffset[0]  = 0;
+   gDirectory->GetList()->Remove(this);
+   gROOT->GetListOfSpecials()->Add(this);
+
+   // Reset PROOF-related bits
+   ResetBit(kProofUptodate);
+
+   // Add to the global list
+   gROOT->GetListOfDataSets()->Add(this);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
