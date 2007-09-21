@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+
 # svn2cl.sh - front end shell script for svn2cl.xsl, calls xsltproc
 #             with the correct parameters
 # 
