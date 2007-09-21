@@ -1722,6 +1722,7 @@ void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Doubl
    fXaxis.Set(nx,xmin,xmax);
    fYaxis.Set(ny,ymin,ymax);
    fNcells = (nx+2)*(ny+2);
+   SetBinsLength(fNcells);
    fBinEntries.Set(fNcells);
    fSumw2.Set(fNcells);
 }
