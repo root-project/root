@@ -180,15 +180,12 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    if (GetOnlyStaged()) {
       static TFileStager* fFileStager = 0;
       // check if the file is staged before opening it
-      if (!fFileStager) {
+      if (!fFileStager)
          fFileStager = TFileStager::Open(url);
-         if (fFileStager) {
-            if (!(fFileStager->IsStaged(url))) {
-               ::Warning("TXNetFile","<%s> is not staged - StageOnly flag is set!",url);
-               delete fFileStager;
-               fFileStager=0;
-               goto zombie;
-            }
+      if (fFileStager) {
+         if (!(fFileStager->IsStaged(url))) {
+            ::Warning("TXNetFile","<%s> is not staged - StageOnly flag is set!",url);
+            goto zombie;
          }
       }
    }
