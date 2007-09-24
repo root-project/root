@@ -26,7 +26,7 @@
 #pragma link C++ class TVirtualPacketizer+;
 #pragma link C++ class TPacketizer+;
 #pragma link C++ class TPacketizerProgressive+;
-#pragma link C++ class TAdaptivePacketizer+;
+#pragma link C++ class TPacketizerAdaptive+;
 
 #pragma link C++ class TEventIter+;
 #pragma link C++ class TEventIterUnit+;

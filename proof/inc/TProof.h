@@ -233,7 +233,7 @@ class TProof : public TNamed, public TQObject {
 
 friend class TPacketizer;
 friend class TPacketizerDev;
-friend class TAdaptivePacketizer;
+friend class TPacketizerAdaptive;
 friend class TProofServ;
 friend class TProofInputHandler;
 friend class TProofInterruptHandler;

@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAdaptivePacketizer                                                  //
+// TPacketizerAdaptive                                                  //
 //                                                                      //
 // This packetizer is based on TPacketizer but uses different           //
 // load-balancing algorithms and data structures.                       //
@@ -32,7 +32,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "TAdaptivePacketizer.h"
+#include "TPacketizerAdaptive.h"
 
 #include "Riostream.h"
 #include "TDSet.h"
@@ -74,7 +74,7 @@
 
 //------------------------------------------------------------------------------
 
-class TAdaptivePacketizer::TFileStat : public TObject {
+class TPacketizerAdaptive::TFileStat : public TObject {
 
 private:
    Bool_t         fIsDone;       // is this element processed
@@ -94,7 +94,7 @@ public:
 };
 
 
-TAdaptivePacketizer::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
+TPacketizerAdaptive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
    : fIsDone(kFALSE), fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
 {
 }
@@ -102,7 +102,7 @@ TAdaptivePacketizer::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
 //------------------------------------------------------------------------------
 
 // a class describing a file node as a part of a session
-class TAdaptivePacketizer::TFileNode : public TObject {
+class TPacketizerAdaptive::TFileNode : public TObject {
 
 private:
    TString        fNodeName;        // FQDN of the node
@@ -243,25 +243,25 @@ public:
                                        - obj->GetRunSlaveCnt();
          if ( mySlavesProcRemote < otherSlavesProcRemote ) {
             if (diffEvents < -(avEventsLeft / 2)
-                && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                return 1;
             else
                return -1;
          } else if ( mySlavesProcRemote > otherSlavesProcRemote ) {
             if (diffEvents > (avEventsLeft / 2)
-                && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                return -1;
             else
                return 1;
          } else if (myExtSlaves < otherExtSlaves) {
             if (diffEvents < -(avEventsLeft / 3)
-                && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                return 1;
             else
                return -1;
          } else if (myExtSlaves > otherExtSlaves) {
             if (diffEvents > (avEventsLeft / 3)
-                && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                return -1;
             else
                return 1;
@@ -271,13 +271,13 @@ public:
             if (myOwnSlaves < otherOwnSlaves) {
                // if the other node has much more to process
                if (diffEvents < -(avEventsLeft / 3)
-                   && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                   && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                   return 1;
                else
                   return -1;
             } else if (myOwnSlaves > otherOwnSlaves) {
                if (diffEvents > (avEventsLeft / 3)
-                   && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+                   && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
                   return -1;
                else
                   return 1;
@@ -313,7 +313,7 @@ public:
 };
 
 
-TAdaptivePacketizer::TFileNode::TFileNode(const char *name)
+TPacketizerAdaptive::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
      fActFileNext(0), fMySlaveCnt(0), fExtSlaveCnt(0), fProcessed(0), fEvents(0)
 {
@@ -325,9 +325,9 @@ TAdaptivePacketizer::TFileNode::TFileNode(const char *name)
 
 //------------------------------------------------------------------------------
 
-class TAdaptivePacketizer::TSlaveStat : public TObject {
+class TPacketizerAdaptive::TSlaveStat : public TObject {
 
-friend class TAdaptivePacketizer;
+friend class TPacketizerAdaptive;
 
 private:
    TSlave        *fSlave;        // corresponding TSlave record
@@ -356,7 +356,7 @@ public:
 };
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
+TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
    : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0),
      fProcTime(0), fCurProcessed(0), fCurProcTime(0)
 {
@@ -364,7 +364,7 @@ TAdaptivePacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
+void TPacketizerAdaptive::TSlaveStat::UpdateRates(Long64_t nEvents,
                                                   Float_t time)
 {
    //Update packetizer rates
@@ -381,19 +381,21 @@ void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
 }
 //------------------------------------------------------------------------------
 
-ClassImp(TAdaptivePacketizer)
+ClassImp(TPacketizerAdaptive)
 
-Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 2;
-Int_t TAdaptivePacketizer::fgNetworkFasterThanHD = 1;
+Int_t    TPacketizerAdaptive::fgMaxSlaveCnt = 2;
+Int_t    TPacketizerAdaptive::fgPacketAsAFraction = 4;
+Double_t TPacketizerAdaptive::fgMinPacketTime = 3;
+Int_t    TPacketizerAdaptive::fgNetworkFasterThanHD = 1;
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
+TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
                           Long64_t first, Long64_t num, TList *input)
                     : TVirtualPacketizer(input)
 {
    // Constructor
 
-   PDB(kPacketizer,1) Info("TAdaptivePacketizer",
+   PDB(kPacketizer,1) Info("TPacketizerAdaptive",
                            "enter (first %lld, num %lld)", first, num);
 
    // Init pointer members
@@ -407,7 +409,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fMaxPerfIdx = 1;
 
    Long_t maxSlaveCnt = 0;
-   if (!(TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt))) {
+   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
       fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
    } else {
       // Use number of CPUs as default
@@ -417,9 +419,34 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          fgMaxSlaveCnt =  si.fCpus;
    }
 
+   // Below we provide a possibility to change the way packet size is
+   // calculated or define the packet time directly.
+   // fPacketAsAFraction can be interpreted as follows:
+   // packet time is (expected job proc. time) / fPacketSizeAsAFraction.
+   // It substitutes 20 in the old formula to calculate the fPacketSize:
+   // fPacketSize = fTotalEntries / (20 * nslaves)
+   Long_t packetAsAFraction = 0;
+   if (TProof::GetParameter(input, "PROOF_PacketAsAFraction",
+                            packetAsAFraction) == 0) {
+      if (packetAsAFraction > 0) {
+         fgPacketAsAFraction = (Int_t)packetAsAFraction;
+         Info("Process",
+              "using alternate fraction of query time as a packet size: %ld",
+              packetAsAFraction);
+      } else
+         Info("Process", "packetAsAFraction parameter must be higher than 0");
+   }
+   Double_t minPacketTime = 0;
+   if (TProof::GetParameter(input, "PROOF_MinPacketTime",
+                            minPacketTime) == 0) {
+      Info("Process", "using alternate minimum time of a packet: %ld",
+           packetAsAFraction);
+      fgMinPacketTime = (Int_t) minPacketTime;
+   }
+
    fgNetworkFasterThanHD = gEnv->GetValue("ProofServ.NetworkFasterThanHD", 1);
    if (fgNetworkFasterThanHD != 1)
-      Info("TAdaptivePacketizer","fgNetworkFasterThanHD set to %d",
+      Info("TPacketizerAdaptive","fgNetworkFasterThanHD set to %d",
                                  fgNetworkFasterThanHD);
 
    Double_t baseLocalPreference = 1.2;
@@ -496,7 +523,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
    PDB(kPacketizer,2)
-      Info("TAdaptivePacketizer",
+      Info("TPacketizerAdaptive",
            "processing Range: First %lld, Num %lld", first, num);
 
    dset->Reset();
@@ -506,7 +533,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2)
-         Info("TAdaptivePacketizer",
+         Info("TPacketizerAdaptive",
               "processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()) {
@@ -514,7 +541,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          if (cur + eNum < first) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TAdaptivePacketizer",
+               Info("TPacketizerAdaptive",
                     "processing element: skip element cur %lld", cur);
             continue;
          }
@@ -523,7 +550,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TAdaptivePacketizer",
+               Info("TPacketizerAdaptive",
                     "processing element: drop element cur %lld", cur);
             continue; // break ??
          }
@@ -533,7 +560,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
          if (num != -1 && (first+num < cur+eNum)) {
             e->SetNum( first + num - cur );
             PDB(kPacketizer,2)
-               Info("TAdaptivePacketizer",
+               Info("TPacketizerAdaptive",
                     "processing element: Adjust end %lld", first + num - cur);
          }
 
@@ -543,7 +570,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
             PDB(kPacketizer,2)
-               Info("TAdaptivePacketizer",
+               Info("TPacketizerAdaptive",
                     "processing element: Adjust start %lld and end %lld",
                     eFirst + (first - cur), first + num - cur);
          }
@@ -562,7 +589,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
             continue;
       }
       PDB(kPacketizer,2)
-         Info("TAdaptivePacketizer",
+         Info("TPacketizerAdaptive",
               "processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
@@ -597,7 +624,7 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
       fTotalEntries = evl ? evl->GetN() : fTotalEntries;
    }
    PDB(kGlobal,1)
-      Info("TAdaptivePacketizer", "processing %lld entries in %d files on %d hosts",
+      Info("TPacketizerAdaptive", "processing %lld entries in %d files on %d hosts",
                                   fTotalEntries, files, fFileNodes->GetSize());
    Reset();
 
@@ -616,24 +643,24 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    }
 
    if (totalNumberOfFiles == 0) {
-      Info("TAdaptivePacketizer", "no valid or non-empty file found: setting invalid");
+      Info("TPacketizerAdaptive", "no valid or non-empty file found: setting invalid");
       // No valid files: set invalid and return
       fValid = kFALSE;
       return;
    }
 
    fFractionOfRemoteFiles = noRemoteFiles / totalNumberOfFiles;
-   Info("TAdaptivePacketizer",
+   Info("TPacketizerAdaptive",
         "fraction of remote files %f", fFractionOfRemoteFiles);
 
    if (!fValid)
       SafeDelete(fProgress);
 
-   PDB(kPacketizer,1) Info("TAdaptivePacketizer", "return");
+   PDB(kPacketizer,1) Info("TPacketizerAdaptive", "return");
 }
 
 //______________________________________________________________________________
-TAdaptivePacketizer::~TAdaptivePacketizer()
+TPacketizerAdaptive::~TPacketizerAdaptive()
 {
    // Destructor.
 
@@ -649,7 +676,7 @@ TAdaptivePacketizer::~TAdaptivePacketizer()
 }
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *node)
+TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *node)
 {
    // Get next unallocated file from 'node' or other nodes:
    // First try 'node'. If there is no more files, keep trying to
@@ -678,7 +705,7 @@ TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *n
 }
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextNode()
+TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
 {
    // Get next node which has unallocated files.
    // the order is determined by TFileNode::Compare
@@ -700,7 +727,7 @@ TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextNode()
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::RemoveUnAllocNode(TFileNode * node)
+void TPacketizerAdaptive::RemoveUnAllocNode(TFileNode * node)
 {
    // Remove unallocated node.
 
@@ -708,7 +735,7 @@ void TAdaptivePacketizer::RemoveUnAllocNode(TFileNode * node)
 }
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextActive()
+TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextActive()
 {
    // Get next active file.
 
@@ -725,7 +752,7 @@ TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextActive()
 
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextActiveNode()
+TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
 {
    // Get next active node.
 
@@ -747,7 +774,7 @@ TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextActiveNode()
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::RemoveActive(TFileStat *file)
+void TPacketizerAdaptive::RemoveActive(TFileStat *file)
 {
    // Remove file from the list of actives.
 
@@ -758,7 +785,7 @@ void TAdaptivePacketizer::RemoveActive(TFileStat *file)
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::RemoveActiveNode(TFileNode *node)
+void TPacketizerAdaptive::RemoveActiveNode(TFileNode *node)
 {
    // Remove node from the list of actives.
 
@@ -766,7 +793,7 @@ void TAdaptivePacketizer::RemoveActiveNode(TFileNode *node)
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::Reset()
+void TPacketizerAdaptive::Reset()
 {
    // Reset the internal datastructure for packet distribution.
 
@@ -795,7 +822,7 @@ void TAdaptivePacketizer::Reset()
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
+void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
 {
    // Check existence of file/dir/tree an get number of entries.
    // Assumes the files have been setup.
@@ -1025,7 +1052,7 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 }
 
 //______________________________________________________________________________
-Long64_t TAdaptivePacketizer::GetEntriesProcessed(TSlave *slave) const
+Long64_t TPacketizerAdaptive::GetEntriesProcessed(TSlave *slave) const
 {
    // Get entries processed by the specified slave.
 
@@ -1039,27 +1066,32 @@ Long64_t TAdaptivePacketizer::GetEntriesProcessed(TSlave *slave) const
 }
 
 //______________________________________________________________________________
-Int_t TAdaptivePacketizer::CalculatePacketSize(TObject *slStatPtr)
+Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr)
 {
    // Calculates the packet size based on performance of this slave
    // and est. time left untill the end of the query.
 
    TSlaveStat* slstat = (TSlaveStat*)slStatPtr;
    Long64_t num;
-   Int_t packetSizeAsFraction = 4;
    Float_t rate = slstat->GetCurRate();
    if (!rate)
       rate = slstat->GetAvgRate();
    if (rate) {
       Float_t avgProcRate = (fProcessed/(fCumProcTime / fSlaveStats->GetSize()));
       Float_t packetTime;
-      packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/packetSizeAsFraction;
-      if (packetTime < 2)
-         packetTime = 2;
+      packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/fgPacketAsAFraction;
+      if (packetTime < fgMinPacketTime)
+         packetTime = fgMinPacketTime;
+      // in case the worker has suddenly slowed down
+      if (rate < 0.25 * slstat->GetAvgRate())
+         rate = (rate + slstat->GetAvgRate()) / 2;
+      // in case the worker was generally slow
+      if (rate < 0.20 * (fTotalEntries - fProcessed))
+         packetTime *= 2;
       num = (Long64_t)(rate * packetTime);
    } else { //first packet for this slave in this query
       Int_t packetSize = (fTotalEntries - fProcessed)
-                         / (8 * packetSizeAsFraction * fSlaveStats->GetSize());
+                         / (6 * fgPacketAsAFraction * fSlaveStats->GetSize());
       num = Long64_t(packetSize *
             ((Float_t)slstat->fSlave->GetPerfIdx() / fMaxPerfIdx));
    }
@@ -1069,7 +1101,7 @@ Int_t TAdaptivePacketizer::CalculatePacketSize(TObject *slStatPtr)
 }
 
 //______________________________________________________________________________
-TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
+TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 {
    // Get next packet;
    // A meaningfull difference to TPacketizer is the fact that this

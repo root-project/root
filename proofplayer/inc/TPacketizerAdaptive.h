@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TAdaptivePacketizer
-#define ROOT_TAdaptivePacketizer
+#ifndef ROOT_TPacketizerAdaptive
+#define ROOT_TPacketizerAdaptive
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAdaptivePacketizer                                                  //
+// TPacketizerAdaptive                                                  //
 //                                                                      //
 // This packetizer is based on TPacketizer but uses different           //
 // load-balancing algorithms and data structures.                       //
@@ -48,7 +48,7 @@ class TProofStats;
 class TRandom;
 
 
-class TAdaptivePacketizer : public TVirtualPacketizer {
+class TPacketizerAdaptive : public TVirtualPacketizer {
 
 public:              // public because of Sun CC bug
    class TFileNode;
@@ -73,9 +73,9 @@ private:
    Float_t        fBaseLocalPreference;   // indicates how much more likely
    // the nodes will be to open their local files (1 means indifferent)
 
-   TAdaptivePacketizer();
-   TAdaptivePacketizer(const TAdaptivePacketizer&);    // no implementation, will generate
-   void operator=(const TAdaptivePacketizer&);         // error on accidental usage
+   TPacketizerAdaptive();
+   TPacketizerAdaptive(const TPacketizerAdaptive&);    // no implementation, will generate
+   void operator=(const TPacketizerAdaptive&);         // error on accidental usage
 
    TFileNode     *NextNode();
    void           RemoveUnAllocNode(TFileNode *);
@@ -92,17 +92,24 @@ private:
 
 public:
    static Int_t   fgMaxSlaveCnt;  // maximum number of slaves per filenode
+   static Int_t   fgPacketAsAFraction;// used to calculate the packet size
+                                 // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
+                                 // fPacketAsAFraction can be interpreted as follows:
+                                 // assuming all slaves have equal processing rate, packet size
+                                 // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
+                                 // It can be set with PROOF_PacketAsAFraction in input list.
+   static Double_t fgMinPacketTime; // minimum packet time
    static Int_t   fgNetworkFasterThanHD; // 1 if network faster than hard disk
 
-   TAdaptivePacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
+   TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input);
-   virtual ~TAdaptivePacketizer();
+   virtual ~TPacketizerAdaptive();
 
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    Int_t         CalculatePacketSize(TObject *slstat);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
-   ClassDef(TAdaptivePacketizer,0)  //Generate work packets for parallel processing
+   ClassDef(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
 };
 
 #endif

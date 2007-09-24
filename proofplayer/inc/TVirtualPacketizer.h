@@ -27,7 +27,7 @@
 //                                                                      //
 // TVirtualPacketizer includes common parts of PROOF packetizers.       //
 // Look in subclasses for details.                                      //
-// The default packetizer is TAdaptivePacketizer.                       //
+// The default packetizer is TPacketizerAdaptive.                       //
 // To use an alternative one, for instance - the TPacketizer, call:     //
 // proof->SetParameter("PROOF_Packetizer", "TPacketizer");              //
 //                                                                      //
@@ -49,7 +49,7 @@ class TNtupleD;
 class TVirtualPacketizer : public TObject {
 
 friend class TPacketizer;
-friend class TAdaptivePacketizer;
+friend class TPacketizerAdaptive;
 friend class TPacketizerProgressive;
 friend class TPacketizerUnit;
 

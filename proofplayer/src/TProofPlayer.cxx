@@ -1145,8 +1145,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
       TString packetizer;
       if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
-         // Using standard packetizer TAdaptivePacketizer
-         packetizer = "TAdaptivePacketizer";
+         // Using standard packetizer TPacketizerAdaptive
+         packetizer = "TPacketizerAdaptive";
       else
          Info("Process", "using Alternate Packetizer: %s", packetizer.Data());
 
