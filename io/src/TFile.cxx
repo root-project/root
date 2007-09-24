@@ -3053,9 +3053,12 @@ Bool_t TFileOpenHandle::Matches(const char *url)
 }
 
 //______________________________________________________________________________
-TFile::EFileType TFile::GetType(const char *name, Option_t *option)
+TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *prefix)
 {
    // Resolve the file type as a function of the protocol field in 'name'
+   // If defined, the string 'prefix' is added when testing the locality of
+   // a 'name' with network-like structure (i.e. root://host//path); if the file
+   // is local, on return 'prefix' will contain the actual local path of the file.
 
    EFileType type = kDefault;
 
@@ -3071,7 +3074,6 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
       //        readonly mode and the current user has read access;
       //    ii) the specified user is equal to the current user then open local
       //        TFile.
-      const char *lfname = 0;
       Bool_t localFile = kFALSE;
       TUrl url(name);
       //
@@ -3091,13 +3093,20 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
             opt.ToUpper();
             if (opt == "" || opt == "READ") read = kTRUE;
             const char *fname = url.GetFile();
-            if (fname[0] == '/' || fname[0] == '~' || fname[0] == '$')
+            TString lfname;
+            if (fname[0] == '/') {
+               if (prefix)
+                  lfname = Form("%s%s", prefix->Data(), fname);
+               else
+                  lfname = fname;
+            } else if (fname[0] == '~' || fname[0] == '$') {
                lfname = fname;
-            else
+            } else {
                lfname = Form("%s/%s", gSystem->HomeDirectory(), fname);
+            }
             if (read) {
                char *fn;
-               if ((fn = gSystem->ExpandPathName(lfname))) {
+               if ((fn = gSystem->ExpandPathName(lfname.Data()))) {
                   if (gSystem->AccessPathName(fn, kReadPermission))
                      read = kFALSE;
                   delete [] fn;
@@ -3110,6 +3119,8 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
             delete u;
             if (read || sameUser)
                localFile = kTRUE;
+            if (localFile)
+               *prefix = lfname;
          }
       }
       //

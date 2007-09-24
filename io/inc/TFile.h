@@ -232,7 +232,7 @@ public:
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
-   static EFileType    GetType(const char *name, Option_t *option = "");
+   static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = 0);
 
    static EAsyncOpenStatus GetAsyncOpenStatus(const char *name);
    static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);
