@@ -732,6 +732,7 @@ TParallelCoordVar* TParallelCoord::RemoveVariable(const char* vartitle)
    fVarList->Remove(var);
    fNvar = fVarList->GetSize();
    SetAxesPosition();
+   var->DeleteVariable();
    return var;
 }
 
