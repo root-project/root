@@ -452,6 +452,9 @@ Bool_t TGListTree::HandleDoubleClick(Event_t *event)
 
    TGListTreeItem *item = 0;
 
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      return kFALSE;
+   }
    // If fDisableOpen is set, only send message and emit signals.
    // It allows user to customize handling of double click events.
    if (fDisableOpen && event->fCode == kButton1 && (item = FindItem(event->fY)) != 0) {
