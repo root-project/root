@@ -2823,18 +2823,24 @@ if test ! "x$xrootddir" = "x"; then
    else
       xrdver="unknown"
    fi
-   decref=20070628
+   decrefone=20070628
+   decreftwo=20070723
    decver=0
    if test ! "x$xrdver" = "xunknown"; then
       tmpver=`echo $xrdver | cut -c2-9`
       decver=`expr 1 \* 0"$tmpver"`
    fi
-   if [ $decver -gt $decref ] ; then
-      xrdcomm="$xrdcomm (version is > 20070628)"
-      extraxrdflags=""
+   if [ $decver -gt $decrefone ] ; then
+      if [ $decver -gt $decreftwo ] ; then
+         xrdcomm="$xrdcomm (version is > 20070723)"
+         extraxrdflags=""
+      else
+         xrdcomm="$xrdcomm (version is > 20070628)"
+         extraxrdflags="-DOLDXRDOUC"
+      fi
    else
       xrdcomm="$xrdcomm (version is <= 20070628: setting the appropriate compilation flag)"
-      extraxrdflags="-DOLDXRCPHYCONN"
+      extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC"
    fi
 
 else
