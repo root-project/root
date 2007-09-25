@@ -16,6 +16,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TEnv.h"
 #include "TEventIter.h"
 #include "TCollection.h"
 #include "TDSet.h"
@@ -124,7 +125,14 @@ Int_t TEventIter::LoadDir()
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
 
-      fFile = TFile::Open(fFilename);
+      // Take into acoount possible prefixes
+      TFile::EFileType typ = TFile::kDefault;
+      TString fname = gEnv->GetValue("ProofServ.Localroot","");
+      if (!fname.IsNull())
+         typ = TFile::GetType(fFilename, "", &fname);
+      if (typ != TFile::kLocal)
+         fname = fFilename;
+      fFile = TFile::Open(fname);
 
       if (gPerfStats != 0) {
          gPerfStats->FileOpenEvent(fFile, fFilename, double(TTimeStamp())-start);
@@ -425,19 +433,28 @@ TTree* TEventIterTree::Load(TDSetElement *e)
    const char *dn = e->GetDirectory();
    const char *tn = e->GetObjName();
 
+   TFile::EFileType typ = TFile::kDefault;
+   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   if (!fname.IsNull())
+      typ = TFile::GetType(fn, "", &fname);
+   if (typ != TFile::kLocal)
+      fname = fn;
+
    // Open the file
-   TFile *f = TFile::Open(fn);
+   TFile *f = TFile::Open(fname);
    if (!f) {
-      Error("GetTrees","file '%s' could not be open", fn);
+      Error("GetTrees","file '%s' ('%s') could not be open", fn, fname.Data());
       return (TTree *)0;
    }
+
+   TDirectory *dd = f;
    // Change dir, if required
-   if (dn && !f->cd(dn)) {
-      Error("Load","Cannot cd to: %s", dn);
+   if (dn && !(dd = f->GetDirectory(dn))) {
+      Error("Load","Cannot get to: %s", dn);
       return (TTree *)0;
    }
    PDB(kLoop,2)
-      Info("Load","cd to: %s", dn);
+      Info("Load","got directory: %s", dn);
 
    // If a wild card we will use the first object of the type
    // requested compatible with the reg expression we got
@@ -449,8 +466,8 @@ TTree* TEventIterTree::Load(TDSetElement *e)
       else
          sreg = ".*";
       TRegexp re(sreg);
-      if (f->GetListOfKeys()) {
-         TIter nxk(f->GetListOfKeys());
+      if (dd->GetListOfKeys()) {
+         TIter nxk(dd->GetListOfKeys());
          TKey *k = 0;
          while ((k = (TKey *) nxk())) {
             if (!strcmp(k->GetClassName(), "TTree")) {
@@ -465,7 +482,7 @@ TTree* TEventIterTree::Load(TDSetElement *e)
    }
 
    // Point to the key
-   TKey *key = f->GetKey(on);
+   TKey *key = dd->GetKey(on);
    if (key == 0) {
       Error("Load", "Cannot find tree \"%s\" in %s", tn, fn);
       return (TTree*)0;
@@ -473,11 +490,10 @@ TTree* TEventIterTree::Load(TDSetElement *e)
 
    PDB(kLoop,2)
       Info("Load", "Reading: %s", tn);
-   TDirectory *dirsave = gDirectory;
-   f->cd();
+
    TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
-   if (dirsave)
-      dirsave->cd();
+   dd->cd();
+
    if (tree == 0) {
       Error("Load", "Cannot <dynamic_cast> obj to tree \"%s\"", tn);
       return (TTree*)0;

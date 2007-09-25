@@ -46,6 +46,7 @@
 #include "TCut.h"
 #include "TError.h"
 #include "TEntryList.h"
+#include "TEnv.h"
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
@@ -329,7 +330,14 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   TFile *file = TFile::Open(GetName());
+   // Take into acoount possible prefixes
+   TFile::EFileType typ = TFile::kDefault;
+   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   if (!fname.IsNull())
+      typ = TFile::GetType(GetName(), "", &fname);
+   if (typ != TFile::kLocal)
+      fname = GetName();
+   TFile *file = TFile::Open(fname);
 
    if (gPerfStats != 0) {
       gPerfStats->FileOpenEvent(file, GetName(), double(TTimeStamp())-start);
@@ -1002,7 +1010,14 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   TFile *file = TFile::Open(filename);
+   // Take into acoount possible prefixes
+   TFile::EFileType typ = TFile::kDefault;
+   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   if (!fname.IsNull())
+      typ = TFile::GetType(filename, "", &fname);
+   if (typ != TFile::kLocal)
+      fname = filename;
+   TFile *file = TFile::Open(fname);
 
    if (gPerfStats != 0) {
       gPerfStats->FileOpenEvent(file, filename, double(TTimeStamp())-start);
