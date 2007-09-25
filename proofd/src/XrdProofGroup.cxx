@@ -111,7 +111,7 @@ XrdProofGroup::XrdProofGroup(const char *n, const char *m)
    fPriority = -1;
    fFraction = -1;
    fFracEff = 0;
-   fMutex = new XrdOucRecMutex;
+   fMutex = new XrdSysRecMutex;
 }
 //__________________________________________________________________________
 XrdProofGroup::~XrdProofGroup()
@@ -128,7 +128,7 @@ void XrdProofGroup::Print()
 {
    // Dump group content
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex); 
 
    if (fName != "default") {
       XPDPRT("+++ Group: "<<fName<<", size "<<fSize<<" member(s) ("<<fMembers<<")");
@@ -154,7 +154,7 @@ void XrdProofGroup::Count(const char *usr, int n)
    XrdOucString u(usr);
    u += ",";
 
-   XrdOucMutexHelper mhp(fMutex);
+   XrdSysMutexHelper mhp(fMutex);
 
    // If we are named, the user must be a member
    if (fName != "unnamed" && fMembers.find(u) == STR_NPOS)
@@ -187,7 +187,7 @@ bool XrdProofGroup::HasMember(const char *usr)
 {
    // Check if 'usr' is member of this group
 
-   XrdOucMutexHelper mhp(fMutex);
+   XrdSysMutexHelper mhp(fMutex);
    XrdOucString u(usr); u += ",";
    int iu = fMembers.find(u);
    if (iu != STR_NPOS)
@@ -224,7 +224,7 @@ XrdOucString XrdProofGroupMgr::Export(const char *grp)
 {
    // Return a string describing the group
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex); 
 
    XrdOucString msg;
 
@@ -243,7 +243,7 @@ void XrdProofGroupMgr::Print(const char *grp)
 {
    // Return a string describing the group
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex); 
 
    if (!grp) {
       fGroups.Apply(PrintGroup, 0);
@@ -321,7 +321,7 @@ int XrdProofGroupMgr::Config(const char *fn)
    if (!fn || strlen(fn) <= 0) {
       // This call is to reset existing info and remain with
       // the 'default' group only
-      XrdOucMutexHelper mhp(fMutex);
+      XrdSysMutexHelper mhp(fMutex);
       // Reset existing info
       fGroups.Purge();
       // Create "default" group
@@ -357,7 +357,7 @@ int XrdProofGroupMgr::Config(const char *fn)
    }
 
    // This part must be modified in atomic way
-   XrdOucMutexHelper mhp(fMutex);
+   XrdSysMutexHelper mhp(fMutex);
 
    // Reset existing info
    fGroups.Purge();

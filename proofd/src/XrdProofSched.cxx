@@ -24,7 +24,7 @@
 //    XrdProofSched *XrdgetProofSched(const char *cfg,                  //
 //                                    XrdProofdManager *mgr,            //
 //                                    XrdProofGroupMgr *grpmgr,         //
-//                                    XrdOucError *edest);              //
+//                                    XrdSysError *edest);              //
 // }                                                                    //
 // Here 'cfg' is the xrootd config file where directives to configure   //
 // the scheduler are specified, 'mgr' is the instance of the cluster    //
@@ -44,9 +44,14 @@
 #include "XrdProofWorker.h"
 #include "XrdProofServProxy.h"
 
-#include "XrdOuc/XrdOucError.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucError.hh"
+#else
+#  include "XrdSys/XrdSysError.hh"
+#endif
 
 // Tracing
 #include "XrdProofdTrace.h"
@@ -60,7 +65,7 @@ extern XrdOucTrace *XrdProofdTrace;
 // extern "C" {
 // //______________________________________________________________________________
 // XrdProofSched *XrdgetProofSched(const char *cfg, XrdProofdManager *mgr,
-//                                 XrdProofGroupMgr *grpmgr, XrdOucError *edest)
+//                                 XrdProofGroupMgr *grpmgr, XrdSysError *edest)
 // {
 //   // This scheduler is meant to live in a shared library. The interface below is
 //   // used by the server to obtain a copy of the scheduler object.
@@ -86,7 +91,7 @@ static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 //______________________________________________________________________________
 XrdProofSched::XrdProofSched(const char *name,
                              XrdProofdManager *mgr, XrdProofGroupMgr *grpmgr,
-                             const char *cfn, XrdOucError *e)
+                             const char *cfn, XrdSysError *e)
 {
    // Constructor
 

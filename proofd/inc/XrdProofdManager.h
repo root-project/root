@@ -28,8 +28,13 @@
 //////////////////////////////////////////////////////////////////////////
 #include <list>
 
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#endif
 #include "XrdProofdAux.h"
-#include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucString.hh"
 
 class XrdClientMessage;
@@ -43,9 +48,9 @@ class XrdProofdManager {
    XrdProofdManager();
    virtual ~XrdProofdManager();
 
-   XrdOucRecMutex   *Mutex() { return &fMutex; }
+   XrdSysRecMutex   *Mutex() { return &fMutex; }
 
-   int               Config(const char *fn, XrdOucError *e = 0);
+   int               Config(const char *fn, XrdSysError *e = 0);
 
    // List of available workers (on master only)
    std::list<XrdProofWorker *> *GetActiveWorkers();
@@ -53,11 +58,11 @@ class XrdProofdManager {
    int               ResourceType() const { return fResourceType; }
 
    // Keping track of active sessions
-   std::list<XrdProofServProxy *> *GetActiveSessions() { XrdOucMutexHelper mhp(&fMutex);
+   std::list<XrdProofServProxy *> *GetActiveSessions() { XrdSysMutexHelper mhp(&fMutex);
                                                          return &fActiveSessions; }
-   void              AddActiveSession(XrdProofServProxy *p) { XrdOucMutexHelper mhp(&fMutex);
+   void              AddActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
                                                               fActiveSessions.push_back(p); }
-   void              RemoveActiveSession(XrdProofServProxy *p) { XrdOucMutexHelper mhp(&fMutex);
+   void              RemoveActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
                                                                  fActiveSessions.remove(p); }
 
    // Node properties
@@ -79,7 +84,7 @@ class XrdProofdManager {
    const char       *PROOFcfg() const { return fPROOFcfg.fName.c_str(); }
 
  private:
-   XrdOucRecMutex    fMutex;        // Atomize this instance
+   XrdSysRecMutex    fMutex;        // Atomize this instance
 
    XrdProofdFile     fCfgFile;      // Configuration file
 
@@ -98,7 +103,7 @@ class XrdProofdManager {
 
    std::list<XrdProofServProxy *> fActiveSessions; // List of active sessions (non-idle)
 
-   XrdOucError      *fEDest;        // Error message handler
+   XrdSysError      *fEDest;        // Error message handler
 
    void              CreateDefaultPROOFcfg();
    int               ReadPROOFcfg();

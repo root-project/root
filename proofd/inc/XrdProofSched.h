@@ -28,7 +28,7 @@
 //    XrdProofSched *XrdgetProofSched(const char *cfg,                  //
 //                                    XrdProofdManager *mgr,            //
 //                                    XrdProofGroupMgr *grpmgr,         //
-//                                    XrdOucError *edest);              //
+//                                    XrdSysError *edest);              //
 // }                                                                    //
 // Here 'cfg' is the xrootd config file where directives to configure   //
 // the scheduler are specified, 'mgr' is the instance of the cluster    //
@@ -43,6 +43,9 @@
 #include <list>
 
 #include "XrdOuc/XrdOucString.hh"
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#endif
 
 #define kXPSMXNMLEN 17
 
@@ -50,14 +53,14 @@ class XrdProofdManager;
 class XrdProofGroupMgr;
 class XrdProofServProxy;
 class XrdProofWorker;
-class XrdOucError;
+class XrdSysError;
 
 class XrdProofSched
 {
 public:
    XrdProofSched(const char *name,
                  XrdProofdManager *mgr, XrdProofGroupMgr *grpmgr,
-                 const char *cfn = 0, XrdOucError *e = 0);
+                 const char *cfn = 0, XrdSysError *e = 0);
    virtual ~XrdProofSched() { }
 
    // Returns list of workers to be used by session 'xps'
@@ -88,7 +91,7 @@ protected:
    double            fNodesFraction; // the fraction of free units to assign
                                      // to a query.
 
-   XrdOucError      *fEDest;      // Error message handler
+   XrdSysError      *fEDest;      // Error message handler
 
    virtual int       Config(const char *cfn);
    virtual int       GetNumWorkers(XrdProofServProxy *xps);
@@ -98,6 +101,6 @@ protected:
 
 // Plugin loader handle
 typedef XrdProofSched *(*XrdProofSchedLoader_t)(const char *, XrdProofdManager *,
-                                                XrdProofGroupMgr *, XrdOucError *);
+                                                XrdProofGroupMgr *, XrdSysError *);
 
 #endif

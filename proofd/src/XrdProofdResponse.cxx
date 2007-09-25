@@ -45,7 +45,7 @@ int XrdProofdResponse::Send()
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.status = static_cast<kXR_unt16>(htons(kXR_ok));
    fResp.dlen   = 0;
@@ -65,7 +65,7 @@ int XrdProofdResponse::Send(XResponseType rcode)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.status        = static_cast<kXR_unt16>(htons(rcode));
    fResp.dlen          = 0;
@@ -85,7 +85,7 @@ int XrdProofdResponse::Send(const char *msg)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
    fRespIO[1].iov_base = (caddr_t)msg;
@@ -107,7 +107,7 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.status        = static_cast<kXR_unt16>(htons(rcode));
    fRespIO[1].iov_base = (caddr_t)data;
@@ -129,7 +129,7 @@ int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(info));
    int dlen = 0;
@@ -163,7 +163,7 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    int nn = 2;
@@ -198,7 +198,7 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    kXR_int32 xcid = static_cast<kXR_int32>(htonl(cid));
@@ -238,7 +238,7 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 xbuf = static_cast<kXR_int32>(htonl(acode));
    kXR_int32 xinf = static_cast<kXR_int32>(htonl(info));
@@ -268,7 +268,7 @@ int XrdProofdResponse::Send(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
    kXR_int16 i2 = static_cast<kXR_int16>(htons(int2));
@@ -309,7 +309,7 @@ int XrdProofdResponse::Send(kXR_int32 int1, kXR_int32 int2, void *data, int dlen
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
    kXR_int32 i2 = static_cast<kXR_int32>(htonl(int2));
@@ -346,7 +346,7 @@ int XrdProofdResponse::Send(kXR_int32 int1, void *data, int dlen )
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
    int ilen = sizeof(i1);
@@ -380,7 +380,7 @@ int XrdProofdResponse::Send(void *data, int dlen)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
    fRespIO[1].iov_base = (caddr_t)data;
@@ -402,7 +402,7 @@ int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    int i, dlen = 0;
 
@@ -429,7 +429,7 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    int dlen;
    kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
@@ -457,7 +457,7 @@ int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
       TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
       return 0;
    }
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    int dlen;
    kXR_int32 erc = static_cast<kXR_int32>(htonl(ecode));
@@ -481,7 +481,7 @@ void XrdProofdResponse::Set(unsigned char *stream)
 {
    // Auxilliary Set method
 
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
@@ -496,7 +496,7 @@ void XrdProofdResponse::Set(unsigned short sid)
    // Auxilliary Set method
 
    unsigned char stream[2];
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    memcpy((void *)&stream[0], (const void *)&sid, sizeof(sid));
 
@@ -511,7 +511,7 @@ void XrdProofdResponse::Set(unsigned short sid)
 void XrdProofdResponse::GetSID(unsigned short &sid)
 {
    // Get stream ID (to be able to restore it later
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
 
@@ -537,7 +537,7 @@ void XrdProofdResponse::SetTrsid()
    // Auxilliary Set method
 
    static char hv[] = "0123456789abcdef";
-   XrdOucMutexHelper mh(fMutex);
+   XrdSysMutexHelper mh(fMutex);
 
    int i;
    char *outbuff = fTrsid;

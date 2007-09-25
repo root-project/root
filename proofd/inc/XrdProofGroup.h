@@ -22,8 +22,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#endif
 #include "XrdOuc/XrdOucHash.hh"
-#include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdProofdAux.h"
 
@@ -62,27 +67,27 @@ private:
    int           fFraction; // Resource fraction in % (nominal)
    float         fFracEff;  // Resource fraction in % (effective)
 
-   XrdOucRecMutex *fMutex; // Local mutex
+   XrdSysRecMutex *fMutex; // Local mutex
 
-   void          AddMember(const char *usr) { XrdOucMutexHelper mhp(fMutex);
+   void          AddMember(const char *usr) { XrdSysMutexHelper mhp(fMutex);
                                               fMembers += usr; fMembers += ","; fSize++; }
    XrdProofGroup(const char *n, const char *m = 0);
 
 public:
    ~XrdProofGroup();
 
-   inline int    Active() const { XrdOucMutexHelper mhp(fMutex); return fActive; }
+   inline int    Active() const { XrdSysMutexHelper mhp(fMutex); return fActive; }
    bool          HasMember(const char *usr);
-   inline const char *Members() const { XrdOucMutexHelper mhp(fMutex); return fMembers.c_str(); }
-   inline const char *Name() const { XrdOucMutexHelper mhp(fMutex); return fName.c_str(); }
-   inline int    Size() const { XrdOucMutexHelper mhp(fMutex); return fSize; }
+   inline const char *Members() const { XrdSysMutexHelper mhp(fMutex); return fMembers.c_str(); }
+   inline const char *Name() const { XrdSysMutexHelper mhp(fMutex); return fName.c_str(); }
+   inline int    Size() const { XrdSysMutexHelper mhp(fMutex); return fSize; }
 
-   inline int    Fraction() const { XrdOucMutexHelper mhp(fMutex); return fFraction; }
-   inline float  FracEff() const { XrdOucMutexHelper mhp(fMutex); return fFracEff; }
-   inline int    Priority() const { XrdOucMutexHelper mhp(fMutex); return fPriority; }
-   void          SetFracEff(float f) { XrdOucMutexHelper mhp(fMutex); fFracEff = f; }
-   void          SetFraction(int f) { XrdOucMutexHelper mhp(fMutex); fFraction = f; }
-   void          SetPriority(int p) { XrdOucMutexHelper mhp(fMutex); fPriority = p; }
+   inline int    Fraction() const { XrdSysMutexHelper mhp(fMutex); return fFraction; }
+   inline float  FracEff() const { XrdSysMutexHelper mhp(fMutex); return fFracEff; }
+   inline int    Priority() const { XrdSysMutexHelper mhp(fMutex); return fPriority; }
+   void          SetFracEff(float f) { XrdSysMutexHelper mhp(fMutex); fFracEff = f; }
+   void          SetFraction(int f) { XrdSysMutexHelper mhp(fMutex); fFraction = f; }
+   void          SetPriority(int p) { XrdSysMutexHelper mhp(fMutex); fPriority = p; }
 
    void          Count(const char *usr, int n = 1);
    void          Print();
@@ -96,7 +101,7 @@ class XrdProofGroupMgr {
 private:
    XrdOucString              fIterator; // Keeps track of groups already processed 
    XrdOucHash<XrdProofGroup> fGroups;  // Keeps track of groups managed by this instance
-   XrdOucRecMutex            fMutex;   // Mutex to protect access to fGroups
+   XrdSysRecMutex            fMutex;   // Mutex to protect access to fGroups
 
    XrdProofdFile             fCfgFile; // Last used group configuration file
 
