@@ -2808,7 +2808,7 @@ xrdcomm=""
 
 # If we are required to use an external XROOTD distribution
 # we just define the pointers
-extraxrdflags=""
+extraxrdflags="-DOLDXRDOUC"
 if test ! "x$xrootddir" = "x"; then
 
    # We do not need to build, just the paths for includes and libs
