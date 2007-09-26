@@ -942,8 +942,10 @@ void TFitEditor::Hide()
    if (fgFitDialog) {
       fgFitDialog->UnmapWindow();
    }
-   fParentPad->Disconnect("RangeAxisChanged()");
-   DoReset();
+   if (fParentPad) {
+      fParentPad->Disconnect("RangeAxisChanged()");
+      DoReset();
+   }
    fCanvas = 0;
    fParentPad = 0;
    fFitObject = 0;
