@@ -3430,12 +3430,17 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    } else {   
       // import from a root file
       TFile *old = gFile;
+      Bool_t modified_cachedir = kFALSE;
+      TString cachedir = TFile::GetCacheFileDir();
       // in case a web file is specified, use the cacheread option to cache
       // this file in the local directory
-      TFile::SetCacheFileDir(".");
       TFile *f = 0;
-      if (strstr(filename,"http://")) f = TFile::Open(filename,"CACHEREAD");
-      else                            f = TFile::Open(filename);
+      if (strstr(filename,"http://")) {
+         TFile::SetCacheFileDir(".");   
+         modified_cachedir = kTRUE;   
+         f = TFile::Open(filename,"CACHEREAD");
+      } else                            
+         f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
          printf("Error in <TGeoManager::Import>: Cannot open file\n");
@@ -3453,6 +3458,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
          }
       }
       if (old) old->cd();
+      if (modified_cachedir) TFile::SetCacheFileDir(cachedir.Data());
       delete f;
    }
    if (!gGeoManager) return 0;

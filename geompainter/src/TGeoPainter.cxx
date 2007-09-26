@@ -1503,7 +1503,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    timer->Start();
    for (px=pxmin; px<pxmax; px++) {
       for (py=pymin; py<pymax; py++) {
-         fChecker->OpProgress("Raytracing",nrays,ntotal,timer);
+         if ((nrays%100)==0) fChecker->OpProgress("Raytracing",nrays,ntotal,timer,kFALSE);
          nrays++;
          base_color = 1;
          steptot = 0;
