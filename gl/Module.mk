@@ -102,4 +102,3 @@ gl/src/TGLText.o: \
                 $(FREETYPEDEP)
 gl/src/TGLText.o: \
                 CXXFLAGS += $(FREETYPEINC)
-
