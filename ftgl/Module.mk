@@ -59,6 +59,4 @@ distclean::     distclean-ftgl
 
 ##### extra rules ######
 $(FTGLO):     $(FREETYPEDEP)
-$(FTGLO):     CXXFLAGS += $(FREETYPEINC)
-
-
+$(FTGLO):     CXXFLAGS += $(FREETYPEINC) $(OPENGLINCDIR:%=-I%)
