@@ -40,4 +40,3 @@
    bar->Show();
    gROOT->SaveContext();
 }
-
