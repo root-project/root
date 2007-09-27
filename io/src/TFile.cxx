@@ -3087,7 +3087,8 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
       if (!forceRemote) {
          TInetAddress a(gSystem->GetHostByName(url.GetHost()));
          TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-         if (!strcmp(a.GetHostName(), b.GetHostName())) {
+         if (!strcmp(a.GetHostName(), b.GetHostName()) ||
+             !strcmp(a.GetHostAddress(), b.GetHostAddress())) {
             Bool_t read = kFALSE;
             TString opt = option;
             opt.ToUpper();
