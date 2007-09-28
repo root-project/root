@@ -2078,8 +2078,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                               if (cl->IsTObject()) {
                                  obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
                               } else {
-                                 Fatal("ProcessMessage","do not support non TObject (like %s) yet",
+                                 Error("ProcessMessage","do not support non TObject (like %s) yet",
                                        cl->GetName());
+                                 break;
                               }
                            }
                            fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
