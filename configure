@@ -4805,26 +4805,6 @@ touch Makefile
 
 ######################################################################
 #
-# FAT conversion in test/tutorials
-#
-# On win32 convert all files in tutorials and test to \r\n convention
-# (only if CVS directory does not exist, otherwise cvs will already
-# have made the conversion).
-#
-if test "x$platform" = "xwin32"  && test ! -d CVS ; then
-   message "Converting files in tutorials and test to DOS format"
-   for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
-            test/Makefile* test/README etc/system.rootrc
-   do
-      sed 's/$//' $i > r__tmp
-      touch -r $i r__tmp
-      mv -f r__tmp $i
-   done
-   echo "done"
-fi
-
-######################################################################
-#
 # Show successful configure options
 #
 enabled_options=""
