@@ -288,7 +288,7 @@ namespace ROOT { namespace Cintex {
                Type btype = base.ToType();
                CINTScopeBuilder::Setup(btype);
                std::string b_nam = CintName(btype);
-               int b_tagnum = CintTag(b_nam);
+               int b_tagnum = G__search_tagname(b_nam.c_str(), 'a');
                // Get the Offset. Treat differently virtual and non-virtual inheritance
                size_t offset;
                long int type = (level == 0) ?  G__ISDIRECTINHERIT : 0;
