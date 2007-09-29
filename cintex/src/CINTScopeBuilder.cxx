@@ -45,7 +45,7 @@ namespace ROOT { namespace Cintex {
          if ( sname.find('<') != string::npos )
             taginfo.tagtype = 'c'; // Is a templated class
          else
-            taginfo.tagtype = 'n'; // Undefined. Assume namespace
+            taginfo.tagtype = 'a'; // Undefined. Do not assume namespace
       }
       taginfo.tagname = sname.c_str();
       int tagnum = G__defined_tagname(taginfo.tagname, 2);

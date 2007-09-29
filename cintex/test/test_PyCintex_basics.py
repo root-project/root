@@ -450,6 +450,11 @@ class BasicsTestCase(unittest.TestCase):
       v[2] = p[2]
       self.failUnlessEqual(v[2], p[2])
 
+  def test32CannotfindShowMembers(self) :
+    obj = self.gbl.TrackingRecHit()
+    self.failUnless(self)
+    self.failUnless(hasattr(obj,'ShowMembers'))
+
 suite = unittest.makeSuite(BasicsTestCase,'test')
 if __name__ == '__main__':
   ret = unittest.TextTestRunner( sys.stdout, verbosity = 2 ).run(suite)

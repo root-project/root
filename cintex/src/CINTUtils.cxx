@@ -200,17 +200,6 @@ namespace ROOT { namespace Cintex {
       return sub=="stdext::" || sub=="__gnu_cx";
    }
 
-   /// one-at-time hash function
-   static unsigned long hash32(const char* key) {
-      unsigned long hash;
-      const char* k;
-      for (hash = 0, k = key; *k; k++) {
-         hash += *k; hash += (hash << 10); hash ^= (hash >> 6); 
-      }
-      hash += (hash << 3); hash ^= (hash >> 11); hash += (hash << 15);
-      return hash; 
-   }
-
    // Conversion table: Note: order is important!
    static const char* s_normalize[][2] =  {
       {"  ",                     " " }
@@ -238,12 +227,8 @@ namespace ROOT { namespace Cintex {
       return CintName(t.Name(SCOPED));
    }
    std::string CintName(const std::string& full_nam)  {
-      if ( full_nam.length() > 255 ) {
-         char txt[256];
-         sprintf(txt,"objecttype_%08lX", hash32(full_nam.c_str()));
-         return txt;
-      }
-      else  {
+      // was: else  {
+      {
          size_t occ;
          std::string nam = full_nam; //(full) ? full_nam : cl->Name();
          std::string s = (nam.substr(0,2) == "::") ? nam.substr(2) : nam;

@@ -779,3 +779,14 @@ public:
   }
 };
 }
+
+//----Bug https://savannah.cern.ch/bugs/?24227 -----------------
+class TrackingRecHit {
+public:
+  class Type {};
+};
+
+class InvalidTrackingRecHit : public TrackingRecHit {
+public:
+  typedef TrackingRecHit::Type Type;
+};
