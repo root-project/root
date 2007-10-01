@@ -379,14 +379,16 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    //  B-    Double32_t     fTemperature; //[0,100]
    //  C-    Double32_t     fCharge;      //[-1,1,2]
    //  D-    Double32_t     fVertex[3];   //[-30,30,10]
-   //  E     Int_t          fNsp;
+   //  E-    Double32_t     fChi2;        //[0,0,6]
+   //  F-    Int_t          fNsp;
    //        Double32_t*    fPointValue;   //[fNsp][0,3]
    //
    // In case A fNormal is converted from a Double_t to a Float_t
    // In case B fTemperature is converted to a 32 bit unsigned integer
    // In case C fCharge is converted to a 2 bits unsigned integer
    // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-   // In case E the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+   // In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+   // In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
    //           Note that the range specifier must follow the dimension specifier.
    // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
    //
