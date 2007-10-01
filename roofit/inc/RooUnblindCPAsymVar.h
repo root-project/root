@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.14 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.h,v 1.15 2007/05/11 10:15:52 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *

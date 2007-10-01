@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.h,v 1.8 2007/05/11 09:13:07 verkerke Exp $
+ *    File: $Id: RooBreitWigner.h,v 1.9 2007/07/12 20:30:49 wouter Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -108,7 +108,7 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 
 
 
-Int_t RooBMixDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
 //   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
   if (rangeName) {

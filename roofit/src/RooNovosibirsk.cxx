@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *

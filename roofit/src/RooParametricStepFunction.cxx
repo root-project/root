@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *

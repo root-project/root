@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -251,7 +251,7 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 }
 
 // advertise analytical integration
-Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( RooArgSet& allVars, 
+Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& allVars, 
 						     RooArgSet& analVars, const char* rangeName ) const 
 {
   if (rangeName) return 0 ;

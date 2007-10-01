@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.h,v 1.11 2007/05/11 09:13:07 verkerke Exp $
+ *    File: $Id: RooBifurGauss.h,v 1.12 2007/07/12 20:30:49 wouter Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *

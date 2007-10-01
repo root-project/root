@@ -20,12 +20,10 @@
 #pragma link C++ class RooGaussian+ ;
 #pragma link C++ class RooGaussModel+ ;
 #pragma link C++ class RooGExpModel+ ;
-#pragma link C++ class RooHistPdf+ ;
 #pragma link C++ class RooKeysPdf+ ;
 #pragma link C++ class RooLandau+ ;
 #pragma link C++ class RooNonCPEigenDecay+ ;
 #pragma link C++ class RooNovosibirsk+ ;
-//#pragma link C++ class RooNumConvPdf+ ;
 #pragma link C++ class RooParametricStepFunction+ ;
 #pragma link C++ class RooPolynomial+ ;
 #pragma link C++ class RooUnblindCPAsymVar+ ;

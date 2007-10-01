@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -128,7 +128,7 @@ Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
 
 
 
-Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (rangeName) return 0 ;
 

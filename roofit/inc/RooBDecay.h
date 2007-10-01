@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.rdl,v 1.6 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBDecay.h,v 1.7 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,6 +45,10 @@ public:
   virtual ~RooBDecay();
 
   virtual Double_t coefficient(Int_t basisIndex) const;
+  RooArgSet* coefVars(Int_t coefIdx) const ;
+
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);

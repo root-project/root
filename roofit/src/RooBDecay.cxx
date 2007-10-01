@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- * @(#)root/roofit:$Id$
+ * @(#)root/roofit:$Name:  $:$Id$
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -112,6 +112,77 @@ Double_t RooBDecay::coefficient(Int_t basisIndex) const
 
   return 0 ;
 }
+
+RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const 
+{
+  if(basisIndex == _basisCosh)
+    {  
+      return _f0.arg().getVariables();
+    }
+  if(basisIndex == _basisSinh)
+    {
+      return _f1.arg().getVariables();
+    }
+  if(basisIndex == _basisCos)
+    {
+      return _f2.arg().getVariables();
+    }
+  if(basisIndex == _basisSin)
+    {
+      return _f3.arg().getVariables();
+    }
+
+  return 0 ;  
+}
+
+
+Int_t RooBDecay::getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+{
+  if(coef == _basisCosh)
+    {  
+      return _f0.arg().getAnalyticalIntegral(allVars,analVars,rangeName) ;
+    }
+  if(coef == _basisSinh)
+    {
+      return _f1.arg().getAnalyticalIntegral(allVars,analVars,rangeName) ;
+    }
+  if(coef == _basisCos)
+    {
+      return _f2.arg().getAnalyticalIntegral(allVars,analVars,rangeName) ;
+    }
+  if(coef == _basisSin)
+    {
+      return _f3.arg().getAnalyticalIntegral(allVars,analVars,rangeName) ;
+    }
+
+  return 0 ;
+}
+
+
+
+Double_t RooBDecay::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const 
+{
+  if(coef == _basisCosh)
+    {  
+      return _f0.arg().analyticalIntegral(code,rangeName) ;
+    }
+  if(coef == _basisSinh)
+    {
+      return _f1.arg().analyticalIntegral(code,rangeName) ;
+    }
+  if(coef == _basisCos)
+    {
+      return _f2.arg().analyticalIntegral(code,rangeName) ;
+    }
+  if(coef == _basisSin)
+    {
+      return _f3.arg().analyticalIntegral(code,rangeName) ;
+    }
+
+  return 0 ;
+}
+
+
 
 Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
