@@ -3,6 +3,11 @@
 # Store info about which svn branch, what revision and at what date/time
 # we executed make.
 
+# if we don't see the .svn directory, just return
+if test ! -d .svn; then
+   exit 0;
+fi
+
 OUT=etc/svninfo.txt
 
 INFO=`svn info | awk '/Revision:/ { print $2 } /URL:/ { print $2 }'`
