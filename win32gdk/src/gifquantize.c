@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Id:$ */
+/* @(#)root/win32gdk:$Id$ */
 /* Author: Fons Rademakers   04/11/98*/
 /*****************************************************************************
 * Module to quantize high resolution image into lower one. You may want to   *

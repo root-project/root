@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Id:$ */
+/* @(#)root/win32gdk:$Id$ */
 /* Author: Rene Brun   11/06/97*/
 #include <stdio.h>
 #include <string.h>

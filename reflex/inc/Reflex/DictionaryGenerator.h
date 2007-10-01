@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id:$
+// @(#)root/reflex:$Id$
 // Author: Antti Hahto   06/20/06
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.

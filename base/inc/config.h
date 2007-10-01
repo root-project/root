@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id:$ */
+/* @(#)root/base:$Id$ */
 /* Author: Fons Rademakers   16/11/2006 */
 
 #ifndef ROOT_config

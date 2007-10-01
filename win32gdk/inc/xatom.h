@@ -1,4 +1,4 @@
-/* @(#)root/win32gdk:$Id:$ */
+/* @(#)root/win32gdk:$Id$ */
 #ifndef XATOM_H
 #define XATOM_H 1
 

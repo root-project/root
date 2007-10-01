@@ -1,4 +1,4 @@
-// @(#)root/fft:$Id:$
+// @(#)root/fft:$Id$
 
 #ifdef __CINT__
 #pragma link off all globals;

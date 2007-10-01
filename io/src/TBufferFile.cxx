@@ -339,9 +339,33 @@ void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
 
    if (ele && ele->GetFactor() != 0) {
+      //a range was specified. We read an integer and convert it back to a double.
       UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
-      Float_t afloat; *this >> afloat; d[0] = (Double_t)afloat;
+      Int_t nbits = 0;
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //we read a float and convert it to double
+         Float_t afloat; 
+         *this >> afloat; 
+         d[0] = (Double_t)afloat;
+      } else {
+         //we read the exponent and the truncated mantissa of the float
+         //and rebuild the double.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         UChar_t  theExp;
+         UShort_t theMan;
+         *this >> theExp;
+         *this >> theMan;
+         ix = theExp;
+         ix <<= 23;
+         ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+         if(1<<(nbits+1) & theMan) xx=-xx;
+         d[0] = (Double_t)xx;
+      }
    }
 }
 
@@ -371,7 +395,21 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    //  [-10,100];
    //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
    //  [-10,100,16]
+   //  [0,0,8]
    // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
+   // if (xmin==0 and xmax==0 and nbits <=16) the double word will be converted
+   // to a float and its mantissa truncated to nbits significative bits.
+   //
+   // IMPORTANT NOTE
+   // --------------
+   // Lets assume an original variable double x:
+   // When using the format [0,0,8] (ie range not specified) you get the best
+   // relative precision when storing and reading back the truncated x, say xt.
+   // The variance of (x-xt)/x will be better than when specifying a range
+   // for the same number of bits. However the precision relative to the 
+   // range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
+   // The format [0,0,8] is also interesting when the range of x is infinite
+   // or unknown.
    //
    //  see example of use of the Double32_t data type in tutorial double32.C
    //
@@ -382,6 +420,9 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    //End_Html
 
    if (ele && ele->GetFactor() != 0) {
+      //A range is specified. We normalize the double to the range and
+      //convert it to an integer using a scaling factor that is a function of nbits.
+      //see TStreamerElement::GetRange.
       Double_t x = d[0];
       Double_t xmin = ele->GetXmin();
       Double_t xmax = ele->GetXmax();
@@ -389,7 +430,30 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
       if (x > xmax) x = xmax;
       UInt_t aint = UInt_t(0.5+ele->GetFactor()*(x-xmin)); *this << aint;
    } else {
-      Float_t afloat = (Float_t)d[0]; *this << afloat;
+      Int_t nbits = 0;
+      //number of bits stored in fXmin (see TStreamerElement::GetRange)
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //if no range and no bits specified, we convert from double to float
+         Float_t afloat = (Float_t)d[0]; 
+         *this << afloat;
+      } else {
+         //a range is not specified, but nbits is.
+         //In this case we truncate the mantissa to nbits and we stream
+         //the exponent as a UChar_t and the mantissa as a UShort_t.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         xx = (Float_t)d[0];
+         UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+         UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+         theMan=(++theMan)>>1;
+         if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+         if(xx<0) theMan|=1<<(nbits+1);
+         *this << theExp;
+         *this << theMan;
+      }
    }
 }
 
