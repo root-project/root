@@ -143,8 +143,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    if (!noLogo && !NoLogoOpt())
       PrintLogo();
-   else
-      PrintLogo(kTRUE);
+   //else
+   //   PrintLogo(kTRUE);
 
    // Load some frequently used includes
    Int_t includes = gEnv->GetValue("Rint.Includes",1);
@@ -181,7 +181,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
-         ProcessLine(Form(".L %s",logon),kTRUE);
+         ProcessLine(Form(".L %s",logon), kTRUE);
       delete [] mac;
    }
 
@@ -203,11 +203,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    // Goto into raw terminal input mode
    char defhist[kMAXPATHLEN];
-#ifndef R__VMS
    sprintf(defhist, "%s/.root_hist", gSystem->HomeDirectory());
-#else
-   sprintf(defhist, "%s.root_hist", gSystem->HomeDirectory());
-#endif
    logon = gEnv->GetValue("Rint.History", defhist);
    int hist_size = gEnv->GetValue("Rint.HistorySize", 500);
    int hist_save = gEnv->GetValue("Rint.HistorySave", 400);
@@ -399,8 +395,8 @@ void TRint::PrintLogo(Bool_t lite)
       Printf("  *  You are welcome to visit our Web site  *");
       Printf("  *          http://root.cern.ch            *");
       Printf("  *                                         *");
-      Printf("  *******************************************");
-      Printf("");
+      Printf("  *******************************************\n");
+
       Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
              gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
              gSystem->GetBuildArch());
