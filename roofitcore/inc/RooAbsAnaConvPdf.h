@@ -17,7 +17,7 @@
 #define ROO_ABS_ANA_CONV_PDF
 
 
-class TIterator ;
+class TIterator  ;
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
