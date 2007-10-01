@@ -190,7 +190,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
    if (fTypeName == "Double32_t" || fTypeName == "Double32_t*") {
       GetRange(title,fXmin,fXmax,fFactor);
-      if (fFactor > 0) SetBit(kHasRange);
+      if (fFactor > 0 || fXmin > 0) SetBit(kHasRange);
    }
 }
 
