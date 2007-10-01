@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,17 @@
 ClassImp(RooSetProxy)
 ;
 
+
+void* RooSetProxy::operator new (size_t bytes)
+{
+  cout << "RooSetProxy::operator new(" << bytes << ")" << endl ;
+  return malloc(bytes) ;
+}
+
+void RooSetProxy::operator delete (void *ptr)
+{
+  cout << "RooSetProxy::operator delete(" << ptr << ")" << endl ;
+}
 
 RooSetProxy::RooSetProxy(const char* name, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.rdl,v 1.14 2005/06/20 15:44:44 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,6 +48,7 @@ protected:
   friend class RooConvGenContext ;
   friend class RooProdGenContext ;
   friend class RooAddGenContext ;
+  friend class RooAddGenContextOrig ;
   friend class RooSimGenContext ;
   friend class RooEffGenContext ;
 

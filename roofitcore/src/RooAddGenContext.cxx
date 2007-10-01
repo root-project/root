@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -67,7 +67,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     _gcList.Add(cx) ;
   }  
 
-  _pdf->syncCoefProjList(_vars) ;
+  _pdf->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
 }
 
@@ -116,7 +116,10 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
 void RooAddGenContext::updateThresholds()
 {
-  _pdf->updateCoefCache(_vars,_vars,0) ;  
+  // WVE FIX THIS _pdf->updateCoefCache(_vars,_vars,0) ;  
+  RooAddPdf::CacheElem* cache = _pdf->getProjCache(_vars) ;
+  _pdf->updateCoefficients(*cache,_vars) ;
+
   _coefThresh[0] = 0. ;
   Int_t i ;
   for (i=0 ; i<_nComp ; i++) {

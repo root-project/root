@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,6 +46,7 @@
 #include "RooCategory.h"
 #include "RooNumIntConfig.h"
 #include "RooAddition.h"
+#include "RooDataHist.h"
 
 #include "Riostream.h"
 
@@ -63,13 +64,13 @@ ClassImp(RooAbsReal)
 
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 
-RooAbsReal::RooAbsReal() : _specIntegratorConfig(0)
+RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE)
 {
 }
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100), 
-  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0)
+  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE)
 {
   // Constructor with unit label
   setValueDirty() ;
@@ -79,7 +80,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _plotMin(minVal), _plotMax(maxVal), _plotBins(100),
-  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0)
+  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE)
 {
   // Constructor with plot range and unit label
   setValueDirty() ;
@@ -89,7 +90,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
-  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt)
+  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), _treeVar(other._treeVar)
 {
 
   // Copy constructor
@@ -141,9 +142,12 @@ Double_t RooAbsReal::getVal(const RooArgSet* set) const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || isShapeDirty()) {
+
     _value = traceEval(set) ;
+
     clearValueDirty() ; 
     clearShapeDirty() ; 
+
   } else if (_cacheCheck) {
     
     // Check if cache contains value that evaluate() gives now
@@ -168,6 +172,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 {
   // Calculate current value of object, with error tracing wrapper
   Double_t value = evaluate() ;
+  cxcoutD("ChangeTracking") << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
   //Standard tracing code goes here
   if (!isValidReal(value)) {
@@ -435,8 +440,8 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
     name.Append(rangeName) ;
   }
   
-  name.Append("]_Norm[") ;
   if (nset && nset->getSize()>0) {
+    name.Append("]_Norm[") ;
     Bool_t first(kTRUE); 
     TIterator* iter  = nset->createIterator() ;
     RooAbsArg* arg ;
@@ -450,6 +455,7 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
     }
     delete iter ;
   }
+
   name.Append("]") ;
 
   return name ;
@@ -766,6 +772,46 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   return hist;
 }
+
+
+
+RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, Double_t scaleFactor) const {
+  // Loop over the bins of the input histogram and add an amount equal to our value evaluated
+  // at the bin center to each one. Our value is calculated by first integrating out any variables
+  // in projectedVars and then scaling the result by scaleFactor. Returns a pointer to the
+  // input RooDataHist, or zero in case of an error. 
+
+  // Do we have a valid histogram to use?
+  if(0 == hist) {
+    cout << ClassName() << "::" << GetName() << ":fillDataHist: no valid RooDataHist to fill" << endl;
+    return 0;
+  }
+
+  // Call checkObservables
+  RooArgSet allDeps(*hist->get()) ;
+  if (checkObservables(&allDeps)) {
+    cout << "RooAbsReal::fillDataHist(" << GetName() << ") error in checkObservables, abort" << endl ;
+    return hist ;
+  }
+  
+  // Make deep clone of self and attach to dataset observables
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooAbsReal* clone = (RooAbsReal*) cloneSet->find(GetName()) ;
+  clone->attachDataSet(*hist) ;
+
+  // Iterator over all bins of RooDataHist and fill weights
+  for (Int_t i=0 ; i<hist->numEntries() ; i++) {
+    const RooArgSet* obs = hist->get(i) ;
+    hist->set(clone->getVal(obs)*scaleFactor) ;
+  }
+
+  delete cloneSet ;
+
+  return hist;
+}
+
+
+
 
 
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
@@ -1180,9 +1226,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     return frame ;
   }
 
-  //cout << "RooAbsReal::plotOn(" << GetName() << ") begin createPlotProjection" << endl ;
   RooAbsReal *projection = (RooAbsReal*) createPlotProjection(*deps, &projectedVars, projectionCompList, o.projectionRangeName) ;
-  //cout << "RooAbsReal::plotOn(" << GetName() << ") end createPlotProjection" << endl ;
 
   // Always fix RooAddPdf normalizations
   RooArgSet fullNormSet(*deps) ;
@@ -1714,8 +1758,8 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     if (!dependsOnValue(*arg)) {
       projectedVars.remove(*arg,kTRUE) ;
 
-      coutW("Plotting") << "RooAbsReal::plotOn(" << GetName() 
-			<< ") WARNING: function doesn't depend on projection variable " 
+      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() 
+			<< ") function doesn't depend on projection variable " 
 			<< arg->GetName() << ", ignoring" << endl ;
     }
   }
@@ -1748,19 +1792,23 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
 
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
-  RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
-  assert(other!=0) ;
 
-  if (source->getAttribute("FLOAT_TREE_BRANCH")) {
-    _value = *reinterpret_cast<Float_t*>(&other->_value) ;
-  } else if (source->getAttribute("INTEGER_TREE_BRANCH")) {
-    _value = *reinterpret_cast<Int_t*>(&other->_value) ;
-  } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
-    _value = *reinterpret_cast<UChar_t*>(&other->_value) ;
-  } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
-    _value = *reinterpret_cast<UInt_t*>(&other->_value) ;
-  } else {
+//   RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
+//   assert(other!=0) ;
+  RooAbsReal* other = static_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
+
+  if (!_treeVar) {
     _value = other->_value ;
+  } else {
+    if (source->getAttribute("FLOAT_TREE_BRANCH")) {
+      _value = *reinterpret_cast<Float_t*>(&other->_value) ;
+    } else if (source->getAttribute("INTEGER_TREE_BRANCH")) {
+      _value = *reinterpret_cast<Int_t*>(&other->_value) ;
+    } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
+      _value = *reinterpret_cast<UChar_t*>(&other->_value) ;
+    } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
+    _value = *reinterpret_cast<UInt_t*>(&other->_value) ;
+    } 
   }
   setValueDirty() ;
 }
@@ -1781,18 +1829,22 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
     } else if (!typeName.CompareTo("Int_t")) {
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
     } else if (!typeName.CompareTo("UChar_t")) {
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
     }  else if (!typeName.CompareTo("UInt_t")) { 
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
     }    
     
     t.SetBranchAddress(cleanName,&_value) ;
@@ -1812,6 +1864,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree" 
 // 	 << (void*)&t << endl ;
   }
+
 }
 
 
@@ -2007,178 +2060,6 @@ void RooAbsReal::setIntegratorConfig()
 
 
 
-void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet, Bool_t /*verbose*/) 
-{
-  getVal(normSet) ;
-
-  RooArgSet branchList("branchList") ;
-  setOperMode(RooAbsArg::ADirty) ;
-  branchNodeServerList(&branchList) ;
-
-  TIterator* bIter = branchList.createIterator() ;
-  RooAbsArg* branch ;
-  while((branch=(RooAbsArg*)bIter->Next())) {
-    if (branch->dependsOn(*dataset.get())) {
-
-      RooArgSet* bdep = branch->getObservables(dataset.get()) ;
-      if (bdep->getSize()>0) {
-	branch->setOperMode(RooAbsArg::ADirty) ;
-      } else {
-	//cout << "using lazy evaluation for node " << branch->GetName() << endl ;
-      }
-      delete bdep ;
-    }
-  }
-  delete bIter ;
-  
-  dataset.setDirtyProp(kFALSE) ;
-}
-
-
-void RooAbsReal::doConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) 
-{
-  // optimizeDirty must have been run first!
-
-  // Find cachable branches and cache them with the data set
-  RooArgSet cacheList ;
-  findCacheableBranches(this,&dataset,cacheList,normSet,verbose) ;
-  dataset.cacheArgs(cacheList,normSet) ;  
-
-  // Find unused data variables after caching and disable them
-  RooArgSet pruneList("pruneList") ;
-  findUnusedDataVariables(&dataset,pruneList,verbose) ;
-  findRedundantCacheServers(&dataset,cacheList,pruneList,verbose) ;
-
-  if (pruneList.getSize()!=0) {
-    // Deactivate tree branches here
-    if (verbose) {
-      cout << "RooAbsReal::optimizeConst: The following unused tree branches are deactivated: " ; 
-      pruneList.Print("1") ;
-    }
-    dataset.setArgStatus(pruneList,kFALSE) ;
-  }
-
-  TIterator* cIter = cacheList.createIterator() ;
-  RooAbsArg *cacheArg ;
-  while((cacheArg=(RooAbsArg*)cIter->Next())){
-    cacheArg->setOperMode(RooAbsArg::AClean) ;
-  }
-  delete cIter ;
-}
-
-
-void RooAbsReal::undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) 
-{
-  // Delete the cache
-  dataset.resetCache() ;
-
-  // Reactivate all tree branches
-  dataset.setArgStatus(*dataset.get(),kTRUE) ;
-  
-  // Reset all nodes to ADirty 
-  optimizeDirty(dataset,normSet,verbose) ;
-}
-
-
-Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, 
-					    RooArgSet& cacheList, const RooArgSet* normSet, Bool_t verbose) 
-{
-  // Find branch PDFs with all-constant parameters, and add them
-  // to the dataset cache list
-
-  // Evaluate function with current normalization in case servers
-  // are created on the fly
-  RooAbsReal* realArg = dynamic_cast<RooAbsReal*>(arg) ;
-  if (realArg) {
-    realArg->getVal(normSet) ;
-  }
-
-  TIterator* sIter = arg->serverIterator() ;
-  RooAbsArg* server ;
-
-  while((server=(RooAbsArg*)sIter->Next())) {
-    if (server->isDerived()) {
-      // Check if this branch node is eligible for precalculation
-      Bool_t canOpt(kTRUE) ;
-
-      RooArgSet* branchParamList = server->getParameters(dset) ;
-      TIterator* pIter = branchParamList->createIterator() ;
-      RooAbsArg* param ;
-      while((param = (RooAbsArg*)pIter->Next())) {
-	if (!param->isConstant()) canOpt=kFALSE ;
-      }
-      delete pIter ;
-      delete branchParamList ;
-
-      if (canOpt) {
-	if (!cacheList.find(server->GetName())) {
-
-	  if (verbose) {
-	    cout << "RooAbsReal::optimize: component " 
-		 << server->GetName() << " will be cached" << endl ;
-	  }
-
-	  // Add to cache list
-	  cacheList.add(*server) ;
-	} 
-      } else {
-	// Recurse if we cannot optimize at this level
-	findCacheableBranches(server,dset,cacheList,normSet,verbose) ;
-      }
-    }
-  }
-  delete sIter ;
-  return kFALSE ;
-}
-
-
-
-void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList, Bool_t /*verbose*/) 
-{
-  RooArgSet* observables = getObservables(dset) ;
-  TIterator* vIter = observables->createIterator() ;
-  RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*) vIter->Next())) {    
-    if (!dependsOn(*arg)) {
-      pruneList.add(*arg) ;
-    }
-  }
-  delete vIter ;
-  delete observables ;
-}
-
-
-void RooAbsReal::findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList, Bool_t /*verbose*/) 
-{
-  TIterator* vIter = dset->get()->createIterator() ;
-  RooAbsArg *var ;
-  while ((var=(RooAbsArg*) vIter->Next())) {
-    if (allClientsCached(var,cacheList)) {
-      pruneList.add(*var) ;
-    }
-  }
-  delete vIter ;
-}
-
-
-
-Bool_t RooAbsReal::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
-{
-  Bool_t ret(kTRUE), anyClient(kFALSE) ;
-
-  TIterator* cIter = var->valueClientIterator() ;    
-  RooAbsArg* client ;
-  while ((client=(RooAbsArg*) cIter->Next())) {
-    anyClient = kTRUE ;
-    if (!cacheList.find(client->GetName())) {
-      // If client is not cached recurse
-      ret &= allClientsCached(client,cacheList) ;
-    }
-  }
-  delete cIter ;
-
-  return anyClient?ret:kFALSE ;
-}
 
 
 void RooAbsReal::selectNormalization(const RooArgSet*, Bool_t) 

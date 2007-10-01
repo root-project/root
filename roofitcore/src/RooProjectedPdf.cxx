@@ -26,7 +26,8 @@
    RooAbsPdf(name,title), 
    intpdf("IntegratedPdf","intpdf",this,_intpdf,kFALSE,kFALSE),
    intobs("IntegrationObservables","intobs",this,kFALSE,kFALSE),
-   deps("!Dependents","deps",this,kTRUE,kTRUE)
+   deps("!Dependents","deps",this,kTRUE,kTRUE),
+   _cacheMgr(this,10)
  { 
    // Constructor of projected of input p.d.f _intpdf over observables intObs
 
@@ -43,8 +44,9 @@
    RooAbsPdf(other,name), 
    intpdf("IntegratedPdf",this,other.intpdf),
    intobs("IntegrarionObservable",this,other.intobs),
-   deps("!Dependents",this,other.deps)
- { 
+   deps("!Dependents",this,other.deps),
+   _cacheMgr(other._cacheMgr,this)
+{ 
    // Copy constructor
  } 
 
@@ -76,17 +78,19 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
  
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  RooArgList* projList = _projListMgr.getNormList(this,nset,&intobs,&sterileIdx,0) ;
-  if (projList) {
-    return static_cast<const RooAbsReal*>(projList->at(0));
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,&intobs,&sterileIdx,0) ;
+  if (cache) {
+    return static_cast<const RooAbsReal*>(cache->_projection);
   }
 
   RooArgSet* nset2 =  intpdf.arg().getObservables(*nset) ;
   RooAbsReal* proj = intpdf.arg().createIntegral(*iset,nset2) ;
   delete nset2 ;
-  projList = new RooArgList(*proj) ;
 
-  code = _projListMgr.setNormList(this,nset,iset,projList,0) ;
+  cache = new CacheElem ;
+  cache->_projection = proj ;
+
+  code = _cacheMgr.setObj(nset,iset,(RooAbsCacheElement*)cache,0) ;
   coutI("Integration") << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
 
   return proj ;
@@ -129,9 +133,9 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
  { 
    // Retrieve appropriate projection by code
-   RooArgList *projList = _projListMgr.getNormListByIndex(code-1) ;
+   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
    
-   return ((RooAbsReal*)projList->at(0))->getVal() ;
+   return cache->_projection->getVal() ;
  } 
 
 
@@ -151,18 +155,10 @@ void RooProjectedPdf::generateEvent(Int_t /*code*/)
 
 
 
-void RooProjectedPdf::clearCache() 
-{
-  // Clear the contents of the projection cache on request
-  _projListMgr.sterilize()  ;
-}
-
-
-
 Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, 
 				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
-  // Intercept a server redirection all and update list of dependens if necessary 
+  // Intercept a server redirection all and update list of dependents if necessary 
 
   // Redetermine explicit list of dependents if intPdf is being replaced
   RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName()) ;
@@ -187,53 +183,34 @@ Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerLis
     delete newdeps ;
   }
 
-  // Throw away cache, as figuring out redirections on the cache is an unsolvable problem. 
-  clearCache() ;
-
   return kFALSE ;
 }
 
 
-void RooProjectedPdf::operModeHook() 
-{
-  // Forward changes in operation mode to the cache
 
-  Int_t i ;
-  for (i=0 ; i<_projListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _projListMgr.getNormListByIndex(i) ;
-    if (plist) {
-      TIterator* iter = plist->createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
-	arg->setOperMode(_operMode) ;
-      }
-      delete iter ;
-    }
-  }
-  return ;
+RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
+{
+  RooArgList ret(*_projection) ;  
+  return ret ;
 }
 
-void RooProjectedPdf::printCompactTreeHook(ostream& os, const char* indent) 
+
+
+void RooProjectedPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
   // Print contents of cache when printing self as part of object tree
-  Int_t i ;
-  os << indent << "RooProjectedPdf begin projection cache" << endl ;
-
-  for (i=0 ; i<_projListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _projListMgr.getNormListByIndex(i) ;    
-    if (plist) {
-      TIterator* iter = plist->createIterator() ;
-      RooAbsArg* arg ;
-      TString indent2(indent) ;
-      indent2 += Form("[%d] ",i) ;
-      while((arg=(RooAbsArg*)iter->Next())) {      
-	arg->printCompactTree(os,indent2) ;
-      }
-      delete iter ;
-    }
+  if (curElem==0) {
+    os << indent << "RooProjectedPdf begin projection cache" << endl ;
   }
 
-  os << indent << "RooProjectedPdf end projection cache" << endl ;
+  TString indent2(indent) ;
+  indent2 += Form("[%d] ",curElem) ;
+
+  _projection->printCompactTree(os,indent2) ;
+
+  if(curElem==maxElem) {
+    os << indent << "RooProjectedPdf end projection cache" << endl ;
+  }
 }
 
 

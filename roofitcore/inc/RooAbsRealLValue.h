@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.h,v 1.36 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.h,v 1.37 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -75,7 +75,7 @@ public:
   inline virtual Bool_t isLValue() const { return kTRUE; }
 
   // Test a value against our fit range
-  Bool_t inRange(Double_t value, Double_t* clippedValue=0) const;
+  Bool_t inRange(Double_t value, const char* rangeName, Double_t* clippedValue=0) const;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ; 
 
   // Constant and Projected flags 
@@ -123,6 +123,9 @@ public:
   static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins) ;
 
 protected:
+
+  friend class RooRealBinding ;
+  virtual void setVal(Double_t value, const char* /*rangeName*/) { return setVal(value) ; }
 
   Bool_t fitRangeOKForPlotting() const ;
 

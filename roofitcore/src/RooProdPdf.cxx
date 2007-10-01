@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,8 +65,7 @@ RooProdPdf::RooProdPdf() :
 
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("pdfs","List of PDFs",this),
@@ -81,8 +80,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
 RooProdPdf::RooProdPdf(const char *name, const char *title,
 		       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("pdfs","List of PDFs",this),
@@ -134,8 +132,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("pdfs","List of PDFs",this),
@@ -198,8 +195,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 		       const RooCmdArg& arg5, const RooCmdArg& arg6,
 		       const RooCmdArg& arg7, const RooCmdArg& arg8) :
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
   _pdfList("pdfs","List of PDFs",this),
@@ -249,8 +245,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
 		       const RooCmdArg& arg5, const RooCmdArg& arg6,
 		       const RooCmdArg& arg7, const RooCmdArg& arg8) :
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
   _pdfList("_pdfList","List of PDFs",this),
@@ -296,8 +291,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
 
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
   RooAbsPdf(name,title), 
-  _partListMgr(10),
-  _partOwnedListMgr(10),
+  _cacheMgr(this,10),
   _genCode(10),
   _cutOff(0),
   _pdfList("pdfs","List of PDFs",this),
@@ -313,8 +307,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
-  _partListMgr(other._partListMgr,kTRUE),
-  _partOwnedListMgr(other._partOwnedListMgr,kTRUE),
+  _cacheMgr(other._cacheMgr,this),
   _genCode(other._genCode),
   _cutOff(other._cutOff),
   _pdfList("pdfs",this,other._pdfList),
@@ -402,13 +395,8 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 RooProdPdf::~RooProdPdf()
 {
   // Destructor
-  Int_t i ;
 
   _pdfNSetList.Delete() ;
-  for (i=0 ; i<10 ; i++) {
-    _partNormListCache[i].Delete() ;
-  }
-
   delete _pdfIter ;
 }
 
@@ -638,20 +626,18 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 {
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  RooArgList* partIntList = _partListMgr.getNormList(this,nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
-  if (partIntList) {
-    code = _partListMgr.lastIndex() ;
-    
-    partList = partIntList ;
-    nsetList = _partNormListCache+code ; 
+
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
+  if (cache) {
+    code = _cacheMgr.lastIndex() ;
+    partList = &cache->_partList ;
+    nsetList = &cache->_normList ;
 
     return ;
   }
 
   // Create containers for partial integral components to be generated
-  partIntList = new RooArgList("partIntList") ;
-  RooArgList* partIntOwnedList = new RooArgList("partIntList") ;
-  RooLinkedList* partIntNormList = new RooLinkedList ;
+  cache = new CacheElem ;
 
   // Factorize the product in irreducible terms for this nset
   RooLinkedList terms, norms, imp, ints, cross ;
@@ -691,9 +677,9 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       Bool_t isOwned ;
       RooAbsReal* func = processProductTerm(nset,iset,isetRangeName,term,termNSet,termISet,isOwned) ;
       if (func) {
-	partIntList->add(*func) ;
-	if (isOwned) partIntOwnedList->addOwned(*func) ;
-	partIntNormList->Add(norm->snapshot()) ;
+	cache->_partList.add(*func) ;
+	if (isOwned) cache->_ownedList.addOwned(*func) ;
+	cache->_normList.Add(norm->snapshot()) ;
       }
     } else {
 
@@ -723,7 +709,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 // 	cout << "created composite term component " << func->GetName() << endl ;
 	if (func) {
 	  compTermSet.add(*func) ;
-	  if (isOwned) partIntOwnedList->addOwned(*func) ;
+	  if (isOwned) cache->_ownedList.addOwned(*func) ;
 	  compTermNorm.add(*norm,kFALSE) ;
 	}      
       }
@@ -735,20 +721,20 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       //const char* name = makeRGPPName("SPECPROJ_",compTermSet,outerIntDeps,RooArgSet()) ;
       //RooAbsReal* func = new RooGenProdProj(name,name,compTermSet,outerIntDeps,RooArgSet()) ;
       //partIntList->add(*func) ;
-      //partIntOwnedList->addOwned(*func) ;
+      //cache->_ownedList->addOwned(*func) ;
 
       // WVE but this does, so we'll keep it for the moment
       const char* prodname = makeRGPPName("SPECPROD_",compTermSet,outerIntDeps,RooArgSet(),isetRangeName) ;
       RooProduct* prodtmp = new RooProduct(prodname,prodname,compTermSet) ;
-      partIntOwnedList->addOwned(*prodtmp) ;
+      cache->_ownedList.addOwned(*prodtmp) ;
 
       const char* intname = makeRGPPName("SPECINT_",compTermSet,outerIntDeps,RooArgSet(),isetRangeName) ;
       RooRealIntegral* inttmp = new RooRealIntegral(intname,intname,*prodtmp,outerIntDeps,0,0,isetRangeName) ;
 
-      partIntOwnedList->addOwned(*inttmp) ;
-      partIntList->add(*inttmp);
+      cache->_ownedList.addOwned(*inttmp) ;
+      cache->_partList.add(*inttmp);
 
-      partIntNormList->Add(compTermNorm.snapshot()) ;
+      cache->_normList.Add(compTermNorm.snapshot()) ;
 
       delete tIter ;      
     }
@@ -756,14 +742,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   delete gIter ;
 
   // Store the partial integral list and return the assigned code ;
-  code = _partListMgr.setNormList(this,nset,iset,partIntList,RooNameReg::ptr(isetRangeName)) ;
-  _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList,RooNameReg::ptr(isetRangeName)) ;
-
-  // Store the normalization set list in the cache using the index code of _partListMgr
-  _partNormListCache[code].Delete() ;
-  // We own content of 'norms' and transfer ownership to the cache
-  _partNormListCache[code] = *partIntNormList ;
-
+  code = _cacheMgr.setObj(nset,iset,(RooAbsCacheElement*)cache,RooNameReg::ptr(isetRangeName)) ;
 
   // WVE PRINT SECTION
 //       cout << "RooProdPdf::getPIL(" << GetName() << "," << this << ") creating new configuration with code " << code << endl
@@ -773,14 +752,16 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 //       partIntList->Print("1") ;
 //       cout << "    Partial Owned Integral List:" ;
 //       partIntOwnedList->Print("1") ;
-//       cout << "    Normalization list: " << endl ; partIntNormList->Print("1") ; 
+//       cout << "    Normalization list: " << endl ; cache->_normList->Print("1") ; 
 //       cout << endl  ;
-  
-  partList =  partIntList ;
-  nsetList = _partNormListCache+code ;
+
+  // Fill references to be returned
+  partList = &cache->_partList ;
+  nsetList = &cache->_normList; 
 
 
   // We own contents of all lists filled by factorizeProduct() 
+  groupedList.Delete() ;
   terms.Delete() ;
   ints.Delete() ;
   imp.Delete() ;
@@ -938,7 +919,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       delete pIter ;
       
       RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet,isetRangeName) ;
-      partInt->setOperMode(operMode()) ;
+      //partInt->setOperMode(operMode()) ;
 
       isOwned=kTRUE ;
       return partInt ;
@@ -951,8 +932,8 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       // Use auxiliary class RooGenProdProj to calculate this term
       const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
       RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName) ;
-      partInt->setOperMode(operMode()) ;
-
+      //partInt->setOperMode(operMode()) ;
+      
       isOwned=kTRUE ;
       return partInt ;
     }      
@@ -964,7 +945,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
     // Composite term needs normalized integration
     const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
     RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName) ;
-    partInt->setOperMode(operMode()) ;
+    //partInt->setOperMode(operMode()) ;
 
     isOwned=kTRUE ;
     return partInt ;
@@ -1094,23 +1075,31 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
   // WVE needs adaptation for rangename feature
 
   // Partial integration scenarios
-  RooArgList* partIntList = _partListMgr.getNormListByIndex(code-1) ;  
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
+  
+  RooArgList* partIntList ;
+  RooLinkedList* normList ;
 
   // If cache has been sterilized, revive this slot
-  if (partIntList==0) {
+  if (cache==0) {
     RooArgSet* vars = getParameters(RooArgSet()) ;
-    RooArgSet* nset = _partListMgr.nameSet1ByIndex(code-1)->select(*vars) ;
-    RooArgSet* iset = _partListMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+    RooArgSet* nset = _cacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
+    RooArgSet* iset = _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
 
     Int_t code2(-1) ;
-    RooLinkedList *nlist ;
-    getPartIntList(nset,iset,partIntList,nlist,code2,rangeName) ;
+    getPartIntList(nset,iset,partIntList,normList,code2,rangeName) ;
 
     delete vars ;
     delete nset ;
     delete iset ;
+  } else {
+
+    partIntList = &cache->_partList ;
+    normList = &cache->_normList ;
+
   }
-  Double_t val = calculate(partIntList,_partNormListCache+code-1) ;
+
+  Double_t val = calculate(partIntList,normList) ;
   
   //cout << "RPP::aIWN(" << GetName() << ") value = " << val << endl ;
   return val ;
@@ -1242,68 +1231,33 @@ void RooProdPdf::generateEvent(Int_t code)
 
 }
 
-
-
-
-void RooProdPdf::operModeHook() 
+RooArgList RooProdPdf::CacheElem::containedArgs(Action) 
 {
-  Int_t i ;
-  for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _partOwnedListMgr.getNormListByIndex(i) ;
-    if (plist) {
-      TIterator* iter = plist->createIterator() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)iter->Next())) {
-	arg->setOperMode(_operMode) ;
-      }
-      delete iter ;
-    }
-  }
-  return ;
+  RooArgList ret ;
+  ret.add(_partList) ;
+  return ret ;
+
 }
 
 
-void RooProdPdf::clearCache() 
+void RooProdPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
-//   cout << "RooProdPdf::clearCache(" << GetName() << ") sterilizing cache content" << endl ;
-  Int_t i ;
-  for (i=0 ; i<10 ; i++) {
-    _partNormListCache[i].Delete() ;
-  }
-  _partListMgr.sterilize()  ;
-  _partOwnedListMgr.sterilize()  ; 
-}
+   if (curElem==0) {
+     os << indent << "RooProdPdf begin partial integral cache" << endl ;
+   }
 
+   TIterator* iter = _partList.createIterator() ;
+   RooAbsArg* arg ;
+   TString indent2(indent) ;
+   indent2 += Form("[%d] ",curElem) ;
+   while((arg=(RooAbsArg*)iter->Next())) {      
+     arg->printCompactTree(os,indent2) ;
+   }
+   delete iter ;
 
-
-Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
-				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
-{
-  // Throw away cache, as figuring out redirections on the cache is an unsolvable problem. 
-  clearCache() ;
-  return kFALSE ;
-}
-
-void RooProdPdf::printCompactTreeHook(ostream& os, const char* indent) 
-{
-  Int_t i ;
-  os << indent << "RooProdPdf begin partial integral cache" << endl ;
-
-  for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
-    if (plist) {
-      TIterator* iter = plist->createIterator() ;
-      RooAbsArg* arg ;
-      TString indent2(indent) ;
-      indent2 += Form("[%d] ",i) ;
-      while((arg=(RooAbsArg*)iter->Next())) {      
-	arg->printCompactTree(os,indent2) ;
-      }
-      delete iter ;
-    }
-  }
-
-  os << indent << "RooProdPdf end partial integral cache" << endl ;
+   if (curElem==maxElem) {
+     os << indent << "RooProdPdf end partial integral cache" << endl ;
+   }
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.14 2005/06/20 15:44:45 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,8 @@ public:
   // Constructors, assignment etc
   inline RooAbsOptGoodnessOfFit() { }
   RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
+			 Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& other, const char* name=0);
   virtual ~RooAbsOptGoodnessOfFit();
 
@@ -38,10 +39,13 @@ public:
 
 protected:
 
-  void constOptimize(ConstOpCode opcode) ;
-
+  void constOptimizeTestStatistic(ConstOpCode opcode) ;
+  
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
+
+  void optimizeCaching() ;
+  void optimizeConstantTerms(Bool_t) ;
 
   RooArgSet*  _normSet ;
   RooArgSet*  _pdfCloneSet ;

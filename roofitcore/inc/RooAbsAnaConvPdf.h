@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.h,v 1.7 2007/05/11 10:14:56 verkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.h,v 1.8 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +23,8 @@ class TIterator ;
 #include "RooListProxy.h"
 #include "RooDataSet.h"
 #include "RooAICRegistry.h"
-#include "RooNormListManager.h"
+#include "RooObjCacheManager.h"
+#include "RooAbsCacheElement.h"
 
 class RooResolutionModel ;
 class RooRealVar ;
@@ -54,11 +55,12 @@ public:
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   
   // Coefficient Analytical integration support
-  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  virtual Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+  virtual RooArgSet* coefVars(Int_t coefIdx) const ;
 
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
     
@@ -66,11 +68,9 @@ protected:
 
   Bool_t _isCopy ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-
   virtual Double_t evaluate() const ;
 
-  void makeCoefVarList() const ;
+  void makeCoefVarList(RooArgList&) const ;
 
   friend class RooConvGenContext ;
   Bool_t changeModel(const RooResolutionModel& newModel) ;
@@ -93,8 +93,15 @@ protected:
   mutable RooArgSet* _convNormSet ;    //!  Subset of last normalization that applies to convolutions
   mutable TIterator* _convSetIter ;    //! Iterator over _convNormSet
 
-  mutable RooArgList _coefVarList;               
-  mutable RooNormListManager _coefNormMgr ; //! Coefficient normalization manager
+
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    virtual ~CacheElem() {} ;
+    RooArgList containedArgs(Action) { RooArgList l(_coefVarList) ; l.add(_normList) ; return l ; }
+    RooArgList _coefVarList ;
+    RooArgList _normList ;
+  } ;
+  mutable RooObjCacheManager _coefNormMgr ; //! Coefficient normalization manager
 
   mutable RooAICRegistry _codeReg ;   //!
 

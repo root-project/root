@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -82,7 +82,7 @@ RooGenericPdf::~RooGenericPdf()
 Double_t RooGenericPdf::evaluate() const
 {
   // Calculate current value of this object
-  return _formula.eval(_normMgr.lastNormSet()) ;
+  return _formula.eval(_normSet) ;
 }
 
 

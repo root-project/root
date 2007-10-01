@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.h,v 1.92 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooAbsArg.h,v 1.93 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,8 +22,10 @@
 #include "THashList.h"
 #include "RooPrintable.h"
 #include "RooRefCountList.h"
+#include "RooAbsCache.h"
 #include <map>
 #include <set>
+#include <deque>
 
 class TTree ;
 class RooArgSet ;
@@ -91,6 +93,7 @@ public:
   // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
   friend class RooAddPdf ;
+  friend class RooAddPdfOrig ;
   RooArgSet* getVariables() const ;
   RooArgSet* getParameters(const RooAbsData* data) const ;
   RooArgSet* getParameters(const RooAbsData& data) const { return getParameters(&data) ; }
@@ -148,7 +151,9 @@ public:
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
   static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
+
   static void setDirtyInhibit(Bool_t flag) { _inhibitDirty = flag ; }
+  static void setACleanADirty(Bool_t flag) { _flipAClean = flag ; }
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
 
@@ -163,35 +168,29 @@ public:
   
 
   friend class RooMinuit ;
-  virtual void constOptimize(ConstOpCode opcode) ;
+
+  // Cache mode optimization (tracks changes & do lazy evaluation vs evaluate always)
+  virtual void optimizeCacheMode(const RooArgSet& observables) ;
+  virtual void optimizeCacheMode(const RooArgSet& observables, RooArgSet& optNodes, RooLinkedList& processedNodes) ;
+  
+
+  // Find constant terms in expression 
+  Bool_t findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList) ;
+  Bool_t findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes) ;
 
 
-  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0) ;
-  void printCompactTree(ostream& os, const char* indent="", const char* namePat=0) ;
+  // constant term optimization
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
+
+
+  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
+  void printCompactTree(ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
   virtual void printCompactTreeHook(ostream& os, const char *ind="") ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
   Bool_t deleteWatch() const { return _deleteWatch ; }
 
-
-protected:
-
-  friend class RooExtendPdf ;
-  friend class RooRealIntegral ;
-  friend class RooAbsReal ;
-  friend class RooProjectedPdf ;
-
-  enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
-  void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
-  virtual void operModeHook() {} ;
-  inline OperMode operMode() const { return _operMode ; }
-
-  virtual Bool_t isValid() const ;
-
-  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
-  virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
-
-  // Dirty state accessor/modifiers
+  // Dirty state accessor
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
   inline Bool_t isValueDirty() const { 
     if (_inhibitDirty) return kTRUE ;
@@ -202,6 +201,34 @@ protected:
     }
     return kTRUE ; // we should never get here
   }
+
+  // Cache management
+  void registerCache(RooAbsCache& cache) ;
+  void unRegisterCache(RooAbsCache& cache) ;
+  Int_t numCaches() const ;
+  RooAbsCache* getCache(Int_t index) const ;
+
+  enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
+  inline OperMode operMode() const { return _operMode ; }
+  void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
+	
+protected:
+
+  friend class RooExtendPdf ;
+  friend class RooRealIntegral ;
+  friend class RooAbsReal ;
+  friend class RooProjectedPdf ;
+
+  virtual void operModeHook() {} ;
+
+  virtual void optimizeDirtyHook(const RooArgSet* /*obs*/) {} ;
+
+  virtual Bool_t isValid() const ;
+
+  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
+  virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
+
+  // Dirty state modifiers
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
   inline void clearValueDirty() const { 
@@ -224,10 +251,12 @@ protected:
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
   RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
   TList _proxyList        ; // list of proxies
+  std::deque<RooAbsCache*> _cacheList ; // list of caches
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
 
   // Server redirection interface
+  friend class RooAbsCachedPdf ;
   friend class RooWorkspace ;
   friend class RooAcceptReject;
   friend class RooGenContext;
@@ -267,7 +296,7 @@ protected:
   RooAbsProxy* getProxy(Int_t index) const ;
   void setProxyNormSet(const RooArgSet* nset) ;
   Int_t numProxies() const ;
-	
+
   // Attribute list
   std::set<string> _boolAttrib ; // Boolean attributes
   std::map<string,string> _stringAttrib ; // String attributes
@@ -292,6 +321,7 @@ protected:
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
+  static Bool_t _flipAClean ; // Static flag controlling flipping status of all AClean nodes to ADirty ;
   Bool_t _deleteWatch ; //! Delete watch flag 
 
   static Int_t _nameLength ;

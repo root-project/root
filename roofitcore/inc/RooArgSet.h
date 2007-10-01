@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.h,v 1.44 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooArgSet.h,v 1.45 2007/08/09 19:55:47 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,9 +22,14 @@
 
 class RooArgList ;
 
+
+
 class RooArgSet : public RooAbsCollection {
 public:
-
+  
+  void* operator new (size_t bytes);
+  void operator delete (void *ptr);
+ 
   // Constructors, assignment etc.
   RooArgSet();
   RooArgSet(const RooArgList& list) ;
@@ -101,18 +106,13 @@ public:
   Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
   Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
 
-  // Allocation counter information, keeps track of reuse of existing pointers
-  Int_t allocationCounter() const { return allocCount()[this] ; }
-  static Int_t allocationCounter(const RooArgSet* set) { return allocCount()[set] ; }
-  static void printAllocationList(Bool_t recycledOnly=kTRUE) ;
-
 protected:
-
-  Int_t& allocationCounter() { return allocCount()[this] ; }
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
 
-  static std::map<const RooArgSet*,int>& allocCount() ;
+  static char* _poolBegin ; //!
+  static char* _poolCur ; //!
+  static char* _poolEnd ; //!
   
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };

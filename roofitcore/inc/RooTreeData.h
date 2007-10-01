@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.h,v 1.40 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooTreeData.h,v 1.41 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -130,6 +130,10 @@ public:
 protected:
 
   friend class RooMCStudy ;
+
+  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList) ;
+  Bool_t allClientsCached(RooAbsArg*, const RooArgSet&) ;
+
 
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 

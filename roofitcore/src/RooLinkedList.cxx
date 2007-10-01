@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -119,9 +119,11 @@ RooLinkedList::~RooLinkedList()
   Clear() ;
   if (_htableName) {
     delete _htableName ;
+    _htableName=0 ;
   }
   if (_htableLink) {
     delete _htableLink ;
+    _htableLink=0 ;
   }
 }
 

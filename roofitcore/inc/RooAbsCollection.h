@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.h,v 1.25 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsCollection.h,v 1.26 2007/08/09 19:55:47 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 #include "RooPrintable.h"
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
+#include <string>
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
@@ -87,6 +88,7 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+  std::string contentsString() const ;
 
   // Latex printing methods
   void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),	

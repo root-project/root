@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -123,7 +123,7 @@ RooCatType
 RooMappedCategory::evaluate() const
 {
   // Calculate the current value of the object
-  const char* inKey = _inputCat ;
+  const char* inKey = _inputCat.label() ;
 
   // Scan array of regexps
   for (int i=0 ; i<_mapArray.GetEntries() ; i++) {

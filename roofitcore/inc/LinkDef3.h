@@ -38,10 +38,21 @@
 #pragma link C++ class RooProdPdf+ ;
 #pragma link C++ class RooSimPdfBuilder+ ;
 #pragma link C++ class RooMCStudy+ ;
-#pragma link C++ class RooMsgService ;
-#pragma link C++ class RooProjectedPdf ;
-#pragma link C++ class RooWorkspace ;
-#pragma link C++ class RooProfileLL ;
+#pragma link C++ class RooMsgService+ ;
+#pragma link C++ class RooProjectedPdf+ ;
+#pragma link C++ class RooWorkspace+ ;
+#pragma link C++ class RooProfileLL+ ;
+#pragma link C++ class RooAbsCachedPdf+ ;
+#pragma link C++ class RooAbsSelfCachedPdf+ ;
+#pragma link C++ class RooHistPdf+ ;
+#pragma link C++ class RooCachedPdf+ ;
+#pragma link C++ class RooFFTConvPdf+ ;
+#pragma link C++ class RooDataHistSliceIter+ ;
+#pragma link C++ class RooCacheManager<vector<Double_t> >+ ;
+#pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
+#pragma link C++ class RooObjCacheManager+ ;
+#pragma link C++ class RooAbsCache+ ;
+#pragma link C++ class RooAbsCacheElement+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

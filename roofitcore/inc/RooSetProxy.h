@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetProxy.h,v 1.20 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooSetProxy.h,v 1.21 2007/07/13 21:24:36 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,9 @@
 
 class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
+
+  void* operator new (size_t bytes);
+  void operator delete (void *ptr);
 
   // Constructors, assignment etc.
   RooSetProxy() { _iter = createIterator() ; _owner = 0 ; } ;

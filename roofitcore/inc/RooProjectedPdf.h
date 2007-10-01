@@ -15,7 +15,7 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooAbsReal.h"
-#include "RooNormListManager.h"
+#include "RooObjCacheManager.h"
 #include "RooSetProxy.h" 
 
 class RooProjectedPdf : public RooAbsPdf {
@@ -49,14 +49,20 @@ protected:
   RooSetProxy intobs ;  // observables that p.d.f is integrated over
   RooSetProxy deps ;    // dependents of this p.d.f
 
-  mutable RooNormListManager _projListMgr ; // Partial integral list manager
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    virtual ~CacheElem() {} ;
+    // Payload
+    RooAbsReal* _projection ;
+    // Cache management functions
+    virtual RooArgList containedArgs(Action) ; 
+    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+  } ;
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+  
   mutable RooArgSet* _curNormSet ; //!
-
-  void clearCache() ;  
-  virtual void operModeHook() ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
-
 
   const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, int& code) const ;
   Double_t evaluate() const ;

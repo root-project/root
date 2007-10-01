@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.53 2006/12/07 21:21:33 wverkerke Exp $
+ *    File: $Id: RooRealVar.h,v 1.54 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -113,6 +113,8 @@ protected:
 
   static Bool_t _printScientific ;
   static Int_t  _printSigDigits ;
+
+  virtual void setVal(Double_t value, const char* rangeName) ;
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
   virtual void copyCache(const RooAbsArg* source) ;

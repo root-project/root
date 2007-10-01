@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.h,v 1.89 2007/07/13 21:50:24 wouter Exp $
+ *    File: $Id: RooAbsPdf.h,v 1.90 2007/07/21 21:32:52 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,8 +19,7 @@
 #include "RooAbsReal.h"
 #include "RooRealIntegral.h"
 #include "RooNameSet.h"
-#include "RooNormSetCache.h"
-#include "RooNormManager.h"
+#include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 
 class RooDataSet;
@@ -161,8 +160,8 @@ public:
 
   inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 
-  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
-  virtual void fixAddCoefRange(const char* rangeName=0) ;
+  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
+  virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 
@@ -192,6 +191,7 @@ protected:
   friend class RooSimGenContext ;
   friend class RooConvGenContext ;
   friend class RooSimultaneous ;
+  friend class RooAddGenContextOrig ;
   friend class RooMCStudy ;
 
   Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen,Bool_t resample=kFALSE) const ;
@@ -214,16 +214,22 @@ protected:
 				    Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 				    const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
 
-  virtual void operModeHook() ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
-				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
   mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
-  mutable RooNormManager _normMgr ;  //! Normalization manager
 
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
+    void operModeHook(RooAbsArg::OperMode) {} ;
+    virtual ~CacheElem() { delete _norm ; } ; 
+    virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
+    RooAbsReal* _norm ;
+  } ;
+  mutable RooObjCacheManager _normMgr ; //! The cache manager
+  
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print

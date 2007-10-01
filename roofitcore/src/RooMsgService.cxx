@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,14 +58,16 @@ ClassImp(RooMsgService)
 RooMsgService* RooMsgService::_instance = 0 ;
 
 
-RooMsgService::RooMsgService() 
+RooMsgService::RooMsgService() : _debugCount(0)
 {
   // Constructor
   _devnull = new ofstream("/dev/null") ;
   addStream(WARNING) ;
   addStream(INFO,Topic("Generation")) ;
   addStream(INFO,Topic("Plotting")) ;
-  addStream(INFO,Topic("Integration")) ;
+  addStream(INFO,Topic("Fitting")) ;
+  // addStream(INFO,Topic("Integration")) ;
+  addStream(INFO,Topic("Optimization")) ;
   addStream(INFO,Topic("Minimization")) ;
 }
 
@@ -160,6 +162,11 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
   newStream.color = color ;
   newStream.prefix = prefix ;
 
+  // Update debug stream count 
+  if (level==DEBUG) {
+    _debugCount++ ;
+  }
+
   // Configure output
   if (os) {
 
@@ -207,6 +214,12 @@ void RooMsgService::deleteStream(Int_t id)
 
   vector<StreamConfig>::iterator iter = _streams.begin() ;
   iter += id ;
+
+  // Update debug stream count 
+  if (iter->minLevel==DEBUG) {
+    _debugCount-- ;
+  }
+
   _streams.erase(iter) ;
 }
 
@@ -219,6 +232,12 @@ void RooMsgService::setStreamStatus(Int_t id, Bool_t flag)
     cout << "RooMsgService::setStreamStatus() ERROR: invalid stream ID " << id << endl ;
     return ;
   }
+
+  // Update debug stream count 
+  if (_streams[id].minLevel==DEBUG) {
+    _debugCount += flag ? 1 : -1 ;
+  }
+
   _streams[id].active = flag ;
 }
 
@@ -282,6 +301,7 @@ Int_t RooMsgService::activeStream(const TObject* self, const char* topic, MsgLev
 Bool_t RooMsgService::StreamConfig::match(MsgLevel level, const char* top, const RooAbsArg* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
+  if (!active) return kFALSE ;
   if (level<minLevel) return kFALSE ;
   if (topic.size()>0 && topic!=top) return kFALSE ;
   if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;

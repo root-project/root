@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.h,v 1.74 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsReal.h,v 1.75 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,7 @@ class RooAbsCategoryLValue ;
 class RooCategory ;
 class RooLinkedList ;
 class RooNumIntConfig ;
+class RooDataHist ;
 
 class TH1;
 class TH1F;
@@ -137,6 +138,9 @@ public:
                        const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
                        const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
 
+  // Fill a RooDataHist
+  RooDataHist* fillDataHist(RooDataHist *hist, Double_t scaleFactor) const ;
+
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
@@ -163,10 +167,12 @@ protected:
 
   TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0) const ;
 
+ public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0) const;
+ protected:
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analticalIntegral() and generateEvent()
@@ -215,21 +221,12 @@ protected:
 
   RooNumIntConfig* _specIntegratorConfig ; //! Numeric integrator configuration specific for this object
 
+  Bool_t   _treeVar ;       // !do not persist
+
   static Bool_t _cacheCheck ;
 
   friend class RooDataProjBinding ;
   friend class RooAbsOptGoodnessOfFit ;
-
-  // Dirty-state and constant term optimization used 
-  // in RooAbsOptGoodnessOfFit and RooDataProjBinding
-  void optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;
-  void doConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;
-  void undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet, Bool_t verbose) ;  
-
-  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList, const RooArgSet* normSet, Bool_t verbose) ;
-  void findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList, Bool_t verbose) ;
-  void findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList, Bool_t verbose) ;
-  Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
   
   struct PlotOpt {
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), projSet(0), precision(1e-3), shiftToZero(kFALSE),

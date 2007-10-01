@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -134,23 +134,30 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
 
       return i ;
     } else {
+
       // Existing slot, compare with current list, if matched return index
       Bool_t match(kTRUE) ;
+
+      // Check that array contents is identical
       for (j=0 ; j<size ; j++) {
 	if (_clArr[i][j] != codeList[j]) match=kFALSE ;
-	if (_asArr1[i] && !set1) match=kFALSE ;
-	if (!_asArr1[i] && set1) match=kFALSE ;
-	if (_asArr2[i] && !set2) match=kFALSE ;
-	if (!_asArr2[i] && set2) match=kFALSE ;
-	if (_asArr3[i] && !set3) match=kFALSE ;
-	if (!_asArr3[i] && set3) match=kFALSE ;
-	if (_asArr4[i] && !set4) match=kFALSE ;
-	if (!_asArr4[i] && set4) match=kFALSE ;
-	if (_asArr1[i] && set1 && !set1->equals(*_asArr1[i])) match=kFALSE ;
-	if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) match=kFALSE ;	
-	if (_asArr3[i] && set3 && !set3->equals(*_asArr3[i])) match=kFALSE ;	
-	if (_asArr4[i] && set4 && !set4->equals(*_asArr4[i])) match=kFALSE ;	
       }
+      // Check that supplied configuration of lists is identical
+      if (_asArr1[i] && !set1) match=kFALSE ;
+      if (!_asArr1[i] && set1) match=kFALSE ;
+      if (_asArr2[i] && !set2) match=kFALSE ;
+      if (!_asArr2[i] && set2) match=kFALSE ;
+      if (_asArr3[i] && !set3) match=kFALSE ;
+      if (!_asArr3[i] && set3) match=kFALSE ;
+      if (_asArr4[i] && !set4) match=kFALSE ;
+      if (!_asArr4[i] && set4) match=kFALSE ;
+
+      // Check that contents of arrays is identical
+      if (_asArr1[i] && set1 && !set1->equals(*_asArr1[i])) match=kFALSE ;
+      if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) match=kFALSE ;	
+      if (_asArr3[i] && set3 && !set3->equals(*_asArr3[i])) match=kFALSE ;	
+      if (_asArr4[i] && set4 && !set4->equals(*_asArr4[i])) match=kFALSE ;	
+
       if (match) {
 	if (set1) delete set1 ;
 	if (set2) delete set2 ;

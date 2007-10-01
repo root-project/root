@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.rdl,v 1.14 2005/06/20 15:44:45 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,13 +37,15 @@ public:
   // Constructors, assignment etc
   inline RooAbsGoodnessOfFit() { }
   RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
+		      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name=0);
   virtual ~RooAbsGoodnessOfFit();
   virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) = 0 ;
+				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
+				      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) = 0 ;
 
-  virtual void constOptimize(ConstOpCode opcode) ;
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
 
 protected:
@@ -69,6 +71,7 @@ protected:
   RooAbsData* _data ;
   const RooArgSet* _projDeps ;
   const char*    _rangeName ; //! 
+  const char*    _addCoefRangeName ; //!
   Bool_t _splitRange ;
   Int_t _simCount ;
   Bool_t _verbose ;
@@ -76,8 +79,8 @@ protected:
 private:  
 
   Bool_t initialize() ;
-  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName) ;    
-  void initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName) ;
+  void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
+  void initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
 
   mutable Bool_t _init ;
   GOFOpMode   _gofOpMode ;

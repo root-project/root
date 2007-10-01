@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,11 @@
 
 #include "RooClassFactory.h"
 #include "RooClassFactory.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "RooArgList.h"
+#include "RooMsgService.h"
+#include "TInterpreter.h"
 #include <fstream>
 #include <vector>
 #include <string>
@@ -41,18 +46,144 @@ RooClassFactory::~RooClassFactory()
 {
 }
 
-Bool_t RooClassFactory::makePdf(const char* name, const char* argNames, Bool_t hasAnaInt, Bool_t hasIntGen) 
+
+Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
-  return makeClass("RooAbsPdf",name,argNames,hasAnaInt,hasIntGen) ;
+  string realArgNames,catArgNames ;
+  TIterator* iter = vars.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsReal*>(arg)) {
+      if (realArgNames.size()>0) realArgNames += "," ;
+      realArgNames += arg->GetName() ;
+    } else if (dynamic_cast<RooAbsCategory*>(arg)) {
+      if (catArgNames.size()>0) catArgNames += "," ;
+      catArgNames += arg->GetName() ;
+    } else {
+      oocoutE((RooAbsArg*)0,"InputArguments") << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName() 
+					      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
+    }
+  }
+  delete iter ;
+
+  Bool_t ret = makePdf(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?kTRUE:kFALSE,kFALSE,intExpression) ;
+  if (ret) {
+    return ret ;
+  }
+ 
+  if (gInterpreter->GetRootMapFiles()==0) {
+    gInterpreter->EnableAutoLoading() ;
+  }
+
+  TInterpreter::EErrorCode ecode;
+  gInterpreter->ProcessLineSynch(Form(".L %s.cxx+",name),&ecode) ;
+  return (ecode!=TInterpreter::kNoError) ;
 }
 
-Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, Bool_t hasAnaInt) 
+
+Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
-  return makeClass("RooAbsReal",name,argNames,hasAnaInt) ;
+  string realArgNames,catArgNames ;
+  TIterator* iter = vars.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsReal*>(arg)) {
+      if (realArgNames.size()>0) realArgNames += "," ;
+      realArgNames += arg->GetName() ;
+    } else if (dynamic_cast<RooAbsCategory*>(arg)) {
+      if (catArgNames.size()>0) catArgNames += "," ;
+      catArgNames += arg->GetName() ;
+    } else {
+      oocoutE((RooAbsArg*)0,"InputArguments") << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName() 
+					      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
+    }
+  }
+  delete iter ;
+
+  Bool_t ret = makeFunction(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?kTRUE:kFALSE,intExpression) ;
+  if (ret) {
+    return ret ;
+  }
+
+  if (gInterpreter->GetRootMapFiles()==0) {
+    gInterpreter->EnableAutoLoading() ;
+  }
+
+  TInterpreter::EErrorCode ecode;
+  gInterpreter->ProcessLineSynch(Form(".L %s.cxx+",name),&ecode) ;
+  return (ecode!=TInterpreter::kNoError) ;
 }
 
-Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, const char* argNames, 
-					Bool_t hasAnaInt, Bool_t hasIntGen)
+
+RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
+{
+  if (gInterpreter->GetRootMapFiles()==0) {
+    gInterpreter->EnableAutoLoading() ;
+  }
+
+  // Construct unique class name for this function expression
+  string className = Form("Roo%sClass",name) ;
+
+  // Use class factory to compile and link specialized function
+  Bool_t error = makeAndCompileFunction(className.c_str(),expression,vars,intExpression) ;
+
+  // Check that class was created OK
+  if (error) {
+    RooErrorHandler::softAbort() ;
+  }
+
+  // Create CINT line that instantiates specialized object
+  string line = Form("new %s(\"%s\",\"%s\"",className.c_str(),name,name) ;
+
+  // Make list of pointer values (represented in hex ascii) to be passed to cint  
+  // Note that the order of passing arguments must match the convention in which
+  // the class code is generated: first all reals, then all categories
+
+  TIterator* iter = vars.createIterator() ;
+  string argList ;
+  // First pass the RooAbsReal arguments in the list order
+  RooAbsArg* var ;
+  while((var=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsReal*>(var)) {
+      argList += Form(",*((RooAbsReal*)%p)",var) ;
+    }
+  }
+  iter->Reset() ;
+  // Next pass the RooAbsCategory arguments in the list order
+  while((var=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsCategory*>(var)) {
+      argList += Form(",*((RooAbsCategory*)%p)",var) ;
+    }
+  }
+  delete iter ;
+
+  line += argList + ") " ;
+
+  // Let CINT instantiate specialized formula
+  return (RooAbsReal*) gInterpreter->ProcessLineSynch(line.c_str()) ;
+}
+
+
+RooAbsPdf* RooClassFactory::makePdfInstance(const char* /*name*/, const char* /*expression*/, 
+					    const RooArgList& /*vars*/, const char* /*intExpression*/)
+{
+  return 0 ;
+}
+
+
+Bool_t RooClassFactory::makePdf(const char* name, const char* argNames, const char* catArgNames, const char* expression, 
+				Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression) 
+{
+  return makeClass("RooAbsPdf",name,argNames,catArgNames,expression,hasAnaInt,hasIntGen,intExpression) ;
+}
+
+Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, const char* catArgNames, const char* expression, Bool_t hasAnaInt, const char* intExpression) 
+{
+  return makeClass("RooAbsReal",name,argNames,catArgNames,expression,hasAnaInt,kFALSE,intExpression) ;
+}
+
+Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, const char* realArgNames, const char* catArgNames, 
+				  const char* expression,  Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression)
 {
   // Check that arguments were given
   if (!baseName) {
@@ -65,22 +196,43 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     return kTRUE ;
   }
 
-  if (!argNames) {
+  if ((!realArgNames || !*realArgNames) && (!catArgNames || !*catArgNames)) {
     cout << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
     return kTRUE ;
   }
 
-  // Parse comma separated list of argument names into list of strings
-  char* buf = new char[strlen(argNames)+1] ;
-  strcpy(buf,argNames) ;
-  char* token = strtok(buf,",") ;
-  vector<string> alist ;
-  while(token) {
-    alist.push_back(token) ;
-    token = strtok(0,",") ;
+  if (intExpression && !hasAnaInt) {
+    cout << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
+    return kTRUE ;
   }
-  delete[] buf ;
 
+  // Parse comma separated list of argument names into list of strings
+  vector<string> alist ;
+  vector<bool> isCat ;
+
+  if (realArgNames && *realArgNames) {
+    char* buf = new char[strlen(realArgNames)+1] ;
+    strcpy(buf,realArgNames) ;
+    char* token = strtok(buf,",") ;
+    while(token) {
+      alist.push_back(token) ;
+      isCat.push_back(false) ;
+      token = strtok(0,",") ;
+    }
+    delete[] buf ;
+  }
+  if (catArgNames && *catArgNames) {
+    char* buf = new char[strlen(catArgNames)+1] ;
+    strcpy(buf,catArgNames) ;
+    char* token = strtok(buf,",") ;
+    while(token) {
+      alist.push_back(token) ;
+      isCat.push_back(true) ;      
+      token = strtok(0,",") ;
+    }
+    delete[] buf ;
+  }
+  
   TString impFileName(className), hdrFileName(className) ;
   impFileName += ".cxx" ;
   hdrFileName += ".h" ;
@@ -92,7 +244,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   hf << "/*****************************************************************************" << endl
      << " * Project: RooFit                                                           *" << endl
      << " *                                                                           *" << endl
-     << " * Copyright (c) 2000-2005, Regents of the University of California          *" << endl
+     << " * Copyright (c) 2000-2007, Regents of the University of California          *" << endl
      << " *                          and Stanford University. All rights reserved.    *" << endl
      << " *                                                                           *" << endl
      << " * Redistribution and use in source and binary forms,                        *" << endl
@@ -105,7 +257,9 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << "" << endl     
      << "#include \"" << baseName << ".h\"" << endl
      << "#include \"RooRealProxy.h\"" << endl
+     << "#include \"RooCategoryProxy.h\"" << endl
      << "#include \"RooAbsReal.h\"" << endl
+     << "#include \"RooAbsCategory.h\"" << endl
      << " " << endl
      << "class " << className << " : public " << baseName << " {" << endl
      << "public:" << endl
@@ -114,7 +268,11 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   // Insert list of input arguments
   unsigned int i ;
   for (i=0 ; i<alist.size() ; i++) { 
-    hf << "	      RooAbsReal& _" ;
+    if (!isCat[i]) {
+      hf << "	      RooAbsReal& _" ;
+    } else {
+      hf << "	      RooAbsCategory& _" ;
+    }
     hf << alist[i] ;
     if (i==alist.size()-1) {
       hf << ");" << endl ;
@@ -146,7 +304,11 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 
   // Insert list of input arguments
   for (i=0 ; i<alist.size() ; i++) { 
-    hf << "  RooRealProxy " << alist[i] << " ;" << endl ;
+    if (!isCat[i]) {
+      hf << "  RooRealProxy " << alist[i] << " ;" << endl ;
+    } else {
+      hf << "  RooCategoryProxy " << alist[i] << " ;" << endl ;
+    }
   }
   
   hf << "  " << endl 
@@ -183,6 +345,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 
      << " #include \"" << className << ".h\" " << endl 
      << " #include \"RooAbsReal.h\" " << endl 
+     << " #include \"RooAbsCategory.h\" " << endl 
      << endl 
 
      << " ClassImp(" << className << ") " << endl 
@@ -192,7 +355,11 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 
   // Insert list of proxy constructors
   for (i=0 ; i<alist.size() ; i++) { 
-    cf << "                        RooAbsReal& _" << alist[i] ;
+    if (!isCat[i]) {
+      cf << "                        RooAbsReal& _" << alist[i] ;
+    } else {
+      cf << "                        RooAbsCategory& _" << alist[i] ;
+    }
     if (i<alist.size()-1) {
       cf << "," ;
     } else {
@@ -238,13 +405,30 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << " Double_t " << className << "::evaluate() const " << endl 
      << " { " << endl 
      << "   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE " << endl 
-     << "   return 1.0 ; " << endl
+     << "   return " << expression << " ; " << endl
      << " } " << endl 
      << endl 
      << endl 
      << endl ;
 
   if (hasAnaInt) {
+
+    vector<string> intObs ;
+    vector<string> intExpr ;
+    // Parse analytical integration expression if provided
+    // Expected form is observable:expression,observable,observable:expression;[...]
+    if (intExpression && *intExpression) {
+      char* buf = new char[strlen(intExpression)+1] ;
+      strcpy(buf,intExpression) ;
+      char* ptr = strtok(buf,":") ;
+      while(ptr) {
+	intObs.push_back(ptr) ;
+	intExpr.push_back(strtok(0,";")) ;
+	ptr = strtok(0,":") ;
+      }
+      delete[] buf ;
+    }
+    
     cf << " Int_t " << className << "::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const  " << endl 
        << " { " << endl 
        << "   // LIST HERE OVER WHICH VARIABLES ANALYTICAL INTEGRATION IS SUPPORTED, " << endl 
@@ -252,9 +436,17 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
        << "   // THE EXAMPLE BELOW ASSIGNS CODE 1 TO INTEGRATION OVER VARIABLE X" << endl 
        << "   // YOU CAN ALSO IMPLEMENT MORE THAN ONE ANALYTICAL INTEGRAL BY REPEATING THE matchArgs " << endl
        << "   // EXPRESSION MULTIPLE TIMES" << endl 
-       << endl 
-       << "   // if (matchArgs(allVars,analVars,x)) return 1 ; " << endl 
-       << "   return 0 ; " << endl 
+       << endl  ;
+
+    if (intObs.size()>0) {
+      for (UInt_t i=0 ; i<intObs.size() ; i++) {
+	cf << "   if (matchArgs(allVars,analVars," << intObs[i] << ")) return " << i+1 << " ; " << endl ;
+      }
+    } else {
+      cf << "   // if (matchArgs(allVars,analVars,x)) return 1 ; " << endl ;
+    }
+
+    cf << "   return 0 ; " << endl 
        << " } " << endl 
        << endl 
        << endl 
@@ -265,10 +457,18 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
        << "   // RETURN ANALYTICAL INTEGRAL DEFINED BY RETURN CODE ASSIGNED BY getAnalyticalIntegral" << endl
        << "   // THE MEMBER FUNCTION x.min(rangeName) AND x.max(rangeName) WILL RETURN THE INTEGRATION" << endl
        << "   // BOUNDARIES FOR EACH OBSERVABLE x" << endl 
-       << endl 
-       << "   // assert(code==1) ; " << endl 
-       << "   // return (x.max(rangeName)-x.min(rangeName)) ; " << endl 
-       << "   return 0 ; " << endl
+       << endl ;
+
+    if (intObs.size()>0) {
+      for (UInt_t i=0 ; i<intObs.size() ; i++) {
+	cf << "   if (code==" << i+1 << ") { return (" << intExpr[i] << ") ; } " << endl ;
+      }      
+    } else {
+      cf << "   // assert(code==1) ; " << endl 
+	 << "   // return (x.max(rangeName)-x.min(rangeName)) ; " << endl ;
+    }
+
+    cf << "   return 0 ; " << endl
        << " } " << endl 
        << endl 
        << endl 

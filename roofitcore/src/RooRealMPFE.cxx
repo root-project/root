@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -209,7 +209,7 @@ void RooRealMPFE::serverLoop()
       read(_pipeToServer[0],&code,sizeof(ConstOpCode)) ;
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
 			       << ") IPC fromClient> ConstOpt " << code << endl ; 
-      ((RooAbsReal&)_arg.arg()).constOptimize(code) ;      
+      ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(code) ;      
       break ;
 
     case Verbose:
@@ -385,7 +385,7 @@ void RooRealMPFE::standby()
 }
 
 
-void RooRealMPFE::constOptimize(ConstOpCode opcode) 
+void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
 #ifndef _WIN32
   if (_state==Client) {
@@ -400,7 +400,7 @@ void RooRealMPFE::constOptimize(ConstOpCode opcode)
 #endif // _WIN32
 
   if (_state==Inline) {
-    ((RooAbsReal&)_arg.arg()).constOptimize(opcode) ;
+    ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(opcode) ;
   }
 }
 

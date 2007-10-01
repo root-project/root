@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,20 +43,23 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooNLLVar::RooNLLVar","ProjectedObservables",0,&_emptySet
 									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
 {
   // RooNLLVar constructor. Optional arguments taken
   //
-  //  Extended()   -- Include extended term in calculation
-  //  NumCPU()     -- Activate parallel processing feature
-  //  Range()      -- Fit only selected region
-  //  SplitRange() -- Fit range is split by index catory of simultaneous PDF
+  //  Extended()     -- Include extended term in calculation
+  //  NumCPU()       -- Activate parallel processing feature
+  //  Range()        -- Fit only selected region
+  //  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
+  //  SplitRange()   -- Fit range is split by index catory of simultaneous PDF
   //  ConditionalObservables() -- Define conditional observables 
-  //  Verbose()    -- Verbose output of GOF framework classes
+  //  Verbose()      -- Verbose output of GOF framework classes
 
   RooCmdConfig pc("RooNLLVar::RooNLLVar") ;
+  pc.allowUndefined() ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
@@ -69,8 +72,8 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     Bool_t extended, const char* rangeName, Int_t nCPU, Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),rangeName,nCPU,verbose,splitRange),
+		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,Int_t nCPU, Bool_t verbose, Bool_t splitRange) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),rangeName,addCoefRangeName,nCPU,verbose,splitRange),
   _extended(extended)
 {
   
@@ -78,8 +81,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,Int_t nCPU,Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,rangeName,nCPU,verbose,splitRange),
+		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, Int_t nCPU,Bool_t verbose, Bool_t splitRange) : 
+  RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,rangeName,addCoefRangeName,nCPU,verbose,splitRange),
   _extended(extended)
 {
   
@@ -111,7 +114,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
     if (_dataClone->weight()==0) continue ;
 
     //cout << "RooNLLVar(" << GetName() << ") wgt[" << i << "] = " << _dataClone->weight() << endl ;
-
+    
+    //cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet);
     sumWeight += _dataClone->weight() ;
 

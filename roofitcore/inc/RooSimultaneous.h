@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.41 2005/07/12 11:29:38 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.h,v 1.42 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +22,9 @@
 #include "RooCategoryProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormListManager.h"
+#include "RooObjCacheManager.h"
+#include "RooAbsCacheElement.h"
+#include "RooArgList.h"
 class RooAbsCategoryLValue ;
 class RooFitResult ;
 class RooPlot ;
@@ -85,8 +87,14 @@ protected:
   mutable RooSetProxy _plotCoefNormSet ;
   const TNamed* _plotCoefNormRange ;
 
-  mutable RooNormListManager _normListMgr ; // Component normalization list manager
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    virtual ~CacheElem() {} ;
+    RooArgList containedArgs(Action) { return RooArgList(_partIntList) ; }
+    RooArgList _partIntList ;
+  } ;
+  mutable RooObjCacheManager _partIntMgr ; // Component normalization manager
+
 
   friend class RooSimGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 

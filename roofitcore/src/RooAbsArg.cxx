@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TObjString.h"
 
+#include "RooMsgService.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
@@ -44,10 +45,12 @@
 #include "RooAbsRealLValue.h"
 #include "RooTrace.h"
 #include "RooStringVar.h" 
+#include "RooRealIntegral.h"
 
 #include <string.h>
 #include <iomanip>
 #include <fstream>
+#include <algorithm>
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -58,6 +61,7 @@ ClassImp(RooAbsArg)
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
+Bool_t RooAbsArg::_flipAClean(kFALSE) ;
 Int_t  RooAbsArg::_nameLength(0) ;
 
 RooAbsArg::RooAbsArg() : 
@@ -566,6 +570,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg*
   RooAbsArg* server ;
   while ((!result && (server=(RooAbsArg*)sIter->Next()))) {
     if (dependsOn(*server,ignoreArg,valueOnly)) {
+//       cout << "dependsOnValue(" << GetName() << ") result is true for arg " << server->GetName() << endl ;
       result= kTRUE;
     }
   }
@@ -673,9 +678,11 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
-  
+  if (dologD("Dirty")) {
+    cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
+	 << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+  }
+
   _valueDirty = kTRUE ;
   
   _clientValueIter->Reset() ;
@@ -802,6 +809,9 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   }
   
   // Optional subclass post-processing
+  for (Int_t i=0 ;i<numCaches() ; i++) {
+    ret |= getCache(i)->redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
+  }
   ret |= redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
   
   return ret ;
@@ -1191,6 +1201,7 @@ Int_t RooAbsArg::Compare(const TObject* other) const
 }
 
 
+
 void RooAbsArg::printDirty(Bool_t depth) const 
 {
   // Print information about current value dirty state information.
@@ -1218,14 +1229,145 @@ void RooAbsArg::printDirty(Bool_t depth) const
 }
 
 
-void RooAbsArg::constOptimize(ConstOpCode opcode) 
+void RooAbsArg::optimizeCacheMode(const RooArgSet& observables) 
 {
-  // Default implementation -- forward to all servers
+  RooLinkedList proc;
+  RooArgSet opt ;
+  optimizeCacheMode(observables,opt,proc) ;
+  
+  coutI("Optimization") << "RooAbsArg::optimizeCacheMode(" << GetName() << ") nodes " << opt << " depend on observables, "
+			<< "changing cache operation mode from change tracking to unconditional evaluation" << endl ;
+}
+
+
+void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optimizedNodes, RooLinkedList& processedNodes) 
+{
+  // Cache mode optimization (tracks changes & do lazy evaluation vs evaluate always)
+
+  // Optimization applies only to branch nodes, not to leaf nodes
+  if (!isDerived()) {
+    return ;
+  }
+
+
+  // Terminate call if this node was already processed (tree structure may be cyclical)
+  if (processedNodes.FindObject(this)) {
+    return ;
+  } else {
+    processedNodes.Add(this) ;
+  }
+
+  // Set cache mode operator to 'AlwaysDirty' if we depend on any of the given observables
+  if (dependsOnValue(observables)) {
+
+    if (dynamic_cast<RooRealIntegral*>(this)) {
+      cxcoutW("Integration") << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
+    }
+    optimizedNodes.add(*this) ;
+    setOperMode(ADirty) ;
+  }
+  // Process any RooAbsArgs contained in any of the caches of this object
+  for (Int_t i=0 ;i<numCaches() ; i++) {
+    getCache(i)->optimizeCacheMode(observables,optimizedNodes,processedNodes) ;
+  }
+  
+  // Forward calls to all servers
   TIterator* sIter = serverIterator() ;
   RooAbsArg* server ;
   while((server=(RooAbsArg*)sIter->Next())) {
-//     cout << GetName() << " forwarding constOpt to " << server->GetName() << endl ;
-    server->constOptimize(opcode) ;
+    server->optimizeCacheMode(observables,optimizedNodes,processedNodes) ;
+  }
+  delete sIter ;
+  
+}
+
+Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList) 
+{
+  RooLinkedList proc ;
+  Bool_t ret = findConstantNodes(observables,cacheList,proc) ;
+
+  // If node can be optimized and hasn't been identified yet, add it to the list
+  coutI("Optimization") << "RooAbsArg::findConstantNodes(" << GetName() << "): components " 
+			<< cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << endl ;
+
+  return ret ;
+}
+
+
+
+Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes) 
+{
+  // Find branch nodes with all-constant parameters, and add them to the list of
+  // nodes that can be cached with a dataset in a test statistic calculation
+
+  // Caching only applies to branch nodes
+  if (!isDerived()) {
+    return kFALSE;
+  }
+
+  // Terminate call if this node was already processed (tree structure may be cyclical)
+  if (processedNodes.FindObject(this)) {
+    return kFALSE ;
+  } else {
+    processedNodes.Add(this) ;
+  }
+
+  // Check if node depends on any non-constant parameter
+  Bool_t canOpt(kTRUE) ;
+  RooArgSet* paramSet = getParameters(observables) ;
+  TIterator* iter = paramSet->createIterator() ;
+  RooAbsArg* param ;
+  while((param = (RooAbsArg*)iter->Next())) {
+    if (!param->isConstant()) {
+      canOpt=kFALSE ;
+      break ;
+    }
+  }
+  delete iter ;
+  delete paramSet ;
+
+  // If yes, list node eligible for caching, if not test nodes one level down
+  if (canOpt) {
+
+    if (!cacheList.find(GetName()) && dependsOnValue(observables)) {
+
+      // Add to cache list
+      cacheList.add(*this) ;
+    } 
+
+  } else {
+
+    // If not, see if next level down can be cached
+    TIterator* sIter = serverIterator() ;
+    RooAbsArg* server ;
+    while((server=(RooAbsArg*)sIter->Next())) {
+      if (server->isDerived()) {
+	server->findConstantNodes(observables,cacheList,processedNodes) ;
+      }
+    }
+    delete sIter ;
+  }
+
+  // Forward call to all cached contained in current object
+  for (Int_t i=0 ;i<numCaches() ; i++) {
+    getCache(i)->findConstantNodes(observables,cacheList,processedNodes) ;
+  }  
+  
+  return kFALSE ;
+}
+
+
+
+
+void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode) 
+{
+  // Default implementation -- forward to all servers. 
+  // Actual optimization implemented by TestStatistic classes
+
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* server ;
+  while((server=(RooAbsArg*)sIter->Next())) {
+    server->constOptimizeTestStatistic(opcode) ;
   }
   delete sIter ;
 }
@@ -1237,6 +1379,9 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
   if (mode==_operMode) return ;
 
   _operMode = mode ; 
+  for (Int_t i=0 ;i<numCaches() ; i++) {
+    getCache(i)->operModeHook() ;
+  }
   operModeHook() ; 
 
   // Propagate to all clients
@@ -1251,32 +1396,38 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
 }
 
 
-void RooAbsArg::printCompactTree(const char* indent, const char* filename, const char* namePat)
+void RooAbsArg::printCompactTree(const char* indent, const char* filename, const char* namePat, RooAbsArg* client)
 {
   if (filename) {
     ofstream ofs(filename) ;
-    printCompactTree(ofs,indent,namePat) ;
+    printCompactTree(ofs,indent,namePat,client) ;
   } else {
-    printCompactTree(cout,indent,namePat) ;
+    printCompactTree(cout,indent,namePat,client) ;
   }
 }
 
 
-void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* namePat)
+void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* namePat, RooAbsArg* client)
 {  
   if ( !namePat || TString(GetName()).Contains(namePat)) {
     os << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
     
     if (_serverList.GetSize()>0) {
       switch(operMode()) {
-      case Auto:   os << " [Auto]" << endl ; break ;
-      case AClean: os << " [ACLEAN]" << endl ; break ;
-      case ADirty: os << " [ADIRTY]" << endl ; break ;
+      case Auto:   os << " [Auto]"  ; break ;
+      case AClean: os << " [ACLEAN]" ; break ;
+      case ADirty: os << " [ADIRTY]" ; break ;
       }
-    } else {
-      os << endl ;
+      if (client) {
+	if (isValueServer(*client)) os << "V" ;
+	if (isShapeServer(*client)) os << "S" ;
+      }
     }
+    os << endl ;
 
+    for (Int_t i=0 ;i<numCaches() ; i++) {
+      getCache(i)->printCompactTreeHook(os,indent) ;
+    }
     printCompactTreeHook(os,indent) ;
   }
 
@@ -1285,7 +1436,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
   TIterator * iter = serverIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    arg->printCompactTree(os,indent2,namePat) ;
+    arg->printCompactTree(os,indent2,namePat,this) ;
   }
   delete iter ;
 }
@@ -1377,6 +1528,30 @@ UInt_t RooAbsArg::crc32(const char* data) const
 
 void RooAbsArg::printCompactTreeHook(ostream&, const char *) 
 {
+}
+
+
+void RooAbsArg::registerCache(RooAbsCache& cache) 
+{
+  _cacheList.push_back(&cache) ;
+}
+
+
+void RooAbsArg::unRegisterCache(RooAbsCache& cache) 
+{
+  std::remove(_cacheList.begin(), _cacheList.end(), &cache);
+}
+
+
+Int_t RooAbsArg::numCaches() const 
+{
+  return _cacheList.size() ;
+}
+
+
+RooAbsCache* RooAbsArg::getCache(Int_t index) const 
+{
+  return _cacheList[index] ;
 }
 
 

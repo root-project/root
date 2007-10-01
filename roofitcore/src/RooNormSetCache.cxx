@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,21 +81,10 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
     _asArr = new RooSetPair[_regSize] ;
   }
 
-  // Check if there is an existing entry with possible different allocation counter
-  Int_t oldACindex = index(set1,set2,0,kTRUE) ;
-  if (oldACindex != -1) {
-    // Recycle this one by updating the allocation counters
-    _asArr[oldACindex]._set1ac = RooArgSet::allocationCounter(set1) ;
-    _asArr[oldACindex]._set2ac = RooArgSet::allocationCounter(set2) ;
-    return ;
-  } 
-
   if (!contains(set1,set2)) {
     // Add to cache
     _asArr[_nreg]._set1 = (RooArgSet*)set1 ;
     _asArr[_nreg]._set2 = (RooArgSet*)set2 ;
-    _asArr[_nreg]._set1ac = RooArgSet::allocationCounter(set1) ;
-    _asArr[_nreg]._set2ac = RooArgSet::allocationCounter(set2) ;
     if (_htable) _htable->add((TObject*)&_asArr[_nreg]) ;
     _nreg++ ;
   }
@@ -126,8 +115,6 @@ void RooNormSetCache::expand()
   for (i=0 ; i<_nreg ; i++) {
     asArr_new[i]._set1 = _asArr[i]._set1 ;
     asArr_new[i]._set2 = _asArr[i]._set2 ;
-    asArr_new[i]._set1ac = _asArr[i]._set1ac ;
-    asArr_new[i]._set2ac = _asArr[i]._set2ac ;
     if (_htable) _htable->add((TObject*)&asArr_new[i]) ;
   }
   
@@ -152,8 +139,14 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
   // B - Check if dependents(set1/set2) are compatible with current cache
   RooNameSet nset1d,nset2d ;
 
-  RooArgSet* set1d = set1 ? self->getObservables(*set1) : new RooArgSet ;
-  RooArgSet* set2d = set2 ? self->getObservables(*set2) : new RooArgSet ;
+  RooArgSet *set1d, *set2d ;
+  if (self) {
+    set1d = set1 ? self->getObservables(*set1) : new RooArgSet ;
+    set2d = set2 ? self->getObservables(*set2) : new RooArgSet ;
+  } else {
+    set1d = set1 ? (RooArgSet*)set1->snapshot() : new RooArgSet ;
+    set2d = set2 ? (RooArgSet*)set2->snapshot() : new RooArgSet ;
+  }
 
   nset1d.refill(*set1d) ;
   nset2d.refill(*set2d) ;

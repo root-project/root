@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.36 2005/12/08 15:26:16 wverkerke Exp $
+ *    File: $Id: RooDataHist.h,v 1.37 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
+#include "RooCacheManager.h"
+#include <vector>
+#include <list>
 
 class TObject ;
 class RooAbsArg;
@@ -29,6 +32,7 @@ class Roo1DTable ;
 class RooPlot;
 class RooArgSet ;
 class RooLinkedList ;
+class RooAbsLValue ;
 
 class RooDataHist : public RooTreeData, public RooDirItem {
 public:
@@ -49,6 +53,7 @@ public:
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0) { add(row,weight,-1.) ; }
   virtual void add(const RooArgSet& row, Double_t weight, Double_t sumw2) ;
+  void set(Double_t weight, Double_t wgtErr=-1) ;
   void set(const RooArgSet& row, Double_t weight, Double_t wgtErr=-1) ;
   void set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, Double_t wgtErrHi) ;
 
@@ -70,6 +75,8 @@ public:
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
 
+  TIterator* sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) ;
+  
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ;
   virtual Double_t weightError(ErrorType etype=Poisson) const { 
     Double_t lo,hi ;
@@ -84,6 +91,10 @@ public:
   void dump2() ;
 
 protected:
+
+  friend class RooAbsCachedPdf ;
+  friend class RooDataHistSliceIter ;
+  void setAllWeights(Double_t value) ;
  
   void initialize(Bool_t fillTree=kTRUE) ;
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
@@ -114,8 +125,9 @@ protected:
   mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
   mutable Int_t    _curIndex ; // Current index
 
-  mutable Double_t* _pbinv ; //! Partial bin volume array
-  mutable RooNameSet _pbinvCache ; //! Partial bin volume definition currently cached
+  mutable vector<Double_t>* _pbinv ; //! Partial bin volume array
+  mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; // Cache manager for arrays of partial bin volumes
+  std::list<RooAbsLValue*> _lvvars ; //!
 
 private:
 

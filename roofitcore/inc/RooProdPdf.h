@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.h,v 1.43 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooProdPdf.h,v 1.44 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,7 +21,8 @@
 #include "RooListProxy.h"
 #include "RooLinkedList.h"
 #include "RooAICRegistry.h"
-#include "RooNormListManager.h"
+#include "RooCacheManager.h"
+#include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 
 typedef RooArgList* pRooArgList ;
@@ -94,17 +95,21 @@ protected:
                                  const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
                                  Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
-  void clearCache() ;  
-  mutable RooNormListManager _partListMgr ; //! Partial integral list manager
-  mutable RooNormListManager _partOwnedListMgr ; //! Partial integral list manager for owned components
-  mutable RooLinkedList _partNormListCache[10] ; //! Cache of normalization lists
-  
-  virtual void operModeHook() ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
-
+  // The cache object
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    virtual ~CacheElem() {} ;
+    // Payload
+    RooArgList _partList ;
+    RooArgList _ownedList ;
+    RooLinkedList _normList ;    
+    // Cache management functions
+    virtual RooArgList containedArgs(Action) ;
+    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+  } ;
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+ 
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
 	                               const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const ;

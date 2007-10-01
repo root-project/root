@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.rdl,v 1.6 2005/06/23 07:37:30 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.h,v 1.7 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ public:
   // Function evaluation
   virtual Double_t evaluate() const ;
   friend class RooAbsGoodnessOfFit ;
-  virtual void constOptimize(ConstOpCode opcode) ;
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
 
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;

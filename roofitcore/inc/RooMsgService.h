@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMsgService.h,v 1.1 2007/07/12 20:30:28 wouter Exp $
+ *    File: $Id: RooMsgService.h,v 1.2 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,6 +33,12 @@ class RooAbsArg ;
 #define coutE(a) RooMsgService::instance().log(this,RooMsgService::ERROR,a) 
 #define coutF(a) RooMsgService::instance().log(this,RooMsgService::FATAL,a) 
 
+#define oocoutD(o,a) RooMsgService::instance().log(o,RooMsgService::DEBUG,a) 
+#define oocoutI(o,a) RooMsgService::instance().log(o,RooMsgService::INFO,a) 
+#define oocoutW(o,a) RooMsgService::instance().log(o,RooMsgService::WARNING,a) 
+#define oocoutE(o,a) RooMsgService::instance().log(o,RooMsgService::ERROR,a) 
+#define oocoutF(o,a) RooMsgService::instance().log(o,RooMsgService::FATAL,a) 
+
 #define dologD(a) (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG))
 #define dologI(a) (RooMsgService::instance().isActive(this,a,RooMsgService::INFO))
 #define dologW(a) (RooMsgService::instance().isActive(this,a,RooMsgService::WARNING))
@@ -40,16 +46,26 @@ class RooAbsArg ;
 #define dologF(a) (RooMsgService::instance().isActive(this,a,RooMsgService::FATAL))
 
 // Shortcuts definitions with conditional execution of print expression -- USE WITH CAUTION 
-#define cxcoutD(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG)) RooMsgService::instance().log(this,RooMsgService::DEBUG,a) 
-#define ccxcoutD(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG)) RooMsgService::instance().log(this,RooMsgService::DEBUG,a,kTRUE) 
+#define cxcoutD(a) if (RooMsgService::anyDebug() && RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG)) RooMsgService::instance().log(this,RooMsgService::DEBUG,a) 
+#define ccxcoutD(a) if (RooMsgService::anyDebug() && RooMsgService::instance().isActive(this,a,RooMsgService::DEBUG)) RooMsgService::instance().log(this,RooMsgService::DEBUG,a,kTRUE) 
+#define oocxcoutD(o,a) if (RooMsgService::anyDebug() && RooMsgService::instance().isActive(o,a,RooMsgService::DEBUG)) RooMsgService::instance().log(o,RooMsgService::DEBUG,a) 
+#define ooccxcoutD(o,a) if (RooMsgService::anyDebug() && RooMsgService::instance().isActive(o,a,RooMsgService::DEBUG)) RooMsgService::instance().log(o,RooMsgService::DEBUG,a,kTRUE) 
 #define cxcoutI(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::INFO)) RooMsgService::instance().log(this,RooMsgService::INFO,a) 
 #define ccxcoutI(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::INFO)) RooMsgService::instance().log(this,RooMsgService::INFO,a,kTRUE) 
+#define oocxcoutI(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::INFO)) RooMsgService::instance().log(o,RooMsgService::INFO,a) 
+#define ooccxcoutI(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::INFO)) RooMsgService::instance().log(o,RooMsgService::INFO,a,kTRUE) 
 #define cxcoutW(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::WARNING)) RooMsgService::instance().log(this,RooMsgService::WARNING,a) 
 #define ccxcoutW(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::WARNING)) RooMsgService::instance().log(this,RooMsgService::WARNING,a,kTRUE) 
+#define oocxcoutW(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::WARNING)) RooMsgService::instance().log(o,RooMsgService::WARNING,a) 
+#define ooccxcoutW(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::WARNING)) RooMsgService::instance().log(o,RooMsgService::WARNING,a,kTRUE) 
 #define cxcoutE(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::ERROR)) RooMsgService::instance().log(this,RooMsgService::ERROR,a) 
 #define ccxcoutE(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::ERROR)) RooMsgService::instance().log(this,RooMsgService::ERROR,a,kTRUE) 
+#define oocxcoutE(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::ERROR)) RooMsgService::instance().log(to,RooMsgService::ERROR,a) 
+#define ooccxcoutE(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::ERROR)) RooMsgService::instance().log(o,RooMsgService::ERROR,a,kTRUE) 
 #define cxcoutF(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::FATAL)) RooMsgService::instance().log(this,RooMsgService::FATAL,a) 
 #define ccxcoutF(a) if (RooMsgService::instance().isActive(this,a,RooMsgService::FATAL)) RooMsgService::instance().log(this,RooMsgService::FATAL,a,kTRUE) 
+#define oocxcoutF(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::FATAL)) RooMsgService::instance().log(o,RooMsgService::FATAL,a) 
+#define ooccxcoutF(o,a) if (RooMsgService::instance().isActive(o,a,RooMsgService::FATAL)) RooMsgService::instance().log(o,RooMsgService::FATAL,a,kTRUE) 
 
 class RooMsgService : public TObject {
 public:
@@ -60,6 +76,7 @@ public:
 
   // Access to instance
   static RooMsgService& instance() ;
+  static Bool_t anyDebug() { return instance()._debugCount>0 ; }
 
   // User interface -- Add or delete reporting streams ;
   Int_t addStream(MsgLevel level, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
@@ -112,6 +129,8 @@ protected:
   RooMsgService(const RooMsgService&) ;
 
   static RooMsgService* _instance ;
+  
+  Int_t _debugCount ;
 
   ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
 };

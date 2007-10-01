@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.rdl,v 1.5 2006/07/03 15:37:11 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.h,v 1.6 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,8 @@
 #ifndef ROO_NUM_INT_FACTORY
 #define ROO_NUM_INT_FACTORY
 
-#include <list>
+#include <map>
+#include <string>
 #include "TObject.h"
 #include "RooLinkedList.h"
 #include "RooAbsIntegrator.h"
@@ -43,9 +44,7 @@ protected:
 	 
   friend class RooNumIntConfig ;
 
-  RooLinkedList _integratorList ; // List of integrator prototypes
-  RooLinkedList _nameList ;       // List of integrator names
-  RooLinkedList _depList ;        // List of dependent integrator names
+  std::map<std::string,pair<RooAbsIntegrator*,std::string> > _map ;
 
   RooNumIntFactory(); 
   RooNumIntFactory(const RooNumIntFactory& other) ;

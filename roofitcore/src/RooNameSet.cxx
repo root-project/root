@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ * @(#)root/roofitcore:$Name:  $:$Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -74,6 +74,7 @@ void RooNameSet::refill(const RooArgSet& argSet)
   RooAbsArg* arg ;
   char *ptr=_nameList ;
   char *end=_nameList+_len-2 ;
+  *ptr = 0 ;
   while((arg=(RooAbsArg*)iter->Next())) {    
     const char* argName = arg->GetName() ;
     while((*ptr++ = *argName++)) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.h,v 1.32 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooAbsData.h,v 1.33 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,10 +98,14 @@ public:
 
 protected:
 
+  virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList) =0 ;
+
 
   // Constant term optimizer interface
+  friend class RooAbsArg ;
   friend class RooAbsReal ;
   friend class RooAbsOptGoodnessOfFit ;
+  friend class RooAbsCachedPdf ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) = 0 ;
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) = 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.h,v 1.45 2007/05/11 10:14:56 verkerke Exp $
+ *    File: $Id: RooAddPdf.h,v 1.46 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,7 +21,8 @@
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
 #include "RooNameSet.h"
-#include "RooNormListManager.h"
+#include "RooCacheManager.h"
+#include "RooObjCacheManager.h"
 
 class RooAddPdf : public RooAbsPdf {
 public:
@@ -63,24 +64,32 @@ protected:
   mutable TNamed* _refCoefRangeName ;  //!
 
   Bool_t _projectCoefs ;
-  void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
-  mutable RooNormListManager _projListMgr ; //!
-  mutable RooArgList* _pdfProjList ;        //!
-
-  void syncSuppNormList(const RooArgSet* nset, const char* rangeName) const ;
-  mutable RooNormListManager _suppListMgr ; //!
-  mutable RooArgSet* _lastSupNormSet ;      //!
-
-  void updateCoefCache(const RooArgSet* nset, const RooArgSet* snset, const char* rangeName) const ;
   mutable Double_t* _coefCache ; //!
+
+
+  class CacheElem : public RooAbsCacheElement {
+  public:
+    virtual ~CacheElem() {} ;
+
+    RooArgList _suppNormList ; // Supplemental normalization list
+
+    RooArgList _projList ; // Projection integrals to be multiplied with coefficients
+    RooArgList _suppProjList ; // Projection integrals to be multiplied with coefficients for supplemental normalization terms
+    RooArgList _refRangeProjList ; // Range integrals to be multiplied with coefficients (reference range)
+    RooArgList _rangeProjList ; // Range integrals to be multiplied with coefficients (target range)
+
+    virtual RooArgList containedArgs(Action) ;
+
+  } ;
+  mutable RooObjCacheManager _projCacheMgr ;  
+  CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
+  void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
+
   
   friend class RooAddGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
-  virtual void operModeHook() ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
-				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
