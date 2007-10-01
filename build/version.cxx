@@ -7,6 +7,8 @@ int main(int argc, char *argv[])
    // Author: Fons Rademakers   11/10/99
 
    const char *in  = "build/version_number";
+   const char *inr = "etc/svninfo.txt";
+
    FILE *fp = fopen(in, "r");
    if (!fp) {
       printf("%s: can not open input file %s\n", argv[0], in);
@@ -16,9 +18,22 @@ int main(int argc, char *argv[])
    fgets(vers, sizeof(vers), fp);
    if (vers[strlen(vers)-1] == '\n') vers[strlen(vers)-1] = 0;
    fclose(fp);
+
+   fp = fopen(inr, "r");
+   if (!fp) {
+      printf("%s: can not open input file %s\n", argv[0], in);
+      exit(1);
+   }
+   char branch[2048];
+   fgets(branch, sizeof(branch), fp);
+   if (branch[strlen(branch)-1] == '\n') branch[strlen(branch)-1] = 0;
+   char revs[32];
+   fgets(revs, sizeof(revs), fp);
+   if (revs[strlen(revs)-1] == '\n') revs[strlen(revs)-1] = 0;
+   fclose(fp);
    
    const char *out = "base/inc/RVersion.h";
-   FILE *fp = fopen(out, "w");
+   fp = fopen(out, "w");
    if (!fp) {
       printf("%s: can not open output file %s\n", argv[0], out);
       exit(1);
@@ -38,13 +53,16 @@ int main(int argc, char *argv[])
    fprintf(fp, " *\n");
    fprintf(fp, "*/\n\n");
 
-   int xx, yy, zz;
+   int xx, yy, zz, rev;
    sscanf(vers, "%d.%d/%d", &xx, &yy, &zz);
    int vers_code = (xx << 16) + (yy << 8) + zz;
+   sscanf(revs, "%d", &rev);
 
    fprintf(fp, "#define ROOT_RELEASE \"%s\"\n", vers);
    fprintf(fp, "#define ROOT_RELEASE_DATE \"%s\"\n", __DATE__);
    fprintf(fp, "#define ROOT_RELEASE_TIME \"%s\"\n", __TIME__);
+   fprintf(fp, "#define ROOT_SVN_REVISION %d\n", rev);
+   fprintf(fp, "#define ROOT_SVN_BRANCH \"%s\"\n", branch);
    fprintf(fp, "#define ROOT_VERSION_CODE %d\n", vers_code);
    fprintf(fp, "#define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))\n");
    fprintf(fp, "\n#endif\n");

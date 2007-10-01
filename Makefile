@@ -349,6 +349,12 @@ F77LIBS      := $(LIBFRTBEGIN) $(F77LIBS)
 endif
 endif
 
+##### Store SVN revision number #####
+
+ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
+SVNREV  := $(shell build/unix/svninfo.sh)
+endif
+
 ##### Utilities #####
 
 ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
@@ -963,6 +969,7 @@ uninstall:
 
 showbuild:
 	@echo "ROOTSYS            = $(ROOTSYS)"
+	@echo "SVNREV             = $(SVNREV)"
 	@echo "PLATFORM           = $(PLATFORM)"
 	@echo "OPT                = $(OPT)"
 	@echo ""

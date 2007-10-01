@@ -277,6 +277,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltDate       = IDATQQ(__DATE__);
    fBuiltTime       = ITIMQQ(__TIME__);
 
+   ReadSvnInfo();
+
    fClasses         = new THashTable(800,3);
    //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
@@ -1480,6 +1482,72 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    }
 
    return result;
+}
+
+//______________________________________________________________________________
+void TROOT::ReadSvnInfo()
+{
+   // Read Subversion revision information and branch name from the
+   // etc/svnrev.txt file.
+
+   fSvnRevision = 0;
+#ifdef ROOT_SVN_REVISION
+   fSvnRevision = ROOT_SVN_REVISION;
+#endif
+#ifdef ROOT_SVN_BRANCH
+   fSvnBranch = ROOT_SVN_BRANCH;
+#endif
+
+   TString svninfo = "svninfo.txt";
+#ifdef ROOTETCDIR
+   char *s = gSystem->ConcatFileName(ROOTETCDIR, svninfo);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   char *s = gSystem->ConcatFileName(etc, svninfo);
+#endif
+
+   FILE *fp = fopen(s, "r");
+   if (fp) {
+      TString s;
+      // read branch name
+      s.Gets(fp);
+      fSvnBranch = s;
+      // read revision number
+      s.Gets(fp);
+      Int_t r = s.Atoi();
+      if (r > 0)
+         fSvnRevision = r;
+      // read date/time make was run
+      s.Gets(fp);
+      fSvnDate = s;
+      fclose(fp);
+   }
+}
+
+//______________________________________________________________________________
+const char *TROOT::GetSvnDate()
+{
+   // Return date/time make was run.
+
+   if (fSvnDate == "") {
+      Int_t iday,imonth,iyear, ihour, imin;
+      static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                      "Jul", "Aug", "Sep", "Oct", "Nov", "De" };
+      Int_t idate = gROOT->GetBuiltDate();
+      Int_t itime = gROOT->GetBuiltTime();
+      iday   = idate%100;
+      imonth = (idate/100)%100;
+      iyear  = idate/10000;
+      ihour  = itime/100;
+      imin   = itime%100;
+      fSvnDate.Form("%s %02d %4d, %02d:%02d:00", months[imonth-1], iday, iyear, ihour, imin);
+   }
+   return fSvnDate;
 }
 
 //______________________________________________________________________________

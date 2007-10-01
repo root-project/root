@@ -143,6 +143,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    if (!noLogo && !NoLogoOpt())
       PrintLogo();
+   else
+      PrintLogo(kTRUE);
 
    // Load some frequently used includes
    Int_t includes = gEnv->GetValue("Rint.Includes",1);
@@ -372,66 +374,50 @@ void TRint::Run(Bool_t retrn)
 }
 
 //______________________________________________________________________________
-void TRint::PrintLogo()
+void TRint::PrintLogo(Bool_t lite)
 {
    // Print the ROOT logo on standard output.
 
-   Int_t iday,imonth,iyear;
-   static const char *months[] = {"January","February","March","April","May",
-                                  "June","July","August","September","October",
-                                  "November","December"};
    const char *root_version = gROOT->GetVersion();
-   Int_t idatqq = gROOT->GetVersionDate();
-   iday   = idatqq%100;
-   imonth = (idatqq/100)%100;
-   iyear  = (idatqq/10000);
-   char *version_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
-   idatqq = gROOT->GetBuiltDate();
-   iday   = idatqq%100;
-   imonth = (idatqq/100)%100;
-   iyear  = (idatqq/10000);
-   char *built_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
 
+   if (!lite) {
+      static const char *months[] = {"January","February","March","April","May",
+                                     "June","July","August","September","October",
+                                     "November","December"};
+      Int_t idatqq = gROOT->GetVersionDate();
+      Int_t iday   = idatqq%100;
+      Int_t imonth = (idatqq/100)%100;
+      Int_t iyear  = (idatqq/10000);
+      char *version_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
 
-   Printf("  *******************************************");
-   Printf("  *                                         *");
-   Printf("  *        W E L C O M E  to  R O O T       *");
-   Printf("  *                                         *");
-   Printf("  *   Version%10s %17s   *", root_version, version_date);
-// Printf("  *            Development version          *");
-   Printf("  *                                         *");
-   Printf("  *  You are welcome to visit our Web site  *");
-   Printf("  *          http://root.cern.ch            *");
-   Printf("  *                                         *");
-   Printf("  *******************************************");
+      Printf("  *******************************************");
+      Printf("  *                                         *");
+      Printf("  *        W E L C O M E  to  R O O T       *");
+      Printf("  *                                         *");
+      Printf("  *   Version%10s %17s   *", root_version, version_date);
+      Printf("  *                                         *");
+      Printf("  *  You are welcome to visit our Web site  *");
+      Printf("  *          http://root.cern.ch            *");
+      Printf("  *                                         *");
+      Printf("  *******************************************");
+      Printf("");
+      Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
+             gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
+             gSystem->GetBuildArch());
 
-   if (strstr(gVirtualX->GetName(), "TTF")) {
-      Int_t major, minor, patch;
-      //TTF::Version(major, minor, patch);
-      // avoid dependency on libGraf and hard code, will not change too often
-      major = 2; minor = 1; patch = 9;
-      Printf("\nFreeType Engine v%d.%d.%d used to render TrueType fonts.",
-             major, minor, patch);
-   }
-#if defined (_REENTRANT) || defined (WIN32)
-   else
-      printf("\n");
-   Printf("Compiled on %s for %s with thread support.", built_date,
-          gSystem->GetBuildArch());
-#else
-   else
-      printf("\n");
-   Printf("Compiled on %s for %s.", built_date, gSystem->GetBuildArch());
-#endif
-
-   gInterpreter->PrintIntro();
+      gInterpreter->PrintIntro();
 
 #ifdef R__UNIX
-   // Popdown X logo, only if started with -splash option
-   for (int i = 0; i < Argc(); i++)
-      if (!strcmp(Argv(i), "-splash"))
-         kill(getppid(), SIGUSR1);
+      // Popdown X logo, only if started with -splash option
+      for (int i = 0; i < Argc(); i++)
+         if (!strcmp(Argv(i), "-splash"))
+            kill(getppid(), SIGUSR1);
 #endif
+   } else {
+      Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
+             gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
+             gSystem->GetBuildArch());
+   }
 }
 
 //______________________________________________________________________________

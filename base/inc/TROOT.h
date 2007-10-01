@@ -78,6 +78,9 @@ protected:
    Int_t           fVersionTime;          //Time of ROOT version (ex 1152)
    Int_t           fBuiltDate;            //Date of ROOT built
    Int_t           fBuiltTime;            //Time of ROOT built
+   Int_t           fSvnRevision;          //Subversion revision number of built
+   TString         fSvnBranch;            //Subversion branch
+   TString         fSvnDate;              //Date and time when make was run
    Int_t           fTimer;                //Timer flag
    TApplication    *fApplication;         //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
@@ -126,6 +129,7 @@ protected:
                   TROOT();                //Only used by Dictionary
    void           InitSystem();           //Operating System interface
    void           InitThreads();          //Initialize threads library
+   void           ReadSvnInfo();          //Read Subversion revision number and branch name
    void          *operator new(size_t l) { return TObject::operator new(l); }
 
 public:
@@ -158,6 +162,9 @@ public:
    Bool_t            GetForceStyle() const { return fForceStyle; }
    Int_t             GetBuiltDate() const { return fBuiltDate; }
    Int_t             GetBuiltTime() const { return fBuiltTime; }
+   Int_t             GetSvnRevision() const { return fSvnRevision; }
+   const char       *GetSvnBranch() const { return fSvnBranch; }
+   const char       *GetSvnDate();
    Int_t             GetVersionDate() const { return fVersionDate; }
    Int_t             GetVersionTime() const { return fVersionTime; }
    Int_t             GetVersionInt() const { return fVersionInt; }

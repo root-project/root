@@ -55,7 +55,7 @@ public:
    virtual const char *SetPrompt(const char *newPrompt);
    virtual void        SetEchoMode(Bool_t mode);
    virtual Bool_t      HandleTermInput();
-   virtual void        PrintLogo();
+   virtual void        PrintLogo(Bool_t lite = kFALSE);
    virtual void        Run(Bool_t retrn = kFALSE);
    virtual void        Terminate(int status);
            void        Interrupt() { fInterrupt = kTRUE; }
