@@ -1138,16 +1138,41 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
    if (n <= 0 || 4*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
+      //a range was specified. We read an integer and convert it back to a double.
       Double_t xmin = ele->GetXmin();
       Double_t factor = ele->GetFactor();
       for (int j=0;j < n; j++) {
          UInt_t aint; *this >> aint; d[j] = (Double_t)(aint/factor + xmin);
       }
    } else {
-      Float_t afloat;
-      for (int i = 0; i < n; i++) {
-         frombuf(fBufCur, &afloat);
-         d[i]=afloat;
+      Int_t i;
+      Int_t nbits = 0;
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //we read a float and convert it to double
+         Float_t afloat; 
+         for (i = 0; i < n; i++) {
+            *this >> afloat; 
+            d[i] = (Double_t)afloat;
+         }
+      } else {
+         //we read the exponent and the truncated mantissa of the float
+         //and rebuild the double.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         UChar_t  theExp;
+         UShort_t theMan;
+         for (i = 0; i < n; i++) {
+            *this >> theExp;
+            *this >> theMan;
+            ix = theExp;
+            ix <<= 23;
+            ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+            if(1<<(nbits+1) & theMan) xx=-xx;
+            d[i] = (Double_t)xx;
+         }
       }
    }
 }
@@ -1670,6 +1695,9 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    if (ele && ele->GetFactor()) {
+      //A range is specified. We normalize the double to the range and
+      //convert it to an integer using a scaling factor that is a function of nbits.
+      //see TStreamerElement::GetRange.
       Double_t factor = ele->GetFactor();
       Double_t xmin = ele->GetXmin();
       Double_t xmax = ele->GetXmax();
@@ -1680,8 +1708,35 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
          UInt_t aint = UInt_t(0.5+factor*(x-xmin)); *this << aint;
       }
    } else {
-      for (int i = 0; i < n; i++)
-         tobuf(fBufCur, Float_t(d[i]));
+      Int_t nbits = 0;
+      //number of bits stored in fXmin (see TStreamerElement::GetRange)
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      Int_t i;
+      if (!nbits) {
+         //if no range and no bits specified, we convert from double to float
+         for (i = 0; i < n; i++) {
+            Float_t afloat = (Float_t)d[0]; 
+            *this << afloat;
+         }
+      } else {
+         //a range is not specified, but nbits is.
+         //In this case we truncate the mantissa to nbits and we stream
+         //the exponent as a UChar_t and the mantissa as a UShort_t.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         for (i = 0; i < n; i++) {
+            xx = (Float_t)d[i];
+            UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+            UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+            theMan=(++theMan)>>1;
+            if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+            if(xx<0) theMan|=1<<(nbits+1);
+            *this << theExp;
+            *this << theMan;
+         }
+      }
    }
 }
 
