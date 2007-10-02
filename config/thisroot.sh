@@ -47,7 +47,13 @@ fi
 if [ -z "${LIBPATH}" ]; then
    LIBPATH=$ROOTSYS/lib; export LIBPATH                       # AIX
 else
-   export LIBPATH=$ROOTSYS/lib:$LIBPATH; export LIBPATH
+   LIBPATH=$ROOTSYS/lib:$LIBPATH; export LIBPATH
+fi
+
+if [ -z "${PYTHONPATH}" ]; then
+   PYTHONPATH=$ROOTSYS/lib; export PYTHONPATH
+else
+   PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH; export PYTHONPATH
 fi
 
 if [ -z "${MANPATH}" ]; then
