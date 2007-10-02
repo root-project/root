@@ -66,6 +66,7 @@ typedef long           Long_t;      //Signed long integer 4 bytes (long)
 typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
 #endif
 typedef float          Float_t;     //Float 4 bytes (float)
+typedef float          Float16_t;   //Float 4 bytes written with a truncated mantissa
 typedef double         Double_t;    //Double 8 bytes
 typedef double         Double32_t;  //Double 8 bytes in memory, written as a 4 bytes float
 typedef char           Text_t;      //General string (char)

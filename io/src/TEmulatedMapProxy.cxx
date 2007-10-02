@@ -107,6 +107,8 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
             case kLong_t:    b >> helper->s_long;      break;
             case kLong64_t:  b >> helper->s_longlong;  break;
             case kFloat_t:   b >> helper->flt;         break;
+            case kFloat16_t: b >> f;
+               helper->flt = float(f);  break;
             case kDouble_t:  b >> helper->dbl;         break;
             case kBOOL_t:    b >> helper->boolean;     break;
             case kUChar_t:   b >> helper->u_char;      break;
@@ -167,6 +169,7 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
             case kLong_t:    b << i->s_long;      break;
             case kLong64_t:  b << i->s_longlong;  break;
             case kFloat_t:   b << i->flt;         break;
+            case kFloat16_t: b << float(i->flt);  break;
             case kDouble_t:  b << i->dbl;         break;
             case kBOOL_t:    b << i->boolean;     break;
             case kUChar_t:   b << i->u_char;      break;

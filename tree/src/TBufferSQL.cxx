@@ -709,6 +709,13 @@ void TBufferSQL::ReadFastArray(Double_t *d, Int_t n)
 }
 
 //________________________________________________________________________
+void     TBufferSQL::ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)
+{
+   // ReadFastArray SQL implementation.   
+   Fatal("ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)","Not implemented yet");
+}
+
+//________________________________________________________________________
 void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)
 {
    // ReadFastArray SQL implementation.   

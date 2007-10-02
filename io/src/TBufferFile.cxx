@@ -333,6 +333,44 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *clas
 
 
 //______________________________________________________________________________
+void TBufferFile::ReadFloat16 (Float_t *f, TStreamerElement *ele)
+{
+   // Read a Float16_t from the buffer,
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+
+   if (ele && ele->GetFactor() != 0) {
+      //a range was specified. We read an integer and convert it back to a double.
+      UInt_t aint; *this >> aint; f[0] = (Float_t)(aint/ele->GetFactor() + ele->GetXmin());
+   } else {
+      Int_t nbits = 0;
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //we read a float and convert it to double
+         Float_t afloat; 
+         *this >> afloat; 
+         f[0] = afloat;
+      } else {
+         //we read the exponent and the truncated mantissa of the float
+         //and rebuild the float.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         UChar_t  theExp;
+         UShort_t theMan;
+         *this >> theExp;
+         *this >> theMan;
+         ix = theExp;
+         ix <<= 23;
+         ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+         if(1<<(nbits+1) & theMan) xx=-xx;
+         f[0] = xx;
+      }
+   }
+}
+
+
+//______________________________________________________________________________
 void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
 {
    // Read a Double32_t from the buffer,
@@ -365,6 +403,96 @@ void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
          ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
          if(1<<(nbits+1) & theMan) xx=-xx;
          d[0] = (Double_t)xx;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
+{
+   // write a Float16_t to the buffer.
+   // The following cases are supported for streaming a Float16_t type
+   // depending on the range declaration in the comment field of the data member:
+   //  A-    Float16_t     fNormal;
+   //  B-    Float16_t     fTemperature; //[0,100]
+   //  C-    Float16_t     fCharge;      //[-1,1,2]
+   //  D-    Float16_t     fVertex[3];   //[-30,30,10]
+   //  E-    Float16_t     fChi2;        //[0,0,6]
+   //  F-    Int_t          fNsp;
+   //        Float16_t*    fPointValue;   //[fNsp][0,3]
+   //
+   // In case A fNormal is converted from a Float_t to a Float_t with mantissa truncated to 12 bits
+   // In case B fTemperature is converted to a 32 bit unsigned integer
+   // In case C fCharge is converted to a 2 bits unsigned integer
+   // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
+   // In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+   // In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+   //           Note that the range specifier must follow the dimension specifier.
+   // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+   //
+   // The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
+   //  [0,1]
+   //  [-10,100];
+   //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+   //  [-10,100,16]
+   //  [0,0,8]
+   // if nbits is not specified, or nbits <2 or nbits>16 it is set to 16
+   // if (xmin==0 and xmax==0 and nbits <=16) the float word will have
+   // its mantissa truncated to nbits significative bits.
+   //
+   // IMPORTANT NOTE
+   // --------------
+   // Lets assume an original variable float x:
+   // When using the format [0,0,8] (ie range not specified) you get the best
+   // relative precision when storing and reading back the truncated x, say xt.
+   // The variance of (x-xt)/x will be better than when specifying a range
+   // for the same number of bits. However the precision relative to the 
+   // range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
+   // The format [0,0,8] is also interesting when the range of x is infinite
+   // or unknown.
+   //
+   //  see example of use of the Float16_t data type in tutorial double32.C
+   //
+   //Begin_Html
+   /*
+     <img src="gif/double32.gif">
+   */
+   //End_Html
+
+   if (ele && ele->GetFactor() != 0) {
+      //A range is specified. We normalize the double to the range and
+      //convert it to an integer using a scaling factor that is a function of nbits.
+      //see TStreamerElement::GetRange.
+      Double_t x = f[0];
+      Double_t xmin = ele->GetXmin();
+      Double_t xmax = ele->GetXmax();
+      if (x < xmin) x = xmin;
+      if (x > xmax) x = xmax;
+      UInt_t aint = UInt_t(0.5+ele->GetFactor()*(x-xmin)); *this << aint;
+   } else {
+      Int_t nbits = 0;
+      //number of bits stored in fXmin (see TStreamerElement::GetRange)
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //if no range and no bits specified, we convert from double to float
+         Float_t afloat = f[0]; 
+         *this << afloat;
+      } else {
+         //a range is not specified, but nbits is.
+         //In this case we truncate the mantissa to nbits and we stream
+         //the exponent as a UChar_t and the mantissa as a UShort_t.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         xx = f[0];
+         UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+         UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+         theMan=(++theMan)>>1;
+         if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+         if(xx<0) theMan|=1<<(nbits+1);
+         *this << theExp;
+         *this << theMan;
       }
    }
 }
@@ -692,6 +820,28 @@ Int_t TBufferFile::ReadArray(Double_t *&d)
 }
 
 //______________________________________________________________________________
+Int_t TBufferFile::ReadArrayFloat16(Float_t *&f, TStreamerElement *ele)
+{
+   // Read array of floats (written as truncated float) from the I/O buffer.
+   // Returns the number of floats read.
+   // If argument is a 0 pointer then space will be allocated for the array.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   R__ASSERT(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || 4*n > fBufSize) return 0;
+
+   if (!f) f = new Float_t[n];
+
+   ReadFastArrayFloat16(f,n,ele);
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBufferFile::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
 {
    // Read array of doubles (written as float) from the I/O buffer.
@@ -938,6 +1088,27 @@ Int_t TBufferFile::ReadStaticArray(Double_t *d)
 }
 
 //______________________________________________________________________________
+Int_t TBufferFile::ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele)
+{
+   // Read array of floats (written as truncated float) from the I/O buffer.
+   // Returns the number of floats read.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   R__ASSERT(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || 4*n > fBufSize) return 0;
+
+   if (!f) return 0;
+
+   ReadFastArrayFloat16(f,n,ele);
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBufferFile::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
 {
    // Read array of doubles (written as float) from the I/O buffer.
@@ -1129,6 +1300,54 @@ void TBufferFile::ReadFastArray(Double_t *d, Int_t n)
    memcpy(d, fBufCur, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele)
+{
+   // Read array of n floats (written as truncated float) from the I/O buffer.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   if (n <= 0 || 4*n > fBufSize) return;
+
+   if (ele && ele->GetFactor() != 0) {
+      //a range was specified. We read an integer and convert it back to a float
+      Double_t xmin = ele->GetXmin();
+      Double_t factor = ele->GetFactor();
+      for (int j=0;j < n; j++) {
+         UInt_t aint; *this >> aint; f[j] = (Float_t)(aint/factor + xmin);
+      }
+   } else {
+      Int_t i;
+      Int_t nbits = 0;
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) {
+         //we read a float and convert it to double
+         Float_t afloat; 
+         for (i = 0; i < n; i++) {
+            *this >> afloat; 
+            f[i] = afloat;
+         }
+      } else {
+         //we read the exponent and the truncated mantissa of the float
+         //and rebuild the new float.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         UChar_t  theExp;
+         UShort_t theMan;
+         for (i = 0; i < n; i++) {
+            *this >> theExp;
+            *this >> theMan;
+            ix = theExp;
+            ix <<= 23;
+            ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+            if(1<<(nbits+1) & theMan) xx=-xx;
+            f[i] = xx;
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1474,6 +1693,26 @@ void TBufferFile::WriteArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBufferFile::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele)
+{
+   // Write array of n floats (as truncated float) into the I/O buffer.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   R__ASSERT(IsWriting());
+
+   *this << n;
+
+   if (n <= 0) return;
+
+   R__ASSERT(f);
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   WriteFastArrayFloat16(f,n,ele);
+}
+
+//______________________________________________________________________________
 void TBufferFile::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
 {
    // Write array of n doubles (as float) into the I/O buffer.
@@ -1683,6 +1922,63 @@ void TBufferFile::WriteFastArray(const Double_t *d, Int_t n)
    memcpy(fBufCur, d, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele)
+{
+   // Write array of n floats (as truncated float) into the I/O buffer.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   if (ele && ele->GetFactor()) {
+      //A range is specified. We normalize the float to the range and
+      //convert it to an integer using a scaling factor that is a function of nbits.
+      //see TStreamerElement::GetRange.
+      Double_t factor = ele->GetFactor();
+      Double_t xmin = ele->GetXmin();
+      Double_t xmax = ele->GetXmax();
+      for (int j = 0; j < n; j++) {
+         Float_t x = f[j];
+         if (x < xmin) x = xmin;
+         if (x > xmax) x = xmax;
+         UInt_t aint = UInt_t(0.5+factor*(x-xmin)); *this << aint;
+      }
+   } else {
+      Int_t nbits = 0;
+      //number of bits stored in fXmin (see TStreamerElement::GetRange)
+      if (ele) nbits = (UInt_t)ele->GetXmin();
+      Int_t i;
+      if (!nbits) {
+         //if no range and no bits specified, we convert to truncated float
+         for (i = 0; i < n; i++) {
+            Float_t afloat = f[0]; 
+            *this << afloat;
+         }
+      } else {
+         //a range is not specified, but nbits is.
+         //In this case we truncate the mantissa to nbits and we stream
+         //the exponent as a UChar_t and the mantissa as a UShort_t.
+         union {
+            Float_t xx;
+            Int_t ix;
+         };
+         for (i = 0; i < n; i++) {
+            xx = f[i];
+            UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+            UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+            theMan=(++theMan)>>1;
+            if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+            if(xx<0) theMan|=1<<(nbits+1);
+            *this << theExp;
+            *this << theMan;
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________

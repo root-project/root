@@ -89,6 +89,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
    case kLong_t:    b.ReadFastArray(&itm->s_long    , nElements); break;
    case kLong64_t:  b.ReadFastArray(&itm->s_longlong, nElements); break;
    case kFloat_t:   b.ReadFastArray(&itm->flt       , nElements); break;
+   case kFloat16_t: b.ReadFastArrayFloat16(&itm->flt, nElements); break;
    case kDouble_t:  b.ReadFastArray(&itm->dbl       , nElements); break;
    case kBOOL_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
    case kUChar_t:   b.ReadFastArray(&itm->u_char    , nElements); break;
@@ -232,6 +233,8 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
             case kLong_t:    b >> i->s_long;      break;
             case kLong64_t:  b >> i->s_longlong;  break;
             case kFloat_t:   b >> i->flt;         break;
+            case kFloat16_t: b >> f;
+               i->flt = float(f);  break;
             case kDouble_t:  b >> i->dbl;         break;
             case kBOOL_t:    b >> i->boolean;     break;
             case kUChar_t:   b >> i->u_char;      break;
@@ -300,6 +303,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
    case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
    case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
    case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
+   case kFloat16_t: b.WriteFastArrayFloat16(&itm->flt, nElements); break;
    case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
    case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
    case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
@@ -395,6 +399,7 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)
             case kLong_t:    b << i->s_long;      break;
             case kLong64_t:  b << i->s_longlong;  break;
             case kFloat_t:   b << i->flt;         break;
+            case kFloat16_t: b << float(i->flt);  break;
             case kDouble_t:  b << i->dbl;         break;
             case kBOOL_t:    b << i->boolean;     break;
             case kUChar_t:   b << i->u_char;      break;

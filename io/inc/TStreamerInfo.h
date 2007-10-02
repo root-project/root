@@ -104,7 +104,7 @@ public:
       kChar     =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
       kDouble   =  8,  kDouble32=  9,
       kUChar    = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
-      kLong64   = 16,  kULong64 = 17,  kBool    = 18,
+      kLong64   = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
       kObject   = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
       kTObject  = 66,  kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,  kAnyPnoVT = 70,
       kSTLp     = 71,

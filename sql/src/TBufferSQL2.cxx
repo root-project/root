@@ -1031,17 +1031,33 @@ void TBufferSQL2::WriteObject(const void *actualObjStart, const TClass *actualCl
    }
 
 //______________________________________________________________________________
+void TBufferSQL2::ReadFloat16 (Float_t *f, TStreamerElement * /*ele*/)
+{
+   // Read Float16 value
+
+   SqlReadBasic(*f);
+}
+
+//______________________________________________________________________________
 void TBufferSQL2::ReadDouble32 (Double_t *d, TStreamerElement * /*ele*/)
 {
-   // Read Double_32 value
+   // Read Double32 value
 
    SqlReadBasic(*d);
 }
 
 //______________________________________________________________________________
+void TBufferSQL2::WriteFloat16 (Float_t *f, TStreamerElement * /*ele*/)
+{
+   // Write Float16 value
+
+   SqlWriteBasic(*f);
+}
+
+//______________________________________________________________________________
 void TBufferSQL2::WriteDouble32 (Double_t *d, TStreamerElement * /*ele*/)
 {
-   // Write Double_32 value
+   // Write Double32 value
 
    SqlWriteBasic(*d);
 }
@@ -1148,6 +1164,14 @@ Int_t TBufferSQL2::ReadArray(Double_t  *&d)
    // Read array of Double_t from buffer
 
    TBufferSQL2_ReadArray(Double_t,d);
+}
+
+//______________________________________________________________________________
+Int_t TBufferSQL2::ReadArrayFloat16(Float_t  *&f, TStreamerElement * /*ele*/)
+{
+   // Read array of Float16_t from buffer
+
+   TBufferSQL2_ReadArray(Float_t,f);
 }
 
 //______________________________________________________________________________
@@ -1270,6 +1294,14 @@ Int_t TBufferSQL2::ReadStaticArray(Double_t  *d)
    // Read array of Double_t from buffer
 
    TBufferSQL2_ReadStaticArray(d);
+}
+
+//______________________________________________________________________________
+Int_t TBufferSQL2::ReadStaticArrayFloat16(Float_t  *f, TStreamerElement * /*ele*/)
+{
+   // Read array of Float16_t from buffer
+
+   TBufferSQL2_ReadStaticArray(f);
 }
 
 //______________________________________________________________________________
@@ -1424,6 +1456,14 @@ void TBufferSQL2::ReadFastArray(Double_t  *d, Int_t n)
    // read array of Double_t from buffer
 
    TBufferSQL2_ReadFastArray(d);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   // read array of Float16_t from buffer
+
+   TBufferSQL2_ReadFastArray(f);
 }
 
 //______________________________________________________________________________
@@ -1660,6 +1700,14 @@ void TBufferSQL2::WriteArray(const Double_t  *d, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBufferSQL2::WriteArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   // Write array of Float16_t to buffer
+
+   TBufferSQL2_WriteArray(f);
+}
+
+//______________________________________________________________________________
 void TBufferSQL2::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
 {
    // Write array of Double32_t to buffer
@@ -1818,6 +1866,14 @@ void TBufferSQL2::WriteFastArray(const Double_t  *d, Int_t n)
    // Write array of Double_t to buffer
 
    TBufferSQL2_WriteFastArray(d);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::WriteFastArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   // Write array of Float16_t to buffer
+
+   TBufferSQL2_WriteFastArray(f);
 }
 
 //______________________________________________________________________________

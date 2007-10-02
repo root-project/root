@@ -1280,6 +1280,65 @@ bool NeedDestructor(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
+bool IsTemplateFloat16(G__ClassInfo &cl)
+{
+   // Return true if any of the argument is or contains a Float16.
+   if (!cl.IsTmplt()) return false;
+
+   static G__TypeInfo ti;
+   char arg[2048], *current, *next;
+
+   strcpy(arg, cl.Name());
+   // arg is now is the name of class template instantiation.
+   // We first need to find the start of the list of its template arguments
+   // then we have a comma separated list of type names.  We want to return
+   // the 'count+1'-th element in the list.
+   int len = strlen(arg);
+   int nesting = 0;
+   current = 0;
+   next = &(arg[0]);
+   for (int c = 0; c<len; c++) {
+      switch (arg[c]) {
+      case '<':
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         nesting++;
+         break;
+      case '>':
+         nesting--;
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,"Float16_t")==0) return true;
+               G__ClassInfo subcl(current);
+               if (IsTemplateFloat16(subcl)) return true;
+            }
+         }
+         break;
+      case ',':
+         if (nesting==1) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,"Float16_t")==0) return true;
+               G__ClassInfo subcl(current);
+               if (IsTemplateFloat16(subcl)) return true;
+            }
+         }
+         break;
+      }
+   }
+
+   return false;
+}
+
+//______________________________________________________________________________
 bool IsTemplateDouble32(G__ClassInfo &cl)
 {
    // Return true if any of the argument is or contains a double32.
@@ -1337,6 +1396,7 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
 
    return false;
 }
+
 
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
@@ -2518,7 +2578,7 @@ void WriteClassInit(G__ClassInfo &cl)
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
 
-   if (!stl && !IsTemplateDouble32(cl)) {
+   if (!stl && !IsTemplateDouble32(cl) && !IsTemplateFloat16(cl)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
                     << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
@@ -2852,6 +2912,10 @@ void WriteStreamer(G__ClassInfo &cl)
          //  - members with an ! as first character in the title (comment) field
          //  - the member G__virtualinfo inserted by the CINT RTTI system
 
+         //special case for Float16_t
+         int isFloat16=0;
+         if (strstr(m.Type()->Name(),"Float16_t")) isFloat16=1;
+
          //special case for Double32_t
          int isDouble32=0;
          if (strstr(m.Type()->Name(),"Double32_t")) isDouble32=1;
@@ -2893,7 +2957,10 @@ void WriteStreamer(G__ClassInfo &cl)
                         (*dictSrcOut) << "      delete [] " << m.Name() << ";" << std::endl
                             << "      " << GetNonConstMemberName(m) << " = new "
                             << ShortTypeName(m.Type()->Name()) << "[" << indexvar << "];" << std::endl;
-                        if (isDouble32) {
+                        if (isFloat16) {
+                           (*dictSrcOut) << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(m)
+                               << "," << indexvar << ");" << std::endl;
+                        } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(m)
                                << "," << indexvar << ");" << std::endl;
                         } else {
@@ -2901,7 +2968,10 @@ void WriteStreamer(G__ClassInfo &cl)
                                << "," << indexvar << ");" << std::endl;
                         }
                      } else {
-                        if (isDouble32) {
+                        if (isFloat16) {
+                           (*dictSrcOut) << "      R__b.WriteFastArrayFloat16("
+                               << m.Name() << "," << indexvar << ");" << std::endl;
+                        } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayDouble32("
                                << m.Name() << "," << indexvar << ");" << std::endl;
                         } else {
@@ -2916,7 +2986,10 @@ void WriteStreamer(G__ClassInfo &cl)
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << m.Name() << ");" << std::endl;
                         else
-                           if (isDouble32) {
+                           if (isFloat16) {
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << m.Type()->TrueName()
+                                  << "*)" << m.Name() << ");" << std::endl;
+                           } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << m.Type()->TrueName()
                                   << "*)" << m.Name() << ");" << std::endl;
                            } else {
@@ -2927,7 +3000,9 @@ void WriteStreamer(G__ClassInfo &cl)
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << m.Name() << ");" << std::endl;
                         else
-                           if (isDouble32) {
+                           if (isFloat16) {
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << m.Name() << ");" << std::endl;
+                           } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << m.Name() << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.ReadStaticArray((" << m.Type()->TrueName()
@@ -2943,7 +3018,10 @@ void WriteStreamer(G__ClassInfo &cl)
                            (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << m.Name() << ", "
                                << s << ");" << std::endl;
                         else
-                           if (isDouble32) {
+                           if (isFloat16) {
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << m.Type()->TrueName()
+                                  << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                           } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << m.Type()->TrueName()
                                   << "*)" << m.Name() << ", " << s << ");" << std::endl;
                            } else {
@@ -2954,7 +3032,9 @@ void WriteStreamer(G__ClassInfo &cl)
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << m.Name() << ", " << s << ");" << std::endl;
                         else
-                           if (isDouble32) {
+                           if (isFloat16) {
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << m.Name() << ", " << s << ");" << std::endl;
+                           } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << m.Name() << ", " << s << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.WriteArray(" << m.Name() << ", " << s << ");" << std::endl;
@@ -2967,7 +3047,13 @@ void WriteStreamer(G__ClassInfo &cl)
                   else
                      (*dictSrcOut) << "      R__b << (Int_t)" << m.Name() << ";" << std::endl;
                } else {
-                  if (isDouble32) {
+                  if (isFloat16) {
+                     if (i == 0)
+                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
+                            << "=Float16_t(R_Dummy);}" << std::endl;
+                     else
+                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(m) << ");" << std::endl;
+                  } else if (isDouble32) {
                      if (i == 0)
                         (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
                             << "=Double32_t(R_Dummy);}" << std::endl;

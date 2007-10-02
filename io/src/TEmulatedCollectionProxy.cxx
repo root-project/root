@@ -429,6 +429,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
             case kLong_t:    b.ReadFastArray(&itm->s_long    , nElements); break;
             case kLong64_t:  b.ReadFastArray(&itm->s_longlong, nElements); break;
             case kFloat_t:   b.ReadFastArray(&itm->flt       , nElements); break;
+            case kFloat16_t: b.ReadFastArrayFloat16(&itm->flt, nElements); break;
             case kDouble_t:  b.ReadFastArray(&itm->dbl       , nElements); break;
             case kBOOL_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
             case kUChar_t:   b.ReadFastArray(&itm->u_char    , nElements); break;
@@ -478,6 +479,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
             case kLong_t:    b.WriteFastArray(&itm->s_long    , nElements); break;
             case kLong64_t:  b.WriteFastArray(&itm->s_longlong, nElements); break;
             case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
+            case kFloat16_t: b.WriteFastArrayFloat16(&itm->flt, nElements); break;
             case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
             case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
             case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;

@@ -559,7 +559,7 @@ namespace {
       // a type.
 
       const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
-                                    "Int_t","Double_t","Double32_t",
+                                    "Int_t","Double_t","Double32_t","Float16_t",
                                     "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
                                     "Long64_t","ULong64_t","Bool_t"};
 

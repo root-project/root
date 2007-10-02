@@ -117,6 +117,7 @@ public:
    virtual   void     ReadFastArray(ULong64_t *, Int_t );
    virtual   void     ReadFastArray(Float_t   *, Int_t );
    virtual   void     ReadFastArray(Double_t  *, Int_t );
+   virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
    virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0);
    virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);

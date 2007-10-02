@@ -780,6 +780,7 @@ Bool_t TSQLStructure::IsNumericType(Int_t typ)
    case TStreamerInfo::kInt     : return kTRUE;
    case TStreamerInfo::kLong    : return kTRUE;
    case TStreamerInfo::kFloat   : return kTRUE;
+   case TStreamerInfo::kFloat16 : return kTRUE;
    case TStreamerInfo::kCounter : return kTRUE;
    case TStreamerInfo::kDouble  : return kTRUE;
    case TStreamerInfo::kDouble32: return kTRUE;
@@ -807,6 +808,7 @@ const char* TSQLStructure::GetSimpleTypeName(Int_t typ)
    case TStreamerInfo::kInt     : return sqlio::Int;
    case TStreamerInfo::kLong    : return sqlio::Long;
    case TStreamerInfo::kFloat   : return sqlio::Float;
+   case TStreamerInfo::kFloat16 : return sqlio::Float;
    case TStreamerInfo::kCounter : return sqlio::Int;
    case TStreamerInfo::kDouble  : return sqlio::Double;
    case TStreamerInfo::kDouble32: return sqlio::Double;

@@ -116,6 +116,7 @@ const char *TDataType::GetTypeName(EDataType type)
       case 16: return "Long64_t";
       case 17: return "ULong64_t";
       case 18: return "Bool_t";
+      case 19: return "Float16_t";
       case kOther_t:  return "";
       case kNoType_t: return "";
       case kchar:     return "Char_t";
@@ -181,6 +182,8 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kBool_t;
    } else if (!strcmp(typeid(float).name(), typeinfo.name())) {
       retType = kFloat_t;
+   } else if (!strcmp(typeid(Float16_t).name(), typeinfo.name())) {
+      retType = kFloat16_t;
    } else if (!strcmp(typeid(double).name(), typeinfo.name())) {
       retType = kDouble_t;
    } else if (!strcmp(typeid(Double32_t).name(), typeinfo.name())) {
@@ -304,6 +307,9 @@ void TDataType::SetType(const char *name)
       fSize = sizeof(Double_t);
    }
 
+   if (!strcmp("Float16_t", fName.Data())) {
+      fType = kFloat16_t;
+   }
    if (!strcmp("Double32_t", fName.Data())) {
       fType = kDouble32_t;
    }

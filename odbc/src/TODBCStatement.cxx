@@ -513,6 +513,7 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
       case kChar_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_STINYINT; elemsize = sizeof(signed char); break;
       case kBool_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(unsigned char); break;
       case kFloat_t:    sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(float); break;
+      case kFloat16_t:  sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(float); break;
       case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
       case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
       case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR;     elemsize = size; break;
