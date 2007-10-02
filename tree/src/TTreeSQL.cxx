@@ -281,6 +281,9 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
    else if(typeName == "Float_t"){
       tn = "FLOAT";
    }
+   else if(typeName == "Float16_t"){
+      tn = "FLOAT";
+   }
    else if(typeName == "Double_t"){
       tn = "DOUBLE";
    }

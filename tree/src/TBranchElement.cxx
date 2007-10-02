@@ -1243,6 +1243,13 @@ void TBranchElement::FillLeaves(TBuffer& b)
                }
                break;
             }
+            case TVirtualStreamerInfo::kFloat16 /*  19 */: {
+               Float_t* xx = (Float_t*) fAddress;
+               for (Int_t ii = 0; ii < n; ++ii) {
+                  b << (Float_t) xx[ii];
+               }
+               break;
+            }
             // Note: Type 10 is unused for now.
             case TVirtualStreamerInfo::kUChar    /* 11 */: { b.WriteFastArray((UChar_t*)   fAddress, n); break; }
             case TVirtualStreamerInfo::kUShort   /* 12 */: { b.WriteFastArray((UShort_t*)  fAddress, n); break; }
@@ -1739,7 +1746,7 @@ const char* TBranchElement::GetTypeName() const
          return 0;
       }
    }
-   const char *types[19] = {
+   const char *types[20] = {
       "",
       "Char_t",
       "Short_t",
@@ -1758,9 +1765,10 @@ const char* TBranchElement::GetTypeName() const
       "UInt_t",
       "Long64_t",
       "ULong64_t",
-      "Bool_t"
+      "Bool_t",
+      "Float16_t"
    };
-   Int_t itype = fStreamerType % 20;
+   Int_t itype = fStreamerType % 21;
    return types[itype];
 }
 

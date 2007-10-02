@@ -672,6 +672,7 @@ namespace ROOT {
    typedef TImpProxy<Double_t>   TDoubleProxy;
    typedef TImpProxy<Double32_t> TDouble32Proxy;
    typedef TImpProxy<Float_t>    TFloatProxy;
+   typedef TImpProxy<Float16_t>  TFloat16Proxy;
    typedef TImpProxy<UInt_t>     TUIntProxy;
    typedef TImpProxy<ULong_t>    TULongProxy;
    typedef TImpProxy<ULong64_t>  TULong64Proxy;
@@ -687,6 +688,7 @@ namespace ROOT {
    typedef TArrayProxy<TArrayType<Double_t> >   TArrayDoubleProxy;
    typedef TArrayProxy<TArrayType<Double32_t> > TArrayDouble32Proxy;
    typedef TArrayProxy<TArrayType<Float_t> >    TArrayFloatProxy;
+   typedef TArrayProxy<TArrayType<Float16_t> >  TArrayFloat16Proxy;
    typedef TArrayProxy<TArrayType<UInt_t> >     TArrayUIntProxy;
    typedef TArrayProxy<TArrayType<ULong_t> >    TArrayULongProxy;
    typedef TArrayProxy<TArrayType<ULong64_t> >  TArrayULong64Proxy;
@@ -702,6 +704,7 @@ namespace ROOT {
    typedef TClaImpProxy<Double_t>   TClaDoubleProxy;
    typedef TClaImpProxy<Double32_t> TClaDouble32Proxy;
    typedef TClaImpProxy<Float_t>    TClaFloatProxy;
+   typedef TClaImpProxy<Float16_t>  TClaFloat16Proxy;
    typedef TClaImpProxy<UInt_t>     TClaUIntProxy;
    typedef TClaImpProxy<ULong_t>    TClaULongProxy;
    typedef TClaImpProxy<ULong64_t>  TClaULong64Proxy;
@@ -717,6 +720,7 @@ namespace ROOT {
    typedef TClaArrayProxy<TArrayType<Double_t> >    TClaArrayDoubleProxy;
    typedef TClaArrayProxy<TArrayType<Double32_t> >  TClaArrayDouble32Proxy;
    typedef TClaArrayProxy<TArrayType<Float_t> >     TClaArrayFloatProxy;
+   typedef TClaArrayProxy<TArrayType<Float16_t> >   TClaArrayFloat16Proxy;
    typedef TClaArrayProxy<TArrayType<UInt_t> >      TClaArrayUIntProxy;
    typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;
    typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;
@@ -733,6 +737,7 @@ namespace ROOT {
    typedef TStlImpProxy<Double_t>   TStlDoubleProxy;
    typedef TStlImpProxy<Double32_t> TStlDouble32Proxy;
    typedef TStlImpProxy<Float_t>    TStlFloatProxy;
+   typedef TStlImpProxy<Float16_t>  TStlFloat16Proxy;
    typedef TStlImpProxy<UInt_t>     TStlUIntProxy;
    typedef TStlImpProxy<ULong_t>    TStlULongProxy;
    typedef TStlImpProxy<ULong64_t>  TStlULong64Proxy;
@@ -748,6 +753,7 @@ namespace ROOT {
    typedef TStlArrayProxy<TArrayType<Double_t> >    TStlArrayDoubleProxy;
    typedef TStlArrayProxy<TArrayType<Double32_t> >  TStlArrayDouble32Proxy;
    typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;
+   typedef TStlArrayProxy<TArrayType<Float16_t> >   TStlArrayFloat16Proxy;
    typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;
    typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;
    typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;

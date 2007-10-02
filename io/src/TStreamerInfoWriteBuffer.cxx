@@ -167,6 +167,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kUInt:                WriteBasicType(UInt_t);    continue;
          case TStreamerInfo::kULong:               WriteBasicType(ULong_t);   continue;
          case TStreamerInfo::kULong64:             WriteBasicType(ULong64_t); continue;
+         case TStreamerInfo::kFloat16: {
+            Float_t *x=(Float_t*)(arr[0]+ioffset);
+            b.WriteFloat16(x,aElement);
+            continue;
+         }
          case TStreamerInfo::kDouble32: {
             Double_t *x=(Double_t*)(arr[0]+ioffset);
             b.WriteDouble32(x,aElement);
@@ -186,6 +191,13 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kUInt    + kHaveLoop: WriteBasicTypeLoop(UInt_t);    continue;
          case TStreamerInfo::kULong   + kHaveLoop: WriteBasicTypeLoop(ULong_t);   continue;
          case TStreamerInfo::kULong64 + kHaveLoop: WriteBasicTypeLoop(ULong64_t); continue;
+         case TStreamerInfo::kFloat16+ kHaveLoop: {
+            for(int k=0; k<narr; ++k) {
+               Float_t *x=(Float_t*)(arr[k]+ioffset);
+               b.WriteFloat16(x,aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kDouble32+ kHaveLoop: {
             for(int k=0; k<narr; ++k) {
                Double_t *x=(Double_t*)(arr[k]+ioffset);
@@ -208,6 +220,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:   WriteBasicArray(UInt_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:  WriteBasicArray(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:WriteBasicArray(ULong64_t); continue;
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat16: {
+            b.WriteFastArrayFloat16((Float_t*)(arr[0]+ioffset),fLength[i],aElement);
+            continue;
+         }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
             b.WriteFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i],aElement);
             continue;
@@ -226,6 +242,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt    + kHaveLoop: WriteBasicArrayLoop(UInt_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong   + kHaveLoop: WriteBasicArrayLoop(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64 + kHaveLoop: WriteBasicArrayLoop(ULong64_t); continue;
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat16+ kHaveLoop: {
+            for(int k=0; k<narr; ++k) {
+               b.WriteFastArrayFloat16((Float_t*)(arr[k]+ioffset),fLength[i],aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32+ kHaveLoop: {
             for(int k=0; k<narr; ++k) {
                b.WriteFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i],aElement);
@@ -247,6 +269,19 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:   WriteBasicPointer(UInt_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  WriteBasicPointer(ULong_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:WriteBasicPointer(ULong64_t); continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat16: {
+            int imethod = fMethod[i]+eoffset;
+            Int_t *l = (Int_t*)(arr[0]+imethod);
+            Float_t **f = (Float_t**)(arr[0]+ioffset);
+            Float_t *af = *f;
+            if (af && *l)  b << Char_t(1);
+            else          {b << Char_t(0); continue;}
+            int j;
+            for(j=0;j<fLength[i];j++) {
+               b.WriteFastArrayFloat16(f[j],*l,aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
             int imethod = fMethod[i]+eoffset;
             Int_t *l = (Int_t*)(arr[0]+imethod);
@@ -274,6 +309,21 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt    + kHaveLoop: WriteBasicPointerLoop(UInt_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong   + kHaveLoop: WriteBasicPointerLoop(ULong_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64 + kHaveLoop: WriteBasicPointerLoop(ULong64_t); continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat16+ kHaveLoop: {
+            int imethod = fMethod[i]+eoffset;
+            for(int k=0; k<narr; ++k) {
+               Int_t *l = (Int_t*)(arr[k]+imethod);
+               Float_t **f = (Float_t**)(arr[k]+ioffset);
+               Float_t *af = *f;
+               if (af && *l)  b << Char_t(1);
+               else          {b << Char_t(0); continue;}
+               int j;
+               for(j=0;j<fLength[i];j++) {
+                  b.WriteFastArrayFloat16(f[j],*l,aElement);
+               }
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32+ kHaveLoop: {
             int imethod = fMethod[i]+eoffset;
             for(int k=0; k<narr; ++k) {

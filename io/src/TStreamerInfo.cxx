@@ -747,6 +747,23 @@ namespace {
       return kFALSE;
    }
 
+   Bool_t CollectionMatchFloat16(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
+          && (oldProxy->GetType() == kFloat_t || oldProxy->GetType() == kFloat16_t)
+          && (newProxy->GetType() == kFloat_t || newProxy->GetType() == kFloat16_t )) {
+            // We have compatibles collections (they have the same content!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
+
    Bool_t CollectionMatchDouble32(const TClass *oldClass, const TClass* newClass)
    {
       // Return true if oldClass and newClass points to 2 compatible collection.
@@ -1040,6 +1057,8 @@ void TStreamerInfo::BuildOld()
                if (gDebug > 0) {
                   Warning("BuildOld","element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());
                }
+            } else if (CollectionMatchFloat16(oldClass,newClass)) {
+               // Actually nothing to do, since both are the same collection of double in memory.
             } else if (CollectionMatchDouble32(oldClass,newClass)) {
                // Actually nothing to do, since both are the same collection of double in memory.
             } else {
@@ -1831,6 +1850,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
       case kLong:              {Long_t *val   = (Long_t*)ladd;   return Double_t(*val);}
       case kLong64:            {Long64_t *val = (Long64_t*)ladd; return Double_t(*val);}
       case kFloat:             {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
+      case kFloat16:           {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
       case kDouble:            {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
       case kDouble32:          {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
       case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  return Double_t(*val);}
@@ -1852,6 +1872,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
       case kOffsetL + kLong:    {Long_t *val   = (Long_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kLong64:  {Long64_t *val = (Long64_t*)ladd; return Double_t(val[k]);}
       case kOffsetL + kFloat:   {Float_t *val  = (Float_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kFloat16: {Float_t *val  = (Float_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kDouble:  {Double_t *val = (Double_t*)ladd; return Double_t(val[k]);}
       case kOffsetL + kDouble32:{Double_t *val = (Double_t*)ladd; return Double_t(val[k]);}
       case kOffsetL + kUChar:   {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[k]);}
@@ -1886,6 +1907,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
       case kOffsetP + kInt_t:     READ_ARRAY(Int_t)
       case kOffsetP + kLong_t:    READ_ARRAY(Long_t)
       case kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
+      case kOffsetP + kFloat16_t:
       case kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
       case kOffsetP + kDouble32_t:
       case kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
@@ -2177,6 +2199,7 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:    DeleteBasicPointer(eaddr,ele,Int_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:   DeleteBasicPointer(eaddr,ele,Long_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64: DeleteBasicPointer(eaddr,ele,Long64_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat16:
          case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:  DeleteBasicPointer(eaddr,ele,Float_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32:
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble: DeleteBasicPointer(eaddr,ele,Double_t);  continue;
@@ -2470,6 +2493,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kLong:              {Long_t    *val = (Long_t*   )ladd; printf("%ld",*val);  break;}
       case kLong64:            {Long64_t  *val = (Long64_t* )ladd; printf("%lld",*val);  break;}
       case kFloat:             {Float_t   *val = (Float_t*  )ladd; printf("%f" ,*val);  break;}
+      case kFloat16:           {Float_t   *val = (Float_t*  )ladd; printf("%f" ,*val);  break;}
       case kDouble:            {Double_t  *val = (Double_t* )ladd; printf("%g" ,*val);  break;}
       case kDouble32:          {Double_t  *val = (Double_t* )ladd; printf("%g" ,*val);  break;}
       case kUChar:             {UChar_t   *val = (UChar_t*  )ladd; printf("%u" ,*val);  break;}
@@ -2487,6 +2511,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kOffsetL + kLong:    {Long_t    *val = (Long_t*   )ladd; for(j=0;j<aleng;j++) { printf("%ld ",val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kLong64:  {Long64_t  *val = (Long64_t* )ladd; for(j=0;j<aleng;j++) { printf("%lld ",val[j]);PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kFloat:   {Float_t   *val = (Float_t*  )ladd; for(j=0;j<aleng;j++) { printf("%f " ,val[j]); PrintCR(j,aleng, 5); } break;}
+      case kOffsetL + kFloat16: {Float_t   *val = (Float_t*  )ladd; for(j=0;j<aleng;j++) { printf("%f " ,val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kDouble:  {Double_t  *val = (Double_t* )ladd; for(j=0;j<aleng;j++) { printf("%g " ,val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kDouble32:{Double_t  *val = (Double_t* )ladd; for(j=0;j<aleng;j++) { printf("%g " ,val[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetL + kUChar:   {UChar_t   *val = (UChar_t*  )ladd; for(j=0;j<aleng;j++) { printf("%u " ,val[j]); PrintCR(j,aleng,20); } break;}
@@ -2504,6 +2529,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kOffsetP + kLong:    {Long_t   **val = (Long_t**  )ladd; for(j=0;j<*count;j++) { printf("%ld ",(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kLong64:  {Long64_t **val = (Long64_t**)ladd; for(j=0;j<*count;j++) { printf("%lld ",(*val)[j]); PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kFloat:   {Float_t  **val = (Float_t** )ladd; for(j=0;j<*count;j++) { printf("%f " ,(*val)[j]);  PrintCR(j,aleng, 5); } break;}
+      case kOffsetP + kFloat16: {Float_t  **val = (Float_t** )ladd; for(j=0;j<*count;j++) { printf("%f " ,(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kDouble:  {Double_t **val = (Double_t**)ladd; for(j=0;j<*count;j++) { printf("%g " ,(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kDouble32:{Double_t **val = (Double_t**)ladd; for(j=0;j<*count;j++) { printf("%g " ,(*val)[j]);  PrintCR(j,aleng, 5); } break;}
       case kOffsetP + kUChar:   {UChar_t  **val = (UChar_t** )ladd; for(j=0;j<*count;j++) { printf("%u " ,(*val)[j]);  PrintCR(j,aleng,20); } break;}

@@ -168,6 +168,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kLong:      SkipCBasicType(Long_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kLong64:    SkipCBasicType(Long64_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kFloat:     SkipCBasicType(Float_t);
+      case TStreamerInfo::kSkip + TStreamerInfo::kFloat16:   SkipCBasicType(Float_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kDouble:    SkipCBasicType(Double_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kDouble32:  SkipCBasicType(Float_t)
       case TStreamerInfo::kSkip + TStreamerInfo::kUChar:     SkipCBasicType(UChar_t);
@@ -184,6 +185,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkipL + TStreamerInfo::kInt:      SkipCBasicArray(Int_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kLong:     SkipCBasicArray(Long_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kLong64:   SkipCBasicArray(Long64_t);
+      case TStreamerInfo::kSkipL + TStreamerInfo::kFloat16:  SkipCBasicArray(Float_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kFloat:    SkipCBasicArray(Float_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kDouble32: SkipCBasicArray(Float_t)
       case TStreamerInfo::kSkipL + TStreamerInfo::kDouble:   SkipCBasicArray(Double_t);
@@ -201,6 +203,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkipP + TStreamerInfo::kLong:     SkipCBasicPointer(Long_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kLong64:   SkipCBasicPointer(Long64_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kFloat:    SkipCBasicPointer(Float_t);
+      case TStreamerInfo::kSkipP + TStreamerInfo::kFloat16:  SkipCBasicPointer(Float_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kDouble:   SkipCBasicPointer(Double_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kDouble32: SkipCBasicPointer(Float_t)
       case TStreamerInfo::kSkipP + TStreamerInfo::kUChar:    SkipCBasicPointer(UChar_t);
@@ -349,6 +352,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
             case TStreamerInfo::kLong:    {Long_t   *x=(Long_t*)(arr[k]+ioffset);   *x = (Long_t)u;   break;} \
             case TStreamerInfo::kLong64:  {Long64_t *x=(Long64_t*)(arr[k]+ioffset); *x = (Long64_t)u; break;} \
             case TStreamerInfo::kFloat:   {Float_t  *x=(Float_t*)(arr[k]+ioffset);  *x = (Float_t)u;  break;} \
+            case TStreamerInfo::kFloat16: {Float_t  *x=(Float_t*)(arr[k]+ioffset);  *x = (Float_t)u;  break;} \
             case TStreamerInfo::kDouble:  {Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
             case TStreamerInfo::kDouble32:{Double_t *x=(Double_t*)(arr[k]+ioffset); *x = (Double_t)u; break;} \
             case TStreamerInfo::kUChar:   {UChar_t  *x=(UChar_t*)(arr[k]+ioffset);  *x = (UChar_t)u;  break;} \
@@ -382,6 +386,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
              case TStreamerInfo::kLong:     ConvCBasicArrayTo(Long_t);    \
              case TStreamerInfo::kLong64:   ConvCBasicArrayTo(Long64_t);  \
              case TStreamerInfo::kFloat:    ConvCBasicArrayTo(Float_t);   \
+             case TStreamerInfo::kFloat16:  ConvCBasicArrayTo(Float_t);   \
              case TStreamerInfo::kDouble:   ConvCBasicArrayTo(Double_t);  \
              case TStreamerInfo::kDouble32: ConvCBasicArrayTo(Double_t);  \
              case TStreamerInfo::kUChar:    ConvCBasicArrayTo(UChar_t);   \
@@ -429,6 +434,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
             case TStreamerInfo::kLong:     ConvCBasicPointerTo(Long_t);   \
             case TStreamerInfo::kLong64:   ConvCBasicPointerTo(Long64_t); \
             case TStreamerInfo::kFloat:    ConvCBasicPointerTo(Float_t);  \
+            case TStreamerInfo::kFloat16:  ConvCBasicPointerTo(Float_t);  \
             case TStreamerInfo::kDouble:   ConvCBasicPointerTo(Double_t); \
             case TStreamerInfo::kDouble32: ConvCBasicPointerTo(Double_t); \
             case TStreamerInfo::kUChar:    ConvCBasicPointerTo(UChar_t);  \
@@ -475,6 +481,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConv + TStreamerInfo::kLong:    ConvCBasicType(Long_t);
       case TStreamerInfo::kConv + TStreamerInfo::kLong64:  ConvCBasicType(Long64_t);
       case TStreamerInfo::kConv + TStreamerInfo::kFloat:   ConvCBasicType(Float_t);
+      case TStreamerInfo::kConv + TStreamerInfo::kFloat16: ConvCBasicType(Float_t);
       case TStreamerInfo::kConv + TStreamerInfo::kDouble:  ConvCBasicType(Double_t);
       case TStreamerInfo::kConv + TStreamerInfo::kDouble32:ConvCBasicType(Float_t);
       case TStreamerInfo::kConv + TStreamerInfo::kUChar:   ConvCBasicType(UChar_t);
@@ -496,6 +503,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvL + TStreamerInfo::kLong:    ConvCBasicArray(Long_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kLong64:  ConvCBasicArray(Long64_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kFloat:   ConvCBasicArray(Float_t);
+      case TStreamerInfo::kConvL + TStreamerInfo::kFloat16: ConvCBasicArray(Float_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kDouble:  ConvCBasicArray(Double_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kDouble32:ConvCBasicArray(Float_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kUChar:   ConvCBasicArray(UChar_t);
@@ -516,6 +524,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvP + TStreamerInfo::kLong:    ConvCBasicPointer(Long_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kLong64:  ConvCBasicPointer(Long64_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kFloat:   ConvCBasicPointer(Float_t);
+      case TStreamerInfo::kConvP + TStreamerInfo::kFloat16: ConvCBasicPointer(Float_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kDouble:  ConvCBasicPointer(Double_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kDouble32:ConvCBasicPointer(Float_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kUChar:   ConvCBasicPointer(UChar_t);
@@ -629,6 +638,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kUInt:               ReadBasicType(UInt_t);    continue;
          case TStreamerInfo::kULong:              ReadBasicType(ULong_t);   continue;
          case TStreamerInfo::kULong64:            ReadBasicType(ULong64_t); continue;
+         case TStreamerInfo::kFloat16: {
+            Float_t *x=(Float_t*)(arr[0]+ioffset);
+            b.ReadFloat16(x,aElement);
+            continue;
+         }
          case TStreamerInfo::kDouble32: {
             Double_t *x=(Double_t*)(arr[0]+ioffset);
             b.ReadDouble32(x,aElement);
@@ -648,6 +662,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kUInt   + kHaveLoop: ReadBasicTypeLoop(UInt_t);    continue;
          case TStreamerInfo::kULong  + kHaveLoop: ReadBasicTypeLoop(ULong_t);   continue;
          case TStreamerInfo::kULong64+ kHaveLoop: ReadBasicTypeLoop(ULong64_t); continue;
+         case TStreamerInfo::kFloat16 + kHaveLoop: {
+            for(Int_t k=0; k<narr; ++k) {
+               Float_t *x=(Float_t*)(arr[k]+ioffset);
+               b.ReadFloat16(x,aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kDouble32 + kHaveLoop: {
             for(Int_t k=0; k<narr; ++k) {
                Double_t *x=(Double_t*)(arr[k]+ioffset);
@@ -670,6 +691,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:   ReadBasicArray(UInt_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:  ReadBasicArray(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:ReadBasicArray(ULong64_t); continue;
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat16: {
+            b.ReadFastArrayFloat16((Float_t*)(arr[0]+ioffset),fLength[i],aElement);
+            continue;
+         }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
             b.ReadFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i],aElement);
             continue;
@@ -688,6 +713,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt    + kHaveLoop: ReadBasicArrayLoop(UInt_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong   + kHaveLoop: ReadBasicArrayLoop(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64 + kHaveLoop: ReadBasicArrayLoop(ULong64_t); continue;
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat16 + kHaveLoop: {
+            for(Int_t k=0; k<narr; ++k) {
+               b.ReadFastArrayFloat16((Float_t*)(arr[k]+ioffset),fLength[i],aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32+ kHaveLoop: {
             for(Int_t k=0; k<narr; ++k) {
                b.ReadFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i],aElement);
@@ -709,6 +740,21 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:   ReadBasicPointer(UInt_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  ReadBasicPointer(ULong_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:ReadBasicPointer(ULong64_t);  continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat16: {
+            Char_t isArray;
+            b >> isArray;
+            const int imethod = fMethod[i]+eoffset;
+            Int_t *l = (Int_t*)(arr[0]+imethod);
+            Float_t **f = (Float_t**)(arr[0]+ioffset);
+            int j;
+            for(j=0;j<fLength[i];j++) {
+               delete [] f[j];
+               f[j] = 0; if (*l <=0) continue;
+               f[j] = new Float_t[*l];
+               b.ReadFastArrayFloat16(f[j],*l,aElement);
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
             Char_t isArray;
             b >> isArray;
@@ -738,6 +784,23 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt    + kHaveLoop: ReadBasicPointerLoop(UInt_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong   + kHaveLoop: ReadBasicPointerLoop(ULong_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64 + kHaveLoop: ReadBasicPointerLoop(ULong64_t); continue;
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat16 + kHaveLoop: {
+            const int imethod = fMethod[i]+eoffset;
+            for(Int_t k=0; k<narr; ++k) {
+               Char_t isArray;
+               b >> isArray;
+               Int_t *l = (Int_t*)(arr[k]+imethod);
+               Float_t **f = (Float_t**)(arr[k]+ioffset);
+               int j;
+               for(j=0;j<fLength[i];j++) {
+                  delete [] f[j];
+                  f[j] = 0; if (*l <=0) continue;
+                  f[j] = new Float_t[*l];
+                  b.ReadFastArrayFloat16(f[j],*l,aElement);
+               }
+            }
+            continue;
+         }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32+ kHaveLoop: {
             const int imethod = fMethod[i]+eoffset;
             for(Int_t k=0; k<narr; ++k) {

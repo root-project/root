@@ -224,6 +224,7 @@ TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
       case kInt_t:      return "int";
       case kLong_t:     return "long";
       case kLong64_t:   return "long long";
+      case kFloat16_t:
       case kFloat_t:    return "float";
       case kDouble32_t:
       case kDouble_t:   return "double";
@@ -257,6 +258,7 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
       case TVirtualStreamerInfo::kInt:      return "int";
       case TVirtualStreamerInfo::kLong:     return "long";
       case TVirtualStreamerInfo::kLong64:   return "long long";
+      case TVirtualStreamerInfo::kFloat16:
       case TVirtualStreamerInfo::kFloat:    return "float";
       case TVirtualStreamerInfo::kDouble32:
       case TVirtualStreamerInfo::kDouble:   return "double";
@@ -287,6 +289,7 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
       case TVirtualStreamerInfo::kInt:      return "ReadInt";
       case TVirtualStreamerInfo::kLong:     return "ReadLong";
       case TVirtualStreamerInfo::kLong64:   return "ReadLong64";
+      case TVirtualStreamerInfo::kFloat16:
       case TVirtualStreamerInfo::kFloat:    return "ReadFloat";
       case TVirtualStreamerInfo::kDouble32:
       case TVirtualStreamerInfo::kDouble:   return "ReadDouble";
@@ -461,6 +464,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kUShort:
@@ -484,6 +488,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:
@@ -506,6 +511,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:
@@ -660,6 +666,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kUShort:
@@ -685,6 +692,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:
@@ -706,6 +714,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat16:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:
          case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:
@@ -831,6 +840,7 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
       case TVirtualStreamerInfo::kLong:
       case TVirtualStreamerInfo::kLong64:
       case TVirtualStreamerInfo::kFloat:
+      case TVirtualStreamerInfo::kFloat16:
       case TVirtualStreamerInfo::kDouble:
       case TVirtualStreamerInfo::kUChar:
       case TVirtualStreamerInfo::kUShort:
@@ -890,6 +900,7 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_
       case TVirtualStreamerInfo::kLong:
       case TVirtualStreamerInfo::kLong64:
       case TVirtualStreamerInfo::kFloat:
+      case TVirtualStreamerInfo::kFloat16:
       case TVirtualStreamerInfo::kDouble:
       case TVirtualStreamerInfo::kUChar:
       case TVirtualStreamerInfo::kUShort:

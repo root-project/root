@@ -2077,8 +2077,14 @@ Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataTyp
          expectedType = (EDataType) gROOT->GetType(l->GetTypeName())->GetType();
       }
    }
+   if (expectedType == kFloat16_t) {
+      expectedType = kFloat_t;
+   }
    if (expectedType == kDouble32_t) {
       expectedType = kDouble_t;
+   }
+   if (datatype == kFloat16_t) {
+      datatype = kFloat_t;
    }
    if (datatype == kDouble32_t) {
       datatype = kDouble_t;

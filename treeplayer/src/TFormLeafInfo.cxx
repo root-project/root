@@ -232,6 +232,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
          case kLong64_t:
          case kULong64_t:
          case kFloat_t:
+         case kFloat16_t:
          case kDouble_t:
          case kDouble32_t:
          case kchar:
@@ -248,6 +249,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
          case TStreamerInfo::kOffsetL + kLong64_t:
          case TStreamerInfo::kOffsetL + kULong64_t:
          case TStreamerInfo::kOffsetL + kFloat_t:
+         case TStreamerInfo::kOffsetL + kFloat16_t:
          case TStreamerInfo::kOffsetL + kDouble_t:
          case TStreamerInfo::kOffsetL + kDouble32_t:
          case TStreamerInfo::kOffsetL + kchar:
@@ -360,6 +362,7 @@ Bool_t TFormLeafInfo::IsInteger() const
       case kULong64_t:
          return kTRUE;
       case kFloat_t:
+      case kFloat16_t:
       case kDouble_t:
       case kDouble32_t:
          return kFALSE;
@@ -595,6 +598,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case kLong64_t:
       case kULong64_t:
       case kFloat_t:
+      case kFloat16_t:
       case kDouble_t:
       case kDouble32_t:
       case kchar:
@@ -615,6 +619,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + kLong64_t:
          {Long64_t *val  = (Long64_t*)(thisobj+fOffset);   return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kFloat_t:
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);    return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kFloat16_t:
          {Float_t *val   = (Float_t*)(thisobj+fOffset);    return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble_t:
          {Double_t *val  = (Double_t*)(thisobj+fOffset);   return &(val[instance]);}
@@ -654,6 +660,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetP + kInt_t:     GET_ARRAY(Int_t)
       case TStreamerInfo::kOffsetP + kLong_t:    GET_ARRAY(Long_t)
       case TStreamerInfo::kOffsetP + kLong64_t:  GET_ARRAY(Long64_t)
+      case TStreamerInfo::kOffsetP + kFloat16_t:
       case TStreamerInfo::kOffsetP + kFloat_t:   GET_ARRAY(Float_t)
       case TStreamerInfo::kOffsetP + kDouble32_t:
       case TStreamerInfo::kOffsetP + kDouble_t:  GET_ARRAY(Double_t)
@@ -777,6 +784,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case kLong64_t:   return (Double_t)(*(Long64_t*)(thisobj+fOffset));
       case kULong64_t:  return (Double_t)(*(Long64_t*)(thisobj+fOffset)); //cannot cast to ULong64_t with VC++6
       case kFloat_t:    return (Double_t)(*(Float_t*)(thisobj+fOffset));
+      case kFloat16_t:  return (Double_t)(*(Float_t*)(thisobj+fOffset));
       case kDouble_t:   return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kDouble32_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kchar:       return (Double_t)(*(char*)(thisobj+fOffset));
@@ -796,6 +804,8 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
          {Long_t *val    = (Long_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kLong64_t:
          {Long64_t *val  = (Long64_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kFloat16_t:
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kFloat_t:
          {Float_t *val   = (Float_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble_t:
@@ -840,6 +850,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetP + kInt_t:     READ_ARRAY(Int_t)
       case TStreamerInfo::kOffsetP + kLong_t:    READ_ARRAY(Long_t)
       case TStreamerInfo::kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
+      case TStreamerInfo::kOffsetP + kFloat16_t:
       case TStreamerInfo::kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
       case TStreamerInfo::kOffsetP + kDouble32_t:
       case TStreamerInfo::kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
