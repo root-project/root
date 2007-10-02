@@ -141,13 +141,13 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    gBenchmark = new TBenchmark();
 
-   if (!noLogo && !NoLogoOpt())
-      PrintLogo();
-   //else
-   //   PrintLogo(kTRUE);
+   if (!noLogo && !NoLogoOpt()) {
+      Bool_t lite = (Bool_t) gEnv->GetValue("Rint.WelcomeLite", 0);
+      PrintLogo(lite);
+   }
 
    // Load some frequently used includes
-   Int_t includes = gEnv->GetValue("Rint.Includes",1);
+   Int_t includes = gEnv->GetValue("Rint.Includes", 1);
    // When the interactive ROOT starts, it can automatically load some frequently
    // used includes. However, this introduces several overheads
    //   -A long list of cint and system files must be kept open during the session
@@ -396,24 +396,21 @@ void TRint::PrintLogo(Bool_t lite)
       Printf("  *          http://root.cern.ch            *");
       Printf("  *                                         *");
       Printf("  *******************************************\n");
+   }
 
-      Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
-             gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
-             gSystem->GetBuildArch());
+   Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
+          gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
+          gSystem->GetBuildArch());
 
+   if (!lite)
       gInterpreter->PrintIntro();
 
 #ifdef R__UNIX
-      // Popdown X logo, only if started with -splash option
-      for (int i = 0; i < Argc(); i++)
-         if (!strcmp(Argv(i), "-splash"))
-            kill(getppid(), SIGUSR1);
+   // Popdown X logo, only if started with -splash option
+   for (int i = 0; i < Argc(); i++)
+      if (!strcmp(Argv(i), "-splash"))
+         kill(getppid(), SIGUSR1);
 #endif
-   } else {
-      Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
-             gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
-             gSystem->GetBuildArch());
-   }
 }
 
 //______________________________________________________________________________
