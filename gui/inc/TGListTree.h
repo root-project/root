@@ -40,7 +40,7 @@
 class TGPicture;
 class TGToolTip;
 class TGCanvas;
-
+class TList;
 
 class TGListTreeItem {
 
@@ -102,7 +102,9 @@ public:
    void            CheckItem(Bool_t checked = kTRUE) { fChecked = checked; }
    void            Toggle() { fChecked = !fChecked; }
    Bool_t          IsChecked() const { return fChecked; }
-
+   void            CheckAllChildren(Bool_t state = kTRUE);
+   void            CheckChildren(TGListTreeItem *item, Bool_t state);
+   
    Color_t         GetColor() const { return fColor; }
    void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    void            ClearColor() { fHasColor = false; }
@@ -268,6 +270,9 @@ public:
    void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  DisableOpen(Bool_t disable = kTRUE) { fDisableOpen = disable;}
+   void  GetChecked(TList *checked);       
+   void  GetCheckedChildren(TList *checked, TGListTreeItem *item);       
+   void  CheckAllChildren(TGListTreeItem *item, Bool_t state);       
 
    TGListTreeItem *GetFirstItem() const { return fFirst; }
    TGListTreeItem *GetSelected() const { return fSelected; }

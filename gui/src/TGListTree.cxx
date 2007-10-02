@@ -52,6 +52,7 @@
 #include "TColor.h"
 #include "TSystem.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "Riostream.h"
 
 
@@ -151,12 +152,53 @@ TGListTreeItem::~TGListTreeItem()
 }
 
 //______________________________________________________________________________
+void TGListTreeItem::CheckAllChildren(Bool_t state)
+{
+   // Set all child items of this one checked if state=kTRUE,
+   // unchecked if state=kFALSE.
+   
+   if (state) {
+      if (!IsChecked())
+         CheckItem();
+   } else {
+      if (IsChecked())
+         Toggle();
+   }
+
+   CheckChildren(GetFirstChild(), state);
+}
+
+//______________________________________________________________________________
+void TGListTreeItem::CheckChildren(TGListTreeItem *item, Bool_t state)
+{
+   // Set all child items of 'item' checked if state=kTRUE;
+   // unchecked if state=kFALSE.
+
+   if (!item) return;
+
+   while (item) {
+      if (state){
+         if (!item->IsChecked())
+            item->CheckItem();
+      } else {
+         if (item->IsChecked())
+            item->Toggle();
+      }
+      if (item->GetFirstChild()) {
+         CheckChildren(item->GetFirstChild(), state);
+      }
+      item = item->GetNextSibling();
+   }
+}
+
+//______________________________________________________________________________
 void TGListTreeItem::Rename(const char *new_name)
 {
    // Rename a list tree item.
 
    fText = new_name;
 }
+
 //______________________________________________________________________________
 void TGListTreeItem::SetCheckBox(Bool_t on)
 {
@@ -2337,5 +2379,52 @@ TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TGListTree::GetChecked(TList *checked)
+{
+   // Add all checked list tree items of this list tree into 
+   // the list 'checked'. This list is not adopted and must
+   // be deleted by the user later.
+   
+   if (!checked || !fFirst) return;
+   TGListTreeItem *current = fFirst;
+   if (current->IsChecked()) {
+      checked->Add(new TObjString(current->GetText()));
+   }
+   while(current) {
+      if (current->GetFirstChild())
+         GetCheckedChildren(checked, current->GetFirstChild());
+      current = current->GetNextSibling();
+   }
+}
+
+//______________________________________________________________________________
+void TGListTree::GetCheckedChildren(TList *checked, TGListTreeItem *item)
+{
+   // Add all child items of 'item' into the list 'checked'.
+
+   if (!checked || !item) return;
+
+   while (item) {
+      if (item->IsChecked()) {
+         checked->Add(new TObjString(item->GetText()));
+      }
+      if (item->GetFirstChild()) {
+         GetCheckedChildren(checked, item->GetFirstChild());
+      }
+      item = item->GetNextSibling();
+   }
+}
+
+//______________________________________________________________________________
+void TGListTree::CheckAllChildren(TGListTreeItem *item, Bool_t state)
+{
+   // Check all child items of 'item' and 'item' itself according
+   // to the state value: kTRUE means check all, kFALSE - uncheck all.
+   
+   if (item) 
+      item->CheckAllChildren(state);
 }
 
