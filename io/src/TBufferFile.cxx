@@ -342,30 +342,23 @@ void TBufferFile::ReadFloat16 (Float_t *f, TStreamerElement *ele)
       //a range was specified. We read an integer and convert it back to a double.
       UInt_t aint; *this >> aint; f[0] = (Float_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
-      Int_t nbits = 0;
+      Int_t nbits = 12;
       if (ele) nbits = (UInt_t)ele->GetXmin();
-      if (!nbits) {
-         //we read a float and convert it to double
-         Float_t afloat; 
-         *this >> afloat; 
-         f[0] = afloat;
-      } else {
-         //we read the exponent and the truncated mantissa of the float
-         //and rebuild the float.
-         union {
-            Float_t xx;
-            Int_t ix;
-         };
-         UChar_t  theExp;
-         UShort_t theMan;
-         *this >> theExp;
-         *this >> theMan;
-         ix = theExp;
-         ix <<= 23;
-         ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
-         if(1<<(nbits+1) & theMan) xx=-xx;
-         f[0] = xx;
-      }
+      //we read the exponent and the truncated mantissa of the float
+      //and rebuild the float.
+      union {
+         Float_t xx;
+         Int_t ix;
+      };
+      UChar_t  theExp;
+      UShort_t theMan;
+      *this >> theExp;
+      *this >> theMan;
+      ix = theExp;
+      ix <<= 23;
+      ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+      if(1<<(nbits+1) & theMan) xx=-xx;
+      f[0] = xx;
    }
 }
 
@@ -470,30 +463,24 @@ void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
       if (x > xmax) x = xmax;
       UInt_t aint = UInt_t(0.5+ele->GetFactor()*(x-xmin)); *this << aint;
    } else {
-      Int_t nbits = 0;
+      Int_t nbits = 12;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
       if (ele) nbits = (UInt_t)ele->GetXmin();
-      if (!nbits) {
-         //if no range and no bits specified, we convert from double to float
-         Float_t afloat = f[0]; 
-         *this << afloat;
-      } else {
-         //a range is not specified, but nbits is.
-         //In this case we truncate the mantissa to nbits and we stream
-         //the exponent as a UChar_t and the mantissa as a UShort_t.
-         union {
-            Float_t xx;
-            Int_t ix;
-         };
-         xx = f[0];
-         UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
-         UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
-         theMan=(++theMan)>>1;
-         if(theMan&1<<nbits) theMan=(1<<nbits)-1;
-         if(xx<0) theMan|=1<<(nbits+1);
-         *this << theExp;
-         *this << theMan;
-      }
+      //a range is not specified, but nbits is.
+      //In this case we truncate the mantissa to nbits and we stream
+      //the exponent as a UChar_t and the mantissa as a UShort_t.
+      union {
+         Float_t xx;
+         Int_t ix;
+      };
+      xx = f[0];
+      UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+      UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+      theMan=(++theMan)>>1;
+      if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+      if(xx<0) theMan|=1<<(nbits+1);
+      *this << theExp;
+      *this << theMan;
    }
 }
 
@@ -1319,33 +1306,24 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
       }
    } else {
       Int_t i;
-      Int_t nbits = 0;
+      Int_t nbits = 12;
       if (ele) nbits = (UInt_t)ele->GetXmin();
-      if (!nbits) {
-         //we read a float and convert it to double
-         Float_t afloat; 
-         for (i = 0; i < n; i++) {
-            *this >> afloat; 
-            f[i] = afloat;
-         }
-      } else {
-         //we read the exponent and the truncated mantissa of the float
-         //and rebuild the new float.
-         union {
-            Float_t xx;
-            Int_t ix;
-         };
-         UChar_t  theExp;
-         UShort_t theMan;
-         for (i = 0; i < n; i++) {
-            *this >> theExp;
-            *this >> theMan;
-            ix = theExp;
-            ix <<= 23;
-            ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
-            if(1<<(nbits+1) & theMan) xx=-xx;
-            f[i] = xx;
-         }
+      //we read the exponent and the truncated mantissa of the float
+      //and rebuild the new float.
+      union {
+         Float_t xx;
+         Int_t ix;
+      };
+      UChar_t  theExp;
+      UShort_t theMan;
+      for (i = 0; i < n; i++) {
+         *this >> theExp;
+         *this >> theMan;
+         ix = theExp;
+         ix <<= 23;
+         ix |= (theMan & ((1<<nbits+1)-1)) <<(23-nbits);
+         if(1<<(nbits+1) & theMan) xx=-xx;
+         f[i] = xx;
       }
    }
 }
@@ -1949,34 +1927,26 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
          UInt_t aint = UInt_t(0.5+factor*(x-xmin)); *this << aint;
       }
    } else {
-      Int_t nbits = 0;
+      Int_t nbits = 12;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
       if (ele) nbits = (UInt_t)ele->GetXmin();
       Int_t i;
-      if (!nbits) {
-         //if no range and no bits specified, we convert to truncated float
-         for (i = 0; i < n; i++) {
-            Float_t afloat = f[0]; 
-            *this << afloat;
-         }
-      } else {
-         //a range is not specified, but nbits is.
-         //In this case we truncate the mantissa to nbits and we stream
-         //the exponent as a UChar_t and the mantissa as a UShort_t.
-         union {
-            Float_t xx;
-            Int_t ix;
-         };
-         for (i = 0; i < n; i++) {
-            xx = f[i];
-            UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
-            UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
-            theMan=(++theMan)>>1;
-            if(theMan&1<<nbits) theMan=(1<<nbits)-1;
-            if(xx<0) theMan|=1<<(nbits+1);
-            *this << theExp;
-            *this << theMan;
-         }
+      //a range is not specified, but nbits is.
+      //In this case we truncate the mantissa to nbits and we stream
+      //the exponent as a UChar_t and the mantissa as a UShort_t.
+      union {
+         Float_t xx;
+         Int_t ix;
+      };
+      for (i = 0; i < n; i++) {
+         xx = f[i];
+         UChar_t  theExp=(UChar_t)(0x000000ff & ((ix<<1)>>24));
+         UShort_t theMan=((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+         theMan=(++theMan)>>1;
+         if(theMan&1<<nbits) theMan=(1<<nbits)-1;
+         if(xx<0) theMan|=1<<(nbits+1);
+         *this << theExp;
+         *this << theMan;
       }
    }
 }
