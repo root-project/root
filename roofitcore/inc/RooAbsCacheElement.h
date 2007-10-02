@@ -31,6 +31,7 @@ public:
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)  ;
   virtual void printCompactTreeHook(std::ostream&, const char *, Int_t curElem, Int_t totElem) ;
+  virtual ~RooAbsCacheElement() {} ;
 
   enum Action { OperModeChange,OptimizeCaching,FindConstantNodes } ;
   virtual RooArgList containedArgs(Action) = 0 ;

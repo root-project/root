@@ -22,6 +22,7 @@
 #include "RooPrintable.h"
 
 class RooAbsReal ;
+class RooAbsPdf ;
 
 class RooClassFactory : public TNamed, public RooPrintable {
 
