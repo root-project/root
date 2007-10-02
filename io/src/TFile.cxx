@@ -3120,7 +3120,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             delete u;
             if (read || sameUser)
                localFile = kTRUE;
-            if (localFile)
+            if (localFile && prefix)
                *prefix = lfname;
          }
       }
