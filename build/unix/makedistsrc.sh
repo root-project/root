@@ -1,6 +1,6 @@
 #! /bin/sh
 
-EXPDIR=$HOME/root_export
+EXPDIR=$HOME/root_export_$$
 CURVERS=`cat build/version_number | sed -e "s/^/v/" -e "s/\./-/" -e "s/\//-/"`
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 MACHINE=`uname`
@@ -12,9 +12,11 @@ rm -rf $EXPDIR
 mkdir $EXPDIR
 cd $EXPDIR
 
-#cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co -r $CURVERS root
-#cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co -D today root
-cvs -z 3 -d :pserver:cvs:cvs@root.cern.ch:/user/cvs co root
+#svn co http://root.cern.ch/svn/root/tags/$CURVERS root
+svn co http://root.cern.ch/svn/root/trunk root
+
+# remove .svn directories containing extra copy of the code
+find root -name .svn -exec rm -rf {} \;
 
 tar cvf $TARFILE root
 gzip $TARFILE
