@@ -342,8 +342,9 @@ void TBufferFile::ReadFloat16 (Float_t *f, TStreamerElement *ele)
       //a range was specified. We read an integer and convert it back to a double.
       UInt_t aint; *this >> aint; f[0] = (Float_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
-      Int_t nbits = 12;
+      Int_t nbits = 0;
       if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) nbits = 12;
       //we read the exponent and the truncated mantissa of the float
       //and rebuild the float.
       union {
@@ -463,9 +464,10 @@ void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
       if (x > xmax) x = xmax;
       UInt_t aint = UInt_t(0.5+ele->GetFactor()*(x-xmin)); *this << aint;
    } else {
-      Int_t nbits = 12;
+      Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
       if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) nbits = 12;
       //a range is not specified, but nbits is.
       //In this case we truncate the mantissa to nbits and we stream
       //the exponent as a UChar_t and the mantissa as a UShort_t.
@@ -1306,8 +1308,9 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
       }
    } else {
       Int_t i;
-      Int_t nbits = 12;
+      Int_t nbits = 0;
       if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) nbits = 12;
       //we read the exponent and the truncated mantissa of the float
       //and rebuild the new float.
       union {
@@ -1927,9 +1930,10 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
          UInt_t aint = UInt_t(0.5+factor*(x-xmin)); *this << aint;
       }
    } else {
-      Int_t nbits = 12;
+      Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
       if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (!nbits) nbits = 12;
       Int_t i;
       //a range is not specified, but nbits is.
       //In this case we truncate the mantissa to nbits and we stream
