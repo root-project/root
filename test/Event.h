@@ -26,17 +26,17 @@ private:
    Float_t      fPx;           //X component of the momentum
    Float_t      fPy;           //Y component of the momentum
    Float_t      fPz;           //Z component of the momentum
-   Float_t      fRandom;       //A random track quantity
-   Float_t      fMass2;        //The mass square of this particle
-   Float_t      fBx;           //X intercept at the vertex
-   Float_t      fBy;           //Y intercept at the vertex
+   Float16_t    fRandom;       //[0,1000,8] A random track quantity
+   Float16_t    fMass2;        //[0,0,8] The mass square of this particle
+   Float16_t    fBx;           //[0,0,10] X intercept at the vertex
+   Float16_t    fBy;           //[0,0,10] Y intercept at the vertex
    Float_t      fMeanCharge;   //Mean charge deposition of all hits of this track
-   Float_t      fXfirst;       //X coordinate of the first point
-   Float_t      fXlast;        //X coordinate of the last point
-   Float_t      fYfirst;       //Y coordinate of the first point
-   Float_t      fYlast;        //Y coordinate of the last point
-   Float_t      fZfirst;       //Z coordinate of the first point
-   Float_t      fZlast;        //Z coordinate of the last point
+   Float16_t    fXfirst;       //X coordinate of the first point
+   Float16_t    fXlast;        //X coordinate of the last point
+   Float16_t    fYfirst;       //Y coordinate of the first point
+   Float16_t    fYlast;        //Y coordinate of the last point
+   Float16_t    fZfirst;       //Z coordinate of the first point
+   Float16_t    fZlast;        //Z coordinate of the last point
    Double32_t   fCharge;       //[-1,1,2] Charge of this track
    Double32_t   fVertex[3];    //[-30,30,16] Track vertex position
    Int_t        fNpoint;       //Number of points for this track
