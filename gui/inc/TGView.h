@@ -126,7 +126,7 @@ public:
    virtual void   SetBackgroundPixmap(Pixmap_t p);
    virtual void   UpdateBackgroundStart();
 
-   const TGGC &GetWhiteGC() { return fWhiteGC; }
+   const TGGC &GetViewWhiteGC() { return fWhiteGC; }
 
    ClassDef(TGView,0)  // View widget base class
 };
