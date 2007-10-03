@@ -162,7 +162,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    }
    f1->AddFrame(fContBnd, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
-   // column 'Value'fParStp
+   // column 'Value'
    fContVal = new TGCompositeFrame(f1, 100, 20, kVerticalFrame | kFixedWidth);
    fContVal->AddFrame(new TGLabel(fContVal,"Value"),
                       new TGLayoutHints(kLHintsTop, 5, 0, 0, 0));
