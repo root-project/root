@@ -786,10 +786,13 @@ install: all
 	   inode1=`ls -id $(DESTDIR)$(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
-	if ([ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]) || \
-	    [ "$(USECONFIG)" = "FALSE" ]; then \
+	if ([ -d $(DESTDIR)$(BINDIR) ] && [ "x$$inode1" = "x$$inode2" ]); then \
 	   echo "Everything already installed..."; \
 	else \
+           if [ "$(USECONFIG)" = "FALSE" ] && [ -z "$(ROOTSYS)" ]; then \
+              echo "ROOTSYS not set, set it to a destination directory"; \
+              exit 1; \
+           fi; \
 	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(BINDIR); \
 	   $(INSTALLDATA) bin/*                 $(DESTDIR)$(BINDIR); \
@@ -818,6 +821,7 @@ install: all
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
 	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
@@ -827,32 +831,39 @@ install: all
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
 	   find $(DESTDIR)$(TTFFONTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(TTFFONTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing misc docs in $(DESTDIR)$(DOCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
 	   find $(DESTDIR)$(DOCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(DOCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
 	   find $(DESTDIR)$(TUTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(TUTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
 	   find $(DESTDIR)$(TESTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(TESTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
 	   find $(DESTDIR)$(MACRODIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(MACRODIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
 	   find $(DESTDIR)$(MANDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(MANDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   rm -f                                $(DESTDIR)$(ETCDIR)/system.rootmap; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   find $(DESTDIR)$(ETCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(ETCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
 	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
@@ -862,6 +873,7 @@ install: all
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) gdml/*.py               $(DESTDIR)$(LIBDIR); \
 	   find $(DESTDIR)$(DATADIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
+	   find $(DESTDIR)$(DATADIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	fi
 
 uninstall:
