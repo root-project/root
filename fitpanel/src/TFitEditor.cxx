@@ -920,6 +920,10 @@ void TFitEditor::SetCanvas(TCanvas *newcan)
    if (!newcan || (fCanvas == newcan)) return;
 
    fCanvas = newcan;
+   fParentPad = fCanvas->GetSelectedPad();
+   if (!fParentPad) fParentPad = fCanvas;
+   newcan->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TFitEditor",
+                   this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
    ConnectToCanvas();
 }
 
