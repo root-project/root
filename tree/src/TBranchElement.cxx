@@ -227,7 +227,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    //
 
    fEntryOffsetLen = 0;
-   if (btype || (fStreamerType <= TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kCharStar) || (fStreamerType == TVirtualStreamerInfo::kBits) || (fStreamerType > TVirtualStreamerInfo::kBool)) {
+   if (btype || (fStreamerType <= TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kCharStar) || (fStreamerType == TVirtualStreamerInfo::kBits) || (fStreamerType > TVirtualStreamerInfo::kFloat16)) {
       fEntryOffsetLen = 1000;
    }
 
@@ -1260,7 +1260,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
             case TVirtualStreamerInfo::kLong64   /* 16 */: { b.WriteFastArray((Long64_t*)  fAddress, n); break; }
             case TVirtualStreamerInfo::kULong64  /* 17 */: { b.WriteFastArray((ULong64_t*) fAddress, n); break; }
             case TVirtualStreamerInfo::kBool     /* 18 */: { b.WriteFastArray((Bool_t*)    fAddress, n); break; }
-            // Note: Type 19 is unused for now.
+            // Note: Type 19 is unused for now. NO It is used above
          }
       } else {
          if (!fObject) {
@@ -2618,6 +2618,14 @@ void TBranchElement::ReadLeaves(TBuffer& b)
                }
                break;
             }
+            case  19:  {
+               Double_t *xx = (Double_t*) fAddress;
+               Float_t afloat;
+               for (Int_t ii=0;ii<n;ii++) {
+                  b >> afloat; xx[ii] = Double_t(afloat);
+               }
+               break;
+            }
          }
          return;
       } else if (fType <= 2) {     // branch in split mode
@@ -2673,6 +2681,14 @@ void TBranchElement::ReadLeaves(TBuffer& b)
                case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
                case 18:  {b.ReadFastArray((Bool_t*)   fAddress, n); break;}
                case  9:  {
+                  Double_t *xx = (Double_t*)fAddress;
+                  Float_t afloat;
+                  for (Int_t ii=0;ii<n;ii++) {
+                     b>> afloat; xx[ii] = Double_t(afloat);
+                  }
+                  break;
+               }
+               case  19:  {
                   Double_t *xx = (Double_t*)fAddress;
                   Float_t afloat;
                   for (Int_t ii=0;ii<n;ii++) {
