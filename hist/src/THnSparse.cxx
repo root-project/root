@@ -874,8 +874,8 @@ Double_t THnSparse::ComputeIntegral()
 
    // check number of bins
    if (GetNbins() == 0) {
-	   Error("ComputeIntegral", "The histogram must have at least one bin.");
-	   return 0.;
+      Error("ComputeIntegral", "The histogram must have at least one bin.");
+      return 0.;
    }
 
    // allocate integral array
@@ -887,26 +887,26 @@ Double_t THnSparse::ComputeIntegral()
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       Double_t v = GetBinContent(i, coord);
 
-	  // check whether the bin is regular
-	  bool regularBin = true;
-	  for (Int_t dim = 0; dim < fNdimensions; dim++)
-		  if (coord[dim] < 1 || coord[dim] > GetAxis(dim)->GetNbins()) {
-			  regularBin = false;
-			  break;
-		  }
+      // check whether the bin is regular
+      bool regularBin = true;
+      for (Int_t dim = 0; dim < fNdimensions; dim++)
+         if (coord[dim] < 1 || coord[dim] > GetAxis(dim)->GetNbins()) {
+            regularBin = false;
+            break;
+         }
 
-	  // if outlayer, count it with zero weight
-	  if (!regularBin) v = 0.;
+      // if outlayer, count it with zero weight
+      if (!regularBin) v = 0.;
 
-	  fIntegral[i + 1] = fIntegral[i] + v;
+      fIntegral[i + 1] = fIntegral[i] + v;
    }
    delete [] coord;
 
    // check sum of weights
    if (fIntegral[GetNbins()] == 0.) {
-	   Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
-	   delete [] fIntegral;
-	   return 0.;
+      Error("ComputeIntegral", "No hits in regular bins (non over/underflow).");
+      delete [] fIntegral;
+      return 0.;
    }
 
    // normalize the integral array
