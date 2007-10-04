@@ -312,12 +312,19 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
       if ((*pos == ':') || (*pos == 0)) {
          // -- Reached end of a leaf spec, create a leaf.
          Int_t lenName = pos - nameBegin;
-         strncpy(leafname, nameBegin, lenName);
-         leafname[lenName] = 0;
-         char* ctype = strstr(leafname, "/");
-         if (ctype) {
-            *ctype = 0;
-            strcpy(leaftype, ctype + 1);
+         char* ctype = 0;
+         if (lenName) {
+            strncpy(leafname, nameBegin, lenName);
+            leafname[lenName] = 0;
+            ctype = strstr(leafname, "/");
+            if (ctype) {
+               *ctype = 0;
+               strcpy(leaftype, ctype + 1);
+            }
+         }
+         if (lenName == 0 || ctype == leafname) {
+            Warning("TBranch","No name was given to the leaf number '%d' in the leaflist of the branch '%s'.",fNleaves,name);
+            sprintf(leafname,"__noname%d",fNleaves);            
          }
          TLeaf* leaf = 0;
          if (*leaftype == 'C') {
