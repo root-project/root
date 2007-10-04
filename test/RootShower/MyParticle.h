@@ -92,6 +92,7 @@ public :
 
     virtual void  Delete(Option_t *) { }
     virtual void  SetLineAttributes() { }
+    virtual void  SetDrawOption(Option_t *) { }
 
     ClassDef(MyParticle,1)  //Event structure
 };
