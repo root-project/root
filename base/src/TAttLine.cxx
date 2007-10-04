@@ -68,7 +68,6 @@ Begin_Macro(source)
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
-   gStyle->SetLineStyleString(9,"400 20");
    for (float s=0.1; s<1.0 ; s+=0.092) {
       TLine *lh = new TLine(0.15,s,.85,s);
       lh->SetLineWidth(i);
@@ -81,27 +80,11 @@ End_Macro
 
 Begin_Html
 <a name="L3"></a><h3>Line Style</h3>
-Line styles are identified via integer numbers.
-The line style of any class inheriting from <tt>TAttLine</tt> can
-be changed using the method <tt>SetLineStyle</tt> and retrieved using the
-method <tt>GetLineStyle</tt>.
-The four basic line styles are:
-<pre>
-   1 = solid
-   2 = dash
-   3 = dot-dot
-   4 = dash-dot
-</pre>
-Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
-<br>Example:
-<pre>
-   gStyle->SetLineStyleString(5,"20 12 4 12");
-   gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
-   gStyle->SetLineStyleString(7,"20 20");
-   gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
-   gStyle->SetLineStyleString(9,"80 20");
-</pre>
-The following picture shows the first 10 line styles.
+Line styles are identified via integer numbers. The line style of any class
+inheriting from <tt>TAttLine</tt> can be changed using the method
+<tt>SetLineStyle</tt> and retrieved using the method <tt>GetLineStyle</tt>.
+<br>
+The first 10 line styles are predefined as shown on the following picture:
 End_Html
 Begin_Macro(source)
 {
@@ -110,7 +93,6 @@ Begin_Macro(source)
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
-   gStyle->SetLineStyleString(9,"400 20");
    for (float s=0.1; s<1.0 ; s+=0.092) {
       TLine *lh = new TLine(0.15,s,.85,s);
       lh->SetLineStyle(i);
@@ -119,7 +101,16 @@ Begin_Macro(source)
    }
    return Ls;
 }
-End_Macro */
+End_Macro 
+
+Begin_Html
+Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
+<br>For example the line style number 11 can be defined as follow:
+<pre>
+   gStyle->SetLineStyleString(11,"400 200");
+</pre>
+Existing line styles (1 to 10) can be redefined using the same method.
+End_Html */
 
 
 //______________________________________________________________________________
