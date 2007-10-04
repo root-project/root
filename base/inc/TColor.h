@@ -100,10 +100,12 @@ public:
    static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);
    static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b)
                      { TColor::HLS2RGB(h, l, s, r, g, b); } // backward compatible
+   static void    HSV2RGB(Float_t h, Float_t s, Float_t v, Float_t &r, Float_t &g, Float_t &b);
    static void    RGB2HLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
    static void    RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s);
    static void    RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s)
                      { TColor::RGB2HLS(r, g, b, h, l, s); } // backward compatible
+   static void    RGB2HSV(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &s, Float_t &v);
    static Int_t   GetColor(const char *hexcolor);
    static Int_t   GetColor(Float_t r, Float_t g, Float_t b);
    static Int_t   GetColor(Int_t r, Int_t g, Int_t b);

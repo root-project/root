@@ -29,17 +29,17 @@ TArrayI TColor::fgPalette(0);
 //////////////////////////////////////////////////////////////////////////
 /* Begin_Html
 <center><h2>TColor: Color Creation and Management</h2></center>
- Color defined by RGB or HLS.                                         
- At initialization time, a table of colors is generated. This linked  
+ Color defined by RGB or HLS.
+ At initialization time, a table of colors is generated. This linked
  list can be accessed from the TROOT object via the color index, eg
  <pre>
- TColor *color = gROOT->GetColor(kOrange); 
- </pre>                         
+ TColor *color = gROOT->GetColor(kOrange);
+ </pre>
 <p> Two sets of colors are initialized;
  <ul>
     <li>Colors with index 0 to 50 (old style palette)
     <li>The Color Wheel (recommended) with color indices from 300 to 1000.
- </ul>  
+ </ul>
 <h4>Old Style Palette</h4>
 End_Html
 Begin_Macro(source)
@@ -50,13 +50,13 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
-   
+
 <h4>The ROOT Color Wheel</h4>
 The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
 <p>Using this color set for your text, background or graphics will give your
 application a consistent appearance across different platforms and browsers.
-<p>Colors are grouped by hue, the aspect most important in human perception 
+<p>Colors are grouped by hue, the aspect most important in human perception
 Touching color chips have the same hue, but with different brightness and vividness.
 <p>Colors of slightly different hues <b>clash</b>. If you intend to display
 colors of the same hue together, you should pick them from the same group.
@@ -81,8 +81,8 @@ End_Macro
 Begin_Html
 
 <h4>Bright and Dark colors</h4>
- The dark and bright color are used to give 3-D effects when drawing  
- various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).         
+ The dark and bright color are used to give 3-D effects when drawing
+ various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).
 <ul>
    <li>The Dark colors have an index = color_index+100
    <li>The Bright colors have an index = color_index+150
@@ -94,12 +94,12 @@ Begin_Html
 </ul>
 
  <h4> Gray scale view of of canvas with colors</h4>
- One can toggle between a grayscale preview and the regular           
- colored mode using TCanvas::SetGrayscale(). Note that in grayscale mode,      
- access via RGB will return grayscale values according to ITU         
- standards (and close to b&w printer grayscales), while access via    
+ One can toggle between a grayscale preview and the regular
+ colored mode using TCanvas::SetGrayscale(). Note that in grayscale mode,
+ access via RGB will return grayscale values according to ITU
+ standards (and close to b&w printer grayscales), while access via
  HLS returns de-saturated grayscales. The table below show the ROOT Color Wheel
-in grayscale mode.                                
+in grayscale mode.
 End_Html
 Begin_Macro(source)
 {
@@ -112,8 +112,7 @@ Begin_Macro(source)
 }
 End_Macro */
 
-   
-   
+
 //______________________________________________________________________________
 TColor::TColor(): TNamed()
 {
@@ -124,8 +123,9 @@ TColor::TColor(): TNamed()
    fAlpha = 1;
 }
 
+
 //______________________________________________________________________________
-TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name, 
+TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
                Float_t a)
       : TNamed(name,"")
 {
@@ -165,6 +165,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    fAlpha = a;
 }
 
+
 //______________________________________________________________________________
 TColor::~TColor()
 {
@@ -173,6 +174,7 @@ TColor::~TColor()
    gROOT->GetListOfColors()->Remove(this);
 }
 
+
 //______________________________________________________________________________
 TColor::TColor(const TColor &color) : TNamed(color)
 {
@@ -180,6 +182,7 @@ TColor::TColor(const TColor &color) : TNamed(color)
 
    ((TColor&)color).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TColor::InitializeColors()
@@ -296,12 +299,13 @@ void TColor::InitializeColors()
          TColor::HLStoRGB(h,1.4*l,s,r,g,b);
          new TColor(200+4*i  ,r,g,b);
       }
-      
+
       // Create the ROOT Color Wheel
       TColor::CreateColorWheel();
    }
    SetPalette(0,0);
 }
+
 
 //______________________________________________________________________________
 const char *TColor::AsHexString() const
@@ -318,6 +322,7 @@ const char *TColor::AsHexString() const
 
    return (a != 255) ? Form("#%02x%02x%02x%02x", a, r, g, b) : Form("#%02x%02x%02x", r, g, b);
 }
+
 
 //______________________________________________________________________________
 void TColor::Copy(TObject &obj) const
@@ -338,9 +343,9 @@ void TColor::Copy(TObject &obj) const
 
 //______________________________________________________________________________
 void TColor::CreateColorsGray()
-{   
+{
    // Create the Gray scale colors in the Color Wheel
-   
+
    if (gROOT->GetColor(kGray)) return;
    TColor *gray  = new TColor(kGray,204./255.,204./255.,204./255.);
    TColor *gray1 = new TColor(kGray+1,153./255.,153./255.,153./255.);
@@ -352,11 +357,12 @@ void TColor::CreateColorsGray()
    gray3->SetName("kGray+3");
 }
 
+
 //______________________________________________________________________________
-void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb) 
+void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
 {
    // Create the "circle" colors in the Color Wheel
-   
+
    for (Int_t n=0;n<15;n++) {
       Int_t colorn = offset+n-10;
       TColor *color = gROOT->GetColor(colorn);
@@ -370,11 +376,12 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
    }
 }
 
+
 //______________________________________________________________________________
-void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb) 
+void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
 {
    // Create the "rectangular" colors in the Color Wheel
-   
+
    for (Int_t n=0;n<20;n++) {
       Int_t colorn = offset+n-9;
       TColor *color = gROOT->GetColor(colorn);
@@ -388,57 +395,58 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
    }
 }
 
+
 //______________________________________________________________________________
-void TColor::CreateColorWheel() 
+void TColor::CreateColorWheel()
 {
    // Static function steering the creation of all colors in the ROOT Color Wheel
-   
+
    UChar_t magenta[46]= {255,204,255
                         ,255,153,255, 204,153,204
                         ,255,102,255, 204,102,204, 153,102,153
                         ,255, 51,255, 204, 51,204, 153, 51,153, 102, 51,102
                         ,255,  0,255, 204,  0,204, 153,  0,153, 102,  0,102,  51,  0, 51};
-                        
+
    UChar_t red[46]    = {255,204,204
                         ,255,153,153, 204,153,153
                         ,255,102,102, 204,102,102, 153,102,102
                         ,255, 51, 51, 204, 51, 51, 153, 51, 51, 102, 51, 51
                         ,255,  0,  0, 204,  0,  0, 153,  0,  0, 102,  0,  0,  51,  0,  0};
-                        
+
    UChar_t yellow[46] = {255,255,204
                         ,255,255,153, 204,204,153
                         ,255,255,102, 204,204,102, 153,153,102
                         ,255,255, 51, 204,204, 51, 153,153, 51, 102,102, 51
                         ,255,255,  0, 204,204,  0, 153,153,  0, 102,102,  0,  51, 51,  0};
-                        
+
    UChar_t green[46]  = {204,255,204
                         ,153,255,153, 153,204,153
                         ,102,255,102, 102,204,102, 102,153,102
                         , 51,255, 51,  51,204, 51,  51,153, 51,  51,102, 51
                         ,  0,255,  0,   0,204,  0,   0,153,  0,   0,102,  0,  0, 51,  0};
-                        
+
    UChar_t cyan[46]   = {204,255,255
                         ,153,255,255, 153,204,204
                         ,102,255,255, 102,204,204, 102,153,153
                         , 51,255,255,  51,204,204,  51,153,153,  51,102,102
                         ,  0,255,255,   0,204,204,   0,153,153,   0,102,102,   0, 51,  51};
-                        
+
    UChar_t blue[46]   = {204,204,255
                         ,153,153,255, 153,153,204
                         ,102,102,255, 102,102,204, 102,102,153
                         , 51, 51,255,  51, 51,204,  51, 51,153,  51, 51,102
                         ,  0,  0,255,   0,  0,204,   0,  0,153,   0,  0,102,   0,  0,  51};
-                        
+
    UChar_t pink[60] = {255, 51,153,  204,  0,102,  102,  0, 51,  153,  0, 51,  204, 51,102
                       ,255,102,153,  255,  0,102,  255, 51,102,  204,  0, 51,  255,  0, 51
                       ,255,153,204,  204,102,153,  153, 51,102,  153,  0,102,  204, 51,153
                       ,255,102,204,  255,  0,153,  204,  0,153,  255, 51,204,  255,  0,153};
-                      
+
    UChar_t orange[60]={255,204,153,  204,153,102,  153,102, 51,  153,102,  0,  204,153, 51
                       ,255,204,102,  255,153,  0,  255,204, 51,  204,153,  0,  255,204,  0
                       ,255,153, 51,  204,102,  0,  102, 51,  0,  153, 51,  0,  204,102, 51
                       ,255,153,102,  255,102,  0,  255,102, 51,  204, 51,  0,  255, 51,  0};
-                       
+
    UChar_t spring[60]={153,255, 51,  102,204,  0,   51,102,  0,   51,153,  0,  102,204, 51
                       ,153,255,102,  102,255,  0,  102,255, 51,   51,204,  0,   51,255, 0
                       ,204,255,153,  153,204,102,  102,153, 51,  102,153,  0,  153,204, 51
@@ -453,7 +461,7 @@ void TColor::CreateColorWheel()
                       ,102,153,255,    0,102,255,   51,102,255,    0, 51,204,    0, 51,255
                       , 51,153,255,    0,102,204,    0, 51,102,    0,102,153,   51,153,204
                       ,102,204,255,    0,153,255,   51,204,255,    0,153,204,    0,204,255};
-      
+
    UChar_t violet[60]={204,153,255,  153,102,204,  102, 51,153,  102,  0,153,  153, 51,204
                       ,204,102,255,  153,  0,255,  204, 51,255,  153,  0,204,  204,  0,255
                       ,153, 51,255,  102,  0,204,   51,  0,102,   51,  0,153,  102, 51,204
@@ -465,16 +473,17 @@ void TColor::CreateColorWheel()
    TColor::CreateColorsCircle(kGreen,  "kGreen",  green);
    TColor::CreateColorsCircle(kCyan,   "kCyan",   cyan);
    TColor::CreateColorsCircle(kBlue,   "kBlue",   blue);
-   
+
    TColor::CreateColorsRectangle(kPink,  "kPink",  pink);
    TColor::CreateColorsRectangle(kOrange,"kOrange",orange);
    TColor::CreateColorsRectangle(kSpring,"kSpring",spring);
    TColor::CreateColorsRectangle(kTeal,  "kTeal",  teal);
    TColor::CreateColorsRectangle(kAzure, "kAzure", azure);
    TColor::CreateColorsRectangle(kViolet,"kViolet",violet);
-   
+
    TColor::CreateColorsGray();
 }
+
 
 //______________________________________________________________________________
 Int_t TColor::GetColorPalette(Int_t i)
@@ -487,13 +496,15 @@ Int_t TColor::GetColorPalette(Int_t i)
    return fgPalette.fArray[icol];
 }
 
+
 //______________________________________________________________________________
 Int_t TColor::GetNumberOfColors()
 {
    // static function: Return number of colors in the color palette
-   
+
    return fgPalette.fN;
-} 
+}
+
 
 //______________________________________________________________________________
 ULong_t TColor::GetPixel() const
@@ -512,6 +523,7 @@ ULong_t TColor::GetPixel() const
 
    return 0;
 }
+
 
 //______________________________________________________________________________
 void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
@@ -538,6 +550,7 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
    b = HLStoRGB1(rm1, rm2, rh-120);
 }
 
+
 //______________________________________________________________________________
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
@@ -551,6 +564,7 @@ Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
    if (hue < 240) return rn1 + (rn2-rn1)*(240-hue)/60;
    return rn1;
 }
+
 
 //______________________________________________________________________________
 void TColor::HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b)
@@ -571,6 +585,70 @@ void TColor::HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b)
    b = (Int_t) (bb * 255);
 }
 
+
+//______________________________________________________________________________
+void TColor::HSV2RGB(Float_t hue, Float_t satur, Float_t value,
+                     Float_t &r, Float_t &g, Float_t &b)
+{
+   // Static method to compute RGB from HSV.
+   // - The hue value runs from 0 to 360.
+   // - The saturation is the degree of strength or purity and is from 0 to 1.
+   //   Purity is how much white is added to the color, so S=1 makes the purest
+   //   color (no white).
+   // - Brightness value also ranges from 0 to 1, where 0 is the black.
+   // The returned r,g,b triplet is between [0,1].
+
+   Int_t i;
+   Float_t f, p, q, t;
+
+   if (satur==0) {
+      // Achromatic (grey)
+      r = g = b = value;
+      return;
+   }
+
+   hue /= 60;   // sector 0 to 5
+   i = (Int_t)floor(hue);
+   f = hue-i;   // factorial part of hue
+   p = value*(1-satur);
+   q = value*(1-satur*f );
+   t = value*(1-satur*(1-f));
+
+   switch (i) {
+      case 0:
+         r = value;
+         g = t;
+         b = p;
+         break;
+      case 1:
+         r = q;
+         g = value;
+         b = p;
+         break;
+      case 2:
+         r = p;
+         g = value;
+         b = t;
+         break;
+      case 3:
+         r = p;
+         g = q;
+         b = value;
+         break;
+      case 4:
+         r = t;
+         g = p;
+         b = value;
+         break;
+      default:
+         r = value;
+         g = p;
+         b = q;
+         break;
+   }
+}
+
+
 //______________________________________________________________________________
 void TColor::ls(Option_t *) const
 {
@@ -580,6 +658,7 @@ void TColor::ls(Option_t *) const
           fNumber, fRed, fGreen, fBlue, GetName());
 }
 
+
 //______________________________________________________________________________
 void TColor::Print(Option_t *) const
 {
@@ -587,6 +666,7 @@ void TColor::Print(Option_t *) const
 
    ls();
 }
+
 
 //______________________________________________________________________________
 void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
@@ -637,6 +717,49 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
       hue = hue - 360;
 }
 
+
+//______________________________________________________________________________
+void TColor::RGB2HSV(Float_t r, Float_t g, Float_t b,
+                     Float_t &hue, Float_t &satur, Float_t &value)
+{
+   // Static method to compute HSV from RGB.
+   // - r,g,b triplet is between [0,1].
+   // The returned value:
+   // - The hue value runs from 0 to 360.
+   // - The saturation is the degree of strength or purity and is from 0 to 1.
+   //   Purity is how much white is added to the color, so S=1 makes the purest
+   //   color (no white).
+   // - Brightness value also ranges from 0 to 1, where 0 is the black.
+
+   Float_t min, max, delta;
+
+   min   = TMath::Min(TMath::Min(r, g), b);
+   max   = TMath::Max(TMath::Max(r, g), b);
+   value = max;
+
+   delta = max - min;
+
+   if (max != 0) {
+      satur = delta/max;
+   } else {
+      satur = 0;
+      hue   = -1;
+      return;
+   }
+
+   if (r == max) {
+      hue = (g-b)/delta;
+   } else if (g == max) {
+      hue = 2+(b-r)/delta;
+   } else {
+      hue = 4+(r-g)/delta;
+   }
+
+   hue *= 60;
+   if (hue < 0) hue += 360;
+}
+
+
 //______________________________________________________________________________
 void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
 {
@@ -655,6 +778,7 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
    l = (Int_t) (light * 255);
    s = (Int_t) (satur * 255);
 }
+
 
 //______________________________________________________________________________
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
@@ -702,6 +826,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    }
 }
 
+
 //______________________________________________________________________________
 void TColor::Allocate()
 {
@@ -710,6 +835,7 @@ void TColor::Allocate()
    if (gVirtualX && !gROOT->IsBatch())
       gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
 }
+
 
 //______________________________________________________________________________
 Int_t TColor::GetColor(const char *hexcolor)
@@ -729,6 +855,7 @@ Int_t TColor::GetColor(const char *hexcolor)
    return 0;
 }
 
+
 //______________________________________________________________________________
 Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 {
@@ -746,6 +873,7 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
    return GetColor(rr, gg, bb);
 }
 
+
 //______________________________________________________________________________
 Int_t TColor::GetColor(ULong_t pixel)
 {
@@ -759,6 +887,7 @@ Int_t TColor::GetColor(ULong_t pixel)
 
    return GetColor(r, g, b);
 }
+
 
 //______________________________________________________________________________
 Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
@@ -822,6 +951,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    return color->GetNumber();
 }
 
+
 //______________________________________________________________________________
 Int_t TColor::GetColorBright(Int_t n)
 {
@@ -830,7 +960,7 @@ Int_t TColor::GetColorBright(Int_t n)
    // The convention is that the bright color nb = n+150
 
    if (n < 0) return -1;
-   
+
    // Get list of all defined colors
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
@@ -838,11 +968,11 @@ Int_t TColor::GetColorBright(Int_t n)
    TColor *color = 0;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
-   
+
    //Get the rgb of the the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2*color->GetLight(), color->GetSaturation(), r, g, b);
-   
+
    //Build the bright color (unless the slot nb is already used)
    Int_t nb = n+150;
    TColor *colorb = 0;
@@ -854,6 +984,7 @@ Int_t TColor::GetColorBright(Int_t n)
    return nb;
 }
 
+
 //______________________________________________________________________________
 Int_t TColor::GetColorDark(Int_t n)
 {
@@ -862,7 +993,7 @@ Int_t TColor::GetColorDark(Int_t n)
    // The convention is that the dark color nd = n+100
 
    if (n < 0) return -1;
-   
+
    // Get list of all defined colors
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
@@ -870,11 +1001,11 @@ Int_t TColor::GetColorDark(Int_t n)
    TColor *color = 0;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
-   
+
    //Get the rgb of the the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7*color->GetLight(), color->GetSaturation(), r, g, b);
-   
+
    //Build the dark color (unless the slot nd is already used)
    Int_t nd = n+100;
    TColor *colord = 0;
@@ -885,7 +1016,7 @@ Int_t TColor::GetColorDark(Int_t n)
    colors->AddAtAndExpand(colord,nd);
    return nd;
 }
-   
+
 
 //______________________________________________________________________________
 ULong_t TColor::Number2Pixel(Int_t ci)
@@ -905,6 +1036,7 @@ ULong_t TColor::Number2Pixel(Int_t ci)
 
    return 0;
 }
+
 
 //______________________________________________________________________________
 ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
@@ -928,6 +1060,7 @@ ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
    return color.fPixel;
 }
 
+
 //______________________________________________________________________________
 ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
 {
@@ -950,6 +1083,7 @@ ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
    return color.fPixel;
 }
 
+
 //______________________________________________________________________________
 void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
 {
@@ -964,6 +1098,7 @@ void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
    g = (Float_t)color.fGreen / 65535;
    b = (Float_t)color.fBlue / 65535;
 }
+
 
 //______________________________________________________________________________
 void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
@@ -980,6 +1115,7 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
    b = color.fBlue / 257;
 }
 
+
 //______________________________________________________________________________
 const char *TColor::PixelAsHexString(ULong_t pixel)
 {
@@ -993,6 +1129,7 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
    Pixel2RGB(pixel, r, g, b);
    return Form("#%02x%02x%02x", r, g, b);
 }
+
 
 //______________________________________________________________________________
 void TColor::SaveColor(ostream &out, Int_t ci)
@@ -1014,12 +1151,14 @@ void TColor::SaveColor(ostream &out, Int_t ci)
    out<<"   ci = TColor::GetColor("<<quote<<cname<<quote<<");"<<endl;
 }
 
+
 //______________________________________________________________________________
 Bool_t TColor::IsGrayscale()
 {
    // Return whether all colors return grayscale values
    return fgGrayscaleMode;
 }
+
 
 //______________________________________________________________________________
 void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
@@ -1037,6 +1176,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
    while ((color = (TColor*) iColor()))
       color->Allocate();
 }
+
 
 //______________________________________________________________________________
 Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
@@ -1136,7 +1276,6 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
    return highestIndex - NColors;
 }
 
-//______________________________________________________________________________
 
 //______________________________________________________________________________
 void TColor::SetPalette(Int_t ncolors, Int_t *colors)
