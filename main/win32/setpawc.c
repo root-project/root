@@ -1,4 +1,4 @@
-/* @(#)root/main:$Name$:$Id$ */
+/* @(#)root/main:$Id$ */
 /* Author: Valery Fine(fine@vxcern.cern.ch)   08/12/96 */
 
 /*

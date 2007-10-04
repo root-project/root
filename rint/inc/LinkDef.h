@@ -1,4 +1,4 @@
-/* @(#)root/rint:$Name$:$Id$ */
+/* @(#)root/rint:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

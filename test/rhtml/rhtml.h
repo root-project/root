@@ -1,4 +1,4 @@
-// @(#)root/test/rhtml/:$Name$:$Id$
+// @(#)root/test/rhtml/:$Id$
 // Author: Bertrand Bellenot   09/05/2007
 
 /*************************************************************************

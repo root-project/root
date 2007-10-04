@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Id$
 // Author: Rene Brun   23/02/95
 // ---------------------------------- points.C
 

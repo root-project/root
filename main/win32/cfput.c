@@ -1,8 +1,8 @@
-/* @(#)root/main:$Name$:$Id$ */
+/* @(#)root/main:$Id$ */
 /* Author: Valery Fine(fine@vxcern.cern.ch)   02/02/90 */
 
 /*
- * $Id: cfput.c,v 1.4 1997/10/23 16:33:19 mclareni Exp $
+ * $Id$
  *
  * $Log: cfput.c,v $
  * Revision 1.4  1997/10/23 16:33:19  mclareni

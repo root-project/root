@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Finish access to a mmap'd malloc managed region.

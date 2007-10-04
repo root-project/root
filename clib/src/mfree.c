@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Free a block of memory allocated by `mmalloc'.

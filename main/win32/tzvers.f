@@ -1,4 +1,4 @@
-* @(#)root/main:$Name$:$Id$ */
+* @(#)root/main:$Id$ */
 * Author: Valery Fine(fine@vxcern.cern.ch)   02/06/97 */
 
 ************************************************************************
@@ -6,7 +6,7 @@
 *   has not been fixed by CERNLIB yet.
 *   For that we include it in the ROOT distribution.
 ************************************************************************
-* $Id: tzvers.F,v 1.2 1996/04/18 16:14:56 mclareni Exp $
+* $Id$
 *
 * $Log: tzvers.F,v $
 * Revision 1.2  1996/04/18 16:14:56  mclareni
@@ -22,7 +22,7 @@ C-    Find title bank with IDH (and IDN if non-zero)
 C-    and a validity range spanning ISELP
 
 *
-* $Id: mqsys.inc,v 1.1.1.1 1996/03/06 10:46:54 mclareni Exp $
+* $Id$
 *
 * $Log: mqsys.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:54  mclareni
@@ -36,7 +36,7 @@ C-    and a validity range spanning ISELP
 *
 
 *
-* $Id: mzbits.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: mzbits.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -50,7 +50,7 @@ C-    and a validity range spanning ISELP
 *
       PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
 *
-* $Id: quest.inc,v 1.1.1.1 1996/03/06 10:46:52 mclareni Exp $
+* $Id$
 *
 * $Log: quest.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:52  mclareni
@@ -63,7 +63,7 @@ C-    and a validity range spanning ISELP
 *
       COMMON /QUEST/ IQUEST(100)
 *
-* $Id: zebq.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: zebq.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -78,7 +78,7 @@ C-    and a validity range spanning ISELP
                               DIMENSION    IQ(92),        Q(92)
                               EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
 *
-* $Id: mzca.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: mzca.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -99,7 +99,7 @@ C-    and a validity range spanning ISELP
 *    Process Master parameters
 
 *
-* $Id: mzcb.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: mzcb.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -117,7 +117,7 @@ C-    and a validity range spanning ISELP
                                        DIMENSION    IQCUR(16)
                                        EQUIVALENCE (IQCUR(1),LQSTOR)
 *
-* $Id: mzcc.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: mzcc.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -141,7 +141,7 @@ C-    and a validity range spanning ISELP
                                        EQUIVALENCE (IQTABV(1),LQPSTO)
 
 *
-* $Id: eqlqt.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: eqlqt.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -162,7 +162,7 @@ C--------------    END CDE                             -----------------
       DATA  NAMESR / 4HTZVE, 4HRS   /
 
 *
-* $Id: q_jbyt.inc,v 1.1 1996/04/18 16:15:07 mclareni Exp $
+* $Id$
 *
 * $Log: q_jbyt.inc,v $
 * Revision 1.1  1996/04/18 16:15:07  mclareni
@@ -175,7 +175,7 @@ C--------------    END CDE                             -----------------
 *
       JBYT (IZW,IZP,NZB) = ISHFT (ISHFT(IZW,33-IZP-NZB), -32+NZB)
 *
-* $Id: qstore.inc,v 1.1.1.1 1996/03/06 10:46:53 mclareni Exp $
+* $Id$
 *
 * $Log: qstore.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:53  mclareni
@@ -219,7 +219,7 @@ C--       bank not found
           RETURN
         ENDIF
 *
-* $Id: qtrace.inc,v 1.1.1.1 1996/03/06 10:46:54 mclareni Exp $
+* $Id$
 *
 * $Log: qtrace.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:54  mclareni
@@ -245,7 +245,7 @@ C--       bank not found
 *      ==================================================
 
 *
-* $Id: qcardl.inc,v 1.1.1.1 1996/03/06 10:46:55 mclareni Exp $
+* $Id$
 *
 * $Log: qcardl.inc,v $
 * Revision 1.1.1.1  1996/03/06 10:46:55  mclareni

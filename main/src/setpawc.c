@@ -1,6 +1,6 @@
-/* @(#)root/main:$Name$:$Id$ */
+/* @(#)root/main:$Id$ */
 /* Author: */
-// @(#)root/main:$Name$:$Id$
+// @(#)root/main:$Id$
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/12/96
 //*--
 //*--  This fortran subroutine is needed to set the right size

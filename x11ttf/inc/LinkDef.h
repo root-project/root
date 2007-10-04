@@ -1,4 +1,4 @@
-/* @(#)root/x11ttf:$Name$:$Id$ */
+/* @(#)root/x11ttf:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -1,4 +1,4 @@
-/* @(#)root/x11:$Name$:$Id$ */
+/* @(#)root/x11:$Id$ */
 /* Author: Rene Brun   11/06/97*/
 #include <stdio.h>
 #include <string.h>

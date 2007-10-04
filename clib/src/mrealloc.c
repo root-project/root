@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Change the size of a block allocated by `mmalloc'.

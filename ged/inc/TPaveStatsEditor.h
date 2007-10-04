@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  TPaveStatsEditor.h
+// @(#)root/ged:$Id$
 // Author: Ilka  Antcheva 21/06/04
 
 /*************************************************************************

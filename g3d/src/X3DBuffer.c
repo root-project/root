@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name$:$Id$ */
+/* @(#)root/g3d:$Id$ */
 /* Author: Nenad Buncic   13/12/95*/
 
 #include "X3DBuffer.h"

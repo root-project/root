@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  TFrameEditor.cxx
+// @(#)root/ged:$Id$
 // Author: Ilka Antcheva   08/03/05
 
 /*************************************************************************

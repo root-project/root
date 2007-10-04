@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Id$
 // Author: Rene Brun   23/08/96
 
 {

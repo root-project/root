@@ -1,8 +1,8 @@
-/* @(#)root/main:$Name$:$Id$ */
+/* @(#)root/main:$Id$ */
 /* Author: Valery Fine(fine@vxcern.cern.ch)   02/02/98 */
 
 /*
- * $Id: cfget.c,v 1.5 1997/10/23 16:33:18 mclareni Exp $
+ * $Id$
  *
  * $Log: cfget.c,v $
  * Revision 1.5  1997/10/23 16:33:18  mclareni

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Memory allocator `malloc'.

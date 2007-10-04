@@ -331,6 +331,7 @@ int main(int argc, char **argv)
       }
       if (!strcmp(argv[i], "-b"))      batch   = true;
       if (!strcmp(argv[i], "-l"))      gNoLogo = true;
+      if (!strcmp(argv[i], "-ll"))     gNoLogo = true;
       if (!strcmp(argv[i], "-a"))      about   = true;
       if (!strcmp(argv[i], "-config")) gNoLogo = true;
    }

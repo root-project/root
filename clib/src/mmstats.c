@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Id$ */
 /* Author: */
 
 /* Access the statistics maintained by `mmalloc'.

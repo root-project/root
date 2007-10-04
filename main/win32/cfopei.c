@@ -1,8 +1,8 @@
-/* @(#)root/main:$Name$:$Id$ */
+/* @(#)root/main:$Id$ */
 /* Author: Valery Fine(fine@vxcern.cern.ch)   02/02/98 */
 
 /*
- * $Id: cfopei.c,v 1.4 1997/09/02 14:26:46 mclareni Exp $
+ * $Id$
  *
  * $Log: cfopei.c,v $
  * Revision 1.4  1997/09/02 14:26:46  mclareni
