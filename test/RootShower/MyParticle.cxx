@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 
+#include <TSystem.h>
 #include <TRandom.h>
 #include <TParticle.h>
 #include "MyParticle.h"
@@ -218,4 +219,32 @@ MyParticle::~MyParticle()
     delete fTracks;
     delete fLocation;
 }
+
+//______________________________________________________________________________
+void MyParticle::HighLight()
+{
+    Int_t i;
+    TPolyLine3D *poly;
+    TIter next(fTracks);
+    for (i=0;i<5;i++) {
+        next.Reset();
+        while (poly = (TPolyLine3D *)next()) {
+            poly->SetLineColor(poly->GetLineColor() + 25);
+            poly->SetLineWidth(3);
+            gSystem->ProcessEvents();
+        }
+        gRootShower->UpdateDisplay();
+        gSystem->ProcessEvents();
+        next.Reset();
+        while (poly = (TPolyLine3D *)next()) {
+            poly->SetLineColor(poly->GetLineColor() - 25);
+            poly->SetLineWidth(1);
+            gSystem->ProcessEvents();
+        }
+        gRootShower->UpdateDisplay();
+        gSystem->ProcessEvents();
+    }
+    gRootShower->UpdateDisplay();
+}
+
 

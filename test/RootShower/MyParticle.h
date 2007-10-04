@@ -43,7 +43,7 @@ private:
 
     Int_t       fNtrack;    
     TObjArray  *fTracks;       // ->array with all tracks
-    
+
 public :
 
     MyParticle();
@@ -87,6 +87,11 @@ public :
     void          SetDecayLength(Double_t len) { fDecayLength = len; }
     void          SetChild(Int_t id, Int_t child_id) { fChild[id] = child_id; }
     void          GenerateTimeOfDecay();
+
+    void          HighLight(); // *MENU*
+
+    virtual void  Delete(Option_t *) { }
+    virtual void  SetLineAttributes() { }
 
     ClassDef(MyParticle,1)  //Event structure
 };

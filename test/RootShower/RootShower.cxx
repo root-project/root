@@ -34,6 +34,7 @@
 #include <TGStatusBar.h>
 #include <TBrowser.h>
 #include <TParticle.h>
+#include <TContextMenu.h>
 #include "RootShower.h"
 #include "MyParticle.h"
 #include "GTitleFrame.h"
@@ -281,6 +282,8 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
     fV1->AddFrame(fSelectionFrame, lo);
 
+    fContextMenu = new TContextMenu("RSContextMenu");
+    
     //__________________________________________________________________________________
 
     // Create Display frame
@@ -511,6 +514,7 @@ RootShower::~RootShower()
     // GUI MEMBERS
     CloseMenuBarFrame();
 
+    delete fContextMenu;
     delete fZoomPlusButton2;
     delete fZoomMoinsButton2;
     delete fZoomPlusButton;
@@ -624,6 +628,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fButtonFrame->SetState(GButtonFrame::kNoneActive);
                         fMenuEvent->DisableEntry(M_SETTINGS_DLG);
                         OnShowerProduce();
+                        fEventListTree->ClearViewPort();
                         fClient->NeedRedraw(fEventListTree);
                         fButtonFrame->SetState(GButtonFrame::kAllActive);
                         fMenuEvent->EnableEntry(M_SETTINGS_DLG);
@@ -838,10 +843,21 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                 case kCT_ITEMDBLCLICK:
                     if (parm1 == kButton1) {
                         if (fEventListTree->GetSelected()) {
+                            fEventListTree->ClearViewPort();
                             fClient->NeedRedraw(fEventListTree);
                         }
                     }
                     break;
+                    
+                case kCT_ITEMCLICK:
+                    if (parm1 == kButton3) {
+                        if (fEventListTree->GetSelected()) {
+                           Int_t x = (Int_t)(parm2 & 0xffff);
+                           Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
+                           Clicked(fEventListTree->GetSelected(), x, y);
+                        }
+                     }
+                     break;
 
             } // switch submsg
             break; // case kC_LISTTREE
@@ -876,6 +892,7 @@ void RootShower::Initialize(Int_t set_angles)
 {
     Interrupt(kFALSE);
     fEventListTree->DeleteChildren(fCurListItem);
+    fEventListTree->ClearViewPort();
     fClient->NeedRedraw(fEventListTree);
 
     fCB->cd();
@@ -934,6 +951,7 @@ void RootShower::produce()
         if (first_pass && fEvent->GetTotal() > 1) {
             fEventListTree->OpenItem(gBaseLTI);
             fEventListTree->OpenItem(gLTI[0]);
+            fEventListTree->ClearViewPort();
             fClient->NeedRedraw(fEventListTree);
             first_pass = kFALSE;
         }
@@ -1138,6 +1156,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
 
     for (i=0;i<=fEvent->GetTotal();i++) {
         gTmpLTI = fEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
+        gTmpLTI->SetUserData(fEvent->GetParticle(i));
         sprintf(strtmp,"%1.2f GeV",fEvent->GetParticle(i)->Energy());
         fEventListTree->SetToolTipItem(gTmpLTI, strtmp);
         gLTI[i] = gTmpLTI;
@@ -1174,6 +1193,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     }
     fEventListTree->OpenItem(gBaseLTI);
     fEventListTree->OpenItem(gLTI[0]);
+    fEventListTree->ClearViewPort();
     fClient->NeedRedraw(fEventListTree);
     AppendPad();
 
@@ -1364,6 +1384,18 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     }
     gPad->SetSelected((TObject*)gPad->GetView());
     return gPad->GetView()->DistancetoPrimitive(px,py);
+}
+
+//______________________________________________________________________________
+void RootShower::Clicked(TGListTreeItem *item, Int_t x, Int_t y)
+{
+   // Process mouse clicks in TGListTree.
+
+   MyParticle *part = (MyParticle *) item->GetUserData();
+   if (part) {
+      fContextMenu->Popup(x, y, part);
+   }
+   fEventListTree->ClearViewPort();
 }
 
 //______________________________________________________________________________

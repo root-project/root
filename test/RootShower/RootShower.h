@@ -22,6 +22,9 @@
 #ifndef ROOT_TDatime
 #include "TDatime.h"
 #endif
+#ifndef ROOT_TCanvas
+#include "TCanvas.h"
+#endif
 
 class TGMenuBar;
 class TGPopupMenu;
@@ -42,6 +45,7 @@ class TEnv;
 class TTimer;
 class TH1F;
 class TGToolBar;
+class TContextMenu;
 
 
 extern TGListTree       *gEventListTree;    // Event selection TGListTree
@@ -121,6 +125,7 @@ private:
     TGCanvas           *fTreeView;          // Canvas containing event selection list tree
     TGListTree         *fEventListTree;     // Event selection TGListTree
     TGListTreeItem     *fCurListItem;       // Current TGlistTreeItem (level) in TGListTree
+    TContextMenu       *fContextMenu;       // pointer to context menu
 
     // Display frame
     TGTab              *fDisplayFrame;      // TGTab for graphical and text display
@@ -182,6 +187,8 @@ public:
     virtual Bool_t     ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
     virtual Bool_t     HandleTimer(TTimer *);
     virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
+    void               Clicked(TGListTreeItem *item, Int_t x, Int_t y);
+    void               UpdateDisplay() { fCA->Modified(); fCA->Update(); }
 
 };
 

@@ -89,6 +89,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    GetParticle(0)->GenerateTimeOfDecay();
 
    gTmpLTI = gEventListTree->AddItem(gBaseLTI, GetParticle(0)->GetName());
+   gTmpLTI->SetUserData(GetParticle(0));
    sprintf(strtmp,"%1.2e GeV",GetParticle(0)->Energy());
    gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
    gLTI[0] = gTmpLTI;
@@ -283,6 +284,7 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
 
         // add a particle related list tree item to the event list tree
         gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+        gTmpLTI->SetUserData(part);
         sprintf(strtmp,"%1.2e GeV",part->Energy());
         gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
         gLTI[d_num1] = gTmpLTI;
@@ -299,7 +301,8 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
         // add a track related to this particle
 
         // add a particle related list tree item to the event list tree
-        gTmpLTI = gEventListTree->AddItem(gLTI[id],part->GetName());
+        gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+        gTmpLTI->SetUserData(part);
         sprintf(strtmp,"%1.2e GeV",part->Energy());
         gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
         gLTI[d_num2] = gTmpLTI;
@@ -405,6 +408,7 @@ again:
 
       // add a child related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+      gTmpLTI->SetUserData(part);
       sprintf(strtmp,"%1.2e GeV",part->Energy());
       gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
       gLTI[d_num[i]] = gTmpLTI;
@@ -662,6 +666,7 @@ Int_t MyEvent::PairCreation(Int_t id)
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+      gTmpLTI->SetUserData(part);
       sprintf(strtmp,"%1.2e GeV",part->Energy());
       gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
       gLTI[d_num1] = gTmpLTI;
@@ -681,6 +686,7 @@ Int_t MyEvent::PairCreation(Int_t id)
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+      gTmpLTI->SetUserData(part);
       sprintf(strtmp,"%1.2e GeV",part->Energy());
       gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
       gLTI[d_num2] = gTmpLTI;
