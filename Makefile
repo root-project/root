@@ -721,6 +721,7 @@ distclean:: clean
                *.def .def
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.so
+	@rm -f cint/stl/*.so
 endif
 	-@mv -f tutorials/gallery.root tutorials/gallery.root-
 	-@mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
