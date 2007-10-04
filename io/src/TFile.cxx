@@ -1567,7 +1567,12 @@ Int_t TFile::Recover()
    if (fWritable) {
       Long64_t max_file_size = Long64_t(kStartBigFile);
       if (max_file_size < fEND) max_file_size = fEND+1000000000;
-      new TFree(fFree,fEND,max_file_size);
+      TFree *last = (TFree*)fFree->Last();
+      if (last) {
+         last->AddFree(fFree,fEND,max_file_size);
+      } else {
+         new TFree(fFree,fEND,max_file_size);
+      }
       if (nrecov) Write();
    }
    return nrecov;
