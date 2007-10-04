@@ -427,7 +427,7 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    fDatime.Set();
    fSeekKey  = bestfree->GetFirst();
 //*-*----------------- Case Add at the end of the file
-   if (fSeekKey == f->GetEND()) {
+   if (fSeekKey >= f->GetEND()) {
       f->SetEND(fSeekKey+nsize);
       bestfree->SetFirst(fSeekKey+nsize);
       fLeft   = -1;
