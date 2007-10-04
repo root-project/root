@@ -1313,6 +1313,7 @@ void TLinearFitter::GetFitSample(TBits &bits)
 //______________________________________________________________________________
 Int_t TLinearFitter::Merge(TCollection *list)
 {
+   //Merge objects in list
    if (!list) return -1;
    TIter next(list);
    TLinearFitter *lfit = 0;
