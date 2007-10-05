@@ -15,22 +15,33 @@ namespace TMVAGlob {
                      kPCA,
                      kNumOfMethods };
 
+   const Int_t c_Canvas          = TColor::GetColor( "#e9e6da" );
+   const Int_t c_FrameFill       = TColor::GetColor( "#fffffd" );
+   const Int_t c_TitleBox        = TColor::GetColor( "#dae1e6" );
+   const Int_t c_DarkBackground  = TColor::GetColor( "#6e7a85" );   
+   
+   const Int_t c_SignalLine      = TColor::GetColor( "#0000ee" );
+   const Int_t c_SignalFill      = TColor::GetColor( "#7d99d1" );
+   const Int_t c_BackgroundLine  = TColor::GetColor( "#ff0000" );
+   const Int_t c_BackgroundFill  = TColor::GetColor( "#ff0000" );
+
    // set the style
    void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = 0 ) 
    {
-
       //signal
-      const Int_t FillColor__S = 38+150;
-      const Int_t FillStyle__S = 1001;
-      const Int_t LineColor__S = 104;
-      const Int_t LineWidth__S = 2;
+      // const Int_t FillColor__S = 38 + 150; // change of Color Scheme in ROOT-5.16.
+      // convince yourself with gROOT->GetListOfColors()->Print()
+      Int_t FillColor__S = c_SignalFill;
+      Int_t FillStyle__S = 1001;
+      Int_t LineColor__S = c_SignalLine;
+      Int_t LineWidth__S = 2;
 
       // background
-      const Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
-      const Int_t FillColor__B = icolor;
-      const Int_t FillStyle__B = 3554;
-      const Int_t LineColor__B = icolor;
-      const Int_t LineWidth__B = 2;
+      Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
+      Int_t FillColor__B = c_BackgroundFill;
+      Int_t FillStyle__B = 3554;
+      Int_t LineColor__B = c_BackgroundLine;
+      Int_t LineWidth__B = 2;
 
       if (sig != NULL) {
          sig->SetLineColor( LineColor__S );
@@ -77,11 +88,6 @@ namespace TMVAGlob {
    // set style and remove existing canvas'
    void Initialize( Bool_t useTMVAStyle = kTRUE )
    {
-      // set style
-      if (!useTMVAStyle) {
-         gROOT->SetStyle("Plain");
-         gStyle->SetOptStat(0);
-      }
 
       // destroy canvas'
       TList * loc = gROOT->GetListOfCanvases();
@@ -89,11 +95,81 @@ namespace TMVAGlob {
       TObject *o(0);
       while ((o = itc())) delete o;
 
-      // define new line styles
-      TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
+      // set style
+      if (!useTMVAStyle) {
+         gROOT->SetStyle("Plain");
+         gStyle->SetOptStat(0);
+         return;
+      }
+
+      SetTMVAStyle();
+   }
+
+   void SetTMVAStyle() {
+
+      TStyle *TMVAStyle = gROOT->GetStyle("TMVA");
+      if(TMVAStyle!=0) {
+         gROOT->SetStyle("TMVA");
+         return;
+      }
+			
+      TMVAStyle = new TStyle(*gROOT->GetStyle("Plain")); // our style is based on Plain
+      TMVAStyle->SetName("TMVA");
+      TMVAStyle->SetTitle("TMVA style based on Plain with modifications define in tmvaglob.C");
+      gROOT->GetListOfStyles()->Add(TMVAStyle);
+      gROOT->SetStyle("TMVA");
+			
       TMVAStyle->SetLineStyleString( 5, "[52 12]" );
       TMVAStyle->SetLineStyleString( 6, "[22 12]" );
       TMVAStyle->SetLineStyleString( 7, "[22 10 7 10]" );
+
+      // the pretty color palette of old
+      TMVAStyle->SetPalette(1,0);
+
+      // use plain black on white colors
+      TMVAStyle->SetFrameBorderMode(0);
+      TMVAStyle->SetCanvasBorderMode(0);
+      TMVAStyle->SetPadBorderMode(0);
+      TMVAStyle->SetPadColor(0);
+      TMVAStyle->SetFillStyle(0);
+
+      TMVAStyle->SetLegendBorderSize(0);
+
+      // title properties
+      // TMVAStyle->SetTitleW(.4);
+      // TMVAStyle->SetTitleH(.10);
+      // MVAStyle->SetTitleX(.5);
+      // TMVAStyle->SetTitleY(.9);
+      TMVAStyle->SetTitleFillColor( c_TitleBox );
+      if (!UsePaperStyle) {
+         TMVAStyle->SetFrameFillColor( c_FrameFill );
+         TMVAStyle->SetCanvasColor( c_Canvas );
+      }
+
+      // set the paper & margin sizes
+      TMVAStyle->SetPaperSize(20,26);
+      TMVAStyle->SetPadTopMargin(0.10);
+      TMVAStyle->SetPadRightMargin(0.05);
+      TMVAStyle->SetPadBottomMargin(0.11);
+      TMVAStyle->SetPadLeftMargin(0.12);
+
+      // use bold lines and markers
+      TMVAStyle->SetMarkerStyle(21);
+      TMVAStyle->SetMarkerSize(0.3);
+      TMVAStyle->SetHistLineWidth(1.85);
+      TMVAStyle->SetLineStyleString(2,"[12 12]"); // postscript dashes
+
+      // do not display any of the standard histogram decorations
+      TMVAStyle->SetOptTitle(1);
+      TMVAStyle->SetTitleH(0.052);
+
+      TMVAStyle->SetOptStat(0);
+      TMVAStyle->SetOptFit(0);
+
+      // put tick marks on top and RHS of plots
+      TMVAStyle->SetPadTickX(1);
+      TMVAStyle->SetPadTickY(1);
+
    }
 
    // checks if file with name "fin" is already open, and if not opens one

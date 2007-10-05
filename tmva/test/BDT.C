@@ -2,10 +2,14 @@
 
 // this macro displays a decision tree read in from the weight file
 
+// colors
+enum COLORS { kSigColorT = 10, kSigColorF = 2,
+              kBkgColorT = 10, kBkgColorF = 4,
+              kIntColorT = 10, kIntColorF = 8  };
 
 // input: - No. of tree
 //        - the weight file from which the tree is read
-void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt", Bool_t useTMVAStyle = kTRUE) 
+void BDT(Int_t itree=1, TString fname= "weights/TMVAnalysis_BDT.weights.txt", Bool_t useTMVAStyle = kTRUE) 
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -14,7 +18,8 @@ void BDT(Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt", Boo
 }
 
 //_______________________________________________________________________
-void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt"){
+void draw_tree( Int_t itree, TString fname )
+{
    // returns poiter to 2D histogram with tree drawing in it.
 
    TString *vars;   
@@ -26,10 +31,13 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
    Double_t xmin= -xmax;
    Double_t ystep = 1./(depth+1);
 
+   TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
+   Int_t canvasColor = TMVAStyle->GetCanvasColor(); // backup
+
    char buffer[100];
    sprintf (buffer, "Decision Tree No.: %d",itree);
    TCanvas *c1=new TCanvas("c1",buffer,200,0,1000,600);
-   c1->Draw();
+   c1->Draw();   
 
    draw_node( (TMVA::DecisionTreeNode*)d->GetRoot(), 0.5, 1.-0.5*ystep, 0.25, ystep ,vars);
   
@@ -42,15 +50,16 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
    TPaveText *whichTree = new TPaveText(0.85,ydown,0.98,yup, "NDC");
    whichTree->SetBorderSize(1);
    whichTree->SetFillStyle(1);
-   whichTree->SetFillColor(5);
+   whichTree->SetFillColor(5+0);
    whichTree->AddText(buffer);
    whichTree->Draw();
 
    TPaveText *intermediate = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    intermediate->SetBorderSize(1);
    intermediate->SetFillStyle(1);
-   intermediate->SetFillColor(3);
+   intermediate->SetFillColor( kIntColorF );
    intermediate->AddText("Intermediate Nodes");
+   intermediate->SetTextColor( kIntColorT );
    intermediate->Draw();
 
 
@@ -60,9 +69,9 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
    signalleaf->SetFillStyle(1);
-   signalleaf->SetFillColor(4);
-   signalleaf->SetTextColor(10);
+   signalleaf->SetFillColor( kSigColorF );
    signalleaf->AddText("Signal Leaf Nodes");
+   signalleaf->SetTextColor( kSigColorT );
    signalleaf->Draw();
 
    ydown = ydown - ystep/2.5 -dy;
@@ -70,13 +79,16 @@ void draw_tree(Int_t itree, TString fname= "weights/MVAnalysis_BDT.weights.txt")
    TPaveText *backgroundleaf = new TPaveText(0.02,ydown,0.15,yup, "NDC");
    backgroundleaf->SetBorderSize(1);
    backgroundleaf->SetFillStyle(1);
-   backgroundleaf->SetFillColor(2);
-   backgroundleaf->AddText("Background Leaf Nodes");
+   backgroundleaf->SetFillColor( kBkgColorF );
+   backgroundleaf->AddText("Backgr. Leaf Nodes");
+   backgroundleaf->SetTextColor( kBkgColorT );
    backgroundleaf->Draw();
 
    c1->Update();
    TString fname = Form("plots/BDT_%i", itree );
    TMVAGlob::imgconv( c1, fname );   
+
+   TMVAStyle->SetCanvasColor( canvasColor );
 }   
       
 //_______________________________________________________________________
@@ -105,9 +117,9 @@ void draw_node(  TMVA::DecisionTreeNode *n,
    t->SetBorderSize(1);
 
    t->SetFillStyle(1);
-   if (n->GetNodeType() == 1) { t->SetFillColor(4); t->SetTextColor(10); }
-   else if (n->GetNodeType() == -1) t->SetFillColor(2);
-   else if (n->GetNodeType() == 0) t->SetFillColor(3);
+   if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
+   else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
+   else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
 
    char buffer[25];
    sprintf(buffer,"N=%d",n->GetNEvents());
@@ -127,22 +139,19 @@ void draw_node(  TMVA::DecisionTreeNode *n,
 //    t->AddText(buffer);
 //    sprintf(buffer,"depth=%d",n->GetDepth());
 //    t->AddText(buffer);
-   sprintf(buffer,"type=%d",n->GetNodeType());
-   t->AddText(buffer);
+//    sprintf(buffer,"type=%d",n->GetNodeType());
+//    t->AddText(buffer);
 
-
-   if (n->GetNodeType() == 1) t->SetFillColor(4);
-   else if (n->GetNodeType() == -1) t->SetFillColor(2);
-   else if (n->GetNodeType() == 0) t->SetFillColor(3);
-   
-
+   if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
+   else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
+   else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
 
    t->Draw();
 
    return;
 }
 
-TMVA::DecisionTree* read_tree(TString * &vars, Int_t itree=1, TString fname= "weights/MVAnalysis_BDT.weights.txt")
+TMVA::DecisionTree* read_tree(TString * &vars, Int_t itree=1, TString fname )
 {
    cout << "reading Tree " << itree << " from weight file: " << fname << endl;
    ifstream fin( fname );

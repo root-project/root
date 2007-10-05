@@ -33,6 +33,7 @@
 #include "TMath.h"
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/RuleFitAPI.h"
+#include "TMVA/RuleFit.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "Riostream.h"

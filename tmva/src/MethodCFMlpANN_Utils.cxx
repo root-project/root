@@ -57,17 +57,11 @@
 //                 Universite de Blaise Pascal, IN2P3/CNRS    
 //_______________________________________________________________________
 
+#include <iostream>
+
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #include "TMVA/Timer.h"
 #include "TMath.h"
-#include <stdio.h>
-#include <string>
-#include <cmath>
-#include <stdlib.h>
-#include <iostream>
-
-using std::cout;
-using std::endl;
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
    

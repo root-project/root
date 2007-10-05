@@ -54,6 +54,14 @@ ClassImp(TMVA::MethodSVM)
 TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
                             TString theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   , fAlphas(0)
+   , fErrorCache(0)
+   , fVariables (0)
+   , fNormVar   (0)
+   , fTypesVec  (0)
+   , fI         (0)
+   , fKernelDiag(0)
+   , fSupportVectors(0)
 {
    // standard constructor
    InitSVM();
@@ -73,6 +81,14 @@ TMVA::MethodSVM::MethodSVM( DataSet& theData,
                             TString theWeightFile,  
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+   , fAlphas(0)
+   , fErrorCache(0)
+   , fVariables (0)
+   , fNormVar   (0)
+   , fTypesVec  (0)
+   , fI         (0)
+   , fKernelDiag(0)
+   , fSupportVectors(0)
 {
    // constructor from weight file
    InitSVM();
@@ -107,6 +123,7 @@ TMVA::MethodSVM::~MethodSVM()
 void TMVA::MethodSVM::InitSVM()
 {
    // default initialisation
+
    SetMethodName( "SVM" );
    SetMethodType( TMVA::Types::kSVM );
    SetTestvarName();

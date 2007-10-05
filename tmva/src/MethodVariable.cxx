@@ -37,6 +37,8 @@
 #include <algorithm>
 
 ClassImp(TMVA::MethodVariable)
+
+using std::endl;
  
 //_______________________________________________________________________
 TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, DataSet& theData, 

@@ -28,10 +28,6 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
-// requires links
-// #include "TMVA/Factory.h"
-// #include "TMVA/Tools.h"
-// #include "TMVA/Config.h"
 
 #include "TMVAGui.C"
    
@@ -48,6 +44,7 @@ Bool_t Use_LikelihoodKDE   = 0;
 Bool_t Use_LikelihoodMIX   = 0;
 // ---
 Bool_t Use_PDERS           = 1;
+Bool_t Use_PDERSkNN        = 0; // depreciated until further notice
 Bool_t Use_PDERSD          = 0;
 Bool_t Use_PDERSPCA        = 0;
 Bool_t Use_KNN             = 1;
@@ -69,7 +66,7 @@ Bool_t Use_TMlpANN         = 0;
 Bool_t Use_BDT             = 1;
 Bool_t Use_BDTD            = 0;
 // ---
-Bool_t Use_RuleFitTMVA     = 1;
+Bool_t Use_RuleFit         = 1;
 Bool_t Use_RuleFitJF       = 0;
 // ---
 Bool_t Use_SVM_Gauss       = 1;
@@ -95,11 +92,11 @@ void TMVAnalysis( TString myMethodList = "" )
    if (mlist->GetSize()>0) {
       Use_CutsGA = Use_CutsD = Use_Cuts
          = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_Likelihood
-         = Use_PDERSPCA = Use_PDERSD = Use_PDERS 
+         = Use_PDERSPCA = Use_PDERSD = Use_PDERS = Use_PDERSkNN
          = Use_KNN
          = Use_MLP = Use_CFMlpANN = Use_TMlpANN
          = Use_HMatrix = Use_Fisher = Use_BDTD = Use_BDT
-         = Use_RuleFitTMVA = Use_RuleFitJF
+         = Use_RuleFit = Use_RuleFitJF
          = Use_SVM_Gauss = Use_SVM_Poly = Use_SVM_Lin 
          = Use_FDA_GA = Use_FDA_MC = Use_FDA_SA = Use_FDA_MT = Use_FDA_GAMT = Use_FDA_MCMT 
          = 0;
@@ -114,6 +111,7 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "LikelihoodMIX" ) != 0) Use_LikelihoodMIX = 1; 
       if (mlist->FindObject( "PDERSPCA"      ) != 0) Use_PDERSPCA      = 1; 
       if (mlist->FindObject( "PDERSD"        ) != 0) Use_PDERSD        = 1; 
+      if (mlist->FindObject( "PDERSkNN"      ) != 0) Use_PDERSkNN      = 1; 
       if (mlist->FindObject( "PDERS"         ) != 0) Use_PDERS         = 1; 
       if (mlist->FindObject( "KNN"           ) != 0) Use_KNN           = 1; 
       if (mlist->FindObject( "HMatrix"       ) != 0) Use_HMatrix       = 1; 
@@ -124,7 +122,7 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "BDTD"          ) != 0) Use_BDTD          = 1; 
       if (mlist->FindObject( "BDT"           ) != 0) Use_BDT           = 1; 
       if (mlist->FindObject( "RuleFitJF"     ) != 0) Use_RuleFitJF     = 1; 
-      if (mlist->FindObject( "RuleFitTMVA"   ) != 0) Use_RuleFitTMVA   = 1; 
+      if (mlist->FindObject( "RuleFit"       ) != 0) Use_RuleFit       = 1; 
       if (mlist->FindObject( "SVM_Gauss"     ) != 0) Use_SVM_Gauss     = 1; 
       if (mlist->FindObject( "SVM_Poly"      ) != 0) Use_SVM_Poly      = 1; 
       if (mlist->FindObject( "SVM_Lin"       ) != 0) Use_SVM_Lin       = 1; 
@@ -216,13 +214,15 @@ void TMVAnalysis( TString myMethodList = "" )
 
    // This would set individual event weights (the variables defined in the 
    // expression need to exist in the original TTree)
-   // factory->SetWeightExpression("weight1*weight2");
+   //    for signal    : factory->SetSignalWeightExpression("weight1*weight2");
+   //    for background: factory->SetBackgroundWeightExpression("weight1*weight2");
 
-   // Apply additional cuts on the signal and background sample. 
-   TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   // Apply additional cuts on the signal and background samples (can be different)
+   TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycut, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=NumEvents:!V" );  
+   factory->PrepareTrainingAndTestTree( mycuts, mycutb, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=None:!V" );  
 
    // If no numbers of events are given, half of the events in the tree are used for training, and 
    // the other half for testing:
@@ -254,16 +254,16 @@ void TMVAnalysis( TString myMethodList = "" )
    // Likelihood
    if (Use_Likelihood) 
       factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood", 
-                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmoothBkg[1]=100:NSmooth=10:NAvEvtPerBin=50" ); 
+                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmoothBkg[1]=10:NSmooth=10:NAvEvtPerBin=50" ); 
 
    // test the decorrelated likelihood
    if (Use_LikelihoodD) 
       factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodD", 
-                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" ); 
+                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" ); 
 
    if (Use_LikelihoodPCA) 
       factory->BookMethod( TMVA::Types::kLikelihood, "LikelihoodPCA", 
-                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" ); 
+                           "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" ); 
  
    // test the new kernel density estimator
    if (Use_LikelihoodKDE) 
@@ -278,20 +278,28 @@ void TMVAnalysis( TString myMethodList = "" )
    // PDE - RS method
    if (Use_PDERS)
       factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
-                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99" );
-   
+                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+
+   if (Use_PDERSkNN) // depreciated until further notice
+      factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN", 
+                           "!H:!V:VolumeRangeMode=kNN:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+
+   // And the options strings for the MinMax and RMS methods, respectively:
+   //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
+   //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
+
    if (Use_PDERSD) 
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSD", 
-                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=Decorrelate" );
+                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=Decorrelate" );
 
    if (Use_PDERSPCA) 
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSPCA", 
-                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=PCA" );
+                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=PCA" );
   
    // K-Nearest Neighbour classifier (KNN)
    if (Use_KNN)
       factory->BookMethod( TMVA::Types::kKNN, "KNN", 
-                           "nkNN=40:TreeOptDepth=6:ScaleFrac=0.8:!UseKernel:!Trim" );  
+                           "nkNN=400:TreeOptDepth=6:ScaleFrac=0.8:!UseKernel:!Trim" );  
 
    // H-Matrix (chi2-squared) method
    if (Use_HMatrix)
@@ -300,7 +308,7 @@ void TMVAnalysis( TString myMethodList = "" )
    // Fisher discriminant
    if (Use_Fisher)
       factory->BookMethod( TMVA::Types::kFisher, "Fisher", 
-                           "H:!V:!Normalise:CreateMVAPdfs:Fisher:NbinsMVAPdf=50:NsmoothMVAPdf=1" );    
+                           "H:!V:Normalise:CreateMVAPdfs:Fisher:NbinsMVAPdf=50:NsmoothMVAPdf=1" );    
 
    // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit or GA
    if (Use_FDA_MC) 
@@ -358,8 +366,8 @@ void TMVAnalysis( TString myMethodList = "" )
                            "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5:VarTransform=Decorrelate" );
 
    // RuleFit -- TMVA implementation of Friedman's method
-   if (Use_RuleFitTMVA)
-      factory->BookMethod( TMVA::Types::kRuleFit, "RuleFitTMVA",
+   if (Use_RuleFit)
+      factory->BookMethod( TMVA::Types::kRuleFit, "RuleFit",
                            "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" );
 
    // Friedman's RuleFit method, implementation by J. Friedman
@@ -383,7 +391,7 @@ void TMVAnalysis( TString myMethodList = "" )
    // Save the output
    outputFile->Close();
 
-   std::cout << "==> wrote root file TMVA.root" << std::endl;
+   std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVAnalysis is done!" << std::endl;      
 
    // Clean up

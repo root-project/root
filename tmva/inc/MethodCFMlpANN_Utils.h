@@ -43,10 +43,6 @@
 #include "TObject.h"
 #endif
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // MethodCFMlpANN_Utils                                                 //

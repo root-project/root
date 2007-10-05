@@ -78,18 +78,18 @@ namespace TMVA {
       virtual ~MethodPDERS( void );
 
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
-      virtual void WriteWeightsToStream( TFile& rf ) const;
+      void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( TFile& rf ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
-      virtual void ReadWeightsFromStream( TFile& istr );
+      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( TFile& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
    public:
 
@@ -103,7 +103,7 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -130,8 +130,8 @@ namespace TMVA {
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       // calculate the averages of the input variables needed for adaptive training
       void CalcAverages();
@@ -148,7 +148,8 @@ namespace TMVA {
          kMinMax,
          kRMS,
          kAdaptive,
-         kUnscaled
+         kUnscaled,
+         kkNN
       } fVRangeMode;
 
       enum EKernelEstimator {
@@ -164,7 +165,8 @@ namespace TMVA {
          kLanczos2,
          kLanczos3,
          kLanczos5,
-         kLanczos8
+         kLanczos8,
+	 kTrim
       } fKernelEstimator;
 
       BinarySearchTree*  fBinaryTreeS;   // binary tree for signal
@@ -178,6 +180,8 @@ namespace TMVA {
       Float_t            fScaleB;        // weight for background events
       Float_t            fDeltaFrac;     // fraction of RMS
       Double_t           fGaussSigma;    // size of Gauss in adaptive volume 
+      Double_t           fGaussSigmaNorm;// size of Gauss in adaptive volume (normalised to dimensions)
+
 
       // input for adaptive volume adjustment
       Float_t            fNEventsMin;    // minimum number of events in adaptive volume
@@ -186,6 +190,14 @@ namespace TMVA {
       Float_t            fInitialScale;  // initial scale for adaptive volume
 
       Bool_t             fInitializedVolumeEle; // is volume element initialized ?
+      
+      Int_t              fkNNMin;        // min number of events in kNN tree
+      Int_t              fkNNMax;	     // max number of events in kNN tree
+      Int_t	             fkNNTests;      // maximum number of iterations to adapt volume size
+      
+      Double_t		 max_distance;
+
+      Bool_t   	         Printed;
 
       void    SetVolumeElement ( void );
       Float_t RScalc           ( const Event& );

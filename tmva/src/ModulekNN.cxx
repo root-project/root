@@ -24,13 +24,13 @@
  **********************************************************************************/
 
 // C++
-#include <cmath>
+#include <assert.h>
 #include <iomanip>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sstream>
 #include <algorithm>
+
+#include "TMath.h"
 
 // TMVA
 #include "TMVA/ModulekNN.h"
@@ -399,7 +399,7 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
       }
    }
 
-   if (double(fDimn*size) < pow(2.0, double(odepth))) {
+   if (double(fDimn*size) < TMath::Power(2.0, double(odepth))) {
       fLogger << kWARNING << "<Optimize> Optimization depth exceeds number of events" << Endl;
       return 0;      
    }   

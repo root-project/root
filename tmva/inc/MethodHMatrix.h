@@ -74,19 +74,19 @@ namespace TMVA {
       virtual ~MethodHMatrix( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -94,7 +94,7 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -102,8 +102,8 @@ namespace TMVA {
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       // returns chi2 estimator for given type (signal or background)
       Double_t GetChi2( Event* e, Types::ESBType ) const;

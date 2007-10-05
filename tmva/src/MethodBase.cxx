@@ -65,9 +65,10 @@
 //End_Html
 //_______________________________________________________________________
 
-#include <string>
-#include <sstream>
+#include <iomanip>
+#include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -79,42 +80,30 @@
 #include "TMath.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TGraph.h"
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_Config
+#include "TMVA/MsgLogger.h"
 #include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Timer
 #include "TMVA/Timer.h"
-#endif
-#ifndef ROOT_TMVA_RootFinder
 #include "TMVA/RootFinder.h"
-#endif
-#ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
-#endif
-#ifndef ROOT_TMVA_VariableIdentityTransform
 #include "TMVA/VariableIdentityTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariableDecorrTransform
 #include "TMVA/VariableDecorrTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariablePCATransform
 #include "TMVA/VariablePCATransform.h"
-#endif
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
+#include "TMVA/TSpline1.h"
+#include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodBase)
+
+using std::endl;
 
 const Int_t    MethodBase_MaxIterations_ = 200;
 const Bool_t   Use_Splines_for_Eff_      = kTRUE;
 
-const int      NBIN_HIST_PLOT = 100;
-const int      NBIN_HIST_HIGH = 10000;
+const Int_t    NBIN_HIST_PLOT = 100;
+const Int_t    NBIN_HIST_HIGH = 10000;
 
 //_______________________________________________________________________
 TMVA::MethodBase::MethodBase( TString      jobName,
@@ -139,42 +128,17 @@ TMVA::MethodBase::MethodBase( TString      jobName,
      fBaseDir                   ( 0 ),
      fMethodBaseDir             ( theBaseDir ),
      fWeightFile                ( "" ),
-     fVarTransform              ( 0 ),
-     fTrainEffS                 ( 0 ),
-     fTrainEffB                 ( 0 ),
-     fTrainEffBvsS              ( 0 ),
-     fTrainRejBvsS              ( 0 ),
-     fGraphTrainS               ( 0 ),
-     fGraphTrainB               ( 0 ),
-     fGraphTrainEffBvsS         ( 0 ),
-     fSplTrainS                 ( 0 ),
-     fSplTrainB                 ( 0 ),
-     fSplTrainEffBvsS           ( 0 ),
-     fMeanS                     ( -1 ),
-     fMeanB                     ( -1 ),
-     fRmsS                      ( -1 ),
-     fRmsB                      ( -1 ),
-     fXmin                      ( 1e30 ),
-     fXmax                      ( -1e30 ),
-     fVariableTransform         ( Types::kNone ),
-     fVerbose                   ( kFALSE ),
-     fHelp                      ( kFALSE ),
-     fIsMVAPdfs                 ( kFALSE ),
-     fTxtWeightsOnly            ( kTRUE ),
-     fSplRefS                   ( 0 ),
-     fSplRefB                   ( 0 )
+     fLogger                    ( this )
 {
    // standard constructur
    Init();
-
-   fLogger = this;
 
    // interpretation of configuration option string
    DeclareOptions();
 
    // default extension for weight files
-   fFileDir = gConfig().GetIONames().fWeightFileDir;
-   gSystem->MakeDirectory( fFileDir );
+   SetWeightFileDir( gConfig().GetIONames().fWeightFileDir );
+   gSystem->MakeDirectory( GetWeightFileDir() );
 }
 
 //_______________________________________________________________________
@@ -190,45 +154,20 @@ TMVA::MethodBase::MethodBase( DataSet&     theData,
      fMethodName                ( "MethodBase"  ),
      fMethodType                ( Types::kMaxMethod ),
      fMethodTitle               ( "" ),
-     fTestvar                   (""),
-     fTestvarPrefix             ("MVA_"),
+     fTestvar                   ( "" ),
+     fTestvarPrefix             ( "MVA_" ),
      fTMVATrainingVersion       ( 0 ),
      fROOTTrainingVersion       ( 0 ),
      fNvar                      ( theData.GetNVariables() ),
      fBaseDir                   ( theBaseDir ),
      fMethodBaseDir             ( 0 ),
      fWeightFile                ( weightFile ),
-     fVarTransform              ( 0 ),
-     fTrainEffS                 ( 0 ),
-     fTrainEffB                 ( 0 ),
-     fTrainEffBvsS              ( 0 ),
-     fTrainRejBvsS              ( 0 ),
-     fGraphTrainS               ( 0 ),
-     fGraphTrainB               ( 0 ),
-     fGraphTrainEffBvsS         ( 0 ),
-     fSplTrainS                 ( 0 ),
-     fSplTrainB                 ( 0 ),
-     fSplTrainEffBvsS           ( 0 ),
-     fMeanS                     ( -1 ),
-     fMeanB                     ( -1 ),
-     fRmsS                      ( -1 ),
-     fRmsB                      ( -1 ),
-     fXmin                      ( 1e30 ),
-     fXmax                      ( -1e30 ),
-     fVariableTransform         ( Types::kNone ),
-     fVerbose                   ( kFALSE ),
-     fHelp                      ( kFALSE ),
-     fIsMVAPdfs                 ( kFALSE ),
-     fTxtWeightsOnly            ( kTRUE ),
-     fSplRefS                   ( 0 ),
-     fSplRefB                   ( 0 )
+     fLogger                    ( this )
 {
    // constructor used for Testing + Application of the MVA,
    // only (no training), using given WeightFiles
 
    Init();
-
-   fLogger = this;
 
    DeclareOptions();
 }
@@ -247,35 +186,56 @@ TMVA::MethodBase::~MethodBase( void )
 void TMVA::MethodBase::Init()
 {
    // default initialization called by all constructors
-   fIsOK            = kTRUE;
+   fNbins              = NBIN_HIST_PLOT;
+   fNbinsH             = NBIN_HIST_HIGH;
 
-   fNbins           = NBIN_HIST_PLOT;
-   fNbinsH          = NBIN_HIST_HIGH;
+   fVarTransform       = 0; 
+   fTrainEffS          = 0; 
+   fTrainEffB          = 0; 
+   fTrainEffBvsS       = 0; 
+   fTrainRejBvsS       = 0; 
+   fGraphTrainS        = 0; 
+   fGraphTrainB        = 0; 
+   fGraphTrainEffBvsS  = 0; 
+   fSplTrainS          = 0; 
+   fSplTrainB          = 0; 
+   fSplTrainEffBvsS    = 0; 
+   fMeanS              = -1; 
+   fMeanB              = -1; 
+   fRmsS               = -1; 
+   fRmsB               = -1; 
+   fXmin               = 1e30; 
+   fXmax               = -1e30; 
+   fVariableTransform  = Types::kNone; 
+   fVerbose            = kFALSE; 
+   fHelp               = kFALSE; 
+   fHasMVAPdfs         = kFALSE; 
+   fTxtWeightsOnly     = kTRUE; 
+   fSplRefS            = 0; 
+   fSplRefB            = 0; 
 
-   fRanking         = NULL;
+   fRanking            = 0;
 
-   fHistS_plotbin   = NULL;
-   fHistB_plotbin   = NULL;
-   fProbaS_plotbin  = NULL;
-   fProbaB_plotbin  = NULL;
-   fRarityS_plotbin = NULL;
-   fRarityB_plotbin = NULL;
-   fHistS_highbin   = NULL;
-   fHistB_highbin   = NULL;
-   fEffS            = NULL;
-   fEffB            = NULL;
-   fEffBvsS         = NULL;
-   fRejBvsS         = NULL;
-   finvBeffvsSeff   = NULL;
-   fHistBhatS       = NULL;
-   fHistBhatB       = NULL;
-   fHistMuS         = NULL;
-   fHistMuB         = NULL;
-   fMVAPdfS         = NULL;
-   fMVAPdfB         = NULL;
+   fHistS_plotbin      = 0;
+   fHistB_plotbin      = 0;
+   fHistTrS_plotbin    = 0;
+   fHistTrB_plotbin    = 0;
+   fProbaS_plotbin     = 0;
+   fProbaB_plotbin     = 0;
+   fRarityS_plotbin    = 0;
+   fRarityB_plotbin    = 0;
+   fHistS_highbin      = 0;
+   fHistB_highbin      = 0;
+   fEffS               = 0;
+   fEffB               = 0;
+   fEffBvsS            = 0;
+   fRejBvsS            = 0;
+   finvBeffvsSeff      = 0;
+   fMVAPdfS            = 0;
+   fMVAPdfB            = 0;
 
    // temporary until the move to DataSet is complete
-   fInputVars = new vector<TString>;
+   fInputVars = new std::vector<TString>;
    for (UInt_t ivar=0; ivar<Data().GetNVariables(); ivar++)
       fInputVars->push_back(Data().GetInternalVarName(ivar));
 
@@ -296,7 +256,7 @@ void TMVA::MethodBase::DeclareOptions()
    //                                                        transformations of signal and background
    //               fNbinsMVAPdf   = 50 Number of bins used to create a PDF of MVA
    //               fNsmoothMVAPdf =  2 Number of times a histogram is smoothed before creating the PDF
-   //               fIsMVAPdfs          create PDFs for the MVA outputs
+   //               fHasMVAPdfs         create PDFs for the MVA outputs
    //               V                   for Verbose output (!V) for non verbos
    //               H                   for Help message
 
@@ -328,7 +288,7 @@ void TMVA::MethodBase::DeclareOptions()
    AddPreDefVal( TString("Fatal") );
 
    DeclareOptionRef( fHelp,             "H",             "Print classifier-specific help message" );
-   DeclareOptionRef( fIsMVAPdfs=kFALSE, "CreateMVAPdfs", "Create PDFs for classifier outputs" );
+   DeclareOptionRef( fHasMVAPdfs=kFALSE, "CreateMVAPdfs", "Create PDFs for classifier outputs" );
 
    DeclareOptionRef( fTxtWeightsOnly=kTRUE, "TxtWeightFilesOnly", "if True, write all weights as text files" );
 }
@@ -374,34 +334,6 @@ void TMVA::MethodBase::ProcessOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::PrintHelpMessage() const
-{
-   // prints out classifier-specific help method
-
-   //         "|--------------------------------------------------------------|"
-   fLogger << kINFO << Endl;
-   fLogger << Tools::Color("bold")
-           << "================================================================"
-           << Tools::Color( "reset" )
-           << Endl;
-   fLogger << Tools::Color("bold")
-           << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :"
-           << Tools::Color( "reset" )
-           << Endl;
-
-   // print method-specific help message
-   GetHelpMessage();
-
-   fLogger << Endl;
-   fLogger << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
-   fLogger << Tools::Color("bold")
-           << "================================================================"
-           << Tools::Color( "reset" )
-           << Endl;
-   fLogger << Endl;
-}
-
-//_______________________________________________________________________
 void TMVA::MethodBase::TrainMethod()
 {
    // train the classifier method
@@ -414,7 +346,7 @@ void TMVA::MethodBase::TrainMethod()
    Train();
 
    // create PDFs for the signal and background MVA distributions
-   if (IsMVAPdfs()) CreateMVAPdfs();
+   if (HasMVAPdfs()) CreateMVAPdfs();
 
    // write the current classifier state into stream
    // produced are one text file and one ROOT file
@@ -431,101 +363,210 @@ void TMVA::MethodBase::TrainMethod()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBase::GetProba( Double_t mvaVal, Double_t ap_sig )
+void TMVA::MethodBase::AddClassifierToTestTree( TTree* testTree )
 {
-   // compute likelihood ratio
-   if (!fMVAPdfS || !fMVAPdfB) {
-      fLogger << kWARNING << "<GetProba> MVA PDFs for Signal and Backgroud don't exist" << Endl;
-      return 0;
+   // prepare tree branch with the method's discriminating variable
+
+   if (0 == testTree) testTree = Data().GetTestTree();
+
+   // sanity checks
+   // checks that all variables in input vector indeed exist in the testTree
+   if (!CheckSanity( testTree )) {
+      fLogger << kFATAL << "<AddClassifierToTestTree> Sanity check failed" << Endl;
    }
-   Double_t p_s = fMVAPdfS->GetVal( mvaVal );
-   Double_t p_b = fMVAPdfB->GetVal( mvaVal );
 
-   Double_t denom = p_s*ap_sig + p_b*(1 - ap_sig);
+   // read the coefficients
+   this->ReadStateFromFile();
 
-   return (denom > 0) ? (p_s*ap_sig) / denom : -1;
+   // use timer
+   Timer timer( testTree->GetEntries(), GetName(), kTRUE );
+   Data().BaseRootDir()->cd();
+   Float_t myMVA   = 0;
+   Float_t myProba = 0;
+   TBranch* newBranchMVA   = testTree->Branch( GetTestvarName(), &myMVA, GetTestvarName() + "/F", 128000 );
+   newBranchMVA->SetFile(testTree->GetDirectory()->GetFile());
+   TBranch* newBranchProba = 0;
+   if (HasMVAPdfs()) {
+      newBranchProba = testTree->Branch( GetProbaName(), &myProba, GetProbaName() + "/F", 128000 );
+      newBranchProba->SetFile(testTree->GetDirectory()->GetFile());
+   }
+
+   fLogger << kINFO << "Preparing evaluation tree... " << Endl;
+   for (Int_t ievt=0; ievt<testTree->GetEntries(); ievt++) {
+
+      ReadTestEvent(ievt);
+      
+      // fill the MVA output value for this event
+      newBranchMVA->SetAddress( &myMVA ); // only when the tree changed, but we don't know when that is
+      myMVA = (Float_t)GetMvaValue();
+      newBranchMVA->Fill();
+
+      // fill corresponding signal probabilities
+      if (newBranchProba) {
+         newBranchProba->SetAddress( &myProba ); // only when the tree changed, but we don't know when that is
+         myProba = (Float_t)GetProba( myMVA, 0.5 );
+         newBranchProba->Fill();
+      }
+
+      // print progress
+      Int_t modulo = Int_t(testTree->GetEntries()/100);
+      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+   }
+
+   Data().BaseRootDir()->Write("",TObject::kOverwrite);
+
+   fLogger << kINFO << "Elapsed time for evaluation of "
+           << testTree->GetEntries() <<  " events: "
+           << timer.GetElapsedTime() << "       " << Endl;
+
+   newBranchMVA  ->ResetAddress();
+   if (newBranchProba) newBranchProba->ResetAddress();
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBase::GetRarity( Double_t mvaVal, Types::ESBType reftype ) const
+void TMVA::MethodBase::Test( TTree *theTestTree )
 {
-   // compute rarity:
-   // R(x) = Integrate_[-oo..x] { PDF(x') dx' }
-   // where PDF(x) is the PDF of the classifier's signal or background distribution
+   // test the method - not much is done here... mainly furthor initialization
 
-   if ((reftype == Types::kSignal && !fMVAPdfS) || (reftype == Types::kBackground && !fMVAPdfB)) {
-      fLogger << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
-              << "select option \"CreateMVAPdfs\"" << Endl;
-      return 0.0;
+   // initialization 
+
+   // sets theTestTree to the TestTree in the DataSet,
+   // decorrelation properly taken care of
+   if (theTestTree == 0) theTestTree = Data().GetTestTree(); 
+
+   // sanity checks: tree must exist, and theVar must be in tree
+   if (0 == theTestTree) {
+      fLogger << kFATAL << "<TestInit> Test tree has zero pointer " << Endl;
+   }
+   if ( 0 == theTestTree->FindBranch( GetTestvarName() ) && !(GetMethodName().Contains("Cuts"))) {
+      fLogger << kFATAL << "<TestInit> Test variable " << GetTestvarName()
+              << " not found in tree" << Endl;
    }
 
-   PDF* thePdf = reftype == Types::kSignal ? fMVAPdfS : fMVAPdfB;
+   // basic statistics operations are made in base class
+   // note: cannot directly modify private class members
+   Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
 
-   return thePdf->GetIntegral( thePdf->GetXmin(), mvaVal );
-}
+   TMVA::Tools::ComputeStat( theTestTree, GetTestvarName(), meanS, meanB, rmsS, rmsB, xmin, xmax );
 
-//_______________________________________________________________________
-void TMVA::MethodBase::CreateMVAPdfs()
-{
-   // Create PDFs of the MVA output variables
+   // choose reasonable histogram ranges, by removing outliers
+   Double_t nrms = 10;
+   xmin = TMath::Max( TMath::Min(meanS - nrms*rmsS, meanB - nrms*rmsB ), xmin );
+   xmax = TMath::Min( TMath::Max(meanS + nrms*rmsS, meanB + nrms*rmsB ), xmax );
 
-   fLogger << kINFO << "<CreateMVAPdfs> Using " << fNbinsMVAPdf << " bins and smooth "
-           << fNsmoothMVAPdf << " times" << Endl;
+   fMeanS = meanS; fMeanB = meanB;
+   fRmsS  = rmsS;  fRmsB  = rmsB;
+   fXmin  = xmin;  fXmax  = xmax;
 
-   vector<Double_t>* sigVec = new vector<Double_t>;
-   vector<Double_t>* bkgVec = new vector<Double_t>;
+   // determine cut orientation
+   fCutOrientation = (fMeanS > fMeanB) ? kPositive : kNegative;
 
-   Double_t minVal=9999;
-   Double_t maxVal=-9999;
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-      ReadTrainingEvent(ievt);
-      Double_t theVal = this->GetMvaValue();
-      if (minVal>theVal) minVal = theVal;
-      if (maxVal<theVal) maxVal = theVal;
-      if (IsSignalEvent()) sigVec->push_back(theVal);
-      else                 bkgVec->push_back(theVal);
+   // fill 2 types of histograms for the various analyses
+   // this one is for actual plotting
+
+   Double_t sxmax = fXmax+0.00001;
+
+   // classifier response distributions for training sample
+   fHistS_plotbin   = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, sxmax );
+   fHistB_plotbin   = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, sxmax );
+
+   if (HasMVAPdfs()) {
+      fProbaS_plotbin = new TH1F( GetTestvarName() + "_Proba_S",GetTestvarName() + "_Proba_S", fNbins, 0.0, 1.0 );
+      fProbaB_plotbin = new TH1F( GetTestvarName() + "_Proba_B",GetTestvarName() + "_Proba_B", fNbins, 0.0, 1.0 );
+
+      fRarityS_plotbin = new TH1F( GetTestvarName() + "_Rarity_S",GetTestvarName() + "_Rarity_S", fNbins, 0.0, 1.0 );
+      fRarityB_plotbin = new TH1F( GetTestvarName() + "_Rarity_B",GetTestvarName() + "_Rarity_B", fNbins, 0.0, 1.0 );
+   }
+   fHistS_highbin  = new TH1F( GetTestvarName() + "_S_high",GetTestvarName() + "_S_high", fNbinsH, fXmin, sxmax );
+   fHistB_highbin  = new TH1F( GetTestvarName() + "_B_high",GetTestvarName() + "_B_high", fNbinsH, fXmin, sxmax );
+
+   // enable quadratic errors
+   fHistS_plotbin->Sumw2();
+   fHistB_plotbin->Sumw2();
+
+   if (HasMVAPdfs()) {
+      fProbaS_plotbin->Sumw2();
+      fProbaB_plotbin->Sumw2();
+
+      fRarityS_plotbin->Sumw2();
+      fRarityB_plotbin->Sumw2();
+   }
+   fHistS_highbin->Sumw2();
+   fHistB_highbin->Sumw2();
+
+   // fill the histograms
+   theTestTree->ResetBranchAddresses();
+   Float_t  v, p;
+   Float_t  w;
+   Int_t    t;
+   TBranch* vbranch = theTestTree->GetBranch( GetTestvarName() );
+   TBranch* pbranch = 0;
+   if (HasMVAPdfs()) pbranch = theTestTree->GetBranch( GetProbaName() );
+   TBranch* wbranch = theTestTree->GetBranch( "weight" );
+   TBranch* tbranch = theTestTree->GetBranch( "type" );
+   if (!vbranch || !wbranch || !tbranch)
+      fLogger << kFATAL << "<Test> Mismatch in test tree: "
+              << vbranch << " " << pbranch << " " << wbranch << " " << tbranch << Endl;
+
+   vbranch->SetAddress( &v );
+   if (pbranch) pbranch->SetAddress( &p );
+   wbranch->SetAddress( &w );
+   tbranch->SetAddress( &t );   
+   fLogger << kINFO << "Loop over test events and fill histograms with classifier response ..." << Endl;
+   if (pbranch) fLogger << kINFO << "Also filling probability and rarity histograms (on request) ..." << Endl;
+   for (Int_t ievt=0; ievt<Data().GetNEvtTest(); ievt++) {
+
+      theTestTree->GetEntry(ievt);
+
+      if (t == 1) {
+         fHistS_plotbin ->Fill( v, w );
+         if (pbranch) {
+            fProbaS_plotbin ->Fill( p, w );
+            fRarityS_plotbin->Fill( GetRarity( v ), w );
+         }
+
+         fHistS_highbin ->Fill( v, w );
+      }
+      else {
+         fHistB_plotbin ->Fill( v, w );
+         if (pbranch) {
+            fProbaB_plotbin->Fill( p, w );
+            fRarityB_plotbin->Fill( GetRarity( v ), w );
+         }
+
+         fHistB_highbin ->Fill( v, w );
+      }
    }
 
-   // create histograms that serve as basis to create the MVA Pdfs
-   TH1* histMVAPdfS = new TH1F( GetMethodName() + "_tr_S", GetMethodName() + "_tr_S",
-                                fNbinsMVAPdf, minVal, maxVal );
-   TH1* histMVAPdfB = new TH1F( GetMethodName() + "_tr_B", GetMethodName() + "_tr_B",
-                                fNbinsMVAPdf, minVal, maxVal );
+   theTestTree->ResetBranchAddresses();
 
-   // compute sum of weights properly
-   histMVAPdfS->Sumw2();
-   histMVAPdfB->Sumw2();
+   Tools::NormHist( fHistS_plotbin  );
+   Tools::NormHist( fHistB_plotbin  );
+   if (pbranch) {
+      Tools::NormHist( fProbaS_plotbin );
+      Tools::NormHist( fProbaB_plotbin );
 
-   // fill histograms
-   for (Int_t i=0; i<(Int_t)sigVec->size(); i++) histMVAPdfS->Fill( (*sigVec)[i] );
-   for (Int_t i=0; i<(Int_t)bkgVec->size(); i++) histMVAPdfB->Fill( (*bkgVec)[i] );
+      Tools::NormHist( fRarityS_plotbin );
+      Tools::NormHist( fRarityB_plotbin );
+   }
+   Tools::NormHist( fHistS_highbin  );
+   Tools::NormHist( fHistB_highbin  );
 
-   // cleanup
-   delete sigVec;
-   delete bkgVec;
+   fHistS_plotbin ->SetDirectory(0);
+   fHistB_plotbin ->SetDirectory(0);
+   if (pbranch) {
+      fProbaS_plotbin->SetDirectory(0);
+      fProbaB_plotbin->SetDirectory(0);
 
-   // normalisation
-   Tools::NormHist( histMVAPdfS );
-   Tools::NormHist( histMVAPdfB );
+      fRarityS_plotbin->SetDirectory(0);
+      fRarityB_plotbin->SetDirectory(0);
+   }
+   fHistS_highbin ->SetDirectory(0);
+   fHistB_highbin ->SetDirectory(0);
 
-   // momentary hack for ROOT problem
-   histMVAPdfS->Write();
-   histMVAPdfB->Write();
-
-   // create PDFs
-   fMVAPdfS = new PDF( histMVAPdfS, PDF::kSpline2, fNsmoothMVAPdf );
-   fMVAPdfB = new PDF( histMVAPdfB, PDF::kSpline2, fNsmoothMVAPdf );
-
-   fMVAPdfS->ValidatePDF( histMVAPdfS );
-   fMVAPdfB->ValidatePDF( histMVAPdfB );
-
-   fLogger << kINFO
-           << Form( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
-                    GetSeparation( histMVAPdfS, histMVAPdfB ), GetSeparation( fMVAPdfS, fMVAPdfB ) )
-           << Endl;
-
-   delete histMVAPdfS;
-   delete histMVAPdfB;
+   // create PDFs from histograms, using default splines, and no additional smoothing
+   fSplS = new PDF( fHistS_plotbin, PDF::kSpline2 );
+   fSplB = new PDF( fHistB_plotbin, PDF::kSpline2 );
 }
 
 //_______________________________________________________________________
@@ -539,8 +580,8 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
    tf << prefix << "#GEN -*-*-*-*-*-*-*-*-*-*-*- general info -*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
    tf << prefix << "Method         : " << GetMethodName() << "::" << GetMethodTitle() << endl;
    tf.setf(std::ios::left);
-   tf << prefix << "TMVA Release   : " << setw(10) << GetTrainingTMVAVersionString() << "    [" << GetTrainingTMVAVersionCode() << "]" << endl;
-   tf << prefix << "ROOT Release   : " << setw(10) << GetTrainingROOTVersionString() << "    [" << GetTrainingROOTVersionCode() << "]" << endl;
+   tf << prefix << "TMVA Release   : " << std::setw(10) << GetTrainingTMVAVersionString() << "    [" << GetTrainingTMVAVersionCode() << "]" << endl;
+   tf << prefix << "ROOT Release   : " << std::setw(10) << GetTrainingROOTVersionString() << "    [" << GetTrainingROOTVersionCode() << "]" << endl;
    tf << prefix << "Creator        : " << gSystem->GetUserInfo()->fUser << endl;
    tf << prefix << "Date           : "; TDatime *d = new TDatime; tf << d->AsString() << endl; delete d;
    tf << prefix << "Host           : " << gSystem->GetBuildNode() << endl;
@@ -566,7 +607,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
       tf << endl;
 
       // Fourth write the MVA variable distributions
-      if (IsMVAPdfs()) {
+      if (HasMVAPdfs()) {
          tf << endl << "#MVAPDFS -*-*-*-*-*-*-*-*-*-*-* MVA PDFS -*-*-*-*-*-*-*-*-*-*-*-" << endl;
          tf << *fMVAPdfS << endl;
          tf << *fMVAPdfB << endl;
@@ -577,7 +618,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
       tf << endl << "#WGT -*-*-*-*-*-*-*-*-*-*-*-*- weights -*-*-*-*-*-*-*-*-*-*-*-*-" << endl << endl;
 
       // no weights when standalone class is produced, which would be duplication
-      WriteWeightsToStream( tf );
+      WriteWeightsToStream( tf ); 
    }
 }
 
@@ -675,34 +716,6 @@ void TMVA::MethodBase::ReadStateFromFile()
 }
 
 //_______________________________________________________________________
-bool TMVA::MethodBase::GetLine(std::istream& fin, char * buf )
-{
-   // reads one line from the input stream
-   // checks for certain keywords and interprets
-   // the line if keywords are found
-   fin.getline(buf,512);
-   TString line(buf);
-   if (line.BeginsWith("TMVA Release")) {
-      Ssiz_t start = line.First('[')+1;
-      Ssiz_t length = line.Index("]",start)-start;
-      TString code = line(start,length);
-      std::stringstream s(code.Data());
-      s >> fTMVATrainingVersion;
-      fLogger << kINFO << "Classifier was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
-   }
-   if (line.BeginsWith("ROOT Release")) {
-      Ssiz_t start = line.First('[')+1;
-      Ssiz_t length = line.Index("]",start)-start;
-      TString code = line(start,length);
-      std::stringstream s(code.Data());
-      s >> fROOTTrainingVersion;
-      fLogger << kINFO << "Classifier was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
-   }
-
-   return true;
-}
-
-//_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
 {
    // read the header from the weight files of the different MVA methods
@@ -722,7 +735,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    if (idx1<0) {
       methodTitle=methodName;
       notit=kTRUE;
-   }
+   } 
    else {
       methodTitle=fullname(idxtit+2,fullname.Length()-1);
       notit=kFALSE;
@@ -774,7 +787,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
       GetVarTransform().ReadTransformationFromStream(fin);
    }
 
-   if (IsMVAPdfs()) {
+   if (HasMVAPdfs()) {
       // Now read the MVA PDFs
       fin.getline(buf,512);
       while (!TString(buf).BeginsWith("#MVAPDFS")) fin.getline(buf,512);
@@ -792,7 +805,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    fin.getline(buf,512);
    while (!TString(buf).BeginsWith("#WGT")) fin.getline(buf,512);
    fin.getline(buf,512);
-
+   
    ReadWeightsFromStream( fin );
 }
 
@@ -843,6 +856,15 @@ TDirectory* TMVA::MethodBase::MethodBaseDir() const
 }
 
 //_______________________________________________________________________
+void TMVA::MethodBase::SetWeightFileDir( TString fileDir )
+{
+   // set directory of weight file
+
+   fFileDir = fileDir;
+   gSystem->MakeDirectory( fFileDir );
+}
+
+//_______________________________________________________________________
 void TMVA::MethodBase::SetWeightFileName( TString theWeightFile)
 {
    // set the weight file name (depreciated)
@@ -858,7 +880,49 @@ TString TMVA::MethodBase::GetWeightFileName() const
    // the default consists of
    // directory/jobname_methodname_suffix.extension.{root/txt}
    TString suffix = "";
-   return  fFileDir + "/" + fJobName + "_" + GetMethodTitle() + suffix + "." + gConfig().GetIONames().fWeightFileExtension + ".txt";
+   return ( GetWeightFileDir() + "/" + fJobName + "_" + GetMethodTitle() + 
+            suffix + "." + gConfig().GetIONames().fWeightFileExtension + ".txt" );
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::WriteEvaluationHistosToFile()
+{
+   // writes all MVA evaluation histograms to file
+   BaseDir()->cd();
+
+   if (0 != fHistS_plotbin  ) fHistS_plotbin->Write();
+   if (0 != fHistB_plotbin  ) fHistB_plotbin->Write();
+   if (0 != fHistTrS_plotbin) fHistTrS_plotbin->Write();
+   if (0 != fHistTrB_plotbin) fHistTrB_plotbin->Write();
+   if (0 != fProbaS_plotbin ) fProbaS_plotbin->Write();
+   if (0 != fProbaB_plotbin ) fProbaB_plotbin->Write();
+   if (0 != fRarityS_plotbin) fRarityS_plotbin->Write();
+   if (0 != fRarityB_plotbin) fRarityB_plotbin->Write();
+   if (0 != fHistS_highbin  ) fHistS_highbin->Write();
+   if (0 != fHistB_highbin  ) fHistB_highbin->Write();
+   if (0 != fEffS           ) fEffS->Write();
+   if (0 != fEffB           ) fEffB->Write();
+   if (0 != fEffBvsS        ) fEffBvsS->Write();
+   if (0 != fRejBvsS        ) fRejBvsS->Write();
+   if (0 != finvBeffvsSeff  ) finvBeffvsSeff->Write();
+
+   if (0 != fMVAPdfS) {
+      fMVAPdfS->GetOriginalHist()->Write();
+      fMVAPdfS->GetSmoothedHist()->Write();
+      fMVAPdfS->GetPDFHist()->Write();
+   }
+   if (0 != fMVAPdfB) {
+      fMVAPdfB->GetOriginalHist()->Write();
+      fMVAPdfB->GetSmoothedHist()->Write();
+      fMVAPdfB->GetPDFHist()->Write();
+   }
+}
+
+//_______________________________________________________________________
+void  TMVA::MethodBase::WriteMonitoringHistosToFile( void ) const
+{
+   // write special monitoring histograms to file - not implemented for this method
+   fLogger << kINFO << "No monitoring histograms written" << Endl;
 }
 
 //_______________________________________________________________________
@@ -877,262 +941,129 @@ Bool_t TMVA::MethodBase::CheckSanity( TTree* theTree )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::SetWeightFileDir( TString fileDir )
+bool TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
 {
-   // set directory of weight file
-
-   fFileDir = fileDir;
-   gSystem->MakeDirectory( fFileDir );
-}
-
-// ---------------------------------------------------------------------------------------
-// ----- methods related to renormalization of variables ---------------------------------
-// ---------------------------------------------------------------------------------------
-
-//_______________________________________________________________________
-Double_t TMVA::MethodBase::Norm( TString var, Double_t x ) const
-{
-   // renormalises variable with respect to its min and max
-   return Tools::NormVariable( x, GetXmin( var ), GetXmax( var ) );
-}
-
-//______________________________________________________________________
-Double_t TMVA::MethodBase::Norm( Int_t ivar, Double_t x ) const
-{
-   // renormalises variable with respect to its min and max
-   return Tools::NormVariable( x, GetXmin( ivar ), GetXmax( ivar ) );
-}
-
-//_______________________________________________________________________
-void TMVA::MethodBase::TestInit(TTree* theTestTree)
-{
-   // initialization of MVA testing
-   if (theTestTree == 0)
-      theTestTree = Data().GetTestTree(); // sets theTestTree to the TestTree in the DataSet,
-   // decorrelation properly taken care of
-
-   fHistS_plotbin   = fHistB_plotbin = 0;
-   fProbaS_plotbin  = fProbaB_plotbin = 0;
-   fRarityS_plotbin = fRarityB_plotbin = 0;
-   fHistS_highbin   = fHistB_highbin = 0;
-   fEffS            = fEffB = fEffBvsS = fRejBvsS = 0;
-   fGraphS          = fGraphB = 0;
-   fCutOrientation  = kPositive;
-   fSplS            = fSplB = 0;
-   fSplRefS         = fSplRefB = 0;
-
-   // sanity checks: tree must exist, and theVar must be in tree
-   if (0 == theTestTree) {
-      fLogger << kFATAL << "<TestInit> Test tree has zero pointer " << Endl;
-      fIsOK = kFALSE;
+   // reads one line from the input stream
+   // checks for certain keywords and interprets
+   // the line if keywords are found
+   fin.getline(buf,512);
+   TString line(buf);
+   if (line.BeginsWith("TMVA Release")) {
+      Ssiz_t start = line.First('[')+1;
+      Ssiz_t length = line.Index("]",start)-start;
+      TString code = line(start,length);
+      std::stringstream s(code.Data());
+      s >> fTMVATrainingVersion;
+      fLogger << kINFO << "Classifier was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
    }
-   if ( 0 == theTestTree->FindBranch( GetTestvarName() ) && !(GetMethodName().Contains("Cuts"))) {
-      fLogger << kFATAL << "<TestInit> Test variable " << GetTestvarName()
-              << " not found in tree" << Endl;
-      fIsOK = kFALSE;
+   if (line.BeginsWith("ROOT Release")) {
+      Ssiz_t start = line.First('[')+1;
+      Ssiz_t length = line.Index("]",start)-start;
+      TString code = line(start,length);
+      std::stringstream s(code.Data());
+      s >> fROOTTrainingVersion;
+      fLogger << kINFO << "Classifier was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
    }
+
+   return true;
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::PrepareEvaluationTree( TTree* testTree )
+void TMVA::MethodBase::CreateMVAPdfs()
 {
-   // prepare tree branch with the method's discriminating variable
+   // Create PDFs of the MVA output variables
 
-   if (0 == testTree) testTree = Data().GetTestTree();
+   fLogger << kINFO << "<CreateMVAPdfs> Using " << fNbinsMVAPdf << " bins and smooth "
+           << fNsmoothMVAPdf << " times" << Endl;
 
-   // sanity checks
-   // checks that all variables in input vector indeed exist in the testTree
-   if (!CheckSanity( testTree )) {
-      fLogger << kFATAL << "<PrepareEvaluationTree> Sanity check failed" << Endl;
+   std::vector<Double_t>* sigVec = new std::vector<Double_t>;
+   std::vector<Double_t>* bkgVec = new std::vector<Double_t>;
+
+   Double_t minVal=9999;
+   Double_t maxVal=-9999;
+   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+      ReadTrainingEvent(ievt);
+      Double_t theVal = this->GetMvaValue();
+      if (minVal>theVal) minVal = theVal;
+      if (maxVal<theVal) maxVal = theVal;
+      if (IsSignalEvent()) sigVec->push_back(theVal);
+      else                 bkgVec->push_back(theVal);
    }
 
-   // read the coefficients
-   this->ReadStateFromFile();
+   // create histograms that serve as basis to create the MVA Pdfs
+   TH1* histMVAPdfS = new TH1F( GetMethodName() + "_tr_S", GetMethodName() + "_tr_S",
+                                fNbinsMVAPdf, minVal, maxVal );
+   TH1* histMVAPdfB = new TH1F( GetMethodName() + "_tr_B", GetMethodName() + "_tr_B",
+                                fNbinsMVAPdf, minVal, maxVal );
 
-   // use timer
-   Timer timer( testTree->GetEntries(), GetName(), kTRUE );
-   Data().BaseRootDir()->cd();
-   Float_t myMVA   = 0;
-   Float_t myProba = 0;
-   TBranch* newBranchMVA   = testTree->Branch( GetTestvarName(), &myMVA, GetTestvarName() + "/F", 128000 );
-   newBranchMVA->SetFile(testTree->GetDirectory()->GetFile());
-   TBranch* newBranchProba = 0;
-   if (IsMVAPdfs()) {
-      newBranchProba = testTree->Branch( GetProbaName(), &myProba, GetProbaName() + "/F", 128000 );
-      newBranchProba->SetFile(testTree->GetDirectory()->GetFile());
-   }
+   // compute sum of weights properly
+   histMVAPdfS->Sumw2();
+   histMVAPdfB->Sumw2();
 
-   fLogger << kINFO << "Preparing evaluation tree... " << Endl;
-   for (Int_t ievt=0; ievt<testTree->GetEntries(); ievt++) {
+   // fill histograms
+   for (Int_t i=0; i<(Int_t)sigVec->size(); i++) histMVAPdfS->Fill( (*sigVec)[i] );
+   for (Int_t i=0; i<(Int_t)bkgVec->size(); i++) histMVAPdfB->Fill( (*bkgVec)[i] );
 
-      ReadTestEvent(ievt);
+   // cleanup
+   delete sigVec;
+   delete bkgVec;
 
-      // fill the MVA output value for this event
-      newBranchMVA->SetAddress( &myMVA ); // only when the tree changed, but we don't know when that is
-      myMVA = (Float_t)GetMvaValue();
-      newBranchMVA->Fill();
+   // normalisation
+   Tools::NormHist( histMVAPdfS );
+   Tools::NormHist( histMVAPdfB );
 
-      // fill corresponding signal probabilities
-      if (newBranchProba) {
-         newBranchProba->SetAddress( &myProba ); // only when the tree changed, but we don't know when that is
-         myProba = (Float_t)GetProba( myMVA, 0.5 );
-         newBranchProba->Fill();
-      }
+   // momentary hack for ROOT problem
+   histMVAPdfS->Write();
+   histMVAPdfB->Write();
 
-      // print progress
-      Int_t modulo = Int_t(testTree->GetEntries()/100);
-      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
-   }
+   // create PDFs
+   fMVAPdfS = new PDF( histMVAPdfS, PDF::kSpline2, fNsmoothMVAPdf );
+   fMVAPdfB = new PDF( histMVAPdfB, PDF::kSpline2, fNsmoothMVAPdf );
 
-   Data().BaseRootDir()->Write("",TObject::kOverwrite);
+   fMVAPdfS->ValidatePDF( histMVAPdfS );
+   fMVAPdfB->ValidatePDF( histMVAPdfB );
 
-   fLogger << kINFO << "Elapsed time for evaluation of "
-           << testTree->GetEntries() <<  " events: "
-           << timer.GetElapsedTime() << "       " << Endl;
+   fLogger << kINFO
+           << Form( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
+                    GetSeparation( histMVAPdfS, histMVAPdfB ), GetSeparation( fMVAPdfS, fMVAPdfB ) )
+           << Endl;
 
-   newBranchMVA  ->ResetAddress();
-   if (newBranchProba) newBranchProba->ResetAddress();
+   delete histMVAPdfS;
+   delete histMVAPdfB;
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::Test( TTree *theTestTree )
+Double_t TMVA::MethodBase::GetProba( Double_t mvaVal, Double_t ap_sig )
 {
-   // test the method - not much is done here... mainly furthor initialization
-
-   // If Empty tree: sets theTestTree to the TestTree in the DataSet,
-   // decorrelation properly taken care of
-   if (theTestTree == 0) theTestTree = Data().GetTestTree();
-
-   // basic statistics operations are made in base class
-   // note: cannot directly modify private class members
-   Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-
-   TMVA::Tools::ComputeStat( theTestTree, GetTestvarName(), meanS, meanB, rmsS, rmsB, xmin, xmax );
-
-   // choose reasonable histogram ranges, by removing outliers
-   Double_t nrms = 10;
-   xmin = TMath::Max( TMath::Min(meanS - nrms*rmsS, meanB - nrms*rmsB ), xmin );
-   xmax = TMath::Min( TMath::Max(meanS + nrms*rmsS, meanB + nrms*rmsB ), xmax );
-
-   fMeanS = meanS; fMeanB = meanB;
-   fRmsS  = rmsS;  fRmsB  = rmsB;
-   fXmin  = xmin;  fXmax  = xmax;
-
-   // determine cut orientation
-   fCutOrientation = (fMeanS > fMeanB) ? kPositive : kNegative;
-
-   // fill 2 types of histograms for the various analyses
-   // this one is for actual plotting
-
-   Double_t sxmax = fXmax+0.00001;
-   if (fHistS_plotbin  ) { delete fHistS_plotbin;   fHistS_plotbin   = 0; }
-   if (fHistB_plotbin  ) { delete fHistB_plotbin;   fHistB_plotbin   = 0; }
-   if (fProbaS_plotbin ) { delete fProbaS_plotbin;  fProbaS_plotbin  = 0; }
-   if (fProbaB_plotbin ) { delete fProbaB_plotbin;  fProbaB_plotbin  = 0; }
-   if (fRarityS_plotbin) { delete fRarityS_plotbin; fRarityS_plotbin = 0; }
-   if (fRarityB_plotbin) { delete fRarityB_plotbin; fRarityB_plotbin = 0; }
-   if (fHistS_highbin  ) { delete fHistS_highbin;   fHistS_highbin   = 0; }
-   if (fHistB_highbin  ) { delete fHistB_highbin;   fHistB_highbin   = 0; }
-
-   fHistS_plotbin  = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, sxmax );
-   fHistB_plotbin  = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, sxmax );
-
-   if (IsMVAPdfs()) {
-      fProbaS_plotbin = new TH1F( GetTestvarName() + "_Proba_S",GetTestvarName() + "_Proba_S", fNbins, 0.0, 1.0 );
-      fProbaB_plotbin = new TH1F( GetTestvarName() + "_Proba_B",GetTestvarName() + "_Proba_B", fNbins, 0.0, 1.0 );
-
-      fRarityS_plotbin = new TH1F( GetTestvarName() + "_Rarity_S",GetTestvarName() + "_Rarity_S", fNbins, 0.0, 1.0 );
-      fRarityB_plotbin = new TH1F( GetTestvarName() + "_Rarity_B",GetTestvarName() + "_Rarity_B", fNbins, 0.0, 1.0 );
+   // compute likelihood ratio
+   if (!fMVAPdfS || !fMVAPdfB) {
+      fLogger << kWARNING << "<GetProba> MVA PDFs for Signal and Backgroud don't exist" << Endl;
+      return 0;
    }
-   fHistS_highbin  = new TH1F( GetTestvarName() + "_S_high",GetTestvarName() + "_S_high", fNbinsH, fXmin, sxmax );
-   fHistB_highbin  = new TH1F( GetTestvarName() + "_B_high",GetTestvarName() + "_B_high", fNbinsH, fXmin, sxmax );
+   Double_t p_s = fMVAPdfS->GetVal( mvaVal );
+   Double_t p_b = fMVAPdfB->GetVal( mvaVal );
 
-   // enable quadratic errors
-   fHistS_plotbin ->Sumw2();
-   fHistB_plotbin ->Sumw2();
-   if (IsMVAPdfs()) {
-      fProbaS_plotbin->Sumw2();
-      fProbaB_plotbin->Sumw2();
+   Double_t denom = p_s*ap_sig + p_b*(1 - ap_sig);
 
-      fRarityS_plotbin->Sumw2();
-      fRarityB_plotbin->Sumw2();
-   }
-   fHistS_highbin ->Sumw2();
-   fHistB_highbin ->Sumw2();
+   return (denom > 0) ? (p_s*ap_sig) / denom : -1;
+}
 
-   // fill the histograms
-   theTestTree->ResetBranchAddresses();
-   Float_t  v, p;
-   Float_t  w;
-   Int_t    t;
-   TBranch* vbranch = theTestTree->GetBranch( GetTestvarName() );
-   TBranch* pbranch = 0;
-   if (IsMVAPdfs()) pbranch = theTestTree->GetBranch( GetProbaName() );
-   TBranch* wbranch = theTestTree->GetBranch( "weight" );
-   TBranch* tbranch = theTestTree->GetBranch( "type" );
-   if (!vbranch || !wbranch || !tbranch)
-      fLogger << kFATAL << "<Test> Mismatch in test tree: "
-              << vbranch << " " << pbranch << " " << wbranch << " " << tbranch << Endl;
+//_______________________________________________________________________
+Double_t TMVA::MethodBase::GetRarity( Double_t mvaVal, Types::ESBType reftype ) const
+{
+   // compute rarity:
+   // R(x) = Integrate_[-oo..x] { PDF(x') dx' }
+   // where PDF(x) is the PDF of the classifier's signal or background distribution
 
-   vbranch->SetAddress( &v );
-   if (pbranch) pbranch->SetAddress( &p );
-   wbranch->SetAddress( &w );
-   tbranch->SetAddress( &t );
-   fLogger << kINFO << "Loop over test events and fill histograms with classifier response ..." << Endl;
-   if (pbranch) fLogger << kINFO << "Also filling probability and rarity histograms (on request) ..." << Endl;
-   for (Int_t ievt=0; ievt<Data().GetNEvtTest(); ievt++) {
-
-      theTestTree->GetEntry(ievt);
-
-      if (t == 1) {
-         fHistS_plotbin ->Fill( v, w );
-         if (pbranch) {
-            fProbaS_plotbin ->Fill( p, w );
-            fRarityS_plotbin->Fill( GetRarity( v ), w );
-         }
-
-         fHistS_highbin ->Fill( v, w );
-      }
-      else {
-         fHistB_plotbin ->Fill( v, w );
-         if (pbranch) {
-            fProbaB_plotbin->Fill( p, w );
-            fRarityB_plotbin->Fill( GetRarity( v ), w );
-         }
-
-         fHistB_highbin ->Fill( v, w );
-      }
+   if ((reftype == Types::kSignal && !fMVAPdfS) || (reftype == Types::kBackground && !fMVAPdfB)) {
+      fLogger << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
+              << "select option \"CreateMVAPdfs\"" << Endl;
+      return 0.0;
    }
 
-   theTestTree->ResetBranchAddresses();
+   PDF* thePdf = reftype == Types::kSignal ? fMVAPdfS : fMVAPdfB;
 
-   Tools::NormHist( fHistS_plotbin  );
-   Tools::NormHist( fHistB_plotbin  );
-   if (pbranch) {
-      Tools::NormHist( fProbaS_plotbin );
-      Tools::NormHist( fProbaB_plotbin );
-
-      Tools::NormHist( fRarityS_plotbin );
-      Tools::NormHist( fRarityB_plotbin );
-   }
-   Tools::NormHist( fHistS_highbin  );
-   Tools::NormHist( fHistB_highbin  );
-
-   fHistS_plotbin ->SetDirectory(0);
-   fHistB_plotbin ->SetDirectory(0);
-   if (pbranch) {
-      fProbaS_plotbin->SetDirectory(0);
-      fProbaB_plotbin->SetDirectory(0);
-
-      fRarityS_plotbin->SetDirectory(0);
-      fRarityB_plotbin->SetDirectory(0);
-   }
-   fHistS_highbin ->SetDirectory(0);
-   fHistB_highbin ->SetDirectory(0);
-
-   // create PDFs from histograms, using default splines, and no additional smoothing
-   fSplS = new PDF( fHistS_plotbin, PDF::kSpline2 );
-   fSplB = new PDF( fHistB_plotbin, PDF::kSpline2 );
+   return thePdf->GetIntegral( thePdf->GetXmin(), mvaVal );
 }
 
 //_______________________________________________________________________
@@ -1159,8 +1090,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
    // sanity check
    if (fHistS_highbin->GetNbinsX() != fHistB_highbin->GetNbinsX() ||
        fHistS_plotbin->GetNbinsX() != fHistB_plotbin->GetNbinsX()) {
-      fLogger << kWARNING << "<GetEfficiency> Binning mismatch between signal and background histos" << Endl;
-      fIsOK = kFALSE;
+      fLogger << kFATAL << "<GetEfficiency> Binning mismatch between signal and background histos" << Endl;
       return -1.0;
    }
 
@@ -1175,7 +1105,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
 
    static Double_t nevtS;
 
-   if (NULL == fEffS && NULL == fEffB) firstPass = kTRUE;
+   if (0 == fEffS && 0 == fEffB) firstPass = kTRUE;
 
    if (firstPass) {
 
@@ -1188,28 +1118,32 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
       // this method is unbinned
       Int_t   theType;
       Float_t theVal;
+      Float_t theWeight;
       theTree->ResetBranchAddresses();
-      TBranch* brType = theTree->GetBranch("type");
-      TBranch* brVal  = theTree->GetBranch(GetTestvarName());
+      TBranch* brType   = theTree->GetBranch("type");
+      TBranch* brVal    = theTree->GetBranch(GetTestvarName());
+      TBranch* brWeight = theTree->GetBranch("weight");
       if (brVal == 0) {
          fLogger << kFATAL << "Could not find variable "
                  << GetTestvarName() << " in tree " << theTree->GetName() << Endl;
       }
-      brType->SetAddress(&theType);
-      brVal ->SetAddress(&theVal );
+      brType  ->SetAddress(&theType  );
+      brVal   ->SetAddress(&theVal   );
+      brWeight->SetAddress(&theWeight);
 
       nevtS = 0;
       for (Int_t ievt=0; ievt<theTree->GetEntries(); ievt++) {
 
          // read the tree
-         brType->GetEntry(ievt);
-         brVal ->GetEntry(ievt);
+         brType  ->GetEntry(ievt);
+         brVal   ->GetEntry(ievt);
+         brWeight->GetEntry(ievt);
 
          // select histogram depending on if sig or bgd
          TH1* theHist = (theType == 1) ? fEffS : fEffB;
 
          // count signal and background events in tree
-         if (theType == 1) nevtS++;
+         if (theType == 1) nevtS+=theWeight;
 
          TAxis* axis   = theHist->GetXaxis();
          Int_t  maxbin = Int_t((theVal - axis->GetXmin())/(axis->GetXmax() - axis->GetXmin())*fNbinsH) + 1;
@@ -1219,9 +1153,9 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
          if (sign < 0 && maxbin > fNbinsH) maxbin = fNbinsH;
 
          if (sign > 0)
-            for (Int_t ibin=1; ibin<=maxbin; ibin++) theHist->AddBinContent( ibin );
+            for (Int_t ibin=1; ibin<=maxbin; ibin++) theHist->AddBinContent( ibin , theWeight);
          else if (sign < 0)
-            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin );
+            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin , theWeight );
          else
             fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
       }
@@ -1311,7 +1245,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
    }
 
    // must exist...
-   if (NULL == fSpleffBvsS) return 0.0;
+   if (0 == fSpleffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
    Double_t effS = 0, effB = 0, effS_ = 0, effB_ = 0;
@@ -1388,7 +1322,6 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
        fHistS_plotbin->GetNbinsX() != fHistB_plotbin->GetNbinsX()) {
       fLogger << kFATAL << "<GetTrainingEfficiency> Binning mismatch between signal and background histos"
               << Endl;
-      fIsOK = kFALSE;
       return -1.0;
    }
 
@@ -1400,10 +1333,20 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
 
    // first round ? --> create histograms
    Bool_t firstPass = kFALSE;
-   if (NULL == fTrainEffS && NULL == fTrainEffB) firstPass = kTRUE;
+   if (0 == fTrainEffS && 0 == fTrainEffB) firstPass = kTRUE;
 
    if (firstPass) {
 
+      // classifier response distributions for test sample
+      Double_t sxmax = fXmax+0.00001;
+      fHistTrS_plotbin = new TH1F( GetTestvarName() + "_Train_S",GetTestvarName() + "_Train_S", 
+                                   fNbins, fXmin, sxmax );
+      fHistTrB_plotbin = new TH1F( GetTestvarName() + "_Train_B",GetTestvarName() + "_Train_B", 
+                                   fNbins, fXmin, sxmax );
+      fHistTrS_plotbin->Sumw2();
+      fHistTrB_plotbin->Sumw2();
+
+      // efficiency plots
       fTrainEffS = new TH1F( GetTestvarName() + "_trainingEffS", GetTestvarName() + " (signal)",
                              fNbinsH, xmin, xmax );
       fTrainEffB = new TH1F( GetTestvarName() + "_trainingEffB", GetTestvarName() + " (background)",
@@ -1414,13 +1357,18 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
 
       // this method is unbinned
       for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
+
          ReadTrainingEvent(ievt);
 
-         TH1* theHist = (IsSignalEvent() ? fTrainEffS : fTrainEffB);
+         Double_t theVal    = GetMvaValue();
+         Double_t theWeight = GetEventWeight();
 
-         Double_t theVal = this->GetMvaValue();
+         TH1* theEffHist = IsSignalEvent() ? fTrainEffS : fTrainEffB;
+         TH1* theClsHist = IsSignalEvent() ? fHistTrS_plotbin : fHistTrB_plotbin;         
 
-         TAxis* axis   = theHist->GetXaxis();
+         theClsHist->Fill( theVal, theWeight );
+
+         TAxis* axis   = theEffHist->GetXaxis();
          Int_t  maxbin = Int_t((theVal - axis->GetXmin())/(axis->GetXmax() - axis->GetXmin())*fNbinsH) + 1;
          if (sign > 0 && maxbin > fNbinsH) continue; // can happen... event doesn't count
          if (sign < 0 && maxbin < 1      ) continue; // can happen... event doesn't count
@@ -1428,13 +1376,18 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
          if (sign < 0 && maxbin > fNbinsH) maxbin = fNbinsH;
 
          if (sign > 0)
-            for (Int_t ibin=1; ibin<=maxbin; ibin++) theHist->AddBinContent( ibin );
+            for (Int_t ibin=1; ibin<=maxbin; ibin++) theEffHist->AddBinContent( ibin , theWeight );
          else if (sign < 0)
-            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin );
+            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theEffHist->AddBinContent( ibin , theWeight );
          else
             fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
-
       }
+
+      // normalise output distributions
+      Tools::NormHist( fHistTrS_plotbin  );
+      Tools::NormHist( fHistTrB_plotbin  );
+      fHistTrS_plotbin->SetDirectory(0);
+      fHistTrB_plotbin->SetDirectory(0);
 
       // renormalise to maximum
       fTrainEffS->Scale( 1.0/(fTrainEffS->GetMaximum() > 0 ? fTrainEffS->GetMaximum() : 1) );
@@ -1490,7 +1443,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
    }
 
    // must exist...
-   if (NULL == fSplTrainEffBvsS) return 0.0;
+   if (0 == fSplTrainEffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
    Double_t effS, effB, effS_ = 0, effB_ = 0;
@@ -1524,7 +1477,7 @@ Double_t TMVA::MethodBase::GetSignificance( void ) const
 Double_t TMVA::MethodBase::GetSeparation( TH1* histoS, TH1* histoB ) const
 {
    // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
+   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
 
    Double_t xmin = histoS->GetXaxis()->GetXmin();
    Double_t xmax = histoB->GetXaxis()->GetXmax();
@@ -1584,20 +1537,20 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
-                                                  Double_t BackgroundEvents,
-                                                  Double_t& optimal_significance_value  ) const
+Double_t TMVA::MethodBase::GetMaximumSignificance( Double_t SignalEvents,
+                                                   Double_t BackgroundEvents,
+                                                   Double_t& max_significance_value ) const
 {
    // plot significance, S/Sqrt(S^2 + B^2), curve for given number
-   // of signal and background events; returns cut for optimal significance
-   // also returned via reference is the optimal significance
+   // of signal and background events; returns cut for maximum significance
+   // also returned via reference is the maximum significance
 
-   Double_t optimal_significance(0);
+   Double_t max_significance(0);
    Double_t effS(0),effB(0),significance(0);
    TH1F *temp_histogram = new TH1F("temp", "temp", fNbinsH, fXmin, fXmax );
 
    if (SignalEvents <= 0 || BackgroundEvents <= 0) {
-      fLogger << kFATAL << "<GetOptimalSignificance> "
+      fLogger << kFATAL << "<GetMaximumSignificance> "
               << "Number of signal or background events is <= 0 ==> abort"
               << Endl;
    }
@@ -1607,7 +1560,7 @@ Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
 
    if ((fEffS == 0) || (fEffB == 0)) {
       fLogger << kWARNING << "Efficiency histograms empty !" << Endl;
-      fLogger << kWARNING << "no optimal cut found, return 0" << Endl;
+      fLogger << kWARNING << "no maximum cut found, return 0" << Endl;
       return 0;
    }
 
@@ -1622,116 +1575,16 @@ Double_t TMVA::MethodBase::GetOptimalSignificance(Double_t SignalEvents,
    }
 
    // find maximum in histogram
-   optimal_significance = temp_histogram->GetBinCenter( temp_histogram->GetMaximumBin() );
-   optimal_significance_value = temp_histogram->GetBinContent( temp_histogram->GetMaximumBin() );
+   max_significance = temp_histogram->GetBinCenter( temp_histogram->GetMaximumBin() );
+   max_significance_value = temp_histogram->GetBinContent( temp_histogram->GetMaximumBin() );
 
    // delete
    temp_histogram->Delete();
 
-   fLogger << kINFO << "Optimal cut at      : " << optimal_significance << Endl;
-   fLogger << kINFO << "Optimal significance: " << optimal_significance_value << Endl;
+   fLogger << kINFO << "Optimal cut at      : " << max_significance << Endl;
+   fLogger << kINFO << "Maximum significance: " << max_significance_value << Endl;
 
-   return optimal_significance;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::MethodBase::GetmuTransform( TTree *theTree )
-{
-   // computes Mu-transform
-   //---------------------------------------------------------------------------------------
-   // Authors     : Francois Le Diberder and Muriel Pivk
-   // Reference   : Muriel Pivk,
-   //               "Etude de la violation de CP dans la désintégration
-   //                B0 -> h+ h- (h = pi, K) auprès du détecteur BaBar à SLAC",
-   //               PhD thesis at Universite de Paris VI-VII, LPNHE (IN2P3/CNRS), Paris, 2003
-   //               http://tel.ccsd.cnrs.fr/documents/archives0/00/00/29/91/index_fr.html
-   //
-   // Definitions : Bhat = PDFbackground(x)/(PDFbackground(x) + PDFsignal(x))
-   //               mu   = mu(b) = Int_0B Bhat[b'] db'
-   //---------------------------------------------------------------------------------------
-
-   // create Bhat distribution function
-   Int_t nbin  = 70;
-   fHistBhatS = new TH1F( GetTestvarName() + "_BhatS", GetTestvarName() + ": Bhat (S)", nbin, 0.0, 1.0 );
-   fHistBhatB = new TH1F( GetTestvarName() + "_BhatB", GetTestvarName() + ": Bhat (B)", nbin, 0.0, 1.0 );
-
-   fHistBhatS->Sumw2();
-   fHistBhatB->Sumw2();
-
-   vector<Double_t>* aBhatB = new vector<Double_t>;
-   vector<Double_t>* aBhatS = new vector<Double_t>;
-
-   Float_t x;
-   TBranch* br = theTree->GetBranch(GetTestvarName());
-   for (Int_t ievt=0; ievt<theTree->GetEntries(); ievt++) {
-      ReadEvent(theTree,ievt);
-      br->SetAddress(&x);
-      br->GetEvent(ievt);
-      Double_t s = fSplS->GetVal( x );
-      Double_t b = fSplB->GetVal( x );
-      Double_t aBhat = 0;
-      if (b + s > 0) aBhat = b/(b + s);
-
-      if (IsSignalEvent()) { // this is signal
-         aBhatS->push_back ( aBhat );
-         fHistBhatS->Fill( aBhat );
-      }
-      else {
-         aBhatB->push_back ( aBhat );
-         fHistBhatB->Fill( aBhat );
-      }
-   }
-
-   // normalise histograms
-   fHistBhatS->Scale( 1.0/((fHistBhatS->GetEntries() > 0 ? fHistBhatS->GetEntries() : 1) / nbin) );
-   fHistBhatB->Scale( 1.0/((fHistBhatB->GetEntries() > 0 ? fHistBhatB->GetEntries() : 1) / nbin) );
-
-   PDF* yB = new PDF( fHistBhatB, PDF::kSpline2, 100 );
-
-   Int_t nevtS = aBhatS->size();
-   Int_t nevtB = aBhatB->size();
-
-   // get the mu-transform
-   Int_t nbinMu = 50;
-   fHistMuS = new TH1F( GetTestvarName() + "_muTransform_S",
-                        GetTestvarName() + ": mu-Transform (S)", nbinMu, 0.0, 1.0 );
-   fHistMuB = new TH1F( GetTestvarName() + "_muTransform_B",
-                        GetTestvarName() + ": mu-Transform (B)", nbinMu, 0.0, 1.0 );
-
-   // signal
-   for (Int_t ievt=0; ievt<nevtS; ievt++) {
-      Double_t w = yB->GetVal( (*aBhatS)[ievt] );
-      if (w > 0) fHistMuS->Fill( 1.0 - (*aBhatS)[ievt], 1.0/w );
-   }
-
-   // background (must be flat)
-   for (Int_t ievt=0; ievt<nevtB; ievt++) {
-      Double_t w = yB->GetVal( (*aBhatB)[ievt] );
-      if (w > 0) fHistMuB->Fill( 1.0 - (*aBhatB)[ievt], 1.0/w );
-   }
-
-   // normalise mu-transforms
-   Tools::NormHist( fHistMuS );
-   Tools::NormHist( fHistMuB );
-
-   // determine the mu-transform value, which is defined as
-   // the average of the signal mu-transform Int_[0,1] { S(mu) dmu }
-   // this average is 0.5 for background, by definition
-   PDF* thePdf = new PDF( fHistMuS, PDF::kSpline2 );
-   Double_t intS = 0;
-   Int_t    nstp = 10000;
-   for (Int_t istp=0; istp<nstp; istp++) {
-      Double_t x = (istp + 0.5)/Double_t(nstp);
-      intS += x*thePdf->GetVal( x );
-   }
-   intS /= Double_t(nstp);
-
-   delete yB;
-   delete thePdf;
-   delete aBhatB;
-   delete aBhatS;
-
-   return intS; // return average mu-transform for signal
+   return max_significance;
 }
 
 //_______________________________________________________________________
@@ -1811,42 +1664,6 @@ void TMVA::MethodBase::Statistics( Types::ETreeType treeType, const TString& the
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::WriteEvaluationHistosToFile( TDirectory* targetDir )
-{
-   // writes all MVA evaluation histograms to file
-   if (targetDir!=0) targetDir->cd();
-   else              BaseDir()->cd();
-   if (0 != fHistS_plotbin  ) fHistS_plotbin->Write();
-   if (0 != fHistB_plotbin  ) fHistB_plotbin->Write();
-   if (0 != fProbaS_plotbin ) fProbaS_plotbin->Write();
-   if (0 != fProbaB_plotbin ) fProbaB_plotbin->Write();
-   if (0 != fRarityS_plotbin) fRarityS_plotbin->Write();
-   if (0 != fRarityB_plotbin) fRarityB_plotbin->Write();
-   if (0 != fHistS_highbin  ) fHistS_highbin->Write();
-   if (0 != fHistB_highbin  ) fHistB_highbin->Write();
-   if (0 != fEffS           ) fEffS->Write();
-   if (0 != fEffB           ) fEffB->Write();
-   if (0 != fEffBvsS        ) fEffBvsS->Write();
-   if (0 != fRejBvsS        ) fRejBvsS->Write();
-   if (0 != finvBeffvsSeff  ) finvBeffvsSeff->Write();
-   if (0 != fHistBhatS      ) fHistBhatS->Write();
-   if (0 != fHistBhatB      ) fHistBhatB->Write();
-   if (0 != fHistMuS        ) fHistMuS->Write();
-   if (0 != fHistMuB        ) fHistMuB->Write();
-
-   if (0 != fMVAPdfS) {
-      fMVAPdfS->GetOriginalHist()->Write();
-      fMVAPdfS->GetSmoothedHist()->Write();
-      fMVAPdfS->GetPDFHist()->Write();
-   }
-   if (0 != fMVAPdfB) {
-      fMVAPdfB->GetOriginalHist()->Write();
-      fMVAPdfB->GetSmoothedHist()->Write();
-      fMVAPdfB->GetPDFHist()->Write();
-   }
-}
-
-//_______________________________________________________________________
 void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
 {
    // create reader class for classifier
@@ -1854,7 +1671,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    // the default consists of
    TString classFileName = "";
    if (theClassFileName == "")
-      classFileName = fFileDir + "/" + fJobName + "_" + GetMethodTitle() + ".class.C";
+      classFileName = GetWeightFileDir() + "/" + fJobName + "_" + GetMethodTitle() + ".class.C";
    else
       classFileName = theClassFileName;
 
@@ -1952,8 +1769,8 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << endl;
    fout << "      // initialize min and max vectors (for normalisation)" << endl;
    for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
-      fout << "      fVmin[" << ivar << "] = " << setprecision(15) << GetXmin( ivar ) << ";" << endl;
-      fout << "      fVmax[" << ivar << "] = " << setprecision(15) << GetXmax( ivar ) << ";" << endl;
+      fout << "      fVmin[" << ivar << "] = " << std::setprecision(15) << GetXmin( ivar ) << ";" << endl;
+      fout << "      fVmax[" << ivar << "] = " << std::setprecision(15) << GetXmax( ivar ) << ";" << endl;
    }
    fout << endl;
    fout << "      // initialize input variable types" << endl;
@@ -1978,39 +1795,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   // the classifier response" << endl;
    fout << "   // \"inputValues\" is a vector of input values in the same order as the " << endl;
    fout << "   // variables given to the constructor" << endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const" << endl;
-   fout << "   {" << endl;
-   fout << "      // classifier response value" << endl;
-   fout << "      double retval = 0;" << endl;
-   fout << endl;
-   fout << "      // classifier response, sanity check first" << endl;
-   fout << "      if (!fStatusIsClean) {" << endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << endl;
-   fout << "                   << \" because status is dirty\" << std::endl;" << endl;
-   fout << "         retval = 0;" << endl;
-   fout << "      }" << endl;
-   fout << "      else {" << endl;
-   fout << "         if (IsNormalised()) {" << endl;
-   fout << "            // normalise variables" << endl;
-   fout << "            std::vector<double> iV;" << endl;
-   fout << "            int ivar = 0;" << endl;
-   fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << endl;
-   fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << endl;
-   fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << endl;
-   fout << "            }" << endl;
-   if (fVariableTransform != Types::kNone && GetMethodType() != Types::kLikelihood )
-      fout << "            Transform( iV, 0 );" << endl;
-   fout << "            retval = GetMvaValue__( iV );" << endl;
-   fout << "         }" << endl;
-   fout << "         else {" << endl;
-   if (fVariableTransform != Types::kNone && GetMethodType() != Types::kLikelihood )
-      fout << "            Transform( inputValues, 0 );" << endl;
-   fout << "            retval = GetMvaValue__( inputValues );" << endl;
-   fout << "         }" << endl;
-   fout << "      }" << endl;
-   fout << endl;
-   fout << "      return retval;" << endl;
-   fout << "   }" << endl;
+   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const;" << endl;
    fout << endl;
    fout << " private:" << endl;
    fout << endl;
@@ -2054,6 +1839,50 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    // call the classifier specific output (the classifier must close the class !)
    MakeClassSpecific( fout, className );
 
+   // now the actual implementation of the GetMvaValue (outside the class specification)
+   fout << "   inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << endl;
+   fout << "   {" << endl;
+   fout << "      // classifier response value" << endl;
+   fout << "      double retval = 0;" << endl;
+   fout << endl;
+   fout << "      // classifier response, sanity check first" << endl;
+   fout << "      if (!fStatusIsClean) {" << endl;
+   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << endl;
+   fout << "                   << \" because status is dirty\" << std::endl;" << endl;
+   fout << "         retval = 0;" << endl;
+   fout << "      }" << endl;
+   fout << "      else {" << endl;
+   fout << "         if (IsNormalised()) {" << endl;
+   fout << "            // normalise variables" << endl;
+   fout << "            std::vector<double> iV;" << endl;
+   fout << "            int ivar = 0;" << endl;
+   fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << endl;
+   fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << endl;
+   fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << endl;
+   fout << "            }" << endl;
+   if (fVariableTransform != Types::kNone && GetMethodType() != Types::kLikelihood )
+      fout << "            Transform( iV, 0 );" << endl;
+   fout << "            retval = GetMvaValue__( iV );" << endl;
+   fout << "         }" << endl;
+   fout << "         else {" << endl;
+   if (fVariableTransform != Types::kNone && GetMethodType() != Types::kLikelihood ){
+      fout << "            std::vector<double> iV;" << endl;
+      fout << "            int ivar = 0;" << endl;
+      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << endl;
+      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << endl;
+      fout << "               iV.push_back(*varIt);" << endl;
+      fout << "            }" << endl;
+      fout << "            Transform( iV, 0 );" << endl;
+      fout << "            retval = GetMvaValue__( iV );" << endl;
+   }else{
+      fout << "            retval = GetMvaValue__( inputValues );" << endl;
+   }
+   fout << "         }" << endl;
+   fout << "      }" << endl;
+   fout << endl;
+   fout << "      return retval;" << endl;
+   fout << "   }" << endl;
+
    // create output for transformation - if any
    if (fVariableTransform != Types::kNone) GetVarTransform().MakeFunction(fout, className,2);
 
@@ -2061,9 +1890,37 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout.close();
 }
 
+//_______________________________________________________________________
+void TMVA::MethodBase::PrintHelpMessage() const
+{
+   // prints out classifier-specific help method
+
+   //         "|--------------------------------------------------------------|"
+   fLogger << kINFO << Endl;
+   fLogger << Tools::Color("bold")
+           << "================================================================" 
+           << Tools::Color( "reset" )
+           << Endl;
+   fLogger << Tools::Color("bold")
+           << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :" 
+           << Tools::Color( "reset" )
+           << Endl;
+
+   // print method-specific help message
+   GetHelpMessage(); 
+
+   fLogger << Endl;
+   fLogger << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
+   fLogger << Tools::Color("bold")
+           << "================================================================" 
+           << Tools::Color( "reset" )
+           << Endl;
+   fLogger << Endl;
+}
+
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
-TMVA::MethodBase* TMVA::MethodBase::fgThisBase = NULL;
+TMVA::MethodBase* TMVA::MethodBase::fgThisBase = 0;
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBase::IGetEffForRoot( Double_t theCut )
@@ -2098,32 +1955,4 @@ Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
    return retval;
 }
 
-//_______________________________________________________________________
-void  TMVA::MethodBase::WriteMonitoringHistosToFile( void ) const
-{
-   // write special monitoring histograms to file - not implemented for this method
-   fLogger << kINFO << "No monitoring histograms written" << Endl;
-}
-
-//_______________________________________________________________________
-TString TMVA::MethodBase::GetTrainingTMVAVersionString() const
-{
-   // calculates the TMVA version string from the training version code on the fly
-   UInt_t a = GetTrainingTMVAVersionCode() & 0xff0000; a>>=16;
-   UInt_t b = GetTrainingTMVAVersionCode() & 0x00ff00; b>>=8;
-   UInt_t c = GetTrainingTMVAVersionCode() & 0x0000ff;
-
-   return TString(Form("%i.%i.%i",a,b,c));
-}
-
-//_______________________________________________________________________
-TString TMVA::MethodBase::GetTrainingROOTVersionString() const
-{
-   // calculates the ROOT version string from the training version code on the fly
-   UInt_t a = GetTrainingROOTVersionCode() & 0xff0000; a>>=16;
-   UInt_t b = GetTrainingROOTVersionCode() & 0x00ff00; b>>=8;
-   UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
-
-   return TString(Form("%i.%02i/%02i",a,b,c));
-}
 

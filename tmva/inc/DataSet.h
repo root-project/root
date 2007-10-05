@@ -110,13 +110,15 @@ namespace TMVA {
       const TString& GetInternalVarName(Int_t i) const { return fVariables[i].GetInternalVarName(); }
 
       // the cut
-      void SetCut( const TString& cut )      { SetCut(TCut(cut)); }
-      void SetCut( const TCut& cut )         { fCut = cut; }
+      void SetCuts( const TString& scut, const TString& bcut ) { SetCuts(TCut(scut), TCut(bcut)); }
+      void SetCuts( const TCut&    scut, const TCut&    bcut ) { fCutSig = scut; fCutBkg = bcut;  }
       void SetMultiCut( const TString& cut ) { SetMultiCut(TCut(cut)); }
       void SetMultiCut( const TCut& cut )    { fMultiCut = cut; }
-      const TCut& Cut()  const { return fCut; }
-      const char* CutS() const { return fCut.GetTitle(); }
-      Bool_t HasCut()          { return TString(CutS())!=""; }
+      const TCut& CutSig()  const { return fCutSig; }
+      const TCut& CutBkg()  const { return fCutBkg; }
+      const char* CutSigS() const { return fCutSig.GetTitle(); }
+      const char* CutBkgS() const { return fCutBkg.GetTitle(); }
+      Bool_t      HasCuts() const { return TString(CutSig()) != "" || TString(CutBkg()) != ""; }
 
       // the internal trees
       TTree* GetTrainingTree()     const { return fTrainingTree; }
@@ -164,7 +166,8 @@ namespace TMVA {
       const TMatrixD* CorrelationMatrix( Types::ESBType sigbgd ) const { return fDecorrMatrix[sigbgd]; }
 
       // the weight 
-      void SetWeightExpression(const TString& expr) { fWeightExp = expr; }
+      void SetSignalWeightExpression    ( const TString& expr ) { fWeightExp[Types::kSignal]     = expr; }
+      void SetBackgroundWeightExpression( const TString& expr ) { fWeightExp[Types::kBackground] = expr; }
 
       // some dataset stats
       Int_t GetNEvtTrain()     const { return fDataStats[Types::kTraining][Types::kSBBoth]; }
@@ -199,7 +202,8 @@ namespace TMVA {
       std::vector<VariableInfo>  fVariables;        //! list of variable expressions/internal names
       std::vector<TString>       fVariableStrings;  //! list of variable expressions
       std::vector<TTreeFormula*> fInputVarFormulas; // local formulas of the same
-      TCut                       fCut;              // the pretraining cut
+      TCut                       fCutSig;           // the pretraining cut
+      TCut                       fCutBkg;           // the pretraining cut
       TCut                       fMultiCut;         // phase-space cut
 
       TTree*                     fTrainingTree;     //! tree used for training
@@ -222,8 +226,8 @@ namespace TMVA {
       mutable UInt_t            fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
 
       // the weight
-      TString                   fWeightExp;        //! the input formula string that is the weight
-      TTreeFormula*             fWeightFormula;    //! local weight formula
+      TString                   fWeightExp[2];      //! the input formula string that is the weight
+      TTreeFormula*             fWeightFormula[2];  //! local weight formula
       
       mutable MsgLogger         fLogger;           //! message logger
 

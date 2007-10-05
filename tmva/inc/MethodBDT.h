@@ -99,35 +99,35 @@ namespace TMVA {
     
       // write all Events from the Tree into a vector of Events, that are 
       // more easily manipulated 
-      virtual void InitEventSample();
+      void InitEventSample();
 
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       // apply the boost algorithm to a tree in the collection 
-      virtual Double_t Boost( std::vector<Event*>, DecisionTree *dt, Int_t iTree );
+      Double_t Boost( std::vector<Event*>, DecisionTree *dt, Int_t iTree );
 
       // ranking of input variables
       const Ranking* CreateRanking();
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       // get the forest
      inline const std::vector<DecisionTree*> & GetForest() const;
@@ -146,10 +146,10 @@ namespace TMVA {
 
 
      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-     virtual void MakeClassSpecific( std::ostream&, const TString& ) const; 
+     void MakeClassSpecific( std::ostream&, const TString& ) const; 
 
       // header and auxiliary classes
-     virtual void MakeClassSpecificHeader( std::ostream&, const TString& ) const; 
+     void MakeClassSpecificHeader( std::ostream&, const TString& ) const; 
 
      void MakeClassInstantiateNode( DecisionTreeNode *n, std::ostream& fout, 
                                     const TString& className ) const;

@@ -53,24 +53,12 @@
 #include "TPaletteAxis.h"
 #include "TPrincipal.h"
 
-#ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_Ranking
 #include "TMVA/Ranking.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Methods
 #include "TMVA/Methods.h"
-#endif
-#ifndef ROOT_TMVA_Methods
 #include "TMVA/Methods.h"
-#endif
 
 const Bool_t DEBUG_TMVA_Factory = kFALSE;
 
@@ -128,13 +116,6 @@ void TMVA::Factory::Greetings()
 TMVA::Factory::~Factory( void )
 {
    // default destructor
-   //
-   // *** segmentation fault occurs when deleting this object :-( ***
-   //   fTrainingTree->Delete();
-   //
-   // *** cannot delete: need to clarify ownership :-( ***
-   //   fSignalTree->Delete();
-   //   fBackgTree->Delete();
    this->DeleteAllMethods();
 }
 
@@ -286,70 +267,8 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut,
 //_______________________________________________________________________
 void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Ntest )
 {
-   // prepare the training and test trees
-   // possible user settings for Ntrain and Ntest:
-   //   ------------------------------------------------------
-   //   |              |              |        |             |
-   //   ------------------------------------------------------
-   //                                                        # input signal events
-   //                                          # input signal events after cuts
-   //   ------------------------------------------------------
-   //   |              |              |             |       |
-   //   ------------------------------------------------------
-   //    \/  \/                      # input bg events
-   //                                               # input bg events after cuts
-   //      Ntrain/2       Ntest/2                         
-   //
-   // definitions:
-   //
-   //         nsigTot = all signal events
-   //         nbkgTot = all bkg events
-   //         nTot    = nsigTot + nbkgTot
-   //         i.g.: nsigTot != nbkgTot
-   //         N:M     = use M events after event N (distinct event sample)
-   //                   (read as: "from event N to event M")
-   //
-   // assumptions:
-   //
-   //         a) equal number of signal and background events is used for training
-   //         b) any numbers of signal and background events are used for testing
-   //         c) an explicit syntax can violate a)
-   //
-   // cases (in order of importance)
-   //
-   // 1)
-   //      user gives         : N1
-   //      PrepareTree does   : nsig_train=nbkg_train=min(N1,nsigTot,nbkgTot)
-   //                           nsig_test =nsig_train:nsigTot, nbkg_test =nsig_train:nbkgTot
-   //      -> give warning if nsig_test<=0 || nbkg_test<=0
-   //
-   // 2)
-   //      user gives         : N1, N2
-   //      PrepareTree does   : nsig_train=nbkg_train=min(N1,nsigTot,nbkgTot)
-   //                           nsig_test =nsig_train:min(N2,nsigTot-nsig_train),
-   //                           nbkg_test =nsig_train:min(N2,nbkgTot-nbkg_train)
-   //      -> give warning if nsig(bkg)_train != N1, or
-   //                      if nsig_test<N2 || nbkg_test<N2
-   //
-   // 3)
-   //      user gives         : -1
-   //      PrepareTree does   : nsig_train=nbkg_train=min(nsigTot,nbkgTot)
-   //                           nsig_test =nsigTot, nbkg_test=nbkgTot
-   //      -> give warning that same samples are used for testing and training
-   //
-   // 4)
-   //      user gives         : -1, -1
-   //      PrepareTree does   : nsig_train=nsigTot, nbkg_train=nbkgTot
-   //                           nsig_test =nsigTot, nbkg_test =nbkgTot
-   //      -> give warning that same samples are used for testing and training,
-   //         and, if nsig_train != nbkg_train, that an unequal number of 
-   //         signal and background events are used in training
-   //                          
-   // ------------------------------------------------------------------------
-   // Give in any case the number of signal and background events that are
-   // used for testing and training, and tell whether there are overlaps between
-   // the samples.
-   // ------------------------------------------------------------------------
+   // prepare the training and test trees 
+   // kept for backward compatibility
    TString opt(Form("NsigTrain=%i:NbkgTrain=%i:NsigTest=%i:NbkgTest=%i:SplitMode=Random:EqualTrainSample:!V", 
                     Ntrain, Ntrain, Ntest, Ntest));
    PrepareTrainingAndTestTree( cut, opt );
@@ -360,7 +279,17 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, const TString& splitOp
 { 
    // prepare the training and test trees
    fLogger << kINFO << "Preparing trees for training and testing..." << Endl;
-   Data().SetCut(cut);
+   Data().SetCuts(cut, cut); // same cut for signal and background
+
+   Data().PrepareForTrainingAndTesting( splitOpt );
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const TString& splitOpt )
+{ 
+   // prepare the training and test trees
+   fLogger << kINFO << "Preparing trees for training and testing..." << Endl;
+   Data().SetCuts(sigcut, bkgcut); // different cuts for signal and background
 
    Data().PrepareForTrainingAndTesting( splitOpt );
 }
@@ -561,7 +490,7 @@ void TMVA::Factory::TestAllMethods( void )
    for (; itrMethod != itrMethodEnd; itrMethod++) {
       MethodBase* mva = (MethodBase*)*itrMethod;
       fLogger << kINFO << "Test method: " << mva->GetMethodTitle() << Endl;
-      mva->PrepareEvaluationTree(0);
+      mva->AddClassifierToTestTree(0);
       if (DEBUG_TMVA_Factory) Data().GetTestTree()->Print();
    }
 }
@@ -676,38 +605,31 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
       fLogger << kINFO << "Evaluate classifier: " << theMethod->GetMethodTitle() << Endl;
       isel = (theMethod->GetMethodName().Contains("Variable")) ? 1 : 0;
-
       
       // perform the evaluation
-      theMethod->TestInit(0);
+      theMethod->Test(0);
 
-      // do the job
-      if (theMethod->IsOK()) theMethod->Test(0);
-      if (theMethod->IsOK()) {
-         mname[isel].push_back( theMethod->GetMethodTitle() );
-         sig[isel].push_back  ( theMethod->GetSignificance() );
-         sep[isel].push_back  ( theMethod->GetSeparation() );
-         TTree * testTree = theMethod->Data().GetTestTree();
-         Double_t err;
-         eff01[isel].push_back( theMethod->GetEfficiency("Efficiency:0.01", testTree, err) );
-         eff01err[isel].push_back( err );
-         eff10[isel].push_back( theMethod->GetEfficiency("Efficiency:0.10", testTree, err) );
-         eff10err[isel].push_back( err );
-         eff30[isel].push_back( theMethod->GetEfficiency("Efficiency:0.30", testTree, err) );
-         eff30err[isel].push_back( err );
-         effArea[isel].push_back( theMethod->GetEfficiency("", testTree, err)  ); // computes the area (average)
+      // evaluate the classifier
+      mname[isel].push_back( theMethod->GetMethodTitle() );
+      sig[isel].push_back  ( theMethod->GetSignificance() );
+      sep[isel].push_back  ( theMethod->GetSeparation() );
+      //      TTree * testTree = theMethod->Data().GetTestTree();
+      //      TTree* testTree = Data().GetTestTree();
+      Double_t err;
+      eff01[isel].push_back( theMethod->GetEfficiency("Efficiency:0.01", Data().GetTestTree(), err) );
+      eff01err[isel].push_back( err );
+      eff10[isel].push_back( theMethod->GetEfficiency("Efficiency:0.10", Data().GetTestTree(), err) );
+      eff10err[isel].push_back( err );
+      eff30[isel].push_back( theMethod->GetEfficiency("Efficiency:0.30", Data().GetTestTree(), err) );
+      eff30err[isel].push_back( err );
+      effArea[isel].push_back( theMethod->GetEfficiency("", Data().GetTestTree(), err)  ); // computes the area (average)
 
-         trainEff01[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.01") ); // the first pass takes longer
-         trainEff10[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.10") );
-         trainEff30[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.30") );
+      trainEff01[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.01") ); // the first pass takes longer
+      trainEff10[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.10") );
+      trainEff30[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.30") );
 
-         nmeth_used[isel]++;
-         theMethod->WriteEvaluationHistosToFile();
-      }
-      else {
-         fLogger << kWARNING << theMethod->GetName() << " returned isOK flag: " 
-                 << theMethod->IsOK() << Endl;
-      }
+      nmeth_used[isel]++;
+      theMethod->WriteEvaluationHistosToFile();
    }
 
    // now sort the variables according to the best 'eff at Beff=0.10'

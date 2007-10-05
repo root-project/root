@@ -7,7 +7,8 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void correlationscatters( TString fin = "TMVA.root", TString var= "var3", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, bool useTMVAStyle = kTRUE )
+void correlationscatters( TString fin = "TMVA.root", TString var= "var3", 
+                          TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, Bool_t useTMVAStyle = kTRUE )
 {
 
    const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
@@ -43,8 +44,8 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3", TMVAGl
    Int_t noPlots = 0;
    TKey* key = 0;
    // how many plots are in the directory?
-   Int_t    noPlots = (TMVAGlob::UsePaperStyle) ? 1 : ((dir->GetListOfKeys())->GetEntries())/2;
-   Double_t noVars  = noPlots == 1 ? 0 : (1 + TMath::Sqrt(1.0 + 2.0*noPlots))/2.0;
+   Int_t    noPlots = (TMVAGlob::UsePaperStyle) ? 1 : ((dir->GetListOfKeys())->GetEntries())/4;
+   Double_t noVars  = noPlots == 1 ? 0 : (1 + TMath::Sqrt(1.0 + 8.0*noPlots))/2.0;
    cout << "noPlots: " << noPlots << " --> noVars: " << noVars << endl;
    if (noVars != Int_t(noVars)) {
       cout << "*** Warning: problem in inferred number of variables ... not an integer *** " << endl;

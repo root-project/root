@@ -39,10 +39,12 @@ Bool_t Use_BDTD            = 0;
 Bool_t Use_RuleFit         = 1;
 // ---------------------------------------------------------------
 
+#include <vector>
+
 void TMVApplication( TString myMethodList = "" ) 
 {
    cout << endl;
-   cout << "==> start TMVApplication" << endl;
+   cout << "==> Start TMVApplication" << endl;
 
    if (myMethodList != "") {
       Use_CutsGA = Use_CutsD = Use_Cuts
@@ -122,7 +124,7 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_TMlpANN)       reader->BookMVA( "TMlpANN method",       dir + prefix + "_TMlpANN.weights.txt" );
    if (Use_BDT)           reader->BookMVA( "BDT method",           dir + prefix + "_BDT.weights.txt" );
    if (Use_BDTD)          reader->BookMVA( "BDTD method",          dir + prefix + "_BDTD.weights.txt" );
-   if (Use_RuleFit)       reader->BookMVA( "RuleFit method",       dir + prefix + "_RuleFitTMVA.weights.txt" );
+   if (Use_RuleFit)       reader->BookMVA( "RuleFit method",       dir + prefix + "_RuleFit.weights.txt" );
    if (Use_SVM_Gauss)     reader->BookMVA( "SVM_Gauss method",     dir + prefix + "_SVM_Gauss.weights.txt" );
    if (Use_SVM_Poly)      reader->BookMVA( "SVM_Poly method",      dir + prefix + "_SVM_Poly.weights.txt" );
    if (Use_SVM_Lin)       reader->BookMVA( "SVM_Lin method",       dir + prefix + "_SVM_Lin.weights.txt" );
@@ -150,7 +152,7 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_TMlpANN)       histNnT   = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use_BDT)           histBdt   = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
    if (Use_BDTD)          histBdtD  = new TH1F( "MVA_BDTD",          "MVA_BDTD",          nbin, -0.4, 0.6 );
-   if (Use_RuleFit)       histRf    = new TH1F( "MVA_RuleFitTMVA",   "MVA_RuleFitTMVA",   nbin, -2.0, 2.0 );
+   if (Use_RuleFit)       histRf    = new TH1F( "MVA_RuleFit",       "MVA_RuleFit",       nbin, -2.0, 2.0 );
    if (Use_SVM_Gauss)     histSVMG  = new TH1F( "MVA_SVM_Gauss",     "MVA_SVM_Gauss",     nbin, 0.0, 1.0 );
    if (Use_SVM_Poly)      histSVMP  = new TH1F( "MVA_SVM_Poly",      "MVA_SVM_Poly",      nbin, 0.0, 1.0 );
    if (Use_SVM_Lin)       histSVML  = new TH1F( "MVA_SVM_Lin",       "MVA_SVM_Lin",       nbin, 0.0, 1.0 );
@@ -172,19 +174,19 @@ void TMVApplication( TString myMethodList = "" )
    TString fname = "./tmva_example.root";   
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
-      cout << "--- accessing data file: " << fname << endl;
+      cout << "--- Accessing data file: " << fname << endl;
       input = TFile::Open( fname );
    } 
    else { 
       // second we try accessing the file via the web from
       // http://root.cern.ch/files/tmva_example.root
-      cout << "--- accessing tmva_example.root file from http://root.cern.ch/files" << endl;
+      cout << "--- Accessing tmva_example.root file from http://root.cern.ch/files" << endl;
       cout << "--- for faster startup you may consider downloading it into you local directory" << endl;
       input = TFile::Open("http://root.cern.ch/files/tmva_example.root");
    }
    
    if (!input) {
-      std::cout << "ERROR: could not open data file: " << fname << std::endl;
+      cout << "ERROR: could not open data file: " << fname << endl;
       exit(1);
    }
 
@@ -195,7 +197,7 @@ void TMVApplication( TString myMethodList = "" )
    //   but of course you can use different ones and copy the values inside the event loop
    //
    TTree* theTree = (TTree*)input->Get("TreeS");
-   cout << "--- select signal sample" << endl;
+   cout << "--- Select signal sample" << endl;
    Float_t userVar1, userVar2;
    theTree->SetBranchAddress( "var1", &userVar1 );
    theTree->SetBranchAddress( "var2", &userVar2 );
@@ -206,13 +208,13 @@ void TMVApplication( TString myMethodList = "" )
    Int_t    nSelCuts = 0, nSelCutsD = 0, nSelCutsGA = 0;
    Double_t effS     = 0.7;
 
-   cout << "--- processing: " << theTree->GetEntries() << " events" << endl;
+   cout << "--- Processing: " << theTree->GetEntries() << " events" << endl;
    TStopwatch sw;
    sw.Start();
    for (Long64_t ievt=0; ievt<theTree->GetEntries();ievt++) {
 
       if (ievt%1000 == 0)
-         cout << "--- ... processing event: " << ievt << endl;
+         cout << "--- ... Processing event: " << ievt << endl;
 
       theTree->GetEntry(ievt);
 
@@ -266,14 +268,34 @@ void TMVApplication( TString myMethodList = "" )
       }
    }
    sw.Stop();
-   cout << "--- end of event loop: "; sw.Print();
+   cout << "--- End of event loop: "; sw.Print();
    // get elapsed time
-   if (Use_Cuts)   cout << "--- efficiency for Cuts method  : " << double(nSelCuts)/theTree->GetEntries()
+   if (Use_Cuts)   cout << "--- Efficiency for Cuts method  : " << double(nSelCuts)/theTree->GetEntries()
                         << " (for a required signal efficiency of " << effS << ")" << endl;
-   if (Use_CutsD)  cout << "--- efficiency for CutsD method : " << double(nSelCutsD)/theTree->GetEntries()
+   if (Use_CutsD)  cout << "--- Efficiency for CutsD method : " << double(nSelCutsD)/theTree->GetEntries()
                         << " (for a required signal efficiency of " << effS << ")" << endl;
-   if (Use_CutsGA) cout << "--- efficiency for CutsGA method: " << double(nSelCutsGA)/theTree->GetEntries()
+   if (Use_CutsGA) cout << "--- Efficiency for CutsGA method: " << double(nSelCutsGA)/theTree->GetEntries()
                         << " (for a required signal efficiency of " << effS << ")" << endl;
+
+
+   // test: retrieve cuts for particular signal efficiency
+   TMVA::MethodCuts* mcuts = dynamic_cast<TMVA::MethodCuts*>(reader->FindMVA( "CutsGA method" ));
+   if (mcuts) {      
+      std::vector<Double_t> cutsMin;
+      std::vector<Double_t> cutsMax;
+      mcuts->GetCuts( 0.7, cutsMin, cutsMax );
+      cout << "--- -------------------------------------------------------------" << endl;
+      cout << "--- Retrieve cut values for signal efficiency of 0.7 from Reader" << endl;
+      for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
+         cout << "... Cut: " 
+              << cutsMin[ivar] 
+              << " < \"" 
+              << reader->GetVarName(ivar) 
+              << "\" <= " 
+              << cutsMax[ivar] << endl;
+      }
+      cout << "--- -------------------------------------------------------------" << endl;
+   }
 
    //
    // write histograms
@@ -300,10 +322,11 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_FDA_MT       )   histFDAMT ->Write();
    if (Use_FDA_GA       )   histFDAGA ->Write();
 
-   if (Use_Fisher       ) { probHistFi->Write(); rarityHistFi->Write(); }
+   // write also probability hists
+   if (Use_Fisher) { probHistFi->Write(); rarityHistFi->Write(); }
    target->Close();
 
-   cout << "--- created root file: \"TMVApp.root\" containing the MVA output histograms" << endl;
+   cout << "--- Created root file: \"TMVApp.root\" containing the MVA output histograms" << endl;
   
    delete reader;
     

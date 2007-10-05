@@ -65,21 +65,21 @@ namespace TMVA {
       virtual ~MethodSVM( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( std::ostream& o ) const;
-      virtual void WriteWeightsToStream( TFile& fout ) const;
+      void WriteWeightsToStream( std::ostream& o ) const;
+      void WriteWeightsToStream( TFile& fout ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( std::istream& istr );
-      virtual void ReadWeightsFromStream( TFile& fFin );
+      void ReadWeightsFromStream( std::istream& istr );
+      void ReadWeightsFromStream( TFile& fFin );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       void InitSVM( void );
 
@@ -91,7 +91,7 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -99,8 +99,8 @@ namespace TMVA {
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       TString     fTheKernel;           // kernel name
 

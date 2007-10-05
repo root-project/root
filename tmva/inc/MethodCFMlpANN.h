@@ -83,8 +83,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -114,19 +112,19 @@ namespace TMVA {
       virtual ~MethodCFMlpANN( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       // data accessors for external functions
       Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
@@ -141,10 +139,10 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // header and auxiliary classes
-      virtual void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -157,8 +155,8 @@ namespace TMVA {
       void PrintWeights( std::ostream & o ) const;
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
       
       static MethodCFMlpANN* fgThis; // this carrier
 

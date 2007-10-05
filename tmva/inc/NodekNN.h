@@ -30,6 +30,7 @@
 #include <list>
 #include <iosfwd>
 #include <string>
+#include <iostream>
 
 // ROOT
 #include "Rtypes.h"

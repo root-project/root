@@ -40,16 +40,13 @@
 
 #include "TObject.h"
 
-#ifndef ROOT_TMVA_Ranking
-#include "TMVA/Ranking.h"
-#endif
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
 
-class TMVA::MsgLogger;
-
 namespace TMVA {
+
+   class Ranking;
    
    class IMethod : public virtual TObject {
       

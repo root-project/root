@@ -101,7 +101,7 @@ namespace TMVA {
       // vector rescaling
       std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
       void Scale     ( std::vector<Double_t>&, Double_t );
-      void Scale     ( std::vector<Float_t> &, Float_t  );
+      void Scale     ( std::vector<Float_t>&,  Float_t  );
   
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffeld accordingly
@@ -124,25 +124,25 @@ namespace TMVA {
                             TString format = "%+1.3f" );
       void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
 
-      void writeFloatArbitraryPrecision(Float_t val, ostream & os);
-      void readFloatArbitraryPrecision(Float_t & val, istream & is);
+      void writeFloatArbitraryPrecision( Float_t  val, ostream& os );
+      void readFloatArbitraryPrecision ( Float_t& val, istream& is );
 
       // check variable range and set var to lower or upper if out of range
       template<typename T>
-      inline Bool_t VerifyRange( MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax );
+      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax );
 
       template<typename T>
-      inline Bool_t VerifyRange( MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax, T vdef );
+      inline Bool_t VerifyRange( MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax, T vdef );
 
       template<typename T>
-      inline Int_t VerifyRange( T & var, T vmin, T vmax );
+      inline Int_t VerifyRange( T& var, T vmin, T vmax );
 
       // output logger
       MsgLogger& Logger();
 
       const TString __regexp__ = "!%^&()'<>?= ";
 
-      const TString& Color(const TString &);
+      const TString& Color( const TString& );
 
       // print welcome message (to be called from, eg, .TMVAlogon)
       enum EWelcomeMessage {
@@ -174,7 +174,7 @@ inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int
 
 //_______________________________________________________________________
 template<typename T>
-inline Int_t TMVA::Tools::VerifyRange( T & var, T vmin, T vmax )
+inline Int_t TMVA::Tools::VerifyRange( T& var, T vmin, T vmax )
 {
    // check range and return +1 if above, -1 if below or 0 if inside
    if (var>vmax) return  1;
@@ -183,7 +183,7 @@ inline Int_t TMVA::Tools::VerifyRange( T & var, T vmin, T vmax )
 }
 //_______________________________________________________________________
 template<typename T>
-inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax )
+inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax )
 {
    // verify range and print out message
    // if outside range, set to closest limit
@@ -205,7 +205,7 @@ inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger &mlog, const char *varst
 
 //_______________________________________________________________________
 template<typename T>
-inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger &mlog, const char *varstr, T & var, T vmin, T vmax, T vdef )
+inline Bool_t TMVA::Tools::VerifyRange( TMVA::MsgLogger& mlog, const char *varstr, T& var, T vmin, T vmax, T vdef )
 {
    // verify range and print out message
    // if outside range, set to given default value

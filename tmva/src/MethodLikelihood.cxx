@@ -102,8 +102,9 @@
 //End_Html
 //_______________________________________________________________________
 
-#include <cmath>
+#include <iomanip>
 #include <vector>
+
 #include "TMatrixD.h"
 #include "TVector.h"
 #include "TMath.h"
@@ -113,14 +114,13 @@
 #include "TH1.h"
 #include "TClass.h"
 
-#ifndef ROOT_TMVA_MethodLikelihood
 #include "TMVA/MethodLikelihood.h"
-#endif
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
+#include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodLikelihood)
+
+using std::endl;
 
 //_______________________________________________________________________
 TMVA::MethodLikelihood::MethodLikelihood( TString jobName, TString methodTitle, DataSet& theData, 
@@ -189,12 +189,12 @@ void TMVA::MethodLikelihood::InitLik( void )
 
    fEpsilon        = 1e-8;
 
-   fHistSig        = new vector<TH1*>      ( GetNvar() ); 
-   fHistBgd        = new vector<TH1*>      ( GetNvar() ); 
-   fHistSig_smooth = new vector<TH1*>      ( GetNvar() ); 
-   fHistBgd_smooth = new vector<TH1*>      ( GetNvar() );
-   fPDFSig         = new vector<TMVA::PDF*>( GetNvar() );
-   fPDFBgd         = new vector<TMVA::PDF*>( GetNvar() );
+   fHistSig        = new std::vector<TH1*>      ( GetNvar() ); 
+   fHistBgd        = new std::vector<TH1*>      ( GetNvar() ); 
+   fHistSig_smooth = new std::vector<TH1*>      ( GetNvar() ); 
+   fHistBgd_smooth = new std::vector<TH1*>      ( GetNvar() );
+   fPDFSig         = new std::vector<TMVA::PDF*>( GetNvar() );
+   fPDFBgd         = new std::vector<TMVA::PDF*>( GetNvar() );
 
    fSpline         = -1;
 }
@@ -345,8 +345,8 @@ void TMVA::MethodLikelihood::Train( void )
    // create reference histograms
 
    // fine binned histos needed for the KDE smoothing
-   std::vector<TH1*>* sigFineBinKDE = new vector<TH1*>( GetNvar() );
-   std::vector<TH1*>* bgdFineBinKDE = new vector<TH1*>( GetNvar() );   
+   std::vector<TH1*>* sigFineBinKDE = new std::vector<TH1*>( GetNvar() );
+   std::vector<TH1*>* bgdFineBinKDE = new std::vector<TH1*>( GetNvar() );   
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
 
       TString var = (*fInputVars)[ivar];
@@ -416,11 +416,11 @@ void TMVA::MethodLikelihood::Train( void )
    // apply smoothing, and create PDFs
    for (UInt_t itype=0; itype < 2; itype++) { // signal and background
 
-      vector<TH1*>& histV    = itype==0 ? *fHistSig : *fHistBgd;
-      vector<TH1*>& histVKDE = itype==0 ? *sigFineBinKDE : *bgdFineBinKDE;
+      std::vector<TH1*>& histV    = itype==0 ? *fHistSig : *fHistBgd;
+      std::vector<TH1*>& histVKDE = itype==0 ? *sigFineBinKDE : *bgdFineBinKDE;
 
-      vector<TH1*>& vHistSmo = itype==0 ? *fHistSig_smooth : *fHistBgd_smooth;
-      vector<PDF*>& vPDF     = itype==0 ? *fPDFSig : *fPDFBgd;
+      std::vector<TH1*>& vHistSmo = itype==0 ? *fHistSig_smooth : *fHistBgd_smooth;
+      std::vector<PDF*>& vPDF     = itype==0 ? *fPDFSig : *fPDFBgd;
       
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) { 
 
@@ -888,7 +888,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "{ " << endl;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   { ";
-      fout << setprecision(8);
+      fout << std::setprecision(8);
       for (Int_t ibin=1; ibin<=nbinMax; ibin++) {
          if (ibin-1 < nbin[ivar])
             fout << (*fPDFBgd)[ivar]->GetPDFHist()->GetBinContent(ibin);

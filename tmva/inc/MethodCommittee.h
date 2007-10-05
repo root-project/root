@@ -38,13 +38,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <ostream>
-#include "TH2.h"
-#include "TTree.h"
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
+
+class TTree;
+class TH2;
 
 namespace TMVA {
 
@@ -78,39 +78,39 @@ namespace TMVA {
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const;
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       // apply the boost algorithm to a member in the committee
-      virtual Double_t Boost(  TMVA::IMethod*, UInt_t imember );
+      Double_t Boost(  TMVA::IMethod*, UInt_t imember );
 
       // ranking of input variables
       const Ranking* CreateRanking();
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       // accessors
       const std::vector<TMVA::IMethod*>& GetCommittee()    const { return fCommittee; }
       const std::vector<Double_t>&       GetBoostWeights() const { return fBoostWeights; }
 
       //return the individual relative variable importance 
-      vector<Double_t> GetVariableImportance();
+      std::vector<Double_t> GetVariableImportance();
       Double_t GetVariableImportance( UInt_t ivar );
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -154,7 +154,7 @@ namespace TMVA {
       Double_t                        fErrorFraction;   // ntuple var: misclassification error fraction 
       Int_t                           fNnodes;          // ntuple var: nNodes
 
-      vector< Double_t > fVariableImportance; // the relative importance of the different variables 
+      std::vector< Double_t >         fVariableImportance; // the relative importance of the different variables 
 
       ClassDef(MethodCommittee,0)  // Analysis of Boosted MVA methods
    };

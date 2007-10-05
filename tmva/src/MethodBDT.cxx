@@ -473,7 +473,7 @@ void TMVA::MethodBDT::Train( void )
       fLogger << kINFO << "<Train_Prune> elapsed time: " << timer2.GetElapsedTime()    
               << "                              " << Endl;    
    }
-   if (DecisionTree::kNoPruning) {
+   if (fPruneMethod == DecisionTree::kNoPruning) {
       fLogger << kINFO << "<Train> average number of nodes (w/o pruning) : "
               << nNodesBeforePruningCount/fNTrees << Endl;
    } 
@@ -627,7 +627,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
    // events that are misclassified by the decision tree. The weight
    // applied is w = (1-err)/err or more general:
    //            w = ((1-err)/err)^beta
-   // where err is the fracthin of misclassified events in the tree ( <0.5 assuming
+   // where err is the fraction of misclassified events in the tree ( <0.5 assuming
    // demanding the that previous selection was better than random guessing)
    // and "beta" beeing a free parameter (standard: beta = 1) that modifies the
    // boosting.
@@ -657,6 +657,12 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
    Int_t i=0;
    Double_t boostWeight;
    if (err>0) {
+      if (err > 0.5) { // sanity check.. should never happen as otherwise s.th. there is apparently
+         // s.th. odd with the assignement of the leaf nodes. (rem: you use the training
+                    // events for this determination of the error rate
+         fLogger << kWARNING << " The error rate in the BDT boosting is > 0.5. " 
+                 << " That should not happen, please check your code (i.e... the BDT code) " << Endl;
+      } 
       if (adaBoostBeta == 1) {
          boostWeight = (1-err)/err;
       }
@@ -971,6 +977,7 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
 void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TString& className ) const
 {
    // specific class header
+   fout << "#define NN new "<<className<<"_DecisionTreeNode" << endl;
    fout << "class "<<className<<"_DecisionTreeNode{" << endl;
    fout << "   " << endl;
    fout << "public:" << endl;
@@ -1036,21 +1043,23 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
       fLogger << kFATAL << "MakeClassInstantiateNode: started with undefined node" <<Endl;
       return ;
    }
-   fout << "new "<<className<<"_DecisionTreeNode("<<endl;
+   //   fout << "new "<<className<<"_DecisionTreeNode("<<endl;
+   fout << "NN("<<endl;
    if (n->GetLeft() != NULL){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetLeft() , fout, className);
    }
    else {
-      fout << "NULL";
+      fout << "0";
    }
    fout << ", " <<endl;
    if (n->GetRight() != NULL){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetRight(), fout, className );
    }
    else {
-      fout << "NULL";
+      fout << "0";
    }
    fout << ", " <<  endl
+        << setprecision(6)
         << n->GetCutValue() << ", " 
         << n->GetCutType() << ", " 
         << n->GetSelector() << ", " 

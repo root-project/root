@@ -95,6 +95,10 @@ void TMVA::MinuitFitter::Init()
    // (2xnpar as workaround for TMinuit allocation bug (taken from RooMinuit))
    fMinWrap = new MinuitWrapper( fFitterTarget, 2*GetNpars() );
 
+   // output level      
+   args[0] = fPrintLevel;
+   fMinWrap->ExecuteCommand( "SET PRINTOUT", args, 1 );
+
    if (fBatch) fMinWrap->ExecuteCommand( "SET BAT", args, 0 );
 
    // set fitter object, and clear
@@ -103,10 +107,6 @@ void TMVA::MinuitFitter::Init()
    // error level: 1 (2*log(L) fit
    args[0] = fErrorLevel;
    fMinWrap->ExecuteCommand( "SET ERR", args, 1 );
-
-   // output level      
-   args[0] = fPrintLevel;
-   fMinWrap->ExecuteCommand( "SET PRINTOUT", args, 1 );
 
    // print warnings ?   
    if (!fPrintWarnings) fMinWrap->ExecuteCommand( "SET NOWARNINGS", args, 0 );

@@ -30,11 +30,13 @@
  **********************************************************************************/
 
 #include <iomanip>
-#include <assert.h>
+#include <cassert>
+
 #include "Riostream.h"
 #include "TMath.h"
 #include "TF1.h"
 #include "TH1F.h"
+
 #include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
@@ -176,13 +178,13 @@ void TMVA::PDF::BuildPDF( Bool_t checkHist )
 
    // (not useful for discrete distributions, or if no splines are requested)
    if (fInterpolMethod != PDF::kSpline0 && checkHist) CheckHist();
-    
+ 
    // use ROOT TH1 smooth methos
    if (fNsmooth > 0) fHist->Smooth( fNsmooth );
-  
+
    // fill histogramm to graph
    fGraph = new TGraph( fHist );
-    
+ 
    switch (fInterpolMethod) {
 
    case kSpline0:
@@ -202,7 +204,7 @@ void TMVA::PDF::BuildPDF( Bool_t checkHist )
    case kSpline3:
       fSpline = new TSpline3( "spline3", fGraph );
       break;
-    
+ 
    case kSpline5:
       fSpline = new TSpline5( "spline5", fGraph );
       break;
@@ -368,7 +370,7 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
    Int_t    nbins = originalHist->GetNbinsX();
 
    // treat errors properly
-   if (originalHist->GetSumw2()->GetSize() == 0) originalHist->Sumw2();
+   if (originalHist->GetSumw2N() == 0) originalHist->Sumw2();
 
    // ---- first validation: simple(st) possible chi2 test
    // count number of empty bins
@@ -563,19 +565,23 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    hnameSmooth.ReplaceAll( "_original", "_smoothed" );
 
    // recreate the original hist
-   TH1 * newhist = new TH1F( hname,hname, nbins, xmin, xmax );
-   newhist->SetDirectory(0);
+   if (pdf.fHistOriginal != 0) delete pdf.fHistOriginal;
+   if (pdf.fHist != 0) delete pdf.fHist;
+
+   pdf.fHistOriginal = new TH1F( hname, hname, nbins, xmin, xmax );
+   pdf.fHist         = new TH1F( hnameSmooth, hnameSmooth, nbins, xmin, xmax );
+
+   pdf.fHistOriginal->SetDirectory(0);
+   pdf.fHist->SetDirectory(0);
+
    Float_t val;
    for (Int_t i=0; i<nbins; i++) {
-      istr >> val;
-      newhist->SetBinContent(i+1,val);
+     istr >> val;
+     pdf.fHistOriginal->SetBinContent(i+1,val);
+     pdf.fHist->SetBinContent(i+1,val);
    }
-   
-   if (pdf.fHistOriginal != 0) delete pdf.fHistOriginal;
-   pdf.fHistOriginal = newhist;
-   pdf.fHist = (TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
-   pdf.fHist->SetTitle( hnameSmooth );
-   pdf.fHist->SetDirectory(0);
+
+   //(TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
 
    if (pdf.fNsmooth>=0) pdf.BuildPDF();
    else                 pdf.FillKDEToHist();

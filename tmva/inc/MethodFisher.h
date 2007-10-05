@@ -44,7 +44,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <map>
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
@@ -77,22 +76,22 @@ namespace TMVA {
       virtual ~MethodFisher( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to stream
-      virtual void WriteWeightsToStream( std::ostream & o) const;
+      void WriteWeightsToStream( std::ostream & o) const;
 
       // read weights from stream
-      virtual void ReadWeightsFromStream( std::istream & i );
+      void ReadWeightsFromStream( std::istream & i );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       enum EFisherMethod { kFisher, kMahalanobis };
-      virtual EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
+      EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -100,16 +99,16 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
-      virtual void GetHelpMessage() const;
+      void GetHelpMessage() const;
 
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
   
       // Initialization and allocation of matrices
       void InitMatrices( void );
@@ -151,8 +150,8 @@ namespace TMVA {
       Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
       Double_t fSumOfWeightsB;        // sum-of-weights for background training events
       
-      vector<Double_t> *fDiscrimPow;  // discriminating power
-      vector<Double_t> *fFisherCoeff; // Fisher coefficients
+      std::vector<Double_t> *fDiscrimPow;  // discriminating power
+      std::vector<Double_t> *fFisherCoeff; // Fisher coefficients
       Double_t fF0;                   // offset
 
 

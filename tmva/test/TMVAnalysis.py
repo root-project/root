@@ -37,7 +37,7 @@ DEFAULT_OUTFNAME = "TMVA.root"
 DEFAULT_INFNAME  = "../examples/data/toy_sigbkg.root"
 DEFAULT_TREESIG  = "TreeS"
 DEFAULT_TREEBKG  = "TreeB"
-DEFAULT_METHODS  = "CutsGA Likelihood LikelihoodPCA PDERS KNN HMatrix Fisher FDA MLP SVM_Gauss BDT RuleFitTMVA"
+DEFAULT_METHODS  = "CutsGA,Likelihood,LikelihoodPCA,PDERS,KNN,HMatrix,Fisher,FDA,MLP,SVM_Gauss,BDT,RuleFit"
 
 # print help
 def usage():
@@ -99,16 +99,18 @@ def main():
             verbose = True
 
     # print methods
-    mlist = methods.split(',')
+    mlist = methods.replace(' ',',').split(',')
     print "=== TMVAnalysis: use methods..."
+    print mlist
     for m in mlist:
-        if m != '':
-            print "=== <%s>" % m
+        if m.strip() != '':
+            print "=== <%s>" % m.strip()
 
     # import ROOT classes
     from ROOT import gSystem, gROOT, gApplication, TFile, TTree, TCut
     
     # logon not automatically loaded through PyROOT (logon loads TMVA library) load also GUI
+    gROOT.SetMacroPath("../macros/")
     gROOT.Macro( '../macros/TMVAlogon.C' )    
     gROOT.LoadMacro( '../macros/TMVAGui.C' )
     
@@ -151,22 +153,20 @@ def main():
     
     # This would set individual event weights (the variables defined in the 
     # expression need to exist in the original TTree)
-    # factory->SetWeightExpression("weight1*weight2")
-    #
+    #    for signal    : factory->SetSignalWeightExpression("weight1*weight2");
+    #    for background: factory->SetBackgroundWeightExpression("weight1*weight2");
+
     # Apply additional cuts on the signal and background sample. 
-    # Assumptions on size of training and testing sample:
-    #    a) equal number of signal and background events is used for training
-    #    b) any numbers of signal and background events are used for testing
-    #    c) an explicit syntax can violate a)
-    # more Documentation with the Factory class
     # example for cut: mycut = TCut( "abs(var1)<0.5 && abs(var2-0.5)<1" )
-    mycut = TCut( "" ) 
+    mycutSig = TCut( "" ) 
+    mycutBkg = TCut( "" ) 
     
     # here, the relevant variables are copied over in new, slim trees that are
     # used for TMVA training and testing
     # "SplitMode=Random" means that the input events are randomly shuffled before
     # splitting them into training and test samples
-    factory.PrepareTrainingAndTestTree( mycut, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=NumEvents:!V" )
+    factory.PrepareTrainingAndTestTree( mycutSig, mycutBkg,
+                                        "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=NumEvents:!V" )
 
     # and alternative call to use a different number of signal and background training/test event is:
     # factory.PrepareTrainingAndTestTree( mycut, "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" )
@@ -183,22 +183,23 @@ def main():
                             
     # Cut optimisation with a Genetic Algorithm
     if "CutsGA" in mlist:
+        print "CUTSGA"
         factory.BookMethod( TMVA.Types.kCuts, "CutsGA",
                             "!H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp=FSmart" )
 
     # Likelihood
     if "Likelihood" in mlist:
         factory.BookMethod( TMVA.Types.kLikelihood, "Likelihood",
-                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmoothBkg[1]=100:NSmooth=10:NAvEvtPerBin=50" )
+                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmoothBkg[1]=10:NSmooth=10:NAvEvtPerBin=50" )
         
     # test the decorrelated likelihood
     if "LikelihoodD" in mlist:
         factory.BookMethod( TMVA.Types.kLikelihood, "LikelihoodD",
-                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" )
+                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=Decorrelate" )
 
     if "LikelihoodPCA" in mlist:
         factory.BookMethod( TMVA.Types.kLikelihood, "LikelihoodPCA",
-                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=100:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" )
+                            "!H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=10:NSmoothBkg[0]=10:NSmooth=5:NAvEvtPerBin=50:VarTransform=PCA" )
 
     # likelihood method with unbinned kernel estimator
     if "LikelihoodKDE" in mlist:
@@ -208,15 +209,19 @@ def main():
     # PDE - RS method
     if "PDERS" in mlist:
         factory.BookMethod( TMVA.Types.kPDERS, "PDERS", 
-                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99" )
+                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+    # And the options strings for the MinMax and RMS methods, respectively:
+    #      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
+    #      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
+
 
     if "PDERSD" in mlist:
         factory.BookMethod( TMVA.Types.kPDERS, "PDERSD", 
-                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=Decorrelate" )
+                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=Decorrelate" )
 
     if "PDERSPCA" in mlist:
         factory.BookMethod( TMVA.Types.kPDERS, "PDERSPCA", 
-                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:InitialScale=0.99:VarTransform=PCA" )
+                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=PCA" )
 
     # HMatrix (chi2-squared) method
     if "HMatrix" in mlist:
@@ -265,8 +270,8 @@ def main():
                             "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5" )
 
     # Friedman's RuleFit method
-    if "RuleFitTMVA" in mlist:
-        factory.BookMethod( TMVA.Types.kRuleFit, "RuleFitTMVA",
+    if "RuleFit" in mlist:
+        factory.BookMethod( TMVA.Types.kRuleFit, "RuleFit",
                             "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" )
 
     if "RuleFitJF" in mlist:
@@ -288,7 +293,7 @@ def main():
     outputFile.Close()
     
     # clean up
-    factory.IsA().Destructor( factory )
+    #factory.IsA().Destructor( factory )
     
     print "=== wrote root file %s\n" % outfname
     print "=== TMVAnalysis is done!\n"

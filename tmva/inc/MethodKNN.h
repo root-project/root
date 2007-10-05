@@ -67,9 +67,9 @@ namespace TMVA
       
       virtual ~MethodKNN( void );
     
-      virtual void Train( void );
+      void Train( void );
 
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
@@ -85,16 +85,16 @@ namespace TMVA
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
-      virtual void GetHelpMessage() const;
+      void GetHelpMessage() const;
 
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       // default initialisation called by all constructors
       void InitKNN( void );

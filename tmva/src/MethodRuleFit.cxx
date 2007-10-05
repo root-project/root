@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
+// Author: Fredrik Tegenfeldt
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -28,18 +28,20 @@
 // J Friedman's RuleFit method
 //_______________________________________________________________________
 
-#include "TMVA/MethodRuleFit.h"
-#include "TMVA/RuleFitAPI.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
+#include <algorithm>
+#include <list>
+
+#include "Riostream.h"
 #include "TRandom.h"
 #include "TMath.h"
 #include "TMatrix.h"
 #include "TDirectory.h"
-#include "Riostream.h"
-#include <algorithm>
-#include <list>
 
+#include "TMVA/MethodRuleFit.h"
+#include "TMVA/RuleFitAPI.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Timer.h"
+#include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodRuleFit)
  
@@ -602,8 +604,9 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
          Double_t norm = rens->GetLinNorm(il);
          Double_t imp  = rens->GetLinImportance(il)/rens->GetImportanceRef();
          fout << "   rval+="
-              << setprecision(10) << rens->GetLinCoefficients(il)*norm << "*std::min(" << setprecision(10) << rens->GetLinDP(il)
-              << ", std::max( inputValues[" << il << "]," << setprecision(10) << rens->GetLinDM(il) << "));"
+              << setprecision(10) << rens->GetLinCoefficients(il)*norm 
+              << "*std::min( double(" << setprecision(10) << rens->GetLinDP(il)
+              << "), std::max( double(inputValues[" << il << "]), double(" << setprecision(10) << rens->GetLinDM(il) << ")));"
               << std::flush;
          fout << "   // importance = " << Form("%3.3f",imp) << std::endl;
       }
@@ -715,8 +718,8 @@ void TMVA::MethodRuleFit::GetHelpMessage() const
    fLogger << Endl;
    fLogger << "III. WARNING MESSAGES" << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("red") << "Risk(i+1)>=Risk(i) in path" << Tools::Color("reset") << Endl;
-   fLogger << Tools::Color("red") << "Chaotic behaviour of risk evolution." << Tools::Color("reset") << Endl;
+   fLogger << Tools::Color("bold") << "Risk(i+1)>=Risk(i) in path" << Tools::Color("reset") << Endl;
+   fLogger << Tools::Color("bold") << "Chaotic behaviour of risk evolution." << Tools::Color("reset") << Endl;
    //         "|----------------|---------------------------------------------|"
    fLogger << "                 The error rate was still decreasing at the end" << Endl;
    fLogger << "                 By construction the Risk should always decrease." << Endl;
@@ -739,12 +742,12 @@ void TMVA::MethodRuleFit::GetHelpMessage() const
    fLogger << "                 Another possibility is to modify the model - " << Endl;
    fLogger << "                 See above on tuning the rule ensemble." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("red") << "The error rate was still decreasing at the end of the path"
+   fLogger << Tools::Color("bold") << "The error rate was still decreasing at the end of the path"
            << Tools::Color("reset") << Endl;
    fLogger << "                 Too few steps in path! Increase "
            << Tools::Color("bold") << "GDNSteps" <<  Tools::Color("reset") << "." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("red") << "Reached minimum early in the search" << Tools::Color("reset") << Endl;
+   fLogger << Tools::Color("bold") << "Reached minimum early in the search" << Tools::Color("reset") << Endl;
 
    fLogger << "                 Minimum was found early in the fitting. This" << Endl;
    fLogger << "                 may indicate that the used step size "
@@ -753,5 +756,4 @@ void TMVA::MethodRuleFit::GetHelpMessage() const
    fLogger << "                 If the results still are not OK, modify the" << Endl;
    fLogger << "                 model either by modifying the rule ensemble" << Endl;
    fLogger << "                 or add/remove linear terms" << Endl;
-   fLogger << Endl;
 }

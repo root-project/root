@@ -34,8 +34,10 @@
 
 #include <string>
 #include <stdexcept>
-#include "TMVA/BinaryTree.h"
+
 #include "Riostream.h"
+
+#include "TMVA/BinaryTree.h"
 #include "TMVA/Event.h"
 
 ClassImp(TMVA::BinaryTree)

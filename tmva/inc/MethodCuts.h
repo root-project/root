@@ -43,6 +43,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <vector>
+#include <map>
+
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -82,54 +85,57 @@ namespace TMVA {
       virtual ~MethodCuts( void );
 
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value (for CUTs this is just a dummy)
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const;
 
       // test the method
-      virtual void Test( TTree* theTestTree );
+      void Test( TTree* theTestTree );
      
       // also overwrite:
-      virtual Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
-      virtual Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB); return 0; }
-      virtual Double_t GetSignificance( void )       const { return 0; }
-      virtual Double_t GetmuTransform ( TTree *)           { return 0; }
-      virtual Double_t GetEfficiency  ( TString, TTree *, Double_t& );
-      virtual Double_t GetTrainingEfficiency( TString );
+      Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
+      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB); return 0; }
+      Double_t GetSignificance( void )       const { return 0; }
+      Double_t GetmuTransform ( TTree *)           { return 0; }
+      Double_t GetEfficiency  ( TString, TTree *, Double_t& );
+      Double_t GetTrainingEfficiency( TString );
 
       // rarity distributions (signal or background (default) is uniform in [0,1])
-      virtual Double_t GetRarity( Double_t, Types::ESBType ) const { return 0; }
+      Double_t GetRarity( Double_t, Types::ESBType ) const { return 0; }
 
       // accessors for Minuit
       Double_t ComputeEstimator( std::vector<Double_t> & );
       
       Double_t EstimatorFunction( std::vector<Double_t> & );
 
-      void SetTestSignalEfficiency( Double_t eff ) { fTestSignalEff = eff; }
+      void SetTestSignalEfficiency( Double_t effS ) { fTestSignalEff = effS; }
+      
+      // retrieve cut values for given signal efficiency
+      void GetCuts( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
 
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;

@@ -103,7 +103,9 @@
 // End_Html
 //_______________________________________________________________________
 
-#include <assert.h>
+#include <iomanip>
+
+#include <cassert>
 #include "TMath.h"
 #include "TMVA/MethodFisher.h"
 #include "TMVA/Tools.h"
@@ -111,6 +113,8 @@
 #include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodFisher)
+
+using std::endl;
 
 //_______________________________________________________________________
 TMVA::MethodFisher::MethodFisher( TString jobName, TString methodTitle, DataSet& theData, 
@@ -150,19 +154,17 @@ void TMVA::MethodFisher::InitFisher( void )
    SetMethodType( TMVA::Types::kFisher );  
    SetTestvarName();
 
-   // Fisher prefers normalised input variables
-   SetNormalised( kTRUE );
-
    fMeanMatx    = 0; 
    fBetw        = 0;
    fWith        = 0;
    fCov         = 0;
+   fDiscrimPow  = 0;
 
    fSumOfWeightsS = fSumOfWeightsB = 0;
 
    // allocate Fisher coefficients
    fF0          = 0;
-   fFisherCoeff = new vector<Double_t>( GetNvar() );
+   fFisherCoeff = new std::vector<Double_t>( GetNvar() );
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.0 );
@@ -196,11 +198,11 @@ void TMVA::MethodFisher::ProcessOptions()
 TMVA::MethodFisher::~MethodFisher( void )
 {
    // destructor
-   delete fBetw;
-   delete fWith;
-   delete fCov;
-   delete fDiscrimPow;
-   delete fFisherCoeff;
+   if(fBetw       ) delete fBetw;
+   if(fWith       ) delete fWith;
+   if(fCov        ) delete fCov;
+   if(fDiscrimPow ) delete fDiscrimPow;
+   if(fFisherCoeff) delete fFisherCoeff;
 }
 
 //_______________________________________________________________________
@@ -240,8 +242,8 @@ Double_t TMVA::MethodFisher::GetMvaValue()
 {
    // returns the Fisher value (no fixed range)
    Double_t result = fF0;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-      result += (*fFisherCoeff)[ivar]*GetEventVal(ivar);
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) result += (*fFisherCoeff)[ivar]*GetEventVal(ivar);
+
    return result;
 }
 
@@ -263,7 +265,7 @@ void TMVA::MethodFisher::InitMatrices( void )
    fCov  = new TMatrixD( GetNvar(), GetNvar() );
 
    // discriminating power
-   fDiscrimPow = new vector<Double_t>( GetNvar() );
+   fDiscrimPow = new std::vector<Double_t>( GetNvar() );
 }
 
 //_______________________________________________________________________
@@ -271,23 +273,14 @@ void TMVA::MethodFisher::GetMean( void )
 {
    // compute mean values of variables in each sample, and the overall means
 
-   // initialize internal sum-of-weights variables
-   fSumOfWeightsS = 0;
-   fSumOfWeightsB = 0;
-
-   for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
-
-      // read the training event
-      ReadTrainingEvent(ievt);
-
-      if (IsSignalEvent()) fSumOfWeightsS += GetEventWeight();
-      else                 fSumOfWeightsB += GetEventWeight();
-   }
-
    // init vectors
    Double_t *sumS = new Double_t[(const Int_t)GetNvar()];
    Double_t *sumB = new Double_t[(const Int_t)GetNvar()];
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) { sumS[ivar] = sumB[ivar] = 0; }   
+
+   // initialize internal sum-of-weights variables
+   fSumOfWeightsS = 0;
+   fSumOfWeightsB = 0;
 
    // compute sample means
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
@@ -331,11 +324,11 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    // product matrices (x-<x>)(y-<y>) where x;y are variables
 
    // init
-   const Int_t nvar = GetNvar();
+   const Int_t nvar  = GetNvar();
    const Int_t nvar2 = nvar*nvar;
-   Double_t *sumSig = new Double_t[nvar2];
-   Double_t *sumBgd = new Double_t[nvar2];
-   Double_t *xval   = new Double_t[nvar];
+   Double_t *sumSig  = new Double_t[nvar2];
+   Double_t *sumBgd  = new Double_t[nvar2];
+   Double_t *xval    = new Double_t[nvar];
    memset(sumSig,0,nvar2*sizeof(Double_t));
    memset(sumBgd,0,nvar2*sizeof(Double_t));
 
@@ -455,7 +448,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    Double_t xfact = TMath::Sqrt( fSumOfWeightsS*fSumOfWeightsB ) / (fSumOfWeightsS + fSumOfWeightsB);
 
    // compute difference of mean values
-   vector<Double_t> diffMeans( GetNvar() );
+   std::vector<Double_t> diffMeans( GetNvar() );
    Int_t ivar, jvar;
    for (ivar=0; ivar<GetNvar(); ivar++) {
       (*fFisherCoeff)[ivar] = 0;
@@ -515,8 +508,8 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    // display Fisher coefficients and discriminating power for each variable
    // check maximum length of variable name
    fLogger << kINFO << "Results for Fisher coefficients:" << Endl;
-   vector<TString>  vars;
-   vector<Double_t> coeffs;
+   std::vector<TString>  vars;
+   std::vector<Double_t> coeffs;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       vars  .push_back( GetInputExp(ivar) );
       coeffs.push_back(  (*fFisherCoeff)[ivar] );
@@ -530,8 +523,8 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 void  TMVA::MethodFisher::WriteWeightsToStream( ostream& o ) const
 {  
    // save the weights
-   o << fF0 << endl;
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) o << setprecision(12) << (*fFisherCoeff)[ivar] << endl;
+   o << std::setprecision(12) << fF0 << endl;
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) o << std::setprecision(12) << (*fFisherCoeff)[ivar] << endl;
 }
   
 //_______________________________________________________________________
@@ -552,9 +545,9 @@ void TMVA::MethodFisher::MakeClassSpecific( std::ostream& fout, const TString& c
    fout << "" << endl;
    fout << "inline void " << className << "::Initialize() " << endl;
    fout << "{" << endl;
-   fout << "   fFisher0 = " << setprecision(12) << fF0 << ";" << endl;
+   fout << "   fFisher0 = " << std::setprecision(12) << fF0 << ";" << endl;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      fout << "   fFisherCoefficients.push_back( " << setprecision(12) << (*fFisherCoeff)[ivar] << " );" << endl;
+      fout << "   fFisherCoefficients.push_back( " << std::setprecision(12) << (*fFisherCoeff)[ivar] << " );" << endl;
    }
    fout << endl;
    fout << "   // sanity check" << endl;

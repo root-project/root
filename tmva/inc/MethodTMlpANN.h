@@ -68,22 +68,22 @@ namespace TMVA {
       virtual ~MethodTMlpANN( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the strucure 
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      virtual Double_t GetMvaValue();
+      Double_t GetMvaValue();
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
@@ -93,7 +93,7 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -101,8 +101,8 @@ namespace TMVA {
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
       void CreateMLPOptions( TString );
 

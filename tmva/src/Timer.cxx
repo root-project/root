@@ -201,7 +201,7 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
    // timing information
    if (fColourfulOutput) {
       clog << Color("reset") << " " ;
-      clog << "(" << Color("dred") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << Color("reset")
+      clog << "(" << Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << Color("reset")
                << ", " 
                << "time left: "
                << this->GetLeftTime( icounts ) << Color("reset") << ") ";
@@ -235,6 +235,6 @@ TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) const
       else        out += Form( "%i mins", m );
    }
 
-   return (fColourfulOutput) ? Color("dred") + out + Color("reset") : out;
+   return (fColourfulOutput) ? Color("red") + out + Color("reset") : out;
 }
 

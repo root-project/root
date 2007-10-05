@@ -25,7 +25,7 @@
  **********************************************************************************/
 
 #include <iostream>
-#include <algorithm>
+#include <iomanip>
 #include <numeric>
 
 #include "TTree.h"
@@ -247,7 +247,7 @@ Double_t TMVA::RuleFitParams::LossFunction( const Event& e ) const
 {
    // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
    // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
-   Double_t h = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( e )) );
+   Double_t h = TMath::Max( -1.0, TMath::Min(1.0,fRuleEnsemble->EvalEvent( e )) );
    Double_t diff = (e.IsSignal()?1:-1) - h;
    //
    return diff*diff*e.GetWeight();
@@ -258,7 +258,7 @@ Double_t TMVA::RuleFitParams::LossFunction( UInt_t evtidx ) const
 {
    // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
    // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
-   Double_t h = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( evtidx )) );
+   Double_t h = TMath::Max( -1.0, TMath::Min(1.0,fRuleEnsemble->EvalEvent( evtidx )) );
    Double_t diff = (fRuleEnsemble->GetRuleMapEvent( evtidx )->IsSignal()?1:-1) - h;
    //
    return diff*diff*fRuleFit->GetTrainingEventWeight(evtidx);
@@ -270,7 +270,7 @@ Double_t TMVA::RuleFitParams::LossFunction( UInt_t evtidx, UInt_t itau ) const
    // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
    // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
    Double_t e = fRuleEnsemble->EvalEvent( evtidx , fGDOfsTst[itau], fGDCoefTst[itau], fGDCoefLinTst[itau]);
-   Double_t h = max( -1.0, min(1.0,e) );
+   Double_t h = TMath::Max( -1.0, TMath::Min(1.0,e) );
    Double_t diff = (fRuleEnsemble->GetRuleMapEvent( evtidx )->IsSignal()?1:-1) - h;
    //
    return diff*diff*fRuleFit->GetTrainingEventWeight(evtidx);
@@ -705,7 +705,7 @@ void TMVA::RuleFitParams::MakeGDPath()
          if (isDebug) fGDNtuple->Fill();
          if (isVerbose) {
             fLogger << kVERBOSE << "ParamsIRE : "
-                    << setw(10)
+                    << std::setw(10)
                     << Form("%8d",iloop+1) << " "
                     << Form("%4.4f",fNTRisk) << " "
                     << Form("%4.4f",riskPerf)  << " "
@@ -745,7 +745,8 @@ void TMVA::RuleFitParams::MakeGDPath()
       }
       done = (found);
    }
-   fLogger << kINFO << "Minimization elapsed time : " << timer.GetElapsedTime() << "      " << Endl;
+   fLogger << kINFO << "Minimization elapsed time : " << timer.GetElapsedTime()
+           << "                        " << Endl;
    fLogger << kINFO << "----------------------------------------------------------------"  << Endl;
    fLogger << kINFO << "Found minimum at step " << indMin+1 << " with error = " << errmin << Endl;
    fLogger << kINFO << "Reason for ending loop: ";

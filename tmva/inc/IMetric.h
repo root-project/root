@@ -25,10 +25,9 @@
 #ifndef ROOT_TMVA_IMetric
 #define ROOT_TMVA_IMetric
 
-#include "Riostream.h"
 #include <vector>
-#include "TObject.h"
-#include "TString.h"
+
+#include "Rtypes.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

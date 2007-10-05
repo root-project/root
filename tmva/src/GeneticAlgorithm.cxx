@@ -27,6 +27,8 @@
 // Base definition for genetic algorithm                                
 //_______________________________________________________________________
 
+#include <iostream>
+
 #include "Riostream.h"
 
 #include "TMVA/GeneticAlgorithm.h"

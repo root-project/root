@@ -99,7 +99,7 @@ void TMVA::MethodMLP::InitMLP()
    SetTestvarName();
 
    // the minimum requirement to declare an event signal-like
-   SetSignalReferenceCut( 0.0 );
+   SetSignalReferenceCut( 0.5 );
 }
 
 //_______________________________________________________________________
@@ -345,7 +345,7 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    
    for (Int_t j = 0; j < GetNvar(); j++) {
       x = branchVar[j];
-      if (IsNormalised()) x = Norm(j, x);
+      if (IsNormalised()) x = Tools::NormVariable( x, GetXmin( j ), GetXmax( j ) );
       neuron = GetInputNeuron(j);
       neuron->ForceValue(x);
    }
@@ -531,6 +531,14 @@ void TMVA::MethodMLP::MinuitMinimize()
 
    TFitter* tfitter = new TFitter( fNumberOfWeights );
 
+   // minuit-specific settings
+   Double_t args[10];
+
+   // output level      
+   args[0] = 2; // put to 0 for results only, or to -1 for no garbage
+   tfitter->ExecuteCommand( "SET PRINTOUT", args, 1 );
+   tfitter->ExecuteCommand( "SET NOWARNINGS", args, 0 );
+
    double w[54];
 
    // init parameters
@@ -542,14 +550,6 @@ void TMVA::MethodMLP::MinuitMinimize()
 
    // define the CFN function
    tfitter->SetFCN( &IFCN );
-
-   // minuit-specific settings
-   Double_t args[10];
-
-   // output level      
-   args[0] = 2; // put to 0 for results only, or to -1 for no garbage
-   tfitter->ExecuteCommand( "SET PRINTOUT", args, 1 );
-   tfitter->ExecuteCommand( "SET NOWARNINGS", args, 0 );
    
    // define fit strategy
    args[0] = 2;

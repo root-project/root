@@ -24,6 +24,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include <vector>
+
 #include "TMVA/DataSet.h"
 #include "TMVA/Tools.h"
 #include "TMVA/MsgLogger.h"
@@ -64,9 +66,10 @@ namespace TMVA {
 }
 
 //_______________________________________________________________________
-TMVA::DataSet::DataSet() 
+TMVA::DataSet::DataSet()
    : fLocalRootDir( 0 ),
-     fCut( "" ),
+     fCutSig( "" ),
+     fCutBkg( "" ),
      fMultiCut( "" ),
      fTrainingTree( 0 ),
      fTestTree( 0 ),
@@ -75,8 +78,6 @@ TMVA::DataSet::DataSet()
      fEvent( 0 ),
      fCurrentTree( 0 ),
      fCurrentEvtIdx( 0 ),
-     fWeightExp(""),
-     fWeightFormula( 0 ),
      fLogger( GetName(), kINFO )
 {
    // constructor
@@ -88,6 +89,10 @@ TMVA::DataSet::DataSet()
          fDataStats[dim1][dim2]=0;
       }
    }
+
+   fWeightExp[Types::kSignal]     = fWeightExp[Types::kBackground]     = "";
+   fWeightFormula[Types::kSignal] = fWeightFormula[Types::kBackground] = 0;
+
 }
 
 //_______________________________________________________________________
@@ -307,26 +312,12 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    // put all to upper case
    splitMode.ToUpper(); normMode.ToUpper(); 
 
-   fLogger << kINFO << "Prepare training and Test samples:" << Endl;
-   fLogger << kINFO << "  Signal tree     - total number of events     : " << SignalTreeInfo(0).GetTree()->GetEntries()     << Endl;
-   fLogger << kINFO << "  Background tree - total number of events     : " << BackgroundTreeInfo(0).GetTree()->GetEntries() << Endl;
+   Int_t nSigTot = 0, nBkgTot = 0;
+   for (UInt_t isig=0; isig<NSignalTrees(); isig++)     nSigTot += SignalTreeInfo(isig).GetTree()->GetEntries();
+   for (UInt_t ibkg=0; ibkg<NBackgroundTrees(); ibkg++) nBkgTot += BackgroundTreeInfo(ibkg).GetTree()->GetEntries();
 
    // loop over signal events first, then over background events
    const char* typeName[2] = { "signal", "background" };
-
-   // apply cuts to the input trees and create TEventLists
-   TEventList*  evList[2]; evList[0]=evList[1]=0;
-   if (HasCut()) {
-      fLogger << kINFO << "  --> Apply cut on input trees                 : " << CutS() << Endl;
-      SignalTreeInfo(0).GetTree()->Draw( ">>signalList", Cut(), "goff" );
-      evList[Types::kSignal] = (TEventList*)gDirectory->Get("signalList");
-      BackgroundTreeInfo(0).GetTree()->Draw( ">>backgroundList", Cut(), "goff" );
-      evList[Types::kBackground] = (TEventList*)gDirectory->Get("backgroundList");
-
-      fLogger << kINFO << "  Signal tree    : number of events passing cut: " << evList[Types::kSignal]->GetN()     << Endl;
-      fLogger << kINFO << "  Background tree: number of events passing cut: " << evList[Types::kBackground]->GetN() << Endl;
-   } 
-   else fLogger << kINFO << "No cuts applied" << Endl;
 
    // ============================================================
    // create training and test tree
@@ -357,15 +348,19 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
       const char* myVar = GetInternalVarName(ivar).Data();
 
       // here, we do not use the true vartype of the variable, but use Float always internally
-      tmpTree[Types::kSignal]->Branch( myVar,&vArr[ivar], Form("%s/F", myVar), basketsize );
+      tmpTree[Types::kSignal]->Branch( myVar, &vArr[ivar], Form("Var%02i/F", ivar), basketsize );
 
    } // end of loop over input variables
-   
+
    tmpTree[Types::kBackground] = (TTree*)tmpTree[Types::kSignal]->CloneTree(0);
    tmpTree[Types::kBackground]->SetName("BkgTT");
 
    tmpTree[Types::kSignal]    ->SetDirectory(0);
    tmpTree[Types::kBackground]->SetDirectory(0);
+
+   // number of signal and background events passing cuts
+   Int_t nAfterCut[2];  nAfterCut[0]  = nAfterCut[1]  = 0;
+   Int_t nBeforeCut[2]; nBeforeCut[0] = nBeforeCut[1] = 0;
 
    // if we work with chains we need to remember the current tree
    // if the chain jumps to a new tree we have to reset the formulas
@@ -390,9 +385,23 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
             pCurrentTree = currentInfo.GetTree()->GetTree();
          }
 
+         // count number of events in tree before cut
+         nBeforeCut[sb] += currentInfo.GetTree()->GetEntries();
+
+         currentInfo.GetTree()->Draw( ">>evList", sb==0 ? CutSig() : CutBkg(), "goff" );
+         TEventList* evList = (TEventList*)gDirectory->Get( "evList" );
+
+         // sanity check
+         if (!evList) {
+            fLogger << kFATAL << "<PrepareForTrainingAndTesting> Big troubles: zero event list pointer returned" << Endl;
+         }
+
+         // count number of events in tree after cut
+         nAfterCut[sb] += evList->GetN(); 
+
          // loop over events in ntuple
          for (Long64_t evtIdx = 0; evtIdx < currentInfo.GetTree()->GetEntries(); evtIdx++) {
-            if (evList[sb]!=0 && !evList[sb]->Contains(evtIdx)) continue;
+            if (!evList->Contains(evtIdx)) continue;
 
             // survived the cut
             currentInfo.GetTree()->LoadTree(evtIdx);
@@ -442,14 +451,17 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
                // the weight (can also be an array)
                weight = currentInfo.GetWeight(); // multiply by tree weight
-               if (fWeightFormula!=0) {
+
+
+
+               if (fWeightFormula[sb]!=0) {
                
-                  Int_t ndata = fWeightFormula->GetNdata();
-                  weight *= ndata==1?fWeightFormula->EvalInstance():fWeightFormula->EvalInstance(idata);
+                  Int_t ndata = fWeightFormula[sb]->GetNdata();
+                  weight *= ndata==1?fWeightFormula[sb]->EvalInstance():fWeightFormula[sb]->EvalInstance(idata);
                   if (TMath::IsNaN(weight)) {
                      containsNaN = kTRUE;
                      fLogger << kWARNING << "Weight expression resolves to infinite value (NaN): " 
-                             << fWeightFormula->GetTitle() << Endl;
+                             << fWeightFormula[sb]->GetTitle() << Endl;
                   }
                }
 
@@ -468,6 +480,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                nTempEvents[sb]  += 1;
             }
          }
+         
+         // event list not needed anymore
+         delete evList;
       
          currentInfo.GetTree()->ResetBranchAddresses();
       }
@@ -475,6 +490,21 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
       // compute renormalisation factors
       renormFactor[sb] = nTempEvents[sb]/sumOfWeights[sb];
    }
+
+   // number of events info
+   fLogger << kINFO << "Prepare training and Test samples:" << Endl;
+   fLogger << kINFO << "  Signal tree     - total number of events     : " << nBeforeCut[0] << Endl;
+   fLogger << kINFO << "  Background tree - total number of events     : " << nBeforeCut[1] << Endl;
+
+   // apply cuts to the input trees and create TEventLists
+   if (HasCuts()) {
+      fLogger << kINFO << "  --> Apply cuts on input trees (signal)       : " << CutSigS() << Endl;
+      fLogger << kINFO << "  --> Apply cuts on input trees (background)   : " << CutBkgS() << Endl;
+      fLogger << kINFO << "  Signal tree    : number of events passing cut: " << nAfterCut[0] << Endl;
+      fLogger << kINFO << "  Background tree: number of events passing cut: " << nAfterCut[1] << Endl;
+   }
+   else fLogger << kINFO << "No cuts applied" << Endl;
+
 
    // print rescaling info
    if (normMode == "NONE") {
@@ -620,7 +650,6 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    }
 
    gROOT->cd();
-   TList lot;
 
    // merge signal and background trees, and renormalise the event weights in this step   
    for (Int_t itreeTypeTmp=0; itreeTypeTmp<2; itreeTypeTmp++) {
@@ -708,7 +737,7 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
 
    tr->SetBranchStatus("*",1);
 
-   vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
+   std::vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
    fInputVarFormulas.clear();
    for (UInt_t i=0; i<GetNVariables(); i++) {
@@ -727,9 +756,11 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
    //    vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
    //    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
 
-   if (fWeightFormula!=0) { delete fWeightFormula; fWeightFormula=0; }
-   if (fWeightExp!=TString("")) 
-      fWeightFormula = new TTreeFormula("FormulaWeight",fWeightExp.Data(),tr);
+   for(Int_t sb=0; sb<2; sb++) {
+      if (fWeightFormula[sb]!=0) { delete fWeightFormula[sb]; fWeightFormula[sb]=0; }
+      if (fWeightExp[sb]!=TString("")) 
+         fWeightFormula[sb] = new TTreeFormula("FormulaWeight",fWeightExp[sb].Data(),tr);
+   }
 
    tr->SetBranchStatus("*",0);
 
@@ -739,9 +770,11 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
          tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    }
 
-   if (fWeightFormula!=0)
-      for (Int_t bi = 0; bi<fWeightFormula->GetNcodes(); bi++)
-         tr->SetBranchStatus( fWeightFormula->GetLeaf(bi)->GetBranch()->GetName(), 1 );
+   for(Int_t sb=0; sb<2; sb++) {
+      if (fWeightFormula[sb]!=0)
+         for (Int_t bi = 0; bi<fWeightFormula[sb]->GetNcodes(); bi++)
+            tr->SetBranchStatus( fWeightFormula[sb]->GetLeaf(bi)->GetBranch()->GetName(), 1 );
+   }
    return;
 }
 
@@ -756,7 +789,7 @@ void TMVA::DataSet::PrintCorrelationMatrix( TTree* theTree )
            << theTree->GetName() << Endl;
 
    TBranch*         branch = 0;
-   vector<TString>* theVars = new vector<TString>;
+   std::vector<TString>* theVars = new std::vector<TString>;
    TObjArrayIter branchIter( theTree->GetListOfBranches(), kIterForward );
    while ((branch = (TBranch*)branchIter.Next()) != 0) 
       if ((TString)branch->GetName() != "type"  &&
@@ -771,13 +804,16 @@ void TMVA::DataSet::PrintCorrelationMatrix( TTree* theTree )
    GetCorrelationMatrix( kFALSE, corrMatB );
 
    // print the matrix
+   std::vector<TString> exprs;
+   for (Int_t ivar=0; ivar<nvar; ivar++) exprs.push_back( GetExpression(ivar) );
+
    fLogger << Endl;
    fLogger << kINFO << "Correlation matrix (signal):" << Endl;
-   TMVA::Tools::FormattedOutput( *corrMatS, *theVars, fLogger );
+   TMVA::Tools::FormattedOutput( *corrMatS, exprs, fLogger );
    fLogger << Endl;
 
    fLogger << kINFO << "Correlation matrix (background):" << Endl;
-   TMVA::Tools::FormattedOutput( *corrMatB, *theVars, fLogger );
+   TMVA::Tools::FormattedOutput( *corrMatB, exprs, fLogger );
    fLogger << Endl;
 
    // ---- histogramming

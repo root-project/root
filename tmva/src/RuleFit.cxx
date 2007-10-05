@@ -748,7 +748,7 @@ void TMVA::RuleFit::MakeVisHists()
    corrDir = (TDirectory *)varDir->Get(corrDirName);
    if (corrDir==0) fLogger << kWARNING << "No correlation directory found : " << corrDirName << Endl;
    // how many plots are in the var directory?
-   Int_t noPlots = ((varDir->GetListOfKeys())->GetEntries()) / 2;
+   Int_t noPlots = ((varDir->GetListOfKeys())->GetSize()) / 2;
    fLogger << kDEBUG << "Got number of plots = " << noPlots << Endl;
  
    // loop over all objects in directory

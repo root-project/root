@@ -21,6 +21,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include <iostream>
+
 #include "TMVA/TActivationIdentity.h"
 
 ClassImp(TMVA::TActivationIdentity)

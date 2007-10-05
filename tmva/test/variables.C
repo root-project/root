@@ -6,7 +6,8 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, bool useTMVAStyle=kTRUE )
+void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, 
+                Bool_t useTMVAStyle = kTRUE )
 {
 
    const TString directories[3] = { "InputVariables_NoTransform",

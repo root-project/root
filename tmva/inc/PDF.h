@@ -41,20 +41,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
-#ifndef ROOT_TObject
+#include "TH1.h"
 #include "TObject.h"
-#endif
+
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
 #ifndef ROOT_TMVA_KDEKernel
 #include "TMVA/KDEKernel.h"
-#endif
-
-#ifndef ROOT_TH1
-#include "TH1.h"
 #endif
 
 class TSpline;

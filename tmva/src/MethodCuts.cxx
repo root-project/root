@@ -89,6 +89,7 @@
 */
 //End_Html
 
+#include <iostream>
 
 #include <stdio.h>
 #include "time.h"
@@ -97,6 +98,8 @@
 #include "TObjString.h"
 #include "TDirectory.h"
 #include "TMath.h"
+#include "TGraph.h"
+#include "TSpline.h"
 
 #include "TMVA/MethodCuts.h"
 #include "TMVA/GeneticFitter.h"
@@ -105,6 +108,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Interval.h"
+#include "TMVA/TSpline1.h"
 
 ClassImp(TMVA::MethodCuts)
 
@@ -363,17 +367,35 @@ Double_t TMVA::MethodCuts::GetMvaValue()
    if (fTestSignalEff > 0) {
       // get efficiency bin
       Int_t ibin = Int_t((fTestSignalEff - fEffSMin)/(fEffSMax - fEffSMin)*Double_t(fNbins));
-      if (ibin < 0      ) ibin = 0;
-      if (ibin >= fNbins) ibin = fNbins - 1;
+      if      (ibin < 0      ) ibin = 0;
+      else if (ibin >= fNbins) ibin = fNbins - 1;
     
       Bool_t passed = kTRUE;
       for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-         passed &= ( (GetEventVal(ivar) >= fCutMin[ivar][ibin]) && 
+         passed &= ( (GetEventVal(ivar) >  fCutMin[ivar][ibin]) && 
                      (GetEventVal(ivar) <= fCutMax[ivar][ibin]) );
 
       return passed ? 1. : 0. ;
    }
    else return 0;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodCuts::GetCuts( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const
+{
+   // retrieve cut values for given signal efficiency
+
+   // find corresponding bin
+   Int_t ibin = Int_t((effS - fEffSMin)/(fEffSMax - fEffSMin)*Double_t(fNbins));
+   if      (ibin < 0      ) ibin = 0;
+   else if (ibin >= fNbins) ibin = fNbins - 1;
+
+   cutMin.clear();
+   cutMax.clear();
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+      cutMin.push_back( fCutMin[ivar][ibin]  );
+      cutMax.push_back( fCutMax[ivar][ibin] );
+   }   
 }
 
 //_______________________________________________________________________

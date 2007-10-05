@@ -214,10 +214,16 @@ void TMVA::Reader::DeclareOptions()
 }
 
 //_______________________________________________________________________
-TMVA::Reader::~Reader( void )
+TMVA::Reader::~Reader()
 {
    // destructor
-}  
+   // the data set
+   if (fDataSet) delete fDataSet;
+   
+   // methods
+   std::map<TString, IMethod*>::iterator methodIt =  fMethodMap.begin();
+   for(;methodIt != fMethodMap.end(); methodIt++) delete methodIt->second;
+}
 
 //_______________________________________________________________________
 void TMVA::Reader::Init( void )
@@ -240,7 +246,7 @@ void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink )
 }
 
 //_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( TString methodTag, TString weightfile )
+TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& weightfile )
 {
    // read method name from weight file
 
@@ -279,7 +285,6 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TString methodTag, TString weightfile )
       methodTitle=fullname(idxtit+2,fullname.Length()-1);
       notit=kFALSE;
    }
-
 
    MethodBase* method = (MethodBase*)this->BookMVA( Types::Instance().GetMethodType(methodRealName), 
                                                     weightfile );
@@ -377,7 +382,17 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TString methodTag, Double_t aux )
+TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
+{
+   // return pointer to method with tag "methodTag"
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
+   if (it != fMethodMap.end()) return it->second;
+
+   return 0;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )
 {
    // Evaluate a vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
@@ -388,7 +403,7 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TStrin
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodTag, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, const TString& methodTag, Double_t aux )
 {
    // Evaluate a vector<double> of input data for a given method
 
@@ -400,7 +415,7 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TStri
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( TString methodTag, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const TString& methodTag, Double_t aux )
 {
    // evaluates MVA for given set of input variables
    IMethod* method = 0;
@@ -412,7 +427,6 @@ Double_t TMVA::Reader::EvaluateMVA( TString methodTag, Double_t aux )
       for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << " --> " << it->first << Endl;
       fLogger << "Check calling string" << kFATAL << Endl;
    }
-
    else method = it->second;
 
    return this->EvaluateMVA( (MethodBase*)method, aux );
@@ -439,7 +453,7 @@ Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::GetProba( TString methodTag,  Double_t ap_sig, Double_t mvaVal )
+Double_t TMVA::Reader::GetProba( const TString& methodTag,  Double_t ap_sig, Double_t mvaVal )
 {
   // evaluates probability of MVA for given set of input variables
    IMethod* method = 0;
@@ -458,7 +472,7 @@ Double_t TMVA::Reader::GetProba( TString methodTag,  Double_t ap_sig, Double_t m
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::GetRarity( TString methodTag, Double_t mvaVal )
+Double_t TMVA::Reader::GetRarity( const TString& methodTag, Double_t mvaVal )
 {
   // evaluates the MVA's rarity
    IMethod* method = 0;

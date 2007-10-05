@@ -35,12 +35,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TObject.h"
 #include "TList.h"
-#include <sstream>
-#include <vector>
-#include <iostream>
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
@@ -58,7 +54,7 @@ namespace TMVA {
    public:
 
       // constructur
-      Configurable( const TString & theOption = "" );
+      Configurable( const TString& theOption = "" );
       
       // default destructur
       virtual ~Configurable();
@@ -85,8 +81,8 @@ namespace TMVA {
       
       void CheckForUnusedOptions() const;
 
-      const TString & GetOptions() const { return fOptions; }
-      void      SetOptions(const TString & s) { fOptions = s; }
+      const TString& GetOptions() const { return fOptions; }
+      void      SetOptions(const TString& s) { fOptions = s; }
 
    protected:
       

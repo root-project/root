@@ -28,6 +28,8 @@
 //
 //_______________________________________________________________________
 
+#include "TMath.h"
+
 #include "TMVA/MetricManhattan.h"
 
 ClassImp(TMVA::MetricManhattan)

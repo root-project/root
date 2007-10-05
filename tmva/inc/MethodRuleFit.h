@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
+// Author: Fredrik Tegenfeldt
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,16 +11,12 @@
  *      Friedman's RuleFit method                                                 * 
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker    <Andreas.Hocker@cern.ch>     - CERN, Switzerland       *
  *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch> - Iowa State U., USA      *
- *      Helge Voss         <Helge.Voss@cern.ch>         - MPI-KP Heidelberg, Ger. *
- *      Kai Voss           <Kai.Voss@cern.ch>           - U. of Victoria, Canada  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
+ *      Iowa State U.                                                             *
  *      MPI-K Heidelberg, Germany                                                 * 
- *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -88,23 +84,23 @@ namespace TMVA {
       virtual ~MethodRuleFit( void );
 
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value
-      //      virtual Double_t GetMvaValue(Event *e);
-      virtual Double_t GetMvaValue();
+      //      Double_t GetMvaValue(Event *e);
+      Double_t GetMvaValue();
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -143,11 +139,11 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
-      virtual void MakeClassRuleCuts( std::ostream& ) const;
+      void MakeClassRuleCuts( std::ostream& ) const;
 
-      virtual void MakeClassLinear( std::ostream& ) const;
+      void MakeClassLinear( std::ostream& ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -161,26 +157,17 @@ namespace TMVA {
       // initialize monitor ntuple
       void InitMonitorNtuple();
 
-      // build a decision tree
-      //      void BuildTree( DecisionTree *dt, std::vector< Event *> & el );
-
-      // make a forest of decision trees
-      //      void MakeForest();
-
-      //      void MakeForestRnd();
-
       void TrainTMVARuleFit();
       void TrainJFRuleFit();
-      //
 
    private:
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
 
-      RuleFit                      fRuleFit;       // RuleFit instance
-      std::vector< Event *>        fEventSample;   // the complete training sample
+      RuleFit                      fRuleFit;        // RuleFit instance
+      std::vector< Event *>        fEventSample;    // the complete training sample
       Double_t                     fSignalFraction; // scalefactor for bkg events to modify initial s/b fraction in training data
 
       // ntuple

@@ -34,7 +34,7 @@
 //_______________________________________________________________________
 
 #include <string>
-#include <fstream>
+#include <iostream>
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -51,19 +51,22 @@
 #include "TMVA/Configurable.h"
 #endif
 
+using std::endl;
+
 // don't change this flag without a good reason ! The FitterBase code won't work anymore !!!
 // #define TMVA_Configurable_SanctionUnknownOption kTRUE 
 
 ClassImp(TMVA::Configurable)
 
 //_______________________________________________________________________
-TMVA::Configurable::Configurable( const TString & theOption)  
+TMVA::Configurable::Configurable( const TString& theOption)  
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
      fLastDeclaredOption         ( 0 ),
      fLogger                     ( this )
 {
    // constructor
+   fLogger.SetMinType( kINFO );
 }
 
 //_______________________________________________________________________
@@ -271,7 +274,7 @@ void TMVA::Configurable::PrintOptions() const
 
    fLogger << kINFO << "The following options are set:" << Endl;
 
-   TListIter optIt( & fListOfOptions );
+   TListIter optIt( &fListOfOptions );
    fLogger << kINFO << "- By User:" << Endl;
    Bool_t found = kFALSE;
    while (OptionBase* opt = (OptionBase *) optIt()) {

@@ -205,6 +205,7 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
    //recursively print the node and its daughters (--> print the 'tree')
 
    os << this->GetDepth() 
+      << setprecision(6)
       << " "         << this->GetPos() 
       << " seq: "    << this->GetSequence()
       << " ivar: "   << this->GetSelector()

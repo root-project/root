@@ -8,16 +8,16 @@
 
 #include <vector>
 
-void ClassApplication( TString myMethodList = "" ) 
+void ClassApplication( TString myMethodList = "Fisher" ) 
 {
    cout << endl;
    cout << "==> start ClassApplication" << endl;
 
-   const int Nmvas = 15;
+   const int Nmvas = 17;
    const char* bulkname[Nmvas] = { "Likelihood", "LikelihoodD", "LikelihoodPCA", "LikelihoodMIX", 
-                                   "HMatrix", "Fisher", 
+                                   "HMatrix", "FisherD", "Fisher",
                                    "MLP", 
-                                   "BDT", "RuleFit", 
+                                   "BDT", "BDTD", "RuleFit", 
                                    "SVM_Gauss", "SVM_Poly", "SVM_Lin",
                                    "FDA_MT", "FDA_MC", "FDA_GA" };
 
@@ -89,6 +89,10 @@ void ClassApplication( TString myMethodList = "" )
             classReader[imva] = new ReadFisher       ( inputVars );
             hist[imva] = new TH1F( "MVA_Fisher",        "MVA_Fisher",        nbin, -4, 4 );
          }
+         if (bulkname[imva] == "FisherD"       ) {
+            classReader[imva] = new ReadFisherD       ( inputVars );
+            hist[imva] = new TH1F( "MVA_FisherD",        "MVA_FisherD",        nbin, -4, 4 );
+         }
          if (bulkname[imva] == "MLP"          ) {
             classReader[imva] = new ReadMLP          ( inputVars );
             hist[imva] = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -0.25, 1.5 );
@@ -97,9 +101,13 @@ void ClassApplication( TString myMethodList = "" )
             classReader[imva] = new ReadBDT          ( inputVars );
             hist[imva] = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
          }
+         if (bulkname[imva] == "BDTD"          ) {
+            classReader[imva] = new ReadBDTD          ( inputVars );
+            hist[imva] = new TH1F( "MVA_BDTD",           "MVA_BDTD",         nbin, -0.8, 0.8 );
+         }
          if (bulkname[imva] == "RuleFit"      ) {
             classReader[imva] = new ReadRuleFit      ( inputVars );
-            hist[imva] = new TH1F( "MVA_RuleFitTMVA",   "MVA_RuleFitTMVA",   nbin, -2.0, 2.0 );
+            hist[imva] = new TH1F( "MVA_RuleFit",       "MVA_RuleFit",       nbin, -2.0, 2.0 );
          }
          if (bulkname[imva] == "SVM_Gauss"    ) {
             classReader[imva] = new ReadSVM_Gauss    ( inputVars );

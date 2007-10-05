@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      User class for genetics algorithm                                         *
+ *      Interface for generic fitter                                              *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -28,19 +28,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// IFitterTarget                                                         //
+// IFitterTarget                                                        //
 //                                                                      //
-// interface for a fitter "target"                                      //
+// Interface for a fitter "target"                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include <deque>
-#include <map>
-#include <string>
-
-#include <stdio.h>
-#include <iostream>
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"

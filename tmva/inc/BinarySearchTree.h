@@ -40,6 +40,7 @@
 
 #include "Riostream.h"
 #include <vector>
+#include <queue>
 #include "time.h"
 
 #ifndef ROOT_TMVA_Volume
@@ -59,6 +60,7 @@ class TTree;
 // the binary search tree
 
 using std::vector;
+using std::queue;
 
 namespace TMVA {
 
@@ -132,6 +134,7 @@ namespace TMVA {
 
       Int_t GetMemSize() { return sizeof(*this) + GetRoot()->GetMemSize(); }
 
+      Int_t SearchVolumeWithMaxLimit( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0, Int_t = -1);
 
    private:
 

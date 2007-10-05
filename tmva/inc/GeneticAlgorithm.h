@@ -35,11 +35,7 @@
 
 #include <vector>
 #include <deque>
-#include <map>
-#include <string>
-
-#include <stdio.h>
-#include <iostream>
+#include <iosfwd>
 
 #ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
@@ -85,32 +81,32 @@ namespace TMVA {
 
       void SetSpread(Double_t s) { fSpread = s; }
 
-      Int_t    fConvCounter;           // converging? ... keeps track of the number of improvements
+      Int_t    fConvCounter;              // converging? ... keeps track of the number of improvements
 
    protected:
    
-      IFitterTarget&    fFitterTarget; // the fitter target
-      GeneticPopulation fPopulation;   // contains and controls the "individual"
+      IFitterTarget&    fFitterTarget;    // the fitter target
+      GeneticPopulation fPopulation;      // contains and controls the "individual"
       
-      Double_t fConvValue;             // keeps track of the quantity of improvement
+      Double_t fConvValue;                // keeps track of the quantity of improvement
 
       // spread-control (stepsize)
       // successList keeps track of the improvements to be able
       
-      std::deque <Int_t> fSuccessList; // to adjust the stepSize      
-      Double_t fLastResult;            // remembers the last obtained result (for internal use)
+      std::deque<Int_t> fSuccessList;     // to adjust the stepSize      
+      Double_t          fLastResult;      // remembers the last obtained result (for internal use)
 
-      Double_t fSpread;                // regulates the spread of the value change at mutation (sigma)
-      Bool_t   fMirror;                // new values for mutation are mirror-mapped if outside of constraints
-      Bool_t   fSexual;                // allow sexual recombination of individual
-      Bool_t   fFirstTime;             // if true its the first time, so no evolution yet
-      Int_t    fPopulationSize;        // the size of the population
+      Double_t          fSpread;          // regulates the spread of the value change at mutation (sigma)
+      Bool_t            fMirror;          // new values for mutation are mirror-mapped if outside of constraints
+      Bool_t            fSexual;          // allow sexual recombination of individual
+      Bool_t            fFirstTime;       // if true its the first time, so no evolution yet
+      Int_t             fPopulationSize;  // the size of the population
 
       const std::vector<TMVA::Interval*>& fRanges; // parameter ranges
 
-      mutable MsgLogger            fLogger;        // message logger
+      mutable MsgLogger fLogger;          // message logger
       
-      ClassDef(GeneticAlgorithm, 0)  // Base definition for genetic algorithm
+      ClassDef(GeneticAlgorithm, 0)  // Genetic algorithm controller
    };
    
 } // namespace TMVA

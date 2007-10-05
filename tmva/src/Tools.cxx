@@ -156,7 +156,7 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
 
    static Int_t    theType;
    TBranch * br1 = theTree->GetBranch("type" );
-   br1->SetAddress( & theType );
+   br1->SetAddress( &theType );
 
    static Double_t theVarD = 0;
    static Float_t  theVarF = 0;
@@ -167,15 +167,15 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
    Int_t tIdx = -1;
    if (leafType=="Double_t") {
       tIdx=0;
-      br2->SetAddress( & theVarD );
+      br2->SetAddress( &theVarD );
    } 
    else if (leafType=="Float_t") {
       tIdx=1;
-      br2->SetAddress( & theVarF );
+      br2->SetAddress( &theVarF );
    } 
    else if (leafType=="Int_t") {
       tIdx=2;
-      br2->SetAddress( & theVarI );
+      br2->SetAddress( &theVarI );
    } 
    else {
       Logger() << kFATAL << "<ComputeStat> unknown Variable Type " << leafType << Endl;
@@ -419,7 +419,7 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
    return retval;
 }
 
-vector<Double_t> TMVA::Tools::MVADiff(vector<Double_t> & a, vector<Double_t> & b)
+vector<Double_t> TMVA::Tools::MVADiff(vector<Double_t>& a, vector<Double_t>& b)
 {
    // computes difference between two vectors
    if (a.size() != b.size()) {
@@ -430,19 +430,19 @@ vector<Double_t> TMVA::Tools::MVADiff(vector<Double_t> & a, vector<Double_t> & b
    return result;
 }
 
-void TMVA::Tools::Scale( vector<Double_t> &v, Double_t f )
+void TMVA::Tools::Scale( vector<Double_t>& v, Double_t f )
 {
    // scales double vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-void TMVA::Tools::Scale( vector<Float_t> &v, Float_t f )
+void TMVA::Tools::Scale( vector<Float_t>& v, Float_t f )
 {
    // scales float vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-void TMVA::Tools::UsefulSortAscending(vector< vector<Double_t> > &v)
+void TMVA::Tools::UsefulSortAscending( vector<vector<Double_t> >& v )
 {
    // sort 2D vector
    UInt_t nArrays=v.size();
@@ -461,7 +461,7 @@ void TMVA::Tools::UsefulSortAscending(vector< vector<Double_t> > &v)
    }
 }
 
-void TMVA::Tools::UsefulSortDescending(vector< vector<Double_t> > &v, vector<TString>* vs)
+void TMVA::Tools::UsefulSortDescending( vector<vector<Double_t> >& v, vector<TString>* vs )
 {
    // sort 2D vector AND (in parallel) TString vector
    UInt_t nArrays=v.size();
@@ -483,7 +483,7 @@ void TMVA::Tools::UsefulSortDescending(vector< vector<Double_t> > &v, vector<TSt
    }
 }
 
-void TMVA::Tools::UsefulSortDescending(vector<Double_t> &v)
+void TMVA::Tools::UsefulSortDescending( vector<Double_t>& v )
 {
    // sort vector
    vector< vector<Double_t> > vtemp;
@@ -492,7 +492,7 @@ void TMVA::Tools::UsefulSortDescending(vector<Double_t> &v)
    v = vtemp[0];
 }
 
-void TMVA::Tools::UsefulSortAscending(vector<Double_t>  &v)
+void TMVA::Tools::UsefulSortAscending( vector<Double_t>& v )
 {
    // sort vector
    vector<vector<Double_t> > vtemp;
@@ -501,7 +501,7 @@ void TMVA::Tools::UsefulSortAscending(vector<Double_t>  &v)
    v=vtemp[0];
 }
 
-Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>  &v )
+Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>& v )
 {
    // find index of maximum entry in vector
    if (v.size()==0) return -1;
@@ -516,7 +516,7 @@ Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>  &v )
    return pos;
 }
 
-Int_t TMVA::Tools::GetIndexMinElement( vector<Double_t>  &v )
+Int_t TMVA::Tools::GetIndexMinElement( vector<Double_t>& v )
 {
    // find index of minimum entry in vector
    if (v.size()==0) return -1;
@@ -566,7 +566,7 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString&
 }
 
 //_______________________________________________________________________
-const TString& TMVA::Tools::Color( const TString & c ) 
+const TString& TMVA::Tools::Color( const TString& c ) 
 {
    // human readable color strings
    static TString gClr_none         = "" ;
@@ -718,7 +718,8 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
-void TMVA::Tools::writeFloatArbitraryPrecision(Float_t val, ostream & os) {
+void TMVA::Tools::writeFloatArbitraryPrecision( Float_t val, ostream& os ) 
+{
    // writes a float value with the available precision to a stream
    os << val << " :: ";
    void * c = &val;
@@ -730,7 +731,8 @@ void TMVA::Tools::writeFloatArbitraryPrecision(Float_t val, ostream & os) {
    os << ":: ";
 }
 
-void TMVA::Tools::readFloatArbitraryPrecision(Float_t & val, istream & is) {
+void TMVA::Tools::readFloatArbitraryPrecision( Float_t& val, istream& is ) 
+{
    // reads a float value with the available precision from a stream
    Float_t a = 0;
    is >> a;
@@ -746,13 +748,12 @@ void TMVA::Tools::readFloatArbitraryPrecision(Float_t & val, istream & is) {
    val = a;
 }
 
-
-
 void TMVA::Tools::TMVAWelcomeMessage()
 {
    // direct output, eg, when starting ROOT session -> no use of Logger here
    cout << endl;
-   cout << Color("bold") << "TMVA -- Toolkit for Multivariate Analysis" << Color("reset") << endl;
+   cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << endl;
+   cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << endl;
    cout << "        " << "Copyright (C) 2005-2007 CERN, MPI-K Heidelberg and Victoria U." << endl;
    cout << "        " << "Home page http://tmva.sourceforge.net" << endl;
    cout << "        " << "All rights reserved, please read http://tmva.sf.net/license.txt" << endl << endl;

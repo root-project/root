@@ -29,9 +29,7 @@
 //_______________________________________________________________________
 
 // C++
-#include <assert.h>
-#include <cmath>
-#include <algorithm>
+#include <string>
 
 // ROOT
 #include "TFile.h"
@@ -44,6 +42,8 @@
 #include "TMVA/Ranking.h"
 
 ClassImp(TMVA::MethodKNN)
+
+using std::endl;
 
 //_______________________________________________________________________
 TMVA::MethodKNN::MethodKNN(TString jobName,
@@ -95,7 +95,7 @@ void TMVA::MethodKNN::DeclareOptions()
    // fTrim         = false;  // use equal number of signal and background events
   
    DeclareOptionRef(fnkNN         = 40,     "nkNN",         "Number of k-nearest neighbors");
-   DeclareOptionRef(fTreeOptDepth = 6,      "TreeOptDepth", "Binary tree optimiation depth");
+   DeclareOptionRef(fTreeOptDepth = 6,      "TreeOptDepth", "Binary tree optimisation depth");
    DeclareOptionRef(fScaleFrac    = 0.80,   "ScaleFrac",    "Fraction of events used for scaling");
    DeclareOptionRef(fUseKernel    = kFALSE, "UseKernel",    "Use polynomial kernel weight");
    DeclareOptionRef(fTrim         = kFALSE, "Trim",         "Use equal number of signal and background events");
@@ -159,7 +159,7 @@ void TMVA::MethodKNN::MakeKNN()
 
    fModule->Clear();
 
-   string option;
+   std::string option;
    if (fScaleFrac > 0.0) {
       option += "metric";
    }
@@ -183,7 +183,7 @@ void TMVA::MethodKNN::MakeKNN()
 Double_t TMVA::MethodKNN::PolKernel(const Double_t value) const
 {
    // polynomial kernel
-   const Double_t avalue = std::fabs(value);
+   const Double_t avalue = TMath::Abs(value);
 
    if (!(avalue < 1.0)) {
       return 0.0;
@@ -306,7 +306,7 @@ Double_t TMVA::MethodKNN::GetMvaValue()
          return -100.0; 
       }
       
-      maxradius = 1.0/std::sqrt(maxradius);
+      maxradius = 1.0/TMath::Sqrt(maxradius);
    }
    
    UInt_t all_count = 0;
@@ -323,7 +323,7 @@ Double_t TMVA::MethodKNN::GetMvaValue()
       
       Double_t weight = node.GetWeight();
       if (fUseKernel) {
-         weight *= PolKernel(std::sqrt(lit->second)*maxradius);
+         weight *= PolKernel(TMath::Sqrt(lit->second)*maxradius);
       }
       
       ++all_count;
@@ -378,7 +378,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(ostream& os) const
    os << "# MethodKNN will write " << fEvent.size() << " events " << endl;
    os << "# event number, type, weight, variable values" << endl;
 
-   const string delim = ", ";
+   const std::string delim = ", ";
 
    UInt_t ievent = 0;
    for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event, ++ievent) {
@@ -436,9 +436,9 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
       kNN::VarVec vvec(nvar, 0.0);
       
       UInt_t vcount = 0;
-      string::size_type prev = 0;
+      std::string::size_type prev = 0;
       
-      for (string::size_type ipos = 0; ipos < line.size(); ++ipos) {
+      for (std::string::size_type ipos = 0; ipos < line.size(); ++ipos) {
          if (line[ipos] != ',' && ipos + 1 != line.size()) {
             continue;
          }
@@ -447,7 +447,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
             fLogger << kFATAL << "Wrog substring limits" << Endl;
          }
          
-         string vstring = line.substr(prev, ipos - prev);
+         std::string vstring = line.substr(prev, ipos - prev);
          if (ipos + 1 == line.size()) {
             vstring = line.substr(prev, ipos - prev + 1);
          }

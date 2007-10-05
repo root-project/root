@@ -52,6 +52,9 @@
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
+#ifndef ROOT_TMVA_Configurable
+#include "TMVA/Configurable.h"
+#endif
 
 #include <vector>
 #include <map>
@@ -76,15 +79,16 @@ namespace TMVA {
 
       virtual ~Reader( void );
   
-      IMethod* BookMVA( TString methodTag, TString weightfile );
+      IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
+      IMethod* FindMVA( const TString& methodTag );
 
-      Double_t EvaluateMVA( const std::vector<Float_t> &, TString methodTag, Double_t aux = 0 );    
-      Double_t EvaluateMVA( const std::vector<Double_t>&, TString methodTag, Double_t aux = 0 );    
+      Double_t EvaluateMVA( const std::vector<Float_t> &, const TString& methodTag, Double_t aux = 0 );    
+      Double_t EvaluateMVA( const std::vector<Double_t>&, const TString& methodTag, Double_t aux = 0 );    
       Double_t EvaluateMVA( MethodBase* method,           Double_t aux = 0 );    
-      Double_t EvaluateMVA( TString methodTag,           Double_t aux = 0 );    
+      Double_t EvaluateMVA( const TString& methodTag,            Double_t aux = 0 );    
 
-      Double_t GetProba ( TString methodTag, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
-      Double_t GetRarity( TString methodTag, Double_t mvaVal=-9999999 );
+      Double_t GetProba ( const TString& methodTag, Double_t ap_sig=0.5, Double_t mvaVal=-9999999 ); 
+      Double_t GetRarity( const TString& methodTag, Double_t mvaVal=-9999999 );
 
       // accessors 
       virtual const char* GetName() const { return "Reader"; }
@@ -94,9 +98,11 @@ namespace TMVA {
       const DataSet& Data() const { return *fDataSet; }
       DataSet& Data() { return *fDataSet; }
       
+      // add and retrieve variables
       void AddVariable( const TString& expression, Float_t* );
-      void AddVariable( const TString& expression, Int_t* );
-  
+      void AddVariable( const TString& expression, Int_t* );  
+      const TString& GetVarName( Int_t ivar ) { return Data().GetExpression(ivar); }
+
    private:
 
       // this booking method is internal

@@ -75,22 +75,22 @@ namespace TMVA {
       virtual ~MethodLikelihood( void );
     
       // training method
-      virtual void Train( void );
+      void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
-      virtual void WriteWeightsToStream( TFile& rf ) const;
+      void WriteWeightsToStream( ostream& o ) const;
+      void WriteWeightsToStream( TFile& rf ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
-      virtual void ReadWeightsFromStream( TFile& istr );
+      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( TFile& istr );
 
       // calculate the MVA value
       // the argument is used for internal ranking tests
-      virtual Double_t GetMvaValue( void );
+      Double_t GetMvaValue( void );
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -98,10 +98,10 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       // header and auxiliary classes
-      virtual void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
 
       // get help message text
       void GetHelpMessage() const;
@@ -112,8 +112,8 @@ namespace TMVA {
       Double_t TransformLikelihoodOutput( Double_t ps, Double_t pb ) const;
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions();
+      void ProcessOptions();
       
       // options
       Int_t     fAverageEvtPerBin;        // average events per bin; used to calculate fNbins

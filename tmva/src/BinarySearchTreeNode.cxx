@@ -39,10 +39,11 @@
 // the respective cut value.
 //______________________________________________________________________
 
-#include "TMVA/BinarySearchTreeNode.h"
-#include "Riostream.h"
 #include <stdexcept>
-#include <assert.h>
+
+#include "Riostream.h"
+
+#include "TMVA/BinarySearchTreeNode.h"
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
 

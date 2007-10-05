@@ -137,8 +137,8 @@ namespace TMVA {
 
       UInt_t GetDepth() { return fDepth; }
 
-      multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
-      multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
+      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
+      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
 
       void FillQualityMap(DecisionTreeNode* n=NULL); 
       void FillQualityGainMap(DecisionTreeNode* n=NULL); 
@@ -152,7 +152,7 @@ namespace TMVA {
 
       TMVA::DecisionTreeNode* GetWeakestLink();
       void FillLinkStrengthMap(TMVA::DecisionTreeNode *n = NULL);
-      multimap<Double_t,TMVA::DecisionTreeNode* >& GetLinkStrengthMap(){ return fLinkStrengthMap; }
+      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetLinkStrengthMap(){ return fLinkStrengthMap; }
 
       Double_t MisClassificationCostOfNode(TMVA::DecisionTreeNode *n);
       Double_t MisClassificationCostOfSubTree(TMVA::DecisionTreeNode *n = NULL);
@@ -198,14 +198,14 @@ namespace TMVA {
       
       EPruneMethod fPruneMethod; // method used for prunig 
 
-      vector< Double_t > fVariableImportance; // the relative importance of the different variables 
+      std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       
       UInt_t     fDepth;         // maximal depth in tree reached
 
       SeparationBase *fQualityIndex;  // separation/quality criterio for CC-pruning
-      multimap<Double_t,TMVA::DecisionTreeNode*> fQualityGainMap;  // the quality-gain of pre-leaf nodes
-      multimap<Double_t,TMVA::DecisionTreeNode*> fQualityMap;      // the quality of leaf nodes
-      multimap<Double_t,TMVA::DecisionTreeNode*> fLinkStrengthMap; // prunestrenghts at which the subtree below the node would be pruned 
+      std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityGainMap;  // the quality-gain of pre-leaf nodes
+      std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityMap;      // the quality of leaf nodes
+      std::multimap<Double_t,TMVA::DecisionTreeNode*> fLinkStrengthMap; // prunestrenghts at which the subtree below the node would be pruned 
 
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
 

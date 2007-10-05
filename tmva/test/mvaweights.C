@@ -38,21 +38,18 @@ void mvaweights( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    TTree *tree = (TTree*)file->Get( "TestTree" );
 
    // search for the right histograms in full list of keys
-   TIter next(file->GetListOfKeys());
-   TKey *key, *hkey;   
-   while ((key = (TKey*)next())) {
-
-      if (TString(key->GetClassName()) != "TDirectory") continue;
-      if (!TString(key->GetName()).BeginsWith("Method_")) continue;
-      if (TString(key->GetName()).Contains("Cuts")) continue;
-
-      cout << "--- Found directory: " << ((TDirectory*)key->ReadObj())->GetName() 
-           << " --> going in" << endl;
-      TDirectory* mDir = (TDirectory*)key->ReadObj();
-
-      TString methodS( key->GetName() ); methodS.Remove(0,7);
-      cout << "--- Method: " << methodS << endl;
-
+   TObjArray* branches = tree->GetListOfBranches();
+   for (Int_t imva=0; imva<branches->GetEntries(); imva++) {
+      TBranch* b = (TBranch*)(*branches)[imva];
+      TString methodS = b->GetName();
+      cout << "Use MVA output of Method " << methodS <<endl; 
+      
+      if (!methodS.BeginsWith("MVA_") || methodS.EndsWith("_Proba")) continue;
+      if (methodS.Contains("Cuts") ) continue;
+      
+      methodS.Remove(0,4);
+      cout << "--- Found variable: \"" << methodS << "\"" << endl;      
+      
       // create new canvas
       TString cname = Form("TMVA output %s",methodS.Data());
       c = new TCanvas( Form("canvas%d", countCanvas+1), cname, 
@@ -60,7 +57,6 @@ void mvaweights( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       c->Divide( 1, 1 );
           
       // set the histogram style
-      cout << "tree pointer: " << tree << endl;
       Float_t xmin = tree->GetMinimum( varx );
       Float_t xmax = tree->GetMaximum( varx );
       Float_t ymin = tree->GetMinimum( vary );

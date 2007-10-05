@@ -115,7 +115,16 @@ namespace TMVA {
                         Double_t min = 0, Double_t max = 0 ) { 
          Data().AddVariable( expression, min, max, type ); 
       }
-      void SetWeightExpression( const TString& variable)  { Data().SetWeightExpression(variable); }
+      void SetWeightExpression( const TString& variable )  { 
+         SetSignalWeightExpression    ( variable );
+         SetBackgroundWeightExpression( variable );
+      }
+      void SetSignalWeightExpression( const TString& variable )  { 
+         Data().SetSignalWeightExpression(variable);
+      }
+      void SetBackgroundWeightExpression( const TString& variable ) {
+         Data().SetBackgroundWeightExpression(variable);
+      }
 
 
       // prepare input tree for training
@@ -127,6 +136,8 @@ namespace TMVA {
                                        const TString& otherOpt="SplitMode=Random:!V" );
 
       void PrepareTrainingAndTestTree( TCut cut, 
+                                       const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
+      void PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, 
                                        const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
 
       Bool_t BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );

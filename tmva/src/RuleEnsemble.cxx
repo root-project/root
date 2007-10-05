@@ -845,6 +845,7 @@ void TMVA::RuleEnsemble::RuleStatistics()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::PrintRuleGen() const
 {
+   if (!DoRules()) return;
    // print rule generation info
    fLogger << kINFO << "-------------------RULE ENSEMBLE SUMMARY------------------------"  << Endl;
    const MethodRuleFit *mrf = GetMethodRuleFit();
@@ -885,7 +886,7 @@ void TMVA::RuleEnsemble::Print() const
    if (isDebug) {
       fLogger << kDEBUG << "Variable importance:" << Endl;
       for (UInt_t iv = 0; iv<fVarImportance.size(); iv++) {
-         fLogger << kDEBUG << setw(maxL) << GetMethodBase()->GetInputExp(iv) //(*(fRuleFit->GetInputVars()))[iv]
+         fLogger << kDEBUG << setw(maxL) << GetMethodBase()->GetInputExp(iv) 
                  << resetiosflags(ios::right) 
                  << " : " << Form(" %3.3f",fVarImportance[iv]) << Endl;
       }

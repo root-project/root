@@ -38,10 +38,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include "Riostream.h"
+
 #include "Rtypes.h"
 
 #ifndef ROOT_TMVA_Node

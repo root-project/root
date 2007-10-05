@@ -45,14 +45,18 @@
 // stochasitc re-sampling of the initial training event sample.
 //_______________________________________________________________________
 
+#include <algorithm>
+
+#include "Riostream.h"
+#include "TRandom.h"
+#include "TObjString.h"
+#include "TDirectory.h"
+#include "TTree.h"
+#include "TH2.h"
+
 #include "TMVA/MethodCommittee.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
-#include "Riostream.h"
-#include "TRandom.h"
-#include <algorithm>
-#include "TObjString.h"
-#include "TDirectory.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Methods.h"
 

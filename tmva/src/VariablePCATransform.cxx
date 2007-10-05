@@ -24,7 +24,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "assert.h"
+#include <cassert>
 
 #include "Riostream.h"
 #include "TVectorF.h"

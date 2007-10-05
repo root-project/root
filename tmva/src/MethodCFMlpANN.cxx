@@ -63,16 +63,16 @@
 // End_Html
 //_______________________________________________________________________
 
-#include "TMatrix.h"
-#include "TObjString.h"
+#include <iostream>
+#include <string>
+
 #include "Riostream.h"
 #include "TMath.h"
-#include <string>
-#include <cmath>
+#include "TMatrix.h"
+#include "TObjString.h"
+
 #include "TMVA/MethodCFMlpANN.h"
 #include "TMVA/MethodCFMlpANN_def.h"
-
-#include <iostream>
 
 ClassImp(TMVA::MethodCFMlpANN)
 

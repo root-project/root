@@ -274,7 +274,7 @@ namespace TMVA {
          predefIt = fPreDefs.begin();
          for (;predefIt!=fPreDefs.end(); predefIt++) {
             if (predefIt != fPreDefs.begin()) os << "                       ";
-            os << "  - " << (*predefIt) << endl;
+            os << "  - " << (*predefIt) << std::endl;
          }
       }
    }
@@ -296,7 +296,7 @@ namespace TMVA {
             os << this->TheName() << "[" << i << "]: " << "\"" << this->GetValue(i) << "\"" << " [" << this->Description() << "]";
          else
             os << "    " << this->TheName() << "[" << i << "]: " << "\"" << this->GetValue(i) << "\"";
-         if (i!=fSize-1) os << endl;
+         if (i!=fSize-1) os << std::endl;
       }
       this->PrintPreDefs(os,levelofdetail);
    }

@@ -504,7 +504,7 @@ void TMVA::DecisionTree::FillLinkStrengthMap(TMVA::DecisionTreeNode *n)
                          this->MisClassificationCostOfSubTree(n) ) /  
          (n->CountMeAndAllDaughters() - 1);
 
-      fLinkStrengthMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > ( alpha, n ));
+      fLinkStrengthMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > ( alpha, n ));
    }
 }
 
@@ -589,7 +589,7 @@ Double_t TMVA::DecisionTree::GetCostComplexity(Double_t alpha)
    Double_t cc=0.;
 
    this->FillQualityMap();
-   multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
+   std::multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
    Int_t count=0;
    for (;it!=fQualityMap.end(); it++){
 //       Double_t s=it->second->GetNSigEvents();
@@ -640,7 +640,7 @@ Double_t TMVA::DecisionTree::GetCostComplexityIfNextPruneStep(Double_t alpha)
    } 
    else {
 
-      multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
+      std::multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
       Int_t count=0;
       for (;it!=fQualityMap.end(); it++){
          if (it->second->GetParent() != fQualityGainMap.begin()->second ) {
@@ -693,7 +693,7 @@ void TMVA::DecisionTree::FillQualityGainMap(DecisionTreeNode* n )
           (this->GetRightDaughter(n)->GetLeft() == NULL) && 
           (this->GetRightDaughter(n)->GetRight() == NULL) ){
          
-         fQualityGainMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
+         fQualityGainMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > 
                                 ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents_unweighted(),
                                                                     this->GetRightDaughter(n)->GetNBkgEvents_unweighted(),
                                                                     n->GetNSigEvents_unweighted(), n->GetNBkgEvents_unweighted()),
@@ -727,7 +727,7 @@ void TMVA::DecisionTree::FillQualityMap(DecisionTreeNode* n )
    
    //now you are intrested in leaf nodes only
    if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {   
-      fQualityMap.insert(pair<const Double_t, TMVA::DecisionTreeNode* > 
+      fQualityMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > 
                          ( fQualityIndex->GetSeparationIndex (n->GetNSigEvents_unweighted(), 
                                                               n->GetNBkgEvents_unweighted()),
                            n));

@@ -116,6 +116,10 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
             histWithLargestInt = hist;
          }
       }
+      if (histWithLargestInt == 0) {
+         cout << "ERROR - unknown hist \"histWithLargestInt\" --> serious problem in ROOT file" << endl;
+         break;
+      }
       legend->AddEntry(histWithLargestInt,TString(histWithLargestInt->GetTitle()).ReplaceAll("MVA_",""),"l");
       hists.Remove(histWithLargestInt);
    }   

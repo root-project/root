@@ -38,16 +38,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodRuleFit
-#include "TMVA/MethodRuleFit.h"
-#endif
-#ifndef ROOT_TMVA_RuleFit
-#include "TMVA/RuleFit.h"
-#endif
+#include <fstream>
 
 namespace TMVA {
 
    class MsgLogger;
+   class MethodRuleFit;
 
    class RuleFitAPI {
 

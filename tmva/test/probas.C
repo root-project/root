@@ -155,12 +155,12 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                      if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") c->SetLogy();
             
                      // overlay signal and background histograms
-                     sig->SetMarkerColor(4);
+                     sig->SetMarkerColor( TMVAGlob::c_SignalLine );
                      sig->SetMarkerSize( 0.7 );
                      sig->SetMarkerStyle( 20 );
                      sig->SetLineWidth(1);
 
-                     bgd->SetMarkerColor(2);
+                     bgd->SetMarkerColor( TMVAGlob::c_BackgroundLine );
                      bgd->SetMarkerSize( 0.7 );
                      bgd->SetMarkerStyle( 24 );
                      bgd->SetLineWidth(1);

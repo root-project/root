@@ -210,7 +210,10 @@ void TMVA::MethodFDA::ProcessOptions()
    
    // create TF1
    fFormula = new TFormula( "FDA_Formula", fFormulaStringT );
+   
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,2,0)
    fFormula->Optimize();
+#endif
 
    // is formula correct ?
    if (fFormula->Compile() != 0)

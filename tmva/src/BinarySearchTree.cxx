@@ -435,3 +435,45 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
    
    return;
 }
+
+Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vector<const BinarySearchTreeNode*>* events,
+                                                        Int_t max_points )
+{
+   if ( this->GetRoot() == NULL ) return 0;  // Are we at an outer leave?
+
+   std::queue< pair< const BinarySearchTreeNode*, Int_t > > queue;
+   std::pair< const BinarySearchTreeNode*, Int_t > st = make_pair( (const BinarySearchTreeNode*)this->GetRoot(), 0 );
+   queue.push( st );
+
+   Int_t count = 0;
+   
+   while ( !queue.empty() ) {
+      st = queue.front(); queue.pop();
+      
+      if (count == max_points)
+         return count;
+
+      if (InVolume( st.first->GetEventV(), volume )) {
+         count++;
+         if (NULL != events) events->push_back( st.first );
+      }
+
+      Bool_t tl, tr;
+      Int_t d = st.second;
+      if ( d == Int_t(this->GetPeriode()) ) d = 0;
+
+      if (d != st.first->GetSelector()) {
+         fLogger << kFATAL << "<SearchVolume> selector in Searchvolume "
+                 << d << " != " << "node "<< st.first->GetSelector() << Endl;
+      }
+
+      tl = (*(volume->fLower))[d] <  st.first->GetEventV()[d] && st.first->GetLeft()  != NULL;  // Should we descend left?
+      tr = (*(volume->fUpper))[d] >= st.first->GetEventV()[d] && st.first->GetRight() != NULL;  // Should we descend right?
+
+      if (tl) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
+      if (tr) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );
+   }
+
+   return count;
+}
+

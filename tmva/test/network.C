@@ -13,7 +13,7 @@ void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   TKey * mkey = TMVAGlob::FindMethod("MLP"); //(TDirectory*)gDirectory->Get("Method_MLP");
+   TKey * mkey = TMVAGlob::FindMethod("MLP"); 
    if (mkey==0) {
       cout << "Could not locate directory MLP in file " << fin << endl;
       return;
@@ -41,8 +41,9 @@ void draw_network(TDirectory* d)
    Bool_t __PRINT_LOGO__ = kTRUE;
 
    // create canvas
-   TStyle *TMVAStyle = gROOT->GetStyle("Plain"); // our style is based on Plain
-   TMVAStyle->SetCanvasColor(37 + 100);
+   TStyle* TMVAStyle = gROOT->GetStyle("TMVA"); // the TMVA style
+   Int_t canvasColor = TMVAStyle->GetCanvasColor(); // backup
+   TMVAStyle->SetCanvasColor( TMVAGlob::c_DarkBackground );
 
    TCanvas* c = new TCanvas( "c", "Neural Network Layout", 100, 0, 1000, 650 );
 
@@ -109,6 +110,8 @@ void draw_network(TDirectory* d)
 
    TString fname = "plots/network";
    TMVAGlob::imgconv( c, fname );
+
+   TMVAStyle->SetCanvasColor( canvasColor );
 }
 
 void draw_layer_labels(Int_t nLayers)
@@ -148,7 +151,7 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
 
    for (Int_t i = 0; i < nInputs; i++) {
       if (i != nInputs-1) input = varNames[i];
-      else                input = "bias";
+      else                input = "Bias node";
       Double_t x1 = margX;
       Double_t x2 = margX + width;
       Double_t y1 = cy[i] - effHeight;
@@ -166,7 +169,7 @@ void draw_input_labels(Int_t nInputs, Double_t* cy,
 
 TString* get_var_names(Int_t nVars)
 {
-   TString fname = "weights/MVAnalysis_MLP.weights.txt";
+   TString fname = "weights/TMVAnalysis_MLP.weights.txt";
    ifstream fin( fname );
    if (!fin.good( )) { // file not found --> Error
       cout << "Error opening " << fname << endl;
@@ -201,10 +204,10 @@ void draw_activation(TCanvas* c, Double_t cx, Double_t cy,
 
    switch (whichActivation) {
    case 0:
-      activation = TImage::Open("sigmoid-small.png");
+      activation = TImage::Open("../macros/sigmoid-small.png");
       break;
    case 1:
-      activation = TImage::Open("line-small.png");
+      activation = TImage::Open("../macros/line-small.png");
       break;
    default:
       cout << "Activation index " << whichActivation << " is not known." << endl;
@@ -265,7 +268,7 @@ void draw_layer(TCanvas* c, TH2F* h, Int_t iHist,
          TEllipse *ellipse 
             = new TEllipse(cx1, cy1[nNeurons1-i-1], 
                            effRad1*ratio, effRad1, 0, 360, 0);
-         ellipse->SetFillColor(19+150);
+         ellipse->SetFillColor(TColor::GetColor( "#fffffd" ));
          ellipse->SetFillStyle(1001);
          ellipse->Draw();
 
@@ -291,7 +294,7 @@ void draw_layer(TCanvas* c, TH2F* h, Int_t iHist,
 
       TEllipse *ellipse = 
          new TEllipse(cx2, cy2[nNeurons2-i-1], effRad2*ratio, effRad2, 0, 360, 0);
-      ellipse->SetFillColor(19+150);
+      ellipse->SetFillColor(TColor::GetColor( "#fffffd" ));
       ellipse->SetFillStyle(1001);
       ellipse->Draw();
 

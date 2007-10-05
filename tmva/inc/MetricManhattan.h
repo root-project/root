@@ -25,10 +25,7 @@
 #ifndef ROOT_TMVA_MetricManhattan
 #define ROOT_TMVA_MetricManhattan
 
-#include "Riostream.h"
 #include <vector>
-#include "TObject.h"
-#include "TString.h"
 
 #ifndef ROOT_TMVA_IMetric
 #include "IMetric.h"

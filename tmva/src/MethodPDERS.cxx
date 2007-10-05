@@ -66,12 +66,14 @@
 //_______________________________________________________________________
 
 #include <assert.h>
-#include "TMVA/MethodPDERS.h"
-#include "TMVA/Tools.h"
-#include "TMVA/RootFinder.h"
+
 #include "TFile.h"
 #include "TObjString.h"
 #include "TMath.h"
+
+#include "TMVA/MethodPDERS.h"
+#include "TMVA/Tools.h"
+#include "TMVA/RootFinder.h"
 
 #define TMVA_MethodPDERS__countByHand__Debug__
 #undef  TMVA_MethodPDERS__countByHand__Debug__
@@ -95,7 +97,6 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& t
    //    VolumeRangeMode - all methods defined in private enum "VolumeRangeMode" 
    //    options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
    //                    - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
-   //
    InitPDERS();
 
    // interpretation of configuration option string
@@ -135,9 +136,14 @@ void TMVA::MethodPDERS::InitPDERS( void )
    // special options for Adaptive mode
    fNEventsMin      = 100;
    fNEventsMax      = 200;
-   fMaxVIterations  = 50;
+   fMaxVIterations  = 150;
    fInitialScale    = 0.99;
-   fGaussSigma      = 0.2;
+   fGaussSigma      = 0.1;
+   
+   fkNNTests	    = 1000;
+    
+   fkNNMin	    = Int_t(fNEventsMin);
+   fkNNMax	    = Int_t(fNEventsMax);
 
    fInitializedVolumeEle = kFALSE;
    fAverageRMS.clear();
@@ -163,6 +169,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    //    available values are:        MinMax 
    //                                 Unscaled
    //                                 RMS
+   //	                                kNN
    //                                 Adaptive <default>
    //
    // KernelEstimator   <string>  Kernel estimation function
@@ -179,6 +186,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    //                                 Lanczos3
    //                                 Lanczos5
    //                                 Lanczos8
+   //                                 Trim
    //
    // DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
    // NEventsMin        <int>     Minimum number of events for adaptive volume range             
@@ -192,6 +200,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    AddPreDefVal(TString("MinMax"));
    AddPreDefVal(TString("RMS"));
    AddPreDefVal(TString("Adaptive"));
+   AddPreDefVal(TString("kNN"));
 
    DeclareOptionRef(fKernelString="Box", "KernelEstimator", "Kernel estimation function");
    AddPreDefVal(TString("Box"));
@@ -207,6 +216,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    AddPreDefVal(TString("Lanczos3"));
    AddPreDefVal(TString("Lanczos5"));
    AddPreDefVal(TString("Lanczos8"));
+   AddPreDefVal(TString("Trim"));
 
    DeclareOptionRef(fDeltaFrac     , "DeltaFrac",      "nEventsMin/Max for minmax and rms volume range");
    DeclareOptionRef(fNEventsMin    , "NEventsMin",     "nEventsMin for adaptive volume range");
@@ -223,12 +233,15 @@ void TMVA::MethodPDERS::ProcessOptions()
    
    MethodBase::ProcessOptions();
 
+   fGaussSigmaNorm = fGaussSigma; // * TMath::Sqrt( Double_t(GetNvar()) );
+
    fVRangeMode = MethodPDERS::kUnsupported;
 
    if      (fVolumeRange == "MinMax"    ) fVRangeMode = kMinMax;
    else if (fVolumeRange == "RMS"       ) fVRangeMode = kRMS;
    else if (fVolumeRange == "Adaptive"  ) fVRangeMode = kAdaptive;
    else if (fVolumeRange == "Unscaled"  ) fVRangeMode = kUnscaled;
+   else if (fVolumeRange == "kNN" 	) fVRangeMode = kkNN;
    else {
       fLogger << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
@@ -246,6 +259,7 @@ void TMVA::MethodPDERS::ProcessOptions()
    else if (fKernelString == "Lanczos3" ) fKernelEstimator = kLanczos3;
    else if (fKernelString == "Lanczos5" ) fKernelEstimator = kLanczos5;
    else if (fKernelString == "Lanczos8" ) fKernelEstimator = kLanczos8;
+   else if (fKernelString == "Trim"     ) fKernelEstimator = kTrim;
    else {
       fLogger << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
    }
@@ -283,7 +297,6 @@ void TMVA::MethodPDERS::Train( void )
    CreateBinarySearchTrees( Data().GetTrainingTree() );
    
    CalcAverages();
-   
    SetVolumeElement();
 
    fInitializedVolumeEle = kTRUE;
@@ -312,7 +325,7 @@ Double_t TMVA::MethodPDERS::GetMvaValue()
 void TMVA::MethodPDERS::CalcAverages()
 {
    // compute also average RMS values required for adaptive Gaussian
-   if (fVRangeMode == kAdaptive) {
+   if (fVRangeMode == kAdaptive || fVRangeMode == kRMS || fVRangeMode == kkNN  ) {
       fAverageRMS.clear();
       fBinaryTreeS->CalcStatistics();
       fBinaryTreeB->CalcStatistics();
@@ -351,40 +364,46 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
    // defines volume dimensions
 
    // init relative scales
+
+   fkNNMin	    = Int_t(fNEventsMin);
+   fkNNMax	    = Int_t(fNEventsMax);   
+
    fDelta = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
    fShift = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
    if (fDelta != 0) {
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         switch (fVRangeMode) {
-
-         case kRMS:
-         case kAdaptive:
-            // sanity check
-            if ((Int_t)fAverageRMS.size() != GetNvar())
-               fLogger << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
-
-            (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
-            fLogger << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
-                    << "\t]: " << fAverageRMS[ivar]
-                    << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
-                    << Endl;
-            break;
-
-         case kMinMax:
+      switch (fVRangeMode) {
+         
+      case kRMS:
+      case kkNN:
+      case kAdaptive:
+         // sanity check
+         if ((Int_t)fAverageRMS.size() != GetNvar())
+            fLogger << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
+         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
+            {
+               (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
+               fLogger << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
+                       << "\t]: " << fAverageRMS[ivar]
+                       << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
+                       << Endl;
+            }
+         break;
+         
+      case kMinMax:
+         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
             (*fDelta)[ivar] = (GetXmax( ivar ) - GetXmin( ivar ))*fDeltaFrac;
-            break;
-
-         case kUnscaled:
+         break;
+         
+      case kUnscaled:
+         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
             (*fDelta)[ivar] = fDeltaFrac;
-            break;
-
-         default:
-            fLogger << kFATAL << "<SetVolumeElement> unknown range-set mode: "
-                    << fVRangeMode << Endl;
-         }
-
-         (*fShift)[ivar] = 0.5; // volume is centered around test value
+         break;
+      default:
+         fLogger << kFATAL << "<SetVolumeElement> unknown range-set mode: "
+                 << fVRangeMode << Endl;
       }
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++)
+         (*fShift)[ivar] = 0.5; // volume is centered around test value
    }
    else {
       fLogger << kFATAL << "GetNvar() <= 0: " << GetNvar() << Endl;
@@ -427,7 +446,7 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
       (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
    }
 
-   Volume* volume = new Volume( lb, ub );
+   Volume *volume = new Volume( lb, ub );   
 
    Float_t countS = 0;
    Float_t countB = 0;
@@ -461,9 +480,10 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
    fLogger << kVERBOSE << "debug: my test: S/B: " << iS << "  " << iB << Endl;
    fLogger << kVERBOSE << "debug: binTree: S/B: " << countS << "  " << countB << Endl << Endl;
 #endif
+
    // -------------------------------------------------------------------------
 
-   if (fVRangeMode == kRMS || fVRangeMode == kUnscaled) { // Constant volume
+   if (fVRangeMode == kRMS || fVRangeMode == kMinMax || fVRangeMode == kUnscaled ) { // Constant volume
       std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
       std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
@@ -492,6 +512,7 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
       // TODO: optimize, perhaps multi stage with broadening limits, 
       // or a different root finding method entirely,
       if (MethodPDERS_UseFindRoot) { 
+
          // that won't need to search through large volume, where the bottle neck probably is
 
          fHelpVolume = volume;
@@ -588,8 +609,98 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
                     << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
                     << Endl;
       }
-
+      	
    } // end of adaptive method
+   else if (fVRangeMode == kkNN)
+      {
+         std::vector< const BinarySearchTreeNode* > eventsS;    //vector for signals
+         std::vector< const BinarySearchTreeNode* > eventsB;    //vector for backgrounds
+         Volume v(*volume);
+
+         // check number of signals in begining volume
+         Int_t kNNcountS = fBinaryTreeS->SearchVolumeWithMaxLimit( &v, &eventsS, fkNNMax+1 );   
+         // check number of backgrounds in begining volume
+         Int_t kNNcountB = fBinaryTreeB->SearchVolumeWithMaxLimit( &v, &eventsB, fkNNMax+1 );   
+         //if this number is too large return fkNNMax+1
+         Int_t t_times = 0;  // number of iterations
+      
+         while ( !(kNNcountS+kNNcountB >= fkNNMin && kNNcountS+kNNcountB <= fkNNMax) ) {
+            if (kNNcountS+kNNcountB < fkNNMin) {         //if we have too less points
+               Float_t scale = 2;			//better scale needed
+               volume->ScaleInterval( scale );
+            }
+            else if (kNNcountS+kNNcountB > fkNNMax) {    //uf we have too many points
+               Float_t scale = 0.1;			//better scale needed
+               volume->ScaleInterval( scale );
+            }
+            eventsS.clear();
+            eventsB.clear();
+    	    
+            v = *volume ;
+         
+            kNNcountS = fBinaryTreeS->SearchVolumeWithMaxLimit( &v, &eventsS, fkNNMax+1 );  //new search
+            kNNcountB = fBinaryTreeB->SearchVolumeWithMaxLimit( &v, &eventsB, fkNNMax+1 );  //new search
+         
+            t_times++;
+         
+            if (t_times == fMaxVIterations) {
+               fLogger << kWARNING << "warining in event" << e
+                       << ": kNN volume adjustment reached "
+                       << "max. #iterations (" << fMaxVIterations << ")"
+                       << "[ kNN: " << fkNNMin << " " << fkNNMax << Endl;
+               break;
+            }
+         }
+      
+         //vector to normalize distance in each dimension
+         Double_t *dim_normalization = new Double_t[GetNvar()];
+         for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+            dim_normalization [ivar] = 1.0 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
+         }      
+
+         std::vector< const BinarySearchTreeNode* > TempVectorS;    //temporary vector for signals
+         std::vector< const BinarySearchTreeNode* > TempVectorB;    //temporary vector for backgrounds
+      
+         if (kNNcountS+kNNcountB >= fkNNMin) {
+            std::vector<Double_t> *Distances = new std::vector<Double_t>( kNNcountS+kNNcountB );
+         
+            //counting the distance for earch signal to event
+            for (Int_t j=0;j< Int_t(eventsS.size()) ;j++)
+               (*Distances)[j] = GetNormalizedDistance ( e, *eventsS[j], dim_normalization );
+         
+            //counting the distance for each background to event
+            for (Int_t j=0;j< Int_t(eventsB.size()) ;j++)
+               (*Distances)[j + Int_t(eventsS.size())] = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
+         
+            //counting the fkNNMin-th element    
+            std::vector<Double_t>::iterator Wsk=Distances->begin();
+            for (Int_t j=0;j<fkNNMin-1;j++) Wsk++;
+            std::nth_element( Distances->begin(), Wsk, Distances->end() );
+         
+            //getting all elements that are closer than fkNNMin-th element
+            //signals
+            for (Int_t j=0;j<Int_t(eventsS.size());j++) {
+               Double_t Dist = GetNormalizedDistance( e, *eventsS[j], dim_normalization );
+            
+               if (Dist <= (*Distances)[fkNNMin-1])		    
+                  TempVectorS.push_back( eventsS[j] );
+            }	    
+            //backgrounds
+            for (Int_t j=0;j<Int_t(eventsB.size());j++) {
+               Double_t Dist = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
+            
+               if (Dist <= (*Distances)[fkNNMin-1]) TempVectorB.push_back( eventsB[j] );
+            }	    
+            max_distance = (*Distances)[fkNNMin-1];
+            delete Distances;
+         }      
+         countS = KernelEstimate( e, TempVectorS, v );
+         countB = KernelEstimate( e, TempVectorB, v );
+      }
+   else {
+      // troubles ahead...
+      fLogger << kFATAL << "<RScalc> unknown RangeMode: " << fVRangeMode << Endl;
+   }
    // -----------------------------------------------------------------------
 
    volume->Delete();
@@ -620,11 +731,7 @@ Double_t TMVA::MethodPDERS::KernelEstimate( const Event & event,
      
       // First switch to the one dimensional distance
       Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
-      
-      // always working within the hyperelipsoid, except for when we don't
-      // note that rejection ratio goes to 1 as nvar goes to infinity
-      if (normalized_distance > 1 && fKernelEstimator != kBox) continue;      
-      
+            
       pdfSum += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
    }
    return KernelNormalization( pdfSum < 0. ? 0. : pdfSum );
@@ -644,7 +751,7 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
       return (1 - normalized_distance);
       break;
    case kGauss:
-      return TMath::Gaus( normalized_distance, 0, fGaussSigma, kFALSE);
+      return TMath::Gaus( normalized_distance, 0, fGaussSigmaNorm, kFALSE);
       break;
    case kSinc3:
    case kSinc5:
@@ -666,6 +773,12 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
       break;
    case kLanczos8:
       return LanczosFilter (8, normalized_distance);
+      break;
+   case kTrim: {
+      Double_t X = normalized_distance / max_distance;
+      X = 1 - X*X*X;
+      return X*X*X;
+   }
       break;
    default:
       fLogger << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
@@ -699,7 +812,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
       break;
    case kGauss:
       // We use full range integral here. Reasonable because of the fast function decay.
-      ret = 1. / TMath::Power ( 2 * TMath::Pi() * fGaussSigma * fGaussSigma, ((Double_t) GetNvar()) / 2.);
+      ret = 1. / TMath::Power ( 2 * TMath::Pi() * fGaussSigmaNorm * fGaussSigmaNorm, ((Double_t) GetNvar()) / 2.);
       break;
    case kSinc3:
    case kSinc5:
@@ -716,9 +829,11 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
    default:
       fLogger << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
    }
+
    // Normalizing by the full volume
    ret *= ( TMath::Power (2., GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
       TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.);
+
    return ret*pdf;
 }
 
