@@ -380,8 +380,16 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
 Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ long long, set arg for call
+
+   if ( PyFloat_Check( pyobject ) ) {
+   // special case: float implements nb_int, but allowing rounding conversions
+   // interferes with overloading
+      PyErr_SetString( PyExc_ValueError, "can not convert float to long long" );
+      return kFALSE;
+   }
+
    para.fll = PyLong_AsLongLong( pyobject );
-   if ( para.fll == -1 && PyErr_Occurred() )
+   if ( PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fll );

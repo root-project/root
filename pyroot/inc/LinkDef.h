@@ -6,6 +6,7 @@
 
 #pragma link C++ class TPython;
 #pragma link C++ class TPyReturn;
+#pragma link C++ class TPyDispatcher;
 
 #pragma link C++ namespace PyROOT;
 #pragma link C++ class PyROOT::TPyException;

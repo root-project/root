@@ -246,10 +246,8 @@ if not __builtins__.has_key( '__IPYTHON__' ):
 ### call EndOfLineAction after each interactive command (to update display etc.)
 def _displayhook( v ):
    _root.gInterpreter.EndOfLineAction()
+   global _orig_dhook
    return _orig_dhook( v )
-
-_orig_dhook = sys.displayhook
-sys.displayhook = _displayhook
 
 
 ### helper to prevent GUIs from starving
@@ -416,6 +414,11 @@ class ModuleFacade( object ):
       for name in std.stlclasses:
          setattr( _root, name, getattr( std, name ) )
 
+    # set the display hook
+      global _orig_dhook
+      _orig_dhook = sys.displayhook
+      sys.displayhook = _displayhook
+
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade
@@ -439,7 +442,12 @@ def cleanup():
  # shutdown GUI thread, as appropriate
    if hasattr( facade, 'thread' ):
       facade.keeppolling = 0
-      facade.thread.join( 3. )                         # arbitrary
+
+    # if not shutdown from GUI (often the case), wait for it
+      import threading
+      if threading.currentThread() != facade.thread:
+         facade.thread.join( 3. )                      # arbitrary
+      del threading
 
  # destroy facade
    del sys.modules[ __name__ ], facade
