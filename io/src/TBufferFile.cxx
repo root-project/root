@@ -1987,7 +1987,7 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
       if (!nbits) {
          //if no range and no bits specified, we convert from double to float
          for (i = 0; i < n; i++) {
-            Float_t afloat = (Float_t)d[0]; 
+            Float_t afloat = (Float_t)d[i]; 
             *this << afloat;
          }
       } else {
