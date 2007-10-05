@@ -69,5 +69,12 @@
 #pragma link C++ function ROOT::Math::uniform_cdf_c( double , double, double, double);
 #pragma link C++ function ROOT::Math::uniform_cdf( double , double, double, double);
 
+#pragma link C++ function ROOT::Math::fdistribution_cdf_c( double , double, double, double);
+#pragma link C++ function ROOT::Math::fdistribution_cdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::gamma_cdf_c( double , double, double, double);
+#pragma link C++ function ROOT::Math::gamma_cdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::tdistribution_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::tdistribution_cdf( double , double, double);
+
 
 #endif

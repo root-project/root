@@ -54,14 +54,14 @@ N1687=04-0127, September 10, 2004</A>
 namespace ROOT {
 namespace Math {
 
-
+   /** @name Special Functions from MathMore */
 
 
   /**
 
   
   Computes the generalized Laguerre polynomials for 
-  \f$ n \geq 0, m \gt -1 \f$. 
+  \f$ n \geq 0, m > -1 \f$. 
   They are defined in terms of the confluent hypergeometric function. 
   For integer values of m they can be defined in terms of the Laguerre polynomials \f$L_n(x)\f$: 
 
@@ -69,15 +69,15 @@ namespace Math {
 
 
   For detailed description see 
-  <A HREF="">
-  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://mathworld.wolfram.com/LaguerrePolynomial.html">Mathworld</A>. 
+  The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Laguerre-Functions.html">GSL</A>.
 
   This function is an extension of C++0x, also consistent in GSL, 
   Abramowitz and Stegun 1972 and MatheMathica that uses non-integer values for m.
   C++0x calls for 'int m', more restrictive than necessary.
   The definition for was incorrect in 'n1687.pdf', but fixed in
-  <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1836.pdf">,
+  <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1836.pdf">n1836.pdf</A>,
   the most recent draft as of 2007-07-01
 
 
@@ -344,6 +344,7 @@ namespace Math {
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
+  @param k 
   @param phi angle in radians
 
   @ingroup SpecFunc
@@ -368,6 +369,7 @@ namespace Math {
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
+  @param k
   @param phi angle in radians
 
   @ingroup SpecFunc
@@ -403,6 +405,8 @@ namespace Math {
   convention. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
+  @param n 
+  @param k
   @param phi angle in radians
 
   @ingroup SpecFunc
@@ -552,11 +556,11 @@ namespace Math {
   /**
   
   Computes the spherical (normalized)  associated Legendre polynomials,
-  or spherical harmonic without azimuthal dependence (e^(im\phi)).
+  or spherical harmonic without azimuthal dependence (\f$e^(im\phi)\f$).
 
   \f[ Y_l^m(theta,0) = \sqrt{(2l+1)/(4\pi)} \sqrt{(l-m)!/(l+m)!} P_l^m(cos \theta) \f]
 
-  for \$m \geq 0, l \geq 0\f$, 
+  for \f$m \geq 0, l \geq 0\f$, 
   where the Condon-Shortley phase  \f$(-1)^m\f$ is included in P_l^m(x)
   This function is consistent with both C++0x and GSL,
   even though there is a discrepancy in where to include the phase.

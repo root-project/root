@@ -180,6 +180,12 @@ int Minimizer1D::Minimize (int maxIter, double absTol, double relTol)
          //throw mathlib::MathlibException("Minimize: Cannot perform iterations");
          return -1; 
       }
+
+#ifdef DEBUG
+      std::cout << "Min1D - iteration " << iter << " interval : [ " << fXlow << "  , " << fXup << " ]  min = " << fXmin
+                << " fmin " << fMin << " f(a) " << fLow << " f(b) " << fUp << std::endl;
+#endif
+
   
       status =  TestInterval(fXlow, fXup, absTol, relTol); 
       if (status == GSL_SUCCESS) { 

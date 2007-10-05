@@ -35,6 +35,7 @@
 
 /**
    @defgroup Min1D One-dimensional Minimization
+   @ingroup NumAlgo
  */
 
 

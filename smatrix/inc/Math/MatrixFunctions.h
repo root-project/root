@@ -32,7 +32,8 @@
 
 //doxygen tag
 /**
-   @defgroup MatrixFunctions Matrix Functions
+   @defgroup MatrixFunctions Matrix Template Functions 
+   @ingroup SMatrixGroup
 
    These function apply to matrices (and also Matrix expression) and can return a 
    matrix expression of a particular defined type, like in the matrix multiplication or 

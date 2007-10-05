@@ -489,7 +489,8 @@ if( (xx <= 0.0) || ( xx >= 1.0) )
 	}
 
 flag = 0;
-/* - to test if that way is better for large b/
+
+/* - to test if that way is better for large b/  (comment out from Cephes version)
 if( (bb * xx) <= 1.0 && xx <= 0.95)
 	{
 	t = pseries(aa, bb, xx);

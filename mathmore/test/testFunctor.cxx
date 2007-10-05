@@ -3,6 +3,7 @@
 
 //#include "Math/IGenFunction.h"
 #include "Math/WrappedFunction.h"
+#include "Math/WrappedParamFunction.h"
 //#include "Fit/WrappedTF1.h"
 #include "TStopwatch.h"
 #include <cmath>
@@ -21,6 +22,7 @@
 #include "Math/IFunctionfwd.h"
 #include "Math/IFunction.h"
 #include "Math/Functor.h"
+#include "Math/ParamFunctor.h"
 
 #include <functional>
 #include <vector>
@@ -39,11 +41,14 @@ double freeFunction(const double * x ) {
    //return ; 
 }
 
-double freeRootFunc2D(double *x, double *){ 
+double freeRootFunc2D(const double *x, const double *){ 
    return FUNC;
 }
-double freeRootFunc1D(double *xx, double *){ 
+double freeRootFunc1D(const double *xx, const double *){ 
    double x = *xx;
+   return FUNC1D;
+}
+double freeParamFunc1D(double x, double *){ 
    return FUNC1D;
 }
 
@@ -152,6 +157,29 @@ void TestTime(const Func & f) {
    std::cout << s << std::endl;
 }
 
+template <class PFunc> 
+void TestTimePF( PFunc & f) { 
+  //double x[Ntimes]; 
+  // use std::vector's to avoid crashes on Windows 
+   std::vector<double> x(Ntimes); 
+   TStopwatch w; 
+   TRandom2 r; 
+   r.RndmArray(Ntimes,&x[0]);
+   w. Start(); 
+   double s=0;
+   double * p = 0;
+   for (int ipass = 0; ipass <NLOOP; ++ipass) {  
+      for (int i = 0; i < Ntimes-1; ++i) { 
+         double y = f(&x[i],p); 
+         s+= y; 
+      }
+   }
+   w.Stop(); 
+   std::cout << "Time for " << typeid(f).name() << "\t:  " << w.RealTime() << "  " << w.CpuTime() << std::endl; 
+   std::cout << s << std::endl;
+}
+
+
 void TestTimeGF(const ROOT::Math::IGenFunction & f) { 
    TestTime(f);    
 }
@@ -221,6 +249,12 @@ int main() {
    ROOT::Math::Functor<ROOT::Math::IMultiGenFunction> f2(&freeFunction,2); 
    TestTime(f2);
 
+   ROOT::Math::ParamFunctor fp1(&freeRootFunc2D); 
+   TestTimePF(fp1);
+
+//    ROOT::Math::ParamFunctor1D fp2(&freeParamFunc1D); 
+//    TestTimePF(fp2);
+
 
    DerivFunction f3; 
    TestTime(f3);
@@ -236,6 +270,7 @@ int main() {
    ROOT::Math::Functor1D<ROOT::Math::IGenFunction> f12(&freeFunction1D); 
    TestTime(f12);
 
+
    DerivFunction1D f13; 
    TestTime(f13);
 
@@ -248,6 +283,11 @@ int main() {
    typedef double( * FreeFunc ) (double ); 
    ROOT::Math::WrappedFunction<> f5(freeFunction1D);
    TestTime(f5);
+
+   ROOT::Math::WrappedMultiFunction<> f5b(freeFunction,2);
+   TestTime(f5b);
+
+
 
    F1D fobj;
    //std::cout << typeid(&F1D::Eval).name() << std::endl;
@@ -289,11 +329,21 @@ int main() {
    ROOT::Math::WrappedMultiTF1 f7b(tf1);
    TestTime(f7b);
 
+   ROOT::Math::WrappedParamFunction<> wf7(freeRootFunc2D,2,0,0);
+   TestTimePF(wf7);
+
+   // use the fact that TF1 implements operator(double *, double *) 
+   ROOT::Math::WrappedParamFunction<TF1*> wf7b(&tf1,2,0,0);
+   TestTimePF(wf7b);
+
+
+
    TF1 tf2("tf2",freeRootFunc1D,0,1,0);
    TestTimeTF1(tf2);
 
    ROOT::Math::WrappedTF1 f7c(tf2);
    TestTime(f7c);
+
    
 //    double xx[1] = {2};
 //    f7(xx);

@@ -1,3 +1,5 @@
+// @(#)root/mathmore:$Id$
+
 // CodeCogs GNU General Public License Agreement
 // Copyright (C) 2004-2005 CodeCogs, Zyba Ltd, Broadwood, Holford, TA5 1DU,
 // England.

@@ -34,7 +34,8 @@
 #define ROOT_Math_Derivator
 
 /** 
-@defgroup Deriv Numerical Differentiation
+    @defgroup Deriv Numerical Differentiation
+    @ingroup NumAlgo
 */
  
 #ifndef ROOT_Math_IFunctionfwd

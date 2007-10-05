@@ -6,17 +6,7 @@
 #ifdef __CINT__
 
 
-#pragma link C++ function ROOT::Math::chisquared_cdf_c( double , double, double);
-#pragma link C++ function ROOT::Math::chisquared_cdf( double , double, double);
-#pragma link C++ function ROOT::Math::fdistribution_cdf_c( double , double, double, double);
-#pragma link C++ function ROOT::Math::fdistribution_cdf( double , double, double, double);
-#pragma link C++ function ROOT::Math::gamma_cdf_c( double , double, double, double);
-#pragma link C++ function ROOT::Math::gamma_cdf( double , double, double, double);
-#pragma link C++ function ROOT::Math::tdistribution_cdf_c( double , double, double);
-#pragma link C++ function ROOT::Math::tdistribution_cdf( double , double, double);
-
-
-// and their inverses (also those contained in mathcore)
+// inverses of cdf (which are contained in mathcore)
 
 #pragma link C++ function ROOT::Math::breitwigner_quantile_c(double,double);
 #pragma link C++ function ROOT::Math::breitwigner_quantile(double,double);

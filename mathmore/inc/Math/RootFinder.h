@@ -42,7 +42,8 @@
 
 /**
    @defgroup RootFinders Root-Finding algorithms
- */
+   @ingroup NumAlgo
+*/
 
 
 namespace ROOT {

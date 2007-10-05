@@ -57,18 +57,22 @@ cumulative distributions and all inverses cumulative distributions
 namespace ROOT {
 namespace Math {
 
-  /** @name Probability Density Functions (PDF)
+  /** @defgorup PdfFunc Probability Density Functions (PDF) from MathMore
+   *   @ingroup StatFunc
+   *
    *  Probability density functions of various distributions (continuous and discrete).
    *  The probability density function returns the probability that 
    *  the variate has the value x. 
    *  In statistics the PDF is called also the frequency function.
    * 
+   */
+
+   /** @name Probability Density Functions from MathMore 
    *  The PDF's in MathMore are implemented using 
    *  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.  
-   *   Additional PDF's are provided in the 
-   *  <A HREF="../../MathCore/html/group__StatFunc.html">MathCore</A> library. 
-   *   
-   */
+   *   Additional PDF's are provided in the MathCore library
+   *   (see PDF functions from MathCore)   
+   */ 
 
   //@{
 
@@ -83,7 +87,7 @@ namespace Math {
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/The-Beta-Distribution.html">GSL</A>.
   
-  @ingroup StatFunc
+  @ingroup PdfFunc
 
   */
 
@@ -101,7 +105,7 @@ namespace Math {
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
    CERNLIB</A>. 
    
-   @ingroup StatFunc
+   @ingroup PdfFunc
    
    */
 

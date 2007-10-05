@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
+#include "UnuRanDist.h"
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Random/RandFlat.h"
@@ -32,6 +33,8 @@
 using namespace ROOT::Math;
 
 static bool fillHist = false;
+
+
 
 void testDiff(TH1D & h1, TH1D & h2, const std::string & name="") { 
   
@@ -60,6 +63,8 @@ std::string findName( const R & r) {
     return "ROOT::Math::Random";
   else if (type.find("TRandom") != std::string::npos )
     return "TRandom           "; 
+  else if (type.find("UnuRan") != std::string::npos )
+    return "UnuRan            "; 
   
   return   "?????????         ";
 }
@@ -484,36 +489,45 @@ int testRandomDist() {
 
   Random<GSLRngMT>         r;
   TRandom3                 tr;
+  UnuRanDist               ur; 
 
 
   // Poisson 
 
-  double mu = 25; 
+  double mu = 5; 
   double xmin = std::floor(std::max(0.0,mu-5*std::sqrt(mu) ) );
   double xmax = std::floor( mu+5*std::sqrt(mu) );
   int nch = std::min( int(xmax-xmin),1000);
   TH1D hp1("hp1","Poisson ROOT",nch,xmin,xmax);
   TH1D hp2("hp2","Poisson GSL",nch,xmin,xmax);
+  TH1D hp3("hp3","Poisson UNR",nch,xmin,xmax);
 
   testPoisson(r,mu,hp1);
   testPoisson(tr,mu,hp2);
+  testPoisson(ur,mu,hp3);
   //testPoisson2(tr,mu,h2);
 #ifdef HAVE_CLHEP
-  //testPoissonCLHEP(mu,h2);
+  testPoissonCLHEP(mu,h2);
 #endif
   // test differences 
-  testDiff(hp1,hp2,"Poisson");
+  testDiff(hp1,hp2,"Poisson ROOT-GSL");
+  testDiff(hp1,hp3,"Poisson ROOT-UNR");
 
   // Gaussian
 
   TH1D hg1("hg1","Gaussian ROOT",nch,xmin,xmax);
   TH1D hg2("hg2","Gaussian GSL",nch,xmin,xmax);
+  TH1D hg3("hg3","Gaussian UNURAN",nch,xmin,xmax);
 
 
   testGaus(r,mu,sqrt(mu),hg1);
   testGaus(tr,mu,sqrt(mu),hg2);
+  
+  testGaus(ur,mu,sqrt(mu),hg3);
 
-  testDiff(hg1,hg2,"Gaussian");
+
+  testDiff(hg1,hg2,"Gaussian ROOT-GSL");
+  testDiff(hg1,hg3,"Gaussian ROOT_UNR");
 
   // Landau
 
@@ -536,18 +550,22 @@ int testRandomDist() {
 
   // binomial
 
-  int ntot = 10;
+  int ntot = 120;
   double p =0.5;
   xmin = 0;
   xmax = ntot+1;
   nch = std::min(1000,ntot+1);
   TH1D hb1("hb1","Binomial ROOT",nch,xmin,xmax);
   TH1D hb2("hb2","Binomial GSL",nch,xmin,xmax);
+  TH1D hb3("hb3","Binomial UNR",nch,xmin,xmax);
 
 
   testBinomial(r,ntot,p,hb1);
   testBinomial(tr,ntot,p,hb2);
-  testDiff(hb1,hb2,"Binomial");
+  testBinomial(ur,ntot,p,hb3);
+
+  testDiff(hb1,hb2,"Binomial ROOT-GSL");
+  testDiff(hb1,hb3,"Binomial ROOT-UNR");
 
 
   // exponential

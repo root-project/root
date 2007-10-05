@@ -48,7 +48,7 @@
 /**
 
 @defgroup Integration Numerical Integration
-
+@ingroup NumAlgo 
 */
 
 

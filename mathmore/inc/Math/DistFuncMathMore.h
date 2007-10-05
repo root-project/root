@@ -30,9 +30,9 @@
 #endif
 
 
-#ifndef ROOT_Math_ProbFuncMathMore
-#include "Math/ProbFuncMathMore.h"
-#endif
+// #ifndef ROOT_Math_ProbFuncMathMore
+// #include "Math/ProbFuncMathMore.h"
+// #endif
 
 // inverse (quantiles) are all in mathmore
 #ifndef ROOT_Math_ProbFuncInv

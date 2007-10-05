@@ -18,7 +18,6 @@
 
 #include "LinkDef_SpecFunc.h" 
 #include "LinkDef_StatFunc.h" 
-#include "LinkDef_Func.h" 
 
 
 #include "LinkDef_RootFinding.h"
@@ -63,6 +62,13 @@
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngGFSR4>+;
 
 #pragma link C++ class ROOT::Math::KelvinFunctions+;
+
+#pragma link C++ class ROOT::Math::GSLMinimizer+;
+#pragma link C++ class ROOT::Math::GSLNLSMinimizer+;
+#pragma link C++ class ROOT::Math::GSLSimAnMinimizer+;
+#pragma link C++ class ROOT::Math::LSResidualFunc+;
+
+#pragma link C++ class ROOT::Math::GSLMCIntegrator+;
 
 
 

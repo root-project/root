@@ -17,6 +17,20 @@ namespace Math {
   
 
 
+  double beta_cdf_c(double x, double a, double b) {
+     // use the fact that I(x,a,b) = 1. - I(1-x,b,a)
+     return ROOT::Math::inc_beta(1-x, b, a);
+  }
+
+
+  double beta_cdf(double x, double a, double b ) {
+
+     return ROOT::Math::inc_beta(x, a, b);
+
+  }
+
+   
+
    double breitwigner_cdf_c(double x, double gamma, double x0) {
       
       return 0.5 - std::atan(2.0 * (x-x0) / gamma) / M_PI;
@@ -93,39 +107,35 @@ namespace Math {
       
    }
    
-   
-   
-//    double fdistribution_cdf_c(double x, double n, double m) {
-      
-//       return gsl_cdf_fdist_Q(x, n, m);
-      
-//    }
-    
-    
-    
-//     double fdistribution_cdf(double x, double n, double m) {
-       
-//        return gsl_cdf_fdist_P(x, n, m);
-       
-//     }
-    
-    
-    
-//     double gamma_cdf_c(double x, double alpha, double theta) {
-       
-//        return gsl_cdf_gamma_Q(x, alpha, theta);
-       
-//     }
-    
-    
-    
-//     double gamma_cdf(double x, double alpha, double theta) {
-       
-//        return gsl_cdf_gamma_P(x, alpha, theta);
-       
-//     }
-    
-   
+  
+   double fdistribution_cdf_c(double x, double n, double m, double x0) {
+
+      return ROOT::Math::inc_beta(m/(m + n*(x-x0)), .5*m, .5*n);
+  
+   }
+
+
+   double fdistribution_cdf(double x, double n, double m, double x0) {
+
+      return ROOT::Math::inc_beta(n*(x-x0)/(m + n*(x-x0)), .5*n, .5*m);
+   }
+
+
+
+   double gamma_cdf_c(double x, double alpha, double theta, double x0) {
+
+      return ROOT::Math::inc_gamma_c(alpha, (x-x0)/theta);
+
+   }
+
+
+
+   double gamma_cdf(double x, double alpha, double theta, double x0) {
+
+      return ROOT::Math::inc_gamma(alpha, (x-x0)/theta);
+   }
+
+
    
    
    double gaussian_cdf_c(double x, double sigma, double x0) {
@@ -175,21 +185,24 @@ namespace Math {
    }
    
    
-   /**
-   double tdistribution_cdf_c(double x, double r) {
-      
-      return gsl_cdf_tdist_Q(x, r);
-      
+
+   double tdistribution_cdf_c(double x, double r, double x0) {
+
+      double p = x-x0;
+      double sign = (p>0) ? 1. : -1;
+      return .5 - .5*ROOT::Math::inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+
    }
-    
-    
-    
-    double tdistribution_cdf(double x, double r) {
-       
-       return gsl_cdf_tdist_P(x, r);
-       
-    }
-    */
+
+
+
+   double tdistribution_cdf(double x, double r, double x0) {
+
+      double p = x-x0;
+      double sign = (p>0) ? 1. : -1;
+      return  .5 + .5*ROOT::Math::inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+
+   }
    
    
    double uniform_cdf_c(double x, double a, double b, double x0) {
@@ -216,7 +229,42 @@ namespace Math {
       }    
    }
    
-   
+   /// discrete distributions
+
+   double poisson_cdf_c(unsigned int n, double mu) {
+      // mu must be >= 0  . Use poisson - gamma relation
+      //  Pr ( x <= n) = Pr( y >= a)   where x is poisson and y is gamma distributed ( a = n+1)
+      double a = (double) n + 1.0;           
+      return ROOT::Math::gamma_cdf(mu, a, 1.0);
+   }
+
+   double poisson_cdf(unsigned int n, double mu) {
+      // mu must be >= 0  . Use poisson - gamma relation
+      //  Pr ( x <= n) = Pr( y >= a)   where x is poisson and y is gamma distributed ( a = n+1)
+      double a = (double) n + 1.0; 
+      return ROOT::Math::gamma_cdf_c(mu, a, 1.0);
+   }
+
+   double binomial_cdf_c(unsigned int k, double p, unsigned int n) {
+      // use relation with in beta distribution
+      // p must be 0 <=p <= 1
+      if ( k >= n) return 0; 
+
+      double a = (double) k + 1.0; 
+      double b = (double) n - k; 
+      return ROOT::Math::beta_cdf(p, a, b);
+   }
+
+   double binomial_cdf(unsigned int k, double p, unsigned int n) {
+      // use relation with in beta distribution
+      // p must be 0 <=p <= 1
+      if ( k >= n) return 1.0; 
+
+      double a = (double) k + 1.0; 
+      double b = (double) n - k; 
+      return ROOT::Math::beta_cdf_c(p, a, b);
+   }
+
 
 
 

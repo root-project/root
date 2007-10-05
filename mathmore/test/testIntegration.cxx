@@ -9,6 +9,7 @@
 #include "TF1.h"
 #endif
 
+#include "TError.h"
 
 
 double exactIntegral ( const std::vector<double> & par, double a, double b) { 
@@ -27,6 +28,7 @@ double exactIntegral ( const std::vector<double> & par, double a, double b) {
 }
 
 double singularFunction(double x) { 
+   return 1./x;
    if (x >= 0) 
       return 1./sqrt(x);
    else 
@@ -36,6 +38,8 @@ double singularFunction(double x) {
 
 void testIntegration() {
 
+
+  gErrorIgnoreLevel = 5000;
 
   ROOT::Math::Polynomial * f = new ROOT::Math::Polynomial(2);
 
@@ -105,6 +109,12 @@ void testIntegration() {
   else 
      std::cout << "Result:[-1,1]      " << r2 << " +/- " << ig.Error() << std::endl; 
 
+
+  std::vector<double> sp2(2); 
+  sp2[0] = -1.; sp2[1] = -0.5; 
+  double r3 = ig.Integral(sp2); 
+  std::cout << "Result on [-1,-0.5] = " << r3 << std::endl;
+
  
 }
 
@@ -121,7 +131,7 @@ void  testIntegPerf(){
   f1.SetParameters(p);
   
   TStopwatch timer; 
-  int n = 1000000; 
+  int n = 100000; 
   double x1 = 0; double x2 = 10; 
   double dx = (x2-x1)/double(n); 
   double a = -1;

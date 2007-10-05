@@ -116,15 +116,31 @@ int testSpecFunc() {
    std::cout.precision(20);
 
 #ifndef NO_MATHCORE 
+
    // explicit put namespace to be sure to use right ones
+   
+   iret |= compare("tgamma(9.0) ", ROOT::Math::tgamma(9.0), 40320.0, 4);
 
-  iret |= compare("tgamma(9.0) ", ROOT::Math::tgamma(9.0), 40320.0, 4);
+   iret |= compare("lgamma(0.1) ", ROOT::Math::lgamma(0.1),  2.252712651734205, 4);
 
-  iret |= compare("erf(0.5) ", ROOT::Math::erf(0.5), 0.5204998778130465377);
+   iret |= compare("inc_gamma(1,0.001) ", ROOT::Math::inc_gamma(1.0,0.001), 0.0009995001666250083319, 1);
 
-  iret |= compare("erfc(-1.0) ", ROOT::Math::erfc(-1.0), 1.8427007929497148693);
+   iret |= compare("inc_gamma(100,99) ", ROOT::Math::inc_gamma(100.,99.), 0.4733043303994607, 1);
 
- iret |= compare("beta(1.0, 5.0) ", ROOT::Math::beta(1.0, 5.0), 0.2);
+   iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, 1);
+
+   iret |= compare("inc_gamma_c(1000,1000.1) ", ROOT::Math::inc_gamma_c(1000.,1000.1),  0.4945333598559338247, 1);
+
+   iret |= compare("erf(0.5) ", ROOT::Math::erf(0.5), 0.5204998778130465377);
+   
+   iret |= compare("erfc(-1.0) ", ROOT::Math::erfc(-1.0), 1.8427007929497148693);
+   
+   iret |= compare("beta(1.0, 5.0) ", ROOT::Math::beta(1.0, 5.0), 0.2);
+
+   iret |= compare("inc_beta(1,1,1) ", ROOT::Math::inc_beta(1.0, 1.0, 1.0), 1.0);
+
+   iret |= compare("inc_beta(0.5,0.1,1.0) ", ROOT::Math::inc_beta(0.5, 0.1, 1.0), 0.9330329915368074160 );
+
 
 #endif
 

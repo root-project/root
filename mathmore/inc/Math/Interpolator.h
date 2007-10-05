@@ -38,6 +38,7 @@
 
 /**
 @defgroup Interpolation Interpolation
+@ingroup NumAlgo
 */
 
 

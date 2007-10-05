@@ -29,6 +29,10 @@ endif
 
 CXXFLAGS += -DHAVE_ROOTLIBS
 
+#--- gsl libraries
+#CXXFLAGS += `gsl-config --cflags`
+#EXTRALIBS += `gsl-config --libs`
+#---
 
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
 CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
@@ -41,6 +45,10 @@ DERIVATION         = testDerivation$(ExeSuf)
 INTEGRATIONOBJ      = testIntegration.$(ObjSuf)
 INTEGRATIONSRC      = testIntegration.$(SrcSuf)
 INTEGRATION         = testIntegration$(ExeSuf)
+
+INTEGRATIONMDOBJ      = testIntegrationMultiDim.$(ObjSuf)
+INTEGRATIONMDSRC      = testIntegrationMultiDim.$(SrcSuf)
+INTEGRATIONMD         = testIntegrationMultiDim$(ExeSuf)
 
 ROOTFINDEROBJ      = testRootFinder.$(ObjSuf)
 ROOTFINDERSRC      = testRootFinder.$(SrcSuf)
@@ -77,12 +85,12 @@ TESTFUNCTORSRC      = testFunctor.$(SrcSuf)
 TESTFUNCTOR         = testFunctor$(ExeSuf)
 
 
-OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
-                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
+OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(INTEGRATIONMDOBJ) $(ROOTFINDEROBJ) \
+                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) \
 	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ)
 
-PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
-                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST) \
+PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(INTEGRATIONMD) $(ROOTFINDER) \
+                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM)  \
 	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -103,6 +111,10 @@ $(INTEGRATION): $(INTEGRATIONOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(INTEGRATIONMD): $(INTEGRATIONMDOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
 $(ROOTFINDER):  $(ROOTFINDEROBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
@@ -119,8 +131,11 @@ $(RANDOM):  	$(RANDOMOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+testRandomDist.$(ObjSuf):       UnuRanDist.h
+
+
 $(RANDOMDIST):  $(RANDOMDISTOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) -lUnuran $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(SPECFUNC):  	$(SPECFUNCOBJ)

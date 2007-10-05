@@ -43,7 +43,7 @@ namespace Math {
   //class GSLRngType;
   //typedef gsl_rng GSLRng; 
   //typedef gsl_rng_type GSLRngType; 
-  class GSLRng; 
+  class GSLRngWrapper; 
 
 
     /**
@@ -57,7 +57,7 @@ namespace Math {
 
     GSLRandomEngine();  
 
-    GSLRandomEngine( GSLRng * rng) : 
+    GSLRandomEngine( GSLRngWrapper * rng) : 
       fRng(rng) , 
       fCurTime(0)
     {}
@@ -107,13 +107,14 @@ namespace Math {
     void SetSeed(unsigned int seed); 
 
 
-    /** distributions implemented using the  
+    /** @name Random Distributions 
+        Implemented using the  
 	<A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">
-	GSL Random number Distributions
+	GSL Random number Distributions</A>
      **/
-
+    //@{
     /**
-       Gaussian distribution - default method is Box-Muller
+       Gaussian distribution - default method is Box-Muller (polar method)
      */
     double Gaussian(double sigma); 
 
@@ -200,6 +201,8 @@ namespace Math {
        Multinomial distribution
      */
     std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ); 
+
+    //@}
   
       
 
@@ -207,7 +210,7 @@ namespace Math {
 
   private: 
 
-    GSLRng * fRng;               // pointer to GSL generator wrapper
+    GSLRngWrapper * fRng;               // pointer to GSL generator wrapper
     unsigned int  fCurTime;      // current time used to seed the generator
 
   }; 

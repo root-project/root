@@ -21,8 +21,8 @@ MATHMOREDIRI := $(MATHMOREDIR)/inc
 MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
 MATHMORELINC := $(MODDIRI)/Math/LinkDef_SpecFunc.h \
 		$(MODDIRI)/Math/LinkDef_StatFunc.h \
-		$(MODDIRI)/Math/LinkDef_RootFinding.h \
-		$(MODDIRI)/Math/LinkDef_Func.h
+		$(MODDIRI)/Math/LinkDef_RootFinding.h 
+
 MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx
 MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
 MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
@@ -42,6 +42,10 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 		$(MODDIRI)/Math/Random.h \
 		$(MODDIRI)/Math/GSLRndmEngines.h \
 		$(MODDIRI)/Math/KelvinFunctions.h \
+		$(MODDIRI)/Math/GSLMinimizer.h \
+		$(MODDIRI)/Math/GSLNLSMinimizer.h \
+		$(MODDIRI)/Math/GSLSimAnMinimizer.h \
+		$(MODDIRI)/Math/GSLMCIntegrator.h \
 		$(MODDIRS)/GSLError.h
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
@@ -97,5 +101,5 @@ distclean-mathmore: clean-mathmore
 distclean::     distclean-mathmore
 
 ##### extra rules ######
-$(MATHMOREO): CXXFLAGS += $(GSLFLAGS)
-$(MATHMOREDO): CXXFLAGS += $(GSLFLAGS)
+$(MATHMOREO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION=$(GSLVERSION) -DUSE_ROOT_ERROR
+$(MATHMOREDO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION=$(GSLVERSION) -DUSE_ROOT_ERROR

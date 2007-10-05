@@ -24,20 +24,19 @@
 #endif
 
 
-// some cdf are in MathCore others in mathmore
+// all cdf are in MathCore others in mathmore
 #ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
 #endif
 
 // include distributions from MathMore when is there
-#ifdef R__HAS_MATHMORE  
+// #ifdef R__HAS_MATHMORE  
 
-// extra cdf in MathMore
-#ifndef ROOT_Math_ProbFuncMathMore
-#include "Math/ProbFuncMathMore.h"
-#endif
+// // extra cdf in MathMore
+// #ifndef ROOT_Math_ProbFuncMathMore
+// #include "Math/ProbFuncMathMore.h"
+// #endif
 
-
-#endif
+// #endif
 
 #endif  // ROOT_Math_ProbFunc

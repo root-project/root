@@ -32,6 +32,7 @@
 
 /**
    @defgroup Expression Expression Template Classes
+   @ingroup SMatrixGroup
  */
 
 //==============================================================================

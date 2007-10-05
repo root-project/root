@@ -88,7 +88,7 @@ struct TestFunc1 {
       // calculate integral of pdf
       PdfFunction f(f_pdf,p[0]); 
       WrappedFunction<PdfFunction> wf(f);
-      Integrator ig(wf);
+      Integrator ig(wf,1.E-12,1.E-12,100000);
       if (!c) { 
          // lower intergal (cdf) 
          double q2 = ig.IntegralLow(val); 
@@ -316,7 +316,7 @@ int testStatFunc() {
    double mu = 5; 
    iret |= testPoissonCdf(mu,tol); 
 
-   tol = 16;
+   tol = 32;
    std::cout << "Binomial distrib. \t: "; 
    double p = 0.5; int nt = 9;  
    iret |= testBinomialCdf(p,nt,tol); 
@@ -348,7 +348,7 @@ int testStatFunc() {
 #endif
 
    std::cout << "Chisquare distribution\t: "; 
-   tol = 4; 
+   tol = 8; 
    TESTDIST1(chisquared,9.,tol);
 
    tol = 2; 

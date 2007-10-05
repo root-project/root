@@ -1,3 +1,4 @@
+// @(#)root/mathmore:$Id$
 // The functions in this class have been imported by Jason Detwiler (jasondet@gmail.com) from
 // CodeCogs GNU General Public License Agreement
 // Copyright (C) 2004-2005 CodeCogs, Zyba Ltd, Broadwood, Holford, TA5 1DU,

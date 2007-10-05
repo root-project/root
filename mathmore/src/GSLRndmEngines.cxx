@@ -40,6 +40,7 @@
 
 
 #include "Math/GSLRndmEngines.h"
+#include "GSLRngWrapper.h"
 
 extern double gsl_ran_gaussian_acr(  const gsl_rng * r, const double sigma);
 
@@ -50,68 +51,13 @@ namespace Math {
 
 
 
-  /**
-     wrapper to gsl_rng and gsl_rng_type
-  */
-  class GSLRng { 
-    public:
-
-
-    GSLRng() : 
-      fRng(0),
-      fRngType(0) 
-    {
-    }
-
-    GSLRng(const gsl_rng_type * type) : 
-      fRng(0),
-      fRngType(type) 
-    {
-    }
-
-    ~GSLRng() { /** no op */  } 
-
-    void Allocate() { 
-      if (fRngType == 0) SetDefaultType();
-      fRng = gsl_rng_alloc( fRngType );
-      //std::cout << " allocate   " << fRng <<  std::endl;
-    }
-
-    void Free() { 
-      //std::cout << "free gslrng " << fRngType <<  "  " << fRng <<  std::endl;
-      if (fRng != 0) gsl_rng_free(fRng);       
-      fRng = 0; 
-    }
-
-
-
-    void SetType(const gsl_rng_type * type) { 
-      fRngType = type; 
-    }
-
-    void SetDefaultType() { 
-      // construct default engine
-      gsl_rng_env_setup(); 
-      fRngType =  gsl_rng_default; 
-    }
-
-
-
-    inline gsl_rng * Rng() const { return fRng; } 
-
-  private: 
-
-    gsl_rng * fRng; 
-    const gsl_rng_type * fRngType; 
-  };
-
 
 
   // default constructor 
   GSLRandomEngine::GSLRandomEngine() : 
     fCurTime(0)
   {  
-    fRng = new GSLRng();
+    fRng = new GSLRngWrapper();
   } 
 
   GSLRandomEngine::~GSLRandomEngine() { 
@@ -307,59 +253,59 @@ namespace Math {
 
   //----------------------------------------------------
   GSLRngMT::GSLRngMT() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_mt19937) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_mt19937) )
   {}
 
 
 
   GSLRngRanLux::GSLRngRanLux() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_ranlux) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlux) )
   {}
 
   // second generation of Ranlux (double precision version)
   GSLRngRanLux2::GSLRngRanLux2() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_ranlxs2) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlxs2) )
   {}
 
   // 48 bits version
   GSLRngRanLux48::GSLRngRanLux48() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_ranlxd2) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlxd2) )
   {}
 
   //----------------------------------------------------
   GSLRngTaus::GSLRngTaus() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_taus2) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_taus2) )
   {}
 
   //----------------------------------------------------
   GSLRngGFSR4::GSLRngGFSR4() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_gfsr4) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_gfsr4) )
   {}
 
   //----------------------------------------------------
   GSLRngCMRG::GSLRngCMRG() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_cmrg) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_cmrg) )
   {}
 
   //----------------------------------------------------
   GSLRngMRG::GSLRngMRG() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_mrg) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_mrg) )
   {}
 
 
   //----------------------------------------------------
   GSLRngRand::GSLRngRand() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_rand) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_rand) )
   {}
 
   //----------------------------------------------------
   GSLRngRanMar::GSLRngRanMar() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_ranmar) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranmar) )
   {}
 
   //----------------------------------------------------
   GSLRngMinStd::GSLRngMinStd() : 
-    GSLRandomEngine(new GSLRng(gsl_rng_minstd) )
+    GSLRandomEngine(new GSLRngWrapper(gsl_rng_minstd) )
   {}
 
 

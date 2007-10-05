@@ -32,7 +32,15 @@
 #define ROOT_Math_Chebyshev
 
 /**
+   @defgroup NumAlgo Numerical Algorithms
+   Numerical Algorithm mainly from the \ref MathMore and implemented using the 
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/">GSL</A> library
+ */
+
+
+/**
    @defgroup FuncApprox Function Approximation (Chebyshev)
+   @ingroup NumAlgo
  */
 
 

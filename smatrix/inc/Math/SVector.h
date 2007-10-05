@@ -65,7 +65,7 @@ namespace Math {
     See \ref SVectorDoc
 
 
-    @ingroup SMatrix
+    @ingroup SMatrixSVector
 
     @authors T. Glebe, L. Moneta and J. Palacios
 

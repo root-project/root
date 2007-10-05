@@ -24,6 +24,9 @@
 
 // Header file for class GSLError
 
+#ifndef ROOT_Math_GSLError
+#define ROOT_Math_GSLError
+
 
 #if defined(G__DICTIONARY) 
 
@@ -67,3 +70,5 @@ ROOT::Math::GSLError gGSLError;
 
 
 #endif
+
+#endif /* ROOT_Math_GSLError */

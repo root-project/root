@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Id$
+// @(#)root/mathmore:$Id: ProbFuncInv.cxx 19826 2007-09-19 19:56:11Z rdm $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #include "gsl/gsl_cdf.h"

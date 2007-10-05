@@ -30,7 +30,7 @@
 #include "Math/PdfFuncMathCore.h"
 #endif
 
-// some cdf are in MathCore others in mathmore
+// all cdf are in MathCore now 
 #ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
 #endif
@@ -43,10 +43,10 @@
 #include "Math/PdfFuncMathMore.h"
 #endif
 
-// extra cdf in MathMore
-#ifndef ROOT_Math_ProbFuncMathMore
-#include "Math/ProbFuncMathMore.h"
-#endif
+// no -more extra cdf in MathMore
+// #ifndef ROOT_Math_ProbFuncMathMore
+// #include "Math/ProbFuncMathMore.h"
+// #endif
 
 // inverse (quantiles) are all in mathmore
 #ifndef ROOT_Math_ProbFuncInv
