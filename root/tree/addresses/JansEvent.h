@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 // File and Version Information:
-//      $Id: MyMiniAnalysis.hh,v 1.5 2004/02/16 16:19:28 bartoldu Exp $
+//      $Id$
 //
 // Description:
 //      Class MyMiniAnalysis - the barest outline of a Beta

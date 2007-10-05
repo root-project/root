@@ -1,5 +1,5 @@
 //
-// $Id: cltestClass.h,v 1.1 2007/02/02 11:37:36 pcanal Exp $
+// $Id$
 //
 
 #ifndef HIROOT_TestClass

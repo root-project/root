@@ -5,7 +5,7 @@
 
 //____________________________________________________________________
 //
-// $Id: Foo.cxx,v 1.1.1.1 2002/08/02 22:24:36 pcanal Exp $
+// $Id$
 // $Author: pcanal $
 // $Date: 2002/08/02 22:24:36 $
 // $Copyright: (C) 2002 BRAHMS Collaboration <brahmlib@rhic.bnl.gov>

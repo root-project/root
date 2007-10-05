@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.75 2007/06/28 21:43:22 pcanal Exp $
+# $Id$
 #
 
 all: tests

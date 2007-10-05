@@ -1,5 +1,5 @@
 //
-// $Id: TestClass.cxx 3623 2007-01-13 00:48:09Z loizides $
+// $Id$
 //
 
 #include "cltestClass.h"
