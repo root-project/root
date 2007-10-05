@@ -41,10 +41,6 @@
 
 #include <cassert>
 
-//doxygen tag
-/**
-   @defgroup GenVector 3D and 4D Vectors
- */
 
 
 

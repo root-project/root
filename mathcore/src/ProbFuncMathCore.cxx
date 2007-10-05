@@ -47,23 +47,21 @@ namespace Math {
       
    }
    
-   /**
    
-    double chisquared_cdf_c(double x, double r) {
-       
-       return gsl_cdf_chisq_Q(x, r);
-       
-    }
-    
-    
-    
-    double chisquared_cdf(double x, double r) {
-       
-       return gsl_cdf_chisq_P(x, r);
-       
-    }
-    */
    
+   double chisquared_cdf_c(double x, double r, double x0) {
+      
+      return ROOT::Math::inc_gamma_c ( 0.5 * r , 0.5* (x-x0) );
+      
+   }
+
+   double chisquared_cdf(double x, double r, double x0) {
+       
+      return ROOT::Math::inc_gamma ( 0.5 * r , 0.5* (x-x0) );
+       
+   }
+   
+      
    
    double exponential_cdf_c(double x, double lambda, double x0) {
       
@@ -96,37 +94,37 @@ namespace Math {
    }
    
    
-   /**
-   double fdistribution_cdf_c(double x, double n, double m) {
+   
+//    double fdistribution_cdf_c(double x, double n, double m) {
       
-      return gsl_cdf_fdist_Q(x, n, m);
+//       return gsl_cdf_fdist_Q(x, n, m);
       
-   }
+//    }
     
     
     
-    double fdistribution_cdf(double x, double n, double m) {
+//     double fdistribution_cdf(double x, double n, double m) {
        
-       return gsl_cdf_fdist_P(x, n, m);
+//        return gsl_cdf_fdist_P(x, n, m);
        
-    }
+//     }
     
     
     
-    double gamma_cdf_c(double x, double alpha, double theta) {
+//     double gamma_cdf_c(double x, double alpha, double theta) {
        
-       return gsl_cdf_gamma_Q(x, alpha, theta);
+//        return gsl_cdf_gamma_Q(x, alpha, theta);
        
-    }
+//     }
     
     
     
-    double gamma_cdf(double x, double alpha, double theta) {
+//     double gamma_cdf(double x, double alpha, double theta) {
        
-       return gsl_cdf_gamma_P(x, alpha, theta);
+//        return gsl_cdf_gamma_P(x, alpha, theta);
        
-    }
-    */
+//     }
+    
    
    
    

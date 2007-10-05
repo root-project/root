@@ -31,6 +31,9 @@ typedef double( * FreeParamMultiFunctionPtr ) (const double *, const double * );
    WrappedParamFunction class to wrap any multi-dimensional parameteric function 
    implementing an operator()(const double * , const double *) 
    in an interface-like IParamFunction
+
+   @ingroup  CppFunctions
+
 */ 
 template< typename FuncPtr =  FreeParamMultiFunctionPtr   >
 class WrappedParamFunction : public IParamMultiFunction {
@@ -38,7 +41,32 @@ class WrappedParamFunction : public IParamMultiFunction {
 public: 
 
    /** 
-      Constructor a wrapped function from a pointer to a callable object and an iterator specifying begin and end 
+      Constructor a wrapped function from a pointer to a callable object, the function dimension and number of parameters
+      which are set to zero by default
+   */ 
+   WrappedParamFunction (const FuncPtr & func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
+      fFunc(func),
+      fDim(dim),
+      fParams(std::vector<double>(npar) )
+   {
+      if (par != 0) std::copy(par,par+npar,fParams.begin() );
+   }
+
+   /** 
+      Constructor a wrapped function from a non-const pointer to a callable object, the function dimension and number of parameters
+      which are set to zero by default
+      This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
+   */ 
+   WrappedParamFunction (FuncPtr & func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
+      fFunc(func),
+      fDim(dim),
+      fParams(std::vector<double>(npar) )
+   {
+      if (par != 0) std::copy(par,par+npar,fParams.begin() );
+   }
+
+   /** 
+      Constructor a wrapped function from a pointer to a callable object, the function dimension and an iterator specifying begin and end 
       of parameters
    */ 
    template<class Iterator> 
@@ -49,7 +77,8 @@ public:
    {}
 
    /** 
-      Constructor a wrapped function from a non - const pointer to a callable object and an iterator specifying begin and end of parameters. This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
+      Constructor a wrapped function from a non - const pointer to a callable object, the function dimension and an iterator specifying begin and end of parameters. 
+      This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
    */ 
    template<class Iterator> 
    WrappedParamFunction (FuncPtr & func, unsigned int dim, Iterator begin, Iterator end) : 
@@ -106,6 +135,9 @@ typedef double( * FreeMultiFunctionPtr ) (const double *);
    in an interface-like IParamFunction, by fixing some of the variables and define them as 
    parameters. 
    i.e. transform any multi-dim function in a parametric function 
+
+   @ingroup  CppFunctions
+
 */ 
 template< typename FuncPtr =  FreeMultiFunctionPtr   >
 class WrappedParamFunctionGen : public IParamMultiFunction {

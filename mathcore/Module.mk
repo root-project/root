@@ -47,11 +47,13 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Transform3D.h \
                  $(MODDIRI)/Math/Translation3D.h \
                  $(MODDIRI)/Math/Plane3D.h \
+                 $(MODDIRI)/Math/VectorUtil_Cint.h  \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/DistFuncMathCore.h \
                  $(MODDIRI)/Math/IParamFunction.h \
                  $(MODDIRI)/Math/IFunction.h \
-                 $(MODDIRI)/Math/VectorUtil_Cint.h
+                 $(MODDIRI)/Math/Minimizer.h \
+                 $(MODDIRI)/Math/IntegratorMultiDim.h 
 
 
 MATHCOREDH132:=  $(MODDIRI)/Math/Vector3D.h \

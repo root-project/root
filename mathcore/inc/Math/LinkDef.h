@@ -13,6 +13,9 @@
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
 
+#pragma link C++ class ROOT::Math::Minimizer+;
+#pragma link C++ class ROOT::Math::IntegratorMultiDim+;
+
 
 #include "LinkDef_Func.h" 
 #include "LinkDef_GenVector.h" 

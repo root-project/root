@@ -14,6 +14,10 @@
 
 /** 
 @defgroup CppFunctions Function Classes and Interfaces
+
+ Interfaces and Base classes used in MathCore and MathMore numerical algorithms. 
+ Included are also adapter classes, such as  functors, to wrap any generic callable C++ objects 
+ in the desired interface. 
 */
 
 //typedefs and tags definitions 
