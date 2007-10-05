@@ -104,7 +104,6 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
          nbits = 32;
       }
       right = comma2;
-      xmin = nbits+0.1;
    }
    TString range(left+1,right-left-1);
    TString sxmin(left+1,comma-left-1);
@@ -139,9 +138,6 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    if (nbits < 32)  bigint = 1<<nbits;
    else             bigint = 0xffffffff;
    if (xmin < xmax) factor = bigint/(xmax-xmin);
-   else {
-      if (nbits < 17) xmin = nbits+0.1;
-   }
 }
 
 ClassImp(TStreamerElement)
