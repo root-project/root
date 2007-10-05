@@ -5600,7 +5600,8 @@ G__exec_asm_getvar:
 #endif // G__ASM
 //
       // static class/struct member
-      if (G__struct_offset && (var->statictype[ig15] == G__LOCALSTATIC)) {
+      if (G__struct_offset && (var->statictype[ig15] == G__LOCALSTATIC || 
+                               (var->statictype[ig15] == G__COMPILEDGLOBAL && (var->tagnum == -1 || (var->tagnum != -1 && G__struct.type[var->tagnum]=='n'))))) {
          G__struct_offset = 0;
       }
       //
