@@ -259,7 +259,7 @@ private:
    //mutable std::vector<double> fErrors;
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
-   std::vector<LSResidualFunc> fResiduals;
+   std::vector<LSResidualFunc> fResiduals;   //! transient
 
 }; 
 

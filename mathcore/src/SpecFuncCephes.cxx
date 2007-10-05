@@ -201,10 +201,10 @@ if( x < -34.0 )
 	{
 	q = -x;
 	w = lgam(q); 
-	p = floor(q);
+	p = std::floor(q);
 	if( p==q )//_unur_FP_same(p,q)
 		return (std::numeric_limits<double>::infinity());
-	i = p;
+	i = (int) p;
 	if( (i & 1) == 0 )
 		sgngam = -1;
 	else
@@ -345,12 +345,12 @@ if( q > 33.0 )
 	{
 	if( x < 0.0 )
 		{
-		p = floor(q);
+		p = std::floor(q);
 		if( p == q )
 			{
 			return( sgngam * std::numeric_limits<double>::infinity());
 			}
-		i = p;
+		i = (int) p;
 		if( (i & 1) == 0 )
 			sgngam = -1;
 		z = q - p;
