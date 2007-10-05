@@ -26,7 +26,7 @@ private:
    Float_t      fPx;           //X component of the momentum
    Float_t      fPy;           //Y component of the momentum
    Float_t      fPz;           //Z component of the momentum
-   Float16_t    fRandom;       //[0,1000,8] A random track quantity
+   Float_t      fRandom;       //A random track quantity
    Float16_t    fMass2;        //[0,0,8] The mass square of this particle
    Float16_t    fBx;           //[0,0,10] X intercept at the vertex
    Float16_t    fBy;           //[0,0,10] Y intercept at the vertex
