@@ -196,7 +196,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
         (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1 ) {
 
    // get the buffer
-      int buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
+      Py_ssize_t buflen = (*(bufprocs->bf_getwritebuffer))( pyobject, 0, &buf );
 
       if ( check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
@@ -205,7 +205,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
             if ( PyString_AS_STRING( pytc )[0] != tc )
                buf = 0;         // no match
             Py_DECREF( pytc );
-         } else if ( buflen / (*(seqmeths->sq_length))( pyobject ) == size ) {
+         } else if ( (int)(buflen / (*(seqmeths->sq_length))( pyobject )) == size ) {
          // this is a gamble ... may or may not be ok, but that's for the user
             PyErr_Clear();
          } else

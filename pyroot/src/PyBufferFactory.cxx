@@ -41,7 +41,7 @@ namespace {
    PYROOT_PREPARE_PYBUFFER_TYPE( Float )
    PYROOT_PREPARE_PYBUFFER_TYPE( Double )
 
-// implement get, str, and length functions (use explicit funcs: vc++ can't handle templates)
+// implement get, str, and length functions
    Py_ssize_t buffer_length( PyObject* self )
    {
       Py_ssize_t nlen = (*(PyBuffer_Type.tp_as_sequence->sq_length))(self);
@@ -140,6 +140,37 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* buf_typecode( PyObject* pyobject, void* )
+   {
+   // return a typecode in the style of module array
+      if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
+         return PyString_FromString( (char*)"h" );
+      else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
+         return PyString_FromString( (char*)"H" );
+      else if ( PyObject_TypeCheck( pyobject, &PyIntBuffer_Type ) )
+         return PyString_FromString( (char*)"i" );
+      else if ( PyObject_TypeCheck( pyobject, &PyUIntBuffer_Type ) )
+         return PyString_FromString( (char*)"I" );
+      else if ( PyObject_TypeCheck( pyobject, &PyLongBuffer_Type ) )
+         return PyString_FromString( (char*)"l" );
+      else if ( PyObject_TypeCheck( pyobject, &PyULongBuffer_Type ) )
+         return PyString_FromString( (char*)"L" );
+      else if ( PyObject_TypeCheck( pyobject, &PyFloatBuffer_Type ) )
+         return PyString_FromString( (char*)"f" );
+      else if ( PyObject_TypeCheck( pyobject, &PyDoubleBuffer_Type ) )
+         return PyString_FromString( (char*)"d" );
+
+      PyErr_SetString( PyExc_TypeError, "received unknown buffer object" );
+      return 0;
+   }
+
+//____________________________________________________________________________
+   PyGetSetDef buffer_getset[] = {
+      { (char*)"typecode", (getter)buf_typecode, NULL, NULL, NULL },
+      { (char*)NULL, NULL, NULL, NULL, NULL }
+   };
+
+//____________________________________________________________________________
    PyMethodDef buffer_methods[] = {
       { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_VARARGS, NULL },
       { (char*)NULL, NULL, 0, NULL }
@@ -164,7 +195,8 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
    Py##name##Buffer_SeqMethods.sq_length    = buffer_length;                    \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
    Py##name##Buffer_Type.tp_str             = name##_buffer_str;                \
-   Py##name##Buffer_Type.tp_methods         = buffer_methods;
+   Py##name##Buffer_Type.tp_methods         = buffer_methods;                   \
+   Py##name##Buffer_Type.tp_getset          = buffer_getset;
 
 PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
@@ -189,7 +221,7 @@ PyROOT::TPyBufferFactory::~TPyBufferFactory()
 #define PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( name, type )                     \
 PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, Py_ssize_t size )\
 {                                                                               \
-   size = size < 0 ? int(INT_MAX/double(sizeof(type))) : size;                  \
+   size = size < 0 ? INT_MAX : size;                                            \
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );        \
    Py_INCREF( &Py##name##Buffer_Type );                                         \
    buf->ob_type = &Py##name##Buffer_Type;                                       \
