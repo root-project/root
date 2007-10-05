@@ -13,6 +13,9 @@
 
 #include <cmath>
 
+#include <limits> 
+
+
 
 namespace ROOT { 
 namespace Math { 
@@ -191,8 +194,8 @@ int i;
 
 int sgngam = 1;
 
-if (x >= INFINITY)
-	return(INFINITY);
+if (x >= std::numeric_limits<double>::infinity())
+	return(std::numeric_limits<double>::infinity());
 
 if( x < -34.0 )
 	{
@@ -200,7 +203,7 @@ if( x < -34.0 )
 	w = lgam(q); 
 	p = floor(q);
 	if( p==q )//_unur_FP_same(p,q)
-		return (INFINITY);
+		return (std::numeric_limits<double>::infinity());
 	i = p;
 	if( (i & 1) == 0 )
 		sgngam = -1;
@@ -214,7 +217,7 @@ if( x < -34.0 )
 		}
 	z = q * std::sin( ROOT::Math::Pi() * z );
 	if( z == 0 )
-		return (INFINITY);
+		return (std::numeric_limits<double>::infinity());
 /*	z = log(ROOT::Math::Pi()) - log( z ) - w;*/
 	z = std::log(ROOT::Math::Pi()) - std::log( z ) - w;
 	return( z );
@@ -234,7 +237,7 @@ if( x < 13.0 )
 	while( u < 2.0 )
 		{
 		if( u == 0 )
-		       return (INFINITY);
+		       return (std::numeric_limits<double>::infinity());
 		z /= u;
 		p += 1.0;
 		u = x + p;
@@ -255,7 +258,7 @@ if( x < 13.0 )
 	}
 
 if( x > kMAXLGM )
-	return( sgngam * INFINITY );
+	return( sgngam * std::numeric_limits<double>::infinity() );
 
 q = ( x - 0.5 ) * std::log(x) - x + LS2PI;
 if( x > 1.0e8 )
@@ -333,7 +336,7 @@ int i;
 
 int sgngam = 1;
 
-if (x >=INFINITY)
+if (x >=std::numeric_limits<double>::infinity())
 	return(x);
 
 q = std::abs(x);
@@ -345,7 +348,7 @@ if( q > 33.0 )
 		p = floor(q);
 		if( p == q )
 			{
-			return( sgngam * INFINITY);
+			return( sgngam * std::numeric_limits<double>::infinity());
 			}
 		i = p;
 		if( (i & 1) == 0 )
@@ -359,7 +362,7 @@ if( q > 33.0 )
 		z = q * std::sin( ROOT::Math::Pi() * z );
 		if( z == 0 )
 			{
-			return( sgngam * INFINITY);
+			return( sgngam * std::numeric_limits<double>::infinity());
  			}
 		z = std::abs(z);
 		z = ROOT::Math::Pi()/(z * stirf(q) );
@@ -404,7 +407,7 @@ return( z * p / q );
 
 small:
 if( x == 0 )
-	return( INFINITY );
+	return( std::numeric_limits<double>::infinity() );
 else
 	return( z/((1.0 + 0.5772156649015329 * x) * x) );
 }
@@ -414,10 +417,10 @@ else
 //#define kMAXLGM 2.556348e305
 
 /*---------------------------------------------------------------------------*/
-/* implementation based on cephes lgamma */
+/* implementation based on cephes log gamma */
 double beta(double z, double w)
 {
-  return std::exp(lgamma(z)+lgamma(w)- lgamma(z+w) );
+  return std::exp(ROOT::Math::Cephes::lgam(z) + ROOT::Math::Cephes::lgam(w)- ROOT::Math::Cephes::lgam(z+w) );
 }
 
 
