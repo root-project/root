@@ -234,6 +234,7 @@ BUILDMATHMORE  := @buildmathmore@
 GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
 GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
+GSLVERSION     := @gslversion@
 
 BUILDCINT7     := @buildcint7@
 
