@@ -1991,7 +1991,7 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
-   Bool_t inbatch = fgVisual && ((int)fgVisual->dpy == 1); // was in batch
+   Bool_t inbatch = fgVisual && (fgVisual->dpy == (void*)1); // was in batch
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
 
    // was in batch, but switched to gui
