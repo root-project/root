@@ -255,7 +255,7 @@ namespace ROOT {
    {
       // Return true if we should create a nested class representing this class
 
-      return cl->TestBit(TClass::kIsEmulation);
+      return cl!=0 && cl->TestBit(TClass::kIsEmulation);
    }
 
    TBranchProxyClassDescriptor*
@@ -1153,13 +1153,15 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                isclones = TBranchProxyClassDescriptor::kSTL;
                cl = cl->GetCollectionProxy()->GetValueClass();
             }
-            if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
-               TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
-               TVirtualStreamerInfo *info = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
-               desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
-                                                      isclones, branch->GetSplitLevel());
-            } else {
-               type = Form("TObjProxy<%s >",cl->GetName());
+            if (cl) {
+               if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
+                  TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
+                  TVirtualStreamerInfo *info = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+                  desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
+                     isclones, branch->GetSplitLevel());
+               } else {
+                  type = Form("TObjProxy<%s >",cl->GetName());
+               }
             }
          }
 
