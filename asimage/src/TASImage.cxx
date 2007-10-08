@@ -1991,12 +1991,21 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
+   Bool_t inbatch = fgVisual && ((int)fgVisual->dpy == -1); // was in batch
+   Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
+
+   // was in batch, but switched to gui
+   if (inbatch && !noX) { 
+      destroy_asvisual(fgVisual, kFALSE);
+      fgVisual = 0;
+   }
+
    if (fgVisual && fgVisual->dpy) { // already initialized
       return kTRUE;
    }
 
    // batch or win32 mode
-   if (!fgVisual && (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32"))) {
+   if (!fgVisual && noX) {
       dpy = 0;
       fgVisual = create_asvisual(0, 0, 0, 0);
       fgVisual->dpy = (Display*)1; //fake (not used)
