@@ -42,12 +42,18 @@
 ClassImp(TFileMerger)
 
 //______________________________________________________________________________
-TFileMerger::TFileMerger() : fOutputFile(0),fFastMethod(kTRUE), fNoTrees(kFALSE)
+TFileMerger::TFileMerger(Bool_t isLocal) : fOutputFile(0), fFastMethod(kTRUE),
+                                           fNoTrees(kFALSE)
 {
    // Create file merger object.
 
    fFileList = new TList;
    fFileList->SetOwner(kTRUE);
+
+   fMergeList = new TList;
+   fMergeList->SetOwner(kTRUE);
+
+   fLocal = isLocal;
 }
 
 //______________________________________________________________________________
@@ -57,6 +63,9 @@ TFileMerger::~TFileMerger()
 
    if (fFileList)
       delete fFileList;
+
+   if (fMergeList)
+      delete fMergeList;
 
    if (fOutputFile)
       delete fOutputFile;
@@ -68,6 +77,7 @@ void TFileMerger::Reset()
    // Reset merger file list.
 
    fFileList->Clear();
+   fMergeList->Clear();
 }
 
 //______________________________________________________________________________
@@ -75,24 +85,38 @@ Bool_t TFileMerger::AddFile(const char *url)
 {
    // Add file to file merger.
 
+   TFile *newfile;
    TUUID uuid;
    TString localcopy = "file:/tmp/";
    localcopy += "ROOTMERGE-";
    localcopy += uuid.AsString();
    localcopy += ".root";
 
-   if (!TFile::Cp(url, localcopy)) {
-      Error("AddFile", "cannot get a local copy of file %s", url);
-      return kFALSE;
+   if (fLocal) {
+      if (!TFile::Cp(url, localcopy)) {
+         Error("AddFile", "cannot get a local copy of file %s", url);
+         return kFALSE;
+      }
+      newfile = TFile::Open(localcopy, "READ");
+   } else {
+      newfile = TFile::Open(url, "READ");
    }
 
-   TFile *newfile = TFile::Open(localcopy, "READ");
    if (!newfile) {
-      Error("AddFile", "cannot open local copy %s of URL %s",
-            localcopy.Data(), url);
+      if (fLocal)
+         Error("AddFile", "cannot open local copy %s of URL %s",
+                          localcopy.Data(), url);
+      else
+         Error("AddFile", "cannot open file %s", url);
       return kFALSE;
    } else {
       fFileList->Add(newfile);
+
+      if (!fMergeList)
+         fMergeList = new TList;  
+      TObjString *urlObj = new TObjString(url); 
+      fMergeList->Add(urlObj);
+
       return  kTRUE;
    }
 }
@@ -156,21 +180,24 @@ Bool_t TFileMerger::Merge()
       TFile::Cp(fOutputFilename1, fOutputFilename);
    }
 
-   // remove the temporary result file
+   // Remove the temporary result file
    TString path(fOutputFile->GetPath());
    path = path(0, path.Index(':',0));
    gSystem->Unlink(path);
    fOutputFile = 0;
 
+   // Remove local copies if there are any 
    TIter next(fFileList);
    TFile *file;
    while ((file = (TFile*) next())) {
       // close the files
       file->Close();
       // remove the temporary files
-      TString path(file->GetPath());
-      path = path(0, path.Index(':',0));
-      gSystem->Unlink(path);
+      if(fLocal) {
+         TString path(file->GetPath());
+         path = path(0, path.Index(':',0));
+         gSystem->Unlink(path);
+      }
    }
    return result;
 }

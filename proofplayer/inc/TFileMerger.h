@@ -56,12 +56,15 @@ protected:
    Bool_t         fFastMethod;      // True if using Fast merging algorithm (default)
    Bool_t         fNoTrees;         // True if Trees should not be merged (default is kFALSE)
 
+   Bool_t	  fLocal;           // Makes local copies of merging files if True (default is kFALSE)
+   TList	 *fMergeList;       // list of the files need to be merged 
 
 public:
-   TFileMerger();
+   TFileMerger(Bool_t isLocal = kTRUE);
    virtual ~TFileMerger();
 
    const char *GetOutputFileName() const { return fOutputFilename; }
+   TList      *GetMergeList() const { return fMergeList;  }
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
