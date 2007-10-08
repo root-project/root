@@ -168,6 +168,7 @@ public:
    virtual ~TPacketizerProgressive();
 
    Long64_t      GetEntriesProcessed(TSlave *s) const;
+   Long64_t      GetTotalEntries() const { return fEstTotalEntries; }
    TDSetElement *GetNextPacket(TSlave *s, TMessage *r);
 
    Long64_t      GetBytesRead() const { return 0; }

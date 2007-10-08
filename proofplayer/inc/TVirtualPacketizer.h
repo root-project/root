@@ -91,6 +91,7 @@ public:
    Bool_t                  IsValid() const { return fValid; }
    Long64_t                GetEntriesProcessed() const { return fProcessed; }
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
+   Long64_t                GetTotalEntries() const { return fTotalEntries; }
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            SetInitTime();
    virtual void            StopProcess(Bool_t abort);
