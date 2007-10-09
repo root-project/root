@@ -437,11 +437,17 @@ void TMVA::MethodLikelihood::Train( void )
             ptmp =  new TMVA::PDF( htmp, PDF::kSpline0, 0 );
          } 
          else {
-            if (htmp->GetNbinsX() <= 2 && nsmooth > 0)
-               fLogger << kWARNING << "histogram "<< htmp->GetName() 
-                       << " does not have enough (" << htmp->GetNbinsX()
-                       << ") bins for for smoothing " << Endl;
-            if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) {
+            if (htmp->GetNbinsX() <= 2 && nsmooth > 0) {
+               fLogger << kWARNING << "histogram \""<< htmp->GetName() 
+                       << "\" has too few bins (" << htmp->GetNbinsX() << ") for smoothing" 
+                       << "\n-> use histogram"
+                       << "\nPlease check if the option variable \"NAvEvtPerBin\" requires "
+                       << "too many events per bin for the given "
+                       << (itype == 0 ? "signal" : "background") << " statistics"
+                       << Endl;
+               ptmp =  new TMVA::PDF( htmp, PDF::kSpline0, 0 );
+            }
+            else if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) {
                ptmp = new TMVA::PDF( histVKDE[ivar], fKDEtype, fKDEiter, fBorderMethod, fKDEfineFactor );
             } 
             else {

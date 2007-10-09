@@ -117,6 +117,7 @@ TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
    DeclareOptions();
 }
 
+//_______________________________________________________________________
 void TMVA::MethodPDERS::InitPDERS( void )
 {
    // default initialisation routine called by all constructors
@@ -139,6 +140,7 @@ void TMVA::MethodPDERS::InitPDERS( void )
    fMaxVIterations  = 150;
    fInitialScale    = 0.99;
    fGaussSigma      = 0.1;
+   fNormTree        = kFALSE;
    
    fkNNTests	    = 1000;
     
@@ -224,6 +226,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    DeclareOptionRef(fMaxVIterations, "MaxVIterations", "MaxVIterations for adaptive volume range");
    DeclareOptionRef(fInitialScale  , "InitialScale",   "InitialScale for adaptive volume range");
    DeclareOptionRef(fGaussSigma    , "GaussSigma",     "Width (wrt volume size) of Gaussian kernel estimator");
+   DeclareOptionRef(fNormTree      , "NormTree",       "Normalize binary search tree");
 }
 
 //_______________________________________________________________________
@@ -290,7 +293,7 @@ void TMVA::MethodPDERS::Train( void )
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
    if (IsNormalised()) fLogger << kFATAL << "\"Normalise\" option cannot be used with PDERS; " 
-                               << "please remove the optoin from the configuration string, or "
+                               << "please remove the option from the configuration string, or "
                                << "use \"!Normalise\""
                                << Endl;
 
@@ -348,8 +351,18 @@ void TMVA::MethodPDERS::CreateBinarySearchTrees( TTree* tree )
    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
    fBinaryTreeS = new BinarySearchTree();
    fBinaryTreeB = new BinarySearchTree();
+   if (fNormTree) {
+      fBinaryTreeS->SetNormalize( kTRUE );
+      fBinaryTreeB->SetNormalize( kTRUE );
+   }
+
    fBinaryTreeS->Fill( *this, tree, 1 );
    fBinaryTreeB->Fill( *this, tree, 0 );
+
+   if (fNormTree) {
+      fBinaryTreeS->NormalizeTree();
+      fBinaryTreeB->NormalizeTree();
+   }
 
    // these are the signal and background scales for the weights
    fScaleS = 1.0/fBinaryTreeS->GetSumOfWeights();
@@ -658,44 +671,44 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
             dim_normalization [ivar] = 1.0 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
          }      
 
-         std::vector< const BinarySearchTreeNode* > TempVectorS;    //temporary vector for signals
-         std::vector< const BinarySearchTreeNode* > TempVectorB;    //temporary vector for backgrounds
+         std::vector<const BinarySearchTreeNode*> tempVectorS;    // temporary vector for signals
+         std::vector<const BinarySearchTreeNode*> tempVectorB;    // temporary vector for backgrounds
       
          if (kNNcountS+kNNcountB >= fkNNMin) {
-            std::vector<Double_t> *Distances = new std::vector<Double_t>( kNNcountS+kNNcountB );
+            std::vector<Double_t> *distances = new std::vector<Double_t>( kNNcountS+kNNcountB );
          
             //counting the distance for earch signal to event
             for (Int_t j=0;j< Int_t(eventsS.size()) ;j++)
-               (*Distances)[j] = GetNormalizedDistance ( e, *eventsS[j], dim_normalization );
+               (*distances)[j] = GetNormalizedDistance ( e, *eventsS[j], dim_normalization );
          
             //counting the distance for each background to event
             for (Int_t j=0;j< Int_t(eventsB.size()) ;j++)
-               (*Distances)[j + Int_t(eventsS.size())] = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
+               (*distances)[j + Int_t(eventsS.size())] = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
          
             //counting the fkNNMin-th element    
-            std::vector<Double_t>::iterator Wsk=Distances->begin();
-            for (Int_t j=0;j<fkNNMin-1;j++) Wsk++;
-            std::nth_element( Distances->begin(), Wsk, Distances->end() );
+            std::vector<Double_t>::iterator wsk = distances->begin();
+            for (Int_t j=0;j<fkNNMin-1;j++) wsk++;
+            std::nth_element( distances->begin(), wsk, distances->end() );
          
             //getting all elements that are closer than fkNNMin-th element
             //signals
             for (Int_t j=0;j<Int_t(eventsS.size());j++) {
-               Double_t Dist = GetNormalizedDistance( e, *eventsS[j], dim_normalization );
-            
-               if (Dist <= (*Distances)[fkNNMin-1])		    
-                  TempVectorS.push_back( eventsS[j] );
+               Double_t dist = GetNormalizedDistance( e, *eventsS[j], dim_normalization );
+               
+               if (dist <= (*distances)[fkNNMin-1])		    
+                  tempVectorS.push_back( eventsS[j] );
             }	    
             //backgrounds
             for (Int_t j=0;j<Int_t(eventsB.size());j++) {
-               Double_t Dist = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
+               Double_t dist = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
             
-               if (Dist <= (*Distances)[fkNNMin-1]) TempVectorB.push_back( eventsB[j] );
+               if (dist <= (*distances)[fkNNMin-1]) tempVectorB.push_back( eventsB[j] );
             }	    
-            max_distance = (*Distances)[fkNNMin-1];
-            delete Distances;
+            fMax_distance = (*distances)[fkNNMin-1];
+            delete distances;
          }      
-         countS = KernelEstimate( e, TempVectorS, v );
-         countB = KernelEstimate( e, TempVectorB, v );
+         countS = KernelEstimate( e, tempVectorS, v );
+         countB = KernelEstimate( e, tempVectorB, v );
       }
    else {
       // troubles ahead...
@@ -775,9 +788,9 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
       return LanczosFilter (8, normalized_distance);
       break;
    case kTrim: {
-      Double_t X = normalized_distance / max_distance;
-      X = 1 - X*X*X;
-      return X*X*X;
+      Double_t x = normalized_distance / fMax_distance;
+      x = 1 - x*x*x;
+      return x*x*x;
    }
       break;
    default:

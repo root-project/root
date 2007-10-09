@@ -278,7 +278,7 @@ void TMVAnalysis( TString myMethodList = "" )
    // PDE - RS method
    if (Use_PDERS)
       factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
-                           "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+                           "!H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
 
    if (Use_PDERSkNN) // depreciated until further notice
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN", 

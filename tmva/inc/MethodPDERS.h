@@ -195,9 +195,9 @@ namespace TMVA {
       Int_t              fkNNMax;	     // max number of events in kNN tree
       Int_t	             fkNNTests;      // maximum number of iterations to adapt volume size
       
-      Double_t		 max_distance;
-
-      Bool_t   	         Printed;
+      Double_t		       fMax_distance;  // maximum distance
+      Bool_t   	       fPrinted;       // print
+      Bool_t             fNormTree;      // binary-search tree is normalised
 
       void    SetVolumeElement ( void );
       Float_t RScalc           ( const Event& );

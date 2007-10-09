@@ -118,7 +118,10 @@ namespace TMVA {
       // using ALL the variables specified included in the Event
       Double_t Fill( vector<TMVA::Event*> theTree, Int_t theType = -1 );
 
-      void CalcStatistics(TMVA::Node *n = 0);
+      void NormalizeTree ();      
+      
+      void CalcStatistics( TMVA::Node* n = 0 );      
+      void Clear         ( TMVA::Node* n = 0 );
 
       // access to mean for signal and background for each variable
       Float_t Mean(Types::ESBType sb, UInt_t var ) { return fMeans[sb==Types::kSignal?0:1][var]; }
@@ -136,6 +139,8 @@ namespace TMVA {
 
       Int_t SearchVolumeWithMaxLimit( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0, Int_t = -1);
 
+      void SetNormalize( Bool_t norm ) { fCanNormalize = norm; }
+
    private:
 
       // add a new  node to the tree (as daughter) 
@@ -147,6 +152,11 @@ namespace TMVA {
       Bool_t   InVolume    (const std::vector<Float_t>&, Volume* ) const;
       //
       void     DestroyNode ( BinarySearchTreeNode* );
+      
+
+      void     NormalizeTree( vector< pair< Double_t, TMVA::Event* > >::iterator, 
+                              vector< pair< Double_t, TMVA::Event* > >::iterator, UInt_t );
+
       // recursive search through daughter nodes in weight counting
       Double_t SearchVolume( Node*, Volume*, Int_t, 
                              std::vector<const TMVA::BinarySearchTreeNode*>* events );
@@ -163,7 +173,10 @@ namespace TMVA {
       Double_t                    fNEventsW[2]; // Number of events per class, taking into account event weights
       Double_t                    fSumOfWeights;// Total number of events (weigthed) counted during filling
                                                 // should be the same as fNEventsW[0]+fNEventsW[1].. used as a check
-
+      
+      Bool_t                      fCanNormalize; // the tree can be normalised
+      std::vector< std::pair<Double_t,TMVA::Event*> > fNormalizeTreeTable;
+      
       ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
    };
   

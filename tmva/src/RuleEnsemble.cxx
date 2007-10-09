@@ -845,8 +845,8 @@ void TMVA::RuleEnsemble::RuleStatistics()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::PrintRuleGen() const
 {
-   if (!DoRules()) return;
    // print rule generation info
+   if (!DoRules()) return;
    fLogger << kINFO << "-------------------RULE ENSEMBLE SUMMARY------------------------"  << Endl;
    const MethodRuleFit *mrf = GetMethodRuleFit();
    if (mrf) fLogger << kINFO << "Tree training method               : " << (mrf->UseBoost() ? "AdaBoost":"Random") << Endl;

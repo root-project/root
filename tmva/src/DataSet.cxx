@@ -25,6 +25,7 @@
  **********************************************************************************/
 
 #include <vector>
+#include <iostream>
 
 #include "TMVA/DataSet.h"
 #include "TMVA/Tools.h"
@@ -52,6 +53,9 @@
 #ifndef ROOT_TMVA_VariablePCATransform
 #include "TMVA/VariablePCATransform.h"
 #endif
+
+using std::cout;
+using std::endl;
 
 namespace TMVA {
    // calculate the largest common divider
@@ -369,21 +373,18 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
       fLogger << kINFO << "Create training and testing trees: looping over " << typeName[sb] 
               << " events ..." << Endl;
 
-      TString currentFileName="";
-      TTree * pCurrentTree  = 0; // used for chains only
+      // used for chains only
+      TString currentFileName = "";
 
+      // loop over registered trees
       std::vector<TreeInfo>::const_iterator treeIt = fTreeCollection[sb].begin();
-      for (;treeIt!=fTreeCollection[sb].end(); treeIt++) {
+      for (; treeIt != fTreeCollection[sb].end(); treeIt++) {
 
          TreeInfo currentInfo = *treeIt;
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          type = 1-sb;
          currentInfo.GetTree()->LoadTree(0);
          ChangeToNewTree( currentInfo.GetTree()->GetTree() );
-         if (isChain) {
-            currentFileName = currentInfo.GetTree()->GetTree()->GetDirectory()->GetFile()->GetName();
-            pCurrentTree = currentInfo.GetTree()->GetTree();
-         }
 
          // count number of events in tree before cut
          nBeforeCut[sb] += currentInfo.GetTree()->GetEntries();
@@ -392,9 +393,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
          TEventList* evList = (TEventList*)gDirectory->Get( "evList" );
 
          // sanity check
-         if (!evList) {
-            fLogger << kFATAL << "<PrepareForTrainingAndTesting> Big troubles: zero event list pointer returned" << Endl;
-         }
+         if (!evList) fLogger << kFATAL 
+                              << "<PrepareForTrainingAndTesting> Big troubles: zero event list pointer returned" 
+                              << Endl;
 
          // count number of events in tree after cut
          nAfterCut[sb] += evList->GetN(); 
@@ -405,10 +406,12 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
             // survived the cut
             currentInfo.GetTree()->LoadTree(evtIdx);
+
+            // may need to reload tree in case of chains
             if (isChain) {
                if (currentInfo.GetTree()->GetTree()->GetDirectory()->GetFile()->GetName() != currentFileName) {
                   currentFileName = currentInfo.GetTree()->GetTree()->GetDirectory()->GetFile()->GetName();
-                  pCurrentTree = currentInfo.GetTree()->GetTree();
+                  TTree* pCurrentTree = currentInfo.GetTree()->GetTree();
                   ChangeToNewTree( pCurrentTree );
                }
             }
@@ -417,8 +420,8 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
             Int_t prevArrExpr = 0;
             for (UInt_t ivar=0; ivar<nvars; ivar++) {
                Int_t ndata = fInputVarFormulas[ivar]->GetNdata();
-               if (ndata==1) continue;
-               if (sizeOfArrays==1) {
+               if (ndata == 1) continue;
+               if (sizeOfArrays == 1) {
                   sizeOfArrays = ndata;
                   prevArrExpr = ivar;
                } 
@@ -451,8 +454,6 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
                // the weight (can also be an array)
                weight = currentInfo.GetWeight(); // multiply by tree weight
-
-
 
                if (fWeightFormula[sb]!=0) {
                
@@ -756,7 +757,7 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
    //    vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
    //    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
 
-   for(Int_t sb=0; sb<2; sb++) {
+   for (Int_t sb=0; sb<2; sb++) {
       if (fWeightFormula[sb]!=0) { delete fWeightFormula[sb]; fWeightFormula[sb]=0; }
       if (fWeightExp[sb]!=TString("")) 
          fWeightFormula[sb] = new TTreeFormula("FormulaWeight",fWeightExp[sb].Data(),tr);
@@ -770,7 +771,7 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
          tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    }
 
-   for(Int_t sb=0; sb<2; sb++) {
+   for (Int_t sb=0; sb<2; sb++) {
       if (fWeightFormula[sb]!=0)
          for (Int_t bi = 0; bi<fWeightFormula[sb]->GetNcodes(); bi++)
             tr->SetBranchStatus( fWeightFormula[sb]->GetLeaf(bi)->GetBranch()->GetName(), 1 );
