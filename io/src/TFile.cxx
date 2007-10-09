@@ -3098,7 +3098,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             TString opt = option;
             opt.ToUpper();
             if (opt == "" || opt == "READ") read = kTRUE;
-            const char *fname = url.GetFile();
+            const char *fname = url.GetFileAndOptions();
             TString lfname;
             if (fname[0] == '/') {
                if (prefix)
@@ -3112,7 +3112,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             }
             if (read) {
                char *fn;
-               if ((fn = gSystem->ExpandPathName(lfname.Data()))) {
+               if ((fn = gSystem->ExpandPathName(TUrl(lfname).GetFile()))) {
                   if (gSystem->AccessPathName(fn, kReadPermission))
                      read = kFALSE;
                   delete [] fn;
