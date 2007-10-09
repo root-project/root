@@ -27,8 +27,11 @@
 // directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
 // have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
 //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
-// to allow easy sorting and grouping. Macros not beginning with 'P'    //
-// and ending with ".C" are ignored. These macros typically look like:  //
+// to allow easy sorting and grouping. If the BaseClass is in a         //
+// namespace the directory must have the name NameSpace@@BaseClass as   //
+// : is a reserved pathname character on some operating systems.        //
+// Macros not beginning with 'P' and ending with ".C" are ignored.      //
+// These macros typically look like:                                    //
 //                                                                      //
 //   void P10_TDCacheFile()                                             //
 //   {                                                                  //
@@ -59,13 +62,13 @@
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
-//   gROOT->GetPluginManager()->AddHandler("TSQLServer", "^sapdb:",     //
-//                                         "TSapDBServer", "SapDB",     //
+//   gPluginMgr->AddHandler("TSQLServer", "^sapdb:",                    //
+//                          "TSapDBServer", "SapDB",                    //
 //             "TSapDBServer(const char*,const char*, const char*)");   //
 //                                                                      //
 // A list of currently defined handlers can be printed using:           //
 //                                                                      //
-//   gROOT->GetPluginManager()->Print(); // use option="a" to see ctors //
+//   gPluginMgr->Print(); // use option="a" to see ctors                //
 //                                                                      //
 // The use of the plugin library manager removes all textual references //
 // to hard-coded class and library names and the resulting dependencies //
@@ -404,9 +407,12 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    // specified in $ROOTSYS/etc/system.rootrc. The macros must have names
    // like <BaseClass>/PX0_<PluginClass>.C, e.g.:
    //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.
-   // to allow easy sorting and grouping. Macros not beginning with 'P' and
-   // ending with ".C" are ignored. If base is specified only plugin macros for
-   // that base class are loaded. The macros typically should look like:
+   // to allow easy sorting and grouping. If the BaseClass is in a namespace
+   // the directory must have the name NameSpace@@BaseClass as : is a reserved
+   // pathname character on some operating systems. Macros not beginning with
+   // 'P' and ending with ".C" are ignored. If base is specified only plugin
+   // macros for that base class are loaded. The macros typically
+   // should look like:
    //   void P10_TDCacheFile()
    //   {
    //       gPluginMgr->AddHandler("TFile", "^dcache", "TDCacheFile",
@@ -422,10 +428,12 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       fBasesLoaded = new THashTable();
       fBasesLoaded->IsOwner();
    }
-   if (base) {
-      if (fBasesLoaded->FindObject(base))
+   TString sbase = base;
+   if (sbase != "") {
+      sbase.ReplaceAll("::", "@@");
+      if (fBasesLoaded->FindObject(sbase))
          return;
-      fBasesLoaded->Add(new TObjString(base));
+      fBasesLoaded->Add(new TObjString(sbase));
    }
 
    fReadingDirs = kTRUE;
@@ -449,8 +457,8 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
          }
       }
       if (!skip) {
-         if (base) {
-            const char *p = gSystem->ConcatFileName(d, base);
+         if (sbase != "") {
+            const char *p = gSystem->ConcatFileName(d, sbase);
             LoadHandlerMacros(p);
             delete [] p;
          } else {
@@ -634,15 +642,18 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
       } else
          idx += 10;
       const char *dd = gSystem->ConcatFileName(d, h->fBase);
-      if (gSystem->AccessPathName(dd, kWritePermission)) {
-         if (gSystem->MakeDirectory(dd) < 0) {
-            Error("WritePluginMacros", "cannot creaqte directory %s", dd);
+      TString sdd = dd;
+      sdd.ReplaceAll("::", "@@");
+      delete [] dd;
+      if (gSystem->AccessPathName(sdd, kWritePermission)) {
+         if (gSystem->MakeDirectory(sdd) < 0) {
+            Error("WritePluginMacros", "cannot create directory %s", sdd.Data());
             return -1;
          }
       }
       TString fn;
       fn.Form("P%03d_%s.C", idx, h->fClass.Data());
-      const char *fd = gSystem->ConcatFileName(dd, fn);
+      const char *fd = gSystem->ConcatFileName(sdd, fn);
       FILE *f = fopen(fd, "w");
       fprintf(f, "void P%03d_%s()\n{\n", idx, h->fClass.Data());
       fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
@@ -667,7 +678,6 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
       fprintf(f, "}\n");
       fclose(f);
       delete [] fd;
-      delete [] dd;
       lnk = lnk->Next();
    }
    return 0;

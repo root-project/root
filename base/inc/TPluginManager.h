@@ -31,8 +31,11 @@
 // directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
 // have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
 //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
-// to allow easy sorting and grouping. Macros not beginning with 'P'    //
-// and ending with ".C" are ignored. These macros typically look like:  //
+// to allow easy sorting and grouping. If the BaseClass is in a         //
+// namespace the directory must have the name NameSpace@@BaseClass as   //
+// : is a reserved pathname character on some operating systems.        //
+// Macros not beginning with 'P' and ending with ".C" are ignored.      //
+// These macros typically look like:                                    //
 //                                                                      //
 //   void P10_TDCacheFile()                                             //
 //   {                                                                  //
@@ -63,13 +66,13 @@
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
-//   gROOT->GetPluginManager()->AddHandler("TSQLServer", "^sapdb:",     //
-//                                         "TSapDBServer", "SapDB",     //
+//   gPluginMgr->AddHandler("TSQLServer", "^sapdb:",                    //
+//                          "TSapDBServer", "SapDB",                    //
 //             "TSapDBServer(const char*,const char*, const char*)");   //
 //                                                                      //
 // A list of currently defined handlers can be printed using:           //
 //                                                                      //
-//   gROOT->GetPluginManager()->Print(); // use option="a" to see ctors //
+//   gPluginMgr->Print(); // use option="a" to see ctors                //
 //                                                                      //
 // The use of the plugin library manager removes all textual references //
 // to hard-coded class and library names and the resulting dependencies //
