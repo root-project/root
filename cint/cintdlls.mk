@@ -113,7 +113,9 @@ CINTDLLSOEXTCMD = mv $(@:.dll=.$(SOEXT)) $@
 ifeq ($(PLATFORM),macosx)
 ifeq ($(subst $(MACOSX_MINOR),,456789),456789)
 # MACOSX_MINOR < 4
-  CINTDLLSOEXTCMD += ;mv $(@:.dll=.so) $@;rm -f $(@:.dll=.so)
+  CINTDLLSOEXTCMD += ;mv $(@:.dll=.so) $@
+else
+  CINTDLLSOEXTCMD += ;rm -f $(@:.dll=.so)
 endif
 endif # macosx
 endif # need to mv to .dll
@@ -196,13 +198,6 @@ $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)):
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDIRDLLSTL)/rootcint_%.o $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $(filter-out $(MAINLIBS),$^)
-ifeq ($(PLATFORM),macosx)
-ifeq ($(subst $(MACOSX_MINOR),,456789),456789)
-	rm -f $@
-else
-	mv -f $@ $(basename $@).so
-endif
-endif
 ##### dictionaries - END
 
 ##### clean
