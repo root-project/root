@@ -307,27 +307,30 @@ void Cint::G__CallFunc::SetArgRef(long double& ld)
 //////////////////////////////////////////////////////////////////////////
 void Cint::G__CallFunc::SetArgs(const char* args)
 {
-  int isrc=0;
-  char *endmark=(char*)",";
-  char *tmp = new char[ strlen(args)+2 ]; 
-  tmp[0] = 0;
+   para.paran=0;
+   if (args==0 || args[0]==0) return;
 
-  // separate and evaluate argument list
-  para.paran=0;
-  int c;
-  do {
-    c=G__getstream((char*)args,&isrc,tmp,endmark);
-    if (tmp[0]) {
-      // evaluate arg
-      para.para[para.paran] = G__calc(tmp);
-      if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
-      else para.parameter[para.paran][0]=0;
-      ++para.paran; // increment argument count
-    }
-  } while (','==c);
-
-  delete [] tmp;
+   int isrc=0;
+   char *endmark=(char*)",";
+   char *tmp = new char[ strlen(args)+2 ]; 
+   tmp[0] = 0;
+   
+   // separate and evaluate argument list
+   int c;
+   do {
+      c=G__getstream((char*)args,&isrc,tmp,endmark);
+      if (tmp[0]) {
+         // evaluate arg
+         para.para[para.paran] = G__calc(tmp);
+         if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
+         else para.parameter[para.paran][0]=0;
+         ++para.paran; // increment argument count
+      }
+   } while (','==c);
+   
+   delete [] tmp;
 }
+
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__CallFunc::SetFuncProto(G__ClassInfo* cls
 			       ,const char* fname  ,const char* argtype
