@@ -64,8 +64,9 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    // Creates a TFileCacheRead data structure.
 
    if (buffersize <=10000) fBufferSize = 100000;
-   fBufferSizeMin = buffersize;
-   fBufferSize  = buffersize;
+   else fBufferSize = buffersize;
+
+   fBufferSizeMin = fBufferSize;
    fBufferLen   = 0;
    fNseek       = 0;
    fNtot        = 0;
