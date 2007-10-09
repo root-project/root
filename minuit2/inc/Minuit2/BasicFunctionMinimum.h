@@ -95,7 +95,7 @@ public:
     StackAllocatorHolder::Get().Deallocate(p);
   }
 
-// forward interface of last state
+                            // forward interface of last state
   const MinimumState& State() const {return fStates.back();}
   const MinimumParameters& Parameters() const {return fStates.back().Parameters();}
   const MinimumError& Error() const {return fStates.back().Error();}
@@ -117,6 +117,12 @@ public:
   bool HasCovariance() const {return State().Error().IsAvailable();}
   bool IsAboveMaxEdm() const {return fAboveMaxEdm;}
   bool HasReachedCallLimit() const {return fReachedCallLimit;}
+
+   void SetErrorDef( double up) { 
+      fErrorDef = up; 
+      // update user state for new valeu of up (scaling of errors)
+      fUserState = MnUserParameterState(State(), up, Seed().Trafo());
+   }
 
 private:
 

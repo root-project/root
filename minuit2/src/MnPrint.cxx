@@ -32,13 +32,12 @@ std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
    // print a vector
    os << "LAVector parameters:" << std::endl;
    { 
-      os << std::endl;
+      //os << std::endl;
       int nrow = vec.size();
       for (int i = 0; i < nrow; i++) {
          os.precision(8); os.width(15); 
          os << vec(i) << std::endl;
       }
-      os << std::endl;
    }
    return os;
 }
@@ -47,7 +46,7 @@ std::ostream& operator<<(std::ostream& os, const LASymMatrix& matrix) {
    // print a matrix
    os << "LASymMatrix parameters:" << std::endl;
    { 
-      os << std::endl;
+      //os << std::endl;
       int n = matrix.Nrow();
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
@@ -190,13 +189,10 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
    // print the FunctionMinimum
    os << std::endl;
    if(!min.IsValid()) {
-      os << std::endl;
       os <<"WARNING: Minuit did not converge."<<std::endl;
       os << std::endl;
    } else {
-      os << std::endl;
       os <<"Minuit did successfully converge."<<std::endl;
-      os << std::endl;
    }
    
    os <<"# of function calls: "<<min.NFcn()<<std::endl;
@@ -207,8 +203,8 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
       os <<"minimum internal covariance matrix: "<<min.Error().Matrix()<<std::endl;
    
    os << min.UserParameters() << std::endl;
-   os << min.UserCovariance() << std::endl;
-   os << min.UserState().GlobalCC() << std::endl;
+   //os << min.UserCovariance() << std::endl;
+   //os << min.UserState().GlobalCC() << std::endl;
    
    if(!min.IsValid())
       os <<"WARNING: FunctionMinimum is invalid."<<std::endl;

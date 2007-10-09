@@ -31,7 +31,7 @@
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/HessianGradientCalculator.h"
 
-
+//#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
@@ -48,9 +48,15 @@ namespace ROOT {
 
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
+
+
    // find seed (initial minimization point) using the calculated gradient
    unsigned int n = st.VariableParameters();
    const MnMachinePrecision& prec = st.Precision();
+
+#ifdef DEBUG
+   std::cout << "MnSeedGenerator: operator() - var par = " << n << " mnfcn pointer " << &fcn << std::endl;
+#endif
    
    // initial starting values
    MnAlgebraicVector x(n);
@@ -82,9 +88,13 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 #endif
       state = ng2ls(fcn, state, gc, prec);
    }
+
    
    if(stra.Strategy() == 2 && !st.HasCovariance()) {
       //calculate full 2nd derivative
+#ifdef DEBUG
+      std::cout << "MnSeedGenerator: calling MnHesse  " << std::endl;
+#endif
       MinimumState tmp = MnHesse(stra)(fcn, state, st.Trafo());
       return MinimumSeed(tmp, st.Trafo());
    }

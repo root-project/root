@@ -14,6 +14,8 @@
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MinosError.h"
 
+//#define DEBUG
+
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
 #endif
@@ -22,6 +24,35 @@
 namespace ROOT {
 
    namespace Minuit2 {
+
+
+MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra ) : 
+   fFCN(fcn), 
+   fMinimum(min), 
+   fStrategy(MnStrategy(stra)) 
+{
+   // construct from FCN + Minimum
+   // check if Error definition  has been changed, in case re-update errors
+   if (fcn.Up() != min.Up() ) { 
+#ifdef WARNINGMSG
+      MN_INFO_MSG("MnMinos UP value has changed, need to update FunctionMinimum class");
+#endif            
+   }
+} 
+
+MnMinos::MnMinos(const FCNBase& fcn, const FunctionMinimum& min,  const MnStrategy& stra) : 
+   fFCN(fcn), 
+   fMinimum(min), 
+   fStrategy(stra) 
+{
+   // construct from FCN + Minimum
+   // check if Error definition  has been changed, in case re-update errors
+   if (fcn.Up() != min.Up() ) { 
+#ifdef WARNINGMSG
+      MN_INFO_MSG("MnMinos UP value has changed, need to update FunctionMinimum class");
+#endif            
+   }
+} 
 
 
 std::pair<double,double> MnMinos::operator()(unsigned int par, unsigned int maxcalls) const {
@@ -67,6 +98,13 @@ MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
 }
 
 MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
+
+
+#ifdef DEBUG
+   std::cout << "\n--------- MnMinos --------- \n Determination of positive Minos error for parameter " 
+             << par << std::endl;
+#endif
+
    // get crossing value in the upper parameter direction 
    assert(fMinimum.IsValid());  
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
@@ -87,24 +125,35 @@ MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
    double up = fFCN.Up();
    unsigned int ind = upar.IntOfExt(par);
    MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
-   double xunit = sqrt(up/err);
+   //LM:  change to use err**2 (m(i,i) instead of err as in F77 version
+   double xunit = sqrt(up/m(ind,ind));
    for(unsigned int i = 0; i < m.Nrow(); i++) {
       if(i == ind) continue;
       double xdev = xunit*m(ind,i);
       unsigned int ext = upar.ExtOfInt(i);
+
+#ifdef DEBUG     
+      std::cout << "Parameter " << ext << " is set from " << upar.Value(ext) << " to " <<  upar.Value(ext) + xdev << std::endl;
+#endif
       upar.SetValue(ext, upar.Value(ext) + xdev);
    }
    
    upar.Fix(par);
    upar.SetValue(par, val);
+
+#ifdef DEBUG
+   std::cout << "Parameter " << par << " is fixed and set from " << fMinimum.UserState().Value(par) << " to " << val << std::endl;
+#endif   
    
    //   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
-   double toler = 0.1;
+   double toler = 0.01; // value used in F77
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
    
-   //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
+#ifdef DEBUG
+   std::cout<<"----- MnMinos: aopt found from MnFunctionCross = "<<aopt.Value()<<std::endl << std::endl;
+#endif
    
 #ifdef WARNINGMSG
    if(aopt.AtLimit()) 
@@ -122,6 +171,12 @@ MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
 
 MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
    // return crossing in the lower parameter direction
+
+#ifdef DEBUG
+   std::cout << "\n--------- MnMinos --------- \n Determination of negative Minos error for parameter " 
+             << par << std::endl;
+#endif   
+
    assert(fMinimum.IsValid());  
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
    assert(!fMinimum.UserState().Parameter(par).IsConst());
@@ -140,24 +195,34 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
    double up = fFCN.Up();
    unsigned int ind = upar.IntOfExt(par);
    MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
-   double xunit = sqrt(up/err);
+   double xunit = sqrt(up/m(ind,ind));
    for(unsigned int i = 0; i < m.Nrow(); i++) {
       if(i == ind) continue;
       double xdev = xunit*m(ind,i);
       unsigned int ext = upar.ExtOfInt(i);
+
+#ifdef DEBUG     
+      std::cout << "Parameter " << ext << " is set from " << upar.Value(ext) << " to " <<  upar.Value(ext) - xdev << std::endl;
+#endif
       upar.SetValue(ext, upar.Value(ext) - xdev);
    }
    
    upar.Fix(par);
    upar.SetValue(par, val);
+
+#ifdef DEBUG
+   std::cout << "Parameter " << par << " is fixed and set from " << fMinimum.UserState().Value(par) << " to " << val << std::endl;
+#endif   
    
    //   double edmmax = 0.5*0.1*fFCN.Up()*1.e-3;
-   double toler = 0.1;
+   double toler = 0.01;
    MnFunctionCross cross(fFCN, upar, fMinimum.Fval(), fStrategy);
    
    MnCross aopt = cross(para, xmid, xdir, toler, maxcalls);
    
-   //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
+#ifdef DEBUG
+   std::cout<<"----- MnMinos: aopt found from MnFunctionCross = "<<aopt.Value()<<std::endl << std::endl;
+#endif
    
 #ifdef WARNINGMSG
    if(aopt.AtLimit()) 

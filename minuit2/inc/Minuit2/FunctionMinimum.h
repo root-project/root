@@ -86,6 +86,8 @@ public:
   bool IsAboveMaxEdm() const {return fData->IsAboveMaxEdm();}
   bool HasReachedCallLimit() const {return fData->HasReachedCallLimit();}
 
+  void SetErrorDef( double up) { return fData->SetErrorDef(up);}
+
 private:
 
   MnRefCountedPointer<BasicFunctionMinimum> fData;

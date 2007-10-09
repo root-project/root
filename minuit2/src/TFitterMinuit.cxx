@@ -181,7 +181,7 @@ FunctionMinimum TFitterMinuit::DoMinimization( int nfcn, double edmval)  {
 
    fMinuitFCN->SetErrorDef(fErrorDef); // set the error def
 
-   if (fDebug >=0) { 
+   if (fDebug >=1) { 
       std::cout << "TFitterMinuit - Minimize with max iterations = " << nfcn << " edmval = " << edmval << " errorDef = " << fMinuitFCN->Up() << std::endl;
    } 
 
@@ -427,7 +427,7 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
    
    // debug ( print all the states) 
    if (fDebug >= 3) { 
-      
+#ifdef LATER     
       const std::vector<MinimumState>& iterationStates = min.States();
       std::cout << "Number of iterations " << iterationStates.size() << std::endl;
       for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
@@ -442,6 +442,7 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
          for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << st.Vec()(j);
          std::cout << std::endl;
       }
+#endif
    }
    // print result 
    if (min.IsValid() ) {

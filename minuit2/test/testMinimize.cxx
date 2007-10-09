@@ -13,6 +13,7 @@
 #include "Minuit2/FCNBase.h"
 #include "TFitterMinuit.h"
 #include "TSystem.h"
+#include "TStopwatch.h"
 
 #include <vector>
 #include <iostream>
@@ -54,10 +55,35 @@ int testMinimize() {
   minuit->SetPrintLevel(3);
   // create Minimizer (default is Migrad)
   minuit->CreateMinimizer();
-  return minuit->Minimize();
-    
- 
+  int iret = minuit->Minimize();
+  if (iret != 0) { 
+     return iret; 
+  }
 
+  std::cout << "\nTest performances........\n\n"; 
+
+  // test performances 
+  int nMin = 10000; 
+  TStopwatch w; 
+  w.Start();
+  for (int i = 0; i < nMin; ++i) { 
+     minuit->Clear();
+     // reset -everything
+     //minuit->SetMinuitFCN(&fcn); 
+     minuit->SetParameter(0,"x",startX,0.1,0,0);
+     minuit->SetParameter(1,"y",startY,0.1,0,0);
+     minuit->SetPrintLevel(0);
+     // create Minimizer (default is Migrad)
+     minuit->CreateMinimizer();
+     iret = minuit->Minimize();
+     if (iret != 0) { 
+        std::cout << "Minimization failed - exit " ; 
+        return iret; 
+     }
+  }
+  w.Stop();
+  std::cout << "\nTime: \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;  
+  return 0; 
 }
 
 #ifndef __CINT__

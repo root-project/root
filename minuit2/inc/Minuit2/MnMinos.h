@@ -34,16 +34,12 @@ class MnMinos {
 
 public:
 
-  /// construct from FCN + Minimum
-  MnMinos(const FCNBase& fcn, const FunctionMinimum& min) : 
-    fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(1)) {} 
 
   /// construct from FCN + Minimum + strategy
-  MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra) : 
-    fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(stra)) {} 
+  MnMinos(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra = 1);  
 
   /// construct from FCN + Minimum + strategy
-  MnMinos(const FCNBase& fcn, const FunctionMinimum& min, const MnStrategy& stra) : fFCN(fcn), fMinimum(min), fStrategy(stra) {} 
+  MnMinos(const FCNBase& fcn, const FunctionMinimum& min, const MnStrategy& stra); 
 
   ~MnMinos() {}
   

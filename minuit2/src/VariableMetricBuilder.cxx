@@ -43,7 +43,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // top level function to find minimum from a given initial seed 
    // iterate on a minimum search in case of first attempt is not succesfull
    
-   edmval *= 0.0001;
+   edmval *= 0.001; // to be consistent with F77 Minuit
    
    
 #ifdef DEBUG
@@ -204,6 +204,13 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
                 << " Newton step " << step << std::endl; 
 #endif
       
+      // check if derivatives are not zero
+      if ( inner_product(s0.Gradient().Vec(),s0.Gradient().Vec() )  <= 0 )  { 
+#ifdef DEBUG
+         std::cout << "VariableMetricBuilder: all derivatives are zero - return current status" << std::endl;
+#endif
+         break;
+      }
       
       double gdel = inner_product(step, s0.Gradient().Grad());
       if(gdel > 0.) {
@@ -227,7 +234,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          }
       }
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
-      if(fabs(pp.y() - s0.Fval()) < fabs(s0.Fval())*prec.Eps() ) {
+
+      // <= needed for case 0 <= 0
+      if(fabs(pp.y() - s0.Fval()) <=  fabs(s0.Fval())*prec.Eps() ) {
 #ifdef WARNINGMSG
          MN_INFO_MSG("VariableMetricBuilder: no improvement in line search");
 #endif
