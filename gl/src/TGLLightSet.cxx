@@ -83,9 +83,6 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       Double_t lightRadius = bbox.Extents().Mag() * 2.9;
       Double_t sideLightsZ, frontLightZ;
 
-      // Find Z depth (in eye coords) for front and side lights
-      // Has to be handlded differently due to ortho camera infinite
-      // viewpoint. TODO: Move into camera classes?
       const TGLOrthoCamera* orthoCamera = dynamic_cast<const TGLOrthoCamera*>(&camera);
       if (orthoCamera) {
          // Find distance from near clip plane to furstum center - i.e. vector of half
@@ -95,14 +92,13 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
          frontLightZ = sideLightsZ;
       } else {
          // Perspective camera
-
-         // Extract vector from camera eye point to center
-         // Camera must have been applied already
+         // Extract vector from camera eye point to center.
+         // Camera must have been applied already.
          TGLVector3 eyeVector = camera.EyePoint() - camera.FrustumCenter();
 
          // Pull forward slightly (0.85) to avoid to sharp a cutoff
          sideLightsZ = eyeVector.Mag() * -0.85;
-         frontLightZ = 0.0;
+         frontLightZ = 0.2 * lightRadius;
       }
 
       // Reset the modelview so static lights are placed in fixed eye space
@@ -111,26 +107,22 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
 
       // 0: Front, 1: Top, 2: Bottom, 3: Left, 4: Right
       TGLVertex3 center = bbox.Center();
-      Float_t pos0[] = { center.X(), center.Y(), frontLightZ, 1.0 };
+      // Float_t pos0[] = { center.X(), center.Y(), frontLightZ, 1.0 };
+      Float_t pos0[] = { 0.0,        0.0,                      frontLightZ, 1.0 };
       Float_t pos1[] = { center.X(), center.Y() + lightRadius, sideLightsZ, 1.0 };
       Float_t pos2[] = { center.X(), center.Y() - lightRadius, sideLightsZ, 1.0 };
       Float_t pos3[] = { center.X() - lightRadius, center.Y(), sideLightsZ, 1.0 };
       Float_t pos4[] = { center.X() + lightRadius, center.Y(), sideLightsZ, 1.0 };
 
-      Float_t frontLightColor[] = {0.35, 0.35, 0.35, 1.0};
-      Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};
+      const Float_t frontLightColor[] = { 0.4, 0.4, 0.4, 1.0 };
+      const Float_t sideLightColor[]  = { 0.7, 0.7, 0.7, 1.0 };
+      const Float_t whiteSpec[]       = { 0.8, 0.8, 0.8, 1.0 };
+      const Float_t nullSpec[]        = { 0.0, 0.0, 0.0, 1.0 };
+
       glLightfv(GL_LIGHT0, GL_POSITION, pos0);
       glLightfv(GL_LIGHT0, GL_DIFFUSE, frontLightColor);
-      if (fUseSpecular)
-      {
-         const Float_t whiteSpec[] = {1.f, 1.f, 1.f, 1.f};
-         glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpec);
-      }
-      else
-      {
-         const Float_t nullSpec[] = {0.f, 0.f, 0.f, 1.f};
-         glLightfv(GL_LIGHT0, GL_SPECULAR, nullSpec);
-      }
+      glLightfv(GL_LIGHT0, GL_SPECULAR, fUseSpecular ? whiteSpec : nullSpec);
+
       glLightfv(GL_LIGHT1, GL_POSITION, pos1);
       glLightfv(GL_LIGHT1, GL_DIFFUSE,  sideLightColor);
       glLightfv(GL_LIGHT2, GL_POSITION, pos2);

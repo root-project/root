@@ -22,8 +22,8 @@
 #include "TPoint.h"
 #endif
 
-#include <assert.h>
-#include <math.h>
+#include <cassert>
+#include <cmath>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -128,6 +128,20 @@ private:
 
 protected:
    // Fields
+   TGLMatrix   fCamBase;         //! tranformation to center and rotation from up to x vector
+   TGLMatrix   fCamTrans;        //! transformation relative to fCamTrans
+   Bool_t      fExternalCenter;  //! use external center insead of scene center
+   TGLVector3  fExtCenter;       //! external camera center
+   TGLVector3  fDefCenter;       //! deafult camera center
+   TGLVector3 *fCenter;          //! current camera center
+
+   mutable Double_t fNearClip;   //! last applied near-clip
+   mutable Double_t fFarClip;    //! last applied far-clip
+
+   // Set in Setup()
+   Double_t    fDollyDefault;    //! default distnce from viewing centre
+   Double_t    fDollyDistance;   //! unit distance for camera movement in fwd/bck direction
+   Float_t     fVAxisMinAngle;	 //! minimal allowed angle between up and fCamTrans Z vector
 
    // Internal cached matrices and frustum planes
    mutable Bool_t    fCacheDirty;                      //! cached items dirty?
@@ -147,12 +161,16 @@ protected:
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
                                 Int_t screenShift, Int_t screenShiftRange,
                                 Bool_t mod1, Bool_t mod2) const;
+   Double_t   AdjustDelta(Int_t screenShift, Double_t deltaFactor,
+                                Bool_t mod1, Bool_t mod2) const;
 
    // Internal cache update - const as the actual camera configuration is unaffected
    void       UpdateCache() const;
 
+   static     UInt_t   fgDollyDeltaSens;
 public:
    TGLCamera();
+   TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLCamera();
 
    Bool_t IsCacheDirty() const { return fCacheDirty; }
@@ -165,20 +183,32 @@ public:
    // Camera manipulation interface (GL coord - origin bottom left)
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) = 0;
    virtual void   Reset() = 0;
-   // virtual void   Frame(const TGLBoundingBox & box) = 0; // TODO
-   // virtual void   Frame(const TGLRec & rect) = 0; // TODO
-   virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
+
+   virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
-   virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
-   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
+   virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t RotateRad(Double_t hRotate, Double_t vRotate);
 
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
    virtual void   Markup(TGLCameraMarkupStyle* /* ms */) const {}
 
+   void    SetExternalCenter(Bool_t x);
+   Bool_t  GetExternalCenter(){ return fExternalCenter; }
+
+   void    SetCenterVec( Double_t x, Double_t y, Double_t z);
+   Double_t* GetCenterVec() { return fCenter->Arr(); }
+
+   Double_t GetNearClip() const { return fNearClip; }
+   Double_t GetFarClip()  const { return fFarClip;  }
+
+   const TGLMatrix& GetCamBase()  const { return fCamBase;  }
+   const TGLMatrix& GetCamTrans() const { return fCamTrans; }
+
    // Current orientation and frustum
-         TGLVertex3 EyePoint() const;
-         TGLVector3 EyeDirection() const;
-         TGLVertex3 FrustumCenter() const;
+   TGLVertex3 EyePoint() const;
+   TGLVector3 EyeDirection() const;
+   TGLVertex3 FrustumCenter() const;
    const TGLPlane & FrustumPlane(EFrustumPlane plane) const;
 
    // Overlap / projection / intersection tests
@@ -204,6 +234,11 @@ public:
 
    const TGLRect& RefViewport() const { return fViewport; }
 
+   Float_t GetVAxisMinAngle(){return fVAxisMinAngle;}
+   void    SetVAxisMinAngle(Float_t x){fVAxisMinAngle = x;}
+
+   virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
+                  Double_t hRotate, Double_t vRotate) = 0;
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) const;
    Bool_t UpdateInterest(Bool_t force);

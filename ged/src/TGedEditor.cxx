@@ -538,7 +538,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
             while ((subf = (TGedFrame::TGedSubFrame*)next())) {
                // locate the composite frame on created tabs
                TGedTabInfo* ti = GetEditorTabInfo(subf->fName);
-               ti->fContainer->AddFrame(subf->fFrame);
+               ti->fContainer->AddFrame(subf->fFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
                if (fVisibleTabs.FindObject(ti) == 0)
                   fVisibleTabs.Add(ti);
             }

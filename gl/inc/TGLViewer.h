@@ -91,10 +91,14 @@ protected:
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
    // Mouse ineraction
+public:
+   enum EPushAction   { kPushStd,
+                        kPushCamCenter };
    enum EDragAction   { kDragNone,
                         kDragCameraRotate, kDragCameraTruck, kDragCameraDolly,
                         kDragOverlay };
-
+protected:
+   EPushAction          fPushAction;
    EDragAction          fAction;
    TPoint               fLastPos;
    UInt_t               fActiveButtonID;
@@ -105,8 +109,10 @@ protected:
    TGLRect        fViewport;       //! viewport - drawn area
    Color_t        fClearColor;     //! clear-color
    Int_t          fAxesType;       //! axes type
+   Bool_t         fAxesDepthTest;  //! remove guides hidden-lines
    Bool_t         fReferenceOn;    //! reference marker on?
    TGLVertex3     fReferencePos;   //! reference position
+   Bool_t         fDrawCameraCenter; //! reference marker on?
    TGLCameraMarkupStyle * fCameraMarkup; //! markup size of viewport in scene units
 
    Bool_t         fInitGL;         //! has GL been initialised?
@@ -184,13 +190,20 @@ public:
    // External GUI component interface
    TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
    void SetCurrentCamera(ECameraType camera);
-   void SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
+   void SetOrthoCamera(ECameraType camera, Double_t zoom, Double_t dolly,
+                             Double_t center[3], Double_t hRotate, Double_t vRotate);
    void SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly,
                              Double_t center[3], Double_t hRotate, Double_t vRotate);
-   void GetGuideState(Int_t & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
-   void SetGuideState(Int_t axesType, Bool_t referenceOn, const Double_t referencePos[3]);
+   void GetGuideState(Int_t & axesType, Bool_t & axesDepthTest, Bool_t & referenceOn, Double_t* referencePos) const;
+   void SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t referenceOn, const Double_t* referencePos);
+   void SetDrawCameraCenter(Bool_t x);
+   Bool_t GetDrawCameraCenter() { return fDrawCameraCenter; }
+   void   PickCameraCenter()    { fPushAction = kPushCamCenter; RefreshPadEditor(this); }
    TGLCameraMarkupStyle* GetCameraMarkup() const { return fCameraMarkup; }
    void SetCameraMarkup(TGLCameraMarkupStyle* m) { fCameraMarkup = m; }
+
+   EPushAction GetPushAction() const { return fPushAction; }
+   EDragAction GetAction()     const { return fAction; }
 
    const TGLPhysicalShape * GetSelected() const;
 

@@ -39,28 +39,27 @@ class TGLPaintDevice;
 
 class TGLOrthoCamera : public TGLCamera {
 public:
-   enum EType { kXOY, kXOZ, kZOY  }; // pair of world axes aligned to h/v screen
+   enum EType { kZOY, kXOZ, kX0Y  }; // pair of world axes aligned to h/v screen
 private:
    // Fields
-   EType          fType;         //! type (EType) - one of kXOY, kXOZ, kZOY
+   EType          fType;         //! camera type
+   Bool_t         fEnableRotate; //! enable rotation
 
    // Limits - set in Setup()
    Double_t       fZoomMin;      //! minimum zoom factor
    Double_t       fZoomDefault;  //! default zoom factor
    Double_t       fZoomMax;      //! maximum zoom factor
-   TGLBoundingBox fVolume;       //!
+   TGLBoundingBox fVolume;       //! scene volume
 
    // Current interaction
-   Double_t       fZoom;         //! current zoom
-   TGLVector3     fTruck;        //! current truck vector
-   TGLMatrix      fMatrix;       //! orthographic orientation matrix
+   Double_t       fDefXSize, fDefYSize; //! x, y size of scene from camera view
+   Double_t       fZoom;                //! current zoom
 
-   static   UInt_t   fgZoomDeltaSens;
-
-   //Stuff for TGLPlotPainter.
+   //Stuff for TGLPlotPainter. MT: This *must* go to a special subclass.
    Double_t       fShift;
    Double_t       fOrthoBox[4];
    TGLVertex3     fCenter;
+   TGLVector3     fTruck;
    TArcBall       fArcBall;
    TPoint         fMousePos;
    Bool_t         fVpChanged;
@@ -68,26 +67,27 @@ private:
    // Methods
    void Init();
 
+   static   UInt_t   fgZoomDeltaSens;
 public:
-
-   // TODO: Convert this so define by pair of vectors as per perspective
-   // camera
    TGLOrthoCamera();
-   TGLOrthoCamera(EType type);
+   TGLOrthoCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLOrthoCamera();
 
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
-   virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
-   virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
-   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
-
+   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
+
    virtual void   Markup (TGLCameraMarkupStyle* ms) const;
 
    // External scripting control
-   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
+   //   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
+   virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
+                  Double_t hRotate, Double_t vRotate);
+
+   void   SetEnableRotate(Bool_t x){ fEnableRotate = x; }
+   Bool_t GetEnableRotate(){ return fEnableRotate; }
 
    //Stuff for TGLPlotPainter.
    void   SetViewport(TGLPaintDevice *dev);
@@ -100,7 +100,6 @@ public:
    void   ZoomOut();
    void   SetCamera()const;
    void   Apply()const;
-
    Bool_t ViewportChanged()const{return fVpChanged;}
    Int_t  GetX()const;
    Int_t  GetY()const;

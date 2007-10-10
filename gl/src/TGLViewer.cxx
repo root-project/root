@@ -82,12 +82,12 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
                      Int_t width, Int_t height) :
    fPad(pad),
    fContextMenu(0),
-   fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
-   fPerspectiveCameraYOZ(TGLVector3(0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
-   fPerspectiveCameraXOY(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 0.0,-1.0)), // XOY floor
-   fOrthoXOYCamera(TGLOrthoCamera::kXOY),
-   fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
-   fOrthoZOYCamera(TGLOrthoCamera::kZOY),
+   fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+   fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+   fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
+   fOrthoXOYCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down Z axis, X horz, Y vert
+   fOrthoXOZCamera(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down Y axis, X horz, Z vert
+   fOrthoZOYCamera(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down X axis, Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
 
    fLightSet          (0),
@@ -95,12 +95,15 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
-   fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
+   fPushAction(kPushStd), fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
    fRedrawTimer(0),
    fClearColor(1),
    fAxesType(TGLUtil::kAxesNone),
+   fAxesDepthTest(kTRUE),
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
+   fDrawCameraCenter(kFALSE),
+   fCameraMarkup(0),
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
@@ -127,12 +130,12 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 TGLViewer::TGLViewer(TVirtualPad * pad) :
    fPad(pad),
    fContextMenu(0),
-   fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
-   fPerspectiveCameraYOZ(TGLVector3(0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
-   fPerspectiveCameraXOY(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 0.0,-1.0)), // XOY floor
-   fOrthoXOYCamera(TGLOrthoCamera::kXOY),
-   fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
-   fOrthoZOYCamera(TGLOrthoCamera::kZOY),
+   fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+   fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+   fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
+   fOrthoXOYCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down Z axis, X horz, Y vert
+   fOrthoXOZCamera(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down Y axis, X horz, Z vert
+   fOrthoZOYCamera(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down X axis, Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
 
    fLightSet          (0),
@@ -140,12 +143,15 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
-   fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
+   fPushAction(kPushStd), fAction(kDragNone), fLastPos(0,0), fActiveButtonID(0),
    fRedrawTimer(0),
    fClearColor(1),
    fAxesType(TGLUtil::kAxesNone),
+   fAxesDepthTest(kTRUE),
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
+   fDrawCameraCenter(kFALSE),
+   fCameraMarkup(0),
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
@@ -309,6 +315,7 @@ void TGLViewer::PostSceneBuildSetup(Bool_t resetCameras)
 
    // Set default reference to center
    fReferencePos.Set(fOverallBoundingBox.Center());
+   RefreshPadEditor(this);
 }
 
 
@@ -474,17 +481,34 @@ void TGLViewer::DrawGuides()
 {
    // Draw reference marker and coordinate axes.
 
-   glDisable(GL_DEPTH_TEST);
-
+   Bool_t disabled = kFALSE;
    if (fReferenceOn)
+   {
+      glDisable(GL_DEPTH_TEST);
       TGLUtil::DrawReferenceMarker(*fCamera, fReferencePos);
-
-   if (fAxesType != TGLUtil::kAxesOrigin)
+      disabled = kTRUE;
+   }
+   if (fDrawCameraCenter)
+   {
+      glDisable(GL_DEPTH_TEST);
+      Float_t radius = fCamera->ViewportDeltaToWorld(TGLVertex3(fCamera->GetCenterVec()), 3, 3).Mag();
+      const Float_t rgba[4] = { 0, 1, 1, 1.0 };
+      TGLUtil::DrawSphere(fCamera->GetCenterVec(), radius, rgba);
+      disabled = kTRUE;
+   }
+   if(fAxesDepthTest && disabled)
+   {
       glEnable(GL_DEPTH_TEST);
-
+      disabled = kFALSE;
+   }
+   else if (fAxesDepthTest == kFALSE && disabled == kFALSE)
+   {
+      glDisable(GL_DEPTH_TEST);
+      disabled = kTRUE;
+   }
    TGLUtil::DrawSimpleAxes(*fCamera, fOverallBoundingBox, fAxesType);
-
-   glEnable(GL_DEPTH_TEST);
+   if(disabled)
+      glEnable(GL_DEPTH_TEST);
 }
 
 //______________________________________________________________________________
@@ -932,8 +956,9 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 
 //______________________________________________________________________________
 void TGLViewer::SetOrthoCamera(ECameraType camera,
-                               Double_t left, Double_t right,
-                               Double_t top,  Double_t bottom)
+                                     Double_t zoom, Double_t dolly,
+                                     Double_t center[3],
+                                     Double_t hRotate, Double_t vRotate)
 {
    // Set an orthographic camera to supplied configuration - note this
    // does not need to be the current camera - though you will not see
@@ -951,21 +976,21 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
    // TODO: Move these into a vector!
    switch(camera) {
       case(kCameraOrthoXOY): {
-         fOrthoXOYCamera.Configure(left, right, top, bottom);
+         fOrthoXOYCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoXOYCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
       case(kCameraOrthoXOZ): {
-         fOrthoXOZCamera.Configure(left, right, top, bottom);
+         fOrthoXOZCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoXOZCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
       case(kCameraOrthoZOY): {
-         fOrthoZOYCamera.Configure(left, right, top, bottom);
+         fOrthoZOYCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoZOYCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
@@ -1032,11 +1057,13 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const
+void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & axesDepthTest, Bool_t & referenceOn, Double_t referencePos[3]) const
 {
-   // Fetch the state of guides (axes & reference markers) into arguments.
+   // Fetch the state of guides (axes & reference markers) into arguments
 
-   axesType    = fAxesType;
+   axesType = fAxesType;
+   axesDepthTest = fAxesDepthTest;
+
    referenceOn = fReferenceOn;
    referencePos[0] = fReferencePos.X();
    referencePos[1] = fReferencePos.Y();
@@ -1044,11 +1071,12 @@ void TGLViewer::GetGuideState(Int_t & axesType, Bool_t & referenceOn, Double_t r
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetGuideState(Int_t axesType, Bool_t referenceOn, const Double_t referencePos[3])
+void TGLViewer::SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t referenceOn, const Double_t referencePos[3])
 {
    // Set the state of guides (axes & reference markers) from arguments.
 
    fAxesType    = axesType;
+   fAxesDepthTest = axesDepthTest;
    fReferenceOn = referenceOn;
    fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
    if (fGLDevice != -1)
@@ -1056,6 +1084,14 @@ void TGLViewer::SetGuideState(Int_t axesType, Bool_t referenceOn, const Double_t
    RequestDraw();
 }
 
+//______________________________________________________________________________
+void TGLViewer::SetDrawCameraCenter(Bool_t x)
+{
+   // Draw camera look at and rotation point.
+
+   fDrawCameraCenter = x;
+   RequestDraw();
+}
 
 // Selected physical
 //______________________________________________________________________________
@@ -1085,10 +1121,8 @@ void TGLViewer::OverlayDragFinished()
    Emit("OverlayDragFinished()");
 }
 
-
 /**************************************************************************/
 /**************************************************************************/
-
 //______________________________________________________________________________
 Int_t TGLViewer::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
@@ -1269,6 +1303,23 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
       if (fAction != kNone)
          return kFALSE;
 
+      if (fPushAction == kPushCamCenter)
+      {
+         fPushAction = kPushStd;
+         RequestSelect(event->fX, event->fY);
+         if (fSelRec.GetN() > 0)
+         {
+            TGLVector3 v(event->fX, event->fY, 0.5*fSelRec.GetMinZ());
+            fCurrentCamera->WindowToViewport(v);
+            v = fCurrentCamera->ViewportToWorld(v);
+            fCurrentCamera->SetExternalCenter(kTRUE);
+            fCurrentCamera->SetCenterVec(v.X(), v.Y(), v.Z());
+            RequestDraw();
+         }
+         RefreshPadEditor(this);
+         return kTRUE;
+      }
+
       Bool_t grabPointer = kFALSE;
       Bool_t handled     = kFALSE;
 
@@ -1295,6 +1346,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
                if (event->fState & kKeyShiftMask) {
                   if (RequestSelect(event->fX, event->fY)) {
                      ApplySelection();
+                     handled = kTRUE;
                   } else {
                      SelectionChanged(); // Just notify clients.
                   }
@@ -1304,8 +1356,10 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
                      TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
                         (*fSecSelRec.GetPhysShape()->GetLogical());
                      lshape.ProcessSelection(*fRnrCtx, fSecSelRec);
+                     handled = kTRUE;
                   }
-               } else {
+               }
+               if ( ! handled) {
                   fAction = kDragCameraRotate;
                   grabPointer = kTRUE;
                }
@@ -1558,8 +1612,10 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    Short_t lod = TGLRnrCtx::kLODMed;
 
    // Camera interface requires GL coords - Y inverted
-   Int_t xDelta = event->fX - fLastPos.fX;
-   Int_t yDelta = event->fY - fLastPos.fY;
+   Int_t  xDelta = event->fX - fLastPos.fX;
+   Int_t  yDelta = event->fY - fLastPos.fY;
+   Bool_t mod1   = event->fState & kKeyControlMask;
+   Bool_t mod2   = event->fState & kKeyShiftMask;
 
    if (fAction == kDragNone)
    {
@@ -1568,13 +1624,11 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
          processed = fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
       lod = TGLRnrCtx::kLODHigh;
    } else if (fAction == kDragCameraRotate) {
-      processed = CurrentCamera().Rotate(xDelta, -yDelta);
+      processed = CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
    } else if (fAction == kDragCameraTruck) {
-      processed = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY,
-                                        xDelta, -yDelta);
+      processed = CurrentCamera().Truck(xDelta, -yDelta, mod1, mod2);
    } else if (fAction == kDragCameraDolly) {
-      processed = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask,
-                                        event->fState & kKeyShiftMask);
+      processed = CurrentCamera().Dolly(xDelta, mod1, mod2);
    } else if (fAction == kDragOverlay) {
       processed = fCurrentOvlElm->Handle(*fRnrCtx, fOvlSelRec, event);
    }

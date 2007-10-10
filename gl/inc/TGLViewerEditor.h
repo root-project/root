@@ -42,10 +42,19 @@ private:
    TGTextButton     *fCameraHome;
 
    //"Guides" tab's controls
+   TGCheckButton    *fCameraCenterExt;
+   TGTextButton     *fCaptureCenter;
+   TGCheckButton    *fDrawCameraCenter;
+   TGNumberEntry    *fCameraCenterX;
+   TGNumberEntry    *fCameraCenterY;
+   TGNumberEntry    *fCameraCenterZ;
+
+   Int_t             fAxesType;
    TGButtonGroup    *fAxesContainer;
    TGRadioButton    *fAxesNone;
    TGRadioButton    *fAxesEdge;
    TGRadioButton    *fAxesOrigin;
+   TGCheckButton    *fAxesDepthTest;
 
    TGGroupFrame     *fRefContainer;
    TGCheckButton    *fReferenceOn;
@@ -72,6 +81,8 @@ private:
    void CreateGuidesTab();
    void CreateClippingTab();
 
+   void UpdateReferencePosState();
+
 public:
    TGLViewerEditor(const TGWindow *p=0, Int_t width=140, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -88,12 +99,18 @@ public:
    void DoResetCameraOnDoubleClick();
    void DoUpdateScene();
    void DoCameraHome();
+   void DoCameraCenterExt();
+   void DoCaptureCenter();
+   void DoDrawCameraCenter();
+   void UpdateCameraCenter();
    //Axis manipulation
-   void UpdateViewerGuides();
-   void UpdateReferencePos();
+   void UpdateViewerAxes(Int_t id);
+   void UpdateViewerReference();
    void DoCameraMarkup();
 
    void DetachFromPad(){fIsInPad = kFALSE;}
+
+   static TGNumberEntry* MakeLabeledNEntry(TGCompositeFrame* p, const char* name, Int_t labelw,Int_t nd=7, Int_t s=5);
 
    ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
 };

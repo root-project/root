@@ -37,39 +37,33 @@ ClassImp(TGLOrthoCamera)
 UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 
 //______________________________________________________________________________
-TGLOrthoCamera::TGLOrthoCamera(EType type) :
-   fType(type), fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0),
+TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxes) :
+   TGLCamera(hAxes, vAxes),
+   fType(kZOY),
+   fEnableRotate(kFALSE), fZoomMin(0.001), fZoomDefault(0.78), fZoomMax(1000.0),
    fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
-   fZoom(1.0), fTruck(0.0, 0.0, 0.0), fMatrix()
-{
-   // Construct orthographic camera with 'type' defining fixed view direction
-   // & orientation (in world frame):
-   //
-   // kXOY : X Horz. / Y Vert (looking towards +Z, Y up)
-   // kXOZ : X Horz. / Z Vert (looking towards +Y, Z up)
-   // kZOY : Z Horz. / Y Vert (looking towards +X, Y up)
-   //
-   Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
-}
-
-//______________________________________________________________________________
-TGLOrthoCamera::TGLOrthoCamera() :
-   fType(kXOY), fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0),
-   fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
-   fZoom(1.0), fTruck(0.0, 0.0, 0.0), fShift(0.), fCenter(),
-   fVpChanged(kFALSE)
+   fZoom(1.0)
 {
    // Construct orthographic camera.
-   fOrthoBox[0] = 1.;
-   fOrthoBox[1] = 1.;
-   fOrthoBox[2] = -1.;
-   fOrthoBox[3] = 1.;
+
+   Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
+
+   // define camera type relative to horizontal vector
+   TGLVector3 v = fCamBase.GetBaseVec(1);
+   for(Int_t i=0; i<3; i++)
+   {
+      if(TMath::Abs(v[i]) == 1)
+      {
+        fType = (TGLOrthoCamera::EType)i;
+        break;
+      }
+   }
 }
 
 //______________________________________________________________________________
 TGLOrthoCamera::~TGLOrthoCamera()
 {
-   // Destroy orthographic camera
+   // Destroy orthographic camera.
 }
 
 //______________________________________________________________________________
@@ -77,51 +71,13 @@ void TGLOrthoCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
 {
    // Setup camera limits suitible to view the world volume defined by 'box'
    // and call Reset() to initialise camera.
-   static const Double_t rotMatrixXOY[] = { 1.,  0.,  0.,  0.,
-                                            0.,  1.,  0.,  0.,
-                                            0.,  0.,  1.,  0.,
-                                            0.,  0.,  0.,  1. };
 
-   static const Double_t rotMatrixXOZ[] = { 1.,  0.,  0.,  0.,
-                                            0.,  0., -1.,  0.,
-                                            0.,  1.,  0.,  0.,
-                                            0.,  0.,  0.,  1. };
+   fVolume = box;
 
-   static const Double_t rotMatrixZOY[] = { 0.,  0., -1.,  0.,
-                                            0.,  1.,  0.,  0.,
-                                            1.,  0.,  0.,  0.,
-                                            0.,  0.,  0.,  1. };
-
-   switch (fType) {
-		// Looking down Z axis, X horz, Y vert
-      case (kXOY): {
-         // X -> X
-         // Y -> Y
-         // Z -> Z
-         fVolume = box;
-         fMatrix.Set(rotMatrixXOY);
-         break;
-      }
-		// Looking down Y axis, X horz, Z vert
-      case (kXOZ): {
-         // X -> X
-         // Z -> Y
-         // Y -> Z
-         fVolume.SetAligned(TGLVertex3(box.XMin(), box.ZMin(), box.YMin()),
-                            TGLVertex3(box.XMax(), box.ZMax(), box.YMax()));
-         fMatrix.Set(rotMatrixXOZ);
-         break;
-      }
-		// Looking down X axis, Z horz, Y vert
-      case (kZOY): {
-         // Z -> X
-         // Y -> Y
-         // X -> Z
-         fVolume.SetAligned(TGLVertex3(box.ZMin(), box.YMin(), box.XMin()),
-                            TGLVertex3(box.ZMax(), box.YMax(), box.XMax()));
-         fMatrix.Set(rotMatrixZOY);
-         break;
-      }
+   if (fExternalCenter == kFALSE)
+   {
+      TGLVertex3 center = box.Center();
+      SetCenterVec(center.X(), center.Y(), center.Z());
    }
    if (reset)
       Reset();
@@ -132,29 +88,33 @@ void TGLOrthoCamera::Reset()
 {
    // Reset the camera to defaults - trucking, zooming to reframe the world volume
    // established in Setup(). Note: limits defined in Setup() are not adjusted.
-   fTruck.Set(0.0, 0.0, 0.0);
+
+   TGLVector3 e = fVolume.Extents();
+   switch (fType) {
+      case kX0Y: {
+         // X -> X, Y -> Y, Z -> Z
+         fDefXSize = e.X(); fDefYSize = e.Y();
+         break;
+      }
+      case kXOZ: {
+         // X -> X, Z -> Y, Y -> Z
+         fDefXSize = e.X(); fDefYSize = e.Z();
+         break;
+      }
+
+      case kZOY: {
+         // Z -> X, Y -> Y, X -> Z
+         fDefXSize = e.Z(); fDefYSize = e.Y();
+         break;
+      }
+   }
+
+   fDollyDefault  = 1.25*0.5*TMath::Sqrt(3)*fVolume.Extents().Mag();
+   fDollyDistance = 0.002 * fDollyDefault;
    fZoom   = fZoomDefault;
+   fCamTrans.SetIdentity();
+   fCamTrans.MoveLF(1, fDollyDefault);
    IncTimeStamp();
-}
-
-//______________________________________________________________________________
-Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
-{
-   // Dolly the camera - 'move camera along eye line, retaining lens focal length'.
-   // Arguments are:
-   //
-   // 'delta' - mouse viewport delta (pixels) - +ive dolly in, -ive dolly out
-   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
-   //
-   // For an orthographic camera dollying and zooming are identical and both equate
-   // logically to a rescaling of the viewport limits - without center shift.
-   // There is no perspective foreshortening or lens 'focal length'.
-   //
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-
-   // TODO: Bring all mouse handling into camera classes - would simplify interface and
-   // remove these non-generic cases.
-   return Zoom(delta, mod1, mod2);
 }
 
 //______________________________________________________________________________
@@ -172,8 +132,6 @@ Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
 
-   // TODO: Bring all mouse handling into camera classes - would simplify interface and
-   // remove these non-generic cases.
    if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta*2, fgZoomDeltaSens, mod1, mod2))
    {
       IncTimeStamp();
@@ -186,39 +144,15 @@ Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
 }
 
 //______________________________________________________________________________
-Bool_t TGLOrthoCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
-{
-   // Truck the camera - 'move camera parallel to film plane'. The film
-   // plane is defined by the EyePoint() / EyeDirection() pair. Define motion
-   // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion.
-   //
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-   //
-   // Note: Trucking is often mistakenly refered to as 'pan' or 'panning'.
-   // Panning is swivelling the camera on it's own axis - the eye point.
-
-   //TODO: Convert TGLRect so this not required
-   GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
-   TGLVertex3 start, end;
-   // Trucking done at near clipping plane
-   gluUnProject(x, y, 0.0, fModVM.CArr(), fProjM.CArr(), viewport, &start.X(), &start.Y(), &start.Z());
-   gluUnProject(x + xDelta, y + yDelta, 0.0, fModVM.CArr(), fProjM.CArr(), viewport, &end.X(), &end.Y(), &end.Z());
-   fTruck = fTruck + (end - start);
-   IncTimeStamp();
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLOrthoCamera::Rotate(Int_t /*xDelta*/, Int_t /*yDelta*/)
+Bool_t TGLOrthoCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Rotate the camera - 'swivel round the view volume center'.
-   // Ignored at present for orthographic cameras - have a fixed direction.
-   // Could let the user or external code create non-axis
-   // ortho projects by adjusting H/V rotations in future.
-   //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
 
-   return kFALSE;
+   if (fEnableRotate)
+      return kFALSE;
+   else
+      return TGLCamera::Rotate(xDelta, yDelta, mod1, mod2);
 }
 
 //______________________________________________________________________________
@@ -235,7 +169,17 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
    // as one passed to Setup().
    // 'pickRect' - optional picking rect. If non-null, restrict drawing to this
    // viewport rect.
+
    glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
+
+   if(fViewport.Width() == 0 || fViewport.Height() == 0)
+   {
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      return;
+   }
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -249,82 +193,161 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
                     (Int_t*) fViewport.CArr());
    }
 
-   if(fViewport.Width() == 0 || fViewport.Height() == 0) {
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      return;
-   }
-
-   TGLVector3 extents = fVolume.Extents();
-   Double_t width = extents.X();
-   Double_t height = extents.Y();
-   Double_t halfRange;
-   if (width > height) {
-      halfRange = width / 2.0;
+   Double_t halfRangeX, halfRangeY;
+   if (fDefYSize*fViewport.Width()/fDefXSize > fViewport.Height()) {
+      halfRangeY = 0.5 *fDefYSize;
+      halfRangeX = halfRangeY*fViewport.Width()/fViewport.Height();
    } else {
-      halfRange = height / 2.0;
+      halfRangeX = 0.5 *fDefXSize;
+      halfRangeY = halfRangeX*fViewport.Height()/fViewport.Width();
    }
-   halfRange /= fZoom;
 
-   // For near/far clipping half depth give extra slack so clip objects/manips
-   // are visible
-   Double_t halfDepth = extents.Mag();
-   const TGLVertex3 & center = fVolume.Center();
+   halfRangeX /= fZoom;
+   halfRangeY /= fZoom;
 
-   glOrtho(center.X() - halfRange,
-           center.X() + halfRange,
-           center.Y() - halfRange,
-           center.Y() + halfRange,
-          -center.Z() + halfDepth,
-          -center.Z() - halfDepth);
+   fNearClip = 0.05*fDollyDefault;
+   fFarClip  = 2.0*fDollyDefault;
+   glOrtho(-halfRangeX, halfRangeX,
+           -halfRangeY, halfRangeY,
+            fNearClip,  fFarClip);
 
-
+   // ii) setup modelview
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
+   TGLMatrix  mx     = fCamBase*fCamTrans;
+   TGLVector3 pos    = mx.GetTranslation();
+   TGLVector3 fwd    = mx.GetBaseVec(1);
+   TGLVector3 center = pos - fwd;
+   TGLVector3 up     = fCamBase.GetBaseVec(3);
 
-   glScaled(1.0 / fViewport.Aspect(), 1.0, 1.0);
+   gluLookAt(pos[0],    pos[1],    pos[2],
+             center[0], center[1], center[2],
+             up[0],     up[1],     up[2]);
 
-   // Debug aid - show current volume
-   /*glDisable(GL_LIGHTING);
-   glColor3d(0.0, 0.0, 1.0);
-   fVolume.Draw();
-   glEnable(GL_LIGHTING);*/
+   if (fCacheDirty) UpdateCache();
+}
 
-   glMultMatrixd(fMatrix.CArr());
-   glTranslated(fTruck.X(), fTruck.Y(), fTruck.Z());
 
-   if (fCacheDirty) {
-      UpdateCache();
-   }
+//______________________________________________________________________________
+void TGLOrthoCamera::Configure(Double_t zoom, Double_t dolly, Double_t center[3],
+                                     Double_t hRotate, Double_t vRotate)
+{
+   // Configure the camera state.
+
+   fZoom = zoom;
+   SetCenterVec(center[0], center[1], center[2]);
+   fCamTrans.MoveLF(1, dolly);
+   RotateRad(hRotate, vRotate);
+
+   IncTimeStamp();
 }
 
 //______________________________________________________________________________
-void TGLOrthoCamera::Configure(Double_t left, Double_t right,
-                               Double_t top, Double_t bottom)
+void TGLOrthoCamera::Markup(TGLCameraMarkupStyle* ms) const
 {
-   // Configure the camera state
-   Double_t width = right - left;
-   Double_t height = top - bottom;
+   // Write viewport dimensions on screen.
 
-   Double_t xZoom = width/fVolume.Extents().X();
-   Double_t yZoom = height/fVolume.Extents().Y();
+   Double_t width     = fFrustumPlanes[kLeft].D() + fFrustumPlanes[kRight].D();
+   Double_t maxbarw0  = ms->Barsize()*width;
 
-   fZoom = (xZoom > yZoom) ? xZoom : yZoom;
+   // get 10-exponent
+   Int_t exp = (Int_t) TMath::Floor(TMath::Log10(maxbarw0));
 
-   // kXOY : X Horz. / Y Vert (looking towards +Z, Y up)
-   // kXOZ : X Horz. / Z Vert (looking towards +Y, Z up)
-   // kZOY : Z Horz. / Y Vert (looking towards +X, Y up)
-   if (fType == kXOY) {
-      fTruck.X() = right - left;
-      fTruck.Y() = top - bottom;
-   } else if (fType == kXOZ) {
-      fTruck.X() = right - left;
-      fTruck.Z() = top - bottom;
-   } else if (fType == kZOY) {
-      fTruck.Z() = right - left;
-      fTruck.Y() = top - bottom;
+   Double_t fact = maxbarw0/TMath::Power(10, exp);
+   Float_t barw;
+
+   if (fact > 5) {
+      barw = 5*TMath::Power(10, exp);
+      glColor3d(1., 0., 1.0);
    }
-   IncTimeStamp();
+   else if (fact > 2) {
+      barw = 2*TMath::Power(10, exp);
+      glColor3d(0., 1., 1.0);
+   } else {
+      barw = TMath::Power(10, exp);
+      glColor3d(0., 0., 1.0);
+   }
+   Double_t wproc = barw / width;
+   Int_t screenw = fViewport.Width();
+   Int_t screenh = fViewport.Height();
+
+   Double_t sX, sY;
+   Double_t offX, offY, txtOffX, txtOffY;
+   ms->Offsets(offX, offY, txtOffX, txtOffY);
+
+   switch (ms->Position())
+   {
+      case TGLCameraMarkupStyle::kLUp:
+         sX = offX;
+         sY = screenh - offY -  txtOffY - 8;
+         break;
+      case TGLCameraMarkupStyle::kLDn:
+         sX = offX;
+         sY = offY;
+         break;
+      case TGLCameraMarkupStyle::kRUp:
+         sX = screenw - ms->Barsize()*screenw - offX;
+         sY = screenh - offY  -  txtOffY - 8;
+         break;
+      case TGLCameraMarkupStyle::kRDn:
+         sX = screenw - ms->Barsize()*screenw -  offX;
+         sY = offY;
+         break;
+      default:
+         sX = 0.5*screenw;
+         sY = 0.5*screenh;
+         break;
+   }
+
+   glTranslatef(sX, sY, 0);
+
+   glLineWidth(2.);
+   glColor3d(1., 1., 1.);
+
+   Double_t mH = 2;
+
+   glBegin(GL_LINES);
+   // horizontal static
+   glVertex3d(0, 0.,0.);
+   glVertex3d(ms->Barsize()*screenw, 0., 0.);
+   // corner bars
+   glVertex3d(ms->Barsize()*screenw,  mH, 0.);
+   glVertex3d(ms->Barsize()*screenw, -mH, 0.);
+   // marker cormer bar
+   glColor3d(1., 0., 0.);
+   glVertex3d(0.,  mH, 0.);
+   glVertex3d(0., -mH, 0.);
+   // marker pointer
+   glVertex3d(screenw*wproc, 0., 0.);
+   glVertex3d(screenw*wproc, mH, 0.);
+   //marker line
+   glVertex3d(0, 0.,0.);
+   glVertex3d(screenw*wproc, 0., 0.);
+   glEnd();
+
+   glTranslated(-sX, -sY, 0);
+
+   TString str = Form("%.*f", (exp < 0) ? -exp : 0, barw);
+   TGLUtil::DrawNumber(str, TGLVertex3(sX + txtOffX, sY + txtOffY, -1));
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//   TGLPlotPainter
+//
+/////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+TGLOrthoCamera::TGLOrthoCamera() :
+   fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0),
+   fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
+   fZoom(1.0), fShift(0.), fCenter(),
+   fVpChanged(kFALSE)
+{
+   // Construct orthographic camera.
+   fOrthoBox[0] = 1.;
+   fOrthoBox[1] = 1.;
+   fOrthoBox[2] = -1.;
+   fOrthoBox[3] = 1.;
 }
 
 //______________________________________________________________________________
@@ -480,92 +503,3 @@ void TGLOrthoCamera::ZoomOut()
    fZoom *= 1.2;
 }
 
-//______________________________________________________________________________
-void TGLOrthoCamera::Markup(TGLCameraMarkupStyle* ms) const
-{
-   // Write viewport dimensions on screen.
-
-   TGLVector3 extents = fVolume.Extents();
-   Double_t width     = extents.X()/fZoom;
-   Double_t maxbarw0  = ms->Barsize()*width;
-
-   // get 10-exponent
-   Int_t exp = (Int_t) TMath::Floor(TMath::Log10(maxbarw0));
-
-   Double_t fact = maxbarw0/TMath::Power(10, exp);
-   Float_t barw;
-
-   if (fact > 5) {
-      barw = 5*TMath::Power(10, exp);
-      glColor3d(1., 0., 1.0);
-   }
-   else if (fact > 2) {
-      barw = 2*TMath::Power(10, exp);
-      glColor3d(0., 1., 1.0);
-   } else {
-      barw = TMath::Power(10, exp);
-      glColor3d(0., 0., 1.0);
-   }
-   Double_t wproc = barw / width;
-   Int_t screenw = fViewport.Width();
-   Int_t screenh = fViewport.Height();
-
-   Double_t sX, sY;
-   Double_t offX, offY, txtOffX, txtOffY;
-   ms->Offsets(offX, offY, txtOffX, txtOffY);
-
-   switch (ms->Position())
-   {
-      case TGLCameraMarkupStyle::kLUp:
-         sX = offX;
-         sY = screenh - offY -  txtOffY - 8;
-         break;
-      case TGLCameraMarkupStyle::kLDn:
-         sX = offX;
-         sY = offY;
-         break;
-      case TGLCameraMarkupStyle::kRUp:
-         sX = screenw - ms->Barsize()*screenw - offX;
-         sY = screenh - offY  -  txtOffY - 8;
-         break;
-      case TGLCameraMarkupStyle::kRDn:
-         sX = screenw - ms->Barsize()*screenw -  offX;
-         sY = offY;
-         break;
-      default:
-         sX = 0.5*screenw;
-         sY = 0.5*screenh;
-         break;
-   }
-
-   glTranslatef(sX, sY, 0);
-
-   glLineWidth(2.);
-   glColor3d(1., 1., 1.);
-
-   Double_t mH = 2;
-
-   glBegin(GL_LINES);
-   // horizontal static
-   glVertex3d(0, 0.,0.);
-   glVertex3d(ms->Barsize()*screenw, 0., 0.);
-   // corner bars
-   glVertex3d(ms->Barsize()*screenw,  mH, 0.);
-   glVertex3d(ms->Barsize()*screenw, -mH, 0.);
-   // marker cormer bar
-   glColor3d(1., 0., 0.);
-   glVertex3d(0.,  mH, 0.);
-   glVertex3d(0., -mH, 0.);
-   // marker pointer
-   glVertex3d(screenw*wproc, 0., 0.);
-   glVertex3d(screenw*wproc, mH, 0.);
-   //marker line
-   glVertex3d(0, 0.,0.);
-   glVertex3d(screenw*wproc, 0., 0.);
-   glEnd();
-
-   glTranslated(-sX, -sY, 0);
-
-   TString str = Form("%.*f", (exp < 0) ? -exp : 0, barw);
-   TGLUtil::DrawNumber(str, TGLVertex3(sX + txtOffX, sY + txtOffY, -1));
-}

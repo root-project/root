@@ -115,56 +115,64 @@ void TGLScenePad::SubPadPaint(TVirtualPad* pad)
    TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
    while (lnk)
    {
-      TObject *obj = lnk->GetObject();
-      if (obj->InheritsFrom(TAtt3D::Class()))
-      {
-         //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
-         obj->Paint(lnk->GetOption());
-      }
-      else if (obj->InheritsFrom(TH2::Class()))
-      {
-         // printf("histo 2d\n");
-         TGLObject* log = new TH2GL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-      else if (obj->InheritsFrom(TF2::Class()))
-      {
-         // printf("func 2d\n");
-         TGLObject* log = new TF2GL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-      else if (obj->InheritsFrom(TGLParametricEquation::Class()))
-      {
-         // printf("parametric\n");
-         TGLObject* log = new TGLParametricEquationGL();
-         log->SetModel(obj, lnk->GetOption());
-         log->SetBBox();
-         AdoptLogical(*log);
-         AddHistoPhysical(log);
-      }
-
-      else if (obj->InheritsFrom(TVirtualPad::Class()))
-      {
-         SubPadPaint(dynamic_cast<TVirtualPad*>(obj));
-      }
-      else
-      {
-         // Handle 2D primitives here.
-         // printf("TGLScenePad::PadPaint skipping %p, %s, %s.\n",
-         //        obj, obj->GetName(), obj->ClassName());
-         obj->Paint(lnk->GetOption());
-      }
+      ObjectPaint(lnk->GetObject(), lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
    }
 
    pad->SetViewer3D(vv3dsav);
    gPad = padsav;
+}
+
+//______________________________________________________________________________
+void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
+{
+   // Override of virtual TVirtualViewer3D::ObjectPaint().
+   // Special handling of 2D/3D histograms to activate Timur's
+   // histo-painters.
+
+   if (obj->InheritsFrom(TAtt3D::Class()))
+   {
+      //printf("normal-painting %s / %s\n", obj->GetName(), obj->ClassName());
+      obj->Paint(opt);
+   }
+   else if (obj->InheritsFrom(TH2::Class()))
+   {
+      // printf("histo 2d\n");
+      TGLObject* log = new TH2GL();
+      log->SetModel(obj, opt);
+      log->SetBBox();
+      AdoptLogical(*log);
+      AddHistoPhysical(log);
+   }
+   else if (obj->InheritsFrom(TF2::Class()))
+   {
+      // printf("func 2d\n");
+      TGLObject* log = new TF2GL();
+      log->SetModel(obj, opt);
+      log->SetBBox();
+      AdoptLogical(*log);
+      AddHistoPhysical(log);
+   }
+   else if (obj->InheritsFrom(TGLParametricEquation::Class()))
+   {
+      // printf("parametric\n");
+      TGLObject* log = new TGLParametricEquationGL();
+      log->SetModel(obj, opt);
+      log->SetBBox();
+      AdoptLogical(*log);
+      AddHistoPhysical(log);
+   }
+   else if (obj->InheritsFrom(TVirtualPad::Class()))
+   {
+      SubPadPaint(dynamic_cast<TVirtualPad*>(obj));
+   }
+   else
+   {
+      // Handle 2D primitives here.
+      // printf("TGLScenePad::PadPaint skipping %p, %s, %s.\n",
+      //        obj, obj->GetName(), obj->ClassName());
+      obj->Paint(opt);
+   }
 }
 
 //______________________________________________________________________________

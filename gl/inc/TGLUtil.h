@@ -25,7 +25,7 @@ class TGLCamera;
 
 #include <cmath>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 // TODO:Find a better place for these enums - TGLEnum.h?
 // Whole GL viewer should be moved into own namespace
@@ -103,14 +103,16 @@ protected:
 public:
    TGLVertex3();
    TGLVertex3(Double_t x, Double_t y, Double_t z);
+   TGLVertex3(Double_t* v);
    TGLVertex3(const TGLVertex3 & other);
    virtual ~TGLVertex3();
 
-         Bool_t       operator == (const TGLVertex3 & rhs) const;
-         TGLVertex3 & operator =  (const TGLVertex3 & rhs);
+   Bool_t       operator == (const TGLVertex3 & rhs) const;
+   TGLVertex3 & operator =  (const TGLVertex3 & rhs);
+   TGLVertex3 & operator *= (Double_t f);
+   TGLVertex3   operator -  () const;
    const TGLVertex3 & operator -= (const TGLVector3 & val);
    const TGLVertex3 & operator += (const TGLVector3 & val);
-         TGLVertex3   operator -  () const;
 
    // Manipulators
    void Fill(Double_t val);
@@ -142,6 +144,12 @@ public:
 };
 
 //______________________________________________________________________________
+inline TGLVertex3 operator*(Double_t f, const TGLVertex3& v)
+{
+   return TGLVertex3(f*v.X(), f*v.Y(), f*v.Z());
+}
+
+//______________________________________________________________________________
 inline void TGLVertex3::Negate()
 {
    fVals[0] = -fVals[0];
@@ -171,6 +179,15 @@ inline TGLVertex3 & TGLVertex3::operator = (const TGLVertex3 & rhs)
 inline TGLVertex3 TGLVertex3::operator - () const
 {
    return TGLVertex3(-fVals[0], -fVals[1], -fVals[2]);
+}
+
+//______________________________________________________________________________
+inline TGLVertex3& TGLVertex3::operator *= (Double_t f)
+{
+   fVals[0] *= f;
+   fVals[1] *= f;
+   fVals[2] *= f;
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -240,9 +257,11 @@ public:
    TGLVector3(const TGLVector3 & other);
    virtual ~TGLVector3();
 
-   const TGLVector3 & operator /= (Double_t val);
-   const TGLVector3 & operator *= (Double_t val);
-         TGLVector3   operator -  () const;
+   TGLVector3& operator = (const TGLVertex3& v)
+   { fVals[0] = v[0]; fVals[1] = v[1]; fVals[2] = v[2]; return *this; }
+
+   TGLVector3 & operator /= (Double_t val);
+   TGLVector3   operator -  () const;
 
    Double_t Mag() const;
    void     Normalise();
@@ -267,20 +286,11 @@ inline const TGLVertex3 & TGLVertex3::operator += (const TGLVector3 & vec)
 }
 
 //______________________________________________________________________________
-inline const TGLVector3 & TGLVector3::operator /= (Double_t val)
+inline TGLVector3 & TGLVector3::operator /= (Double_t val)
 {
    fVals[0] /= val;
    fVals[1] /= val;
    fVals[2] /= val;
-   return *this;
-}
-
-//______________________________________________________________________________
-inline const TGLVector3 & TGLVector3::operator *= (Double_t val)
-{
-   fVals[0] *= val;
-   fVals[1] *= val;
-   fVals[2] *= val;
    return *this;
 }
 
@@ -361,6 +371,13 @@ inline TGLVector3 operator + (const TGLVector3 & vector1, const TGLVector3 & vec
 inline TGLVector3 operator - (const TGLVector3 & vector1, const TGLVector3 & vector2)
 {
    return TGLVector3(vector1[0] - vector2[0], vector1[1] - vector2[1], vector1[2] - vector2[2]);
+}
+
+//______________________________________________________________________________
+// Dot-product
+inline Double_t operator * (const TGLVector3 & a, const TGLVector3 & b)
+{
+   return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -506,7 +523,9 @@ inline void TGLRect::Expand(Int_t x, Int_t y)
 //______________________________________________________________________________
 inline Int_t TGLRect::Diagonal() const
 {
-   return static_cast<Int_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight)));
+   const Double_t w = static_cast<Double_t>(fWidth);
+   const Double_t h = static_cast<Double_t>(fHeight);
+   return static_cast<Int_t>(sqrt(w*w + h*h));
 }
 
 //______________________________________________________________________________
@@ -709,22 +728,23 @@ public:
    TGLMatrix();
    TGLMatrix(Double_t x, Double_t y, Double_t z);
    TGLMatrix(const TGLVertex3 & translation);
-   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis = 0);
+   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis);
+   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis);
    TGLMatrix(const Double_t vals[16]);
    TGLMatrix(const TGLMatrix & other);
    virtual ~TGLMatrix(); // ClassDef introduces virtual fns
 
    // Operators
    TGLMatrix & operator =(const TGLMatrix & rhs);
-   Double_t & operator [] (Int_t index);
-   Double_t operator [] (Int_t index) const;
+   Double_t  & operator [] (Int_t index);
+   Double_t    operator [] (Int_t index) const;
 
    void MultRight(const TGLMatrix & rhs);
    void MultLeft (const TGLMatrix & lhs);
    TGLMatrix & operator*=(const TGLMatrix & rhs) { MultRight(rhs); return *this; }
 
    // Manipulators
-   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis = 0);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = 0);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
@@ -732,15 +752,29 @@ public:
    void SetTranslation(const TGLVertex3 & translation);
 
    void Translate(const TGLVector3 & vect);
+   void MoveLF(Int_t ai, Double_t amount);
    void Scale(const TGLVector3 & scale);
    void Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
    void RotateLF(Int_t i1, Int_t i2, Double_t amount);
+   void RotatePF(Int_t i1, Int_t i2, Double_t amount);
    void TransformVertex(TGLVertex3 & vertex) const;
    void Transpose3x3();
+   Double_t Invert();
 
    // Accesors
-   TGLVertex3  GetTranslation() const;
+   TGLVector3  GetTranslation() const;
    TGLVector3  GetScale() const;
+
+   void SetBaseVec(Int_t b, Double_t x, Double_t y, Double_t z);
+   void SetBaseVec(Int_t b, const TGLVector3& v);
+   void SetBaseVec(Int_t b, Double_t* x);
+
+   TGLVector3 GetBaseVec(Int_t b) const;
+   void       GetBaseVec(Int_t b, TGLVector3& v) const;
+   void       GetBaseVec(Int_t b, Double_t* x) const;
+
+   void       MultiplyIP(TGLVector3& v, Double_t w=1) const;
+   void       RotateIP(TGLVector3& v) const;
 
    // Internal data accessors - for GL API
    const Double_t * CArr() const { return fVals; }
@@ -811,6 +845,48 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
    return res;
 }
 
+//______________________________________________________________________________
+inline void TGLMatrix::SetBaseVec(Int_t b, Double_t x, Double_t y, Double_t z)
+{
+   Double_t* C = fVals + 4*--b;
+   C[0] = x; C[1] = y; C[2] = z;
+}
+
+//______________________________________________________________________________
+inline void TGLMatrix::SetBaseVec(Int_t b, const TGLVector3& v)
+{
+   Double_t* C = fVals + 4*--b;
+   C[0] = v[0]; C[1] = v[1]; C[2] = v[2];
+}
+
+//______________________________________________________________________________
+inline void TGLMatrix::SetBaseVec(Int_t b, Double_t* x)
+{
+   Double_t* C = fVals + 4*--b;
+   C[0] = x[0]; C[1] = x[1]; C[2] = x[2];
+}
+
+//______________________________________________________________________________
+inline TGLVector3 TGLMatrix::GetBaseVec(Int_t b) const
+{
+   return TGLVector3(&fVals[4*--b]);
+}
+
+//______________________________________________________________________________
+inline void TGLMatrix::GetBaseVec(Int_t b, TGLVector3& v) const
+{
+   const Double_t* C = fVals + 4*--b;
+   v[0] = C[0]; v[1] = C[1]; v[2] = C[2];
+}
+
+//______________________________________________________________________________
+inline void TGLMatrix::GetBaseVec(Int_t b, Double_t* x) const
+{
+   const Double_t* C = fVals + 4*--b;
+   x[0] = C[0], x[1] = C[1], x[2] = C[2];
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGLUtil                                                              //
@@ -823,6 +899,7 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
 class TGLUtil
 {
 private:
+   static UInt_t fgDefaultDrawQuality;
    static UInt_t fgDrawQuality;
 
 protected:
@@ -840,8 +917,10 @@ public:
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
    enum EAxesType      { kAxesNone, kAxesEdge, kAxesOrigin };
 
-   static void SetDrawQuality(UInt_t dq) { fgDrawQuality = dq; }
-   static void ResetDrawQuality()        { fgDrawQuality = 60; }
+   static void   SetDrawQuality(UInt_t dq)        { fgDrawQuality = dq; }
+   static void   ResetDrawQuality()               { fgDrawQuality = fgDefaultDrawQuality; }
+   static UInt_t GetDefaultDrawQuality()          { return fgDefaultDrawQuality; }
+   static void   SetDefaultDrawQuality(UInt_t dq) { fgDefaultDrawQuality = dq; }
 
    // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);

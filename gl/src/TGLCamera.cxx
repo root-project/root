@@ -13,6 +13,7 @@
 #include "TGLIncludes.h"
 #include "TGLBoundingBox.h"
 #include "TError.h"
+#include "TMath.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -37,9 +38,15 @@
 ClassImp(TGLCamera)
 
 const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
+UInt_t         TGLCamera::fgDollyDeltaSens       = 500;
 
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
+   fExternalCenter(kFALSE),
+   fCenter(&fDefCenter),
+   fNearClip(0), fFarClip(0),
+   fDollyDefault(1.0), fDollyDistance(1.0),
+   fVAxisMinAngle(0.01f),
    fCacheDirty(kTRUE),
    fTimeStamp (1),
    fProjM(), fModVM(), fClipM(),
@@ -50,6 +57,29 @@ TGLCamera::TGLCamera() :
    for (UInt_t i = 0; i < kPlanesPerFrustum; i++ ) {
       fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0);
    }
+   TGLVertex3 origin;
+   fCamBase.Set(origin, TGLVector3(1, 0, 0), TGLVector3(0, 0, 1));
+}
+
+//______________________________________________________________________________
+TGLCamera::TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
+   fExternalCenter(kFALSE),
+   fCenter(&fDefCenter),
+   fNearClip(0), fFarClip(0),
+   fDollyDefault(1.0), fDollyDistance(1.0),
+   fVAxisMinAngle(0.01f),
+   fCacheDirty(kTRUE),
+   fTimeStamp (1),
+   fProjM(), fModVM(), fClipM(),
+   fViewport(0,0,100,100),
+   fLargestSeen(0.0)
+{
+   // Default base camera constructor
+   for (UInt_t i = 0; i < kPlanesPerFrustum; i++ ) {
+      fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0);
+   }
+   TGLVertex3 origin;
+   fCamBase.Set(origin, vAxis, hAxis);
 }
 
 //______________________________________________________________________________
@@ -690,14 +720,34 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
       val = max;
    }
 
-   if (val != oldVal)
-   {
-      return kTRUE;
+   return val != oldVal;
+}
+
+//______________________________________________________________________________
+Double_t TGLCamera::AdjustDelta(Int_t screenShift, Double_t deltaFactor,
+                                Bool_t mod1, Bool_t mod2) const
+{
+   // Adjust a passed screen value and apply modifiers.
+   // See AdjustAndClampVal() for details.
+
+   if (screenShift == 0)
+      return 0;
+
+   // Calculate a sensitivity based on passed modifiers
+   Double_t sens = 1.0;
+
+   if (mod1) {
+      sens *= 0.1;
+      if (mod2) {
+         sens *= 0.1;
+      }
+   } else {
+      if (mod2) {
+         sens *= 10.0;
+      }
    }
-   else
-   {
-      return kFALSE;
-   }
+
+   return sens * deltaFactor * screenShift;
 }
 
 //______________________________________________________________________________
@@ -735,4 +785,136 @@ void TGLCamera::DrawDebugAids() const
    glVertex3dv(start.CArr());
    glVertex3dv(end.CArr());
    glEnd();
+}
+
+//______________________________________________________________________________
+void TGLCamera::SetExternalCenter(Bool_t enable)
+{
+   // Set camera center diffrent than scene center, if enable is kTRUE.
+
+   if (fExternalCenter == enable)
+      return;
+
+   fExternalCenter = enable;
+   if (fExternalCenter)
+      fCenter = &fExtCenter;
+   else
+      fCenter = &fDefCenter;
+
+   TGLMatrix bt = fCamBase * fCamTrans;
+   fCamBase.SetBaseVec(4, *fCenter);
+   TGLMatrix binv = fCamBase; binv.Invert();
+   fCamTrans = binv * bt;
+
+   IncTimeStamp();
+}
+
+//______________________________________________________________________________
+void TGLCamera::SetCenterVec(Double_t x, Double_t y, Double_t z)
+{
+   // Set camera center vector.
+
+   if (fExternalCenter)
+      fExtCenter.Set(x, y, z);
+   else
+      fDefCenter.Set(x, y, z);
+
+   TGLMatrix bt = fCamBase * fCamTrans;
+   fCamBase.SetBaseVec(4, *fCenter);
+   TGLMatrix binv = fCamBase; binv.Invert();
+   fCamTrans = binv * bt;
+
+   IncTimeStamp();
+}
+
+//______________________________________________________________________________
+Bool_t TGLCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
+{
+   // Truck the camera - 'move camera parallel to film plane'.
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
+   Double_t xstep = AdjustDelta(xDelta, 0.2*fDollyDistance, mod1, mod2);
+   fCamTrans.MoveLF(2, -xstep);
+
+   Double_t ystep = AdjustDelta(yDelta, 0.2*fDollyDistance, mod1, mod2);
+   fCamTrans.MoveLF(3, -ystep);
+
+   IncTimeStamp();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
+{
+   // Rotate the camera round view volume center established in Setup().
+   // Arguments are:
+   // xDelta - horizontal delta (pixels)
+   // YDelta - vertical delta (pixels)
+
+   Double_t vRotate = AdjustDelta(xDelta, TMath::TwoPi() / fViewport.Width(), mod1, mod2);
+   Double_t hRotate = AdjustDelta(yDelta, TMath::Pi()   / fViewport.Height(), mod1, mod2);
+
+   return RotateRad(hRotate, vRotate);
+}
+
+//______________________________________________________________________________
+Bool_t TGLCamera::RotateRad(Double_t hRotate, Double_t vRotate)
+{
+   // Rotate camera around center.
+
+   using namespace TMath;
+   if (hRotate != 0.0)
+   {
+      TGLVector3 fwd  = fCamTrans.GetBaseVec(1);
+      TGLVector3 lft  = fCamTrans.GetBaseVec(2);
+      TGLVector3 up   = fCamTrans.GetBaseVec(3);
+      TGLVector3 pos  = fCamTrans.GetTranslation();
+
+      TGLVector3 deltaT = pos - (pos*lft)*lft;
+      Double_t   deltaF = deltaT * fwd;
+      Double_t   deltaU = deltaT * up;
+
+      // up vector lock
+      TGLVector3 zdir = fCamBase.GetBaseVec(3);
+      fCamBase.RotateIP(fwd);
+      Double_t theta = ACos(fwd*zdir);
+      if(theta+hRotate < fVAxisMinAngle)
+         hRotate = fVAxisMinAngle - theta;
+      else if(theta+hRotate > Pi() - fVAxisMinAngle)
+         hRotate = Pi() - fVAxisMinAngle - theta;
+
+      fCamTrans.MoveLF(1, -deltaF);
+      fCamTrans.MoveLF(3, -deltaU);
+      fCamTrans.RotateLF(3, 1, hRotate);
+      fCamTrans.MoveLF(3,  deltaU);
+      fCamTrans.MoveLF(1,  deltaF);
+   }
+   if (vRotate != 0.0)
+   {
+      fCamTrans.RotatePF(1, 2, -vRotate);
+   }
+
+   IncTimeStamp();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
+{
+   // Dolly the camera - 'move camera along eye line, retaining lens focal length'.
+   // Arguments are:
+   //
+   // 'delta' - mouse viewport delta (pixels) - +ive dolly in, -ive dolly out
+   // 'mod1' / 'mod2' - sensitivity modifiers - see TGLCamera::AdjustAndClampVal()
+   //
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
+   Double_t step = AdjustDelta(delta, fDollyDistance, mod1, mod2);
+   if (step == 0)
+      return kFALSE;
+
+   fCamTrans.MoveLF(1, -step);
+
+   IncTimeStamp();
+   return kTRUE;
 }

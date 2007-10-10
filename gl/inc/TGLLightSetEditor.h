@@ -24,7 +24,7 @@ private:
    TGLLightSetSubEditor& operator=(const TGLLightSetSubEditor&); // Not implemented
 
 protected:
-   TGLLightSet       *fM;
+   TGLLightSet      *fM;
 
    TGGroupFrame     *fLightFrame;
    TGButton         *fTopLight;
@@ -35,7 +35,7 @@ protected:
 
    TGButton         *fSpecularLight;
 
-   TGButton* MakeLampButton(const Text_t* name, Int_t wid);
+   TGButton* MakeLampButton(const Text_t* name, Int_t wid, TGCompositeFrame* parent);
 
 public:
    TGLLightSetSubEditor(const TGWindow* p);

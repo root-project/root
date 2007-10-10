@@ -28,6 +28,7 @@
 
 ClassImp(TGLLightSetSubEditor)
 
+//______________________________________________________________________________
 TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM             (0),
@@ -42,32 +43,41 @@ TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
 {
    // Constructor.
 
-   fLightFrame = new TGGroupFrame(this, "Light sources:", kLHintsTop | kLHintsCenterX);
-
+   fLightFrame = new TGGroupFrame(this, "Light sources:", kVerticalFrame);//, kLHintsTop | kLHintsCenterX);
    fLightFrame->SetTitlePos(TGGroupFrame::kLeft);
-   AddFrame(fLightFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));//-
+   AddFrame(fLightFrame, new TGLayoutHints(kLHintsTop| kLHintsExpandX, 1, 1, 1, 1));//-
+   TGCompositeFrame* hf =0;
 
-   TGMatrixLayout *ml = new TGMatrixLayout(fLightFrame, 0, 1, 10);
-   fLightFrame->SetLayoutManager(ml);
+   hf = new TGHorizontalFrame(fLightFrame);
+   fTopLight      = MakeLampButton("Top",      TGLLightSet::kLightTop, hf);
+   fBottomLight   = MakeLampButton("Bottom",   TGLLightSet::kLightBottom, hf);
+   fLightFrame->AddFrame(hf, new TGLayoutHints(kLHintsTop|kLHintsExpandX, 0, 0, 2, 2));
 
-   fTopLight      = MakeLampButton("Top",      TGLLightSet::kLightTop);
-   fRightLight    = MakeLampButton("Right",    TGLLightSet::kLightRight);
-   fBottomLight   = MakeLampButton("Bottom",   TGLLightSet::kLightBottom);
-   fLeftLight     = MakeLampButton("Left",     TGLLightSet::kLightLeft);
-   fFrontLight    = MakeLampButton("Front",    TGLLightSet::kLightFront);
-   fSpecularLight = MakeLampButton("Specular", TGLLightSet::kLightSpecular);
+   hf = new TGHorizontalFrame(fLightFrame);
+   fLeftLight     = MakeLampButton("Left",     TGLLightSet::kLightLeft, hf);
+   fRightLight    = MakeLampButton("Right",    TGLLightSet::kLightRight, hf);
+   fLightFrame->AddFrame(hf, new TGLayoutHints(kLHintsTop|kLHintsExpandX , 0, 0, 0, 2));
+
+   hf = new TGHorizontalFrame(fLightFrame);
+   fFrontLight    = MakeLampButton("Front",    TGLLightSet::kLightFront, hf);
+   fSpecularLight = MakeLampButton("Specular", TGLLightSet::kLightSpecular, hf);
+
+   fLightFrame->AddFrame(hf, new TGLayoutHints(kLHintsTop|kLHintsExpandX, 0, 0, 0, 2));
 }
 
-TGButton* TGLLightSetSubEditor::MakeLampButton(const Text_t* name, Int_t wid)
+//______________________________________________________________________________
+TGButton* TGLLightSetSubEditor::MakeLampButton(const Text_t* name, Int_t wid,
+                                               TGCompositeFrame* parent)
 {
    // Create a button for given lamp and set it up.
 
-   TGButton* b = new TGCheckButton(fLightFrame, name,  wid);
-   fLightFrame->AddFrame(b);
+   TGButton* b = new TGCheckButton(parent, name, wid);
+   parent->AddFrame(b, new TGLayoutHints(kLHintsNormal|kLHintsExpandX, -2, 0, 0, 2));
    b->Connect("Clicked()", "TGLLightSetSubEditor", this, "DoButton()");
    return b;
 }
 
+//______________________________________________________________________________
 void TGLLightSetSubEditor::SetModel(TGLLightSet* m)
 {
    // New model was set, refresh data.
@@ -84,6 +94,7 @@ void TGLLightSetSubEditor::SetModel(TGLLightSet* m)
    fSpecularLight->SetState(fM->GetUseSpecular() ? kButtonDown : kButtonUp);
 }
 
+//______________________________________________________________________________
 void TGLLightSetSubEditor::Changed()
 {
    // Data in sub-editor has been changed, emit "Changed()" signal.
@@ -102,14 +113,16 @@ void TGLLightSetSubEditor::DoButton()
 }
 
 
-//______________________________________________________________________
+//______________________________________________________________________________
 // TGLLightSetEditor
 //
 // Editor for TGLLightSet.
 
 ClassImp(TGLLightSetEditor)
 
-TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p, Int_t width, Int_t height,
+//______________________________________________________________________________
+TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p,
+                                     Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM  (0),
@@ -124,13 +137,13 @@ TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p, Int_t width, Int_t heigh
    fSE->Connect("Changed()", "TGLLightSetEditor", this, "Update()");
 }
 
+//______________________________________________________________________________
 TGLLightSetEditor::~TGLLightSetEditor()
 {
    // Destructor.
 }
 
-/**************************************************************************/
-
+//______________________________________________________________________________
 void TGLLightSetEditor::SetModel(TObject* obj)
 {
    // SetModel ... forward to sub-editor.

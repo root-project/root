@@ -64,6 +64,13 @@ TGLVertex3::TGLVertex3(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
+TGLVertex3::TGLVertex3(Double_t* v)
+{
+   // Construct a vertex with components (v[0], v[1], v[2])
+   Set(v[0], v[1], v[2]);
+}
+
+//______________________________________________________________________________
 TGLVertex3::TGLVertex3(const TGLVertex3 & other)
 {
    // Construct a vertex from 'other'
@@ -201,6 +208,7 @@ TGLLine3::~TGLLine3()
 void TGLLine3::Set(const TGLVertex3 & start, const TGLVertex3 & end)
 {
    // Set 3D line running from 'start' to 'end'
+
    fVertex = start;
    fVector = end - start;
 }
@@ -486,7 +494,30 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 }
 
 //______________________________________________________________________________
-TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
+TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis)
+{
+   // Construct matrix which when applied puts local origin at
+   // 'origin' and the local Z axis in direction 'z'. Both
+   // 'origin' and 'zAxisVec' are expressed in the parent frame
+   SetIdentity();
+
+   TGLVector3 zAxisInt(zAxis);
+   zAxisInt.Normalise();
+   TGLVector3 arbAxis;
+
+   if (TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Y()) && TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Z())) {
+      arbAxis.Set(1.0, 0.0, 0.0);
+   } else if (TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.X()) && TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.Z())) {
+      arbAxis.Set(0.0, 1.0, 0.0);
+   } else {
+      arbAxis.Set(0.0, 0.0, 1.0);
+   }
+
+   Set(origin, zAxis, Cross(zAxisInt, arbAxis));
+}
+
+//______________________________________________________________________________
+TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis)
 {
    // Construct matrix which when applied puts local origin at
    // 'origin' and the local Z axis in direction 'z'. Both
@@ -550,7 +581,7 @@ void TGLMatrix::MultLeft (const TGLMatrix & lhs)
 }
 
 //______________________________________________________________________________
-void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
+void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis)
 {
    // Set matrix which when applied puts local origin at
    // 'origin' and the local Z axis in direction 'z'. Both
@@ -558,21 +589,7 @@ void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const T
    TGLVector3 zAxisInt(zAxis);
    zAxisInt.Normalise();
 
-   TGLVector3 xAxisInt;
-   if (xAxis) {
-      xAxisInt = *xAxis;
-   } else {
-      TGLVector3 arbAxis;
-      if (TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Y()) && TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Z())) {
-         arbAxis.Set(1.0, 0.0, 0.0);
-      } else if (TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.X()) && TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.Z())) {
-         arbAxis.Set(0.0, 1.0, 0.0);
-      } else {
-         arbAxis.Set(0.0, 0.0, 1.0);
-      }
-      xAxisInt = Cross(zAxisInt, arbAxis);
-   }
-
+   TGLVector3 xAxisInt(xAxis);
    xAxisInt.Normalise();
    TGLVector3 yAxisInt = Cross(zAxisInt, xAxisInt);
 
@@ -639,7 +656,7 @@ void TGLMatrix::SetTranslation(const TGLVertex3 & translation)
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLMatrix::GetTranslation() const
+TGLVector3 TGLMatrix::GetTranslation() const
 {
    // Return the translation component of matrix
    //
@@ -648,7 +665,7 @@ TGLVertex3 TGLMatrix::GetTranslation() const
    // . . . Z()
    // . . . .
 
-   return TGLVertex3(fVals[12], fVals[13], fVals[14]);
+   return TGLVector3(fVals[12], fVals[13], fVals[14]);
 }
 
 //______________________________________________________________________________
@@ -665,6 +682,16 @@ void TGLMatrix::Translate(const TGLVector3 & vect)
    fVals[12] += vect[0];
    fVals[13] += vect[1];
    fVals[14] += vect[2];
+}
+
+//______________________________________________________________________________
+void TGLMatrix::MoveLF(Int_t ai, Double_t amount)
+{
+   // Translate in local frame.
+   // i1, i2 are axes indices: 1 ~ x, 2 ~ y, 3 ~ z.
+
+   const Double_t *C = fVals + 4*--ai;
+   fVals[12] += amount*C[0]; fVals[13] += amount*C[1]; fVals[14] += amount*C[2];
 }
 
 //______________________________________________________________________________
@@ -748,6 +775,25 @@ void TGLMatrix::RotateLF(Int_t i1, Int_t i2, Double_t amount)
 }
 
 //______________________________________________________________________________
+void TGLMatrix::RotatePF(Int_t i1, Int_t i2, Double_t amount)
+{
+   // Rotate in parent frame. Does optimised version of MultLeft.
+
+   if(i1 == i2) return;
+
+   // Optimized version:
+   const Double_t cos = TMath::Cos(amount), sin = TMath::Sin(amount);
+   Double_t  b1, b2;
+   Double_t* C = fVals;
+   --i1; --i2;
+   for(int c=0; c<4; ++c, C+=4) {
+      b1 = cos*C[i1] - sin*C[i2];
+      b2 = cos*C[i2] + sin*C[i1];
+      C[i1] = b1; C[i2] = b2;
+   }
+}
+
+//______________________________________________________________________________
 void TGLMatrix::TransformVertex(TGLVertex3 & vertex) const
 {
    // Transform passed 'vertex' by this matrix - converts local frame to parent
@@ -781,6 +827,107 @@ void TGLMatrix::Transpose3x3()
    temp = fVals[9];
    fVals[9] = fVals[6];
    fVals[6] = temp;
+}
+
+//______________________________________________________________________________
+Double_t TGLMatrix::Invert()
+{
+   // Invert the matrix, returns determinant.
+   // Copied from TMatrixFCramerInv.
+
+   Double_t* M = fVals;
+
+   const Double_t det2_12_01 = M[1]*M[6]  - M[5]*M[2];
+   const Double_t det2_12_02 = M[1]*M[10] - M[9]*M[2];
+   const Double_t det2_12_03 = M[1]*M[14] - M[13]*M[2];
+   const Double_t det2_12_13 = M[5]*M[14] - M[13]*M[6];
+   const Double_t det2_12_23 = M[9]*M[14] - M[13]*M[10];
+   const Double_t det2_12_12 = M[5]*M[10] - M[9]*M[6];
+   const Double_t det2_13_01 = M[1]*M[7]  - M[5]*M[3];
+   const Double_t det2_13_02 = M[1]*M[11] - M[9]*M[3];
+   const Double_t det2_13_03 = M[1]*M[15] - M[13]*M[3];
+   const Double_t det2_13_12 = M[5]*M[11] - M[9]*M[7];
+   const Double_t det2_13_13 = M[5]*M[15] - M[13]*M[7];
+   const Double_t det2_13_23 = M[9]*M[15] - M[13]*M[11];
+   const Double_t det2_23_01 = M[2]*M[7]  - M[6]*M[3];
+   const Double_t det2_23_02 = M[2]*M[11] - M[10]*M[3];
+   const Double_t det2_23_03 = M[2]*M[15] - M[14]*M[3];
+   const Double_t det2_23_12 = M[6]*M[11] - M[10]*M[7];
+   const Double_t det2_23_13 = M[6]*M[15] - M[14]*M[7];
+   const Double_t det2_23_23 = M[10]*M[15] - M[14]*M[11];
+
+
+   const Double_t det3_012_012 = M[0]*det2_12_12 - M[4]*det2_12_02 + M[8]*det2_12_01;
+   const Double_t det3_012_013 = M[0]*det2_12_13 - M[4]*det2_12_03 + M[12]*det2_12_01;
+   const Double_t det3_012_023 = M[0]*det2_12_23 - M[8]*det2_12_03 + M[12]*det2_12_02;
+   const Double_t det3_012_123 = M[4]*det2_12_23 - M[8]*det2_12_13 + M[12]*det2_12_12;
+   const Double_t det3_013_012 = M[0]*det2_13_12 - M[4]*det2_13_02 + M[8]*det2_13_01;
+   const Double_t det3_013_013 = M[0]*det2_13_13 - M[4]*det2_13_03 + M[12]*det2_13_01;
+   const Double_t det3_013_023 = M[0]*det2_13_23 - M[8]*det2_13_03 + M[12]*det2_13_02;
+   const Double_t det3_013_123 = M[4]*det2_13_23 - M[8]*det2_13_13 + M[12]*det2_13_12;
+   const Double_t det3_023_012 = M[0]*det2_23_12 - M[4]*det2_23_02 + M[8]*det2_23_01;
+   const Double_t det3_023_013 = M[0]*det2_23_13 - M[4]*det2_23_03 + M[12]*det2_23_01;
+   const Double_t det3_023_023 = M[0]*det2_23_23 - M[8]*det2_23_03 + M[12]*det2_23_02;
+   const Double_t det3_023_123 = M[4]*det2_23_23 - M[8]*det2_23_13 + M[12]*det2_23_12;
+   const Double_t det3_123_012 = M[1]*det2_23_12 - M[5]*det2_23_02 + M[9]*det2_23_01;
+   const Double_t det3_123_013 = M[1]*det2_23_13 - M[5]*det2_23_03 + M[13]*det2_23_01;
+   const Double_t det3_123_023 = M[1]*det2_23_23 - M[9]*det2_23_03 + M[13]*det2_23_02;
+   const Double_t det3_123_123 = M[5]*det2_23_23 - M[9]*det2_23_13 + M[13]*det2_23_12;
+
+   const Double_t det = M[0]*det3_123_123 - M[4]*det3_123_023 +
+      M[8]*det3_123_013 - M[12]*det3_123_012;
+
+   if(det == 0) {
+      Warning("TGLMatrix::Invert", "matrix is singular.");
+      return 0;
+   }
+
+   const Double_t oneOverDet = 1.0/det;
+   const Double_t mn1OverDet = - oneOverDet;
+
+   M[0]  = det3_123_123 * oneOverDet;
+   M[4]  = det3_023_123 * mn1OverDet;
+   M[8]  = det3_013_123 * oneOverDet;
+   M[12] = det3_012_123 * mn1OverDet;
+
+   M[1]  = det3_123_023 * mn1OverDet;
+   M[5]  = det3_023_023 * oneOverDet;
+   M[9]  = det3_013_023 * mn1OverDet;
+   M[13] = det3_012_023 * oneOverDet;
+
+   M[2]  = det3_123_013 * oneOverDet;
+   M[6]  = det3_023_013 * mn1OverDet;
+   M[10] = det3_013_013 * oneOverDet;
+   M[14] = det3_012_013 * mn1OverDet;
+
+   M[3]  = det3_123_012 * mn1OverDet;
+   M[7]  = det3_023_012 * oneOverDet;
+   M[11] = det3_013_012 * mn1OverDet;
+   M[15] = det3_012_012 * oneOverDet;
+
+   return det;
+}
+
+//______________________________________________________________________________
+void TGLMatrix::MultiplyIP(TGLVector3& v, Double_t w) const
+{
+   // Multiply vector in-place.
+   const Double_t* M = fVals;
+   Double_t r[3] = { v[0], v[1], v[2] };
+   v.X() = M[0]*r[0] + M[4]*r[1] +  M[8]*r[2] + M[12]*w;
+   v.Y() = M[1]*r[0] + M[5]*r[1] +  M[9]*r[2] + M[13]*w;
+   v.Z() = M[2]*r[0] + M[6]*r[1] + M[10]*r[2] + M[14]*w;
+}
+
+//______________________________________________________________________________
+void TGLMatrix::RotateIP(TGLVector3& v) const
+{
+   // Rotate vector in-place. Translation is not applied.
+   const Double_t* M = fVals;
+   Double_t r[3] = { v[0], v[1], v[2] };
+   v.X() = M[0]*r[0] + M[4]*r[1] +  M[8]*r[2];
+   v.Y() = M[1]*r[0] + M[5]*r[1] +  M[9]*r[2];
+   v.Z() = M[2]*r[0] + M[6]*r[1] + M[10]*r[2];
 }
 
 //______________________________________________________________________________
@@ -824,7 +971,8 @@ void TGLMatrix::Dump() const
 
 ClassImp(TGLUtil)
 
-UInt_t TGLUtil::fgDrawQuality = 60;
+UInt_t TGLUtil::fgDefaultDrawQuality = 60;
+UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 
 //______________________________________________________________________________
 void TGLUtil::CheckError(const char * loc)

@@ -56,6 +56,7 @@ public:
    // When they can, TPad::Paint() and TPad::PaintModified() simply
    // call the following function:
    virtual void   PadPaint(TVirtualPad*) {}
+   virtual void   ObjectPaint(TObject*, Option_t* = "")  {}
 
    // Addition/removal of objects must occur between Begin/EndUpdate calls
    virtual void   BeginScene() = 0;

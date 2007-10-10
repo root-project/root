@@ -79,6 +79,7 @@ public:
 
    virtual Bool_t CanLoopOnPrimitives() const { return kTRUE; }
    virtual void   PadPaint(TVirtualPad* pad);
+   virtual void   ObjectPaint(TObject* obj, Option_t* opt="");
 
    // For now handled by viewer
    virtual Int_t  DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/) { return 9999; }

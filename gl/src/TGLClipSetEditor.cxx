@@ -18,6 +18,7 @@
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
 
+#include "TGLViewerEditor.h"
 
 //______________________________________________________________________________
 // TGLClipSetSubEditor
@@ -49,45 +50,36 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    new TGRadioButton(fTypeButtons, "Plane");
    new TGRadioButton(fTypeButtons, "Box");
 
-   AddFrame(fTypeButtons, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fTypeButtons, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    // Clip inside / edit
    fClipInside = new TGCheckButton(this, "Clip away inside");
-   AddFrame(fClipInside, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fClipInside, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    fClipEdit   = new TGCheckButton(this, "Edit In Viewer");
-   AddFrame(fClipEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fClipEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    fClipShow   = new TGCheckButton(this, "Show In Viewer");
-   AddFrame(fClipShow, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fClipShow, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
 
    // Plane properties
    fPlanePropFrame = new TGCompositeFrame(this);
-   //fPlanePropFrame->SetCleanup(kDeepCleanup);
-   AddFrame(fPlanePropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fPlanePropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
 
    static const char * const planeStr[] = { "aX + ", "bY +", "cZ + ", "d = 0" };
 
-   for (Int_t i = 0; i < 4; ++i) {
-      TGLabel *label = new TGLabel(fPlanePropFrame, planeStr[i]);
-      fPlanePropFrame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
-      fPlaneProp[i] = new TGNumberEntry(fPlanePropFrame, 1., 8);
-      fPlanePropFrame->AddFrame(fPlaneProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   }
+   for (Int_t i = 0; i < 4; ++i)
+     fPlaneProp[i] = TGLViewerEditor::MakeLabeledNEntry(fPlanePropFrame, planeStr[i] , 40);
 
    // Box properties
    fBoxPropFrame = new TGCompositeFrame(this);
-   AddFrame(fBoxPropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fBoxPropFrame, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
 
    static const char * const boxStr[] = {"Center X", "Center Y", "Center Z", "Length X", "Length Y", "Length Z" };
 
-   for (Int_t i = 0; i < 6; ++i) {
-      TGLabel *label = new TGLabel(fBoxPropFrame, boxStr[i]);
-      fBoxPropFrame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
-      fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
-      fBoxPropFrame->AddFrame(fBoxProp[i], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   }
+   for (Int_t i = 0; i < 6; ++i)
+     fBoxProp[i] = TGLViewerEditor::MakeLabeledNEntry(fBoxPropFrame, boxStr[i] , 60);
 
    // Apply button
    fApplyButton = new TGTextButton(this, "Apply");
-   AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+   AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
 
    fTypeButtons->Connect("Clicked(Int_t)", "TGLClipSetSubEditor", this, "ClipTypeChanged(Int_t)");
    fClipInside->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
