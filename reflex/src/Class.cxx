@@ -259,14 +259,14 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl,
          path.push_back( b ); 
          return true; 
       }
-      else if ( basetype && basetype.HasBase(cl) ) {
-         // is the final base class one of the current class ?
-         // if searched base class is not direct base look in the bases of this one
-         //       if ( basetype.HasBase( cl ) ) {                                              
+      else if ( basetype ) {
+         const Class* clbase = dynamic_cast<const Class*>(basetype.FinalType().ToTypeBase());
+         if (clbase && clbase->HasBase(cl, path) ) {
+            // is the final base class one of the current class ?
             // if successfull remember path
             path.push_back( b ); 
             return true; 
-            //}
+         }
       }
    }
    return false;
