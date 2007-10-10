@@ -436,6 +436,7 @@ void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
    //
    // IMPORTANT NOTE
    // --------------
+   // --NOTE 1
    // Lets assume an original variable float x:
    // When using the format [0,0,8] (ie range not specified) you get the best
    // relative precision when storing and reading back the truncated x, say xt.
@@ -445,6 +446,12 @@ void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
    // The format [0,0,8] is also interesting when the range of x is infinite
    // or unknown.
    //
+   // --NOTE 2
+   // It is important to understand the difference with the meaning of nbits
+   //  -in case of [-1,1,nbits], nbits is the total number of bits used to make
+   //    the conversion from a float to an integer
+   //  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+   //   
    //  see example of use of the Float16_t data type in tutorial double32.C
    //
    //Begin_Html
@@ -504,7 +511,7 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    // In case B fTemperature is converted to a 32 bit unsigned integer
    // In case C fCharge is converted to a 2 bits unsigned integer
    // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-   // In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+   // In case E fChi2 is converted to a Float_t with mantissa truncated precision at 6 bits
    // In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
    //           Note that the range specifier must follow the dimension specifier.
    // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
@@ -519,8 +526,9 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    // if (xmin==0 and xmax==0 and nbits <=16) the double word will be converted
    // to a float and its mantissa truncated to nbits significative bits.
    //
-   // IMPORTANT NOTE
+   // IMPORTANT NOTEs
    // --------------
+   // --NOTE 1
    // Lets assume an original variable double x:
    // When using the format [0,0,8] (ie range not specified) you get the best
    // relative precision when storing and reading back the truncated x, say xt.
@@ -530,6 +538,12 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    // The format [0,0,8] is also interesting when the range of x is infinite
    // or unknown.
    //
+   // --NOTE 2
+   // It is important to understand the difference with the meaning of nbits
+   //  -in case of [-1,1,nbits], nbits is the total number of bits used to make
+   //    the conversion from a double to an integer
+   //  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+   //   
    //  see example of use of the Double32_t data type in tutorial double32.C
    //
    //Begin_Html
