@@ -303,7 +303,9 @@ void TColor::InitializeColors()
       // Create the ROOT Color Wheel
       TColor::CreateColorWheel();
    }
-   SetPalette(0,0);
+   // If fgPalette.fN !=0 SetPalette has been called already 
+   // (from rootlogon.C for instance)
+   if (!fgPalette.fN) SetPalette(0,0);
 }
 
 
