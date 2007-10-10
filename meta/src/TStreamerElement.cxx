@@ -138,6 +138,7 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    if (nbits < 32)  bigint = 1<<nbits;
    else             bigint = 0xffffffff;
    if (xmin < xmax) factor = bigint/(xmax-xmin);
+   if (xmin >= xmax && nbits <15) xmin = nbits+0.1;
 }
 
 ClassImp(TStreamerElement)

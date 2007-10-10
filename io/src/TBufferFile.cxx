@@ -343,7 +343,7 @@ void TBufferFile::ReadFloat16 (Float_t *f, TStreamerElement *ele)
       UInt_t aint; *this >> aint; f[0] = (Float_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
       Int_t nbits = 0;
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) nbits = 12;
       //we read the exponent and the truncated mantissa of the float
       //and rebuild the float.
@@ -375,7 +375,7 @@ void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
       UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
       Int_t nbits = 0;
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) {
          //we read a float and convert it to double
          Float_t afloat; 
@@ -473,7 +473,7 @@ void TBufferFile::WriteFloat16 (Float_t *f, TStreamerElement *ele)
    } else {
       Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) nbits = 12;
       //a range is not specified, but nbits is.
       //In this case we truncate the mantissa to nbits and we stream
@@ -523,7 +523,7 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    //  [-10,100,16]
    //  [0,0,8]
    // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-   // if (xmin==0 and xmax==0 and nbits <=16) the double word will be converted
+   // if (xmin==0 and xmax==0 and nbits <=14) the double word will be converted
    // to a float and its mantissa truncated to nbits significative bits.
    //
    // IMPORTANT NOTEs
@@ -565,7 +565,7 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    } else {
       Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) {
          //if no range and no bits specified, we convert from double to float
          Float_t afloat = (Float_t)d[0]; 
@@ -1323,7 +1323,7 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
    } else {
       Int_t i;
       Int_t nbits = 0;
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) nbits = 12;
       //we read the exponent and the truncated mantissa of the float
       //and rebuild the new float.
@@ -1363,7 +1363,7 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
    } else {
       Int_t i;
       Int_t nbits = 0;
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) {
          //we read a float and convert it to double
          Float_t afloat; 
@@ -1946,7 +1946,7 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
    } else {
       Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       if (!nbits) nbits = 12;
       Int_t i;
       //a range is not specified, but nbits is.
