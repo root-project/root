@@ -41,6 +41,7 @@ extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, I
 
 ClassImp(TGraph)
 
+
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Graph class</h2></center>
@@ -189,7 +190,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
       TAttLine::operator=(gr);
       TAttFill::operator=(gr);
       TAttMarker::operator=(gr);
-    
+
       fNpoints = gr.fNpoints;
       fMaxSize = gr.fMaxSize;
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
@@ -205,7 +206,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
          fX = new Double_t[fMaxSize];
          fY = new Double_t[fMaxSize];
       }
-    
+
       Int_t n = gr.GetN()*sizeof(Double_t);
       if (n>0) {
          memcpy(fX, gr.fX, n);
@@ -463,7 +464,7 @@ Double_t TGraph::Chisquare(const TF1 *f1) const
    // In case of a pure TGraph, the denominator is 1.
    // In case of a TGraphErrors or TGraphAsymmErrors the errors are taken
    // into account.
-   
+
    if (!f1) return 0;
    Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
@@ -489,7 +490,7 @@ Double_t TGraph::Chisquare(const TF1 *f1) const
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
       if (exh > 0 || exl > 0) {
-         //"Effective Variance" method introduced by Anna Kreshuk 
+         //"Effective Variance" method introduced by Anna Kreshuk
          //a copy of the algorithm in GraphFitChisquare from TFitter
          eux = 0.5*(exl + exh)*func->Derivative(x[0]);
       } else
@@ -501,17 +502,19 @@ Double_t TGraph::Chisquare(const TF1 *f1) const
    return chi2;
 }
 
+
 //______________________________________________________________________________
 Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 {
    // Return kTRUE if point number "left"'s argument (angle with respect to positive
    // x-axis) is bigger than that of point number "right". Can be used by Sort.
-   
+
    Double_t xl,yl,xr,yr;
    gr->GetPoint(left,xl,yl);
    gr->GetPoint(right,xr,yr);
    return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
 }
+
 
 //______________________________________________________________________________
 Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
@@ -695,7 +698,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
       d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
       if (d < distance) distance = d;
    }
-   
+
    // If graph has been drawn with the fill area option, check if we are inside
    TString drawOption = GetDrawOption();
    drawOption.ToLower();
@@ -1007,7 +1010,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                       xmax + dxr*gPad->GetRightMargin(),
                       ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
-      }      
+      }
       if (middle) {
          for(i=0;i<fNpoints;i++) {
             if (badcase) continue;  //do not update if big zoom and points moved
@@ -1162,7 +1165,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //                    (saves time)
    //             = "F" If fitting a polN, switch to minuit fitter
    //             = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using 
+   //                     coefficients (robust(resistant) regression), using
    //                     the default fraction of good points
    //               "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
@@ -1186,7 +1189,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   see the discussion below on the errors calulation.
    //
    // Linear fitting:
-   // 
+   //
    //   When the fitting function is linear (contains the "++" sign) or the fitting
    //   function is a polynomial, a linear fitter is initialised.
    //   To create a linear function, use the following syntaxis: linear parts
@@ -1198,7 +1201,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   advantage in speed.
    //
    // Setting initial conditions:
-   // 
+   //
    //   Parameters must be initialized before invoking the Fit function.
    //   The setting of the parameter initial values is automatic for the
    //   predefined functions : poln, expo, gaus, landau. One can however disable
@@ -1216,14 +1219,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   Parameter 5 is fixed to 100.
    //
    // Fit range:
-   // 
+   //
    //   The fit range can be specified in two ways:
    //     - specify rxmax > rxmin (default is rxmin=rxmax=0)
    //     - specify the option "R". In this case, the function will be taken
    //       instead of the full graph range.
    //
    // Changing the fitting function:
-   // 
+   //
    //   By default the fitting function GraphFitChisquare is used.
    //   To specify a User defined fitting function, specify option "U" and
    //   call the following functions:
@@ -1232,7 +1235,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    //
    // How errors are used in the chisquare function (see TFitter GraphFitChisquare)//   Access to the fit results
-   // 
+   //
    //   In case of a TGraphErrors object, ex, the error along x,  is projected
    //   along the y-direction by calculating the function at the points x-exlow and
    //   x+exhigh.
@@ -1261,7 +1264,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //      becomes a non-linear case, which takes several iterations
    //      instead of 0 as in the linear case .
    //
-   //   2) The effective variance technique assumes that there is no correlation 
+   //   2) The effective variance technique assumes that there is no correlation
    //      between the x and y coordinate .
    //
    //   Note, that the linear fitter doesn't take into account the errors in x. If errors
@@ -1289,7 +1292,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
    //
    // Fit Statistics
-   // 
+   //
    //   You can change the statistics box to display the fit parameters with
    //   the TStyle::SetOptFit(mode) method. This mode has four digits.
    //   mode = pcev  (default = 0111)
@@ -1313,7 +1316,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    //     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
    //   The fitResult is 0 is the fit is OK.
    //   The fitResult is negative in case of an error not connected with the fit.
-   
+
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx, ndf;
@@ -1377,7 +1380,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
    if (opt.Contains("F")) fitOption.Minuit  = 1;
-   if (opt.Contains("H")) fitOption.Robust  = 1; 
+   if (opt.Contains("H")) fitOption.Robust  = 1;
 
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
@@ -1561,9 +1564,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          werr  = f1->GetParError(i);
          werr *= TMath::Sqrt(amin/(ndf-1));
          f1->SetParError(i,werr);
-      }  
-   }  
-    
+      }
+   }
+
    // Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);
@@ -3183,12 +3186,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
       wminstep = wmin + 0.5*delta;
       Axis_t ax1,ax2,ay1,ay2;
       gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
- 
+
       Int_t ax1Pix = gPad->XtoAbsPixel(ax1);
       Int_t ax2Pix = gPad->XtoAbsPixel(ax2);
       Int_t ay1Pix = gPad->YtoAbsPixel(ay1);
       Int_t ay2Pix = gPad->YtoAbsPixel(ay2);
- 
+
       Int_t nrPix;
       if (!optionRot)
          nrPix = ax2Pix-ax1Pix+1;
@@ -3267,7 +3270,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                } else {
                   yc[nrLine] = gPad->AbsPixeltoY(ay1Pix+ipix) + ycadjust;
                   xc[nrLine] = gPad->AbsPixeltoX((Int_t)centrPix[ipix]);
- 
+
                   xl[0]      = gPad->AbsPixeltoX((Int_t)minPix[ipix]);
                   yl[0]      = yc[nrLine];
                   xl[1]      = gPad->AbsPixeltoX((Int_t)maxPix[ipix]);
@@ -3534,7 +3537,7 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    // zone. x and y are the the vectors holding the polyline and n the
    // number of points in the polyline and w the width of the hatches.
    // w can be negative.
-   // This method is not meant to be used directly. It is called 
+   // This method is not meant to be used directly. It is called
    // automatically according to the line style convention.
 
    Int_t i,j,nf;
@@ -3572,7 +3575,7 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
    // The first part of the filled area is made of the graph points.
-   // Make sure that two adjacent points are different. 
+   // Make sure that two adjacent points are different.
    xf[0] = rx*(x[0]-rx1)+x1ndc;
    yf[0] = ry*(y[0]-ry1)+y1ndc;
    nf = 0;
@@ -3589,19 +3592,19 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    a = TMath::ATan((yf[1]-yf[0])/(xf[1]-xf[0]));
    if (xf[0]<=xf[1]) {
       xt[0] = xf[0]-w*TMath::Sin(a);
-      yt[0] = yf[0]+w*TMath::Cos(a); 
+      yt[0] = yf[0]+w*TMath::Cos(a);
    } else {
       xt[0] = xf[0]+w*TMath::Sin(a);
-      yt[0] = yf[0]-w*TMath::Cos(a); 
+      yt[0] = yf[0]-w*TMath::Cos(a);
    }
-  
+
    a = TMath::ATan((yf[nf]-yf[nf-1])/(xf[nf]-xf[nf-1]));
    if (xf[nf]>=xf[nf-1]) {
       xt[nf] = xf[nf]-w*TMath::Sin(a);
-      yt[nf] = yf[nf]+w*TMath::Cos(a); 
+      yt[nf] = yf[nf]+w*TMath::Cos(a);
    } else {
       xt[nf] = xf[nf]+w*TMath::Sin(a);
-      yt[nf] = yf[nf]-w*TMath::Cos(a); 
+      yt[nf] = yf[nf]-w*TMath::Cos(a);
    }
 
    Double_t xi0,yi0,xi1,yi1,xi2,yi2;
@@ -3617,9 +3620,9 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
       if (xi0<xi2) a2 = a2+3.14159;
       x1 = xi0-w*TMath::Sin(a1);
-      y1 = yi0+w*TMath::Cos(a1); 
+      y1 = yi0+w*TMath::Cos(a1);
       x2 = xi0-w*TMath::Sin(a2);
-      y2 = yi0+w*TMath::Cos(a2); 
+      y2 = yi0+w*TMath::Cos(a2);
       xm = (x1+x2)*0.5;
       ym = (y1+y2)*0.5;
       a3 = TMath::ATan((ym-yi0)/(xm-xi0));
@@ -3627,7 +3630,7 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       y3 = yi0+w*TMath::Cos(a3+1.57079);
       // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
       if ((xm-xi0)*(x3-xi0)<0 && (ym-yi0)*(y3-yi0)<0) {
-         x3 = 2*xi0-x3; 
+         x3 = 2*xi0-x3;
          y3 = 2*yi0-y3;
       }
       if ((xm==x1) && (ym==y1)) {
@@ -3646,7 +3649,7 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       x3 = xf[0]+w*TMath::Sin(a3+1.57079);
       y3 = yf[0]-w*TMath::Cos(a3+1.57079);
       if ((xm-xf[0])*(x3-xf[0])<0 && (ym-yf[0])*(y3-yf[0])<0) {
-         x3 = 2*xf[0]-x3; 
+         x3 = 2*xf[0]-x3;
          y3 = 2*yf[0]-y3;
       }
       xt[nf] = x3;
@@ -3669,9 +3672,9 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
          if (c1 != c2) {
             xc = (b2-b1)/(c1-c2);
             yc = c1*xc+b1;
-            if (xc>TMath::Min(xt[i],xt[i-1]) && xc<TMath::Max(xt[i],xt[i-1]) && 
+            if (xc>TMath::Min(xt[i],xt[i-1]) && xc<TMath::Max(xt[i],xt[i-1]) &&
                 xc>TMath::Min(xt[j],xt[j-1]) && xc<TMath::Max(xt[j],xt[j-1]) &&
-                yc>TMath::Min(yt[i],yt[i-1]) && yc<TMath::Max(yt[i],yt[i-1]) && 
+                yc>TMath::Min(yt[i],yt[i-1]) && yc<TMath::Max(yt[i],yt[i-1]) &&
                 yc>TMath::Min(yt[j],yt[j-1]) && yc<TMath::Max(yt[j],yt[j-1])) {
                nf++; xf[nf] = xt[i]; yf[nf] = yt[i];
                nf++; xf[nf] = xc   ; yf[nf] = yc;
@@ -3750,6 +3753,7 @@ void TGraph::Print(Option_t *) const
    }
 }
 
+
 //______________________________________________________________________________
 void TGraph::RecursiveRemove(TObject *obj)
 {
@@ -3820,9 +3824,7 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   graph->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
    }
-   if (strstr(option,"multigraph")) {
-      return;
-   }
+
    static Int_t frameNumber = 0;
    if (fHistogram) {
       frameNumber++;
@@ -3847,9 +3849,11 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (!strstr(option,"multigraph")) {
-      out<<"   graph->Draw("
-         <<quote<<option<<quote<<");"<<endl;
+   char *l = strstr(option,"multigraph");
+   if (l) {
+      out<<"   multigraph->Add(graph,"<<quote<<l+10<<quote<<");"<<endl;
+   } else {
+      out<<"   graph->Draw("<<quote<<option<<quote<<");"<<endl;
    }
 }
 
@@ -4459,7 +4463,7 @@ L390:
 
 //______________________________________________________________________________
 void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
-                  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) 
+                  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */)
 {
    // Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
    // To compare two points the function parameter greaterfunc is used (see TGraph::CompareX for an

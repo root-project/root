@@ -27,24 +27,28 @@ ClassImp(TMultiGraph)
 
 
 //______________________________________________________________________________
-//
-//   A TMultiGraph is a collection of TGraph (or derived) objects
-//   Use TMultiGraph::Add to add a new graph to the list.
-//   The TMultiGraph owns the objects in the list.
-//   Drawing options are the same as for TGraph
-//   Example;
-//     TGraph *gr1 = new TGraph(...
-//     TGraphErrors *gr2 = new TGraphErrors(...
-//     TMultiGraph *mg = new TMultiGraph();
-//     mg->Add(gr1,"lp");
-//     mg->Add(gr2,"cp");
-//     mg->Draw("a");
-//
-//  The drawing option for each TGraph may be specified as an optional
-//  second argument of the Add function.
-//  If a draw option is specified, it will be used to draw the graph,
-//  otherwise the graph will be drawn with the option specified in
-//  TMultiGraph::Draw
+/* Begin_Html
+<center><h2>TMultiGraph class</h2></center>
+A TMultiGraph is a collection of TGraph (or derived) objects
+Use <tt>TMultiGraph::Add</tt> to add a new graph to the list.
+The TMultiGraph owns the objects in the list.
+Drawing options are the same as for TGraph.
+<p>
+Example:
+<pre>	
+     TGraph *gr1 = new TGraph(...
+     TGraphErrors *gr2 = new TGraphErrors(...
+     TMultiGraph *mg = new TMultiGraph();
+     mg->Add(gr1,"lp");
+     mg->Add(gr2,"cp");
+     mg->Draw("a");
+</pre>
+The drawing option for each TGraph may be specified as an optional
+second argument of the Add function.
+If a draw option is specified, it will be used to draw the graph,
+otherwise the graph will be drawn with the option specified in
+<tt>TMultiGraph::Draw</tt>.
+End_Html */
 
 
 //______________________________________________________________________________
@@ -1204,13 +1208,11 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
       while (lnk) {
          g = lnk->GetObject();
-         g->SavePrimitive(out,"multigraph");
+         g->SavePrimitive(out, Form("multigraph%s",lnk->GetOption()));
          lnk = (TObjOptLink*)lnk->Next();
-
       }
    }
-   out<<"   multigraph->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+   out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<endl;
 
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
