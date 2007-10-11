@@ -676,7 +676,11 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   grbe->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
-      out<<"   grbe->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<endl;
+      out<<"   grbe->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]
+                                       <<","<<fEYlow[i]<<","<<fEYhigh[i]              
+                                       <<","<<fEXlowd[i]<<","<<fEXhighd[i]
+                                       <<","<<fEYlowd[i]<<","<<fEYhighd[i]
+                                       <<");"<<endl;
    }
 
    static Int_t frameNumber = 0;
@@ -711,7 +715,8 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
 
 //______________________________________________________________________________
-void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
+void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
+                                     Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
 {
    // Set ex and ey values for point pointed by the mouse.
 
@@ -729,16 +734,21 @@ void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, D
    }
    if (ipoint == -2) return;
 
-   fEXlow[ipoint]  = exl;
-   fEYlow[ipoint]  = eyl;
-   fEXhigh[ipoint] = exh;
-   fEYhigh[ipoint] = eyh;
+   fEXlow[ipoint]   = exl;
+   fEYlow[ipoint]   = eyl;
+   fEXhigh[ipoint]  = exh;
+   fEYhigh[ipoint]  = eyh;
+   fEXlowd[ipoint]  = exld;
+   fEXhighd[ipoint] = exhd;
+   fEYlowd[ipoint]  = eyld;
+   fEYhighd[ipoint] = eyhd;
    gPad->Modified();
 }
 
 
 //______________________________________________________________________________
-void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
+void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
+                                     Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
 {
    // Set ex and ey values for point number i.
 
@@ -747,10 +757,14 @@ void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double
    // re-allocate the object
       TGraphBentErrors::SetPoint(i,0,0);
    }
-   fEXlow[i]  = exl;
-   fEYlow[i]  = eyl;
-   fEXhigh[i] = exh;
-   fEYhigh[i] = eyh;
+   fEXlow[i]   = exl;
+   fEYlow[i]   = eyl;
+   fEXhigh[i]  = exh;
+   fEYhigh[i]  = eyh;
+   fEXlowd[i]  = exld;
+   fEXhighd[i] = exhd;
+   fEYlowd[i]  = eyld;
+   fEYhighd[i] = eyhd;
 }
 
 

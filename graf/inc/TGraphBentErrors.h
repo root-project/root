@@ -86,10 +86,14 @@ public:
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh,
-                                 Double_t eyl, Double_t eyh); // *MENU*
+                                 Double_t eyl, Double_t eyh,
+                                 Double_t exld=0, Double_t exhd=0,  
+                                 Double_t eyld=0, Double_t eyhd=0); // *MENU*
    virtual void    SetPointError(Int_t i,
                                  Double_t exl, Double_t exh,
-                                 Double_t eyl, Double_t eyh);
+                                 Double_t eyl, Double_t eyh,
+                                 Double_t exld=0, Double_t exhd=0,  
+                                 Double_t eyld=0, Double_t eyhd=0);
 
    ClassDef(TGraphBentErrors,1)  //A graph with bent, asymmetric error bars
 };
