@@ -124,7 +124,7 @@ int XrdProofdManager::Config(const char *fn, XrdSysError *e)
    // Effective user
    XrdProofUI ui;
    if (XrdProofdAux::GetUserInfo(geteuid(), ui) == 0) {
-      fEffectiveUser += ui.fUser;
+      fEffectiveUser = ui.fUser;
    } else {
       mp = "ProofdManager: Config: could not resolve effective user (getpwuid, errno: ";
       mp += errno;

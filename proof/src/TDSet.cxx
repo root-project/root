@@ -99,13 +99,13 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    // Create a TDSet element.
 
    if (first < 0) {
-      Warning("TDSetElement", "first must be >= 0, %d is not allowed - setting to 0", first);
+      Warning("TDSetElement", "first must be >= 0, %lld is not allowed - setting to 0", first);
       fFirst = 0;
    } else {
       fFirst = first;
    }
    if (num < -1) {
-      Warning("TDSetElement", "num must be >= -1, %d is not allowed - setting to -1", num);
+      Warning("TDSetElement", "num must be >= -1, %lld is not allowed - setting to -1", num);
       fNum   = -1;
    } else {
       fNum   = num;
@@ -421,16 +421,18 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
 }
 
 //______________________________________________________________________________
-void TDSetElement::Lookup(Bool_t force)
+Int_t TDSetElement::Lookup(Bool_t force)
 {
    // Resolve end-point URL for this element
+   // Return 0 on success and -1 otherwise
    static Int_t xNetPluginOK = -1;
    static TString xNotRedir;
    static TFileStager *xStager = 0;
+   Int_t retVal = 0;
 
    // Check if required
    if (!force && HasBeenLookedUp())
-      return;
+      return retVal;
 
    // Open the file as raw to avoid the (slow) initialization
    TUrl url(GetName());
@@ -471,8 +473,10 @@ void TDSetElement::Lookup(Bool_t force)
    if (doit) {
       if (!xStager || !xStager->Matches(name)) {
          SafeDelete(xStager);
-         if (!(xStager = TFileStager::Open(name)))
+         if (!(xStager = TFileStager::Open(name))) {
             Error("Lookup", "TFileStager instance cannot be instantiated");
+            retVal = -1;
+         }
       }
       if (xStager && xStager->Locate(name.Data(), name) == 0) {
          // Get the effective end-point Url
@@ -485,11 +489,13 @@ void TDSetElement::Lookup(Bool_t force)
       } else {
          // Failure
          Error("Lookup", "couldn't lookup %s\n", name.Data());
+         retVal = -1;
       }
    }
 
    // Mark has looked-up
    SetBit(kHasBeenLookedUp);
+   return retVal;
 }
 
 //______________________________________________________________________________
@@ -1186,15 +1192,16 @@ Bool_t TDSet::ElementsValid() const
 }
 
 //______________________________________________________________________________
-Int_t TDSet::Remove(TDSetElement *elem)
+Int_t TDSet::Remove(TDSetElement *elem, Bool_t deleteElem)
 {
    // Remove TDSetElement 'elem' from the list.
    // Return 0 on success, -1 if the element is not in the list
 
-   if (!elem || !(GetListOfElements()->Remove(elem)))
+   if (!elem || !(((THashList *)(GetListOfElements()))->Remove(elem)))
       return -1;
 
-   SafeDelete(elem);
+   if (deleteElem)
+      SafeDelete(elem);
    return 0;
 }
 
@@ -1211,12 +1218,13 @@ void TDSet::Validate()
 }
 
 //______________________________________________________________________________
-void TDSet::Lookup()
+TList *TDSet::Lookup(Bool_t removeMissing)
 {
    // Resolve the end-point URL for the current elements of this data set
-   // If an entry- or event- list has been given, assign the relevant portions
-   // to each element; this also allows to look-up only for the elements which
-   // have something to be processed, so it is better to do it before Lookup()
+   // If the removeMissing option is set to kTRUE, remove the TDSetElements
+   // that can not be located. 
+   // The method returns the list of removed TDSetElements (if any) or NULL.
+   // The list of removed elements must be later deleted.
 
    // If an entry- or event- list has been given, assign the relevant portions
    // to each element; this allows to look-up only for the elements which have
@@ -1224,6 +1232,7 @@ void TDSet::Lookup()
    // operations.
    SplitEntryList();
 
+   TList *listOfMissingFiles = 0;
    TString msg("Looking up for exact location of files");
    UInt_t n = 0;
    UInt_t ng = 0;
@@ -1235,7 +1244,14 @@ void TDSet::Lookup()
       if (elem->GetNum() != 0) { // -1 means "all entries"
          ng++;
          if (!elem->GetValid())
-            elem->Lookup();
+            if (elem->Lookup())
+               if (removeMissing) {
+                  if (Remove(elem, kFALSE))
+                     Error("Lookup", "Error removing a missing file");
+                  if (!listOfMissingFiles)
+                     listOfMissingFiles = new TList;
+                  listOfMissingFiles->Add(elem);
+               }
       }
       n++;
       // Notify the client
@@ -1248,6 +1264,7 @@ void TDSet::Lookup()
       msg = Form("Files with entries to be processed: %d (out of %d)\n", ng, tot);
       gProofServ->SendAsynMessage(msg);
    }
+   return listOfMissingFiles;
 }
 
 //______________________________________________________________________________

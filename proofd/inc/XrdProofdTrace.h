@@ -33,7 +33,8 @@
 #define TRACE_XERR      0x0040
 #define TRACE_FORK      0x0080
 #define TRACE_HDBG      0x0100
-#define TRACE_INFLT     0x0200
+#define TRACE_SCHED     0x0200
+#define TRACE_ADMIN     0x0400
 
 #ifndef NODEBUG
 

@@ -202,11 +202,13 @@ public:
    bool                IsValid() const { XrdSysMutexHelper mhp(fMutex); return fIsValid; }
    const char         *StatusAsString() const;
 
-   int                 ChangeProcessPriority(int deltap);
+   int                 GetDefaultProcessPriority();
+   int                 SetProcessPriority(int priority = -99999);
    int                 SetShutdownTimer(int opt, int delay, bool on = 1);
    int                 TerminateProofServ();
    int                 VerifyProofServ(int timeout);
 
+   int                 BroadcastPriority(int priority);
    int                 SetInflate(int inflate, bool sendover);
    int                 SetSchedRoundRobin(bool on = 1);
    void                SetSrv(int id);

@@ -274,7 +274,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fValid = kTRUE;
 
    // Resolve end-point urls to optmize distribution
-   dset->Lookup();
+   // dset->Lookup(); // moved to TProofPlayerRemote::Process
 
    // Split into per host entries
    dset->Reset();

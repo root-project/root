@@ -122,7 +122,7 @@ public:
    void             Invalidate() { fValid = kFALSE; }
    Int_t            Compare(const TObject *obj) const;
    Bool_t           IsSortable() const { return kTRUE; }
-   void             Lookup(Bool_t force = kFALSE);
+   Int_t            Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
 
    ClassDef(TDSetElement,6)  // A TDSet element
@@ -197,7 +197,7 @@ public:
    const char           *GetDirectory() const { return fDir; }
    TList                *GetListOfElements() const { return (TList *)fElements; }
 
-   Int_t                 Remove(TDSetElement *elem);
+   Int_t                 Remove(TDSetElement *elem, Bool_t deleteElem = kTRUE);
 
    virtual void          Reset();
    virtual TDSetElement *Next(Long64_t totalEntries = -1);
@@ -218,7 +218,7 @@ public:
    void                  Validate();
    void                  Validate(TDSet *dset);
 
-   void                  Lookup();
+   TList                *Lookup(Bool_t removeMissing = kFALSE);
    void                  SetLookedUp();
 
    void                  SetWriteV3(Bool_t on = kTRUE);

@@ -87,8 +87,8 @@ enum EAdminMsgType {
 // XPROOFD Worker CPU load sharing options
 enum XProofSchedOpts {
    kXPD_sched_off = 0,
-   kXPD_sched_fraction = 1,
-   kXPD_sched_priority = 2
+   kXPD_sched_local = 1,     // Priorities defined in a local file on the worker
+   kXPD_sched_central = 2    // Priorities communicated by the master
 };
 
 // XPROOFD SERVER STATUS
@@ -136,7 +136,8 @@ enum XProofActionCode {
    kXPD_timer,     // 5107     // Server request to start a timer for delayed termination
    kXPD_urgent,    // 5108     // Urgent message to be processed in the reader thread
    kXPD_flush,     // 5109     // Server request to flush stdout (before retrieving logs)
-   kXPD_inflate    // 5110     // Server request to inflate processing times
+   kXPD_inflate,   // 5110     // Server request to inflate processing times
+   kXPD_priority   // 5111     // Server request to propagate a group priority
 };
 
 //_______________________________________________

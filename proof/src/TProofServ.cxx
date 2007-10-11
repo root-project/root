@@ -733,10 +733,6 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    TMessage req(kPROOF_GETPACKET);
    Double_t cputime = fCompute.CpuTime();
    Double_t realtime = fCompute.RealTime();
-   req << fLatency.RealTime() << realtime << cputime
-       << bytesRead << totalEntries;
-   if (fPlayer)
-       req << fPlayer->GetEventsProcessed();
 
    // Apply inflate factor, if needed
    PDB(kLoop, 2)
@@ -745,10 +741,21 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
                             fInflateFactor, realtime, cputime, totalEntries);
    if (fInflateFactor > 1000) {
       UInt_t sleeptime = (UInt_t) (cputime * (fInflateFactor - 1000)) ;
-      PDB(kLoop, 2)
-         Info("GetNextPacket","sleeping %d millisec", sleeptime);
+      Int_t i = 0;
+      for (i = kSigBus ; i <= kSigUser2 ; i++)
+          gSystem->IgnoreSignal((ESignals)i, kTRUE);
       gSystem->Sleep(sleeptime);
+      for (i = kSigBus ; i <= kSigUser2 ; i++)
+          gSystem->IgnoreSignal((ESignals)i, kFALSE);
+      realtime += sleeptime / 1000.;
+      PDB(kLoop, 2)
+         Info("GetNextPacket","slept %d millisec", sleeptime);
    }
+
+   req << fLatency.RealTime() << realtime << cputime
+       << bytesRead << totalEntries;
+   if (fPlayer)
+       req << fPlayer->GetEventsProcessed();
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);
@@ -2177,9 +2184,11 @@ Int_t TProofServ::Setup()
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {
       TString vac = gROOT->GetVersion();
+      if (gROOT->GetSvnRevision() > 0)
+         vac += Form(":r%d", gROOT->GetSvnRevision());
       TString rtag = gEnv->GetValue("ProofServ.RootVersionTag", "");
       if (rtag.Length() > 0)
-         vac += Form("-%s", rtag.Data());
+         vac += Form(":%s", rtag.Data());
       vac += Form("|%s-%s",gSystem->GetBuildArch(), gSystem->GetBuildCompilerVersion());
       TMessage m(kPROOF_VERSARCHCOMP);
       m << vac;
@@ -3029,18 +3038,19 @@ void TProofServ::HandleProcess(TMessage *mess)
    // Get entry list information, if any (support started with fProtocol == 15)
    if ((mess->BufferSize() > mess->Length()) && fProtocol > 14)
       (*mess) >> enl;
+   Bool_t hasNoData = (dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
 
    // Priority to the entry list
    TObject *elist = (enl) ? (TObject *)enl : (TObject *)evl;
    if (enl && evl)
       // Cannot spcify both at the same time
       SafeDelete(evl);
-   if (elist)
+   if ((!hasNoData) && elist)
       dset->SetEntryList(elist);
 
    if (IsTopMaster()) {
 
-      if (dset->GetListOfElements()->GetSize() == 0) {
+      if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
          // The received message included an empty dataset, with only the name
          // defined: assume that a dataset, stored on the PROOF master by that
          // name, should be processed.
@@ -3227,6 +3237,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                   mbuf.Reset();
                   Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
                   mbuf << type;
+
                   mbuf.WriteObject(o);
                   totsz += mbuf.Length();
                   SendAsynMessage(Form("%s: sending obj %d/%d (%d bytes)",fPrefix.Data(),
@@ -3694,6 +3705,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TString packnam = filenam;
       packnam.Remove(packnam.Length() - 4);  // strip off ".par"
       // compare md5's to check if transmission was ok
+      fPackageLock->Lock();
       TMD5 *md5local = TMD5::FileChecksum(fPackageDir + "/" + filenam);
       if (md5local && md5 == (*md5local)) {
          if ((opt & TProof::kRemoveOld)) {
@@ -3756,6 +3768,9 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          // forward to workers
          fPackageLock->Unlock();
          fProof->UploadPackage(fPackageDir + "/" + filenam, (TProof::EUploadPackageOpt)opt);
+      } else {
+         // Unlock in all cases
+         fPackageLock->Unlock();
       }
       delete md5local;
    } else if (filenam.BeginsWith("+")) {
@@ -3766,9 +3781,9 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
       fPackageLock->Lock();
       TMD5 *md5local = TMD5::ReadChecksum(md5f);
+      fPackageLock->Unlock();
       if (md5local && md5 == (*md5local)) {
          // package already on server, unlock directory
-         fPackageLock->Unlock();
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kPackage, 1)
             Info("HandleCheckFile",
@@ -3975,40 +3990,49 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
                // read version from file proofvers.txt, and if current version is
                // not the same do a "BUILD.sh clean"
+               Bool_t savever = kFALSE;
+               TString v;
+               Int_t rev = -1;
                FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
                if (f) {
-                  TString v;
+                  TString r;
                   v.Gets(f);
+                  r.Gets(f);
+                  rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                   fclose(f);
-                  if (v != gROOT->GetVersion()) {
-                     if (!fromglobal) {
-                        SendAsynMessage(Form("%s: %s: version change (current: %s, build: %s): cleaning ... ",
-                                             noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                        // Hard cleanup: go up the dir tree
-                        gSystem->ChangeDirectory(fPackageDir);
-                        // remove package directory
-                        gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
-                        // find gunzip...
-                        char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
-                                                      kExecutePermission);
-                        if (gunzip) {
-                           TString par = Form("%s.par", pdir.Data()); 
-                           // untar package
-                           TString cmd(Form(kUNTAR3, gunzip, par.Data()));
-                           status = gSystem->Exec(cmd);
-                           if (status)
-                              Error("HandleCache", "kBuildPackage: failure executing: %s", cmd.Data());
-                           else
-                              // Go down to the package directory
-                              gSystem->ChangeDirectory(pdir);
-                           delete [] gunzip;
-                        } else
-                           Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
-                     } else {
-                        SendAsynMessage(Form("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
-                                             " global package: cannot re-build!!! ",
-                                             noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                     }
+               }
+               if (!f || v != gROOT->GetVersion() ||
+                  (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
+                  if (!fromglobal) {
+                     savever = kTRUE;
+                     SendAsynMessage(Form("%s: %s: version change (current: %s:%d,"
+                                          " build: %s:%d): cleaning ... ",
+                                          noth.Data(), package.Data(), gROOT->GetVersion(),
+                                          gROOT->GetSvnRevision(), v.Data(), rev));
+                     // Hard cleanup: go up the dir tree
+                     gSystem->ChangeDirectory(fPackageDir);
+                     // remove package directory
+                     gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
+                     // find gunzip...
+                     char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
+                                                   kExecutePermission);
+                     if (gunzip) {
+                        TString par = Form("%s.par", pdir.Data()); 
+                        // untar package
+                        TString cmd(Form(kUNTAR3, gunzip, par.Data()));
+                        status = gSystem->Exec(cmd);
+                        if (status)
+                           Error("HandleCache", "kBuildPackage: failure executing: %s", cmd.Data());
+                        else
+                           // Go down to the package directory
+                           gSystem->ChangeDirectory(pdir);
+                        delete [] gunzip;
+                     } else
+                        Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
+                  } else {
+                     SendAsynMessage(Form("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
+                                          " global package: cannot re-build!!! ",
+                                          noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
                   }
                }
 
@@ -4027,10 +4051,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   }
 
                   // write version file
-                  f = fopen("PROOF-INF/proofvers.txt", "w");
-                  if (f) {
-                     fputs(gROOT->GetVersion(), f);
-                     fclose(f);
+                  if (savever) {
+                     f = fopen("PROOF-INF/proofvers.txt", "w");
+                     if (f) {
+                        fputs(gROOT->GetVersion(), f);
+                        fputs(Form("\n%d",gROOT->GetSvnRevision()), f);
+                        fclose(f);
+                     }
                   }
                }
             }
@@ -4772,31 +4799,71 @@ Int_t TProofServ::CopyFromCache(const char *macro)
    if (dot != kNPOS) {
       binname.Replace(dot,1,"_");
       binname += ".";
-      void *dirp = gSystem->OpenDirectory(fCacheDir);
-      if (dirp) {
-         const char *e = 0;
-         while ((e = gSystem->GetDirEntry(dirp))) {
-            if (!strncmp(e, binname.Data(), binname.Length())) {
-               Bool_t docp = kTRUE;
-               FileStat_t stlocal, stcache;
-               TString fncache = Form("%s/%s", fCacheDir.Data(), e);
-               if (!gSystem->GetPathInfo(fncache, stcache)) {
-                  Int_t rc = gSystem->GetPathInfo(e, stlocal);
-                  if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
-                     docp = kFALSE;
-                  // Copy the file, if needed
-                  if (docp) {
-                     gSystem->Exec(Form("%s %s", kRM, e));
-                     PDB(kGlobal,2)
-                        Info("CopyFromCache",
-                             "retrieving %s from cache", fncache.Data());
-                     gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
-                  }
+   } else {
+      PDB(kGlobal,2)
+         Info("CopyFromCache",
+              "non-standard name structure: %s ('.' missing)", name.Data());
+      // Done
+      fCacheLock->Unlock();
+      return 0;
+   }
+
+   // Binary version file name
+   TString vername(Form(".%s", name.Data()));
+   Int_t dotv = vername.Last('.');
+   if (dotv != kNPOS)
+      vername.Remove(dotv);
+   vername += ".binversion";
+
+   // Check binary version
+   TString v;
+   Int_t rev = -1;
+   FILE *f = fopen(Form("%s/%s", fCacheDir.Data(), vername.Data()), "r");
+   if (f) {
+      TString r;
+      v.Gets(f);
+      r.Gets(f);
+      rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
+      fclose(f);
+   }
+
+   if (!f || v != gROOT->GetVersion() ||
+      (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
+      // Remove all existing binaries
+      binname += "*";
+      gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
+      // ... and the binary version file
+      gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
+      // Done
+      fCacheLock->Unlock();
+      return 0;
+   }
+
+   // Retrieve existing binaries, if any
+   void *dirp = gSystem->OpenDirectory(fCacheDir);
+   if (dirp) {
+      const char *e = 0;
+      while ((e = gSystem->GetDirEntry(dirp))) {
+         if (!strncmp(e, binname.Data(), binname.Length())) {
+            TString fncache = Form("%s/%s", fCacheDir.Data(), e);
+            Bool_t docp = kTRUE;
+            FileStat_t stlocal, stcache;
+            if (!gSystem->GetPathInfo(fncache, stcache)) {
+               Int_t rc = gSystem->GetPathInfo(e, stlocal);
+               if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
+                  docp = kFALSE;
+               // Copy the file, if needed
+               if (docp) {
+                  gSystem->Exec(Form("%s %s", kRM, e));
+                  PDB(kGlobal,2)
+                     Info("CopyFromCache",
+                          "retrieving %s from cache", fncache.Data());
+                  gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
                }
             }
          }
-         gSystem->FreeDirectory(dirp);
       }
+      gSystem->FreeDirectory(dirp);
    }
 
    // End of atomicity
@@ -4837,6 +4904,14 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    if (dot != kNPOS)
       binname.Replace(dot,1,"_");
 
+   // Create version file name template
+   TString vername(Form(".%s", name.Data()));
+   dot = vername.Last('.');
+   if (dot != kNPOS)
+      vername.Remove(dot);
+   vername += ".binversion";
+   Bool_t savever = kFALSE;
+
    // Atomic action
    fCacheLock->Lock();
 
@@ -4851,6 +4926,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
       if (dot != kNPOS) {
          binname += ".*";
          gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
+         gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
       }
    } else if (opt == 1) {
       // If needed, copy to the cache any existing binary related to 'name'.
@@ -4874,11 +4950,21 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
                         PDB(kGlobal,2)
                            Info("CopyFromCache","caching %s ...", e);
                         gSystem->Exec(Form("%s %s %s", kCP, e, fncache.Data()));
+                        savever = kTRUE;
                      }
                   }
                }
             }
             gSystem->FreeDirectory(dirp);
+         }
+         // Save binary version if requested
+         if (savever) {
+            FILE *f = fopen(Form("%s/%s", fCacheDir.Data(), vername.Data()), "w");
+            if (f) {
+               fputs(gROOT->GetVersion(), f);
+               fputs(Form("\n%d",gROOT->GetSvnRevision()), f);
+               fclose(f);
+            }
          }
       }
    }
@@ -5027,6 +5113,8 @@ Int_t TProofLockPath::Lock()
       return -1;
    }
 
+   PDB(kPackage, 2)
+      Info("Lock", "%d: locking file %s ...", gSystem->GetPid(), pname);
    // lock the file
 #if !defined(R__WIN32) && !defined(R__WINGCC)
    if (lockf(fLockId, F_LOCK, (off_t) 1) == -1) {
@@ -5038,7 +5126,7 @@ Int_t TProofLockPath::Lock()
 #endif
 
    PDB(kPackage, 2)
-      Info("Lock", "file %s locked", pname);
+      Info("Lock", "%d: file %s locked", gSystem->GetPid(), pname);
 
    return 0;
 }
@@ -5052,6 +5140,8 @@ Int_t TProofLockPath::Unlock()
    if (!IsLocked())
       return 0;
 
+   PDB(kPackage, 2)
+      Info("Lock", "%d: unlocking file %s ...", gSystem->GetPid(), GetName());
    // unlock the file
    lseek(fLockId, 0, SEEK_SET);
 #if !defined(R__WIN32) && !defined(R__WINGCC)
@@ -5064,7 +5154,7 @@ Int_t TProofLockPath::Unlock()
 #endif
 
    PDB(kPackage, 2)
-      Info("Unlock", "file %s unlocked", GetName());
+      Info("Unlock", "%d: file %s unlocked", gSystem->GetPid(), GetName());
 
    close(fLockId);
    fLockId = -1;

@@ -315,7 +315,7 @@ XrdProofGroup *XrdProofGroupMgr::Next()
 //__________________________________________________________________________
 int XrdProofGroupMgr::Config(const char *fn)
 {
-   // (Ri-)configure the group info using the file 'fn'.
+   // (Re-)configure the group info using the file 'fn'.
    // Return the number of active groups or -1 in case of error.
 
    if (!fn || strlen(fn) <= 0) {
@@ -396,6 +396,14 @@ int XrdProofGroupMgr::Config(const char *fn)
          continue;
       }
 
+      if (key == "priorityfile") {
+         // File from which (updated) priorities are read
+         fPriorityFile.fName = group;
+         XrdProofdAux::Expand(fPriorityFile.fName);
+         fPriorityFile.fMtime = 0;
+         continue;
+      }
+
       // Get linked to the group, if any
       XrdProofGroup *g = fGroups.Find(group.c_str());
 
@@ -436,7 +444,7 @@ int XrdProofGroupMgr::Config(const char *fn)
             // Create new group container
             fGroups.Add(group.c_str(), (g = new XrdProofGroup(group.c_str())));
          if (name == "priority")
-            g->SetPriority(nom);
+            g->SetPriority((float)nom);
          if (name == "fraction")
             g->SetFraction(nom);
       }
@@ -446,3 +454,71 @@ int XrdProofGroupMgr::Config(const char *fn)
    return fGroups.Num();
 }
 
+//__________________________________________________________________________
+int XrdProofGroupMgr::ReadPriorities()
+{
+   // Read update priorities from the file defined at configuration time.
+   // Return 1 if the file did not change, 0 if the file has been read
+   // correctly, or -1 in case of error.
+
+   // Get the modification time
+   struct stat st;
+   if (stat(fPriorityFile.fName.c_str(), &st) != 0)
+      return -1;
+   TRACE(DBG, "ReadPriorities: enter: time of last modification: " << st.st_mtime);
+
+   // File should be loaded only once
+   if (st.st_mtime <= fPriorityFile.fMtime) {
+      TRACE(DBG, "ReadPriorities: file unchanged since last reading - do nothing ");
+      return 1;
+   }
+
+   // Save the modification time
+   fPriorityFile.fMtime = st.st_mtime;
+
+   // Open the defined path.
+   FILE *fin = 0;
+   if (!(fin = fopen(fPriorityFile.fName.c_str(), "r"))) {
+      TRACE(XERR, "ReadPriorities: cannot open file: "<<fPriorityFile.fName<<
+                  " (errno:"<<errno<<")");
+      return -1;
+   }
+
+   // This part must be modified in atomic way
+   XrdSysMutexHelper mhp(fMutex);
+
+   // Read now the directives
+   char lin[2048];
+   while (fgets(lin,sizeof(lin),fin)) {
+      // Remove trailing '\n'
+      if (lin[strlen(lin)-1] == '\n') lin[strlen(lin)-1] = '\0';
+      // Skip comments or empty lines
+      if (lin[0] == '#' || strlen(lin) <= 0) continue;
+      // Good line candidate: parse it
+      XrdOucString gl(lin), group, value;
+      // It must contain a '='
+      int from = 0;
+      if ((from = gl.tokenize(group, 0, '=')) == -1)
+         continue;
+      // Get linked to the group, if any
+      XrdProofGroup *g = fGroups.Find(group.c_str());
+      if (!g) {
+         TRACE(XERR, "ReadPriorities: WARNING: found info for unknown group: "<<
+                     group<<" - ignoring");
+         continue;
+      }
+      gl.tokenize(value, from, '=');
+      if (value.length() <= 0) {
+         TRACE(XERR, "ReadPriorities: WARNING: value missing: read line is: '"<<gl<<"'");
+         continue;
+      }
+      // Transform it in a usable value 
+      if (value.find('.') == STR_NPOS)
+         value += '.';
+      // Save it
+      g->SetPriority((float)strtod(value.c_str(),0));
+   }
+
+   // Done
+   return 0;
+}

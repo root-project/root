@@ -467,7 +467,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fValid = kTRUE;
 
    // Resolve end-point urls to optmize distribution
-   dset->Lookup();
+   // dset->Lookup(); // moved to TProofPlayerRemote::Process
 
    // Split into per host entries
    dset->Reset();

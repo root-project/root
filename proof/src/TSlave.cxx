@@ -346,7 +346,7 @@ void TSlave::Print(Option_t *) const
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), sst[st]);
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
-   Printf("    ROOT version:            %s", GetROOTVersion());
+   Printf("    ROOT version|rev|tag:    %s", GetROOTVersion());
    Printf("    Architecture-Compiler:   %s", GetArchCompiler());
    if (fSocket) {
       if (strlen(GetGroup()) > 0) {

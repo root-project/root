@@ -96,6 +96,7 @@ public:
    static int    Reconfig();
    static int    TraceConfig(const char *cfn);
    static int    TrimTerminatedProcesses();
+   static int    UpdatePriorities(bool forceupdate = 0);
 
  private:
 
@@ -223,6 +224,8 @@ public:
    // Worker level scheduling control
    static float                  fgOverallInflate; // Overall inflate factor
    static int                    fgSchedOpt;  // Worker sched option
+   static int                    fgPriorityMax;  // Max session priority [1,40], [20]
+   static int                    fgPriorityMin;  // Min session priority [1,40], [1]
    //
    // Static area: client section
    //
@@ -232,6 +235,7 @@ public:
    //
    // Static area: methods
    //
+   static int    BroadcastPriorities();
    static bool   CheckMaster(const char *m);
    static int    CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
    static int    Config(const char *fn);
@@ -243,6 +247,7 @@ public:
    static int    ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
    static int    SetGroupEffectiveFractions();
    static int    SetInflateFactors();
+   static int    SetNiceValues(int opt = 0);
    static int    SetProofServEnv(XrdROOT *r);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
    static int    VerifyProcessByID(int pid, const char *pname = 0);

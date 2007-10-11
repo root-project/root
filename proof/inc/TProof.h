@@ -542,6 +542,8 @@ public:
    Long64_t    Process(const char *dsetname, const char *selector,
                        Option_t *option = "", Long64_t nentries = -1,
                        Long64_t firstentry = 0, TObject *enl = 0);
+   Long64_t    Process(const char *selector, Long64_t nentries,
+                       Option_t *option = "");
    Long64_t    DrawSelect(TDSet *dset, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,

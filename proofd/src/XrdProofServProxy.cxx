@@ -66,7 +66,7 @@ XrdProofServProxy::XrdProofServProxy()
    fInflate = 1000;
    fSched = -1;
    fDefSched = -1;
-   fDefSchedPriority = 0;
+   fDefSchedPriority = -99999;
    fFracEff = 0.;
 }
 
@@ -144,7 +144,7 @@ void XrdProofServProxy::Reset()
    fInflate = 1000;
    fSched = -1;
    fDefSched = -1;
-   fDefSchedPriority = 0;
+   fDefSchedPriority = -99999;
    fFracEff = 0.;
    // Cleanup worker info
    ClearWorkers();
@@ -390,52 +390,68 @@ int XrdProofServProxy::VerifyProofServ(int timeout)
    // Done
    return rc;
 }
+
 //__________________________________________________________________________
-int XrdProofServProxy::ChangeProcessPriority(int dp)
+int XrdProofServProxy::GetDefaultProcessPriority()
 {
-   // Change priority of the server process by dp (positive or negative)
+   // Get the default nice value for a process
+
+   if (fDefSchedPriority == -99999)
+      fDefSchedPriority = getpriority(PRIO_PROCESS, fSrvID);
+   return fDefSchedPriority;
+}
+
+//__________________________________________________________________________
+int XrdProofServProxy::SetProcessPriority(int priority)
+{
+   // Set priority of the server process to priority (positive or negative)
+   // If 'priority' is -99999 restore the default value.
    // Returns 0 in case of success, -errno in case of error.
 
-   TRACE(ACT, "ChangeProcessPriority: enter: pid: " << fSrvID << ", dp: " << dp);
+   TRACE(SCHED, "SetProcessPriority: enter: pid: " << fSrvID <<
+              ", priority: " << priority);
 
-   // No action requested
-   if (dp == 0)
-      return 0;
-
-   // Get current priority; errno needs to be reset here, as -1
-   // could be a legitimate priority value
-   errno = 0;
-   int priority = getpriority(PRIO_PROCESS, fSrvID);
-   if (priority == -1 && errno != 0) {
-      TRACE(XERR, "ChangeProcessPriority:"
-                 " getpriority: errno: " << errno);
-      return -errno;
+   int newpriority = priority;
+   // Restore defaults if requested
+   if (priority == -99999) {
+      newpriority = GetDefaultProcessPriority();
    }
 
-   // Reference priority
-   int refpriority = priority + dp;
-
-   // Chaneg the priority
-   if (setpriority(PRIO_PROCESS, fSrvID, refpriority) != 0) {
-      TRACE(XERR, "ChangeProcessPriority:"
-                 " setpriority: errno: " << errno);
-      return ((errno != 0) ? -errno : -1);
+   // Set the priority
+   {  XrdProofUI ui;
+      XrdProofdAux::GetUserInfo(geteuid(), ui);
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+      if (XpdBadPGuard(pGuard, ui.fUid)) {
+         TRACE(XERR, "SetProcessPriority: could not get privileges");
+         return -1;
+      }
+      TRACE(SCHED, "SetProcessPriority: got privileges ");
+      errno = 0;
+      if (setpriority(PRIO_PROCESS, fSrvID, newpriority) != 0) {
+         TRACE(XERR, "SetProcessPriority:"
+                     " setpriority: errno: " << errno);
+         return ((errno != 0) ? -errno : -1);
+      }
+      TRACE(SCHED, "SetProcessPriority: new priority set ");
    }
 
    // Check that it worked out
    errno = 0;
    if ((priority = getpriority(PRIO_PROCESS, fSrvID)) == -1 && errno != 0) {
-      TRACE(XERR, "ChangeProcessPriority:"
+      TRACE(XERR, "SetProcessPriority:"
                  " getpriority: errno: " << errno);
       return -errno;
    }
-   if (priority != refpriority) {
-      TRACE(XERR, "ChangeProcessPriority:"
+   if (priority != newpriority) {
+      TRACE(XERR, "SetProcessPriority:"
                  " unexpected result of action: found " << priority <<
-                 ", expected "<<refpriority);
+                 ", expected "<<newpriority);
       errno = EPERM;
       return -errno;
    }
+
+   TRACE(SCHED, "SetProcessPriority: done: pid: " << fSrvID <<
+              ", priority: " << priority);
 
    // We are done
    return 0;
@@ -468,6 +484,31 @@ int XrdProofServProxy::SetInflate(int inflate, bool sendover)
       }
       TRACE(DBG,"XrdProofServProxy::SetInflate: inflate factor set to "<<inflate);
    }
+   // Done
+   return 0;
+}
+
+//__________________________________________________________________________
+int XrdProofServProxy::BroadcastPriority(int priority)
+{
+   // Broadcast a new group priority value to the worker servers.
+   // Called by masters.
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   // Prepare buffer
+   int len = sizeof(kXR_int32);
+   char *buf = new char[len];
+   kXR_int32 itmp = priority;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf, &itmp, sizeof(kXR_int32));
+   // Send over
+   if (fProofSrv.Send(kXR_attn, kXPD_priority, buf, len) != 0) {
+      // Failure
+      TRACE(XERR,"XrdProofServProxy::BroadcastPriorities: problems telling proofserv");
+      return -1;
+   }
+   TRACE(DBG,"XrdProofServProxy::BroadcastPriorities: priority "<<priority<<" sent over");
    // Done
    return 0;
 }

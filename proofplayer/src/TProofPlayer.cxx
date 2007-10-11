@@ -18,12 +18,14 @@
 #include "TProofDraw.h"
 #include "TProofPlayer.h"
 #include "THashList.h"
+#include "TEnv.h"
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
 #include "TSelector.h"
 #include "TSocket.h"
 #include "TProofServ.h"
 #include "TProof.h"
+#include "TProofFile.h"
 #include "TProofSuperMaster.h"
 #include "TSlave.h"
 #include "TClass.h"
@@ -36,6 +38,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TFileMerger.h"
 #include "TProofDebug.h"
 #include "TTimer.h"
 #include "TMap.h"
@@ -871,6 +874,18 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Finalize
 
    if (fExitStatus != kAborted) {
+
+      TIter nxo(GetOutputList());
+      TObject *o = 0;
+      while ((o = nxo())) {
+         // Special treatment for files
+         if (o->IsA() == TProofFile::Class()) {
+            ((TProofFile *)o)->SetWorkerOrdinal(gProofServ->GetOrdinal());
+            if (!strcmp(((TProofFile *)o)->GetDir(),"")) 
+               ((TProofFile *)o)->SetDir(gProofServ->GetSessionDir());
+         }
+      }
+
       if (fSelStatus->IsOk()) {
          if (version == 0) {
             PDB(kLoop,1) Info("Process","Call Terminate()");
@@ -1136,6 +1151,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    // Parse option
    Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
+   Bool_t noData = kFALSE;
 
    TDSet *set = dset;
    if (fProof->IsMaster()) {
@@ -1144,34 +1160,97 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
                             dset->GetDirectory() );
       TString packetizer;
-      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
-         // Using standard packetizer TPacketizerAdaptive
-         packetizer = "TPacketizerAdaptive";
-      else
-         Info("Process", "using Alternate Packetizer: %s", packetizer.Data());
-
-      // Get linked to the related class
-      TClass *cl = TClass::GetClass(packetizer);
-      if (cl == 0) {
-         Error("Process", "class '%s' not found", packetizer.Data());
-         fExitStatus = kAborted;
-         return -1;
-      }
-
-      // Init the constructor
       TMethodCall callEnv;
-      callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
-      if (!callEnv.IsValid()) {
-         Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
-         fExitStatus = kAborted;
-         return -1;
+      TClass *cl;
+      noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
+
+      if (noData) {
+
+         set->SetBit(TDSet::kEmpty);
+         if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
+            packetizer = "TPacketizerUnit";
+         else
+            Info("Process", "using alternate packetizer: %s", packetizer.Data());
+
+         // Get linked to the related class
+         cl = TClass::GetClass(packetizer);
+         if (cl == 0) {
+            Error("Process", "class '%s' not found", packetizer.Data());
+            fExitStatus = kAborted;
+            return -1;
+         }
+
+         // Init the constructor
+         callEnv.InitWithPrototype(cl, cl->GetName(),"TList*,Long64_t,TList*");
+         if (!callEnv.IsValid()) {
+            Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
+            fExitStatus = kAborted;
+            return -1;
+         }
+         callEnv.ResetParam();
+         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+         callEnv.SetParam((Long64_t) nentries);
+         callEnv.SetParam((Long_t) fInput);
+
+      } else {
+
+         // Lookup - resolve the end-point urls to optmize the distribution.
+         // The lookup was previously called in the packetizer's constructor.
+         TList *listOfMissingFiles = dset->Lookup(kTRUE);
+         if (!(dset->GetListOfElements()) ||
+             !(dset->GetListOfElements()->GetSize())) {
+            gProofServ->SendAsynMessage("Process: No files from the data set were found - Aborting");
+            Error("Process", "No files from the data set were found - Aborting");
+            fExitStatus = kAborted;
+            if (listOfMissingFiles) {
+               listOfMissingFiles->SetOwner();
+               delete listOfMissingFiles;
+            }
+            return -1;
+         } else if (listOfMissingFiles) {
+            TIter missingFiles(listOfMissingFiles);
+            TDSetElement *elem;
+            while ((elem = (TDSetElement*) missingFiles.Next()))
+               gProofServ->SendAsynMessage(Form("File not found: %s - skipping!",
+                                                elem->GetName()));
+            listOfMissingFiles->SetName("MissingFiles");
+            AddOutputObject(listOfMissingFiles);
+            TStatus *tmpStatus = (TStatus *)GetOutput("PROOF_Status");
+            if (!tmpStatus) {
+               tmpStatus = new TStatus();
+               AddOutputObject(tmpStatus);
+            }
+            tmpStatus->Add("Some files were missing; check 'missingFiles' list");
+         }
+
+         if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
+            // Using standard packetizer TAdaptivePacketizer
+            packetizer = "TPacketizerAdaptive";
+         else
+            Info("Process", "using alternate packetizer: %s", packetizer.Data());
+
+         // Get linked to the related class
+         cl = TClass::GetClass(packetizer);
+         if (cl == 0) {
+            Error("Process", "class '%s' not found", packetizer.Data());
+            fExitStatus = kAborted;
+            return -1;
+         }
+
+         // Init the constructor
+         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
+         if (!callEnv.IsValid()) {
+            Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
+            fExitStatus = kAborted;
+            return -1;
+         }
+         callEnv.ResetParam();
+         callEnv.SetParam((Long_t) dset);
+         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+         callEnv.SetParam((Long64_t) first);
+         callEnv.SetParam((Long64_t) nentries);
+         callEnv.SetParam((Long_t) fInput);
       }
-      callEnv.ResetParam();
-      callEnv.SetParam((Long_t) dset);
-      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
-      callEnv.SetParam((Long64_t) first);
-      callEnv.SetParam((Long64_t) nentries);
-      callEnv.SetParam((Long_t) fInput);
 
       // Get an instance of the packetizer
       Long_t ret = 0;
@@ -1313,6 +1392,39 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
+Bool_t  TProofPlayerRemote::MergeOutputFiles()
+{
+   // Merge output in files
+
+   if (fMergeFiles) {
+      TFileMerger *filemerger = TProofFile::GetFileMerger();
+      if (!filemerger) {
+         Error("MergeOutputFiles", "file merger is null in gProofServ! Protocol error?");
+         return kFALSE;
+      }
+
+      Bool_t result = filemerger->Merge();
+      if (!result) {
+         Error("MergeOutputFiles", "cannot merge the output files");
+         return kFALSE;
+      }
+
+      TList *fileList = filemerger->GetMergeList();
+      if (fileList) {
+         TIter next(fileList);
+         TObjString *url = 0;
+         while((url = (TObjString*)next())) {
+            gSystem->Unlink(url->GetString());
+         }
+      }
+      filemerger->Reset();
+   }
+   // Done
+   return kTRUE;
+}
+
+
+//______________________________________________________________________________
 Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 {
    // Finalize a query.
@@ -1335,6 +1447,10 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
    Long64_t rv = 0;
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
+
+      // Merge the output files created on workers, if any
+      MergeOutputFiles();
+
       fOutput->SetOwner();
       SafeDelete(fSelector);
    } else {
@@ -1702,6 +1818,37 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
       // The original object has been transformed in something else; we do
       // not have ownership on it
       return 1;
+   }
+
+   // Check if we need to merge files
+   TProofFile *pf = dynamic_cast<TProofFile*>(obj);
+   if (pf) {
+      if (!strcmp(pf->GetMode(),"CENTRAL"))
+         fMergeFiles = kTRUE;
+      if (!IsClient()) {
+         // Fill the output file name, if not done by the client
+         if (strlen(pf->GetOutputFileName()) <= 0) {
+            TString of(Form("root://%s", gSystem->HostName()));
+            if (gSystem->Getenv("XRDPORT")) {
+               TString sp(gSystem->Getenv("XRDPORT"));
+               if (sp.IsDigit())
+                  of += Form(":%s", sp.Data());
+            }
+            TString sessionPath(gProofServ->GetSessionDir());
+            // Take into account a prefix, if any
+            TString pfx  = gEnv->GetValue("ProofServ.Localroot","");
+            if (!pfx.IsNull())
+               sessionPath.Remove(0, pfx.Length());
+            of += Form("/%s/%s", sessionPath.Data(), pf->GetFileName());
+            pf->SetOutputFileName(of);
+         }
+         // Notify, if required
+         if (gDebug > 0)
+            pf->Print();
+      } else {
+         // On clients notify the output path
+         Printf("Output file: %s", pf->GetOutputFileName());
+      }
    }
 
    // For other objects we just run the incorporation procedure

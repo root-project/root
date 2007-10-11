@@ -304,7 +304,7 @@ void TPacketizerProgressive::Init()
    }
 
    // Resolve end-point urls to optmize distribution
-   fDset->Lookup();
+   // dset->Lookup(); // moved to TProofPlayerRemote::Process
 
    // put TDSetElements in the appropriate TFileStat object
    THashTable slaves_added; // map of slaves that have already

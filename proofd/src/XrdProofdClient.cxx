@@ -167,6 +167,11 @@ void XrdProofdClient::CountSession(int n, bool worker)
       fWorkerProofServ += n;
    else
       fMasterProofServ += n;
+
+   TRACE(SCHED, "XrdProofdClient::CountSession:"<<fClientID<<
+                " {n,worker}: {"<<n<<","<<worker<<"} "<<
+                " fWorker: "<<fWorkerProofServ<<
+                ", fMaster: "<<fMasterProofServ);
 }
 
 //__________________________________________________________________________
