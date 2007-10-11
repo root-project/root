@@ -701,7 +701,7 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   char *l = strstr(option,"multigraph");
+   const char *l = strstr(option,"multigraph");
    if (l) {
       out<<"   multigraph->Add(grbe,"<<quote<<l+10<<quote<<");"<<endl;
    } else {
