@@ -186,6 +186,11 @@ void TXNetSystem::InitXrdClient()
    // Init vars with default debug level -1, so we do not get warnings
    TXNetFile::SetEnv();
 
+#ifndef OLDXRDOUC
+   // Use optimized connections
+   XrdClientAdmin::SetAdminConn();
+#endif
+
    // Only once
    fgInitDone = kTRUE;
 
