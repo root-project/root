@@ -446,7 +446,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--config] [--features] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--config] [--features] [--svn-revision] [--python-version] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -542,6 +542,18 @@ while test $# -gt 0; do
          echo "cannot read ${incdir}/RVersion.h"
          exit 1
       fi
+      ;;
+    --svn-revision)
+      ### Output the version number.  If RVersion.h can not be found, give up.
+      if test -r ${incdir}/RVersion.h; then
+         out="$out `sed -n 's,.*ROOT_SVN_REVISION *\([0-9]*\).*,\1,p' < ${incdir}/RVersion.h`"
+      else
+         echo "cannot read ${incdir}/RVersion.h"
+         exit 1
+      fi
+      ;;
+    --python-version)
+      out="$out @pythonvers@"
       ;;
     --cflags)
       ### Output the compiler flags
@@ -698,6 +710,8 @@ while test $# -gt 0; do
       echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --dicttype            Print dictionary generator being used"
       echo "  --version             Print the ROOT version"
+      echo "  --svn-revision        Print the ROOT SVN revision number"
+      echo "  --python-version      Print the Python version used by ROOT"
       echo "  --help                Print this message"
       exit 0
       ;;

@@ -2621,46 +2621,31 @@ check_explicit "$enable_ldap" "$enable_ldap_explicit" \
 #
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
-    pythonhdrdirs="\
-        $PYTHONDIR/include \
-        /Library/Frameworks/Python.framework/Versions/Current/include \
-        /System/Library/Frameworks/Python.framework/Versions/Current/include \
-        /usr/local/include /usr/include"
-    if test "x$platform" = xwin32 ; then
-	pythonhdrdirs="$pythonhdrdirs \
-        /cygdrive/c/Python25/include /cygdrive/c/Python24/include \
-        /cygdrive/c/Python23/include /cygdrive/c/Python22/include"
+    mypython=`$cwhich python 2> /dev/null`
+    if test ! "x$mypython" = "x" && test -x "$mypython" ; then
+       pythonvers=`python -c 'import sys; print sys.version[:3]'`
+       pythonsysincdir=`python -c 'import sys;print sys.prefix + "/include/python" + sys.version[:3]'`
+       pythonsyslibdir=`python -c 'import sys; print sys.prefix + "/lib/python" + sys.version[:3]'`
+       pythonsyslibdir2=
+       if test "x$platform" = "xmacosx"; then
+          pythonsyslibdir2=`python -c 'import sys; print sys.prefix'`
+       fi
     fi
-    check_header "python/Python.h python2.5/Python.h python2.4/Python.h \
-                  python2.3/Python.h python2.2/Python.h Python.h" \
-                  "$pythonincdir" $pythonhdrdirs
+    check_header "Python.h" "$pythonincdir" $PYTHONDIR $PYTHONDIR/include \
+       $PYTHONDIR/include/python $pythonsysincdir
     pythoninc=$found_hdr
-    if test ! "x$pythoninc" = "x"; then
-       pythonincdir=`dirname $found_dir/$found_hdr`
-    fi
+    pythonincdir=$found_dir
     if test "x$platform" = "xwin32"; then
        if test ! "x$pythonincdir" = "x" ; then
           pythonincdir=`cygpath -m $pythonincdir`
        fi
     fi
 
-    pythonlibdirs="\
-        $PYTHONDIR/lib $PYTHONDIR/libs \
-        /Library/Frameworks/Python.framework/Versions/Current \
-        /System/Library/Frameworks/Python.framework/Versions/Current \
-        /usr/local/lib /usr/lib \
-        /usr/local/lib/python2.2/config /usr/lib/python2.2/config \
-        /usr/local/lib/python2.4/config /usr/lib/python2.4/config"
-
-    if test "x$platform" = xwin32 ; then
-	pythonlibdirs="$pythonlibdirs \
-        /cygdrive/c/Python25/libs /cygdrive/c/Python24/libs \
-        /cygdrive/c/Python23/libs /cygdrive/c/Python22/libs"
-    fi
-    check_library "libpython libpython2.5 libpython2.4 libpython2.3 libpython2.2 \
-                   python25 python24 python23 \
-                   Python" \
-        "$enable_shared" "$pythonlibdir" $pythonlibdirs
+    check_library "libpython${pythonvers} libpython \
+                   python${pythonvers} python Python" \
+        "$enable_shared" "$pythonlibdir" $PYTHONDIR $PYTHONDIR/lib \
+        $PYTHONDIR/libs $pythonsyslibdir $pythonsyslibdir/config \
+        $pythonsyslibdir2
     pythonlib=$found_lib
     pythonlibdir=$found_dir
 
@@ -4560,6 +4545,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@configargs@|$configargs|"       \
     -e "s|@dicttype@|$dicttype|"           \
     -e "s|@zliblib@|$zliblib|"             \
+    -e "s|@pythonvers@|$pythonvers|"       \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT
