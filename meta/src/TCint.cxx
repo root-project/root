@@ -1063,6 +1063,8 @@ const char *TCint::TypeName(const char *typeDesc)
       template_start = (char*)strchr(typeDesc, '<');
       if (!strcmp(typeDesc, "long long"))
          strcpy(t, typeDesc);
+      else if (!strncmp(typeDesc,"unsigned ",s+1-typeDesc))
+         strcpy(t, typeDesc);
       // s is the position of the second 'word' (if any)
       // except in the case of templates where there will be a space
       // just before any closing '>': eg.
