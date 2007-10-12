@@ -152,10 +152,15 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    //
    //  If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //     If nelem is a leaf name, return countval = 1 and the pointer to 
-   //     the leaf named nelem.
+   //          the leaf named nelem.
    //  If leaf name has the form var[nelem], where nelem is a digit, then
    //     return countval = nelem and a null pointer.
-   //  Otherwise return countval=0 and a null pointer.
+   //  If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2] 
+   //     where nelem and nelem2 are digits) then
+   //     return countval = product of all dimension size and a null pointer.
+   //  If leaf name has the form var[... (and do not match the previous 2
+   //     cases) return countval = -1 and null pointer;
+   //  Otherwise return countval=1 and a null pointer.
    //
 
    countval = 1;
@@ -172,6 +177,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    if (!bright) {
       delete[] countname;
       countname = 0;
+      countval = -1;
       return 0;
    }
    char *bleft2 = (char*) strchr(countname, '[');
