@@ -1925,7 +1925,8 @@ static G__value G__exec_do()
    //
    //  Start bytecode generation, if enabled.
    //
-   int asm_start_pc = 0;
+   // Rember the position of the beginning of the body for the jump at the end.
+   int asm_start_pc = G__asm_cp;
    if (G__asm_loopcompile) {
       // -- We are generating bytecode for loops.
       //
@@ -1935,15 +1936,15 @@ static G__value G__exec_do()
          // -- If bytecode generation is turned off, turn it on.
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "\nLoop compile start (for do).");
+            G__fprinterr(G__serr, "\nLoop compile start (for do).  Erasing old bytecode and resetting pc.");
             G__printlinenum();
          }
 #endif // G__ASM_DBG
          G__asm_noverflow = 1;
          G__clear_asm();
+         // Rember the position of the beginning of the body for the jump at the end.
+         asm_start_pc = G__asm_cp;
       }
-      // Rember the position of the beginning of the body for the jump at the end.
-      asm_start_pc = G__asm_cp;
       // Clear the data stack.
       G__asm_clear();
    }
@@ -2736,16 +2737,21 @@ static G__value G__exec_loop(char* forinit, char* condition, int naction, char**
    //
 #ifdef G__ASM
    if (G__asm_loopcompile) {
+      // -- We are generating bytecode for loops.
+      //
+      // Reset and initialize the bytecode generation environment.
+      //
       if (!G__asm_noverflow) {
+         // -- If bytecode generation is turned off, turn it on.
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "\nLoop compile start (for a for or while).  Erasing old bytecode and resetting pc.");
+            G__printlinenum();
+         }
+#endif // G__ASM_DBG
          G__asm_noverflow = 1;
          G__clear_asm();
       }
-#ifdef G__ASM_DBG
-      if (G__asm_dbg) {
-         G__fprinterr(G__serr, "\nLoop compile start. (for for or while)");
-         G__printlinenum();
-      }
-#endif // G__ASM_DBG
    }
 #endif // G__ASM
    //
@@ -3097,6 +3103,9 @@ static G__value G__exec_loop(char* forinit, char* condition, int naction, char**
                G__asm_optimize(&asm_start_pc);
                //fprintf(stderr, "\nG__exec_loop: End bytecode optimize.\n");
             }
+            // FIXME: Are we ignoring bytecode generation errors from G__asm_optimize here?
+            // Reenable bytecode generation.
+            G__asm_noverflow = 1;
             if (G__asm_dbg) {
                G__fprinterr(G__serr, "\nBytecode loop compilation successful. (for for or while)");
                G__printlinenum();
@@ -3116,7 +3125,11 @@ static G__value G__exec_loop(char* forinit, char* condition, int naction, char**
             if (!G__no_exec_compile) {
                //fprintf(stderr, "G__exec_loop: Beginning to execute bytecode.\n", G__no_exec_compile);
                // Note: Bytecode generation must be off here, or we will overwrite the generated code!
+               // Disable bytecode generation.
+               G__asm_noverflow = 0;
                /*int status =*/ G__exec_asm(asm_start_pc, 0, &result, 0);
+               // Reenable bytecode generation.
+               G__asm_noverflow = 1;
                if (G__return != G__RETURN_NON) {
                   // -- User requested that we return immediately.
                   // If no bytecode errors, restore bytecode generation

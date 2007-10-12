@@ -25,14 +25,19 @@
 #include <time.h>
 #include <locale.h>
 #endif
+
+#include <ctime>
+
 #if (defined(__sgi) && !defined(__GNUC__) && !defined(__KCC)) || (defined(__alpha) && !defined(__GNUC__))
 #include <math.h>
 #else
 #include <cmath>
 #endif
 #ifdef __hpux
-namespace std {} using namespace std;
+namespace std {}
 #endif
+
+using namespace std;
 
 #ifdef __MAKECINT__
 
@@ -66,6 +71,8 @@ float tanh (float);
 
 double abs(double);            // fabs()
 double pow(double, int);
+
+size_t strftime(char* ptr, size_t maxsize, const char* fmt, const struct tm* time);
 
 #if !defined(G__SUN) && !defined(G__AIX)
 long double abs  (long double);

@@ -531,7 +531,7 @@ void G__define_struct(char type)
    char tagname[G__LONGLINE];
    int c = G__fgetname_template(tagname, "{:;=&");
    if (strlen(tagname) >= G__LONGLINE) {
-      G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+      G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", tagname, G__LONGLINE);
       G__genericerror(0);
    }
    while (c == ':') {
@@ -734,7 +734,7 @@ void G__define_struct(char type)
       c = G__fgetname(basename, "{,");
 #endif // G__TEMPLATECLASS
       if (strlen(basename) >= G__LONGLINE) {
-         G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+         G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
          G__genericerror(0);
       }
       // [struct|class] <tagname> : <private|protected|public|virtual> base1 , base2 {}
@@ -749,7 +749,7 @@ void G__define_struct(char type)
          c = G__fgetname_template(basename, "{,");
          isvirtualbase = G__ISVIRTUALBASE;
          if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
             G__genericerror(0);
          }
       }
@@ -765,7 +765,7 @@ void G__define_struct(char type)
          c = G__fgetname(basename, "{,");
 #endif // G__TEMPLATECLASS
          if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
             G__genericerror(0);
          }
       }
@@ -777,7 +777,7 @@ void G__define_struct(char type)
          c = G__fgetname(basename, "{,");
 #endif // G__TEMPLATECLASS
          if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
             G__genericerror(0);
          }
       }
@@ -789,7 +789,7 @@ void G__define_struct(char type)
          c = G__fgetname(basename, "{,");
 #endif // G__TEMPLATECLASS
          if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
             G__genericerror(0);
          }
       }
@@ -802,7 +802,7 @@ void G__define_struct(char type)
          c = G__fgetname_template(basename, "{,");
          isvirtualbase = G__ISVIRTUALBASE;
          if (strlen(basename) >= G__LONGLINE) {
-            G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+            G__fprinterr(G__serr, "Limitation: class name '%s' too long. Must be < %d", basename, G__LONGLINE);
             G__genericerror(0);
          }
       }

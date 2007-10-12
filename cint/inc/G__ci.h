@@ -20,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010024
-#define G__CINTVERSIONSTR_V6  "6.1.25, Sept 10, 2007"
-#define G__CINTVERSION_V5      50160024
-#define G__CINTVERSIONSTR_V5  "5.16.25, Sept 10, 2007"
+#define G__CINTVERSION_V6      60010026
+#define G__CINTVERSIONSTR_V6  "6.1.26, Oct 11, 2007"
+#define G__CINTVERSION_V5      50160026
+#define G__CINTVERSIONSTR_V5  "5.16.26, Oct 11, 2007"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -398,7 +398,7 @@ typedef unsigned long long G__uint64;
 #if defined(G__WIN32) && !defined(G__STD_EXCEPTION)
 #define G__STD_EXCEPTION
 #endif
-#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
+#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER) && !defined(G__APIIF)
 #define G__EXCEPTIONWRAPPER
 #endif
 

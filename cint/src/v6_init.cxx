@@ -120,6 +120,7 @@ void G__remove_setup_func(const char* libname)
 int G__call_setup_funcs()
 {
    int i, k = 0;
+   G__var_array* store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
    if (!G__initpermanentsl) {
       G__initpermanentsl = new std::list<G__DLLINIT>;
@@ -135,6 +136,7 @@ int G__call_setup_funcs()
 #endif
       }
    G__UnlockCriticalSection();
+   G__p_local = store_p_local;
    return k;
 }
 

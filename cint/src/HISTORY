@@ -4972,6 +4972,16 @@
 *   members were getting declared static, even when they were not)
 * - scratch_upto now returns a counter that gets bumped 
 *   every time the dictionary is rewound, allows detection of changed dict.
+*
+* 5.16.26 Oct 11, 2007
+* 6.1.26 Oct 11, 2007
+* - move to subversion
+* - fix gcc4strm
+* - update CINT API dictionary
+* - update ReadF tutorial
+* - fix bytecode generation (was disabled in some loops)
+* - minor bug fixes
+
 
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion

@@ -196,6 +196,7 @@ using namespace Cint;
 #pragma link off class $G__linked_taginfo;
 #pragma link off class G__includepath;
 #pragma link C++ namespace Cint;
+#pragma link C++ nestedclasses;
 #pragma link off namespace Cint::Internal;
 #endif
 

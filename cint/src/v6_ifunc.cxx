@@ -4886,7 +4886,12 @@ int G__interpret_func(G__value* result7, char* funcname, G__param* libp, int has
                   G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
                   p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-                  if (baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
+                  // require !G__prerun, else store_inherit_offset might not point
+                  // to a valid object with vtable, and G__getvirtualbaseoffset()
+                  // might fail. We should not need the voffset in this case
+                  // anyway, as we don't actually call the function.
+                  if (!G__prerun &&
+                      baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
                      G__store_struct_offset = store_inherit_offset +
                                               G__getvirtualbaseoffset(store_inherit_offset, G__tagnum
                                                                       , baseclass, basen);
@@ -4914,7 +4919,12 @@ int G__interpret_func(G__value* result7, char* funcname, G__param* libp, int has
                   G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
                   p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-                  if (baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
+                  // require !G__prerun, else store_inherit_offset might not point
+                  // to a valid object with vtable, and G__getvirtualbaseoffset()
+                  // might fail. We should not need the voffset in this case
+                  // anyway, as we don't actually call the function.
+                  if (!G__prerun &&
+                      baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
                      G__store_struct_offset = store_inherit_offset +
                                               G__getvirtualbaseoffset(store_inherit_offset, G__tagnum
                                                                       , baseclass, basen);
@@ -5493,15 +5503,12 @@ int G__interpret_func(G__value* result7, char* funcname, G__param* libp, int has
    }
    else {
       // -- We are not doing whole function compilation.
-      // FIXME: Turn off bytecode generation unconditionally without saving the old state.
       G__asm_noverflow = 0;
    }
 #else // G__ASM_WHOLEFUNC
-   // FIXME: Turn off bytecode generation unconditionally without saving the old state.
    G__asm_noverflow = 0;
 #endif // G__ASM_WHOLEFUNC
-   G__asm_cp = 0;
-   G__asm_dt = G__MAXSTACK - 1;
+   G__clear_asm();
 #endif // G__ASM_IFUNC
 #endif // G__ASM
    //

@@ -408,7 +408,7 @@ G__value G__calc(const char* exprwithspace);
       while(pp_and) { \
          G__free_tempobject(); --G__templevel; /* 1516 */ \
          if(G__asm_dbg) \
-            G__fprinterr(G__serr,"   %s: CNDJMP assigned for AND %x  %s:%d\n", ppointer_and[pp_and-1] - 1, G__asm_cp, __FILE__, __LINE__); \
+            G__fprinterr(G__serr,"   %3x: CNDJMP assigned for AND %x  %s:%d\n", ppointer_and[pp_and-1] - 1, G__asm_cp, __FILE__, __LINE__); \
          if(G__PVOID==G__asm_inst[ppointer_and[pp_and-1]]) /* 1575 */ \
             G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp; \
          else --pp_and; /* 1575 */ \

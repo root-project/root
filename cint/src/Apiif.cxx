@@ -15,6 +15,7 @@ extern "C" void G__cpp_reset_tagtableG__API();
 
 extern "C" void G__set_cpp_environmentG__API() {
   G__add_compiledheader("Api.h");
+  G__add_compiledheader("Shadow.h");
   G__cpp_reset_tagtableG__API();
 }
 #include <new>
@@ -3226,7 +3227,7 @@ static int G__G__API_87_0_18(G__value* result7, G__CONST char* funcname, struct 
 *********************************************************/
 class G__Sizep2memfuncG__API {
  public:
-  G__Sizep2memfuncG__API() {p=&G__Sizep2memfuncG__API::sizep2memfunc;}
+  G__Sizep2memfuncG__API(): p(&G__Sizep2memfuncG__API::sizep2memfunc) {}
     size_t sizep2memfunc() { return(sizeof(p)); }
   private:
     size_t (G__Sizep2memfuncG__API::*p)();
@@ -3367,10 +3368,6 @@ static void G__setup_memvarCintcLcLG__ClassInfo(void) {
 }
 
 
-   /* Cint::G__ClassInfo::MatchMode */
-
-   /* Cint::G__ClassInfo::InheritanceMode */
-
    /* Cint::G__BaseClassInfo */
 static void G__setup_memvarCintcLcLG__BaseClassInfo(void) {
    G__tag_memvar_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo));
@@ -3398,8 +3395,6 @@ static void G__setup_memvarCintcLcLG__MethodArgInfo(void) {
 }
 
 
-   /* Cint::G__DataMemberInfo::error_code */
-
    /* Cint::G__CallFunc */
 static void G__setup_memvarCintcLcLG__CallFunc(void) {
    G__tag_memvar_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc));
@@ -3410,8 +3405,6 @@ static void G__setup_memvarCintcLcLG__CallFunc(void) {
    G__tag_memvar_reset();
 }
 
-
-   /* Cint::G__CallFunc::MatchMode */
 
    /* Cint::G__TypedefInfo */
 static void G__setup_memvarCintcLcLG__TypedefInfo(void) {
@@ -3445,10 +3438,6 @@ static void G__setup_memvarCintcLcLG__TokenInfo(void) {
    G__tag_memvar_reset();
 }
 
-
-   /* Cint::G__TokenInfo::G__TokenType */
-
-   /* Cint::G__TokenInfo::G__TokenProperty */
 
    /* Cint::G__SourceFileInfo */
 static void G__setup_memvarCintcLcLG__SourceFileInfo(void) {
@@ -4023,6 +4012,9 @@ static void G__cpp_setup_global3() {
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__CALLFUNC_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__TYPEDEFINFO_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__TOKENINFO_H=0",1,(char*)NULL);
+}
+
+static void G__cpp_setup_global4() {
 
    G__resetglobalenv();
 }
@@ -4031,6 +4023,7 @@ extern "C" void G__cpp_setup_globalG__API() {
   G__cpp_setup_global1();
   G__cpp_setup_global2();
   G__cpp_setup_global3();
+  G__cpp_setup_global4();
 }
 
 /*********************************************************
@@ -4113,6 +4106,8 @@ extern "C" void G__cpp_reset_tagtableG__API() {
   G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenProperty.tagnum = -1 ;
   G__G__APILN_CintcLcLG__SourceFileInfo.tagnum = -1 ;
   G__G__APILN_CintcLcLG__IncludePathInfo.tagnum = -1 ;
+  G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
+  G__G__APILN_string.tagnum = -1 ;
   G__G__APILN_CintcLcLG__ShadowMaker.tagnum = -1 ;
 }
 
@@ -4147,6 +4142,8 @@ extern "C" void G__cpp_setup_tagtableG__API() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenProperty),sizeof(int),-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo),sizeof(Cint::G__SourceFileInfo),-1,34048,(char*)NULL,G__setup_memvarCintcLcLG__SourceFileInfo,G__setup_memfuncCintcLcLG__SourceFileInfo);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo),sizeof(Cint::G__IncludePathInfo),-1,3328,(char*)NULL,G__setup_memvarCintcLcLG__IncludePathInfo,G__setup_memfuncCintcLcLG__IncludePathInfo);
+   G__get_linked_tagnum_fwd(&G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR);
+   G__get_linked_tagnum_fwd(&G__G__APILN_string);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker),sizeof(Cint::G__ShadowMaker),-1,35328,(char*)NULL,G__setup_memvarCintcLcLG__ShadowMaker,G__setup_memfuncCintcLcLG__ShadowMaker);
 }
 extern "C" void G__cpp_setupG__API(void) {

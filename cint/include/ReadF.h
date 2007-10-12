@@ -1,10 +1,3 @@
-/* -*- C++ -*- */
-/*************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
- *
- * For the licensing terms see the file COPYING
- *
- ************************************************************************/
 /*****************************************************************************
 * ReadFile.h
 *
@@ -30,6 +23,9 @@
 #define MAX_TOKEN        1024
 #define MAX_SEPARATOR    32
 #define MAX_ENDOFLINE    10
+#ifndef G__OLDIMPLEMENTATION3000
+#define MAX_QUOTATION    10
+#endif
 
 class ReadFile {
  public:
@@ -56,6 +52,9 @@ class ReadFile {
   void setdelimitor(const char *delimitorin); 
 #endif
   void setendofline(const char *endoflinein); 
+#ifndef G__OLDIMPLEMENTATION3000
+  void setquotation(const char *quotationin); 
+#endif
 
   int isvalid() { if(fp) return(1); else return(0); }
   void disp();
@@ -75,6 +74,10 @@ class ReadFile {
 #endif
   char endofline[MAX_ENDOFLINE];
   int lenendofline;
+#ifndef G__OLDIMPLEMENTATION3000
+  char quotation[MAX_SEPARATOR];
+  int lenquotation;
+#endif
 
   void separatearg(void);
   void initialize();
@@ -83,6 +86,9 @@ class ReadFile {
   int isdelimitor(int c);
 #endif
   int isendofline(int c);
+#ifndef G__OLDIMPLEMENTATION3000
+  int isquotation(int c);
+#endif
 };
 
 

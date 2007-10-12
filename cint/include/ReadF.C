@@ -1,10 +1,3 @@
-/* -*- C++ -*- */
-/*************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
- *
- * For the licensing terms see the file COPYING
- *
- ************************************************************************/
 /*****************************************************************************
 * ReadFile.C
 *****************************************************************************/
@@ -56,6 +49,12 @@ void ReadFile::initialize()
   argc = 0;
   setseparator(" \t\v");
   setendofline("");
+#ifndef G__OLDIMPLEMENTATION1960
+  setdelimitor("");
+#endif
+#ifndef G__OLDIMPLEMENTATION3000
+  setquotation("");
+#endif
 }
 
 void ReadFile::setseparator(const char *separatorin)
@@ -77,6 +76,14 @@ void ReadFile::setendofline(const char *endoflinein)
   strcpy(endofline,endoflinein); 
   lenendofline = strlen(endofline);
 }
+
+#ifndef G__OLDIMPLEMENTATION3000
+void ReadFile::setquotation(const char *quotationin)
+{
+  strcpy(quotation,quotationin); 
+  lenquotation = strlen(quotation);
+}
+#endif
 
 /*****************************************************************************
 * Reading one line
@@ -189,6 +196,18 @@ void ReadFile::separatearg(void)
   p = argbuf;
   do {
     while(isseparator((c = *p)) && c) ++p;
+#ifndef G__OLDIMPLEMENTATION3000
+    if(isquotation(c)) {
+      argv[++argc] = ++p;
+      while(!isquotation((c = *p)) && c) {
+        if(c=='\\') ++p;
+        ++p;
+      }
+      *p = '\0';
+      ++p;
+    }
+    else 
+#endif
     if(c) {
       argv[++argc] = p;
 #ifndef G__OLDIMPLEMENTATION1960
@@ -236,6 +255,21 @@ int ReadFile::isdelimitor(int c)
   int i;
   for(i=0;i<lendelimitor;i++) {
     if(c==delimitor[i]) return(1);
+  }
+  return(0);
+}
+
+#endif
+
+#ifndef G__OLDIMPLEMENTATION3000
+/*****************************************************************************
+* isquotation()
+*****************************************************************************/
+int ReadFile::isquotation(int c)
+{
+  int i;
+  for(i=0;i<lenquotation;i++) {
+    if(c==quotation[i]) return(1);
   }
   return(0);
 }
