@@ -616,7 +616,11 @@ const char* RooCmdConfig::decodeStringOnTheFly(const char* callerID, const char*
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
   const char* ret =  pc.getString("theString",0,kTRUE) ;
 
-  retBuf = ret ;
+  if (ret) {
+    retBuf = ret ;
+  } else {
+    retBuf.clear() ;
+  }
   return retBuf.c_str() ;
 }
 

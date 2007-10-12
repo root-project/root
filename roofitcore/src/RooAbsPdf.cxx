@@ -191,7 +191,6 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // the dependents in 'nset'. If 'nset' is 0, the unnormalized value. 
   // is returned. All elements of 'nset' must be lvalues
 
-
   // Unnormalized values are not cached
   // Doing so would be complicated as _norm->getVal() could
   // spoil the cache and interfere with returning the cached
@@ -212,7 +211,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
   // Process change in last data set used
   Bool_t nsetChanged(kFALSE) ;
-  if (nset!=_normSet) {
+  if (nset!=_normSet || _norm==0) {
     nsetChanged = syncNormalization(nset) ;
   }
 
@@ -382,7 +381,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   // Check if data sets are identical
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
   if (cache) {
-    
+
     Bool_t nsetChanged = (_norm!=cache->_norm) ;
     _norm = cache->_norm ;
 
@@ -1034,13 +1033,18 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
   if (extended) {
     nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0?expectedEvents(&whatVars):nEvents) ;
+    cxcoutI("Generation") << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
+			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
+  } else if (nEvents==0) {
+    cxcoutI("Generation") << "No number of events specified , number of events generated is " 
+			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
   }
 
   if (extended && protoData && !randProto) {
-    cout << "RooAbsPdf::generate: WARNING Using generator option Extended() (Poisson distribution of #events) together " << endl
-	 << "                     with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
-	 << "                     Set randomize flag in ProtoData() option to randomize prototype dataset order and thus" << endl
-         << "                     to randomize the set of over/undersampled prototype events for each generation cycle." << endl ;
+    cxcoutW("Generation") << "WARNING Using generator option Extended() (Poisson distribution of #events) together "
+			  << "with a prototype dataset implies incomplete sampling or oversampling of proto data. " 
+			  << "Set randomize flag in ProtoData() option to randomize prototype dataset order and thus "
+			  << "to randomize the set of over/undersampled prototype events for each generation cycle." << endl ;
   }
 
 
@@ -1985,6 +1989,12 @@ Int_t RooAbsPdf::verboseEval()
   // Return global level of verbosity for p.d.f. evaluations
   return _verboseEval ;
 }
+
+
+RooAbsPdf::CacheElem::~CacheElem() 
+{ 
+  delete _norm ; 
+} 
 
 
 RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset) 

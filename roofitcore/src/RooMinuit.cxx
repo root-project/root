@@ -659,7 +659,11 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n1*n1*errdef);
     // calculate and draw the contour
     graph1= (TGraph*)gMinuit->Contour(25, index1, index2);
-    gDirectory->Append(graph1) ;
+    if (graph1) {
+      gDirectory->Append(graph1) ;
+    } else {
+      cout << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n1 << endl ;
+    }
   }
 
   TGraph* graph2 = 0;
@@ -668,8 +672,12 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n2*n2*errdef);
     // calculate and draw the contour
     graph2= (TGraph*)gMinuit->Contour(25, index1, index2);
-    graph2->SetLineStyle(2);
-    gDirectory->Append(graph2) ;
+    if (graph2) {
+      graph2->SetLineStyle(2);
+      gDirectory->Append(graph2) ;
+    } else {
+      cout << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n2 << endl ;
+    }
   }
 
   TGraph* graph3 = 0;
@@ -677,9 +685,16 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     // set the value corresponding to an n3-sigma contour
     gMinuit->SetErrorDef(n3*n3*errdef);
     // calculate and draw the contour
+    
     graph3= (TGraph*)gMinuit->Contour(25, index1, index2);
-    graph3->SetLineStyle(3);
-    gDirectory->Append(graph3) ;
+
+    if (graph3) {
+      graph3->SetLineStyle(3);
+      gDirectory->Append(graph3) ;   
+    } else {
+      cout << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n3 << endl ;
+    }
+
   }
   // restore the original ERRDEF
   gMinuit->SetErrorDef(errdef);

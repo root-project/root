@@ -79,6 +79,8 @@ void RooMultiCategory::updateIndexList()
 {
   // Update the list of super-category states 
 
+  // WVE broken if used with derived categories!
+
   clearTypes() ;
 
   RooMultiCatIter iter(_catSet) ;

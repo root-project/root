@@ -700,14 +700,12 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   delete[] subCode ;
   delete avIter ;
 
-  cout << "RooAddPDF::getAIWN code = " << masterCode << endl ;
   return masterCode ;
 }
 
 
 Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
-  cout << "RooAddPdf::analyticalIntegralWN code = " << code << endl ;
   // Return analytical integral defined by given scenario code
 
   // WVE needs adaptation to handle new rangeName feature

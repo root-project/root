@@ -36,6 +36,7 @@ class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
 class RooListProxy ;
+//class RooSimCloneTool ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -212,12 +213,13 @@ public:
   inline OperMode operMode() const { return _operMode ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 	
-protected:
+  protected:
 
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;
   friend class RooAbsReal ;
   friend class RooProjectedPdf ;
+  //friend class RooSimCloneTool ;
 
   virtual void operModeHook() {} ;
 

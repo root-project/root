@@ -1797,7 +1797,7 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
 //   assert(other!=0) ;
   RooAbsReal* other = static_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
 
-  if (!_treeVar) {
+  if (!other->_treeVar) {
     _value = other->_value ;
   } else {
     if (source->getAttribute("FLOAT_TREE_BRANCH")) {
@@ -1807,7 +1807,7 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
     } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
       _value = *reinterpret_cast<UChar_t*>(&other->_value) ;
     } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
-    _value = *reinterpret_cast<UInt_t*>(&other->_value) ;
+      _value = *reinterpret_cast<UInt_t*>(&other->_value) ;
     } 
   }
   setValueDirty() ;
@@ -1830,39 +1830,43 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 	   << " will be converted to double precision" << endl ;
       setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
+      t.SetBranchAddress(cleanName,reinterpret_cast<Float_t*>(&_value)) ;
     } else if (!typeName.CompareTo("Int_t")) {
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
+      t.SetBranchAddress(cleanName,reinterpret_cast<Int_t*>(&_value)) ;
     } else if (!typeName.CompareTo("UChar_t")) {
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
+      t.SetBranchAddress(cleanName,reinterpret_cast<UChar_t*>(&_value)) ;
     }  else if (!typeName.CompareTo("UInt_t")) { 
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
-    }    
+      t.SetBranchAddress(cleanName,reinterpret_cast<UInt_t*>(&_value)) ;
+    } else {
+      t.SetBranchAddress(cleanName,&_value) ;
+    }   
     
-    t.SetBranchAddress(cleanName,&_value) ;
     if (branch->GetCompressionLevel()<0) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
+      // cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;
       branch->SetCompressionLevel(1) ;
     }
 
-//     cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " 
-// 	 << (void*)&t << ", changing address" << endl ;
+//      cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " << (void*)&t << ", changing address" << endl ;
 
   } else {
+
     TString format(cleanName);
     format.Append("/D");
     branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
     branch->SetCompressionLevel(1) ;
-//     cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree" 
-// 	 << (void*)&t << endl ;
+    //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
 
 }

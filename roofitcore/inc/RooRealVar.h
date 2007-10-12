@@ -109,7 +109,7 @@ public:
 
   void deleteSharedProperties() ;
 
-protected:
+  protected:
 
   static Bool_t _printScientific ;
   static Int_t  _printSigDigits ;

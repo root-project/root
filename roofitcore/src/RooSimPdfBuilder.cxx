@@ -806,6 +806,29 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  catName = strtok(0,",") ;
 #endif
 		}		
+
+
+		// check that any auxSplitCats in compCatSet do not depend on any other
+		// fundamental or auxiliary splitting categories in the composite set.
+		TIterator* iter = compCatSet.createIterator() ;
+		RooAbsArg* arg ;
+		while((arg=(RooAbsArg*)iter->Next())) {
+		  RooArgSet tmp(compCatSet) ;
+		  tmp.remove(*arg) ;
+		  if (arg->dependsOnValue(tmp)) {
+		    cout << "RooSimPdfBuilder::buildPDF: ERROR: Ill defined split: auxiliary splitting category " << arg->GetName() 
+			 << " used in composite split " << compCatSet << " depends on one or more of the other splitting categories in the composite split" << endl ;
+		    
+		    // Cleanup and axit
+		    customizerList->Delete() ;
+		    delete customizerList ;
+		    splitStateList.Delete() ;
+		    delete[] buf ;
+		    return 0 ;
+		  }
+		}
+		delete iter ;
+
 		splitCat = new RooMultiCategory(origCompCatName,origCompCatName,compCatSet) ;
 		_compSplitCatSet.addOwned(*splitCat) ;
 		//cout << "composite splitcat: " << splitCat->GetName() ;
