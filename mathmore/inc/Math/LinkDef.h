@@ -41,7 +41,7 @@
 
 
 #pragma link C++ namespace ROOT::Math::Integration;
-#pragma link C++ class ROOT::Math::Integrator+;
+#pragma link C++ class ROOT::Math::GSLIntegrator+;
 
 #pragma link C++ namespace ROOT::Math::Minim1D;
 #pragma link C++ class ROOT::Math::Minimizer1D+;

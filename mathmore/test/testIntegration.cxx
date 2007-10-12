@@ -1,5 +1,4 @@
 #include "Math/Polynomial.h"
-#include "Math/Integrator.h"
 #include "Math/Functor.h"
 #include <iostream>
 
@@ -11,6 +10,13 @@
 
 #include "TError.h"
 
+#include "Math/GSLIntegrator.h"
+// temp before having new Integrator class 
+namespace ROOT { 
+   namespace Math { 
+      typedef GSLIntegrator Integrator; 
+   }
+}
 
 double exactIntegral ( const std::vector<double> & par, double a, double b) { 
 
@@ -55,7 +61,11 @@ void testIntegration() {
   std::cout << "Exact value " << exactresult << std::endl << std::endl; 
 
 
-  ROOT::Math::Integrator ig(func, 0.001, 0.01, 100 );
+  //ROOT::Math::Integrator ig(func, 0.001, 0.01, 100 );
+  ROOT::Math::GSLIntegrator ig(0.001, 0.01, 100 );
+  ig.SetFunction(func);
+
+
   double value = ig.Integral( 0, 3); 
   // or ig.Integral(*f, 0, 10); if new function 
 
@@ -68,7 +78,8 @@ void testIntegration() {
 
   
   // integrate again ADAPTIve, with different rule 
-  ROOT::Math::Integrator ig2(func, ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61, 0.001, 0.01, 100 );
+  ROOT::Math::GSLIntegrator ig2(ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61, 0.001, 0.01, 100 );
+  ig2.SetFunction(func);
   value = ig2.Integral(0, 3); 
   // or ig2.Integral(*f, 0, 10); if different function
 
@@ -137,7 +148,7 @@ void  testIntegPerf(){
   double a = -1;
 
   timer.Start(); 
-  ROOT::Math::Integrator ig(f1);
+  ROOT::Math::Integrator ig; ig.SetFunction(f1);
   double s1 = 0; 
   for (int i = 0; i < n; ++i) { 
      double x = x1 + dx*i; 
@@ -150,7 +161,7 @@ void  testIntegPerf(){
   timer.Start(); 
   s1 = 0; 
   for (int i = 0; i < n; ++i) { 
-     ROOT::Math::Integrator ig2(f1);
+     ROOT::Math::Integrator ig2; ig2.SetFunction(f1);
      double x = x1 + dx*i; 
      s1+= ig2.Integral(a,x);
   }

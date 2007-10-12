@@ -32,6 +32,10 @@
 #define ROOT_Math_IntegrationTypes
 
 
+#ifndef ROOT_Math_AllIntegrationTypes
+#include "Math/AllIntegrationTypes.h"
+#endif
+
 namespace ROOT {
 namespace Math {
 
@@ -39,19 +43,21 @@ namespace Math {
 
   namespace Integration {
 
-    /**
-	 enumeration specifying the integration types.
-	 <ul>
-	 <li>NONADAPTIVE : to be used for smooth functions
-	 <li>ADAPTIVE : to be used for general functions without singularities.
-	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
-	 </ul>
-	 @ingroup Integration
-    */
+     using namespace IntegrationOneDim; 
 
-    // type of integration
+//     /**
+// 	 enumeration specifying the integration types.
+// 	 <ul>
+// 	 <li>NONADAPTIVE : to be used for smooth functions
+// 	 <li>ADAPTIVE : to be used for general functions without singularities.
+// 	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
+// 	 </ul>
+// 	 @ingroup Integration
+//     */
 
-    enum Type { NONADAPTIVE, ADAPTIVE, ADAPTIVESINGULAR } ;
+//     // type of integration
+
+//     enum Type { NONADAPTIVE, ADAPTIVE, ADAPTIVESINGULAR } ;
 
 
     /**

@@ -4,7 +4,7 @@
 
 #include "Math/DistFuncMathMore.h"
 #ifndef NO_MATHCORE
-#include "Math/Integrator.h"
+#include "Math/GSLIntegrator.h"
 #include "Math/WrappedFunction.h"
 #include "Math/DistFuncMathCore.h"
 #endif
@@ -88,7 +88,8 @@ struct TestFunc1 {
       // calculate integral of pdf
       PdfFunction f(f_pdf,p[0]); 
       WrappedFunction<PdfFunction> wf(f);
-      Integrator ig(wf,1.E-12,1.E-12,100000);
+      GSLIntegrator ig(1.E-12,1.E-12,100000);
+      ig.SetFunction(wf);
       if (!c) { 
          // lower intergal (cdf) 
          double q2 = ig.IntegralLow(val); 
@@ -160,7 +161,8 @@ struct TestFunc2 {
       // calculate integral of pdf
       PdfFunction f(f_pdf,p[0],p[1]); 
       WrappedFunction<PdfFunction> wf(f);
-      Integrator ig(wf);
+      GSLIntegrator ig(1.E-12,1.E-12,100000);
+      ig.SetFunction(wf);
       if (!c) { 
          // lower intergal (cdf) 
          double q2 = ig.IntegralLow(val); 

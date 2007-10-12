@@ -26,41 +26,46 @@ namespace Math {
 
 
                       
-// constructors
+// constructor
       
-           
-GSLMCIntegrator::GSLMCIntegrator(unsigned int dim, double absTol, double relTol, unsigned int calls):
-   fAbsTol(absTol),
-   fRelTol(relTol),
-   fDim(dim),
-   fCalls(calls),
-   //fr(r),
-   fWorkspace(0),
-   fFunction(0)
-{
-   //  Default constructor of GSL Integrator for Adaptive Singular integration
-   
-   fRng = new GSLRngWrapper();      
-   fRng->Allocate();
-   
-}    
-
-        
-          
+                   
       
-GSLMCIntegrator::GSLMCIntegrator(unsigned int dim, MCIntegration::Type type, double absTol, double relTol, unsigned int calls):
+GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double relTol, unsigned int calls):
    fType(type),
    fAbsTol(absTol),
    fRelTol(relTol),
-   fDim(dim),
+   fDim(0),
    //fr(r),
    fCalls(calls),
    fWorkspace(0),
    fFunction(0)
 {
-   // constructor of GSL MCIntegrator.Plain MC is set as default integration type
+   // constructor of GSL MCIntegrator.Vegas MC is set as default integration type
    //set Workspace according to type
-   SetType(type);
+   
+   //set random number generator
+   fRng = new GSLRngWrapper();      
+   fRng->Allocate();
+   
+}
+
+GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol, unsigned int calls):
+   fAbsTol(absTol),
+   fRelTol(relTol),
+   fDim(0),
+   //fr(r),
+   fCalls(calls),
+   fWorkspace(0),
+   fFunction(0)
+{
+   // constructor of GSL MCIntegrator. Vegas MC is set as default integration type
+   std::string typeName(type); 
+   if (typeName == "PLAIN")
+      fType =  MCIntegration::PLAIN;
+   else if (typeName == "MISER")
+      fType =  MCIntegration::MISER;
+   else 
+      fType =  MCIntegration::VEGAS;  // default
    
    //set random number generator
    fRng = new GSLRngWrapper();      
@@ -87,8 +92,11 @@ GSLMCIntegrator::~GSLMCIntegrator()
 // disable copy ctrs
   
          
-//GSLMCIntegrator(const GSLMCIntegrator &);
-//GSLMCIntegrator & operator=(const GSLMCIntegrator &);
+GSLMCIntegrator::GSLMCIntegrator(const GSLMCIntegrator &) : 
+   VirtualIntegrator()
+{}
+
+GSLMCIntegrator & GSLMCIntegrator::operator=(const GSLMCIntegrator &) { return *this; }
       
    
          
@@ -100,25 +108,32 @@ void GSLMCIntegrator::SetFunction(const IMultiGenFunction &f)
    // method to set the a generic integration function
    if(fFunction == 0) fFunction = new  GSLMonteFunctionWrapper();
    fFunction->SetFunction(f);
+   fDim = f.NDim();
 } 
       
-void GSLMCIntegrator::SetFunction( GSLMonteFuncPointer f, void * p )
+void GSLMCIntegrator::SetFunction( GSLMonteFuncPointer f,  unsigned int dim, void * p  )
 {
    // method to set the a generic integration function
    if(fFunction == 0) fFunction = new  GSLMonteFunctionWrapper();
    fFunction->SetFuncPointer( f );
    fFunction->SetParams ( p );
+   fDim = dim;
 }
 
 
 
-double GSLMCIntegrator::Integral(double* a, double* b)
+double GSLMCIntegrator::Integral(const double* a, const double* b)
 {
    // evaluate the Integral of a over the defined interval (a[],b[])
    assert(fRng != 0);
    gsl_rng* fr = fRng->Rng();
    assert(fr != 0);
    if (!CheckFunction()) return 0;  
+
+   // initialize by  creating the right WS 
+   // (if dimension and type are different than previous calculation)
+   DoInitialize(); 
+
    if ( fType == MCIntegration::VEGAS) 
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
@@ -127,19 +142,19 @@ double GSLMCIntegrator::Integral(double* a, double* b)
       else if(fMode == MCIntegration::STRATIFIED) ws->GetWS()->mode = 1;
       else if(fMode == MCIntegration::IMPORTANCE_ONLY) ws->GetWS()->mode = 2;
 
-      fStatus = gsl_monte_vegas_integrate( fFunction->GetFunc(), a, b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
+      fStatus = gsl_monte_vegas_integrate( fFunction->GetFunc(), (double *) a, (double*) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
    else if (fType ==  MCIntegration::MISER) 
    {
       GSLMiserIntegrationWorkspace * ws = dynamic_cast<GSLMiserIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0); 
-      fStatus = gsl_monte_miser_integrate( fFunction->GetFunc(), a, b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
+      fStatus = gsl_monte_miser_integrate( fFunction->GetFunc(), (double *) a, (double *) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
    else if (fType ==  MCIntegration::PLAIN) 
    {
       GSLPlainIntegrationWorkspace * ws = dynamic_cast<GSLPlainIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0); 
-      fStatus = gsl_monte_plain_integrate( fFunction->GetFunc(), a, b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
+      fStatus = gsl_monte_plain_integrate( fFunction->GetFunc(), (double *) a, (double *) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
    /**/
    else 
@@ -157,10 +172,10 @@ double GSLMCIntegrator::Integral(double* a, double* b)
 }
 
      
-double GSLMCIntegrator::Integral(const GSLMonteFuncPointer & f, double* a, double* b)
+double GSLMCIntegrator::Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p )
 {
    // evaluate the Integral for a function f over the defined interval (a[],b[])
-   SetFunction(f,(void*)0);
+   SetFunction(f,dim,p);
    return Integral(a,b);
 }
 
@@ -206,23 +221,39 @@ void GSLMCIntegrator::SetGenerator(GSLRngWrapper* r){ this->fRng = r; }
       
 void GSLMCIntegrator::SetType (MCIntegration::Type type)
 {
-   //    set integration type
-   if(type ==  ROOT::Math::MCIntegration::VEGAS)
-   {
       fType=type;
+}
+
+void GSLMCIntegrator::DoInitialize ( )
+{
+   //    initialize by setting  integration type 
+
+   
+
+   if (fWorkspace != 0) { 
+      if (fDim == fWorkspace->NDim() && fType == fWorkspace->Type() ) 
+         return; // can use previously existing ws
+
+      // otherwise delete previously existing ws and create a new one
+      delete fWorkspace; 
+   }
+ 
+   if(fType  ==  ROOT::Math::MCIntegration::VEGAS)
+   {
+      
       fWorkspace = new GSLVegasIntegrationWorkspace(fDim);
 	  
    }
 
-   else if (type ==  ROOT::Math::MCIntegration::MISER) 
+   else if (fType ==  ROOT::Math::MCIntegration::MISER) 
    {
-      fType=type;
+
       fWorkspace = new GSLMiserIntegrationWorkspace(fDim);
    }
-   else if (type ==  ROOT::Math::MCIntegration::PLAIN)   
+   else if (fType ==  ROOT::Math::MCIntegration::PLAIN)   
    {
-      fType=type;
-      fWorkspace =new GSLPlainIntegrationWorkspace(fDim);
+
+      fWorkspace = new GSLPlainIntegrationWorkspace(fDim);
    }
    else 
    {

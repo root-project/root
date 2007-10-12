@@ -26,8 +26,8 @@
 // 
 //
 
-#ifndef ROOT_Math_GSLIntegrator
-#define ROOT_Math_GSLIntegrator
+#ifndef ROOT_Math_GSLMCIntegrator
+#define ROOT_Math_GSLMCIntegrator
 
 #ifndef ROOT_Math_MCIntegrationTypes
 #include "Math/MCIntegrationTypes.h"
@@ -51,6 +51,9 @@
 #include "Math/MCParameters.h"
 #endif
 
+#ifndef ROOT_Math_VirtualIntegrator
+#include "Math/VirtualIntegrator.h"
+#endif
 
 #include <iostream>
 
@@ -86,62 +89,50 @@ namespace Math {
    */
    
    
-   class GSLMCIntegrator {
+   class GSLMCIntegrator : public VirtualIntegrator{
       
    public:
                   
       // constructors
       
+                  
       
-      /** Default constructor of GSL MCIntegrator 
-      
-      @param dim dimension of the function
-      @param absTol desired absolute Error
-      @param relTol desired relative Error
-      @param calls maximum number of function calls
-      */
-      
-      GSLMCIntegrator(unsigned int dim, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
-            
-      
-      /** constructor of GSL MCIntegrator. Plain MC is set as default integration type (??)
+      /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
          
-      @param dim dimension of the function
       @param type type of integration. The possible types are defined in the Integration::Type enumeration
       @param absTol desired absolute Error
       @param relTol desired relative Error
       @param calls maximum number of function calls
       */
       
+      explicit 
+      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::VEGAS, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
+
+      /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
+         
+      @param type type of integration using a char * (required by plug-in manager) 
+      @param absTol desired absolute Error
+      @param relTol desired relative Error
+      @param calls maximum number of function calls
+      */
       
-      GSLMCIntegrator(unsigned int dim, MCIntegration::Type type, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
+      explicit 
+      GSLMCIntegrator(const char *  type, double absTol, double relTol, unsigned int calls);
       
       
-//       /**
-//          generic constructor for GSL Integrator
-       
-//        @param type type of integration. The possible types are defined in the Integration::Type enumeration
-//        @param absTol desired absolute Error
-//        @param relTol desired relative Error
-//        @param dim function dimensionality
-//        @param calls number of function evaluations
-       
-//        */
-//       /*
-//       GSLMCIntegrator(const MCIntegration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, gsl_rng* r );
-//       */
 
       /** destructor */ 
       virtual ~GSLMCIntegrator();
       
       // disable copy ctrs
-      /*
-   private:
+      
+private:
          
       GSLMCIntegrator(const GSLMCIntegrator &);
+
       GSLMCIntegrator & operator=(const GSLMCIntegrator &);
-      */
-   public:
+      
+public:
          
          
          // template methods for generic functors
@@ -155,10 +146,11 @@ namespace Math {
          
          
       void SetFunction(const IMultiGenFunction &f); 
-   
+      using VirtualIntegrator::SetFunction;
+
       typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);    
       
-      void SetFunction( GSLMonteFuncPointer f, void * p = 0); 
+      void SetFunction( GSLMonteFuncPointer f, unsigned int dim, void * p = 0 ); 
       
       // methods using GSLMonteFuncPointer
       
@@ -169,12 +161,14 @@ namespace Math {
        @param b upper value of the integration interval
        */
       
-      double Integral(const GSLMonteFuncPointer & f, double* a, double* b);
+      double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = 0);
       
       // to be added later    
       //double Integral(const GSLMonteFuncPointer & f);
         
-      double Integral(double* a, double* b);
+      double Integral(const double* a, const double* b);
+
+      using VirtualIntegrator::Integral;
     
       
       //double Integral(GSLMonteFuncPointer f, void * p, double* a, double* b);
@@ -268,6 +262,10 @@ namespace Math {
          
       // internal method to check validity of GSL function pointer
       bool CheckFunction(); 
+
+      // set internally the type of integration method
+      void DoInitialize( );
+
       
    private:
       //type of intergation method   

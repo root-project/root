@@ -36,7 +36,8 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 		$(MODDIRI)/Math/GSLRootFinder.h \
 		$(MODDIRI)/Math/GSLRootFinderDeriv.h \
 		$(MODDIRI)/Math/RootFinderAlgorithms.h \
-		$(MODDIRI)/Math/Integrator.h \
+		$(MODDIRI)/Math/GSLIntegrator.h \
+		$(MODDIRI)/Math/GSLMCIntegrator.h \
 		$(MODDIRI)/Math/Minimizer1D.h \
 		$(MODDIRI)/Math/Chebyshev.h  \
 		$(MODDIRI)/Math/Random.h \
@@ -45,7 +46,6 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 		$(MODDIRI)/Math/GSLMinimizer.h \
 		$(MODDIRI)/Math/GSLNLSMinimizer.h \
 		$(MODDIRI)/Math/GSLSimAnMinimizer.h \
-		$(MODDIRI)/Math/GSLMCIntegrator.h \
 		$(MODDIRS)/GSLError.h
 
 MATHMOREH    := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))

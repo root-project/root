@@ -31,23 +31,33 @@
 #ifndef ROOT_Math_GSLIntegrator
 #define ROOT_Math_GSLIntegrator
 
+
+#ifndef ROOT_Math_VirtualIntegrator
+#include "Math/VirtualIntegrator.h"
+#endif
+
+#ifndef ROOT_Math_IntegrationTypes
+#include "Math/IntegrationTypes.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#include "Math/IFunction.h"
+#endif
+
+
+
+
+#ifndef ROOT_Math_GSLFunctionAdapter
+#include "Math/GSLFunctionAdapter.h"
+#endif
 
 #include <vector>
 
-#include "Math/Integrator.h"
-
-#include "GSLFunctionWrapper.h"
-
-
-
-#include "Math/GSLFunctionAdapter.h"
 
 /**
 
 @defgroup Integration Numerical Integration
-
+@ingroup NumAlgo 
 */
 
 
@@ -84,14 +94,14 @@ namespace Math {
     ADAPTIVE with a lower Gauss-Kronrod rule.
     
     For detailed description on GSL integration algorithms see the
-    <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_16.html#SEC248">GSL Manual</A>.
+    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Numerical-Integration.html">GSL Manual</A>.
     
     
     @ingroup Integration
     */
    
    
-   class GSLIntegrator {
+   class GSLIntegrator : public VirtualIntegrator  {
       
    public:
       
@@ -137,6 +147,16 @@ namespace Math {
       
       GSLIntegrator(const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
+
+      /** constructor of GSL Integrator. In the case of Adaptive integration the Gauss-Krond rule of 31 points is used
+          This is used by the plug-in manager (need a char * instead of enumerations)
+         
+         @param type type of integration. The possible types are defined in the Integration::Type enumeration
+         @param absTol desired absolute Error
+         @param relTol desired relative Error
+         @param size maximum number of sub-intervals
+         */            
+      GSLIntegrator(const char *  type, double absTol, double relTol, size_t size );
       
       virtual ~GSLIntegrator();
       //~GSLIntegrator();
@@ -160,7 +180,9 @@ namespace Math {
           */
          
          
-      void SetFunction(const IGenFunction &f); 
+      void SetFunction(const IGenFunction &f, bool copyFunc = false); 
+      using VirtualIntegrator::SetFunction;
+
       
       void SetFunction( GSLFuncPointer f, void * p = 0); 
       
@@ -184,17 +206,21 @@ namespace Math {
       double Integral(const IGenFunction & f);
    
       /**
-	evaluate the Cauchy principal value of the integral of  a previously set function over the defined interval (a,b) with a singularity at c 
-
+	evaluate the Cauchy principal value of the integral of  a previously defined function f over 
+        the defined interval (a,b) with a singularity at c 
+        @param a lower interval value
+        @param b lower interval value
+        @param c singular value of f
         */   
       double IntegralCauchy(double a, double b, double c);
 
       /**
-	evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
-@param a lower interval value
-@param b lower interval value
-@param c singular value of f
-@param f integration function. The function type must implement the mathlib::IGenFunction interface
+	evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) 
+        with a singularity at c 
+        @param f integration function. The function type must implement the mathlib::IGenFunction interface
+        @param a lower interval value
+        @param b lower interval value
+        @param c singular value of f
       */
       double IntegralCauchy(const IGenFunction & f, double a, double b, double c);
       
@@ -230,6 +256,7 @@ namespace Math {
        */
       
       double Integral(double a, double b);
+      using VirtualIntegrator::Integral;
       
       /**
          evaluate the Integral over the infinite interval (-inf,+inf) using the function previously set with GSLIntegrator::SetFunction method.
@@ -339,6 +366,7 @@ namespace Math {
          
       // internal method to check validity of GSL function pointer
       bool CheckFunction(); 
+
       
    private:
          
@@ -357,8 +385,8 @@ namespace Math {
       
       // GSLIntegrationAlgorithm * fAlgorithm;
       
+      GSLFunctionWrapper  *     fFunction;
       GSLIntegrationWorkspace * fWorkspace;
-      GSLFunctionWrapper  fFunction;
      
    };
    

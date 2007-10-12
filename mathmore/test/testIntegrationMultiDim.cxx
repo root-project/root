@@ -78,7 +78,6 @@ Double_t SingularFun( const double* x, const double *p)
 }
 
 
-
   // ################################################################
   //
   //      testing IntegratorMultiDim class 
@@ -93,11 +92,11 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
 
   TStopwatch timer; 
   timer.Start();
-  ROOT::Math::WrappedParamFunction<> funptr1(&SimpleFun, 3, p, p+1);
-  ROOT::Math::IntegratorMultiDim ig1(funptr1, dim, 1.E-5, 1.E-5, 1.E7);
+  ROOT::Math::WrappedParamFunction<> funptr1(&SimpleFun, dim, p, p+1);
+  ROOT::Math::IntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, (unsigned int)1.E7);
   //  std::cout << "1. integral= " << std::endl; 
   ig1.SetFunction(funptr1); 
-  ig1.Integral(dim, a, b);
+  ig1.Integral(a, b);
   timer.Stop();
   std::cout.precision(12);
   std::cout << "result:  \t";
@@ -124,12 +123,12 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
 
   TStopwatch timer; 
   //timer.Start();
-  ROOT::Math::WrappedParamFunction<> funptr(&SimpleFun, 3, p, p+1);
+  ROOT::Math::WrappedParamFunction<> funptr(&SimpleFun, dim, p, p+1);
 
-  ROOT::Math::GSLMCIntegrator ig1(dim);
+  ROOT::Math::GSLMCIntegrator ig1;
   ig1.SetType(ROOT::Math::MCIntegration::VEGAS);
-  //ig1.SetMode(ROOT::Math::MCIntegration::IMPORTANCE_ONLY);
   ig1.SetFunction(funptr);
+  //ig1.SetMode(ROOT::Math::MCIntegration::IMPORTANCE_ONLY);
 
   /*
   VegasParameters param;
@@ -154,7 +153,7 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   timeVegas = timer.RealTime();
 
   timer.Start();
-  ROOT::Math::GSLMCIntegrator ig2(dim, ROOT::Math::MCIntegration::MISER);
+  ROOT::Math::GSLMCIntegrator ig2(ROOT::Math::MCIntegration::MISER);
  
   ig2.SetFunction(funptr);
 
@@ -176,7 +175,7 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   std::cout << "\t PLAIN.. " << std::endl;
   timer.Start();
   std::cout << "" << std::endl;
-  ROOT::Math::GSLMCIntegrator ig3(dim, ROOT::Math::MCIntegration::PLAIN);
+  ROOT::Math::GSLMCIntegrator ig3(ROOT::Math::MCIntegration::PLAIN);
   ig3.SetFunction(funptr);
   ig3.Integral(a, b);
   timer.Stop();
