@@ -963,6 +963,8 @@ static G__value G__exec_switch()
          //  continues, gotos, or reaches the
          //  end of the block.
          //
+         // Tell the parser to handle case clauses.
+         G__switch = 1;
          // Tell the parser to go until the end of the switch block.
          int brace_level = 1;
          // Call the parser.
@@ -970,6 +972,8 @@ static G__value G__exec_switch()
          //fprintf(stderr, "G__exec_switch: just before running case block: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
          result = G__exec_statement(&brace_level);
          //fprintf(stderr, "G__exec_switch: Case block parse has returned.\n");
+         // Restore state.
+         G__switch = 0;
          //
          //  Check if user requested an immediate return.
          //
@@ -1147,7 +1151,7 @@ static G__value G__exec_switch_case(char* casepara)
          //
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: JMP (for case, end of case, jump into next case block, assigned later)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "%3x,%3x: JMP (for case, end of case, jump into next case block body, intentional fallthrough, assigned later)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__JMP;
@@ -1160,7 +1164,7 @@ static G__value G__exec_switch_case(char* casepara)
          G__asm_inst[G__prevcase] = G__asm_cp;
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "   %3x: CNDJMP %x assigned (for case expression not equal)  %s:%d\n", G__prevcase - 1, G__asm_cp, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "   %3x: CNDJMP %x assigned (for case expression not equal, jump to next case test)  %s:%d\n", G__prevcase - 1, G__asm_cp, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
          // --
@@ -1170,7 +1174,7 @@ static G__value G__exec_switch_case(char* casepara)
       //
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x,%3x: PUSHCPY (for case)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: PUSHCPY (for case, copy selector value for test against case expression)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
       }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__PUSHCPY;
@@ -1197,7 +1201,7 @@ static G__value G__exec_switch_case(char* casepara)
       //
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x,%3x: OP2_OPTIMIZED == (for case)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: OP2_OPTIMIZED == (for case, test selector against case expression)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
       }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__OP2_OPTIMIZED;
@@ -1208,7 +1212,7 @@ static G__value G__exec_switch_case(char* casepara)
       //
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x,%3x: CNDJMP (for case, assigned later)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: CNDJMP (for case, jump to next case test if no match with selector value, assigned later)  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
       }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__CNDJMP;
@@ -1224,7 +1228,7 @@ static G__value G__exec_switch_case(char* casepara)
          G__asm_inst[jmp1] = G__asm_cp;
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "   %3x: JMP %x assigned (for case, jump into this case block)  %s:%d\n", jmp1 - 1, G__asm_cp, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "   %3x: JMP %x assigned (for case, jump into this case block body on intentional fallthrough)  %s:%d\n", jmp1 - 1, G__asm_cp, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
          // --
