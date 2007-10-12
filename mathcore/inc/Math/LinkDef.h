@@ -15,6 +15,9 @@
 
 #pragma link C++ class ROOT::Math::Minimizer+;
 #pragma link C++ class ROOT::Math::IntegratorMultiDim+;
+#pragma link C++ class ROOT::Math::Integrator+;
+#pragma link C++ class ROOT::Math::VirtualIntegrator+;
+
 
 
 #include "LinkDef_Func.h" 

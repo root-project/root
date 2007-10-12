@@ -11,8 +11,8 @@ namespace Math {
 
 
 
-IntegratorMultiDim::IntegratorMultiDim(unsigned int dim, double absTol, double relTol, unsigned int size):
-   fdim(dim), 
+IntegratorMultiDim::IntegratorMultiDim(double absTol, double relTol, unsigned int size):
+   fDim(0), 
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size)
@@ -22,8 +22,8 @@ IntegratorMultiDim::IntegratorMultiDim(unsigned int dim, double absTol, double r
    fFun = 0; 
 }
 
-IntegratorMultiDim::IntegratorMultiDim( const IMultiGenFunction &f, unsigned int dim, double absTol, double relTol, unsigned int size):
-   fdim(dim), 
+IntegratorMultiDim::IntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int size):
+   fDim(f.NDim()), 
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
@@ -41,6 +41,7 @@ void IntegratorMultiDim::SetFunction(const IMultiGenFunction &f)
 {
    // set the integration function
   fFun = &f;
+  fDim = f.NDim();
 }
 
 void IntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol = relTol; }
@@ -49,7 +50,7 @@ void IntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol = relTol;
 void IntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
 
 
-double IntegratorMultiDim::Integral(unsigned int dim, double* xmin, double * xmax)
+double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
 {
    // References:
    //
@@ -60,7 +61,7 @@ double IntegratorMultiDim::Integral(unsigned int dim, double* xmin, double * xma
    //     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
   
    //to be changed later
-   unsigned int n=dim;
+   unsigned int n=fDim;
    bool kFALSE = false;
    bool kTRUE = true;
 
@@ -119,7 +120,7 @@ double IntegratorMultiDim::Integral(unsigned int dim, double* xmin, double * xma
    ifail  = 3;
    nfnevl = 0;
    relerr = 0;
-   if (dim < 2 || dim > 15) return 0;
+   if (n < 2 || n > 15) return 0;
 
    double twondm = std::pow(2.0,static_cast<int>(n));
    //unsigned int minpts = Int_t(twondm)+ 2*n*(n+1)+1;
@@ -331,10 +332,10 @@ L140:
 
 
   
-double IntegratorMultiDim::Integral(const IMultiGenFunction &f, unsigned int dim, double* xmin, double * xmax)
+double IntegratorMultiDim::Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax)
 {
   fFun = &f;
-  return Integral(dim, xmin, xmax);
+  return Integral(xmin, xmax);
 
 }
 

@@ -18,7 +18,7 @@
 #include "Math/IFunctionfwd.h"
 #endif
 
-
+#include "Math/VirtualIntegrator.h"
 
 namespace ROOT {
 namespace Math {
@@ -35,13 +35,14 @@ namespace Math {
   
  */
 
-class IntegratorMultiDim {
+class IntegratorMultiDim : public VirtualIntegrator{
    public:
    // constructors
    explicit 
-   IntegratorMultiDim(unsigned int dim, double absTol = 1.E-6, double relTol = 1E-6, unsigned int size = 100000);
+   IntegratorMultiDim(double absTol = 1.E-6, double relTol = 1E-6, unsigned int size = 100000);
 
-   IntegratorMultiDim(const IMultiGenFunction &f, unsigned int dim, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 100000);
+   explicit
+   IntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 100000);
 
 
    virtual ~IntegratorMultiDim() {}
@@ -54,13 +55,15 @@ class IntegratorMultiDim {
    /**
       evaluate the integral with the previously given function between xmin[] and xmax[]  
    */
-   double Integral(unsigned int dim, double* xmin, double * xmax);
+   double Integral(const double* xmin, const double * xmax);
+
+   using VirtualIntegrator::Integral;
 
    /// evaluate the integral passing a new function
-   double Integral(const IMultiGenFunction &f, unsigned int dim, double* xmin, double * xmax);
+   double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
 
    void SetFunction(const IMultiGenFunction &f);
- 
+   using VirtualIntegrator::SetFunction;
    /// return result of integration 
    double Result() const { return fResult; }
 
@@ -76,7 +79,7 @@ class IntegratorMultiDim {
 
  private:
 
-   unsigned int fdim; // dimentionality of integrand
+   unsigned int fDim; // dimentionality of integrand
 
    double fAbsTol;
    double fRelTol;
