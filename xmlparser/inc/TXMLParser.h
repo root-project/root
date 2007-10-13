@@ -48,6 +48,7 @@ class TXMLParser : public TObject, public TQObject {
 protected:
    _xmlParserCtxt     *fContext;          // parse the xml file
    Bool_t              fValidate;         // to validate the parse context
+   Bool_t              fReplaceEntities;  // replace entities
    Bool_t              fStopError;        // stop when parse error occurs
    TString             fValidateError;    // parse error
    TString             fValidateWarning;  // parse warning
@@ -64,8 +65,11 @@ public:
    TXMLParser();
    virtual ~TXMLParser();
 
-   virtual void        SetValidate(Bool_t val = kTRUE);
-   virtual Bool_t      GetValidate() const { return fValidate; }
+   void                SetValidate(Bool_t val = kTRUE);
+   Bool_t              GetValidate() const { return fValidate; }
+
+   void                SetReplaceEntities(Bool_t val = kTRUE);
+   Bool_t              GetReplaceEntities() const { return fReplaceEntities; }
 
    virtual Int_t       ParseFile(const char *filename) = 0;
    virtual Int_t       ParseBuffer(const char *contents, Int_t len) = 0;

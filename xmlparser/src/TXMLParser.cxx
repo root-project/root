@@ -44,7 +44,7 @@ ClassImp(TXMLParser);
 
 //______________________________________________________________________________
 TXMLParser::TXMLParser()
-  : fContext(0), fValidate(true), fParseCode(0)
+  : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fParseCode(0)
 {
    // Initializes parser variables.
 }
@@ -67,14 +67,22 @@ void TXMLParser::SetValidate(Bool_t val)
 }
 
 //______________________________________________________________________________
+void TXMLParser::SetReplaceEntities(Bool_t val)
+{
+   // The parser will replace/expand entities.
+
+   fReplaceEntities = val;
+}
+
+//______________________________________________________________________________
 void TXMLParser::ReleaseUnderlying()
 {
    // To release any existing document.
 
    if (fContext) {
       fContext->_private = 0;
-      xmlFreeParserCtxt(fContext);      
-      fContext = 0;      
+      xmlFreeParserCtxt(fContext);
+      fContext = 0;
    }
 }
 
@@ -129,7 +137,8 @@ void TXMLParser::InitializeContext()
    // features, on/off validation, clear error and warning messages.
 
    fContext->linenumbers = 1; // TRUE - This is the default anyway.
-   fContext->validate = (fValidate ? 1 : 0);
+   fContext->validate = fValidate ? 1 : 0;
+   fContext->replaceEntities = fReplaceEntities ? 1 : 0;
    fContext->_private = this;
 
    fValidateError = "";
