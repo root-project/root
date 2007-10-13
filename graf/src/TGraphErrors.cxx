@@ -338,6 +338,8 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
 {
    // Compute range.
 
+   TGraph::ComputeRange(xmin,ymin,xmax,ymax);
+   
    for (Int_t i=0;i<fNpoints;i++) {
       if (fX[i] -fEX[i] < xmin) {
          if (gPad && gPad->GetLogx()) {

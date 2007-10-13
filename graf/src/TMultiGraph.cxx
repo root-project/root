@@ -1004,7 +1004,6 @@ void TMultiGraph::Paint(Option_t *option)
    Int_t i;
    for (i=0;i<nch;i++) chopt[i] = toupper(option[i]);
    chopt[nch] = 0;
-   Double_t *x, *y;
    TGraph *g;
 
    l = strstr(chopt,"A");
@@ -1047,20 +1046,7 @@ void TMultiGraph::Paint(Option_t *option)
          uxmin   = gPad->PadtoX(rwxmin);
          uxmax   = gPad->PadtoX(rwxmax);
       } else {
-         rwxmin = 1e100;
-         rwxmax = -rwxmin;
-         rwymin = rwxmin;
-         rwymax = -rwymin;
          while ((g = (TGraph*) next())) {
-            Int_t npoints = g->GetN();
-            x = g->GetX();
-            y = g->GetY();
-            for (i=0;i<npoints;i++) {
-               if (x[i] < rwxmin) rwxmin = x[i];
-               if (x[i] > rwxmax) rwxmax = x[i];
-               if (y[i] > rwymax) rwymax = y[i];
-               if (y[i] < rwymin) rwymin = y[i];
-            }
             g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
             if (g->GetN() > npt) npt = g->GetN();
          }

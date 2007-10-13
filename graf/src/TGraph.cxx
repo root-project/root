@@ -546,9 +546,21 @@ Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right)
 
 
 //______________________________________________________________________________
-void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &) const
+void TGraph::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
-   // This function is dummy in TGraph, but redefined by TGraphErrors
+   // Compute the x/y range of the points in this graph
+   if (fNpoints <= 0) {
+      xmin=xmax=ymin=ymax = 0;
+      return;
+   }
+   xmin = xmax = fX[0];
+   ymin = ymax = fY[0];
+   for (Int_t i=1;i<fNpoints;i++) {
+      if (fX[i] < xmin) xmin = fX[i];
+      if (fX[i] > xmax) xmax = fX[i];
+      if (fY[i] < ymin) ymin = fY[i];
+      if (fY[i] > ymax) ymax = fY[i];
+   }
 }
 
 
@@ -1769,19 +1781,6 @@ TH1F *TGraph::GetHistogram() const
    if (fHistogram) return fHistogram;
    Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
    Double_t uxmin, uxmax;
-   if (fNpoints <= 0) {
-      rwxmin = rwxmax = 0;
-      rwymin = rwymax = 0;
-   } else {
-      rwxmin = rwxmax = fX[0];
-      rwymin = rwymax = fY[0];
-   }
-   for (Int_t i=1;i<fNpoints;i++) {
-      if (fX[i] < rwxmin) rwxmin = fX[i];
-      if (fX[i] > rwxmax) rwxmax = fX[i];
-      if (fY[i] < rwymin) rwymin = fY[i];
-      if (fY[i] > rwymax) rwymax = fY[i];
-   }
 
    ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 
@@ -2343,14 +2342,6 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
          uxmin     = gPad->PadtoX(rwxmin);
          uxmax     = gPad->PadtoX(rwxmax);
       } else {
-         rwxmin = rwxmax = x[0];
-         rwymin = rwymax = y[0];
-         for (i=1;i<npoints;i++) {
-            if (x[i] < rwxmin) rwxmin = x[i];
-            if (x[i] > rwxmax) rwxmax = x[i];
-            if (y[i] < rwymin) rwymin = y[i];
-            if (y[i] > rwymax) rwymax = y[i];
-         }
 
          ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 

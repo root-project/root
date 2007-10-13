@@ -568,6 +568,8 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
 {
    // Compute Range
 
+   TGraph::ComputeRange(xmin,ymin,xmax,ymax);
+   
    for (Int_t i=0;i<fNpoints;i++) {
       if (fX[i] -fEXlow[i] < xmin) {
          if (gPad && gPad->GetLogx()) {
