@@ -196,7 +196,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       gcl = GetGlobalNamespaceInfo();
 
    fMethodCall->SetFunc( gcl->GetMethod(
-      fMethod ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
+      (bool)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
       &fOffset, G__ClassInfo::ExactMatch ) );
 
    return kTRUE;
@@ -207,7 +207,7 @@ template< class T, class M >
 Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
-   executor = CreateExecutor( fMethod ?
+   executor = CreateExecutor( (bool)fMethod == true ?
       fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F )
       : fClass.Name( ROOT::Reflex::S | ROOT::Reflex::F ) );
    if ( ! executor )
