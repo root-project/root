@@ -2852,14 +2852,19 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
 }
 
 //______________________________________________________________________________
-Long64_t TProof::Process(const char *selector, Long64_t nentries,
-                         Option_t *option)
+Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
 {
-   // Process an empty data set using the specified selector (.C) file.
+   // Generic (non-data based) selector processing: the Process() method of the
+   // specified selector (.C) is called 'n' times.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
    if (!IsValid()) return -1;
+
+   if (fProtocol < 16) {
+      Info("Process", "server version < 5.17/04: generic processing not supported");
+      return -1;
+   }
 
    // Resolve query mode
    fSync = (GetQueryMode(option) == kSync);
@@ -2880,7 +2885,7 @@ Long64_t TProof::Process(const char *selector, Long64_t nentries,
    TDSet *dset = new TDSet;
    dset->SetBit(TDSet::kEmpty);
 
-   Long64_t rv = fPlayer->Process(dset, selector, option, nentries);
+   Long64_t rv = fPlayer->Process(dset, selector, option, n);
 
    if (fSync) {
       // reactivate the default application interrupt handler

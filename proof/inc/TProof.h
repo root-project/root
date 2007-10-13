@@ -104,9 +104,10 @@ class TVirtualMutex;
 // 12 -> 13: exchange version/architecture/compiler info
 // 13 -> 14: new proofserv environment setting
 // 14 -> 15: add support for entry lists; new version of TFileInfo
+// 15 -> 16: add support for generic non-data based processing
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 15;            // protocol version number
+const Int_t       kPROOF_Protocol        = 16;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
