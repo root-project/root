@@ -428,7 +428,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::Initialize()
       return kFALSE;
 
 // minimum number of arguments when calling
-   fArgsRequired = fMethod ? fMethod.FunctionParameterSize( true ) : 0;
+   fArgsRequired = (bool)fMethod == true ? fMethod.FunctionParameterSize( true ) : 0;
 
 // init done
    fIsInitialized = kTRUE;
