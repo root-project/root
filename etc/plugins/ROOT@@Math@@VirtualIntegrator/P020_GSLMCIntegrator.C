@@ -1,5 +1,5 @@
 void P020_GSLMCIntegrator()
 {
    gPluginMgr->AddHandler("ROOT::Math::VirtualIntegrator", "GSLMCIntegrator", "ROOT::Math::GSLMCIntegrator",
-      "GSLMCIntegrator", "GSLMCIntegrator(const char *, double, double, unsigned int)");
+      "MathMore", "GSLMCIntegrator(const char *, double, double, unsigned int)");
 }
