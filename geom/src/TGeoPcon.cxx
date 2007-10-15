@@ -189,6 +189,15 @@ Double_t TGeoPcon::Capacity() const
 void TGeoPcon::ComputeBBox()
 {
 // compute bounding box of the pcon
+   // Check if the last sections are valid
+   if (TMath::Abs(fZ[1]-fZ[0]) < TGeoShape::Tolerance() ||
+       TMath::Abs(fZ[fNz-1]-fZ[fNz-2]) < TGeoShape::Tolerance()) {
+      Error("ComputeBBox","Shape %s at index %d: Not allowed first and last pcon sections at same Z",
+             GetName(), gGeoManager->GetListOfShapes()->IndexOf(this));
+      InspectShape();
+      SetShapeBit(kGeoInvalidShape);       
+      return;
+   }          
    Double_t zmin = TMath::Min(fZ[0], fZ[fNz-1]);
    Double_t zmax = TMath::Max(fZ[0], fZ[fNz-1]);
    // find largest rmax an smallest rmin
@@ -371,6 +380,7 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t point_new[3];
    // determine which z segment contains the point
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (ipl<0) ipl=0;
    if (ipl==(fNz-1)) ipl--;
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
    if (dz<1e-9) {

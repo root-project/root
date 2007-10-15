@@ -123,6 +123,15 @@ Double_t TGeoPgon::Capacity() const
 void TGeoPgon::ComputeBBox()
 {
 // compute bounding box for a polygone
+   // Check if the last sections are valid
+   if (TMath::Abs(fZ[1]-fZ[0]) < TGeoShape::Tolerance() ||
+       TMath::Abs(fZ[fNz-1]-fZ[fNz-2]) < TGeoShape::Tolerance()) {
+      Error("ComputeBBox","Shape %s at index %d: Not allowed first and last pgon sections at same Z",
+             GetName(), gGeoManager->GetListOfShapes()->IndexOf(this));
+      InspectShape();
+      SetShapeBit(kGeoInvalidShape);       
+      return;
+   }          
    Double_t zmin = TMath::Min(fZ[0], fZ[fNz-1]);
    Double_t zmax = TMath::Max(fZ[0], fZ[fNz-1]);
    // find largest rmax an smallest rmin
@@ -503,7 +512,7 @@ Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, In
    // Get current Z segment
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl<0 || ipl==fNz-1) return kFALSE;
-   if (point[2] == fZ[ipl]) {
+   if (TMath::Abs(point[2]-fZ[ipl])<TGeoShape::Tolerance()) {
       if (ipl<fNz-2 && fZ[ipl]==fZ[ipl+1]) {
          rmin = TMath::Min(fRmin[ipl], fRmin[ipl+1]);
          rmax = TMath::Max(fRmax[ipl], fRmax[ipl+1]);
@@ -573,7 +582,7 @@ Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_
    // Get current Z segment
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl<0 || ipl==fNz-1) return kFALSE;
-   if (point[2] == fZ[ipl]) {
+   if (TMath::Abs(point[2]-fZ[ipl])<TGeoShape::Tolerance()) {
       if (ipl<fNz-2 && fZ[ipl]==fZ[ipl+1]) {
          rmin = TMath::Min(fRmin[ipl], fRmin[ipl+1]);
          rmax = TMath::Max(fRmax[ipl], fRmax[ipl+1]);
@@ -783,12 +792,15 @@ Bool_t TGeoPgon::SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl<0) {
       ipl = 0; // this should never happen
+      if (incseg<0) return kFALSE;
    } else {
       if (ipl==fNz-1) {
          ipl = fNz-2;  // nor this
+         if (incseg>0) return kFALSE;
       } else {
-         if (point[2] == fZ[ipl]) {
+         if (TMath::Abs(point[2]-fZ[ipl])<TGeoShape::Tolerance()) {
          // we are at the sector edge, but never inside the pgon
+            if ((ipl+incseg)<0 || (ipl+incseg)>fNz-1) return kFALSE;
             if (fZ[ipl] == fZ[ipl+incseg]) ipl += incseg;
             // move to next clean segment if downwards
             if (incseg<0) {
@@ -961,6 +973,9 @@ Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
+   // Protection for points on last Z sections
+   if (dir[2]<=0 && TMath::Abs(point[2]-fZ[0])<TGeoShape::Tolerance()) return TGeoShape::Big();
+   if (dir[2]>=0 && TMath::Abs(point[2]-fZ[fNz-1])<TGeoShape::Tolerance()) return TGeoShape::Big();
    // copy the current point
    Double_t pt[3];
    memcpy(pt,point,3*sizeof(Double_t));
@@ -968,8 +983,6 @@ Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    Int_t ipl;
    Int_t i, ipsec;
    ipl = TMath::BinarySearch(fNz, fZ, pt[2]);
-   if (ipl<0 && dir[2]<=0) return TGeoShape::Big();      // ray downwards
-   if (ipl==fNz-1 && dir[2]>=0) return TGeoShape::Big(); // ray upwards
 
    Double_t divphi=fDphi/fNedges;
    // check if ray may intersect outer cylinder

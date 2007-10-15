@@ -385,6 +385,9 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
       if (fShape->TestShapeBit(TGeoShape::kGeoBad)) {
          Warning("Ctor", "volume %s has invalid shape", name);
       }
+      if (!fShape->IsValid()) {
+         Fatal("ctor", "Shape of volume %s invalid. Aborting!", fName.Data());
+      }   
    }      
    fFinder   = 0;
    fVoxels   = 0;

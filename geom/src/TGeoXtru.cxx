@@ -280,6 +280,7 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
    if (point[2]<fZ[0]) return kFALSE;   
    if (point[2]>fZ[fNz-1]) return kFALSE; 
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (iz<0 || iz==fNz-1) return kFALSE;
    if (point[2]==fZ[iz]) {
       xtru->SetIz(-1);
       xtru->SetCurrentVertices(fX0[iz],fY0[iz], fScale[iz]);
@@ -293,8 +294,8 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
       }      
    }      
    xtru->SetCurrentZ(point[2], iz);
-   if (TMath::Abs(point[2]-fZ[iz])<1.e-8 ||
-       TMath::Abs(fZ[iz+1]-point[2])<1.e-8)  xtru->SetIz(-1);
+   if (TMath::Abs(point[2]-fZ[iz])<TGeoShape::Tolerance() ||
+       TMath::Abs(fZ[iz+1]-point[2])<TGeoShape::Tolerance())  xtru->SetIz(-1);
    // Now fXc,fYc represent the vertices of the section at point[2]
    return fPoly->Contains(point);
 }
