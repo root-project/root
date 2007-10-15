@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Id$
+// @(#)root/pyroot:$Name:  $:$Id$
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
@@ -62,6 +62,10 @@ public:
 } // namespace PyROOT
 
 #if defined(G__DICTIONARY) && defined(R__SOLARIS)
+// Force the inclusion of rw/math.h
+#include <limits>
+// Work around interaction between a struct named exception in math.h,
+// std::exception and the use of using namespace std;
 #define exception std::exception
 #endif
 #endif
