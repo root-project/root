@@ -12,7 +12,8 @@ typedef double Double32_t;
 
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >        Vector4D; 
-typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >    Vector4D32;
+//typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >    Vector4D32;
+typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >    Vector4D32;
 
 typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >        Point3D; 
 typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t> >    Point3D32; 
@@ -23,6 +24,9 @@ typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t> >    Po
 class  TrackD { 
 
 public:
+
+   typedef Vector4D VectorType;
+   typedef Point3D  PointType;
 
    TrackD() {}
 
@@ -53,6 +57,10 @@ class  TrackD32 {
 
 public:
 
+   typedef Vector4D32 VectorType;
+   typedef Point3D32  PointType;
+
+
    TrackD32() {}
 
    TrackD32(const Vector4D32 & q, const Point3D32 & p) : fVec(q), fPos(p) {}
@@ -65,7 +73,8 @@ public:
   }
 
   void Set( const Vector4D32 & q, const Point3D32 & p) { 
-    fVec = q; fPos = p; 
+    fVec =  q; 
+    fPos =  p; 
   }
 private:
 
@@ -81,6 +90,9 @@ class VecTrackD {
 public: 
 
    typedef std::vector<TrackD>::const_iterator It;
+   typedef Vector4D VectorType;
+   typedef Point3D  PointType;
+
  
   VecTrackD() {}
 
@@ -120,6 +132,9 @@ class  ClusterD {
 public:
 
    ClusterD() {}
+
+   typedef Vector4D VectorType;
+   typedef Point3D  PointType;
 
 
    Vector4D & Vec() { return fVec; }

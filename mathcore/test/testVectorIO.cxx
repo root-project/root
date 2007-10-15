@@ -38,15 +38,15 @@
 #endif
 
 #define DEFVECTOR4D(TYPE) \
-typedef TYPE Vector4D; \
+typedef TYPE AVector4D; \
 const std::string vector4d_type = #TYPE ;
 
 #define DEFVECTOR3D(TYPE) \
-typedef TYPE Vector3D; \
+typedef TYPE AVector3D; \
 const std::string vector3d_type = #TYPE ;
 
 #define DEFPOINT3D(TYPE) \
-typedef TYPE Point3D; \
+typedef TYPE APoint3D; \
 const std::string point3d_type = #TYPE ;
 
 
@@ -54,7 +54,8 @@ const std::string point3d_type = #TYPE ;
 //const double tol = 1.0E-16;
 const double tol = 1.0E-6; // or doublr 32 or float
 
-DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >);
+//DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >);
+DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >);
 
 DEFVECTOR3D(ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >); 
 
@@ -280,6 +281,9 @@ double writeTrack(int n, const std::string & file_name, int compress = 0) {
   double s = 0; 
   ROOT::Math::XYZTVector q; 
   ROOT::Math::XYZPoint p; 
+  typedef typename TrackType::VectorType V;
+  typedef typename TrackType::PointType  P;
+
   for (int i = 0; i < n; ++i) { 
     q.SetXYZT( R.Gaus(0,10),
 	       R.Gaus(0,10),
@@ -287,7 +291,7 @@ double writeTrack(int n, const std::string & file_name, int compress = 0) {
 	       R.Gaus(100,10) ); 
     p.SetXYZ( q.X(), q.Y(), q.Z() ); 
 	
-    track->Set(q,p); 
+    track->Set( V(q), P(p) ); 
     
     t1.Fill();
     s += getMag2( *track ); 
@@ -375,7 +379,7 @@ int testVectorIO(bool readOnly = false) {
   double w1, r1 = 0;
   std::string fname; 
   
-  testDummy<Vector4D>(nEvents);
+  testDummy<AVector4D>(nEvents);
  
   fname = "lorentzvector";
   if (readOnly) {
@@ -383,9 +387,9 @@ int testVectorIO(bool readOnly = false) {
      fname += "_prev";
   }
   else
-     w1 = write<Vector4D>(nEvents,fname,vector4d_type);
+     w1 = write<AVector4D>(nEvents,fname,vector4d_type);
 
-  r1 = read<Vector4D>(fname);
+  r1 = read<AVector4D>(fname);
   iret |= testResult(w1,r1,vector4d_type); 
 
   fname = "displacementvector";
@@ -394,18 +398,18 @@ int testVectorIO(bool readOnly = false) {
      fname += "_prev";
   }
   else 
-     w1 = write<Vector3D>(nEvents,fname,vector3d_type);
+     w1 = write<AVector3D>(nEvents,fname,vector3d_type);
 
-  r1 = read<Vector3D>(fname);
+  r1 = read<AVector3D>(fname);
   iret |= testResult(w1,r1,vector3d_type); 
 
   fname = "positionvector";
   if (readOnly)
      fname += "_prev";
   else 
-     w1 = write<Point3D>(nEvents,fname,point3d_type);
+     w1 = write<APoint3D>(nEvents,fname,point3d_type);
   
-  r1 = read<Point3D>(fname);
+  r1 = read<APoint3D>(fname);
   iret |= testResult(w1,r1,point3d_type); 
 
 

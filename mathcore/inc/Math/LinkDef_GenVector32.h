@@ -11,11 +11,14 @@
 #pragma link off all functions;
 
 
+#pragma link C++ class ROOT::Math::Cartesian2D<Double32_t>+;
+#pragma link C++ class ROOT::Math::Polar2D<Double32_t>+;
+
 
 #pragma link C++ class ROOT::Math::Cartesian3D<Double32_t>+;
 #pragma link C++ class ROOT::Math::CylindricalEta3D<Double32_t>+;
-//#pragma link C++ class ROOT::Math::Polar3D<Double32_t>+;
-//#pragma link C++ class ROOT::Math::Cylindrical3D<Double32_t>+;
+#pragma link C++ class ROOT::Math::Polar3D<Double32_t>+;
+#pragma link C++ class ROOT::Math::Cylindrical3D<Double32_t>+;
 
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
@@ -42,15 +45,13 @@
 
 #pragma link C++ class ROOT::Math::PxPyPzE4D<Double32_t>+;
 #pragma link C++ class ROOT::Math::PtEtaPhiE4D<Double32_t>+;
-//#pragma link C++ class ROOT::Math::PxPyPzM4D<Double32_t>+;
-//#pragma link C++ class ROOT::Math::PtEtaPhiM4D<Double32_t>+;
-//#pragma link C++ class ROOT::Math::EEtaPhiMSystem<Double32_t>+;
-//#pragma link C++ class ROOT::Math::PtEtaPhiMSystem<Double32_t>+;
+#pragma link C++ class ROOT::Math::PxPyPzM4D<Double32_t>+;
+#pragma link C++ class ROOT::Math::PtEtaPhiM4D<Double32_t>+;
 
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >+;
 //#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >+;
 
 
 

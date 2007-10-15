@@ -2,6 +2,7 @@
 #include "Math/GSLRndmEngines.h"
 #include "TStopwatch.h"
 #include "TRandom3.h"
+#include "TRandom2.h"
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -10,11 +11,17 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
+#ifdef HAVE_UNURAN
 #include "UnuRanDist.h"
+#endif
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandPoissonQ.h"
 #include "CLHEP/Random/RandPoisson.h"
+#include "CLHEP/Random/RandGauss.h"
+#include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/JamesRandom.h"
 #endif
 
 
@@ -31,6 +38,7 @@
 //#define TEST_TIME
 
 using namespace ROOT::Math;
+
 
 static bool fillHist = false;
 
@@ -65,6 +73,8 @@ std::string findName( const R & r) {
     return "TRandom           "; 
   else if (type.find("UnuRan") != std::string::npos )
     return "UnuRan            "; 
+  else if (type.find("Rand") != std::string::npos )
+    return "CLHEP             "; 
   
   return   "?????????         ";
 }
@@ -224,7 +234,8 @@ void testPoisson2( R & r,double mu,TH1D & h) {
 }
 
 #ifdef HAVE_CLHEP
-void testPoissonCLHEP( double mu,TH1D & h) { 
+template<class R>
+void testPoissonCLHEP( R & r, double mu,TH1D & h) { 
 
   TStopwatch w; 
 
@@ -234,7 +245,7 @@ void testPoissonCLHEP( double mu,TH1D & h) {
   //  r.SetSeed(0);
   for (int i = 0; i < n; ++i) {
     //int n = RandPoisson::shoot(mu + RandFlat::shoot());
-    int n = RandPoisson::shoot(mu);
+    int n = r(mu);
     if (fillHist)
       h.Fill( double(n) );
   }
@@ -245,11 +256,84 @@ void testPoissonCLHEP( double mu,TH1D & h) {
 	    << "\t(ns/call)" << std::endl;   
   // fill histogram the second pass
   fillHist = true; 
-  testPoissonCLHEP(mu,h);
+  testPoissonCLHEP(r,mu,h);
 }
+
+template<class R>
+void testGausCLHEP( R & r,double mu,double sigma,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  w.Start();
+  for (int i = 0; i < n; ++i) { 
+    double x = r(mu,sigma );
+    if (fillHist)
+      h.Fill( x );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Gaussian - mu,sigma = " << mu << " , " << sigma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testGausCLHEP(r,mu,sigma,h);
+}
+
+template <class R> 
+void testFlatCLHEP( R & r,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  w.Start();
+  //r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r();
+    if (fillHist)
+      h.Fill( x );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Flat - [0,1]           \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testFlatCLHEP(r,h);
+}
+
+
 #endif
 
 
+
+template <class R> 
+void testFlat( R & r,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  w.Start();
+  r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = r.Rndm();
+    if (fillHist)
+      h.Fill( x );
+
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Flat - [0,1]       \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testFlat(r,h);
+}
 
 
 
@@ -489,15 +573,39 @@ int testRandomDist() {
 
   Random<GSLRngMT>         r;
   TRandom3                 tr;
+#ifdef HAVE_UNURAN
   UnuRanDist               ur; 
+#else 
+  TRandom2                 ur;
+#endif
+
+  // flat 
+  double xmin = 0; 
+  double xmax = 1;
+  int nch = 1000;
+  TH1D hf1("hf1","FLAT ROOT",nch,xmin,xmax);
+  TH1D hf2("hf2","Flat GSL",nch,xmin,xmax);
+
+  testFlat(r,hf1);
+  testFlat(tr,hf2);
+  testDiff(hf1,hf2,"Flat ROOT-GSL");
+
+#ifdef HAVE_CLHEP
+  HepJamesRandom eng; 
+  RandFlat crf(eng);
+  TH1D hf3("hf3","Flat CLHEP",nch,xmin,xmax);
+  testFlatCLHEP(crf,hf3);
+  testDiff(hf3,hf1,"Flat CLHEP-GSL");
+#endif
+
 
 
   // Poisson 
 
-  double mu = 5; 
-  double xmin = std::floor(std::max(0.0,mu-5*std::sqrt(mu) ) );
-  double xmax = std::floor( mu+5*std::sqrt(mu) );
-  int nch = std::min( int(xmax-xmin),1000);
+  double mu = 25; 
+  xmin = std::floor(std::max(0.0,mu-5*std::sqrt(mu) ) );
+  xmax = std::floor( mu+5*std::sqrt(mu) );
+  nch = std::min( int(xmax-xmin),1000);
   TH1D hp1("hp1","Poisson ROOT",nch,xmin,xmax);
   TH1D hp2("hp2","Poisson GSL",nch,xmin,xmax);
   TH1D hp3("hp3","Poisson UNR",nch,xmin,xmax);
@@ -505,13 +613,18 @@ int testRandomDist() {
   testPoisson(r,mu,hp1);
   testPoisson(tr,mu,hp2);
   testPoisson(ur,mu,hp3);
-  //testPoisson2(tr,mu,h2);
 #ifdef HAVE_CLHEP
-  testPoissonCLHEP(mu,h2);
+  RandPoissonQ crp(eng);
+  TH1D hp4("hp4","Poisson CLHEP",nch,xmin,xmax);
+  testPoissonCLHEP(crp,mu,hp4);
 #endif
+  //testPoisson2(tr,mu,h2);
   // test differences 
   testDiff(hp1,hp2,"Poisson ROOT-GSL");
   testDiff(hp1,hp3,"Poisson ROOT-UNR");
+#ifdef HAVE_CLHEP
+  testDiff(hp1,hp4,"Poisson ROOT-CLHEP");
+#endif
 
   // Gaussian
 
@@ -522,8 +635,13 @@ int testRandomDist() {
 
   testGaus(r,mu,sqrt(mu),hg1);
   testGaus(tr,mu,sqrt(mu),hg2);
-  
+ 
   testGaus(ur,mu,sqrt(mu),hg3);
+#ifdef HAVE_CLHEP
+  RandGaussQ crg(eng);
+  TH1D hg4("hg4","Gauss CLHEP",nch,xmin,xmax);
+  testGausCLHEP(crg,mu,sqrt(mu),hg3);
+#endif
 
 
   testDiff(hg1,hg2,"Gaussian ROOT-GSL");

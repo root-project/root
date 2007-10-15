@@ -59,7 +59,9 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/IntegratorMultiDim.h 
 
 
-MATHCOREDH132:=  $(MODDIRI)/Math/Vector3D.h \
+MATHCOREDH132:=  $(MODDIRI)/Math/Vector2D.h \
+	         $(MODDIRI)/Math/Point2D.h \
+	         $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
                  $(MODDIRI)/Math/Vector4D.h \
 
