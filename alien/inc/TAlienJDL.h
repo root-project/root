@@ -28,7 +28,7 @@
 class TAlienJDL : public TGridJDL {
 
 public:
-   TAlienJDL() { }
+   TAlienJDL() : TGridJDL() { }
    virtual ~TAlienJDL() { };
 
    virtual void SetExecutable(const char* value=0);
@@ -52,9 +52,10 @@ public:
    virtual void AddToRequirements(const char* value=0);
    virtual void AddToPackages(const char* name="AliRoot", const char* version="newest",const char* type="VO_ALICE");
    virtual void AddToOutputArchive(const char* value=0);
-
-   Bool_t SubmitTest();
-
+   void         AddToReqSet(const char *key, const char *value=0);
+   Bool_t       SubmitTest();
+ private:
+   
    ClassDef(TAlienJDL,1)  // Creates JDL files for the AliEn middleware
 };
 

@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TGrid.h"
 #include "TAlienJob.h"
 #include "TAlienJobStatus.h"
 #include "TObjString.h"
@@ -58,4 +59,30 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
    delete gjobarray;
 
    return status;
+}
+
+//______________________________________________________________________________
+Bool_t TAlienJob::Cancel()
+{
+   // Cancels a job e.g. sends a kill command.
+   // Returns kFALSE in case of failure, otherwise kTRUE.
+
+   if (gGrid) {
+      return gGrid->Kill((TGridJob*)this);
+   }
+   Error("Cancel","No GRID connection (gGrid=0)");
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TAlienJob::Resubmit()
+{
+   // Resubmits a job.
+   // Returns kFALSE in case of failure, otherwise kTRUE.
+
+   if (gGrid) {
+      return gGrid->Resubmit((TGridJob*)this);
+   }
+   Error("Cancel","No GRID connection (gGrid=0)");
+   return kFALSE;
 }

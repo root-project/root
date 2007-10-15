@@ -80,8 +80,8 @@ public:
    virtual TGridCollection* OpenCollection(const char* collectionfile, UInt_t maxentries = kTRUE);
    virtual TGridCollection* OpenCollectionQuery(TGridResult * queryresult, Bool_t nogrouping = kFALSE);
    virtual TGridJobStatusList* Ps(const char* options, Bool_t verbose = kTRUE);
-   virtual Bool_t Kill(UInt_t jobid);
-   virtual UInt_t Resubmit(UInt_t jobid);
+   virtual Bool_t KillById(TString jobid);
+   virtual Bool_t ResubmitById(TString jobid);
 
    //--- Catalogue Interface
    virtual TGridResult *Ls(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);

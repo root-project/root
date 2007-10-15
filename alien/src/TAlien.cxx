@@ -309,22 +309,22 @@ TGridJobStatusList *TAlien::Ps(const char* /*options*/, Bool_t verbose)
 }
 
 //______________________________________________________________________________
-Bool_t TAlien::Kill(UInt_t jobid)
+Bool_t TAlien::KillById(TString jobid)
 {
    // Kill a specific job.
 
-   if (gapi_kill(jobid))
+   if (gapi_kill(atoi(jobid.Data())))
       return kFALSE;
    else
       return kTRUE;
 }
 
 //______________________________________________________________________________
-UInt_t TAlien::Resubmit(UInt_t jobid)
+Bool_t TAlien::ResubmitById(TString jobid)
 {
    // Resubmit a specific job.
 
-   if (gapi_resubmit(jobid))
+  if (gapi_resubmit(atoi(jobid.Data())))
       return kFALSE;
    else
       return kTRUE;
@@ -500,9 +500,9 @@ Bool_t TAlien::Mkdir(const char* ldn, Option_t* options, Bool_t verbose)
    TString cmdline = TString("mkdir");
    if (strlen(options)) {
       cmdline +=  (TString(" ") + TString(options));
-   } else {
-      cmdline += (TString(" -s ") + TString(ldn));
    }
+
+   cmdline += (TString(" -s ") + TString(ldn));
 
    Command(cmdline, kFALSE);
 

@@ -21,6 +21,7 @@
 #include "TGrid.h"
 #include "TGridJob.h"
 #include "Riostream.h"
+#include "TSystem.h"
 
 ClassImp(TAlienJDL)
 
@@ -57,7 +58,7 @@ void TAlienJDL::SetOutputDirectory(const char* value)
    // Sets OutputDirectory
 
    if (value)
-      SetValue("OutputDirectory", AddQuotes(value));
+      SetValue("OutputDir", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -65,7 +66,7 @@ void TAlienJDL:: SetPrice(UInt_t price)
 {
    // Sets OutputDirectory.
 
-   TString pricestring= (Int_t)price;
+   TString pricestring(Form("%d",price));
 
    SetValue("Price", pricestring.Data());
 }
@@ -155,7 +156,7 @@ void TAlienJDL::AddToRequirements(const char* value)
    // Adds a requirement.
 
    if (value)
-      AddToSet("Requirements", value);
+      AddToReqSet("Requirements", value);
 }
 
 //______________________________________________________________________________
@@ -217,6 +218,29 @@ void TAlienJDL::AddToOutputArchive(const char* value)
 
    if (value)
       AddToSet("OutputArchive", value);
+}
+
+//______________________________________________________________________________
+void TAlienJDL::AddToReqSet(const char *key, const char *value)
+{
+   // Adds a value to a key value which hosts a set of values.
+   // E.g. InputSandbox: {"file1","file2"}
+
+   const char *oldValue = GetValue(key);
+   TString newString;
+   if (oldValue)
+      newString = oldValue;
+   if (newString.IsNull()) {
+      newString = "(";
+   } else {
+      newString.Remove(newString.Length()-1);
+      newString += " && ";
+   }
+
+   newString += value;
+   newString += ")";
+
+   SetValue(key, newString);
 }
 
 //______________________________________________________________________________

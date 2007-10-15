@@ -34,6 +34,8 @@ public:
    virtual ~TAlienJob() { }
 
    virtual TGridJobStatus *GetJobStatus() const;
+   virtual Bool_t          Resubmit();
+   virtual Bool_t          Cancel();
 
    ClassDef(TAlienJob,1)  // Alien implementation of TGridJob
 };

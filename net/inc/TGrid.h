@@ -37,6 +37,10 @@
 #include "TString.h"
 #endif
 
+#ifndef ROOT_TGridJob
+#include "TGridJob.h"
+#endif
+
 class TGridResult;
 class TGridJDL;
 class TGridJob;
@@ -112,10 +116,14 @@ public:
       { MayNotUse("OpenCollection"); return 0; }
    virtual TGridJobStatusList* Ps(const char* /*options*/, Bool_t /*verbose*/ = kTRUE)
       { MayNotUse("Ps"); return 0; }
-   virtual Bool_t Kill(UInt_t /*jobid*/)
-      { MayNotUse("Kill"); return kFALSE; }
-   virtual UInt_t Resubmit(UInt_t /*jobid*/)
-      { MayNotUse("Resubmit"); return 0; }
+   virtual Bool_t KillById(TString /*jobid*/)
+      { MayNotUse("KillById"); return kFALSE; }
+   virtual Bool_t ResubmitById(TString /*jobid*/)
+      { MayNotUse("ResubmitById"); return 0; }
+   virtual Bool_t Kill(TGridJob *gridjob)
+      { return ((gridjob)?KillById(gridjob->GetJobID()):kFALSE); }
+   virtual Bool_t Resubmit(TGridJob* gridjob)
+      { return ((gridjob)?ResubmitById(gridjob->GetJobID()):kFALSE); }
 
    //--- Load desired plugin and setup conection to GRID
    static TGrid *Connect(const char *grid, const char *uid = 0,
