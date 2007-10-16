@@ -44,7 +44,7 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is D0. Master volume is D0
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 2048158 nodes/ 1354 volume UID's in d0.C
+Info in <TGeoManager::CloseGeometry>: 2048146 nodes/ 1354 volume UID's in d0.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
