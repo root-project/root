@@ -97,7 +97,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
 
    fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
-   fBranches = new TBranch*[nleaves+10]; //add a margin just in case in a TChain?
+   fBranches = new TObjArray(nleaves);
 }
 
 //______________________________________________________________________________
@@ -105,7 +105,7 @@ TTreeCache::~TTreeCache()
 {
    // destructor. (in general called by the TFile destructor
 
-   delete [] fBranches;
+   delete fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
 }
 
@@ -125,11 +125,11 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
    for (int i=0;i<fNbranches;i++) {
-      if (fBranches[i] == b) {isNew = kFALSE; break;}
+      if (fBranches->UncheckedAt(i) == b) {isNew = kFALSE; break;}
    }
    if (isNew) {
       fTree = b->GetTree();
-      fBranches[fNbranches] = b;
+      fBranches->AddAtAndExpand(b, fNbranches);
       fBrNames->Add(new TObjString(b->GetName()));
       fZipBytes += b->GetZipBytes();
       fNbranches++;
@@ -236,7 +236,7 @@ Bool_t TTreeCache::FillBuffer()
    // Fill the cache buffer with the branches in the cache.
 
    if (fNbranches <= 0) return kFALSE;
-   TTree *tree = fBranches[0]->GetTree();
+   TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
    
    if (!fIsManual && entry < fEntryNext) return kFALSE;
@@ -273,7 +273,7 @@ Bool_t TTreeCache::FillBuffer()
    Bool_t mustBreak = kFALSE;
    for (Int_t i=0;i<fNbranches;i++) {
       if (mustBreak) break;
-      TBranch *b = fBranches[i];
+      TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
       Long64_t *entries = b->GetBasketEntry();
@@ -297,7 +297,7 @@ Bool_t TTreeCache::FillBuffer()
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
          if (fNtot > 2*fBufferSizeMin) {TFileCacheRead::Prefetch(0,0);mustBreak = kTRUE; break;}
       }
-      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,fBranches[i]->GetName(),fEntryNext,fNseek,fNtot);
+      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
    }
    fIsLearning = kFALSE;
    if (mustBreak) return kFALSE;
@@ -354,7 +354,7 @@ TTree *TTreeCache::GetTree() const
 {
    //return Tree in the cache
    if (fNbranches <= 0) return 0;
-   return fBranches[0]->GetTree();
+   return ((TBranch*)(fBranches->UncheckedAt(0)))->GetTree();
 }
 
 //_____________________________________________________________________________
@@ -472,7 +472,7 @@ void TTreeCache::UpdateBranches(TTree *tree)
    while ((os = (TObjString*)next())) {
       TBranch *b = fTree->GetBranch(os->GetName());
       if (!b) continue;
-      fBranches[fNbranches] = b;
+      fBranches->AddAt(b, fNbranches);
       fZipBytes   += b->GetZipBytes();
       fNbranches++;
    }
