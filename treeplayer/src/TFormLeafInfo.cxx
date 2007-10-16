@@ -1852,7 +1852,7 @@ TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
 
             fDeleteFormat  = "delete (";
             fDeleteFormat += rtype;
-            fDeleteFormat += "*)0x%x;";
+            fDeleteFormat += "*)0x%x";
 
             fIsByValue = kTRUE;
          }
@@ -1886,7 +1886,7 @@ TFormLeafInfoMethod::~TFormLeafInfoMethod()
    // Destructor.
 
    if (fValuePointer) {
-      gROOT->ProcessLine(Form(fDeleteFormat.Data(),fValuePointer));
+      gInterpreter->Calc(Form(fDeleteFormat.Data(),fValuePointer));
    }
    delete fMethod;
 }

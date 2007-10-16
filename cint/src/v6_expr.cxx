@@ -976,6 +976,10 @@ G__value G__calc_internal(char* exprwithspace)
    G__asm_noverflow = 0;
    G__asm_exec = 0;
    exprnospace[0] = '\0';
+
+   bool isdelete = false;
+   bool isdeletearr = false;
+
    while (exprwithspace[iin] != '\0') {
       switch (exprwithspace[iin]) {
          case '"' : /* double quote */
@@ -997,28 +1001,22 @@ G__value G__calc_internal(char* exprwithspace)
          case '\t' : /* tab */
             exprnospace[iout] = '\0'; /* temporarily terminate string */
             len = strlen(exprnospace);
-            if ((single_quote != 0) || (double_quote != 0) ||
-                  (len >= 3 + ipunct && strncmp(exprnospace + ipunct, "new", 3) == 0)
+            if ((single_quote != 0) || (double_quote != 0)
                   || (len >= 5 + ipunct && strncmp(exprnospace + ipunct, "const", 5) == 0)
                ) {
+               
                exprnospace[iout++] = exprwithspace[iin] ;
-            }
-            else if (len >= 8 && strncmp(exprnospace, "delete[]", 8) == 0) {
-               G__getstream(exprwithspace , &iin , exprnospace, "\0");
-               G__delete_operator(exprnospace, 1);
-               result = G__null;
-               goto deletereturn;
+            } else if (len >= 3 + ipunct && strncmp(exprnospace + ipunct, "new", 3) == 0) {
+               exprnospace[iout++] = exprwithspace[iin] ;
+            } else if (len >= 8 && strncmp(exprnospace, "delete[]", 8) == 0) {
+               iout = 0;
+               ipunct = 0;
+               isdeletearr = true;
             }
             else if (len >= 6 && strncmp(exprnospace, "delete", 6) == 0) {
-               G__getstream(exprwithspace , &iin , exprnospace, "\0");
-               if (exprnospace[0] == '[') {
-                  G__delete_operator(exprnospace + 2, 1);
-               }
-               else {
-                  G__delete_operator(exprnospace, 0);
-               }
-               result = G__null;
-               goto deletereturn;
+               iout = 0;
+               ipunct = 0;
+               isdelete = true;
             }
             iin++;
             break;
@@ -1026,6 +1024,7 @@ G__value G__calc_internal(char* exprwithspace)
          case '(':
          case ')':
          case ',':
+         case '<':
             ipunct = iout + 1;
          default :
             exprnospace[iout++] = exprwithspace[iin++] ;
@@ -1033,34 +1032,50 @@ G__value G__calc_internal(char* exprwithspace)
       }
    }
    exprnospace[iout++] = '\0';
+   if (isdelete) {
+      if (exprnospace[0] == '[') {
+         G__delete_operator(exprnospace + 2, 1);
+      }
+      else {
+         G__delete_operator(exprnospace, 0);
+      }
+      result = G__null;
+   } else if (isdeletearr) {
+
+      G__delete_operator(exprnospace, 1);
+      result = G__null;
+   } else {
 #ifdef G__EH_SIGNAL
-   fpe = signal(SIGFPE, G__error_handle);
-   segv = signal(SIGSEGV, G__error_handle);
+      fpe = signal(SIGFPE, G__error_handle);
+      segv = signal(SIGSEGV, G__error_handle);
 #ifdef SIGILL
-   ill = signal(SIGILL, G__error_handle);
+      ill = signal(SIGILL, G__error_handle);
 #endif // SIGILL
 #ifdef SIGEMT
-   emt = signal(SIGEMT, G__error_handle);
+      emt = signal(SIGEMT, G__error_handle);
 #endif // SIGEMT
 #ifdef SIGBUS
-   bus = signal(SIGBUS, G__error_handle);
+      bus = signal(SIGBUS, G__error_handle);
 #endif // SIGBUS
 #endif // G__EH_SIGNAL
-   result = G__getexpr(exprnospace);
-   G__last_error = G__security_error;
+      result = G__getexpr(exprnospace);
+      G__last_error = G__security_error;
 #ifdef G__EH_SIGNAL
-   signal(SIGFPE, fpe);
-   signal(SIGSEGV, segv);
+      signal(SIGFPE, fpe);
+      signal(SIGSEGV, segv);
 #ifdef SIGILL
-   signal(SIGILL, ill);
+      signal(SIGILL, ill);
 #endif // SIGILL
 #ifdef SIGEMT
-   signal(SIGEMT, emt);
+      signal(SIGEMT, emt);
 #endif // SIGEMT
 #ifdef SIGBUS
-   signal(SIGBUS, bus);
+      signal(SIGBUS, bus);
 #endif // SIGBUS
 #endif // G__EH_SIGNAL
+
+   }
+
    // --
 deletereturn:
    G__asm_exec = store_asm_exec;
