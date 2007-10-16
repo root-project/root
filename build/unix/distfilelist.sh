@@ -79,4 +79,5 @@ echo `echo ${FILES} | tr ' ' '\n' | sed \
   -e 's,^include/precompile\..*$,,' \
   -e 's,^.*.cvsignore$,,' \
   -e 's,^.*/CVS/.*$,,' \
+  -e 's,^.*/.svn/.*$,,' \
    | grep -v '^$'` ${HAVEPRECOMP} | tr ' ' '\n' | sort | uniq | sed -e 's,^,'${PREPENDDIR}','
