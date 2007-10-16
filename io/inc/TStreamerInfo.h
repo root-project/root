@@ -40,7 +40,7 @@ class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;
 class TClassStreamer;
-class ROOT::TCollectionProxyInfo;
+namespace ROOT { class TCollectionProxyInfo; }
 
 class TStreamerInfo : public TVirtualStreamerInfo {
 
