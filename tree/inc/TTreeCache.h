@@ -24,6 +24,9 @@
 #ifndef ROOT_TFileCacheRead
 #include "TFileCacheRead.h"
 #endif
+#ifndef ROOT_TObjArray
+#include "TObjArray.h"
+#endif
 
 class TTree;
 class TBranch;
@@ -39,7 +42,7 @@ protected:
    Int_t           fNReadOk;     //Number of blocks read and found in the cache
    Int_t           fNReadMiss;   //Number of blocks read and not found in the chache
    Int_t           fNReadPref;   //Number of blocks that were prefetched
-   TBranch       **fBranches;    //! [fNbranches] List of branches to be stored in the cache
+   TObjArray      *fBranches;    //! List of branches to be stored in the cache
    TList          *fBrNames;     //! list of branch names in the cache
    TTree          *fOwner;       //! pointer to the owner Tree/chain
    TTree          *fTree;        //! pointer to the current Tree
