@@ -1446,13 +1446,12 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
 
       PrepareTexCoords(pos, low, up);
 
-      if (fPalette.EnableTexture(GL_REPLACE)) {
-         const TGLDisableGuard lightGuard(GL_LIGHTING);
-         DrawSliceTextured(pos);
-         fPalette.DisableTexture();
-         //highlight bins in a slice.
-         //DrawSliceFrame(low, up);
-      }
+      fPalette.EnableTexture(GL_REPLACE);
+      const TGLDisableGuard lightGuard(GL_LIGHTING);
+      DrawSliceTextured(pos);
+      fPalette.DisableTexture();
+      //highlight bins in a slice.
+      //DrawSliceFrame(low, up);
    }
 }
 

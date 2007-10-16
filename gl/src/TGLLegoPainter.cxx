@@ -493,9 +493,12 @@ void TGLLegoPainter::DrawLegoCartesian()const
    const Int_t addI = frontPoint == 2 || frontPoint == 1 ? 1 : (iInit = nX - 1, irInit = fCoord->GetLastXBin(), -1);
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fCoord->GetLastYBin(), -1);
 
-   if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
+   if (fLegoType == kColorLevel && !fSelectionPass) {
+      if (!PreparePalette())
          fLegoType = kColorSimple;
+      else
+         fPalette.EnableTexture(GL_MODULATE);
+   }
 
    if (fSelectionPass && fHighColor)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -586,8 +589,10 @@ void TGLLegoPainter::DrawLegoPolar()const
    Double_t points[4][2] = {};
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
+      if (!PreparePalette())
          fLegoType = kColorSimple;
+      else
+         fPalette.EnableTexture(GL_MODULATE);
 
    if (fHighColor && fSelectionPass)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -681,8 +686,10 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    legoR *= fCoord->GetXScale();
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
+      if (!PreparePalette())
          fLegoType = kColorSimple;
+      else
+         fPalette.EnableTexture(GL_MODULATE);
 
    if (fHighColor && fSelectionPass)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -780,8 +787,10 @@ void TGLLegoPainter::DrawLegoSpherical()const
    const Double_t sc = 1 - legoR;
 
    if (fLegoType == kColorLevel && !fSelectionPass)
-      if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
+      if (!PreparePalette())
          fLegoType = kColorSimple;
+      else
+         fPalette.EnableTexture(GL_MODULATE);
 
    if (fSelectionPass && fHighColor)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -1026,6 +1035,8 @@ Bool_t TGLLegoPainter::ClampZ(Double_t &zVal)const
 Bool_t TGLLegoPainter::PreparePalette()const
 {
    //Initialize color palette.
+   if(fMinMaxVal.first == fMinMaxVal.second)
+      return kFALSE;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
    UInt_t paletteSize = fHist->GetContour();
    if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
       paletteSize = 20;

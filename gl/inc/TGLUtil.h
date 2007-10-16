@@ -1200,7 +1200,7 @@ public:
 
    void   SetContours(const std::vector<Double_t> *contours);
 
-   Bool_t EnableTexture(Int_t mode)const;
+   void   EnableTexture(Int_t mode)const;
    void   DisableTexture()const;
 
    Double_t       GetTexCoord(Double_t z)const;

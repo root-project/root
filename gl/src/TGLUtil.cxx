@@ -2051,7 +2051,7 @@ namespace Rgl {
       Double_t normal[3] = {0.};
 
       glBegin(GL_POLYGON);
-      TMath::Normal2Plane(ver[0], ver[1], ver[2], normal);
+      TMath::Normal2Plane(ver[1], ver[2], ver[3], normal);
       glNormal3dv(normal);
       glVertex3dv(ver[0]);
       glVertex3dv(ver[1]);
@@ -2669,7 +2669,7 @@ void TGLLevelPalette::SetContours(const std::vector<Double_t> *cont)
 }
 
 //______________________________________________________________________________
-Bool_t TGLLevelPalette::EnableTexture(Int_t mode)const
+void TGLLevelPalette::EnableTexture(Int_t mode)const
 {
    //Enable 1D texture
    glEnable(GL_TEXTURE_1D);
@@ -2684,8 +2684,6 @@ Bool_t TGLLevelPalette::EnableTexture(Int_t mode)const
    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, fTexels.size() / 4, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, &fTexels[0]);
    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GLint(mode));
-
-   return kTRUE;
 }
 
 //______________________________________________________________________________

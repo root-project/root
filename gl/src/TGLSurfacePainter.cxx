@@ -289,9 +289,9 @@ void TGLSurfacePainter::DrawPlot()const
 
    if (Textured() && !fSelectionPass) {
       if (!PreparePalette())
-         fType = kSurf1;
-      if (fType != kSurf3 && !fPalette.EnableTexture(GL_MODULATE))
-         fType = kSurf1;
+         fType = kSurf;
+      else if (fType != kSurf3)
+         fPalette.EnableTexture(GL_MODULATE);
    }
 
    const Int_t nX = fCoord->GetNXBins();
@@ -379,7 +379,8 @@ void TGLSurfacePainter::DrawPlot()const
       }
    }
 
-   if (fType == kSurf3 && !fSelectionPass && fPalette.EnableTexture(GL_MODULATE)) {
+   if (fType == kSurf3 && !fSelectionPass) {
+      fPalette.EnableTexture(GL_MODULATE);
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       DrawContoursProjection();
@@ -509,14 +510,14 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
    fMesh.resize(nX * nY);
    fMesh.SetRowLen(nY);
 
-   const Double_t fullAngle = fXAxis->GetXmax() - fXAxis->GetXmin();
-   const Double_t phiLow    = fXAxis->GetXmin();
-   const Double_t rRange    = fYAxis->GetXmax() - fYAxis->GetXmin();
+   const Double_t fullAngle = fXAxis->GetBinCenter(fXAxis->GetNbins()) - fXAxis->GetBinCenter(1);
+   const Double_t phiLow    = fXAxis->GetBinCenter(1);
+   const Double_t rRange    = fYAxis->GetBinCenter(fYAxis->GetNbins()) - fYAxis->GetBinCenter(1);
 
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          const Double_t angle  = (fXAxis->GetBinCenter(ir) - phiLow) / fullAngle * TMath::TwoPi();
-         const Double_t radius = ((fYAxis->GetBinCenter(jr)) - fYAxis->GetXmin()) /
+         const Double_t radius = ((fYAxis->GetBinCenter(jr)) - fYAxis->GetBinCenter(1)) /
                                  rRange * fCoord->GetYScale();
          fMesh[i][j].X() = radius * TMath::Cos(angle);
          fMesh[i][j].Y() = radius * TMath::Sin(angle);
@@ -582,8 +583,8 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
    const Double_t sc = (1 - legoR) * fCoord->GetXScale();
    legoR *= fCoord->GetXScale();
 
-   const Double_t fullAngle = fXAxis->GetXmax() - fXAxis->GetXmin();
-   const Double_t phiLow    = fXAxis->GetXmin();
+   const Double_t fullAngle = fXAxis->GetBinCenter(fXAxis->GetNbins()) - fXAxis->GetBinCenter(1);
+   const Double_t phiLow    = fXAxis->GetBinCenter(1);
    Double_t angle = 0.;
 
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
@@ -656,11 +657,11 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
    legoR *= fCoord->GetXScale();
 
    //0 <= theta <= 2 * pi
-   const Double_t fullTheta   = fXAxis->GetXmax() - fXAxis->GetXmin();
-   const Double_t thetaLow    = fXAxis->GetXmin();
-   //0 <= phi <= 2 * pi
-   const Double_t fullPhi = fYAxis->GetXmax() - fYAxis->GetXmin();
-   const Double_t phiLow  = fYAxis->GetXmin();
+   const Double_t fullTheta   = fXAxis->GetBinCenter(fXAxis->GetNbins()) - fXAxis->GetBinCenter(1);
+   const Double_t thetaLow    = fXAxis->GetBinCenter(1);
+   //0 <= phi <= pi
+   const Double_t fullPhi = fYAxis->GetBinCenter(fYAxis->GetNbins()) - fYAxis->GetBinCenter(1);
+   const Double_t phiLow  = fYAxis->GetBinCenter(1);
 
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
 
@@ -1068,6 +1069,9 @@ Bool_t TGLSurfacePainter::PreparePalette()const
    //Generate palette.
    if (!fUpdateTexMap)
       return kTRUE;
+
+   if(fMinMaxVal.first == fMinMaxVal.second)
+      return kFALSE;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
 
    UInt_t paletteSize = fHist->GetContour();
    if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
