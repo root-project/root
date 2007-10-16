@@ -4543,6 +4543,7 @@ int main(int argc, char **argv)
    iv = 0;
    il = 0;
 
+   std::list<std::string> includedFilesForBundle;
    char esc_arg[512];
    bool insertedBundle = false;
    FILE *bundle = 0;
@@ -4584,6 +4585,7 @@ int main(int argc, char **argv)
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
          fprintf(bundle,"#include \"%s\"\n", esc_arg);
+         includedFilesForBundle.push_back(argv[i]);
          if (!insertedBundle) {
             argvv[argcc++] = (char*)bundlename.c_str();
             insertedBundle = true;
@@ -4603,7 +4605,24 @@ int main(int argc, char **argv)
    }
 
    if (!il) {
+      // replace bundlename by headers for autolinkdef
+      char* bundle = argvv[argcc - 1];
+      if (insertedBundle)
+         --argcc;
+      for (std::list<std::string>::const_iterator iHdr = includedFilesForBundle.begin();
+           iHdr != includedFilesForBundle.end(); ++iHdr) {
+         argvv[argcc] = StrDup(iHdr->c_str());
+         ++argcc;
+      }
       GenerateLinkdef(&argcc, argvv, iv);
+      for (int iarg = argcc - includedFilesForBundle.size();
+           iarg < argcc; ++iarg)
+         delete [] argvv[iarg];
+      argcc -= includedFilesForBundle.size();
+      if (insertedBundle)
+         ++argcc;
+      argvv[argcc - 1] = bundle;
+      
       argvv[argcc++] = autold;
    }
    G__ShadowMaker::VetoShadow(); // we create them ourselves
