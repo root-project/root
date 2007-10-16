@@ -19,7 +19,6 @@
 #include "TLegend.h"
 
 //#include "TLabel.h"
-#include "Math/Integrator.h"
 #include "Math/Functor.h"
 #include "Math/WrappedFunction.h"
 #include "Math/IFunction.h"
@@ -72,22 +71,10 @@ void  testIntegPerf(double x1, double x2, int n = 100000){
      s1+= ig.Integral(x1,x);
   }
   timer.Stop(); 
-  std::cout << "Time using ROOT::Math::Integrator (default):\t" << timer.RealTime() << std::endl; 
+  std::cout << "Time using ROOT::Math::Integrator        :\t" << timer.RealTime() << std::endl; 
   std::cout << "Number of function calls = " << nc/n << std::endl;
   int pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
   
-  timer.Start(); 
-  s1 = 0; 
-  nc = 0;
-  ROOT::Math::Integrator ig2(f1, ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61,1.E-12,1.E-12);
-  for (int i = 0; i < n; ++i) { 
-     double x = x1 + dx*i; 
-     s1+= ig2.Integral(x1,x);
-  }
-  timer.Stop(); 
-  std::cout << "Time using ROOT::Math::Integrator(GAUSS61):\t" << timer.RealTime() << std::endl; 
-  std::cout << "Number of function calls = " << nc/n << std::endl;
-  pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
 
 
   //TF1 *fBW = new TF1("fBW","TMath::BreitWigner(x)",x1, x2);  //  this is faster but cannot measure number of function calls
@@ -126,7 +113,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    // alternative method using ROOT::Math::Functor class 
    ROOT::Math::Functor1D<ROOT::Math::IGenFunction> f1(& TMath::BreitWigner);
   
-   ROOT::Math::Integrator ig(f1, ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61,1.E-12,1.E-12);
+   ROOT::Math::Integrator ig(f1, ROOT::Math::IntegrationOneDim::ADAPTIVE,1.E-12,1.E-12);
  
    TH1D *cum1 = new TH1D("cum1", "", n, x1, x2); 
    for (int i = 1; i <= n; ++i) { 
