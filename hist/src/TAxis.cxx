@@ -829,7 +829,7 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
-   SetRange(FindBin(ufirst),FindBin(ulast));
+   SetRange(FindFixBin(ufirst),FindFixBin(ulast));
 }
 
 //______________________________________________________________________________
