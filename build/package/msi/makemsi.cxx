@@ -153,6 +153,7 @@ string MSIDirEntry::GetMyId() const {
    std::replace(ret.begin(), ret.end(), '-', '_');
    std::replace(ret.begin(), ret.end(), '#', '_');
    std::replace(ret.begin(), ret.end(), '~', '_');
+   std::replace(ret.begin(), ret.end(), '@', '_');
    return ret;
 }
 
