@@ -128,6 +128,20 @@ TChain::TChain(const char* name, const char* title)
    //       The Draw function above will process the variable "x" in Tree "T"
    //       reading sequentially the 3 files in the chain ch.
    //
+   //   The TChain data structure
+   //       Each TChainElement has a name equal to the tree name of this TChain
+   //       and a title equal to the file name. So, to loop over the
+   //       TFiles that have been added to this chain:
+   //
+   //         TObjArray *fileElements=chain->GetListOfFiles();
+   //         TIter next(fileElements);
+   //         TChainElement *chEl=0;
+   //         while (( chEl=(TChainElement*)next() )) {
+   //            TFile f(chEl->GetTitle());
+   //            ... do something with f ...
+   //         }
+
+   //
    //*-*
 
    fTreeOffset = new Long64_t[fTreeOffsetLen];
@@ -252,6 +266,19 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    //       a chain with this default, GetEntriesFast will return kBigNumber!
    //       TChain::GetEntries will force of the Tree headers in the chain to be
    //       read to read the number of entries in each Tree.
+   //
+   //    D- The TChain data structure
+   //       Each TChainElement has a name equal to the tree name of this TChain
+   //       and a title equal to the file name. So, to loop over the
+   //       TFiles that have been added to this chain:
+   //
+   //         TObjArray *fileElements=chain->GetListOfFiles();
+   //         TIter next(fileElements);
+   //         TChainElement *chEl=0;
+   //         while (( chEl=(TChainElement*)next() )) {
+   //            TFile f(chEl->GetTitle());
+   //            ... do something with f ...
+   //         }
 
    // case with one single file
    if (!TString(name).MaybeWildcard()) {
@@ -345,6 +372,19 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //    headers in the chain to be read to read the number of entries in
    //    each tree.
    //
+   // D. The TChain data structure
+   //    Each TChainElement has a name equal to the tree name of this TChain
+   //    and a title equal to the file name. So, to loop over the
+   //    TFiles that have been added to this chain:
+   //
+   //      TObjArray *fileElements=chain->GetListOfFiles();
+   //      TIter next(fileElements);
+   //      TChainElement *chEl=0;
+   //      while (( chEl=(TChainElement*)next() )) {
+   //         TFile f(chEl->GetTitle());
+   //         ... do something with f ...
+   //      }
+   
 
    TDirectory::TContext ctxt(0);
    const char *treename = GetName();

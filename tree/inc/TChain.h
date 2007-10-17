@@ -95,6 +95,8 @@ public:
    TFile            *GetFile() const;
    virtual TLeaf    *GetLeaf(const char* name);
    virtual TObjArray *GetListOfBranches();
+   //                Warning, GetListOfFiles returns the list of TChainElements (not the list of files)
+   //                see TChain::AddFile to see how to get the corresponding TFile objects
    TObjArray        *GetListOfFiles() const {return fFiles;}
    virtual TObjArray *GetListOfLeaves();
    virtual const char *GetAlias(const char *aliasName) const;
