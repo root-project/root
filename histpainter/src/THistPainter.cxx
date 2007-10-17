@@ -3685,7 +3685,11 @@ Int_t THistPainter::PaintInit()
    //       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
       if (Hparam.xlowedge <=0 ) {
-         Hparam.xlowedge = 0.1*Hparam.xbinsize;
+         if (Hoption.Same) {
+            Hparam.xlowedge = TMath::Power(10, gPad->GetUxmin());
+         } else {
+            Hparam.xlowedge = 0.1*Hparam.xbinsize;
+         }
          Hparam.xmin  = Hparam.xlowedge;
       }
       if (Hparam.xmin <=0 || Hparam.xmax <=0) {
