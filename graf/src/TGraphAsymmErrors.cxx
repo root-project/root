@@ -1098,13 +1098,17 @@ double TGraphAsymmErrors::SearchLower(double high, int k, int N, double c) const
    double test;
 
    // use a bracket-and-bisect search
-   // now we loop 20 times, to end with a root guaranteed accurate to better
-   // than 0.1%
-   for (int loop=0; loop<20; loop++) {
+   // LM: looping 20 times might be not enough to get an accurate precision. 
+   // see for example bug https://savannah.cern.ch/bugs/?30246
+   // now break loop when difference is less than 1E-6
+   // t.b.d: use directly the beta distribution quantile
+
+   for (int loop=0; loop<50; loop++) {
       test = 0.5*(too_high + too_low);
       integral = Beta_ab(test, high, k, N);
       if (integral > c)  too_low = test;
       else too_high = test;
+      if ( TMath::Abs(integral - c) <= 1.E-6) break;
    }
    return test;
 }
@@ -1129,13 +1133,17 @@ double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
    double test;
 
    // use a bracket-and-bisect search
-   // now we loop 20 times, to end with a root guaranteed accurate to better
-   // than 0.1%
-   for (int loop=0; loop<20; loop++) {
+   // LM: looping 20 times might be not enough to get an accurate precision. 
+   // see for example bug https://savannah.cern.ch/bugs/?30246
+   // now break loop when difference is less than 1E-6
+   // t.b.d: use directly the beta distribution quantile
+
+   for (int loop=0; loop<50; loop++) {
       test = 0.5*(too_low + too_high);
       integral = Beta_ab(low, test, k, N);
       if (integral > c)  too_high = test;
       else too_low = test;
+      if ( TMath::Abs(integral - c) <= 1.E-6) break;
    }
    return test;
 }
