@@ -384,7 +384,7 @@ void TKey::Browse(TBrowser *b)
          if (tobj->InheritsFrom(TCollection::Class()))
             tobj->Delete();   // delete also collection elements
          delete tobj;
-         tobj = 0;
+         obj = 0;
       }
    } 
 
