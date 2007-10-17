@@ -542,7 +542,6 @@ void convert_profile(Int_t id)
 #else
    hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
 #endif
-   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
    chtitl[4*nwt] = 0;
    const char *option= " ";
    if (iq[lw] == 1) option = "S";
@@ -551,15 +550,9 @@ void convert_profile(Int_t id)
 
    const Int_t kCON1 = 9;
    Int_t i;
-   Float_t x;
-   Float_t y = 0.5*(ymin+ymax);
    for (i=1;i<=ncx;i++) {
       Int_t n = Int_t(q[ln+i]);
-      hix(id,i,x);
-      for (Int_t j=0;j<n;j++) {
-         p->Fill(x+offsetx,y);
-      }
-      //p->SetBinEntries(i,n);  //this one should be much faster (to be tested)
+      p->SetBinEntries(i,n);
       Float_t content = q[lcont+kCON1+i];
       Float_t error   = TMath::Sqrt(q[lw+i]);
       p->SetBinContent(i,content);
