@@ -104,6 +104,7 @@ static TString gStringKurtosisZ;
 
 ClassImp(THistPainter)
 
+
 //______________________________________________________________________________
 THistPainter::THistPainter()
 {
@@ -145,6 +146,7 @@ THistPainter::THistPainter()
    gStringKurtosisY = gEnv->GetValue("Hist.Stats.KurtosisY", "Kurtosis y");
    gStringKurtosisZ = gEnv->GetValue("Hist.Stats.KurtosisZ", "Kurtosis z");
 }
+
 
 //______________________________________________________________________________
 THistPainter::~THistPainter()
@@ -318,6 +320,7 @@ FUNCTIONS:
    return curdist;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::DrawPanel()
 {
@@ -334,6 +337,7 @@ void THistPainter::DrawPanel()
    editor->Show();
    gROOT->ProcessLine(Form("((TCanvas*)0x%x)->Selected((TVirtualPad*)0x%x,(TObject*)0x%x,1)",gPad->GetCanvas(),gPad,fH));
 }
+
 
 //______________________________________________________________________________
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
@@ -448,6 +452,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void THistPainter::FitPanel()
 {
@@ -464,6 +469,7 @@ void THistPainter::FitPanel()
    if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
 }
+
 
 //______________________________________________________________________________
 TList *THistPainter::GetContourList(Double_t contour) const
@@ -483,6 +489,7 @@ TList *THistPainter::GetContourList(Double_t contour) const
 
    return fGraphPainter->GetContourList(contour);
 }
+
 
 //______________________________________________________________________________
 char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
@@ -562,6 +569,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
+
 //______________________________________________________________________________
 Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
 {
@@ -579,6 +587,7 @@ Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
    return kTRUE;
 }
 
+
 //______________________________________________________________________________
 Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 {
@@ -593,6 +602,7 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
    }
    return kTRUE;
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::MakeChopt(Option_t *choptin)
@@ -828,7 +838,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          if (strstr(chopt,"E2"))  Hoption.Error = 12;
          if (strstr(chopt,"E3"))  Hoption.Error = 13;
          if (strstr(chopt,"E4"))  Hoption.Error = 14;
-         if (strstr(chopt,"X0") && Hoption.Error == 1)  Hoption.Error += 20;
+         if (strstr(chopt,"E5"))  Hoption.Error = 15;
+         if (strstr(chopt,"E6"))  Hoption.Error = 16;
+         if (strstr(chopt,"X0")) {
+            if (Hoption.Error == 1)  Hoption.Error += 20;
+            Hoption.Error += 10;
+         }
       } else {
          if (Hoption.Error == 0) {
             Hoption.Error = 100;
@@ -839,7 +854,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
             Hoption.Error = 0;
          }
       }
-      if (strstr(chopt,"X0"))  Hoption.Error += 10;
    }
 
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
@@ -876,6 +890,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
    return 1;
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::MakeCuts(char *choptin)
@@ -922,6 +937,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
    for (i=0;i<=nch;i++) left[i] = ' ';
    return fNcuts;
 }
+
 
 //______________________________________________________________________________
 void THistPainter::Paint(Option_t *option)
@@ -1006,11 +1022,13 @@ void THistPainter::Paint(Option_t *option)
    //    "B"      : Bar chart option
    //    "C"      : Draw a smooth Curve througth the histogram bins
    //    "E"      : Draw error bars
-   //    "E0"     : Draw error bars including bins with o contents
+   //    "E0"     : Draw error bars. Markers are drawn for bins with 0 contents
    //    "E1"     : Draw error bars with perpendicular lines at the edges
    //    "E2"     : Draw error bars with rectangles
    //    "E3"     : Draw a fill area througth the end points of the vertical error bars
    //    "E4"     : Draw a smoothed filled area through the end points of the error bars
+   //    "E5"     : Like E3 but ignore the bins with 0 contents
+   //    "E6"     : Like E4 but ignore the bins with 0 contents
    //    "X0"     : When used with one of the "E" option, it suppress the error
    //               bar along X as gStyle->SetErrorX(0) would do.
    //    "L"      : Draw a line througth the bin contents
@@ -1656,6 +1674,7 @@ paintstat:
 
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintArrows(Option_t *)
 {
@@ -1751,6 +1770,7 @@ void THistPainter::PaintArrows(Option_t *)
    fH->SetLineWidth(widthsav);
    fH->TAttLine::Modify();
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintAxis(Bool_t drawGridOnly)
@@ -2042,6 +2062,7 @@ void THistPainter::PaintBar(Option_t *)
    }
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintBarH(Option_t *)
 {
@@ -2134,6 +2155,7 @@ void THistPainter::PaintBarH(Option_t *)
    fXaxis = xaxis;
    fYaxis = yaxis;
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintBoxes(Option_t *)
@@ -2344,6 +2366,7 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels(Option_t *)
 {
@@ -2473,6 +2496,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    fH->TAttFill::Modify();
 
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintContour(Option_t *option)
@@ -2853,6 +2877,7 @@ theEND:
    delete [] levels;
 }
 
+
 //______________________________________________________________________________
 Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
@@ -2909,6 +2934,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
    return icount;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintErrors(Option_t *)
 {
@@ -2925,6 +2951,8 @@ void THistPainter::PaintErrors(Option_t *)
    //           error bars.
    //       '4' A smoothed filled area is drawn through the end points of the
    //           vertical error bars.
+   //       '5' Like option '3' but the empty bins are ignored.
+   //       '6' Like option '4' but the empty bins are ignored.
    //       '0' Turn off the symbols clipping.
    //
    //      'X0' When used with one of the "E" option, it suppress the error
@@ -2957,11 +2985,11 @@ void THistPainter::PaintErrors(Option_t *)
    Int_t if1 = 0;
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
-   Int_t option0, option1, option2, option3, option4, optionE, optionEX0;
+   Int_t option0, option1, option2, option3, option4, optionE, optionEX0, optionI0;
 
    Double_t *xline = 0;
    Double_t *yline = 0;
-   option0 = option1 = option2 = option3 = option4 = optionE = optionEX0 = 0;
+   option0 = option1 = option2 = option3 = option4 = optionE = optionEX0 = optionI0 = 0;
    if (Int_t(Hoption.Error/10) == 2) {optionEX0 = 1; Hoption.Error -= 10;}
    if (Hoption.Error == 31) {optionEX0 = 1; Hoption.Error = 1;}
    if (Hoption.Error == 10) option0 = 1;
@@ -2969,6 +2997,8 @@ void THistPainter::PaintErrors(Option_t *)
    if (Hoption.Error == 12) option2 = 1;
    if (Hoption.Error == 13) option3 = 1;
    if (Hoption.Error == 14) {option4 = 1; option3 = 1;}
+   if (Hoption.Error == 15) {optionI0 = 1; option3 = 1;}
+   if (Hoption.Error == 16) {optionI0 = 1; option4 = 1; option3 = 1;}
    if (option2+option3 == 0) optionE = 1;
    if (Hoption.Error == 0) optionE = 0;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
@@ -3056,8 +3086,10 @@ void THistPainter::PaintErrors(Option_t *)
          if (xp > xmax) break;
       }
       yp = factor*fH->GetBinContent(k);
-      if (fixbin) ex1 = xerror*Hparam.xbinsize;
-      else {
+      if (optionI0 && yp==0) goto L30;
+      if (fixbin) {
+         ex1 = xerror*Hparam.xbinsize;
+      } else {
          delta = fH->GetBinWidth(k);
          ex1 = xerror*delta;
       }
@@ -3197,6 +3229,7 @@ L30:
       delete [] yline;
    }
 }
+
 
 //______________________________________________________________________________
 void THistPainter::Paint2DErrors(Option_t *)
@@ -3351,6 +3384,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    delete fLego; fLego = 0;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintFrame()
 {
@@ -3368,6 +3402,7 @@ void THistPainter::PaintFrame()
    }
    gPad->PaintPadFrame(Hparam.xmin,Hparam.ymin,Hparam.xmax,Hparam.ymax);
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintFunction(Option_t *)
@@ -3403,6 +3438,7 @@ void THistPainter::PaintFunction(Option_t *)
       padsave->cd();
    }
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintHist(Option_t *)
@@ -3594,6 +3630,7 @@ void THistPainter::PaintHist(Option_t *)
    htype=oldhtype;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintH3(Option_t *option)
 {
@@ -3656,6 +3693,7 @@ void THistPainter::PaintH3(Option_t *option)
    }
 
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::PaintInit()
@@ -3856,6 +3894,7 @@ Int_t THistPainter::PaintInit()
    Hparam.ymax = ymax;
    return 1;
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::PaintInitH()
@@ -4367,6 +4406,7 @@ void THistPainter::PaintLego(Option_t *)
    delete fLego; fLego = 0;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
@@ -4547,6 +4587,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    fH->SetLineStyle(1);
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintPalette()
 {
@@ -4580,6 +4621,7 @@ void THistPainter::PaintPalette()
       palette->Paint();
    }
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintScatterPlot(Option_t *option)
@@ -4705,6 +4747,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    if (Hoption.Zscale) PaintPalette();
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 {
@@ -4743,6 +4786,7 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 
    TH1::AddDirectory(status);
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
@@ -4999,6 +5043,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    stats->Paint();
 }
 
+
 //______________________________________________________________________________
 void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 {
@@ -5224,6 +5269,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    if (!done) fFunctions->Add(stats);
    stats->Paint();
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
@@ -5478,6 +5524,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    if (!done) fFunctions->Add(stats);
    stats->Paint();
 }
+
 
 //______________________________________________________________________________
 void THistPainter::PaintSurface(Option_t *)
@@ -5811,6 +5858,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    delete fLego; fLego = 0;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::DefineColorLevels(Int_t ndivz)
 {
@@ -6143,6 +6191,7 @@ void THistPainter::PaintTitle()
 
 }
 
+
 //______________________________________________________________________________
 void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
@@ -6160,6 +6209,7 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
       TPainter3dAlgorithms::SetF3ClippingBoxOn(xclip,yclip,zclip);
    }
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
@@ -6192,6 +6242,7 @@ Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Doubl
    return 0;
 }
 
+
 //______________________________________________________________________________
 Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -6212,6 +6263,7 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
    return 0;
 }
 
+
 //______________________________________________________________________________
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -6223,6 +6275,7 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
    return 0;
 }
 
+
 //______________________________________________________________________________
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -6233,6 +6286,7 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
    Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
    return 0;
 }
+
 
 //______________________________________________________________________________
 void THistPainter::RecalculateRange()
@@ -6344,6 +6398,7 @@ void THistPainter::RecalculateRange()
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
 }
 
+
 //______________________________________________________________________________
 void THistPainter::SetHistogram(TH1 *h)
 {
@@ -6356,6 +6411,7 @@ void THistPainter::SetHistogram(TH1 *h)
    fZaxis = h->GetZaxis();
    fFunctions = fH->GetListOfFunctions();
 }
+
 
 //______________________________________________________________________________
 Int_t THistPainter::TableInit()
@@ -6530,6 +6586,7 @@ LZMIN:
    return 1;
 }
 
+
 //______________________________________________________________________________
 const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
@@ -6579,6 +6636,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    return ef;
 }
 
+
 //______________________________________________________________________________
 void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 {
@@ -6604,6 +6662,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    gPad->SetName(Form("%x_c_projection_%d",fH,fShowProjection));
    gPad->SetGrid();
 }
+
 
 //______________________________________________________________________________
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
@@ -6659,6 +6718,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    padsav->cd();
 }
 
+
 //______________________________________________________________________________
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
@@ -6712,6 +6772,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    c->Update();
    padsav->cd();
 }
+
 
 //______________________________________________________________________________
 void THistPainter::ShowProjection3(Int_t px, Int_t py)
