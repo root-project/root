@@ -500,9 +500,10 @@ void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t dz, Double_t 
    b = point[0]*dir[0] + point[1]*dir[1] - tz*rc*dir[2];
    Double_t c = rsq - rc*rc;
 
-   if (a==0) {
-      if (b==0) return;
+   if (TMath::Abs(a)<TGeoShape::Tolerance()) {
+      if (TMath::Abs(b)<TGeoShape::Tolerance()) return;
       b = 0.5*c/b;
+      delta = 0.;
       return;
    }   
    a = 1./a;

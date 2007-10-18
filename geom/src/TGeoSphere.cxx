@@ -493,10 +493,10 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                if (delta>0) {
                   st1 = -b-delta;
                   znew = ptnew[2]+st1*dir[2];
-                  if (st1<0 || TMath::Abs(znew)>0) {
+                  if (st1<0 || TMath::Abs(znew)>dz) {
                      st1 = -b+delta; 
                      znew = ptnew[2]+st1*dir[2];
-                     if (st1<0 || TMath::Abs(znew)>0) st1=TGeoShape::Big();
+                     if (st1<0 || TMath::Abs(znew)>dz) st1=TGeoShape::Big();
                   } 
                }     
             }
@@ -543,7 +543,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                   if (st2<0 || TMath::Abs(znew)>dz) {
                      st2 = -b+delta; 
                      znew = ptnew[2]+st2*dir[2];
-                     if (st2<0 || TMath::Abs(znew)>0) st2=TGeoShape::Big();
+                     if (st2<0 || TMath::Abs(znew)>dz) st2=TGeoShape::Big();
                   }   
                }    
             }
@@ -706,7 +706,7 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
                   if (sn1<0 || TMath::Abs(znew)>dz) {
                      sn1 = -b+delta; 
                      znew = ptnew[2]+sn1*dir[2];
-                     if (sn1<0 || TMath::Abs(znew)>0) sn1=TGeoShape::Big();
+                     if (sn1<0 || TMath::Abs(znew)>dz) sn1=TGeoShape::Big();
                   } 
                }     
             }
@@ -742,10 +742,10 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
                if (delta>0) {
                   sn2 = -b-delta;
                   znew = ptnew[2]+sn2*dir[2];
-                  if (sn2<0 || TMath::Abs(znew)>0) {
+                  if (sn2<0 || TMath::Abs(znew)>dz) {
                      sn2 = -b+delta; 
                      znew = ptnew[2]+sn2*dir[2];
-                     if (sn2<0 || TMath::Abs(znew)>0) sn2=TGeoShape::Big();
+                     if (sn2<0 || TMath::Abs(znew)>dz) sn2=TGeoShape::Big();
                   } 
                }     
             }
