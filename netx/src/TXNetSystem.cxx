@@ -55,6 +55,7 @@ TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
    fDirp = 0;
    fDirListValid = kFALSE;
    fUrl = "";
+   fIsLocal = kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -69,6 +70,24 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDirp = 0;
    fDirListValid = kFALSE;
    fUrl = url;
+
+   // Check locality, taking into account possible prefixes
+   fLocalPrefix = "";
+   fIsLocal = kFALSE;
+   // We may have been asked explicitely to go through the daemon
+   Bool_t forceRemote = gEnv->GetValue("Path.ForceRemote", 0);
+   TString opts = TUrl(url).GetOptions();
+   if (opts.Contains("remote=1"))
+      forceRemote = kTRUE;
+   else if (opts.Contains("remote=0"))
+      forceRemote = kFALSE;
+   if (!forceRemote) {
+      if ((fIsLocal = gSystem->IsPathLocal(url))) {
+         fLocalPrefix = gEnv->GetValue("Path.Localroot","");
+         // Nothing more to do
+         return;
+      }
+   }
 
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
@@ -604,7 +623,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
          XrdClientUrlInfo ui;
          TString edir = TUrl(path).GetFile();
 
-         if (cg.ClientAdmin()->Locate((kXR_char *)edir.Data(), ui)) {
+         if (cg.ClientAdmin()->Locate((kXR_char *)edir.Data(), ui, kTRUE)) {
             TUrl u(path);
             u.SetHost(ui.Host.c_str());
             u.SetPort(ui.Port);
