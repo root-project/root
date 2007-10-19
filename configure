@@ -4510,7 +4510,7 @@ fi
 # only update $CONFIGUREOUT when different
 if test -f $CONFIGUREOUT; then
    diff RConfigure-out.tmp $CONFIGUREOUT > /dev/null; status=$?;
-   if [ "$status" -ne "0"]; then
+   if [ "$status" -ne "0" ]; then
       mv -f RConfigure-out.tmp $CONFIGUREOUT
    else
       rm -f RConfigure-out.tmp
