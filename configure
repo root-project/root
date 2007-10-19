@@ -1065,7 +1065,8 @@ fi
 #
 ### echo %%% Some clean up
 #
-trapcmd="rm -f Makefile.tmp RConfigure.tmp root-config.tmp rootrc.tmp \
+trapcmd="rm -f Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
+         root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
          conftest.c conftest xrootd.tmp olbd.tmp"
@@ -4496,14 +4497,26 @@ sed \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
-    < RConfigure.tmp > $CONFIGUREOUT
+    < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 
 if test ! "x$enable_ruby" = "xno"; then
-   echo "" >> $CONFIGUREOUT
+   echo "" >> RConfigure-out.tmp
    ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
    sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
-   tr '@' '\n' >> $CONFIGUREOUT
+   tr '@' '\n' >> RConfigure-out.tmp
+fi
+
+# only update $CONFIGUREOUT when different
+if test -f $CONFIGUREOUT; then
+   diff RConfigure-out.tmp $CONFIGUREOUT > /dev/null; status=$?;
+   if [ "$status" -ne "0"]; then
+      mv -f RConfigure-out.tmp $CONFIGUREOUT
+   else
+      rm -f RConfigure-out.tmp
+   fi
+else
+   mv -f RConfigure-out.tmp $CONFIGUREOUT
 fi
 
 result "done"
