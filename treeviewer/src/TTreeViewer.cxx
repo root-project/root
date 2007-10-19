@@ -160,9 +160,7 @@
 //End_Html
 //
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 #include "snprintf.h"
 
@@ -822,12 +820,12 @@ void TTreeViewer::BuildInterface()
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);
    fWidgets->Add(lo);
    fHpb->AddFrame(fDRAW, lo);
-   
+
    //--- SPIDER button
    fSPIDER = new TGTextButton(fHpb,"SPIDER");
    fSPIDER->SetToolTipText("Scan current selection using a spider plot");
    fSPIDER->Associate(this);
-   
+
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);
    fWidgets->Add(lo);
    fHpb->AddFrame(fSPIDER,lo);
@@ -1482,7 +1480,7 @@ void TTreeViewer::ExecuteDraw()
 void TTreeViewer::ExecuteSpider()
 {
    // Draw a spider plot for the selected entries.
-   
+
    char varexp[2000];
    varexp[0] = 0;
    char command[2000];
@@ -1556,12 +1554,12 @@ void TTreeViewer::ExecuteSpider()
    Long64_t nentries = (Long64_t)(fSlider->GetMaxPosition() -
                             fSlider->GetMinPosition() + 1);
    Long64_t firstentry =(Long64_t) fSlider->GetMinPosition();
-   
+
    // create the spider plot
-   
+
    TSpider* spider = new TSpider(fTree,varexp,cut,Form("%s spider average",gopt),nentries,firstentry);
    spider->Draw();
-   
+
    if (gPad) gPad->Update();
 }
 

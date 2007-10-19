@@ -17,10 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// config.h is needed for TTFFONTDIR
-#ifdef R__HAVE_CONFIG
+// RConfigure.h is needed for TTFFONTDIR
 #include "RConfigure.h"
-#endif
 
 #include "TTF.h"
 #include "TSystem.h"

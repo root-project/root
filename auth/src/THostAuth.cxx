@@ -19,10 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
-
 #include "TSystem.h"
 #include "THostAuth.h"
 #include "TRootSecContext.h"

@@ -25,9 +25,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #ifdef R__AFS
 #include "TAFS.h"
 #endif

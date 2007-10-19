@@ -123,10 +123,7 @@
 
 #include <stdio.h>
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
-
 #include "TTabCom.h"
 #include "TClass.h"
 #include "TSystem.h"

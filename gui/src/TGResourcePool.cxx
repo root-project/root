@@ -30,9 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 #include "TGResourcePool.h"
 #include "TGClient.h"

@@ -20,10 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
-
 #include "RConfig.h"
 #include "Riostream.h"
 
@@ -3101,7 +3098,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->Send(m);
       }
 
-      // Nothing more to do if we are not idle  
+      // Nothing more to do if we are not idle
       if (!fIdle) {
          // Notify submission
          Info("HandleProcess",
@@ -3930,7 +3927,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          break;
       case TProof::kBuildPackage:
          (*mess) >> package;
- 
+
          // always follows BuildPackage so no need to check for PROOF-INF
          pdir = fPackageDir + "/" + package;
 
@@ -4017,7 +4014,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                      char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
                                                    kExecutePermission);
                      if (gunzip) {
-                        TString par = Form("%s.par", pdir.Data()); 
+                        TString par = Form("%s.par", pdir.Data());
                         // untar package
                         TString cmd(Form(kUNTAR3, gunzip, par.Data()));
                         status = gSystem->Exec(cmd);

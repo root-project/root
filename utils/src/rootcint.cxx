@@ -159,9 +159,7 @@
 
 #ifndef __CINT__
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #include "RConfig.h"
 #include "Shadow.h"
 #include <iostream>
@@ -588,13 +586,13 @@ void LoadLibraryMap() {
 #ifdef WIN32
       struct _stati64 finfo;
 
-      if (_stati64(filename.c_str(), &finfo) < 0 || 
+      if (_stati64(filename.c_str(), &finfo) < 0 ||
           finfo.st_mode & S_IFDIR) {
          continue;
       }
 #else
       struct stat finfo;
-      if (stat(filename.c_str(), &finfo) < 0 || 
+      if (stat(filename.c_str(), &finfo) < 0 ||
           S_ISDIR(finfo.st_mode)) {
          continue;
       }
@@ -3908,7 +3906,7 @@ char *Compress(const char *str)
 }
 
 //______________________________________________________________________________
-const char *CopyArg(const char *original) 
+const char *CopyArg(const char *original)
 {
    // If the argument starts with MODULE/inc, strip it
    // to make it the name we can use in #includes.
@@ -3922,8 +3920,8 @@ const char *CopyArg(const char *original)
    if (slash==0) {
       slash = (char *)strchr(original,'/');
    }
-   if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 && 
-       ( slash[4]=='/' || slash[4]=='\\') ) 
+   if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
+       ( slash[4]=='/' || slash[4]=='\\') )
    {
       return slash+5;
    } else {
@@ -4622,7 +4620,7 @@ int main(int argc, char **argv)
       if (insertedBundle)
          ++argcc;
       argvv[argcc - 1] = bundle;
-      
+
       argvv[argcc++] = autold;
    }
    G__ShadowMaker::VetoShadow(); // we create them ourselves
@@ -4738,7 +4736,7 @@ int main(int argc, char **argv)
        << "//Break the privacy of classes -- Disabled for the moment" << std::endl
        << "#define private public" << std::endl
        << "#define protected public" << std::endl
-       << "#endif" << std::endl 
+       << "#endif" << std::endl
        << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl

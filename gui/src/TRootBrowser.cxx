@@ -18,9 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 #include "TRootBrowser.h"
 #include "TRootApplication.h"
@@ -2315,7 +2313,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]", 
+                  Getlinem(kInit, Form("\n%s:root [0]",
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2347,7 +2345,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]", 
+                  Getlinem(kInit, Form("\n%s:root [0]",
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2358,7 +2356,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             }
          }
          else {
-            // check if the listtree item is from a local session or 
+            // check if the listtree item is from a local session or
             // from a remote session, then switch to the session it belongs to
             TGListTreeItem *top = item;
             while (top->GetParent()) {
@@ -2371,7 +2369,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
                   // switch to remote session if not already in
                   gROOT->ProcessLine(Form(".R %s", top->GetText()));
                   if (gApplication->GetAppRemote()) {
-                     Getlinem(kInit, Form("\n%s:root [0]", 
+                     Getlinem(kInit, Form("\n%s:root [0]",
                               gApplication->GetAppRemote()->ApplicationName()));
                   }
                }
@@ -2482,14 +2480,14 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          browsable = kTRUE;
 
       if (obj->InheritsFrom("TLeaf")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();", 
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();",
                                                       obj->ClassName(), obj));
          if (!dir) {
             browsable = kFALSE;
          }
       }
       if (obj->InheritsFrom("TBranchElement")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();", 
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();",
                                                       obj->ClassName(), obj));
          if (!dir) {
             browsable = kFALSE;

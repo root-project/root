@@ -18,10 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
-
 #include "RConfig.h"
 #include "Riostream.h"
 
@@ -896,7 +893,7 @@ Int_t TApplicationServer::SendCanvases()
          fSentCanvases = new TList;
       Bool_t sentalready = kFALSE;
       // We cannot use FindObject here because there may be invalid
-      // objects in the send list (i.e. deleted canvases) 
+      // objects in the send list (i.e. deleted canvases)
       TObjLink *lnk = fSentCanvases->FirstLink();
       while (lnk) {
          TObject *sc = lnk->GetObject();

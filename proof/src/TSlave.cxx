@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #include "TApplication.h"
 #include "TSlave.h"
 #include "TProof.h"
@@ -161,7 +159,7 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
       fSocket->Send(m);
    } else {
       Info("Init","** NOT ** Sending kPROOF_SETENV RemoteProtocol : %d",
-         fSocket->GetRemoteProtocol());   
+         fSocket->GetRemoteProtocol());
    }
 
    char buf[512];

@@ -31,10 +31,7 @@
 #endif
 #include <vector>
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
-
 #include "Riostream.h"
 #include "Getline.h"
 #include "TBrowser.h"
@@ -4422,7 +4419,7 @@ Int_t TProof::BuildPackageOnClient(const TString &package)
             // find gunzip...
             char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP, kExecutePermission);
             if (gunzip) {
-               TString par = Form("%s.par", pdir.Data()); 
+               TString par = Form("%s.par", pdir.Data());
                // untar package
                TString cmd(Form(kUNTAR3, gunzip, par.Data()));
                status = gSystem->Exec(cmd);

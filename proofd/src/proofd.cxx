@@ -154,9 +154,7 @@
 // 13: support for SSH authentication via SSH tunnel
 // 14: add env setup message
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #include "RConfig.h"
 
 #include <ctype.h>

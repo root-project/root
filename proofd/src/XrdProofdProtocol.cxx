@@ -58,9 +58,7 @@
 #include "XrdProofWorker.h"
 #include "XrdROOT.h"
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 // Tracing utils
 #include "XrdProofdTrace.h"

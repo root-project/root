@@ -17,9 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #include "RConfig.h"
 #include "TUnixSystem.h"
 #include "TROOT.h"

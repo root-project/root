@@ -206,9 +206,7 @@
 // 16 -> 17: Addition of "Gets" (multiple buffers in a single request)
 // 17 -> 18: fix problems with '//' in admin paths; partial logging in castor mode
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 #include "RConfig.h"
 
 #include <ctype.h>

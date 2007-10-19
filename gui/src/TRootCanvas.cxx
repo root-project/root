@@ -18,9 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 #include "TRootCanvas.h"
 #include "TRootApplication.h"

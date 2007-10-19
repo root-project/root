@@ -29,9 +29,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
-#endif
 
 #include "TGFSComboBox.h"
 #include "TGResourcePool.h"
