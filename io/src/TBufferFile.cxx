@@ -429,7 +429,7 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
    //  [-10,100,16]
    //  [0,0,8]
    // if nbits is not specified, or nbits <2 or nbits>16 it is set to 16
-   // if (xmin==0 and xmax==0 and nbits <=16) the float word will have
+   // if (xmin==0 and xmax==0 and nbits <=14) the float word will have
    // its mantissa truncated to nbits significative bits.
    //
    // IMPORTANT NOTE
@@ -1997,7 +1997,7 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
    } else {
       Int_t nbits = 0;
       //number of bits stored in fXmin (see TStreamerElement::GetRange)
-      if (ele) nbits = (UInt_t)ele->GetXmin();
+      if (ele) nbits = (Int_t)ele->GetXmin();
       Int_t i;
       if (!nbits) {
          //if no range and no bits specified, we convert from double to float
