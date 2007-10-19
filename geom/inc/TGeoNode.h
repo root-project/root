@@ -80,6 +80,7 @@ public:
    virtual void      cd() const {;}
    void              CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void              CheckShapes();
+   Int_t             CountDaughters(Bool_t unique_volumes=kFALSE);
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");

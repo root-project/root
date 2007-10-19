@@ -35,6 +35,7 @@ class TVirtualGeoTrack;
 class TParticle;
 class TObjArray;
 class TH2F;
+class TStopwatch;
 class TGeoBatemanSol;
 
 class TVirtualGeoPainter : public TObject {
@@ -110,6 +111,7 @@ public:
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
    virtual void       ModifiedPad(Bool_t update=kFALSE) const = 0;
+   virtual void       OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE, Bool_t refresh=kFALSE) = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=0) = 0;
    virtual void       PaintShape(TGeoShape *shape, Option_t *option="") = 0;

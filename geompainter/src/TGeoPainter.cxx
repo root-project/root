@@ -1403,7 +1403,14 @@ void TGeoPainter::PrintOverlaps() const
 {
 // Print overlaps (see TGeoChecker::PrintOverlaps())
    fChecker->PrintOverlaps();
-}
+}   
+
+//______________________________________________________________________________
+void TGeoPainter::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last, Bool_t refresh)
+{
+// Text progress bar.
+   fChecker->OpProgress(opname,current,size,watch,last,refresh);
+}   
    
 //______________________________________________________________________________
 void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
@@ -1503,7 +1510,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    timer->Start();
    for (px=pxmin; px<pxmax; px++) {
       for (py=pymin; py<pymax; py++) {
-         if ((nrays%100)==0) fChecker->OpProgress("Raytracing",nrays,ntotal,timer,kFALSE);
+         if ((nrays%100)==0) OpProgress("Raytracing",nrays,ntotal,timer,kFALSE);
          nrays++;
          base_color = 1;
          steptot = 0;

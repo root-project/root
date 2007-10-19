@@ -73,7 +73,7 @@ public:
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    TGeoOverlap     *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
-   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE);
+   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE, Bool_t refresh=kFALSE);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
    //void             ShowPoints(Option_t *option="");

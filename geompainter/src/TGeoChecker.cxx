@@ -135,48 +135,66 @@ TGeoChecker::~TGeoChecker()
 }
 
 //______________________________________________________________________________
-void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last)
+void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last, Bool_t refresh)
 {
 // Print current operation progress.
    static Long64_t icount = 0;
+   static TString oname;
+   static Long64_t ocurrent = 0;
+   static Long64_t osize = 0;
+   static Int_t oseconds = 0;
+   static TStopwatch *owatch = 0;
    const char symbol[4] = {'=','\\','|','/'}; 
    char progress[11] = "          ";
    Int_t ichar = icount%4;
-   if (!size) return;
+   
+   if (!refresh) {
+      if (!size) return;
+      owatch = watch;
+      oname = opname;
+      ocurrent = current;
+      osize = size;
+   } else {
+      if (!osize) return;
+   }     
    icount++;
    Double_t time = 0.;
-   Double_t etl = 0.;
    Int_t hours = 0;
    Int_t minutes = 0;
    Int_t seconds = 0;
-   if (watch && !last) {
-      watch->Stop();
-      time = watch->RealTime();
-      if (current) {
-         etl = time*(size-current)/current;
-         hours = (Int_t)(etl/3600.);
-         etl -= 3600*hours;
-         minutes = (Int_t)(etl/60.);
-         etl -= 60*minutes;
-         seconds = (Int_t)etl;
-      }   
+   if (owatch && !last) {
+      owatch->Stop();
+      time = owatch->RealTime();
+      hours = (Int_t)(time/3600.);
+      time -= 3600*hours;
+      minutes = (Int_t)(time/60.);
+      time -= 60*minutes;
+      seconds = (Int_t)time;
+      if (refresh && oseconds==seconds) {
+         owatch->Continue();
+         return;
+      }
+      oseconds = seconds;   
    }   
-   Double_t percent = 100.0*current/size;
+   Double_t percent = 100.0*ocurrent/osize;
    Int_t nchar = Int_t(percent/10);
    Int_t i;
    for (i=0; i<nchar; i++)  progress[i] = '=';
    progress[nchar] = symbol[ichar];
    for (i=nchar+1; i<10; i++) progress[i] = ' ';
    progress[10] = '\0';
-   if (size<1000) fprintf(stderr, "%s [%10s] %3lld ",opname ,progress, current);
-   else if(size<10000) fprintf(stderr, "%s [%10s] %4lld ", opname, progress,current);
-   else if(size<100000) fprintf(stderr, "%s [%10s] %5lld ",opname, progress, current);
-   else fprintf(stderr, "%s [%10s] %7lld ",opname, progress, current);
-   if (etl>0.) fprintf(stderr, "[%6.2f %%]    ETL=%2dh %2dm %2ds\r", percent, hours, minutes, seconds);
+   if(size<10000) fprintf(stderr, "%s [%10s] %4lld ", oname.Data(), progress, ocurrent);
+   else if(size<100000) fprintf(stderr, "%s [%10s] %5lld ",oname.Data(), progress, ocurrent);
+   else fprintf(stderr, "%s [%10s] %7lld ",oname.Data(), progress, ocurrent);
+   if (time>0.) fprintf(stderr, "[%6.2f %%]   TIME %.2d:%.2d:%.2d\r", percent, hours, minutes, seconds);
    else fprintf(stderr, "[%6.2f %%]\r", percent);
-   if (watch) watch->Continue();
+   if (owatch) owatch->Continue();
    if (last) {
       icount = 0;
+      owatch = 0;
+      ocurrent = 0;
+      osize = 0;
+      oseconds = 0;
       fprintf(stderr, "\n");
    }   
 }   
@@ -712,7 +730,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    if (vol1->IsAssembly() || vol2->IsAssembly()) return nodeovlp;
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
-   
+   OpProgress("refresh", 0,0,NULL,kFALSE,kTRUE);   
    shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
    if (!shape1->IsComposite() && 
        fBuff1->fID != (TObject*)shape1) {

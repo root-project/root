@@ -132,6 +132,7 @@ public:
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    void               Lock(Bool_t flag = kTRUE) {fVisLock = flag;}
    virtual void       ModifiedPad(Bool_t update=kFALSE) const;
+   virtual void       OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE, Bool_t refresh=kFALSE);
    virtual void       Paint(Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=0);
    Bool_t             PaintShape(const TGeoShape & shape, Option_t * option) const;
