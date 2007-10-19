@@ -2892,6 +2892,12 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //     where MyFittingFunction is of type:
 //     extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 //
+//      Fitting a histogram of dimension N with a function of dimension N-1
+//      ===================================================================
+//     It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
+//     In this case the option "Integral" is not allowed and each cell has
+//     equal weight.
+//
 //     Associated functions
 //     ====================
 //     One or more object (typically a TF1*) can be added to the list
@@ -3028,8 +3034,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    }
 
    // Check that function has same dimension as histogram
-   if (f1->GetNdim() != GetDimension()) {
-      Error("Fit","function %s dimension, %d, does not match histogram dimension, %d",
+   if (f1->GetNdim() > GetDimension()) {
+      Error("Fit","function %s dimension, %d, is greater than histogram dimension, %d",
             f1->GetName(), f1->GetNdim(), GetDimension());
       return -4;
    }
@@ -3061,6 +3067,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
       fitOption.Range = 1;
    }
+   if (f1->GetNdim() < fDimension) fitOption.Integral = 0;
 
 //   - Check if Minuit is initialized and create special functions
 
@@ -3153,6 +3160,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    for (Int_t binz=hzfirst;binz<=hzlast;binz++) {
       for (Int_t biny=hyfirst;biny<=hylast;biny++) {
          for (Int_t binx=hxfirst;binx<=hxlast;binx++) {
+            Int_t bin = GetBin(binx,biny,binz);
+            cache[0] = GetBinContent(bin);
+            cache[1] = GetBinError(bin);
             if (fitOption.Integral) {
                if (fDimension > 2) {
                   cache[6] = fZaxis.GetBinCenter(binz);
@@ -3167,16 +3177,15 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             } else {
                if (fDimension > 2) {
                   cache[4] = fZaxis.GetBinCenter(binz);
+                  if (f1->GetNdim() < fDimension) cache[0] = cache[4];
                }
                if (fDimension > 1) {
                   cache[3] = fYaxis.GetBinCenter(biny);
+                  if (f1->GetNdim() < fDimension) cache[0] = cache[3];
                }
                cache[2] = fXaxis.GetBinCenter(binx);
             }
             if (!f1->IsInside(&cache[2])) continue;
-            Int_t bin = GetBin(binx,biny,binz);
-            cache[0] = GetBinContent(bin);
-            cache[1] = GetBinError(bin);
             if (fitOption.W1) {
                if (fitOption.W1 == 1 && cache[0] == 0) continue;
                cache[1] = 1;

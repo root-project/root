@@ -1799,7 +1799,8 @@ Int_t TLinearFitter::HistLinearFitter()
    TF1 *f1   = (TF1*)GetUserFunc();
    Int_t fitResult;
    Foption_t fitOption = GetFitOption();
-   SetDim(hfit->GetDimension());
+   //SetDim(hfit->GetDimension());
+   SetDim(f1->GetNdim());
    SetFormula(f1);
 
    Int_t hxfirst = GetXfirst();
@@ -1821,6 +1822,10 @@ Int_t TLinearFitter::HistLinearFitter()
             if (!f1->IsInside(x)) continue;
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
+            if (f1->GetNdim() < hfit->GetDimension()) {
+               if (hfit->GetDimension() > 2) cu = x[2];
+               else                          cu = x[1];
+            }
             if (fitOption.W1) {
                if (fitOption.W1==1 && cu == 0) continue;
                eu = 1;
