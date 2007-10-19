@@ -1339,7 +1339,7 @@ TSubString TString::operator()(Ssiz_t start, Ssiz_t len)
 {
    // Return sub-string of string starting at start with length len.
 
-   if (start < Length()) {
+   if (start < Length() && len > 0) {
       if (start+len > Length())
          len = Length() - start;
    } else {
@@ -1387,7 +1387,7 @@ TSubString TString::operator()(Ssiz_t start, Ssiz_t len) const
 {
    // Return sub-string of string starting at start with length len.
 
-   if (start < Length()) {
+   if (start < Length() && len > 0) {
       if (start+len > Length())
          len = Length() - start;
    } else {
