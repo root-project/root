@@ -27,7 +27,8 @@
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf(const char *name=0, const char *title=0);
+  RooAddPdf() ;
+  RooAddPdf(const char *name, const char *title=0);
   RooAddPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) ;
@@ -81,7 +82,7 @@ protected:
     virtual RooArgList containedArgs(Action) ;
 
   } ;
-  mutable RooObjCacheManager _projCacheMgr ;  
+  mutable RooObjCacheManager _projCacheMgr ;  //
   CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 

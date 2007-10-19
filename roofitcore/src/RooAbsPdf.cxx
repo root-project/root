@@ -147,6 +147,10 @@ Int_t RooAbsPdf::_verboseEval = 0;
 Bool_t RooAbsPdf::_globalSelectComp = kFALSE ;
 Bool_t RooAbsPdf::_evalError = kFALSE ;
 
+RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0)
+{
+}
+
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
   RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE)

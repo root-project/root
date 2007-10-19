@@ -183,6 +183,8 @@ public:
   // constant term optimization
   virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
 
+  void graphVizTree(const char* fileName) ;
+  void graphVizTree(ostream& os) ;
 
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
   void printCompactTree(ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
@@ -214,6 +216,8 @@ public:
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 	
   protected:
+
+  void graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >&) ;
 
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;

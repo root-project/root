@@ -52,7 +52,7 @@ protected:
   Bool_t _clearOnRedirect ;
 
   Bool_t _optCacheModeSeen  ;
-  RooArgSet* _optCacheObservables ;
+  RooArgSet* _optCacheObservables ; //!
 
   ClassDef(RooObjCacheManager,1) // Cache Manager class generic objects
 } ;

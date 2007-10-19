@@ -21,6 +21,7 @@
 class RooProjectedPdf : public RooAbsPdf {
 public:
 
+  RooProjectedPdf() ;
   RooProjectedPdf(const char *name, const char *title,  RooAbsReal& _intpdf, const RooArgSet& intObs);
   RooProjectedPdf(const RooProjectedPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooProjectedPdf(*this,newname); }
@@ -58,7 +59,7 @@ protected:
     virtual RooArgList containedArgs(Action) ; 
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; // The cache manager
 
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
   

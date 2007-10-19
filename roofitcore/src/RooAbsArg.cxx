@@ -1582,3 +1582,59 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
   
   return retVal ;
 }
+
+
+void RooAbsArg::graphVizTree(const char* fileName) 
+{
+  ofstream ofs(fileName) ;
+  if (!ofs) {
+    coutE("InputArguments") << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << endl ;
+    return ;
+  }
+  graphVizTree(ofs) ;
+}
+
+void RooAbsArg::graphVizTree(ostream& os) 
+{
+  if (!os) {
+    coutE("InputArguments") << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
+  }
+  
+  // Write header
+  os << "digraph " << GetName() << "{" << endl ;
+  
+  // First list all the tree nodes 
+  RooArgSet nodeSet ;
+  treeNodeServerList(&nodeSet) ;
+  TIterator* iter = nodeSet.createIterator() ;
+  RooAbsArg* node ;
+  while((node=(RooAbsArg*)iter->Next())) {
+    os << "\"" << node->GetName() << "\" [ color=" << (node->isFundamental()?"blue":"red") << ", label=\"" << node->IsA()->GetName() << "\\n" << node->GetName() << "\"];" << endl ;    
+  }  
+  delete iter ;
+
+  // Get set of all server links
+  set<pair<RooAbsArg*,RooAbsArg*> > links ;
+  graphVizAddConnections(links) ;
+
+  // And write them out
+  set<pair<RooAbsArg*,RooAbsArg*> >::iterator liter = links.begin() ;
+  for( ; liter != links.end() ; ++liter ) {
+    os << "\"" << liter->first->GetName() << "\" -> \"" << liter->second->GetName() << "\";" << endl ;
+  }
+  
+  // Write trailer
+  os << "}" << endl ;
+
+}
+
+void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSet) 
+{
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* server ;
+  while((server=(RooAbsArg*)sIter->Next())) {
+    linkSet.insert(make_pair(this,server)) ;
+    server->graphVizAddConnections(linkSet) ;
+  }
+  delete sIter ;
+}

@@ -21,6 +21,12 @@
 #include "RooAbsReal.h" 
 
  ClassImp(RooProjectedPdf) 
+   ;
+
+RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
+{
+}
+
 
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title), 

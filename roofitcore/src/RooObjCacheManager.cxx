@@ -29,6 +29,7 @@
 #include "RooFit.h"
 #include <vector>
 #include "RooObjCacheManager.h"
+#include "RooMsgService.h"
 
 ClassImp(RooObjCacheManager)
    ;
@@ -92,7 +93,7 @@ void RooObjCacheManager::operModeHook()
 
 void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
 {
-  //cout << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
+  oocxcoutD(_owner,"Caching") << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
 
   _optCacheModeSeen = kTRUE ;
   RooArgSet* oldObs = 0 ;
@@ -108,7 +109,6 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 
   for (Int_t i=0 ; i<_size ; i++) {
     if (_object[i]) {
-      //cout << "passing call to cache element " << i << endl ;
       _object[i]->optimizeCacheMode(obs,optNodes,processedNodes) ;
     }
   }

@@ -206,7 +206,6 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
   if (pc.hasProcessed("Range")) {
     xmin = pc.getDouble("min") ;
     xmax = pc.getDouble("max") ;
-    cout << "Found Range" << xmin << " " << xmax << endl ;
     if (xmin==xmax) {
       xmin = getMin() ;
       xmax = getMax() ;

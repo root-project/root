@@ -26,7 +26,7 @@ class TObject ;
 class RooSuperCategory : public RooAbsCategoryLValue {
 public:
   // Constructors etc.
-  inline RooSuperCategory() : _catIter(0) { }
+  inline RooSuperCategory() { _catIter = _catSet.createIterator() ; }
   RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooSuperCategory(const RooSuperCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooSuperCategory(*this,newname); }
@@ -55,7 +55,7 @@ protected:
   TString currentLabel() const ;
 
   RooSetProxy _catSet ; // Set of input category
-  TIterator* _catIter ; // Iterator over set of input categories
+  TIterator* _catIter ; //! Iterator over set of input categories
   
   virtual RooCatType evaluate() const ; 
 

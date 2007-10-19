@@ -269,7 +269,6 @@ void RooFFTConvPdf::fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& sliceP
     }
 
     iter->Next() ;
-    //cout << "slice[" << i << " ] = " << aux->fftc2r->GetPointReal(j) << endl ;
     cacheHist.set(aux->fftc2r->GetPointReal(j)) ;    
   }
   
@@ -354,6 +353,7 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
     }
 
   }
+
 
   // Cleanup 
   delete cloneSet ;

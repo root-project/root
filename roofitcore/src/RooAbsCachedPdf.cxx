@@ -126,6 +126,10 @@ const RooAbsCachedPdf::CacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nse
   cache->_params = new RooFormulaVar(Form("%s_CACHEPARAMS",cache->_pdf->GetName()),"1",*params) ;
   cache->_params->getVal() ; // clear dirty flag as cache is up-to-date upon creation
 
+  // Introduce formal dependency of RooHistPdf on parameters so that const optimization code
+  // makes the correct decisions
+  cache->_pdf->addServerList(*params) ;
+
   delete params ;
   delete nset2 ;
 
@@ -181,6 +185,7 @@ void RooAbsCachedPdf::setInterpolationOrder(Int_t order)
 RooArgList RooAbsCachedPdf::CacheElem::containedArgs(Action) 
 {
   RooArgList ret(*_pdf) ;
+
   ret.add(*_params) ;
   return ret ;
 }

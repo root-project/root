@@ -101,7 +101,7 @@ protected:
     RooArgList _coefVarList ;
     RooArgList _normList ;
   } ;
-  mutable RooObjCacheManager _coefNormMgr ; //! Coefficient normalization manager
+  mutable RooObjCacheManager _coefNormMgr ; // Coefficient normalization manager
 
   mutable RooAICRegistry _codeReg ;   //!
 

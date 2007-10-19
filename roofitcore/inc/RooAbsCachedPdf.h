@@ -61,7 +61,7 @@ protected:
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const = 0 ;
   virtual void fillCacheObject(CacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; // The cache manager
 
   
   Int_t _ipOrder ; // Interpolation order for cache histograms 

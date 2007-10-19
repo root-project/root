@@ -56,6 +56,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 				 RooAbsCategoryLValue& indexCat) : 
   RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,indexCat),
   _numPdf(0),
@@ -76,6 +77,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 				 const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) :
   RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,indexCat),
   _numPdf(0),
@@ -116,6 +118,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
   _plotCoefNormSet("plotCoefNormSet",this,other._plotCoefNormSet),
+  _plotCoefNormRange(other._plotCoefNormRange),
   _partIntMgr(other._partIntMgr,this),
   _indexCat("indexCat",this,other._indexCat), 
   _numPdf(other._numPdf),
@@ -421,7 +424,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       projIndex = kTRUE ;
     }
   } 
-  
+
   // Calculate relative weight fractions of components
   Roo1DTable* wTable = projData->table(_indexCat.arg()) ;
 
@@ -436,9 +439,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     const RooAbsData* projDataTmp(projData) ;
     if (projData) {
-      // Make list of categories columns to exclude from projection data
+      // Make list of categories columns to exclude from projection data      
       RooArgSet* indexCatComps = _indexCat.arg().getObservables(frame->getNormVars());
-      
+
       // Make cut string to exclude rows from projection data
       TString cutString ;
       TIterator* compIter =  indexCatComps->createIterator() ;    
@@ -467,7 +470,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 //     RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,drawOptions,
 // 					   scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),
 // 					   stype,projDataTmp,projSet) ;
-    
+
     // Override normalization and projection dataset
     RooLinkedList cmdList2(cmdList) ;
     RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;

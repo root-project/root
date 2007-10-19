@@ -34,7 +34,8 @@ class RooCacheManager : public RooAbsCache {
 
 public:
 
-  RooCacheManager(RooAbsArg* owner=0, Int_t maxSize=10) ;
+  RooCacheManager() ;
+  RooCacheManager(RooAbsArg* owner, Int_t maxSize=10) ;
   RooCacheManager(const RooCacheManager& other, RooAbsArg* owner=0) ;
   virtual ~RooCacheManager() ;
   
@@ -83,8 +84,17 @@ template <> void RooCacheManager<std::vector<Double_t> >::ShowMembers(TMemberIns
 
 
 template<class T>
+RooCacheManager<T>::RooCacheManager() : RooAbsCache(0)
+{
+  _nsetCache = 0 ;
+  _object = 0 ;
+
+}
+
+template<class T>
 RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCache(owner)
 {
+
   _maxSize = maxSize ;
   _size = 0 ;
 
@@ -96,6 +106,7 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
   for (i=0 ; i<_maxSize ; i++) {
     _object[i]=0 ;
   }
+
 }
 
 
@@ -126,6 +137,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
 template<class T>
 RooCacheManager<T>::~RooCacheManager()
 {
+
   delete[] _nsetCache ;  
   Int_t i ;
   for (i=0 ; i<_size ; i++) {

@@ -23,6 +23,10 @@
 
 class RooLinkedListIter : public TIterator {
 public:
+
+  RooLinkedListIter() {} ;
+
+
   RooLinkedListIter(const RooLinkedList* list, Bool_t forward) : 
     TIterator(), _forward(forward), _list(list)
   {
@@ -72,7 +76,7 @@ protected:
   const RooLinkedListElem* _ptr ;  //! Current link element
   const RooLinkedList* _list ;     //! Collection iterated over
 
-  ClassDef(RooLinkedListIter,0) // Iterator for RooLinkedList container class
+  ClassDef(RooLinkedListIter,1) // Iterator for RooLinkedList container class
 } ;
 
 
