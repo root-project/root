@@ -31,7 +31,7 @@
 //  [-10,100,16]
 //  [0,0,8]
 // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-// if (xmin==0 and xmax==0 and nbits <=16) the double word will be converted
+// if (xmin==0 and xmax==0 and nbits <=14) the double word will be converted
 // to a float and its mantissa truncated to nbits significative bits.
 //
 // IMPORTANT NOTE
@@ -53,9 +53,10 @@
 #include "TCanvas.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TMath.h"
 #include "TRandom3.h"
 #include "TGraph.h"
-#include "TText.h"
+#include "TLegend.h"
 #include "TFrame.h"
 #include "TPaveLabel.h"
    
@@ -63,22 +64,29 @@ class DemoDouble32  {
 private:
    Double_t    fD64;     //reference member with full double precision
    Double32_t  fF32;     //saved as a 32 bit Float_t
-   Double32_t  fI32;     //[0,pi]    saved as a 32 bit unsigned int
-   Double32_t  fI30;     //[0,pi,30] saved as a 30 bit unsigned int
-   Double32_t  fI28;     //[0,pi,28] saved as a 28 bit unsigned int
-   Double32_t  fI26;     //[0,pi,26] saved as a 26 bit unsigned int
-   Double32_t  fI24;     //[0,pi,24] saved as a 24 bit unsigned int
-   Double32_t  fI22;     //[0,pi,22] saved as a 22 bit unsigned int
-   Double32_t  fI20;     //[0,pi,20] saved as a 20 bit unsigned int
-   Double32_t  fI18;     //[0,pi,18] saved as a 18 bit unsigned int
-   Double32_t  fI16;     //[0,pi,16] saved as a 16 bit unsigned int
-   Double32_t  fI14;     //[0,pi,14] saved as a 14 bit unsigned int
-   Double32_t  fI12;     //[0,pi,12] saved as a 12 bit unsigned int
-   Double32_t  fI10;     //[0,pi,10] saved as a 10 bit unsigned int
-   Double32_t  fI8;      //[0,pi, 8] saved as a  8 bit unsigned int
-   Double32_t  fI6;      //[0,pi, 6] saved as a  6 bit unsigned int
-   Double32_t  fI4;      //[0,pi, 4] saved as a  4 bit unsigned int
-   Double32_t  fI2;      //[0,pi, 2] saved as a  2 bit unsigned int
+   Double32_t  fI32;     //[-pi,pi]    saved as a 32 bit unsigned int
+   Double32_t  fI30;     //[-pi,pi,30] saved as a 30 bit unsigned int
+   Double32_t  fI28;     //[-pi,pi,28] saved as a 28 bit unsigned int
+   Double32_t  fI26;     //[-pi,pi,26] saved as a 26 bit unsigned int
+   Double32_t  fI24;     //[-pi,pi,24] saved as a 24 bit unsigned int
+   Double32_t  fI22;     //[-pi,pi,22] saved as a 22 bit unsigned int
+   Double32_t  fI20;     //[-pi,pi,20] saved as a 20 bit unsigned int
+   Double32_t  fI18;     //[-pi,pi,18] saved as a 18 bit unsigned int
+   Double32_t  fI16;     //[-pi,pi,16] saved as a 16 bit unsigned int
+   Double32_t  fI14;     //[-pi,pi,14] saved as a 14 bit unsigned int
+   Double32_t  fI12;     //[-pi,pi,12] saved as a 12 bit unsigned int
+   Double32_t  fI10;     //[-pi,pi,10] saved as a 10 bit unsigned int
+   Double32_t  fI8;      //[-pi,pi, 8] saved as a  8 bit unsigned int
+   Double32_t  fI6;      //[-pi,pi, 6] saved as a  6 bit unsigned int
+   Double32_t  fI4;      //[-pi,pi, 4] saved as a  4 bit unsigned int
+   Double32_t  fI2;      //[-pi,pi, 2] saved as a  2 bit unsigned int
+   Double32_t  fR14;     //[0,  0, 14] saved as a 32 bit float with a 14 bits mantissa
+   Double32_t  fR12;     //[0,  0, 12] saved as a 32 bit float with a 12 bits mantissa
+   Double32_t  fR10;     //[0,  0, 10] saved as a 32 bit float with a 10 bits mantissa
+   Double32_t  fR8;      //[0,  0,  8] saved as a 32 bit float with a  8 bits mantissa
+   Double32_t  fR6;      //[0,  0,  6] saved as a 32 bit float with a  6 bits mantissa
+   Double32_t  fR4;      //[0,  0,  4] saved as a 32 bit float with a  4 bits mantissa
+   Double32_t  fR2;      //[0,  0,  2] saved as a 32 bit float with a  2 bits mantissa
        
 public:
    DemoDouble32() {;}
@@ -88,6 +96,7 @@ public:
 void DemoDouble32::Set(Double_t ref) {
    fD64 = fF32 = fI32 = fI30 = fI28 = fI26 = fI24 = fI22 = fI20 = ref;
    fI18 = fI16 = fI14 = fI12 = fI10 = fI8  = fI6  = fI4  = fI2  = ref;
+   fR14 = fR12 = fR10 = fR8  = fR6  = fR4  = fR2  = ref;
 }
       
 void double32() {
@@ -95,15 +104,16 @@ void double32() {
    
    DemoDouble32 *d = new DemoDouble32();
    
-   //create a Tree with 10000 objects DemoDouble32
+   //create a Tree with 40000 objects DemoDouble32
    TFile::Open("DemoDouble32.root","recreate");
    TTree *T = new TTree("T","DemoDouble32");
-   TBranch *bd = T->Branch("d","DemoDouble32",&d);
+   TBranch *bd = T->Branch("d","DemoDouble32",&d,4000);
    TRandom3 r;
-   Double_t pi = TMath::Pi();
-   Int_t i, n = 10000;
+   Double_t xmax = TMath::Pi();
+   Double_t xmin = -xmax;
+   Int_t i, n = 40000;
    for (i=0;i<n;i++) {
-      d->Set(r.Uniform(0,pi));
+      d->Set(r.Uniform(xmin,xmax));
       T->Fill();
    }
    T->Write();
@@ -112,9 +122,10 @@ void double32() {
    TObjArray *branches = bd->GetListOfBranches();
    Int_t nb = branches->GetEntries();
    TBranch *br = (TBranch*)branches->At(0);
-   Double_t zip64 = br->GetZipBytes();
+   Long64_t zip64 = br->GetZipBytes();
    Double_t cx = 1;
-   Double_t di = 15;
+   Double_t drange = 15;
+   Double_t dval = 15;
    TCanvas *c1 = new TCanvas("c1","c1",800,600);
    c1->SetGrid();
    c1->SetHighLightColor(0);
@@ -127,20 +138,15 @@ void double32() {
    h->Draw();
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(12);
-   TGraph *gcx = new TGraph(nb);
-   TGraph *gdi = new TGraph(nb);
+   TGraph *gcx = new TGraph(nb); gcx->SetName("gcx");
    gcx->SetMarkerStyle(21);
    gcx->SetMarkerColor(kBlue);
-   gdi->SetMarkerStyle(20);
-   gdi->SetMarkerColor(kRed);
-   TText *tdi = new TText(2.5,10.5,"Number of significative digits");
-   tdi->SetTextColor(kRed);
-   tdi->SetTextSize(0.05);
-   tdi->Draw();
-   TText *tcx = new TText(1.5,2.6,"Compression factor");
-   tcx->SetTextColor(kBlue);
-   tcx->SetTextSize(0.05);
-   tcx->Draw();
+   TGraph *gdrange = new TGraph(nb); gdrange->SetName("gdrange");
+   gdrange->SetMarkerStyle(20);
+   gdrange->SetMarkerColor(kRed);
+   TGraph *gdval = new TGraph(nb); gdval->SetName("gdval");
+   gdval->SetMarkerStyle(20);
+   gdval->SetMarkerColor(kBlack);
    TPaveLabel *title = new TPaveLabel(.15,.92,.85,.97,"Double32_t compression and precision","brNDC");   
    title->Draw();
    
@@ -148,17 +154,33 @@ void double32() {
    for (i=0;i<nb;i++) {
       br = (TBranch*)branches->At(i);
       h->GetXaxis()->SetBinLabel(i+1,br->GetName());
-      cx = zip64/br->GetZipBytes();
+      cx = Double_t(zip64)/Double_t(br->GetZipBytes());
       gcx->SetPoint(i,i+0.5,cx);
       if (i > 0) {
-         T->Draw(Form("fD64-%s",br->GetName()),"","goff");
+         T->Draw(Form("(fD64-%s)/(%g)",br->GetName(),xmax-xmin),"","goff");
          Double_t rms = TMath::RMS(n,T->GetV1());
-         di = -(1)*TMath::Log10(2*rms/pi);
+         drange = TMath::Max(0.,-TMath::Log10(rms));
       }
-      gdi->SetPoint(i,i+0.5,di);
+      gdrange->SetPoint(i,i+0.5,drange);
+      if (i > 0) {
+         T->Draw(Form("(fD64-%s)/(fD64+0.01)",br->GetName()),"","goff");
+         Double_t rms = TMath::RMS(n,T->GetV1());
+         dval = TMath::Max(0.,-TMath::Log10(rms));
+      }
+      gdval->SetPoint(i,i+0.5,dval);
    }
    gcx->Draw("lp");
-   gdi->Draw("lp");
+   gdrange->Draw("lp");
+   gdval->Draw("lp");
+   TLegend *legend = new TLegend(0.2,0.7,0.7,0.85);
+   legend->SetTextFont(72);
+   legend->SetTextSize(0.04);
+   legend->AddEntry(gcx,"Compression factor","lp");
+   legend->AddEntry(gdrange,"Log of precision wrt range","lp");
+   legend->AddEntry(gdval,"Log of precision wrt value","lp");
+   legend->Draw();
+   TPaveLabel *rang = new TPaveLabel(.75,.75,.88,.80,"[-pi,pi]","brNDC");   
+   rang->Draw();
 }
    
    
