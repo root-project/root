@@ -2914,12 +2914,7 @@ void TPad::PaintModified()
    cd();
    if (IsModified() || IsTransparent()) {
       if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-         Int_t px1 = XtoPixel(fX1);
-         Int_t px2 = XtoPixel(fX2);
-         Int_t py1 = YtoPixel(fY1);
-         Int_t py2 = YtoPixel(fY2);
-         gVirtualX->SetFillColor(10);
-         gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
+         if (!gPad->IsBatch()) gVirtualX->ClearWindow();
       }
       PaintBorder(GetFillColor(), kTRUE);
    }
