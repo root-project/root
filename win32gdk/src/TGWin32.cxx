@@ -1564,7 +1564,7 @@ void TGWin32::ClearWindow()
       GdiFlush();
    } else {
       SetColor(gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gCws->drawing, gGCpxmp, 0,
+      gdk_win32_draw_rectangle(gCws->drawing, gGCpxmp, 1,
                          0, 0, gCws->width, gCws->height);
       SetColor(gGCpxmp, 1);
    }
