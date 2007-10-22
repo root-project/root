@@ -35,7 +35,7 @@ The TMultiGraph owns the objects in the list.
 Drawing options are the same as for TGraph.
 <p>
 Example:
-<pre>	
+<pre>
      TGraph *gr1 = new TGraph(...
      TGraphErrors *gr2 = new TGraphErrors(...
      TMultiGraph *mg = new TMultiGraph();
@@ -77,6 +77,7 @@ TMultiGraph::TMultiGraph(const char *name, const char *title)
    fMinimum   = -1111;
 }
 
+
 //______________________________________________________________________________
 TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   TNamed (mg),
@@ -85,9 +86,10 @@ TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   fHistogram(mg.fHistogram),
   fMaximum(mg.fMaximum),
   fMinimum(mg.fMinimum)
-{ 
+{
    //copy constructor
 }
+
 
 //______________________________________________________________________________
 TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
@@ -100,9 +102,10 @@ TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
       fHistogram=mg.fHistogram;
       fMaximum=mg.fMaximum;
       fMinimum=mg.fMinimum;
-   } 
+   }
    return *this;
 }
+
 
 //______________________________________________________________________________
 TMultiGraph::~TMultiGraph()
@@ -159,7 +162,7 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
    if (!graphlist) return;
 
    if (!fGraphs) fGraphs = new TList();
-   
+
    TGraph *gr;
    gr = (TGraph*)graphlist->First();
    fGraphs->Add(gr,chopt);
@@ -274,7 +277,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    //                    (saves time)
    //             = "F" If fitting a polN, switch to minuit fitter
    //             = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using 
+   //                     coefficients (robust(resistant) regression), using
    //                     the default fraction of good points
    //               "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
@@ -457,7 +460,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
    if (opt.Contains("F")) fitOption.Minuit  = 1;
-   if (opt.Contains("H")) fitOption.Robust  = 1; 
+   if (opt.Contains("H")) fitOption.Robust  = 1;
 
    if (rxmax > rxmin) {
       xmin = rxmin;
@@ -1047,7 +1050,12 @@ void TMultiGraph::Paint(Option_t *option)
          uxmax   = gPad->PadtoX(rwxmax);
       } else {
          while ((g = (TGraph*) next())) {
-            g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+            Double_t rx1,ry1,rx2,ry2;
+            g->ComputeRange(rx1, ry1, rx2, ry2);
+            if (rx1 < rwxmin) rwxmin = rx1;
+            if (ry1 < rwymin) rwymin = ry1;
+            if (rx2 > rwxmax) rwxmax = rx2;
+            if (ry2 > rwymax) rwymax = ry2;
             if (g->GetN() > npt) npt = g->GetN();
          }
          if (rwxmin == rwxmax) rwxmax += 1.;
@@ -1202,9 +1210,9 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
-   
-   if (xaxis) xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");      
-   if (yaxis) yaxis->SaveAttributes(out, "multigraph","->GetYaxis()");      
+
+   if (xaxis) xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");
+   if (yaxis) yaxis->SaveAttributes(out, "multigraph","->GetYaxis()");
 }
 
 
