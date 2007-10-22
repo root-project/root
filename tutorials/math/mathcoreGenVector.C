@@ -806,7 +806,9 @@ int testRotation() {
 
   // test costruct inverse from translation first
 
-  Transform3D tinv2( -d, r2.Inverse() );
+  //Transform3D tinv2( -d, r2.Inverse() );
+  //Transform3D tinv2 =  r2.Inverse() * Translation3D(-d) ;
+  Transform3D tinv2 ( r2.Inverse(), r2.Inverse() *( -d) ) ;
   p = tinv2 * t * v; 
 
   ok+= compare(p.X(), v.X(), "x",10); 
@@ -817,7 +819,7 @@ int testRotation() {
   Transform3D ta( EulerAngles(1.,2.,3.) );
   Transform3D tb( XYZVector(1,2,3) );
   Transform3D tc(  Rotation3D(EulerAngles(1.,2.,3.)) ,  XYZVector(1,2,3) );
-  Transform3D td( XYZVector(1,2,3), Rotation3D( EulerAngles(1.,2.,3.) ) );
+  Transform3D td(  ta.Rotation(), ta.Rotation()  * XYZVector(1,2,3) ) ;
   
   ok+= compare( tc == tb*ta, static_cast<double>(true), "== Rot*Tra");
   ok+= compare( td == ta*tb, static_cast<double>(true), "== Rot*Tra");
