@@ -28,6 +28,7 @@
 #include "TGTextEntry.h"
 #include "TGButton.h"
 #include "TObjString.h"
+#include "KeySymbols.h"
 
 extern TGTextEntry *gBlinkingEntry;
 
@@ -54,6 +55,8 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
    SetWindowName(title);
    SetIconName(title);
    SetEditDisabled(kEditDisable);
+   
+   AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
@@ -247,11 +250,12 @@ void TRootDialog::TabPressed()
    // Handle Tab keyboard navigation in this dialog.
 
    Bool_t setNext = kFALSE;
+   TGTextEntry *entry;
    TIter next(fWidgets);
 
    while ( TObject* obj = next() ) {
       if ( obj->IsA() == TGTextEntry::Class() ) {
-         TGTextEntry *entry = (TGTextEntry*) obj;
+         entry = (TGTextEntry*) obj;
          if ( entry == gBlinkingEntry ) {
             setNext = kTRUE;
          } else if ( setNext ) {
@@ -265,10 +269,36 @@ void TRootDialog::TabPressed()
    next.Reset();
    while ( TObject* obj = next() ) {
       if ( obj->IsA() == TGTextEntry::Class() ) {
-         TGTextEntry *entry = (TGTextEntry*) obj;
+         entry = (TGTextEntry*) obj;
          entry->SetFocus();
          entry->End();
          return;
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TRootDialog::HandleKey(Event_t* event)
+{
+   // The key press event handler in this dialog.
+   
+   Int_t  n;
+   char   tmp[10];
+   UInt_t keysym;
+   gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   n = strlen(tmp);
+   if ((EKeySym)keysym  == kKey_Tab) {
+
+      TGTextEntry *entry;
+      TIter next(fWidgets);
+
+      while ( TObject* obj = next() ) {
+         if ( obj->IsA() == TGTextEntry::Class() ) {
+            entry = (TGTextEntry*) obj;
+            entry->TabPressed();
+            return kTRUE;
+         }
+      }
+   }
+   return kTRUE;
 }

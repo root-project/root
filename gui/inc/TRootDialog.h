@@ -52,8 +52,9 @@ public:
 
    virtual const char *GetParameters();
 
-   virtual void CloseWindow();
-   virtual void Popup();
+   virtual void   CloseWindow();
+   virtual void   Popup();
+   virtual Bool_t HandleKey(Event_t *event);
 
    void TabPressed();
 
