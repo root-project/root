@@ -291,17 +291,12 @@ Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
    //    TString tok;
    //    Ssiz_t from = 0;
    //    while (myl.Tokenize(tok, from, "[ |]")) {
-   //       if (!tok.IsNull()) {
-   //          // Analyse tok
-   //          ...
-   //       }
+   //       // Analyse tok
+   //       ...
    //    }
    //
    // more convenient of the other Tokenize method when saving the tokens is not
    // needed.
-   //
-   // Warning: it may return empty tokens (e.g. in cases like "::"), so
-   // the token length must always be checked.
 
    Bool_t found = kFALSE;
 
@@ -310,34 +305,39 @@ Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
 
    // Make sure inputs make sense
    Int_t len = Length();
-   if (len <= 0 || from > (len - 1))
+   if (len <= 0 || from > (len - 1) || from < 0)
       return found;
-   from = (from < 0) ? 0 : from;
 
    TRegexp rg(delim);
 
-   // Find delimiter
-   Int_t ext = 0;
-   Int_t pos = Index(rg, &ext, from);
+   while (tok.IsNull()) {
+      // Find delimiter
+      Int_t ext = 0;
+      Int_t pos = Index(rg, &ext, from);
 
-   // Assign to token
-   if (pos == kNPOS || pos > from) {
-      Ssiz_t last = (pos != kNPOS) ? (pos - 1) : len;
-      tok = (*this)(from, last-from+1);
-   }
-   found = kTRUE;
+      // Assign to token
+      if (pos == kNPOS || pos > from) {
+         Ssiz_t last = (pos != kNPOS) ? (pos - 1) : len;
+         tok = (*this)(from, last-from+1);
+      }
+      found = kTRUE;
 
-   // Update start-of-search index
-   from = pos + ext;
-   if (pos == kNPOS) {
-      from = pos;
-      if (tok.Length() > 0)
-         // So we can analize the last one
-         from = len;
-      else
-         // Empty, last token
-         found = kFALSE;
+      // Update start-of-search index
+      from = pos + ext;
+      if (pos == kNPOS) {
+         from = pos;
+         if (tok.Length() > 0) {
+            // So we can analize the last one
+            from = len;
+         } else {
+            // Empty, last token
+            found = kFALSE;
+            break;
+         }
+      }
    }
+   // Make sure that 'from' has a meaningful value
+   from = (from < len) ? from : len;
 
    // Done
    return found;
