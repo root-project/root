@@ -5,8 +5,8 @@
 // an embedded canvas that shows the info of the selected object exactly
 // as the status bar of any canvas window
 // To run it do either:
-// .x embstat.C
-// .x embstat.C++
+// .x statusBar.C
+// .x statusBar.C++
 
 #include <TApplication.h>
 #include <TGClient.h>
@@ -19,6 +19,7 @@
 #include <TF1.h>
 #include <TRandom.h>
 #include <TGraph.h>
+#include <TAxis.h>
 
 
 class MyMainFrame : public TGMainFrame {
