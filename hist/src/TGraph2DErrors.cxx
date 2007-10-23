@@ -135,6 +135,19 @@ Double_t TGraph2DErrors::GetErrorZ(Int_t i) const
    return -1;
 }
 
+//______________________________________________________________________________
+void TGraph2DErrors::Set(Int_t n)
+{
+   // Set number of points in the 2D graph.
+   // Existing coordinates are preserved.
+   // New coordinates above fNpoints are preset to 0.
+
+   if (n < 0) n = 0;
+   if (n == fNpoints) return;
+   if (n >  fNpoints) SetPointError(n,0,0,0);          
+   fNpoints = n;
+}
+
 
 //______________________________________________________________________________
 void TGraph2DErrors::SetPoint(Int_t i, Double_t x, Double_t y, Double_t z)

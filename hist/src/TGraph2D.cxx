@@ -1387,6 +1387,20 @@ void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
 
 //______________________________________________________________________________
+void TGraph2D::Set(Int_t n)
+{
+   // Set number of points in the 2D graph.
+   // Existing coordinates are preserved.
+   // New coordinates above fNpoints are preset to 0.
+
+   if (n < 0) n = 0;
+   if (n == fNpoints) return;
+   if (n >  fNpoints) SetPoint(n,0,0,0);
+   fNpoints = n;
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::SetDirectory(TDirectory *dir)
 {
    // By default when an 2D graph is created, it is added to the list

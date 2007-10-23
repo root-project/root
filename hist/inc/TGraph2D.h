@@ -126,6 +126,7 @@ public:
    TH1             *Project(Option_t *option="x") const; // *MENU*
    Int_t            RemovePoint(Int_t ipoint); // *MENU*
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     Set(Int_t n);
    virtual void     SetDirectory(TDirectory *dir);
    virtual void     SetHistogram(TH2 *h);
    void             SetMargin(Double_t m=0.1); // *MENU*
