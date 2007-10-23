@@ -4,8 +4,8 @@
 
 PLATFORM      = linux
 
-DEBUGFLAGS    = -g
-OPTFLAGS      = -O
+DEBUGFLAGS    = -g -ftz
+OPTFLAGS      = -O -ftz
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         = -O0

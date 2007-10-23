@@ -295,7 +295,7 @@ ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
 ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
 CXX           = icc
-CXXFLAGS      = $(OPT) -fPIC -wd1476
+CXXFLAGS      = $(OPT) -fPIC -wd1476 -ftz
 LD            = icpc
 LDFLAGS       = $(OPT)
 SOFLAGS       = -shared
