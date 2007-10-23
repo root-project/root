@@ -326,10 +326,7 @@ Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
       from = pos + ext;
       if (pos == kNPOS) {
          from = pos;
-         if (tok.Length() > 0) {
-            // So we can analize the last one
-            from = len;
-         } else {
+         if (tok.IsNull()) {
             // Empty, last token
             found = kFALSE;
             break;
