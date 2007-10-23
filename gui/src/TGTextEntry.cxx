@@ -170,6 +170,12 @@ All other keys with valid ASCII codes insert themselves into the line.
 //    Use for changing focus.
 //
 //______________________________________________________________________________
+// TGTextEntry::ShiftTabPressed()
+//
+//    This signal is emitted when the <SHIFT> and <TAB> keys are pressed.
+//    Use for changing focus in reverse direction.
+//
+//______________________________________________________________________________
 // TGTextEntry::TextChanged(const char *text)
 //
 //    This signal is emitted every time the text has changed.
