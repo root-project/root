@@ -26,6 +26,9 @@
 #include "TBox.h"
 #endif
 
+#ifndef ROOT_TColor
+#include "TColor.h"
+#endif
 
 class TWbox : public TBox {
 
@@ -47,8 +50,8 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    Short_t       GetBorderMode() const { return fBorderMode;}
    Short_t       GetBorderSize() const { return fBorderSize;}
-   Int_t         GetDarkColor() const  {return GetFillColor() + 100;}
-   Int_t         GetLightColor() const {return GetFillColor() + 150;}
+   Int_t         GetDarkColor() const  {return TColor::GetColorDark(GetFillColor());}
+   Int_t         GetLightColor() const {return TColor::GetColorBright(GetFillColor());}
    virtual void  Paint(Option_t *option="");
    virtual void  PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                             Color_t color, Short_t bordersize, Short_t bordermode,
