@@ -21,9 +21,15 @@
 // XrdProtocol implementation to coordinate 'proofserv' applications.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#  include "XrdOuc/XrdOucError.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#  include "XrdSys/XrdSysError.hh"
+#endif
 
-#include "XrdOuc/XrdOucError.hh"
-#include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -55,7 +61,7 @@ enum EStaticSelOpt { kSSORoundRobin, kSSORandom };
 class XrdBuffer;
 class XrdClientMessage;
 class XrdLink;
-class XrdOucError;
+class XrdSysError;
 class XrdOucTrace;
 class XrdProofClient;
 class XrdProofdPriority;
@@ -150,19 +156,19 @@ public:
    //
    XPClientRequest               fRequest; // handle client requests
    XrdProofdResponse             fResponse; // Response to incomign request
-   XrdOucRecMutex                fMutex; // Local mutex
+   XrdSysRecMutex                fMutex; // Local mutex
 
    //
    // Static area: general protocol managing section
    //
-   static XrdOucRecMutex         fgXPDMutex;  // Mutex for static area
+   static XrdSysRecMutex         fgXPDMutex;  // Mutex for static area
    static int                    fgCount;
    static XrdObjectQ<XrdProofdProtocol> fgProtStack;
    static XrdBuffManager        *fgBPool;     // Buffer manager
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
    static XrdSecService         *fgCIA;       // Authentication Server
    static XrdScheduler          *fgSched;     // System scheduler
-   static XrdOucError            fgEDest;     // Error message handler
+   static XrdSysError            fgEDest;     // Error message handler
 
    //
    // Static area: protocol configuration section
@@ -279,7 +285,7 @@ class XrdProofClient {
    std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
 
-   XrdOucMutex                      fMutex; // Local mutex
+   XrdSysMutex                      fMutex; // Local mutex
 
  private:
    char                            *fClientID;   // String identifying this client

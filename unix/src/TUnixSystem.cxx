@@ -913,7 +913,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       break;
    case kSigChild:
       CheckChilds();
-      return;
+      break;
    case kSigBus:
    case kSigSegmentationViolation:
    case kSigIllegalInstruction:

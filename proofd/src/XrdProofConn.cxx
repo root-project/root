@@ -22,6 +22,13 @@
 #include "XrdProofConn.h"
 #include "XProofProtocol.h"
 
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#endif
+
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientDebug.hh"
@@ -31,7 +38,6 @@
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
-#include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
@@ -346,8 +352,8 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    // If (*answData != 0) the program assumes that the caller has allocated
    // enough bytes to contain the reply.
    if (!fMutex)
-      fMutex = new XrdOucRecMutex();
-   XrdOucMutexHelper l(*fMutex);
+      fMutex = new XrdSysRecMutex();
+   XrdSysMutexHelper l(*fMutex);
 
    XrdClientMessage *xmsg = 0;
 
@@ -655,8 +661,8 @@ bool XrdProofConn::GetAccessToSrv()
 
       // Now we can start the reader thread in the physical connection, if needed
       fPhyConn->StartReader();
-      fPhyConn->SetTTL(DLBD_TTL);// = DLBD_TTL;
-      fPhyConn->fServerType = kBase;
+//      fPhyConn->SetTTL(DLBD_TTL);// = DLBD_TTL;
+      fPhyConn->fServerType = kSTBaseXrootd;
       break;
 
    case kSTProofd:
@@ -696,7 +702,7 @@ int XrdProofConn::WriteRaw(const void *buf, int len)
    // Low level write call
 
    if (fgConnMgr)
-      return fgConnMgr->WriteRaw(fLogConnID, buf, len);
+      return fgConnMgr->WriteRaw(fLogConnID, buf, len, 0);
 
    // No connection open
    return -1;
@@ -721,7 +727,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
    // kind of server is there at the other side
 
    // Nothing to do if already connected
-   if (fPhyConn->fServerType == kBase) {
+   if (fPhyConn->fServerType == kSTBaseXrootd) {
 
       TRACE(REQ,"XrdProofConn::DoHandShake: already connected to a PROOF server "<<URLTAG);
       return kSTXProofd;

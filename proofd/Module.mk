@@ -111,8 +111,8 @@ endif
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a
+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
+                  -L$(XROOTDDIRP) -lXrdClient -lXrdSut
 endif
 
 # used in the main Makefile

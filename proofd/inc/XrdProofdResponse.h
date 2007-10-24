@@ -26,7 +26,12 @@
 #include <unistd.h>
 #include <sys/uio.h>
 
-#include "XrdOuc/XrdOucPthread.hh"
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#endif
 #include "XProofProtocol.h"
 
 class XrdLink;
@@ -73,7 +78,7 @@ class XrdProofdResponse
 
 
    // To protect from concurrent use
-   XrdOucRecMutex       fMutex;
+   XrdSysRecMutex       fMutex;
 
  private:
 

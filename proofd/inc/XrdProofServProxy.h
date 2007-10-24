@@ -20,9 +20,15 @@
 #include <map>
 #include <vector>
 
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#  include "XrdOuc/XrdOucSemWait.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#  include "XrdSys/XrdSysSemWait.hh"
+#endif
 #include "Xrd/XrdLink.hh"
-#include "XrdOuc/XrdOucPthread.hh"
-#include "XrdOuc/XrdOucSemWait.hh"
 
 #include "XrdProofdResponse.h"
 
@@ -110,7 +116,7 @@ public:
    inline const char  *Alias() const { return (const char *)fAlias; }
    inline const char  *Client() const { return (const char *)fClient; }
    inline bool         Match(short int id) const { return (id == fID); }
-   inline XrdOucMutex *Mutex() { return &fMutex; }
+   inline XrdSysMutex *Mutex() { return &fMutex; }
    inline int          SrvID() const { return fSrvID; }
    inline int          SrvType() const { return fSrvType; }
    inline void         SetClient(const char *c) { if (c) memcpy(fClient, c, 8); }
@@ -136,7 +142,7 @@ public:
 
  private:
 
-   XrdOucRecMutex            fMutex;
+   XrdSysRecMutex            fMutex;
    XrdLink                  *fLink;      // Link to proofsrv
    XrdProofdResponse         fProofSrv;  // Utility to talk to proofsrv
 
@@ -144,7 +150,7 @@ public:
    std::vector<XrdClientID *> fClients;   // Attached clients stream ids
    std::list<XrdProofWorker *> fWorkers; // Workers assigned to the session
 
-   XrdOucSemWait            *fPingSem;   // To sychronize ping requests
+   XrdSysSemWait            *fPingSem;   // To sychronize ping requests
 
    XrdSrvBuffer             *fQueryNum;  // Msg with sequential number of currebt query
    XrdSrvBuffer             *fStartMsg;  // Msg with start processing info

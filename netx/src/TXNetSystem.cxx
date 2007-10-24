@@ -94,7 +94,7 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    } else {
       if (fgRootdBC) {
          Bool_t isRootd =
-            (fClientAdmin->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
+            (fClientAdmin->GetClientConn()->GetServerType() == kSTRootd);
          Int_t sd = fClientAdmin->GetClientConn()->GetOpenSockFD();
          if (isRootd && sd > -1) {
             //
@@ -177,6 +177,9 @@ void TXNetSystem::InitXrdClient()
 
    // Init vars with default debug level -1, so we do not get warnings
    TXNetFile::SetEnv();
+
+   // Use optimized connections
+   XrdClientAdmin::SetAdminConn();
 
    // Only once
    fgInitDone = kTRUE;

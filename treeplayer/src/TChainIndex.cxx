@@ -101,7 +101,8 @@ void TChainIndex::DeleteIndices()
          if (fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
             fTree->GetTree()->SetTreeIndex(0);
          }
-         SafeDelete(fEntries[i].fTreeIndex);
+         //do not delete the vector element (deleted by ~TChainIndex)
+         // SafeDelete(fEntries[i].fTreeIndex);
       }
    }
 }

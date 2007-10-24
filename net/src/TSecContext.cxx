@@ -334,7 +334,7 @@ Bool_t TSecContext::CleanupSecContext(Bool_t)
 }
 
 //______________________________________________________________________________
-const char *TSecContext::GetName()
+const char *TSecContext::GetName() const
 {
    // Return hash of fUser@fHost for fast search.
 

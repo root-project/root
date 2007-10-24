@@ -47,12 +47,18 @@
 #endif
 
 // ---- Tracing utils ----------------------------------------------------------
-#include "XrdOuc/XrdOucError.hh"
-#include "XrdOuc/XrdOucLogger.hh"
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucError.hh"
+#  include "XrdOuc/XrdOucLogger.hh"
+#else
+#  include "XrdSys/XrdSysError.hh"
+#  include "XrdSys/XrdSysLogger.hh"
+#endif
 #include "XrdProofdTrace.h"
 XrdOucTrace *XrdProofdTrace = 0;
-static XrdOucLogger eLogger;
-static XrdOucError eDest(0, "Proofx");
+static XrdSysLogger eLogger;
+static XrdSysError eDest(0, "Proofx");
 
 #ifdef WIN32
 ULong64_t TSocket::fgBytesSent;
@@ -1466,9 +1472,6 @@ void TXSocket::InitEnvs()
    Int_t garbCollTh = gEnv->GetValue("XProof.StartGarbageCollectorThread",
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
-
-   // PROOF needs a separate thread for reading
-   EnvPutInt(NAME_GOASYNC, 1);
 
    // Max number of retries on first connect
    Int_t maxRetries = gEnv->GetValue("XProof.FirstConnectMaxCnt",5);

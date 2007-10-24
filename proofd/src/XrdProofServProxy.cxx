@@ -87,7 +87,7 @@ void XrdProofServProxy::ClearWorkers()
 void XrdProofServProxy::Reset()
 {
    // Reset this instance
-   XrdOucMutexHelper mtxh(&fMutex);
+   XrdSysMutexHelper mtxh(&fMutex);
 
    fLink = 0;
    fParent = 0;

@@ -87,7 +87,7 @@ public:
    const char *GetToken()   const { return fToken; }
    const char *GetUser()    const { return fUser; }
 
-   const char *GetName();  // fUser@fHost, for searching purposes
+   const char *GetName() const;  // fUser@fHost, for searching purposes
 
    Bool_t      IsA(const char *methodname);
    Bool_t      IsActive()   const;

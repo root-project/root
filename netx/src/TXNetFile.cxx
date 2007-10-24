@@ -52,8 +52,14 @@
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
-#include <XrdOuc/XrdOucPthread.hh>
 #include <XProtocol/XProtocol.hh>
+
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucPthread.hh"
+#else
+#  include "XrdSys/XrdSysPthread.hh"
+#endif
 
 ClassImp(TXNetFile);
 
@@ -115,7 +121,7 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    urlnoanchor.SetAnchor("");
 
    // Init mutex used in the asynchronous open machinery
-   fInitMtx = new XrdOucRecMutex();
+   fInitMtx = new XrdSysRecMutex();
 
    // Create an instance
    CreateXClient(urlnoanchor.GetUrl(), option, netopt, parallelopen);
@@ -197,8 +203,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
             Info("CreateXClient", "remote file could not be open");
 
          // If the server is a rootd we need to create a TNetFile
-         isRootd = (fClient->GetClientConn()->GetServerType() ==
-                    XrdClientConn::kSTRootd);
+         isRootd = (fClient->GetClientConn()->GetServerType() == kSTRootd);
 
          if (isRootd) {
             if (fgRootdBC) {
@@ -641,7 +646,7 @@ void TXNetFile::Init(Bool_t create)
 
    if (fClient) {
       // A mutex serializes this very delicate section
-      XrdOucMutexHelper m(fInitMtx);
+      XrdSysMutexHelper m(fInitMtx);
 
       // To safely perform the Init() we must make sure that
       // the file is successfully open; this call may block
@@ -934,10 +939,6 @@ void TXNetFile::SetEnv()
    Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
-
-   // Whether to use a separate thread for reading
-   Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
-   EnvPutInt(NAME_GOASYNC, goAsync);
 
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",
