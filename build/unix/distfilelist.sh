@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Script to produce list of files to be included in the binary distribution of ROOT.
+# Script to produce list of files to be included in the
+# binary distribution of ROOT.
 # Called by makedist.sh.
 #
 # Axel, 2006-05-16
@@ -40,7 +41,7 @@ mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 
 # mixture of files, wildcards, and directories
 WILDCARDS="LICENSE README bin \
-   include lib cint/include tutorials \
+   include lib man cint/include tutorials \
    cint/lib cint/stl gdml/*.py \
    test/*.cxx test/*.h test/Makefile* test/README \
    test/*.C test/*.sh test/dt_Makefile test/linearIO.root \
