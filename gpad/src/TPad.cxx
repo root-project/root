@@ -82,14 +82,14 @@ ClassImpQ(TPad)
 //  member function of the object classes.
 //  It is important to realize that the pad is a linked list of references
 //  to the original object.
-//  For example, in case of an histogram, the histogram.Draw() operation
+//  For example, in case of a histogram, the histogram.Draw() operation
 //  only stores a reference to the histogram object and not a graphical
 //  representation of this histogram.
 //  When the mouse is used to change (say the bin content), the bin content
 //  of the original histogram is changed !!
 //
 //  The convention used in ROOT is that a Draw operation only adds
-//  a reference to the object. The effective drawing is performed when
+//  a reference to the object. The effective drawing is performed
 //  when the canvas receives a signal to be painted.
 //  This signal is generally sent when typing carriage return in the
 //  command input or when a graphical operation has been performed on one
