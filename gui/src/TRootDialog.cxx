@@ -300,5 +300,6 @@ Bool_t TRootDialog::HandleKey(Event_t* event)
          }
       }
    }
-   return kTRUE;
+
+   return TGMainFrame::HandleKey(event);
 }
