@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += EqualTest ParanTest
+TEST_TARGETS += EqualTest ParanTest ConversionOp
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -38,3 +38,12 @@ t01.log: t01.C
 
 ParanTest: t01.log
 	$(CMDECHO) diff -b t01.log t01.ref
+
+ConversionOp.log : runConversionOp.C ConversionOp.C
+	$(CMDECHO) root.exe -q -l -b  runConversionOp.C | \
+	$(RemoveLeadingDirs) -e 's?FILE:.*[/\]?FILE:?' -e 's/.dll/.so/g' \
+	| grep -v -e tagnum -e 'int c' > $@ 2>&1
+
+ConversionOp: ConversionOp.log
+	$(TestDiff)
+	$(WarnFailTest)
