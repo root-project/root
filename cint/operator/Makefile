@@ -46,4 +46,4 @@ ConversionOp.log : runConversionOp.C ConversionOp.C
 
 ConversionOp: ConversionOp.log
 	$(TestDiff)
-	$(WarnFailTest)
+	$(WarnFailTest) # see ConversionOp.C for the skipped, failing tests
