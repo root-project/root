@@ -62,7 +62,7 @@ public:
    TFileCacheRead();
    TFileCacheRead(TFile *file, Int_t buffersize);
    virtual ~TFileCacheRead();
-   virtual Int_t       GetBufferSize() { return fBufferSize; };
+   virtual Int_t       GetBufferSize() const { return fBufferSize; };
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
