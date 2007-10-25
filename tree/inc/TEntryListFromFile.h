@@ -61,7 +61,7 @@ class TEntryListFromFile: public TEntryList
    virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/)  {return 0;};
    virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/){return 0;};
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
-   virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t */*opt=""*/) {return 0;};
+   virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) {return 0;};
    
    virtual Long64_t    GetEntry(Int_t index);
    virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
