@@ -391,6 +391,10 @@ RSA.KeyType:  1
 # this variable is set to no the file is just flagged as zombie.
 #TFile.Recover:      no
 
+# Control the usage of asynchronous reading capabilities eventually
+# supported by the underlying TFile implementation. Default is yes.
+#TFile.AsyncReading:     no
+
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/path/file.root,
 # castor:/path/file.root or /alien/path/file.root.
@@ -455,25 +459,43 @@ XProof.Debug:  0
 #                         load balancer (or rebouncing to the same
 #                         failing host) after a read/write error
 #                         [10 s]
-# XNet.StartGarbageCollectorThread -
-#                         for test/development purposes. Normally
-#                         nonzero (True), but as workaround for
-#                         external causes someone could be
-#                         interested in not having the garbage
-#                         collector thread around.
-#                         [experimental!]
-# XNet.GoAsynchronous   - Default is 0. When activated, XTNetFile
-#                         works in async mode, allowing input
-#                         buffering and unsolicited responses
-#                         [experimental!]
-# XNet.TryConnect       - Number of tries connect to a single
-#                         server before giving up
-# XNet.TryConnectServersList
-#                       - Number of connect retries to the whole
-#                         server list given [240]
-# XNet.PrintTAG         - Print a particular string the developers
+# XNet.ReadAheadSize    - read ahead value, in bytes, to use with the XrdClient
+#                         internal caching scheme
+#                         Generally not much useful together with the TFile cache,
+#                         which will disable the readahead as soon it starts operating,
+#                         i.e. requesting async data through XrdClient.
+#                         Note that we cannot suppose that the TFile cache
+#                         will start working at the beginning of the data processing.
+#                         Setting a read ahead size > 0 will involve this phase,
+#                         sometimes it could be an advantage, sometimes not.
+#                         If > 0, TXNetFile will switch it on again if it sees that
+#                         synchronous ReadBuffer requests are issued again
+
+XNet.ReadAheadSize: 500000
+
+# XNet.ReadCacheSize    - Default read cache size inside XrdClient, in bytes.
+#                         TXNetFile/TFileReadCache automatically sets this to a
+#                         'correct' value when needed.
+#                         Set a value here to override a *minimum*
+#                         size. It is not preallocated.
+#                         TFile/TXNetFile can anyway make it grow
+#                         automatically when needed.
+
+XNet.ReadCacheSize: 10000000
+
+# XNet.FirstConnectMaxCnt
+#                       - Number of connect retries to the first host
+# XNet.PrintTAG         - Print a particular string the developers 
 #                         can choose to quickly recognize the
 #                         version at run time [0]
+#
+# XNet.ParStreamsPerPhyConn
+#                       - Number of additional TCP streams to use per
+#                         each physical connection
+#                         0=monostream mode
+#                         1-15=multistream mode
+
+XNet.ParStreamsPerPhyConn: 0
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

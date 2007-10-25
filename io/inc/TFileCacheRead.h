@@ -33,6 +33,11 @@ protected:
    Int_t         fBufferSizeMin;  //Original size of fBuffer
    Int_t         fBufferSize;     //Allocated size of fBuffer (at a given time)
    Int_t         fBufferLen;      //Current buffer length (<= fBufferSize)
+
+   Int_t         fBytesToPrefetch;// Helpers to allow the incremental async prefetch
+   Int_t         fFirstIndexToPrefetch;
+   Bool_t        fAsyncReading;
+
    Int_t         fNseek;          //Number of blocks to be prefetched
    Int_t         fNtot;           //Total size of prefetched blocks
    Int_t         fNb;             //Number of long buffers
@@ -57,6 +62,7 @@ public:
    TFileCacheRead();
    TFileCacheRead(TFile *file, Int_t buffersize);
    virtual ~TFileCacheRead();
+   virtual Int_t       GetBufferSize() { return fBufferSize; };
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);

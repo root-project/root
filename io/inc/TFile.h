@@ -149,7 +149,8 @@ public:
    virtual void        Close(Option_t *option=""); // *MENU*
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
-   virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
+   virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
+                                 const char* name, Int_t bufsize);
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
@@ -157,6 +158,7 @@ public:
    virtual void        Flush();
    TArchiveFile       *GetArchive() const { return fArchive; }
    Int_t               GetBestBuffer() const;
+   virtual Int_t       GetBytesToPrefetch() const;
    TFileCacheRead     *GetCacheRead() const;
    TFileCacheWrite    *GetCacheWrite() const;
    TArrayC            *GetClassIndex() const { return fClassIndex; }
@@ -176,7 +178,8 @@ public:
    virtual Long64_t    GetBytesWritten() const;
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
    Int_t               GetVersion() const { return fVersion; }
-   Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   Int_t               GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes,
+                                       Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
@@ -191,12 +194,14 @@ public:
    virtual Bool_t      IsOpen() const;
    virtual void        ls(Option_t *option="") const;
    virtual void        MakeFree(Long64_t first, Long64_t last);
-   virtual void        MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
+   virtual void        MakeProject(const char *dirname, const char *classes="*",
+                                   Option_t *option="new"); // *MENU*
    virtual void        Map(); // *MENU*
    virtual Bool_t      Matches(const char *name);
    virtual Bool_t      MustFlush() const {return fMustFlush;}
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
+   virtual Bool_t      ReadBufferAsync(Long64_t offs, Int_t len);
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        ReadFree();
@@ -250,7 +255,8 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
-   static Bool_t       SetCacheFileDir(const char *cacheDir, Bool_t operateDisconnected = kTRUE, Bool_t forceCacheread = kFALSE);
+   static Bool_t       SetCacheFileDir(const char *cacheDir, Bool_t operateDisconnected = kTRUE,
+                                       Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();
    static Bool_t       ShrinkCacheFileDir(Long64_t shrinkSize, Long_t cleanupInteval = 0);
    static Bool_t       Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,

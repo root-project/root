@@ -25,6 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TEnv.h"
 #include "TFile.h"
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
@@ -55,6 +56,11 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fFile        = 0;
    fBuffer      = 0;
    fIsSorted    = kFALSE;
+
+   // Asynchronous reading
+   fBytesToPrefetch = 0;
+   fFirstIndexToPrefetch = 0;
+   fAsyncReading = kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -81,7 +87,20 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fSeekPos     = new Int_t[fSeekSize];
    fLen         = new Int_t[fSeekSize];
    fFile        = file;
-   fBuffer      = new char[fBufferSize];
+
+   fBuffer = 0;
+   fBytesToPrefetch = 0;
+   fFirstIndexToPrefetch = 0;
+   fAsyncReading = gEnv->GetValue("TFile.AsyncReading", 1);
+   if (fAsyncReading) {
+      // If asynchronous reading is not supported by this TFile specialization
+      // we use sync primitives, hence we need the local buffer
+      if (file && file->ReadBufferAsync(0, 0)) {
+         fAsyncReading = kFALSE;
+         fBuffer    = new char[fBufferSize];
+      }
+   }
+
    fIsSorted    = kFALSE;
    if (file) file->SetCacheRead(this);
 }
@@ -188,11 +207,24 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // If pos is in the list of prefetched blocks read from fBuffer,
    // otherwise need to make a normal read from file. Returns -1 in case of
    // read error, 0 in case not in cache, 1 in case read from cache.
+   Int_t i = 0;
 
    if (fNseek > 0 && !fIsSorted) {
       Sort();
-      if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb)) {
-         return -1;
+
+      // If ReadBufferAsync is not supported by this implementation...
+      if (!fAsyncReading) {
+         // Then we use the vectored read to read everything now
+         if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb)) {
+            return -1;
+         }
+      } else {
+         // In any case, we'll start to request the chunks.
+         // This implementation simply reads all the chunks in advance
+         // in the async way.
+
+         fBytesToPrefetch = fFile->GetBytesToPrefetch();
+         fFirstIndexToPrefetch = 0;
       }
    }
 
@@ -205,12 +237,59 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       }
    }
 
-   Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
-   if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
-      memcpy(buf,&fBuffer[fSeekPos[loc]],len);
-      fFile->Seek(pos+len);
-      //printf("TFileCacheRead::ReadBuffer, pos=%lld, len=%d, slen=%d, loc=%d\n",pos,len,fSeekSortLen[loc],loc);
-      return 1;
+   // If asynchronous reading is supported by this implementation...
+   if (fAsyncReading) {
+
+      Int_t retval;
+      Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+
+      // Now we dont have to look for it in the local buffer
+      // if it's async, we expect that the communication library
+      // will handle it more efficiently than we can do here
+
+      // We use the internal list just to notify if the list is to be reconstructed
+      if (loc >= 0 && loc < fNseek && pos == fSeekSort[loc]) {
+         // Block found, the caller will get it
+
+         // A speculative forward read of our chunks list
+         for (i = fFirstIndexToPrefetch; i < fNb; i++) {
+            if (!fLen[i])
+               continue;
+            if (fLen[i] > fBytesToPrefetch)
+               break;
+            // If we run out of parallel streamids in XrdClient, we'll continue later
+            if (fFile->ReadBufferAsync(fPos[i], fLen[i]))
+               break;
+            fBytesToPrefetch -= fLen[i];
+            fLen[i] = 0;
+         }
+         fFirstIndexToPrefetch = i;
+
+         if (buf) {
+            fFile->Seek(pos);
+            // Notify if troubles arise
+            if (fFile->ReadBuffer(buf, len))
+            return -1;
+            fFile->Seek(pos+len);
+         }
+         fBytesToPrefetch += len;
+         retval = 1;
+      } else {
+         // Block not found in the list, we report it as a miss
+         retval = 0;
+      }
+
+      if (gDebug > 0)
+         Info("ReadBuffer","pos=%lld, len=%d, retval=%d", pos, len, retval);
+
+      return retval;
+   } else {
+      Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+      if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
+         memcpy(buf,&fBuffer[fSeekPos[loc]],len);
+         fFile->Seek(pos+len);
+         return 1;
+      }
    }
 
    return 0;
@@ -221,8 +300,19 @@ void TFileCacheRead::SetFile(TFile *file)
 {
    // Set the file using this cache and reset the current blocks (if any).
 
-
    fFile = file;
+
+   if (fAsyncReading) {
+      // If asynchronous reading is not supported by this TFile specialization
+      // we use sync primitives, hence we need the local buffer
+      if (file && file->ReadBufferAsync(0, 0)) {
+         fAsyncReading = kFALSE;
+         fBuffer    = new char[fBufferSize];
+         fBytesToPrefetch = 0;
+         fFirstIndexToPrefetch = 0;
+      }
+   }
+
    Prefetch(0,0);
 }
 
@@ -244,15 +334,19 @@ void TFileCacheRead::Sort()
    if (fNtot > fBufferSizeMin) {
       fBufferSize = fNtot + 100;
       delete [] fBuffer;
-      fBuffer = new char[fBufferSize];
-     // printf("CHANGING fBufferSize=%d, fNseek=%d, fNtot=%d\n",fBufferSize, fNseek,fNtot);
+      fBuffer = 0;
+      // If ReadBufferAsync is not supported by this implementation
+      // it means that we are using sync primitives, hence we need the local buffer
+      if (!fAsyncReading)
+         fBuffer = new char[fBufferSize];
    }
    fPos[0]  = fSeekSort[0];
    fLen[0]  = fSeekSortLen[0];
    fSeekPos[0] = 0;
    for (i=1;i<fNseek;i++) {
       fSeekPos[i] = fSeekPos[i-1] + fSeekSortLen[i-1];
-      if (fSeekSort[i] != fSeekSort[i-1]+fSeekSortLen[i-1]) {
+      if ((fSeekSort[i] != fSeekSort[i-1]+fSeekSortLen[i-1]) ||
+          (fLen[nb] > 2000000)) {
          nb++;
          fPos[nb] = fSeekSort[i];
          fLen[nb] = fSeekSortLen[i];

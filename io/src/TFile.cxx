@@ -3380,3 +3380,26 @@ copyout:
 
    return success;
 }
+
+//______________________________________________________________________________
+Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
+{
+   // Not supported for regular (local) files.
+   // See TFile specializations for real implementations.
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TFile::GetBytesToPrefetch() const
+{
+   // Max number of bytes to prefetch. By default this is 75% of the
+   // read cache size. But specific TFile implementations may need to change it
+
+   TFileCacheRead *cr = 0;
+   if ((cr = GetCacheRead())) {
+      Int_t bytes = cr->GetBufferSize() / 4 * 3;
+      return ((bytes < 0) ? 0 : bytes);
+   }
+   return 0;
+}
