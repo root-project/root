@@ -4314,7 +4314,17 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     if ((ifunc->access[ifn] == G__PROTECTED) || ((ifunc->access[ifn] == G__PRIVATE) && (G__struct.protectedaccess[tagnum] & G__PRIVATEACCESS))) {
       fprintf(fp, "G__PT_%s(", ifunc->funcname[ifn]);
     } else {
-      fprintf(fp, "%s(", ifunc->funcname[ifn]);
+       // we need to convert A::operator T() to A::operator ::T, or
+       // the context will be the one of tagnum, i.e. A::T instead of ::T
+       if (tolower(ifunc->type[ifn]) == 'u'
+           && !strncmp(ifunc->funcname[ifn], "operator ", 8)
+           && (isalpha(ifunc->funcname[ifn][9]) || ifunc->funcname[ifn][9] == '_')) {
+          if (!strncmp(ifunc->funcname[ifn] + 9, "const ", 6))
+             fprintf(fp, "operator const ::%s(", ifunc->funcname[ifn] + 15);
+          else
+             fprintf(fp, "operator ::%s(", ifunc->funcname[ifn] + 9);
+       } else
+          fprintf(fp, "%s(", ifunc->funcname[ifn]);
     }
     //
     // Output the parameters.

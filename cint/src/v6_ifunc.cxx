@@ -661,8 +661,7 @@ void G__make_ifunctable(char* funcheader)
                   ptrrefbuf = new char[strlen(posEndType) + 1];
                   strcpy(ptrrefbuf, posEndType);
                }
-               strcpy(oprtype, "::");
-               strcpy(oprtype + 2, G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
+               strcpy(oprtype, G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
                if (ptrrefbuf) {
                   strcat(oprtype, ptrrefbuf);
                   delete [] ptrrefbuf;
@@ -693,8 +692,7 @@ void G__make_ifunctable(char* funcheader)
                      ptrrefbuf = new char[strlen(posEndType) + 1];
                      strcpy(ptrrefbuf, posEndType);
                   }
-                  strcpy(oprtype, "::");
-                  strcpy(oprtype + 2, G__fulltagname(oprtagnum, 0));
+                  strcpy(oprtype, G__fulltagname(oprtagnum, 0));
                   if (ptrrefbuf) {
                      strcat(oprtype, ptrrefbuf);
                      delete [] ptrrefbuf;
