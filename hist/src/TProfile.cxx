@@ -474,12 +474,17 @@ void TProfile::Copy(TObject &obj) const
 
    TH1D::Copy(((TProfile&)obj));
    fBinEntries.Copy(((TProfile&)obj).fBinEntries);
+   for (int bin=0;bin<fNcells;bin++) {
+      ((TProfile&)obj).fArray[bin]        = fArray[bin];
+      ((TProfile&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+   }
+
    ((TProfile&)obj).fYmin = fYmin;
    ((TProfile&)obj).fYmax = fYmax;
-   ((TProfile&)obj).fScaling = fScaling;
+   ((TProfile&)obj).fScaling   = fScaling;
    ((TProfile&)obj).fErrorMode = fErrorMode;
-   ((TProfile&)obj).fTsumwy      = fTsumwy;
-   ((TProfile&)obj).fTsumwy2     = fTsumwy2;
+   ((TProfile&)obj).fTsumwy    = fTsumwy;
+   ((TProfile&)obj).fTsumwy2   = fTsumwy2;
 }
 
 

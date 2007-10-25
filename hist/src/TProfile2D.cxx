@@ -488,12 +488,16 @@ void TProfile2D::Copy(TObject &obj) const
 
    TH2D::Copy(((TProfile2D&)obj));
    fBinEntries.Copy(((TProfile2D&)obj).fBinEntries);
+   for (int bin=0;bin<fNcells;bin++) {
+      ((TProfile2D&)obj).fArray[bin]        = fArray[bin];
+      ((TProfile2D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+   }
    ((TProfile2D&)obj).fZmin = fZmin;
    ((TProfile2D&)obj).fZmax = fZmax;
-   ((TProfile2D&)obj).fScaling = fScaling;
+   ((TProfile2D&)obj).fScaling   = fScaling;
    ((TProfile2D&)obj).fErrorMode = fErrorMode;
-   ((TProfile2D&)obj).fTsumwz  = fTsumwz;
-   ((TProfile2D&)obj).fTsumwz2 = fTsumwz2;
+   ((TProfile2D&)obj).fTsumwz    = fTsumwz;
+   ((TProfile2D&)obj).fTsumwz2   = fTsumwz2;
 }
 
 
