@@ -20,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010026
-#define G__CINTVERSIONSTR_V6  "6.1.26, Oct 11, 2007"
-#define G__CINTVERSION_V5      50160026
-#define G__CINTVERSIONSTR_V5  "5.16.26, Oct 11, 2007"
+#define G__CINTVERSION_V6      60010027
+#define G__CINTVERSIONSTR_V6  "6.1.27, Oct 25, 2007"
+#define G__CINTVERSION_V5      50160027
+#define G__CINTVERSIONSTR_V5  "5.16.27, Oct 25, 2007"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -1623,8 +1623,8 @@ extern G__EXPORT void* G__findsym G__P((G__CONST char *fname));
 extern G__EXPORT int G__IsInMacro G__P((void));
 extern G__EXPORT void G__storerewindposition G__P((void));
 extern G__EXPORT void G__rewinddictionary G__P((void));
-extern G__EXPORT void G__SetCriticalSectionEnv G__P((void));
-
+extern G__EXPORT void G__SetCriticalSectionEnv G__P(( int(*issamethread)G__P((void)), void(*storelockthread)G__P((void)), void(*entercs)G__P((void)), void(*leavecs)G__P((void)) ));
+   
 extern G__EXPORT void G__storelasterror G__P((void));
 
 

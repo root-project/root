@@ -661,7 +661,8 @@ void G__make_ifunctable(char* funcheader)
                   ptrrefbuf = new char[strlen(posEndType) + 1];
                   strcpy(ptrrefbuf, posEndType);
                }
-               strcpy(oprtype, G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
+               strcpy(oprtype, "::");
+               strcpy(oprtype + 2, G__type2string(G__newtype.type[oprtypenum] , -1, -1, G__newtype.reftype[oprtypenum], G__newtype.isconst[oprtypenum]));
                if (ptrrefbuf) {
                   strcat(oprtype, ptrrefbuf);
                   delete [] ptrrefbuf;
@@ -671,16 +672,29 @@ void G__make_ifunctable(char* funcheader)
                int oprtagnum = G__defined_tagname(oprtype, 2);
                if (oprtagnum > -1) {
                   const char* posEndType = oprtype;
+                  bool isTemplate = (strchr(G__struct.name[oprtagnum], '<'));
                   while (isalnum(*posEndType)
-                         || posEndType[0] == ':' && posEndType[1] == ':'
-                         || *posEndType == '_')
+                         || posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType)
+                         || *posEndType == '_') {
                      ++posEndType;
+                     if (isTemplate && *posEndType == '<') {
+                        // also include "<T>" in type name
+                        ++posEndType;
+                        int templLevel = 1;
+                        while (templLevel && *posEndType) {
+                           if (*posEndType == '<') ++templLevel;
+                           else if (*posEndType == '>') --templLevel;
+                           ++posEndType;
+                        }
+                     }
+                  }
                   char* ptrrefbuf = 0;
                   if (*posEndType) {
                      ptrrefbuf = new char[strlen(posEndType) + 1];
                      strcpy(ptrrefbuf, posEndType);
                   }
-                  strcpy(oprtype, G__fulltagname(oprtagnum, 0));
+                  strcpy(oprtype, "::");
+                  strcpy(oprtype + 2, G__fulltagname(oprtagnum, 0));
                   if (ptrrefbuf) {
                      strcat(oprtype, ptrrefbuf);
                      delete [] ptrrefbuf;

@@ -4981,6 +4981,13 @@
 * - update ReadF tutorial
 * - fix bytecode generation (was disabled in some loops)
 * - minor bug fixes
+*
+* 5.16.27 Oct 25, 2007
+* 6.1.27 Oct 25, 2007
+* - a few fixes for parsing conversion operators:
+*   template args, type in namespace, local vs. global type
+* - fix bytecode generation for switch statement
+* - fix spelling of G__SetCriticalSectionEnv()
 
 
 * ---------------------------------------------------------------------

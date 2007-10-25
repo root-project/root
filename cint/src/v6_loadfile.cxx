@@ -23,7 +23,9 @@
 #include "process.h"
 #endif
 
+#if defined(G__ROOT)
 #include "RConfigure.h"
+#endif
 
 #if defined(G__HAVE_CONFIG)
 #include "configcint.h"

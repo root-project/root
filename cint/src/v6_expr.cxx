@@ -1077,7 +1077,6 @@ G__value G__calc_internal(char* exprwithspace)
    }
 
    // --
-deletereturn:
    G__asm_exec = store_asm_exec;
    G__asm_noverflow = store_asm_noverflow;
    free(exprnospace);

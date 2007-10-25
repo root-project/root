@@ -187,7 +187,7 @@ static void(*G__LeaveCriticalSection)();
 /************************************************************************
 * G__SetCriticalSectionEnv
 ************************************************************************/
-void G__SetCrititalSectionEnv(int(*issamethread)(), void(*storelockthread)(), void(*entercs)(), void(*leavecs)())
+void G__SetCriticalSectionEnv(int(*issamethread)(), void(*storelockthread)(), void(*entercs)(), void(*leavecs)())
 {
    G__IsSameThread = issamethread;
    G__StoreLockThread = storelockthread;
