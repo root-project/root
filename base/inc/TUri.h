@@ -85,7 +85,7 @@ public:
    const TString GetHierPart() const;
    const TString GetRelativePart() const;
    const TString GetAuthority() const;
-   const TString GetUserinfo() const { return fUserinfo; }
+   const TString GetUserInfo() const { return fUserinfo; }
    const TString GetHost() const { return fHost; }
    const TString GetPort() const { return fPort; }
    const TString GetPath() const { return fPath; }
@@ -95,7 +95,7 @@ public:
    Bool_t HasScheme() const { return fHasScheme; }
    Bool_t HasHierPart() const { return IsHierPart(GetHierPart()); }
    Bool_t HasAuthority() const { return fHasHost; }
-   Bool_t HasUserinfo() const { return fHasUserinfo; }
+   Bool_t HasUserInfo() const { return fHasUserinfo; }
    Bool_t HasHost() const { return fHasHost; }
    Bool_t HasPort() const { return fHasPort; }
    Bool_t HasPath() const { return fHasPath; }
@@ -107,7 +107,7 @@ public:
    Bool_t SetScheme(const TString &scheme);
    Bool_t SetHierPart(const TString &hier);
    Bool_t SetAuthority(const TString &authority);
-   Bool_t SetUserinfo(const TString &userinfo);
+   Bool_t SetUserInfo(const TString &userinfo);
    Bool_t SetHost(const TString &host);
    Bool_t SetPort(const TString &port);
    Bool_t SetPath(const TString &path);
@@ -136,7 +136,7 @@ public:
    static Bool_t IsScheme(const TString&);
    static Bool_t IsHierPart(const TString&);
    static Bool_t IsAuthority(const TString&);
-   static Bool_t IsUserinfo(const TString&);
+   static Bool_t IsUserInfo(const TString&);
    static Bool_t IsHost(const TString&);
    static Bool_t IsIpv4(const TString&);
    static Bool_t IsRegName(const TString&);

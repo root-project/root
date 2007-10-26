@@ -254,7 +254,7 @@ Bool_t TUri::SetScheme(const TString &scheme)
       fHasScheme = kTRUE;
       return kTRUE;
    } else {
-      Error(__FUNCTION__, "<scheme> component \"%s\" of URI is not compliant with RFC 3986.", scheme.Data());
+      Error("SetScheme", "<scheme> component \"%s\" of URI is not compliant with RFC 3986.", scheme.Data());
       return kFALSE;
    }
 }
@@ -298,7 +298,7 @@ Bool_t TUri::SetQuery(const TString &query)
       fHasQuery = kTRUE;
       return kTRUE;
    } else {
-      Error(__FUNCTION__, "<query> component \"%s\" of URI is not compliant with RFC 3986.", query.Data());
+      Error("SetQuery", "<query> component \"%s\" of URI is not compliant with RFC 3986.", query.Data());
       return kFALSE;
    }
 }
@@ -335,7 +335,7 @@ Bool_t TUri::SetAuthority(const TString &authority)
    TObjArray *tokens = regexp.MatchS(authority);
 
    if (tokens->GetEntries() != 4) {
-      Error(__FUNCTION__, "<authority> component \"%s\" of URI is not compliant with RFC 3986.", authority.Data());
+      Error("SetAuthority", "<authority> component \"%s\" of URI is not compliant with RFC 3986.", authority.Data());
       return kFALSE;
    }
 
@@ -345,7 +345,7 @@ Bool_t TUri::SetAuthority(const TString &authority)
    TString userinfo = ((TObjString*) tokens->At(1))->GetString();
    if (userinfo.EndsWith("@")) {
       userinfo.Remove(TString::kTrailing, '@');
-      valid &= SetUserinfo(userinfo);
+      valid &= SetUserInfo(userinfo);
    }
 
    // handle host
@@ -379,11 +379,11 @@ Bool_t TUri::IsAuthority(const TString &string)
       port = ((TObjString*) tokens->At(3))->GetString();
    else
       port = "";
-   return (IsHost(host) && IsUserinfo(userinfo) && IsPort(port));
+   return (IsHost(host) && IsUserInfo(userinfo) && IsPort(port));
 }
 
 //______________________________________________________________________________
-Bool_t TUri::SetUserinfo(const TString &userinfo)
+Bool_t TUri::SetUserInfo(const TString &userinfo)
 {
    // Set userinfo component of URI:
    // userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
@@ -392,18 +392,18 @@ Bool_t TUri::SetUserinfo(const TString &userinfo)
       fHasUserinfo = kFALSE;
       return kTRUE;
    }
-   if (IsUserinfo(userinfo)) {
+   if (IsUserInfo(userinfo)) {
       fUserinfo = userinfo;
       fHasUserinfo = kTRUE;
       return kTRUE;
    } else {
-      Error(__FUNCTION__, "<userinfo> component \"%s\" of URI is not compliant with RFC 3986.", userinfo.Data());
+      Error("SetUserInfo", "<userinfo> component \"%s\" of URI is not compliant with RFC 3986.", userinfo.Data());
       return kFALSE;
    }
 }
 
 //______________________________________________________________________________
-Bool_t TUri::IsUserinfo(const TString &string)
+Bool_t TUri::IsUserInfo(const TString &string)
 {
    // Return kTRUE is string qualifies as valid URI userinfo:
    // userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
@@ -426,7 +426,7 @@ Bool_t TUri::SetHost(const TString &host)
       fHasHost = kTRUE;
       return kTRUE;
    } else {
-      Error(__FUNCTION__, "<host> component \"%s\" of URI is not compliant with RFC 3986.", host.Data());
+      Error("SetHost", "<host> component \"%s\" of URI is not compliant with RFC 3986.", host.Data());
       return kFALSE;
    }
 }
@@ -442,7 +442,7 @@ Bool_t TUri::SetPort(const TString &port)
       fHasPort = kTRUE;
       return kTRUE;
    }
-   Error(__FUNCTION__, "<port> component \"%s\" of URI is not compliant with RFC 3986.", port.Data());
+   Error("SetPort", "<port> component \"%s\" of URI is not compliant with RFC 3986.", port.Data());
    return kFALSE;
 }
 
@@ -461,7 +461,7 @@ Bool_t TUri::SetPath(const TString &path)
       fHasPath = kTRUE;
       return kTRUE;
    }
-   Error(__FUNCTION__, "<path> component \"%s\" of URI is not compliant with RFC 3986.", path.Data());
+   Error("SetPath", "<path> component \"%s\" of URI is not compliant with RFC 3986.", path.Data());
    return kFALSE;
 }
 
@@ -476,7 +476,7 @@ Bool_t TUri::SetFragment(const TString &fragment)
       fHasFragment = kTRUE;
       return kTRUE;
    } else {
-      Error(__FUNCTION__, "<fragment> component \"%s\" of URI is not compliant with RFC 3986.", fragment.Data());
+      Error("SetFragment", "<fragment> component \"%s\" of URI is not compliant with RFC 3986.", fragment.Data());
       return kFALSE;
    }
 }
@@ -607,7 +607,7 @@ Bool_t TUri::SetUri(const TString &uri)
 
       default:
          // regular expression did not match
-         Error(__FUNCTION__, "URI \"%s\" is not is not compliant with RFC 3986.", uri.Data());
+         Error("SetUri", "URI \"%s\" is not is not compliant with RFC 3986.", uri.Data());
          valid = kFALSE;
    }
 
@@ -668,7 +668,7 @@ Bool_t TUri::SetHierPart(const TString &hier)
    TObjArray *tokens = regexp.MatchS(hier);
 
    if (tokens->GetEntries() == 0) {
-      Error(__FUNCTION__, "<hier-part> component \"%s\" of URI is not compliant with RFC 3986.", hier.Data());
+      Error("SetHierPart", "<hier-part> component \"%s\" of URI is not compliant with RFC 3986.", hier.Data());
       delete tokens;
       return false;
    }
@@ -689,7 +689,7 @@ Bool_t TUri::SetHierPart(const TString &hier)
          valid &= SetPath(path);
       else {
          valid = kFALSE;
-         Error(__FUNCTION__, "<hier-part> component \"%s\" of URI is not compliant with RFC 3986.", hier.Data());
+         Error("SetHierPart", "<hier-part> component \"%s\" of URI is not compliant with RFC 3986.", hier.Data());
       }
    }
    delete tokens;
@@ -741,7 +741,7 @@ Bool_t TUri::SetRelativePart(const TString &relative)
    TObjArray *tokens = regexp.MatchS(relative);
 
    if (tokens->GetEntries() == 0) {
-      Error(__FUNCTION__, "<relative-part> component \"%s\" of URI is not compliant with RFC 3986.", relative.Data());
+      Error("SetRelativePath", "<relative-part> component \"%s\" of URI is not compliant with RFC 3986.", relative.Data());
       delete tokens;
       return false;
    }
@@ -761,7 +761,7 @@ Bool_t TUri::SetRelativePart(const TString &relative)
          valid &= SetPath(path);
       else {
          valid = kFALSE;
-         Error(__FUNCTION__, "<relative-part> component \"%s\" of URI is not compliant with RFC 3986.", relative.Data());
+         Error("SetRelativePath", "<relative-part> component \"%s\" of URI is not compliant with RFC 3986.", relative.Data());
       }
    }
    delete tokens;

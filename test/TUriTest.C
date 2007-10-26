@@ -83,7 +83,7 @@ Bool_t TestComposition() {
 	TString composed = "http://user:pass@host.org/some/path/file.avi?key1=value1#anchor3";
 	TUri uri;
 	uri.SetScheme("http");
-	uri.SetUserinfo("user:pass");
+	uri.SetUserInfo("user:pass");
 	uri.SetHost("host.org");
 	uri.SetPath("/some/path/file.avi");
 	uri.SetQuery("key1=value1");
