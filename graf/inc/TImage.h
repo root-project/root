@@ -225,6 +225,7 @@ public:
    virtual Pixmap_t  GetMask() { return 0; }
    virtual UInt_t   *GetArgbArray() { return 0; }
    virtual UInt_t   *GetRgbaArray() { return 0; }
+   virtual Double_t *GetVecArray() { return 0; }
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return 0; }
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }

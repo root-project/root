@@ -55,6 +55,26 @@
 //       and can be used for good quality convertion of images into     //
 //       2-D histograms.                                                //
 //                                                                      //
+//    o  TImagePalette(Int_t ncolors, Int_t *colors)                    //
+//        if ncolors <= 0 a default palette (see below) of 50 colors    //
+//        is defined.                                                   //
+//                                                                      //   
+//        if ncolors == 1 && colors == 0, then                          //
+//        a Pretty Palette with a Spectrum Violet->Red is created.      //
+//                                                                      //
+//        if ncolors > 50 and colors=0, the DeepSea palette is used.    //
+//         (see TStyle::CreateGradientColorTable for more details)      //
+//                                                                      //
+//        if ncolors > 0 and colors = 0, the default palette is used    //
+//        with a maximum of ncolors.                                    //
+//                                                                      //
+// The default palette defines:                                         //
+//   index 0->9   : grey colors from light to dark grey                 //
+//   index 10->19 : "brown" colors                                      //
+//   index 20->29 : "blueish" colors                                    //
+//   index 30->39 : "redish" colors                                     //
+//   index 40->49 : basic colors                                        //
+//                                                                      //
 //                                                                      //
 //  TPaletteEditor                                                      //
 //                                                                      //
@@ -333,7 +353,15 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
       fColorGreen = new UShort_t[fNumPoints];
       fColorBlue  = new UShort_t[fNumPoints];
       fColorAlpha = new UShort_t[fNumPoints];
-      for (i=0;i<ncolors;i++) {
+
+      // 0 point is white
+      fPoints[0] = 0;
+      fColorRed[0] = 255 << 8;
+      fColorGreen[0] = 255 << 8;
+      fColorBlue[0] = 255 << 8;
+      fColorAlpha[0] = 0;
+
+      for (i=1;i<ncolors;i++) {
          col = gROOT->GetColor(51+i);
          fPoints[i] = i*step;
          fColorRed[i] = UShort_t(col->GetRed()*255) << 8;

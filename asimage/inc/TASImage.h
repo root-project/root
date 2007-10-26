@@ -206,6 +206,7 @@ public:
    TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette);
    UInt_t    *GetArgbArray();
    UInt_t    *GetRgbaArray();
+   Double_t  *GetVecArray();
    UInt_t    *GetScanline(UInt_t y);
    void       GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
    Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);

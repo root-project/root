@@ -1348,18 +1348,22 @@ void TASImage::Paint(Option_t *option)
          if (!fScaledImage) {
             fScaledImage = (TASImage*)TImage::Create();
 
-            if ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight)) {
+            if (fZoomWidth && fZoomHeight && 
+                ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight))) {
                // zoom and scale image
                ASImage *tmpImage = 0;
-               tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
-                                       fImage->height - fZoomHeight - fZoomOffY,
-                                       fZoomWidth, fZoomHeight, 0, ASA_ASImage,
-                                       GetImageCompression(), GetImageQuality());
 
-               fScaledImage->fImage = scale_asimage(fgVisual, tmpImage, to_w, to_h,
-                                                   ASA_ASImage, GetImageCompression(),
-                                                   GetImageQuality());
-               destroy_asimage(&tmpImage);
+               tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
+                                          fImage->height - fZoomHeight - fZoomOffY,
+                                          fZoomWidth, fZoomHeight, 0, ASA_ASImage,
+                                          GetImageCompression(), GetImageQuality());
+
+               if (tmpImage) {
+                  fScaledImage->fImage = scale_asimage(fgVisual, tmpImage, to_w, to_h,
+                                                       ASA_ASImage, GetImageCompression(),
+                                                      GetImageQuality());
+                  destroy_asimage(&tmpImage);
+               }
             } else {
                // scale image, no zooming
                fScaledImage->fImage = scale_asimage(fgVisual, fImage, to_w, to_h,
@@ -2256,15 +2260,41 @@ TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
 }
 
 //______________________________________________________________________________
-TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
+Double_t *TASImage::GetVecArray()
 {
-   // Converts an image into 2D array of doubles according to palette.
-   // If palette is ZERO a color converted to double value [0, 1] according to formula
-   //   Double_t((r << 16) + (g << 8) + b)/0xFFFFFF
+   // Returns a pointer to internal array[width x height] of double values [0, 1]
+   // This array is directly accessible. That allows to manipulate/change the image
 
    if (!fImage) {
-      Warning("GetArray", "Wrong Image");
+      Warning("GetVecArray", "Bad Image");
       return 0;
+   }
+   if (fImage->alt.vector) {
+      return fImage->alt.vector;
+   }
+   // vectorize
+   return 0;
+}
+
+//______________________________________________________________________________
+TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
+{
+   // In case of vectorized image return an associated array of doubles 
+   // otherwise this method creates and returns a 2D array of doubles corresponding to palette.
+   // If palette is ZERO a color converted to double value [0, 1] according to formula
+   //   Double_t((r << 16) + (g << 8) + b)/0xFFFFFF
+   // The returned array must be deleted after usage.
+
+   if (!fImage) {
+      Warning("GetArray", "Bad Image");
+      return 0;
+   }
+
+   TArrayD *ret;
+
+   if (fImage->alt.vector) {
+      ret = new TArrayD(fImage->width*fImage->height, fImage->alt.vector);
+      return ret;
    }
 
    ASImageDecoder *imdec;
@@ -2284,7 +2314,7 @@ TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
       return 0;
    }
 
-   TArrayD *ret = new TArrayD(w * h);
+   ret = new TArrayD(w * h);
    CARD32 r = 0;
    CARD32 g = 0;
    CARD32 b = 0;
@@ -2480,8 +2510,8 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    layers[1].im = ((TASImage*)im)->fImage;
    layers[1].dst_x = x;
    layers[1].dst_y = y;
-   layers[1].clip_width = im->GetWidth();
-   layers[1].clip_height = im->GetHeight();
+   layers[1].clip_width = x + im->GetWidth();
+   layers[1].clip_height = y + im->GetHeight();
    layers[1].merge_scanlines = blend_scanlines_name2func(op ? op : "add");
 
    rendered_im = merge_layers(fgVisual, &(layers[0]), 2, fImage->width, fImage->height,
@@ -4891,7 +4921,7 @@ static int GetPolyYBounds(TPoint *pts, int n, int *by, int *ty)
 Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
                                  TPoint **outPoint, UInt_t **outWidth)
 {
-   // The code is taken on Xserver/mi/mipolycon.c
+   // The code is based on Xserver/mi/mipolycon.c
    //    "Copyright 1987, 1998  The Open Group"
 
    int xl = 0;                   // x vals of leftedges
@@ -4910,8 +4940,8 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    int nextleft, nextright;      // indices to second endpoints
    TPoint *ptsOut;               // output buffer
    UInt_t *width;                // output buffer
-   TPoint *firstPoint;
-   UInt_t *firstWidth;
+   TPoint *firstPoint=0;
+   UInt_t *firstWidth=0;
    int imin;                     // index of smallest vertex (in y)
    int ymin;                     // y-extents of polygon
    int ymax;
@@ -4950,19 +4980,9 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    dy = ymax - ymin + 1;
    if ((npt < 3) || (dy < 0)) return kFALSE;
 
-   static const Int_t gCachePwSize = 512;
-   static TPoint gPointCache[gCachePwSize];
-   static UInt_t gWidthCache[gCachePwSize];
-
-   if (dy < gCachePwSize) {
-      ptsOut = firstPoint = (TPoint*)&gPointCache;
-      width = firstWidth = (UInt_t*)&gWidthCache;
-      ret = kFALSE;
-   } else {
-      ptsOut = firstPoint = new TPoint[dy];
-      width = firstWidth = new UInt_t[dy];
-      ret = kTRUE;
-   }
+   ptsOut = firstPoint = new TPoint[dy];
+   width = firstWidth = new UInt_t[dy];
+   ret = kTRUE;
 
    nextleft = nextright = imin;
    y = ppt[nextleft].fY;
@@ -5009,13 +5029,9 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
       //  a right edge as well as a left edge.
       i = min(ppt[nextleft].fY, ppt[nextright].fY) - y;
 
-      // in case we're called with non-convex polygon
+      // in case of non-convex polygon
       if (i < 0) {
-         delete [] firstWidth;
-         delete [] firstPoint;
-         firstPoint = 0;
-         firstWidth = 0;
-         return kFALSE;
+         return kTRUE;
       }
 
       while (i-- > 0)  {
