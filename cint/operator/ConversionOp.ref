@@ -2,13 +2,11 @@
 Processing runConversionOp.C...
 KNOWN FAILURE: b = ab
 KNOWN FAILURE: pb = ab
-KNOWN FAILURE: pab = ab
 A::op <(T)
 ab >= b
 A::op <(A)
 ab < *pab
 KNOWN FAILURE: ab = c
-KNOWN FAILURE: ac = c: should call C::op A<C>()
 KNOWN FAILURE: b = c
 KNOWN FAILURE: N::B nb = c
 KNOWN FAILURE: pac = c
@@ -94,13 +92,11 @@ ConversionOp.h   60:1    0 public: A<B> operator+(A<B> a);
 ConversionOp.h   61:1    0 public: A<B>* operator-(A<B> a);
 KNOWN FAILURE: b = ab
 KNOWN FAILURE: pb = ab
-KNOWN FAILURE: pab = ab
 A::op <(T)
 ab >= b
 A::op <(A)
 ab < *pab
 KNOWN FAILURE: ab = c
-KNOWN FAILURE: ac = c: should call C::op A<C>()
 KNOWN FAILURE: b = c
 KNOWN FAILURE: N::B nb = c
 KNOWN FAILURE: pac = c
