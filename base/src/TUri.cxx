@@ -181,7 +181,7 @@ const TString TUri::RemoveDotSegments(const TString &inp)
       }
 
       // Rule 2.D
-      if (source.CompareTo(".") == 0 or source.CompareTo("..") == 0) {
+      if (source.CompareTo(".") == 0 || source.CompareTo("..") == 0) {
          source.Remove(0, source.Length() - 11);
          continue;
       }
@@ -206,7 +206,7 @@ Bool_t TUri::IsAbsolute() const
    // absolute-URI  = scheme ":" hier-part [ "?" query ]
    // cf. Appendix A.
 
-   return (HasScheme() and HasHierPart() and !HasFragment());
+   return (HasScheme() && HasHierPart() && !HasFragment());
 }
 
 //______________________________________________________________________________
@@ -216,7 +216,7 @@ Bool_t TUri::IsRelative() const
    // relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
    // cf. Appendix A.
 
-   return (!HasScheme() and HasRelativePart());
+   return (!HasScheme() && HasRelativePart());
 }
 
 //______________________________________________________________________________
@@ -226,7 +226,7 @@ Bool_t TUri::IsUri() const
    // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
    // cf. Appendix A.
 
-   return (HasScheme() and HasHierPart());
+   return (HasScheme() && HasHierPart());
 }
 
 //______________________________________________________________________________
@@ -236,7 +236,7 @@ Bool_t TUri::IsReference() const
    // URI-reference = URI / relative-ref
    // cf. Appendix A.
 
-   return (IsUri() or IsRelative());
+   return (IsUri() || IsRelative());
 }
 
 //______________________________________________________________________________
@@ -277,7 +277,7 @@ const TString TUri::GetAuthority() const
    // authority   = [ userinfo "@" ] host [ ":" port ]
 
    TString authority = fHasUserinfo ? fUserinfo + "@" + fHost : fHost;
-   if (fHasPort and !fPort.IsNull())
+   if (fHasPort && !fPort.IsNull())
       // add port only if not empty
       authority += TString(":") + TString(fPort);
    return (authority);
@@ -379,7 +379,7 @@ Bool_t TUri::IsAuthority(const TString &string)
       port = ((TObjString*) tokens->At(3))->GetString();
    else
       port = "";
-   return (IsHost(host) and IsUserinfo(userinfo) and IsPort(port));
+   return (IsHost(host) && IsUserinfo(userinfo) && IsPort(port));
 }
 
 //______________________________________________________________________________
@@ -411,7 +411,7 @@ Bool_t TUri::IsUserinfo(const TString &string)
 
    return (TPRegexp(
               "^" + TString(kURI_pchar) + "*$"
-           ).Match(string) > 0 and not TString(string).Contains("@"));
+           ).Match(string) > 0 && !TString(string).Contains("@"));
 }
 
 //______________________________________________________________________________
@@ -627,7 +627,7 @@ const TString TUri::GetHierPart() const
    //             / path-rootless
    //             / path-empty
 
-   if (HasAuthority() and IsPathAbempty(fPath))
+   if (HasAuthority() && IsPathAbempty(fPath))
       return (TString("//") + GetAuthority() + fPath);
    else
       return fPath;
@@ -641,7 +641,7 @@ const TString TUri::GetRelativePart() const
    //               / path-noscheme
    //               / path-empty
 
-   if (HasAuthority() and IsPathAbempty(fPath))
+   if (HasAuthority() && IsPathAbempty(fPath))
       return (TString("//") + GetAuthority() + fPath);
    else
       return fPath;
@@ -657,7 +657,7 @@ Bool_t TUri::SetHierPart(const TString &hier)
    //             / path-empty
    //
 
-   /*  if ( IsPathAbsolute(hier) or IsPathRootless(hier) or IsPathEmpty(hier) ) {
+   /*  if ( IsPathAbsolute(hier) || IsPathRootless(hier) || IsPathEmpty(hier) ) {
      SetPath (hier);
      return kTRUE;
     }
@@ -679,13 +679,13 @@ Bool_t TUri::SetHierPart(const TString &hier)
 
    Bool_t valid = kTRUE;
 
-   if (!delm.IsNull() and IsPathAbempty(path)) {
+   if (!delm.IsNull() && IsPathAbempty(path)) {
       // URI contains an authority delimiter '//' ...
       valid &= SetAuthority(auth);
       valid &= SetPath(path);
    } else {
       // URI does not contain an authority
-      if (IsPathAbsolute(path) or IsPathRootless(path) or IsPathEmpty(path))
+      if (IsPathAbsolute(path) || IsPathRootless(path) || IsPathEmpty(path))
          valid &= SetPath(path);
       else {
          valid = kFALSE;
@@ -751,13 +751,13 @@ Bool_t TUri::SetRelativePart(const TString &relative)
 
    Bool_t valid = kTRUE;
 
-   if (!delm.IsNull() and IsPathAbempty(path)) {
+   if (!delm.IsNull() && IsPathAbempty(path)) {
       // URI contains an authority delimiter '//' ...
       valid &= SetAuthority(auth);
       valid &= SetPath(path);
    } else {
       // URI does not contain an authority
-      if (IsPathAbsolute(path) or IsPathNoscheme(path) or IsPathEmpty(path))
+      if (IsPathAbsolute(path) || IsPathNoscheme(path) || IsPathEmpty(path))
          valid &= SetPath(path);
       else {
          valid = kFALSE;
@@ -798,7 +798,7 @@ Bool_t TUri::IsHost(const TString &string)
    // host = IP-literal / IPv4address / reg-name
    // implemented: host =  IPv4address / reg-name
 
-   return (IsRegName(string) or IsIpv4(string));
+   return (IsRegName(string) || IsIpv4(string));
 }
 
 //______________________________________________________________________________
@@ -811,10 +811,10 @@ Bool_t TUri::IsPath(const TString &string)
    //               / path-rootless   ; begins with a segment
    //               / path-empty      ; zero characters
 
-   return (IsPathAbempty(string) or
-           IsPathAbsolute(string) or
-           IsPathNoscheme(string) or
-           IsPathRootless(string) or
+   return (IsPathAbempty(string) ||
+           IsPathAbsolute(string) ||
+           IsPathNoscheme(string) ||
+           IsPathRootless(string) ||
            IsPathEmpty(string));
 }
 
@@ -1080,7 +1080,7 @@ const TString TUri::MergePaths(const TUri &reference, const TUri &base)
    // any "/" characters).
 
    TString result = "";
-   if (base.HasAuthority() and base.GetPath().IsNull()) {
+   if (base.HasAuthority() && base.GetPath().IsNull()) {
       result = TString("/") + reference.GetPath();
    } else {
       TString basepath = base.GetPath();
