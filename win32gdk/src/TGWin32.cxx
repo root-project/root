@@ -4097,6 +4097,10 @@ Int_t TGWin32::WriteGIF(char *name)
       //GIFquantize(...);
       Error("WriteGIF",
             "can not create GIF of image containing more than 256 colors");
+      delete[]R;
+      delete[]G;
+      delete[]B;
+      return 0;
    }
 
    maxcol = 0;
