@@ -228,7 +228,7 @@ public:
    virtual void   DoPrintOpt(Bool_t on);
    
    
-   ClassDef(TFitEditor,0)  //new fit panel interface
+   ClassDef(TFitEditor,0)  //Fit Panel interface
 };
 
 #endif
