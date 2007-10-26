@@ -1,5 +1,5 @@
 // @(#)root/gui:$Id$
-// Author: Fons Rademakers   27/02/98
+// Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,163 +9,136 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_TRootBrowser
 #define ROOT_TRootBrowser
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootBrowser                                                         //
-//                                                                      //
-// This class creates a ROOT object browser (looking like Windows       //
-// Explorer). The widgets used are the new native ROOT GUI widgets.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TBrowserImp
-#include "TBrowserImp.h"
-#endif
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
 
+#ifndef ROOT_TBrowserImp
+#include "TBrowserImp.h"
+#endif
+
+class TGLayoutHints;
+class TGTab;
 class TGMenuBar;
 class TGPopupMenu;
-class TGLayoutHints;
 class TGStatusBar;
-class TGHorizontal3DLine;
-class TGToolBar;
-class TGButton;
-class TGFSComboBox;
-class TGLabel;
-class TGListView;
-class TRootIconBox;
-class TGCanvas;
-class TGListTree;
-class TGListTreeItem;
-class TGFileItem;
-class TList;
-class TGFileContainer;
-class TGComboBox;
-class TGTextEdit;
+class TGVSplitter;
+class TGHSplitter;
+
+class TBrowserPlugin : public TNamed
+{
+public:
+   Int_t    fTab;             // Tab number
+   Int_t    fSubTab;          // Tab element number
+   TString  fCommand;         // Command to be executed
+
+   TBrowserPlugin(const char *name, const char *cmd = "", Int_t tab = 1, 
+                  Int_t sub = -1) : TNamed(name, cmd), fTab(tab),
+      fSubTab(sub), fCommand(cmd) { }
+   virtual ~TBrowserPlugin() {}
+   
+   void     SetTab(Int_t tab) { fTab = tab; }
+   void     SetSubTab(Int_t sub) { fSubTab = sub; }
+   void     SetCommand(const char *cmd) { fCommand = cmd; }
+
+   ClassDef(TBrowserPlugin, 0)  // basic plugin description class
+};
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
-friend class TRootIconBox;
-
-private:
-   TGMenuBar           *fMenuBar;
-   TGToolBar           *fToolBar;
-   TGHorizontal3DLine  *fToolBarSep;
-   TGVerticalFrame     *fV1;
-   TGVerticalFrame     *fV2;
-   TGLabel             *fLbl1;
-   TGLabel             *fLbl2;
-   TGHorizontalFrame   *fHf;
-   TGCompositeFrame    *fTreeHdr;
-   TGCompositeFrame    *fListHdr;
-
-   TGLayoutHints       *fMenuBarLayout;
-   TGLayoutHints       *fMenuBarItemLayout;
-   TGLayoutHints       *fMenuBarHelpLayout;
-   TGLayoutHints       *fComboLayout;
-   TGLayoutHints       *fBarLayout;
-   TGComboBox          *fDrawOption;         // drawing option entry
-   TGLayoutHints       *fExpandLayout;       //
-   Bool_t               fBrowseTextFile;     //
-   TString              fTextFileName;
-
-   TList               *fWidgets;
-   TList               *fHistory;            // history of browsing
-   TObject             *fHistoryCursor;      // current hsitory position
-   const TGPicture     *fIconPic;            // icon picture
-
-   void  CreateBrowser(const char *name);
-   void  ListTreeHighlight(TGListTreeItem *item);
-   void  DeleteListTreeItem(TGListTreeItem *item);
-   void  HighlightListLevel();
-   void  AddToHistory(TGListTreeItem *item);
-   void  IconBoxAction(TObject *obj);
-   void  Chdir(TGListTreeItem *item);
-   void  DisplayDirectory();
-   void  DisplayTotal(Int_t total, Int_t selected);
-   void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
-   void  ToSystemDirectory(const char *dirname);
-   void  UpdateDrawOption();
-   void  Search();
-   void  BrowseTextFile(const char *file);
-   void  HideTextEdit();
-   void  ShowMacroButtons(Bool_t show = kTRUE);
-
-   Bool_t  HistoryBackward();
-   Bool_t  HistoryForward();
-   void    ClearHistory();
-
 protected:
-   TGPopupMenu         *fFileMenu;
-   TGPopupMenu         *fViewMenu;
-   TGPopupMenu         *fOptionMenu;
-   TGPopupMenu         *fHelpMenu;
-   TGPopupMenu         *fSortMenu;
-   TGListView          *fListView;
-   TRootIconBox        *fIconBox;
-   TGCanvas            *fTreeView;
-   TGListTree          *fLt;
-   TGButton            *fToolBarButton[7];  // same size as gToolBarData[]
-   TGFSComboBox        *fFSComboBox;
-   TGStatusBar         *fStatusBar;
-   TGListTreeItem      *fListLevel;         // current TGListTree level
-   Bool_t               fTreeLock;          // true when we want to lock TGListTree
-   Int_t                fViewMode;          // current IconBox view mode
-   Int_t                fSortMode;          // current IconBox sort mode
-   TGTextEdit          *fTextEdit;          // contents of browsed text file
+
+   TGLayoutHints     *fLH0, *fLH1, *fLH2, *fLH3;   // Layout hints, part 1
+   TGLayoutHints     *fLH4, *fLH5, *fLH6, *fLH7;   // Layout hints, part 2
+   TGTab             *fTabLeft;                    // Left Tab
+   TGTab             *fTabRight;                   // Right Tab
+   TGTab             *fTabBottom;                  // Bottom Tab
+   TGTab             *fEditTab;                    // Tab in "Edit" mode
+   TGVerticalFrame   *fVf;                         // Vertical frame
+   TGHorizontalFrame *fHf;                         // Horizontal frame
+   TGHorizontalFrame *fH1;                         // Horizontal frame
+   TGHorizontalFrame *fH2;                         // Horizontal frame
+   TGVerticalFrame   *fV1;                         // Vertical frame
+   TGVerticalFrame   *fV2;                         // Vertical frame
+   TGVSplitter       *fVSplitter;                  // Vertical splitter
+   TGHSplitter       *fHSplitter;                  // Horizontal splitter
+   TGCompositeFrame  *fEditFrame;                  // Frame in "Edit" mode
+   TGHorizontalFrame *fTopMenuFrame;               // Top menu frame
+   TGHorizontalFrame *fPreMenuFrame;               // First (owned) menu frame
+   TGHorizontalFrame *fMenuFrame;                  // Shared menu frame
+   TGHorizontalFrame *fToolbarFrame;               // Toolbar frame
+   TGMenuBar         *fMenuBar;                    // Main (owned) menu bar
+   TGPopupMenu       *fMenuFile;                   // "File" popup menu
+   TGPopupMenu       *fMenuExecPlugin;             // "Exec Plugin" popup menu
+   TGCompositeFrame  *fActMenuBar;                 // Actual (active) menu bar
+   TBrowserImp       *fActBrowser;                 // Actual (active) browser imp
+   TList              fBrowsers;                   // List of (sub)browsers
+   TList              fPlugins;                    // List of plugins
+   TGStatusBar       *fStatusBar;                  // Status bar
+   Int_t              fNbInitPlugins;              // Number of initial plugins (from .rootrc)
+   Int_t              fNbTab[3];                   // Number of tab elements (for each Tab)
+   Int_t              fCrTab[3];                   // Actual (active) tab elements (for each Tab)
+   Int_t              fPid;                        // Current process id
 
 public:
-   TRootBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500);
-   TRootBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   enum EInsertPosition {
+      kLeft, kRight, kBottom
+   };
+
+   TRootBrowser(TBrowser *b = 0, const char *name = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="", Bool_t initshow=kTRUE);
+   TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="", Bool_t initshow=kTRUE);
    virtual ~TRootBrowser();
 
-   virtual void Add(TObject *obj, const char *name = 0, Int_t check = -1);
-   virtual void AddToBox(TObject *obj, const char *name);
-   virtual void AddToTree(TObject *obj, const char *name, Int_t check = -1);
+   void              InitPlugins(Option_t *opt="");
 
-   virtual void AddCheckBox(TObject *obj, Bool_t check = kFALSE);
-   virtual void CheckObjectItem(TObject *obj, Bool_t check = kFALSE);
-   virtual void RemoveCheckBox(TObject *obj);
+   void              CreateBrowser(const char *name);
+   void              CloneBrowser();
+   void              CloseWindow();
+   void              DoTab(Int_t id);
+   TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
+   TGStatusBar      *GetStatusBar() const { return fStatusBar; }
+   TGTab            *GetTabLeft() const { return fTabLeft; }
+   TGTab            *GetTabRight() const { return fTabRight; }
+   TGTab            *GetTabBottom() const { return fTabBottom; }
+   TGTab            *GetTab(Int_t pos) const;
+   void              SetTab(Int_t pos = kRight, Int_t subpos = -1);
+   void              SetTabTitle(const char *title, Int_t pos = kRight, Int_t subpos = -1);
+   void              HandleMenu(Int_t id);
+   void              RecursiveReparent(TGPopupMenu *popup);
+   void              RemoveTab(Int_t pos, Int_t subpos);
+   void              SetActBrowser(TBrowserImp *b) { fActBrowser = b; }
+   void              ShowMenu(TGCompositeFrame *menu);
+   virtual void      StartEmbedding(Int_t pos = kRight, Int_t subpos = -1);
+   virtual void      StopEmbedding(const char *name = 0) { StopEmbedding(name, 0); }
+   void              StopEmbedding(const char *name, TGLayoutHints *layout);
+   void              SwitchMenus(TGCompositeFrame *from);
 
-   virtual void BrowseObj(TObject *obj);             //*SIGNAL*
-   virtual void ExecuteDefaultAction(TObject *obj);  //*SIGNAL*
-   virtual void DoubleClicked(TObject *obj);         //*SIGNAL*
-   virtual void Checked(TObject *obj, Bool_t check); //*SIGNAL*
-   virtual void Iconify() { }
-   virtual void RecursiveRemove(TObject *obj);
-   virtual void Refresh(Bool_t force = kFALSE);
-   virtual void ResizeBrowser() { }
-   virtual void ShowToolBar(Bool_t show = kTRUE);
-   virtual void ShowStatusBar(Bool_t show = kTRUE);
-   virtual void Show() { MapRaised(); }
-   virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
-   virtual Bool_t HandleKey(Event_t *event);
+   virtual void      BrowseObj(TObject *obj);             //*SIGNAL*
+   virtual void      ExecuteDefaultAction(TObject *obj);  //*SIGNAL*
+   virtual void      DoubleClicked(TObject *obj);         //*SIGNAL*
+   virtual void      Checked(TObject *obj, Bool_t check); //*SIGNAL*
 
-   TGListTree      *GetListTree()  const { return fLt; }
-   TGFileContainer *GetIconBox()   const;
-   TGStatusBar     *GetStatusBar() const { return fStatusBar; }
-   TGMenuBar       *GetMenuBar()   const { return  fMenuBar; }
-   TGToolBar       *GetToolBar()   const { return fToolBar; }
-   void             SetDrawOption(Option_t *option="");
-   Option_t        *GetDrawOption() const;
-   void             SetSortMode(Int_t new_mode);
+   virtual void      Add(TObject *obj, const char *name = 0, Int_t check = -1);
+   virtual void      RecursiveRemove(TObject *obj);
+   virtual void      Refresh(Bool_t force = kFALSE);
+   virtual void      Show() { MapRaised(); }
+   Option_t         *GetDrawOption() const;
+
+   virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0, 
+                                const char *cmd = 0, Int_t pos = kRight, 
+                                Int_t subpos = -1);
+   virtual Bool_t    HandleKey(Event_t *event);
 
    // overridden from TGMainFrame
-   void     CloseWindow();
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   void     ReallyDelete();
+   void              ReallyDelete();
 
-   // auxilary (a la privae) methods
-   void     ExecMacro();
-   void     InterruptMacro();
+   static TBrowserImp *NewBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="");
+   static TBrowserImp *NewBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");
 
-   ClassDef(TRootBrowser,0)  //ROOT native GUI version of browser
+   ClassDef(TRootBrowser, 0) // New ROOT Browser
 };
 
 #endif

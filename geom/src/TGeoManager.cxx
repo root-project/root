@@ -443,6 +443,7 @@
 #include "TVirtualGeoTrack.h"
 #include "TQObject.h"
 #include "TMath.h"
+#include "TEnv.h"
 
 // statics and globals
 
@@ -942,7 +943,8 @@ void TGeoManager::Browse(TBrowser *b)
    if (fMasterVolume) b->Add(fMasterVolume, "Master Volume", fMasterVolume->IsVisible());
    if (fTopVolume) b->Add(fTopVolume, "Top Volume", fTopVolume->IsVisible());
    if (fTopNode)   b->Add(fTopNode);
-   TQObject::Connect("TRootBrowser", "Checked(TObject*,Bool_t)", 
+   TString browserImp(gEnv->GetValue("Browser.Name", "TRootBrowserLite"));
+   TQObject::Connect(browserImp.Data(), "Checked(TObject*,Bool_t)", 
                      "TGeoManager", this, "SetVisibility(TObject*,Bool_t)");
 }
 

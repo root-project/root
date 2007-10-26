@@ -40,7 +40,7 @@
 
 #include "TGClient.h"
 #include "TRootCanvas.h"
-#include "TRootBrowser.h"
+#include "TRootBrowserLite.h"
 #include "TRootControlBar.h"
 #include "TContextMenu.h"
 #include "TRootContextMenu.h"

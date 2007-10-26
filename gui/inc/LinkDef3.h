@@ -34,7 +34,7 @@
 #pragma link C++ class TRootApplication;
 #pragma link C++ class TRootCanvas;
 #pragma link C++ class TRootEmbeddedCanvas;
-#pragma link C++ class TRootBrowser;
+#pragma link C++ class TRootBrowserLite;
 #pragma link C++ class TRootContextMenu;
 #pragma link C++ class TRootDialog;
 #pragma link C++ class TRootControlBar;
@@ -77,5 +77,10 @@
 #pragma link C++ class TDNDdata;
 #pragma link C++ class TGDNDManager;
 #pragma link C++ class TGDragWindow;
+
+#pragma link C++ class TGCommandPlugin;
+#pragma link C++ class TGFileBrowser;
+#pragma link C++ class TBrowserPlugin;
+#pragma link C++ class TRootBrowser;
 
 #endif

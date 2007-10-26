@@ -1,1256 +1,482 @@
 // @(#)root/gui:$Id$
-// Author: Fons Rademakers   27/02/98
-
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootBrowser                                                         //
-//                                                                      //
-// This class creates a ROOT object browser (looking like Windows       //
-// Explorer). The widgets used are the new native ROOT GUI widgets.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#include "RConfigure.h"
-
-#include "TRootBrowser.h"
-#include "TRootApplication.h"
-#include "TGCanvas.h"
-#include "TGMenu.h"
-#include "TGFileDialog.h"
-#include "TGStatusBar.h"
-#include "TGFSComboBox.h"
-#include "TGLabel.h"
-#include "TGButton.h"
-#include "TGListView.h"
-#include "TGListTree.h"
-#include "TGToolBar.h"
-#include "TGSplitter.h"
-#include "TG3DLine.h"
-#include "TGFSContainer.h"
-#include "TGMimeTypes.h"
-#include "TRootHelpDialog.h"
-#include "TGTextEntry.h"
-#include "TGTextEdit.h"
-#include "TGTextEditDialogs.h"
+// Author: Bertrand Bellenot   26/09/2007
 
 #include "TROOT.h"
-#include "TEnv.h"
-#include "TBrowser.h"
-#include "TApplication.h"
-#include "TFile.h"
-#include "TKey.h"
-#include "TKeyMapFile.h"
-#include "TClass.h"
-#include "TContextMenu.h"
 #include "TSystem.h"
-#include "TSystemDirectory.h"
-#include "TSystemFile.h"
-#include "TRemoteObject.h"
+#include "TApplication.h"
+#include "TBrowser.h"
+#include "TGClient.h"
+#include "TGFrame.h"
+#include "TGTab.h"
+#include "TGMenu.h"
+#include "TGLayout.h"
+#include "TGSplitter.h"
+#include "TGStatusBar.h"
+#include "Varargs.h"
 #include "TInterpreter.h"
-#include "TGuiBuilder.h"
-#include "TImage.h"
-#include "TVirtualPad.h"
-#include "KeySymbols.h"
-#include "THashTable.h"
-#include "TMethod.h"
-#include "TColor.h"
+#include "TBrowser.h"
+#include "TGFileDialog.h"
 #include "TObjString.h"
-#include "TGDNDManager.h"
-#include "TBufferFile.h"
-#include "TFolder.h"
+#include "TVirtualPad.h"
+#include <KeySymbols.h>
+
+#include "TRootBrowser.h"
+#include "TGFileBrowser.h"
+#include "TGInputDialog.h"
+
 #include "Getline.h"
 
-#include "HelpText.h"
-
 #ifdef WIN32
-#include "TWin32SplashThread.h"
+#include <TWin32SplashThread.h>
 #endif
 
-// Browser menu command ids
-enum ERootBrowserCommands {
-   kFileNewBrowser,
-   kFileNewCanvas,
-   kFileNewBuilder,
-   kFileOpen,
-   kFileSave,
-   kFileSaveAs,
-   kFilePrint,
-   kFileCloseBrowser,
-   kFileQuit,
-
-   kViewToolBar,
-   kViewStatusBar,
-   kViewLargeIcons,
-   kViewSmallIcons,
-   kViewList,
-   kViewDetails,
-   kViewLineUp,
-   kViewHidden,
-   kViewRefresh,
-   kViewFind,
-   kViewExec,
-   kViewInterrupt,
-   kViewSave,
-
-   kViewArrangeByName,     // Arrange submenu
-   kViewArrangeByType,
-   kViewArrangeBySize,
-   kViewArrangeByDate,
-   kViewArrangeAuto,
-   kViewGroupLV,
-
-   kHistoryBack,
-   kHistoryForw,
-
-   kOptionShowCycles,
-   kOptionAutoThumbnail,
-
-   kOneLevelUp,            // One level up toolbar button
-   kFSComboBox,            // File system combobox in toolbar
-
-   kHelpAbout,
-   kHelpOnBrowser,
-   kHelpOnCanvas,
-   kHelpOnMenus,
-   kHelpOnGraphicsEd,
-   kHelpOnObjects,
-   kHelpOnPS
+static const char *gOpenFileTypes[] = {
+   "ROOT files",   "*.root",
+   "All files",    "*",
+   0,              0 
 };
 
-
-//----- Struct for default icons
-
-struct DefaultIcon_t {
-   const char      *fPicnamePrefix;
-   const TGPicture *fIcon[2];
+static const char *gPluginFileTypes[] = {
+   "ROOT files",   "*.C",
+   "All files",    "*",
+   0,              0 
 };
 
-#if 0
-static DefaultIcon_t gDefaultIcon[] = {
-   { "folder",  { 0, 0 } },
-   { "app",     { 0, 0 } },
-   { "doc",     { 0, 0 } },
-   { "slink",   { 0, 0 } },
-   { "histo",   { 0, 0 } },
-   { "object",  { 0, 0 } }
-};
-#endif
-
-
-//----- Toolbar stuff...
-
-static ToolBarData_t gToolBarData[] = {
-   { "tb_uplevel.xpm",   "Up One Level",   kFALSE, kOneLevelUp, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "tb_bigicons.xpm",  "Large Icons",    kTRUE,  kViewLargeIcons, 0 },
-   { "tb_smicons.xpm",   "Small Icons",    kTRUE,  kViewSmallIcons, 0 },
-   { "tb_list.xpm",      "List",           kTRUE,  kViewList, 0 },
-   { "tb_details.xpm",   "Details",        kTRUE,  kViewDetails, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "tb_back.xpm",      "Back",           kFALSE, kHistoryBack, 0 },
-   { "tb_forw.xpm",      "Forward",        kFALSE, kHistoryForw, 0 },
-   { "tb_refresh.xpm",   "Refresh (F5)",   kFALSE, kViewRefresh, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "tb_find.xpm",      "Find (Ctrl-F)",  kFALSE, kViewFind, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "macro_t.xpm",      "Execute Macro",  kFALSE, kViewExec, 0 },
-   { "interrupt.xpm",    "Interrupt Macro",kFALSE, kViewInterrupt, 0 },
-   { "filesaveas.xpm",   "Save Macro",     kFALSE, kViewSave, 0 },
-   { 0,                  0,                kFALSE, 0, 0 }
-};
-
-
-//----- TGFileDialog file types
-
-static const char *gOpenTypes[] = { "ROOT files",   "*.root",
-                                    "All files",    "*",
-                                    0,              0 };
-
-////////////////////////////////////////////////////////////////////////////////////
-class TRootBrowserHistoryCursor : public TObject {
-public:
-   TGListTreeItem *fItem;
-
-   TRootBrowserHistoryCursor(TGListTreeItem *item) : fItem(item) {}
-   void Print(Option_t *) const {  if (fItem) printf("%s\n", fItem->GetText()); }
-};
-
-
-////////////////////////////////////////////////////////////////////////////////////
-class TRootBrowserHistory : public TList {
-public:
-   void RecursiveRemove(TObject *obj) {
-      TRootBrowserHistoryCursor *cur;
-      TIter next(this);
-
-      while ((cur = (TRootBrowserHistoryCursor*)next())) {
-         if (cur->fItem->GetUserData() == obj) {
-            Remove(cur);
-            delete cur;
-         }
-      }
-   }
-
-   void DeleteItem(TGListTreeItem *item) {
-      TRootBrowserHistoryCursor *cur;
-      TIter next(this);
-
-      while ((cur = (TRootBrowserHistoryCursor*)next())) {
-         if (cur->fItem == item) {
-            Remove(cur);
-            delete cur;
-         }
-      }
-   }
-};
-
-
-////////////////////////////////////////////////////////////////////////////////////
-class TRootBrowserCursorSwitcher {
-private:
-   TGWindow *fW1;
-   TGWindow *fW2;
-public:
-   TRootBrowserCursorSwitcher(TGWindow *w1, TGWindow *w2) : fW1(w1), fW2(w2) {
-      if (w1) gVirtualX->SetCursor(w1->GetId(), gVirtualX->CreateCursor(kWatch));
-      if (w2) gVirtualX->SetCursor(w2->GetId(), gVirtualX->CreateCursor(kWatch));
-   }
-   ~TRootBrowserCursorSwitcher() {
-      if (fW1) gVirtualX->SetCursor(fW1->GetId(), gVirtualX->CreateCursor(kPointer));
-      if (fW2) gVirtualX->SetCursor(fW2->GetId(), gVirtualX->CreateCursor(kPointer));
-   }
-};
-
-////////////////////////////////////////////////////////////////////////////////////
-class TIconBoxThumb : public TObject {
-public:
-   TString fName;
-   const TGPicture *fSmall;
-   const TGPicture *fLarge;
-
-   TIconBoxThumb(const char *name, const TGPicture *spic, const TGPicture *pic) {
-      fName = name;
-      fSmall = spic;
-      fLarge = pic;
-   }
-   ULong_t Hash() const { return fName.Hash(); }
-   const char *GetName() const { return fName.Data(); }
-};
-
-
-
-//----- Special ROOT object item (this are items in the icon box, see
-//----- TRootIconBox)
-////////////////////////////////////////////////////////////////////////////////////
-class TRootObjItem : public TGFileItem {
-public:
-   TRootObjItem(const TGWindow *p, const TGPicture *bpic,
-                const TGPicture *spic, TGString *name,
-                TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
-
-   virtual TDNDdata *GetDNDdata(Atom_t) {
-      TObject *object = 0;
-      if (fObj->IsA() == TKey::Class())
-         object = ((TKey *)fObj)->ReadObj();
-      else
-         object = fObj;
-      if (object) {
-         if (!fBuf) fBuf = new TBufferFile(TBuffer::kWrite);
-         fBuf->WriteObject(object);
-         fDNDData.fData = fBuf->Buffer();
-         fDNDData.fDataLength = fBuf->Length();
-      }
-      fDNDData.fDataType = gVirtualX->InternAtom("application/root", kFALSE);
-      return &fDNDData;
-   }
-
-   virtual Bool_t HandleDNDfinished() {
-      if (GetParent())
-         return ((TGFrame *)GetParent())->HandleDNDfinished();
-      return kFALSE;
-   }
-
-protected:
-   TObject     *fObj;
-   TDNDdata     fDNDData;
+enum ENewBrowserMessages {
+   kBrowse = 11011,
+   kOpenFile,
+   kClone,
+   kNewEditor,
+   kNewCanvas,
+   kExecPluginMacro,
+   kExecPluginCmd,
+   kCloseTab,
+   kCloseWindow,
+   kQuitRoot
 };
 
 //______________________________________________________________________________
-TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
-                           const TGPicture *spic, TGString *name,
-                           TObject *obj, TClass *, EListViewMode viewMode) :
-   TGFileItem(p, bpic, 0, spic, 0, name, 0, 0, 0, 0, 0, viewMode)
-{
-   // Create an icon box item.
-
-   fObj = obj;
-   fDNDData.fData = 0;
-   fDNDData.fDataLength = 0;
-
-   if (fSubnames) {
-      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
-   }
-   delete [] fSubnames;
-   fSubnames = new TGString* [2];
-
-   fSubnames[0] = new TGString(obj->GetTitle());
-
-   fSubnames[1] = 0;
-
-   if (obj->IsA()->HasDefaultConstructor()) {
-      SetDNDSource(kTRUE);
-   }
-   if ((obj->IsA() == TFolder::Class()) ||
-       (obj->IsA() == TClass::Class())) {
-      SetDNDSource(kFALSE);
-   }
-
-   int i;
-   for (i = 0; fSubnames[i] != 0; ++i)
-      ;
-   fCtw = new int[i];
-   for (i = 0; fSubnames[i] != 0; ++i)
-      fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                     fSubnames[i]->GetLength());
-}
-
-class TRootIconBox;
-////////////////////////////////////////////////////////////////////////////////////
-class TRootIconList : public TList {
-
-private:
-   TRootIconBox    *fIconBox; // iconbox to which list belongs
-   const TGPicture *fPic;     // list view icon
-
-public:
-   TRootIconList(TRootIconBox* box = 0);
-   virtual ~TRootIconList();
-   void              UpdateName();
-   const char       *GetTitle() const { return "ListView Container"; }
-   Bool_t            IsFolder() const { return kFALSE; }
-   void              Browse(TBrowser *b);
-   const TGPicture  *GetPicture() const { return fPic; }
-};
-
-//______________________________________________________________________________
-TRootIconList::TRootIconList(TRootIconBox* box)
-{
-   // constructor
-
-   fPic = gClient->GetPicture("listview.xpm");
-   fIconBox = box;
-   fName = "empty";
-}
-
-//______________________________________________________________________________
-TRootIconList::~TRootIconList()
-{
-   // destructor
-
-   gClient->FreePicture(fPic);
-}
-
-//______________________________________________________________________________
-void TRootIconList::UpdateName()
-{
-   // composite name
-
-   if (!First()) return;
-
-   if (fSize==1) {
-      fName = First()->GetName();
-      return;
-   }
-
-   fName = First()->GetName();
-   fName += "-";
-   fName += Last()->GetName();
-}
-
-//----- Special ROOT object container (this is the icon box on the
-//----- right side of the browser)
-////////////////////////////////////////////////////////////////////////////////////
-class TRootIconBox : public TGFileContainer {
-friend class TRootIconList;
-friend class TRootBrowser;
-
-private:
-   Bool_t           fCheckHeaders;   // if true check headers
-   TRootIconList   *fCurrentList;    //
-   TRootObjItem    *fCurrentItem;    //
-   Bool_t           fGrouped;        //
-   TString          fCachedPicName;  //
-   TList           *fGarbage;        // garbage for  TRootIconList's
-   Int_t            fGroupSize;      // the total number of items when icon box switched to "global view" mode
-   TGString        *fCurrentName;    //
-   const TGPicture *fLargeCachedPic; //
-   const TGPicture *fSmallCachedPic; //
-   Bool_t           fWasGrouped;
-   TObject         *fActiveObject;   //
-   Bool_t           fIsEmpty;
-   THashTable      *fThumbnails;     // hash table with thumbnailed pictures
-   Bool_t           fAutoThumbnail;  //
-   TRootBrowser    *fBrowser;
-
-   void  *FindItem(const TString& name,
-                   Bool_t direction = kTRUE,
-                   Bool_t caseSensitive = kTRUE,
-                   Bool_t beginWith = kFALSE);
-   void RemoveGarbage();
-
-public:
-   TRootIconBox(TRootBrowser *browser, TGListView *lv,
-                UInt_t options = kSunkenFrame,
-                ULong_t back = GetDefaultFrameBackground());
-
-   virtual ~TRootIconBox();
-
-   void   AddObjItem(const char *name, TObject *obj, TClass *cl);
-   void   GetObjPictures(const TGPicture **pic, const TGPicture **spic,
-                         TObject *obj, const char *name);
-   void   SetObjHeaders();
-   void   Refresh();
-   void   RemoveAll();
-   void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
-   Int_t  GetGroupSize() const { return fGroupSize; }
-   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude=kTRUE) { return TGContainer::FindFrame(x,y,exclude); }
-   Bool_t WasGrouped() const { return fWasGrouped; }
-};
-
-//______________________________________________________________________________
-TRootIconBox::TRootIconBox(TRootBrowser *browser, TGListView *lv, UInt_t options,
-                           ULong_t back) : TGFileContainer(lv, options, back)
-{
-   // Create iconbox containing ROOT objects in browser.
-
-   fListView = lv;
-   fBrowser = browser;
-
-   fCheckHeaders = kTRUE;
-   fTotal = 0;
-   fGarbage = new TList();
-   fCurrentList = 0;
-   fCurrentItem = 0;
-   fGrouped = kFALSE;
-   fGroupSize = 1000;
-   fCurrentName = 0;
-   fWasGrouped = kFALSE;
-   fActiveObject = 0;
-   fIsEmpty = kTRUE;
-
-   // Don't use timer HERE (timer is set in TBrowser).
-   StopRefreshTimer();
-   fRefresh = 0;
-   fThumbnails = new THashTable(50);
-   fAutoThumbnail = kTRUE;
-}
-
-//______________________________________________________________________________
-TRootIconBox::~TRootIconBox()
-{
-   // destructor
-
-   RemoveAll();
-   RemoveGarbage();
-   delete fGarbage;
-   delete fThumbnails;
-}
-
-//______________________________________________________________________________
-void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
-                                  TObject *obj, const char *name)
-{
-   // Retrieve icons associated with class "name". Association is made
-   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
-
-   static TImage *im = 0;
-   if (!im) {
-      im = TImage::Create();
-   }
-
-   TString xpm_magic(name, 3);
-   Bool_t xpm = xpm_magic == "/* ";
-   const char *iconname = xpm ? obj->GetName() : name;
-
-   if (obj->IsA()->InheritsFrom("TGeoVolume")) {
-      iconname = obj->GetIconName() ? obj->GetIconName() : obj->IsA()->GetName();
-   }
-
-   if (fCachedPicName == iconname) {
-      *pic = fLargeCachedPic;
-      *spic = fSmallCachedPic;
-      return;
-   }
-
-   *pic = fClient->GetMimeTypeList()->GetIcon(iconname, kFALSE);
-
-   if (!(*pic) && xpm) {
-      if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
-         *pic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
-                                                      im->GetMask());
-         im->Scale(im->GetWidth()/2, im->GetHeight()/2);
-         *spic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
-                                                      im->GetMask());
-      }
-
-      fClient->GetMimeTypeList()->AddType("[thumbnail]", iconname, iconname, iconname, "->Browse()");
-      return;
-   }
-
-   if (*pic == 0) {
-      if (obj->IsFolder()) {
-         *pic = fFolder_s;
-      } else {
-         *pic = fDoc_s;
-      }
-   }
-   fLargeCachedPic = *pic;
-
-   *spic = fClient->GetMimeTypeList()->GetIcon(iconname, kTRUE);
-
-   if (*spic == 0) {
-      if (obj->IsFolder())
-         *spic = fFolder_t;
-      else
-         *spic = fDoc_t;
-   }
-   fSmallCachedPic = *spic;
-   fCachedPicName = iconname;
-}
-
-//______________________________________________________________________________
-void TRootIconBox::RemoveGarbage()
-{
-   // delete all TRootIconLists from garbage
-
-   TIter next(fGarbage);
-   TList *li;
-
-   while ((li=(TList *)next())) {
-      li->Clear("nodelete");
-   }
-   fGarbage->Delete();
-}
-
-//______________________________________________________________________________
-void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
-{
-   // Add object to iconbox. Class is used to get the associated icons
-   // via the mime file (see GetObjPictures()).
-
-   if (!cl) return;
-
-   Bool_t isSystemFile = kFALSE;
-   TGFileItem *fi;
-   fWasGrouped = kFALSE;
-   const TGPicture *pic = 0;
-   const TGPicture *spic = 0;
-
-   if (obj->InheritsFrom("TRemoteObject")) {
-      // check if the real remote object is a system file or directory
-      TRemoteObject *robj = (TRemoteObject *)obj;
-      if ((TString(robj->GetClassName()) == "TSystemFile") ||
-          (TString(robj->GetClassName()) == "TSystemDirectory"))
-         isSystemFile = kTRUE;
-   }
-
-   if (isSystemFile || obj->IsA() == TSystemFile::Class() ||
-       obj->IsA() == TSystemDirectory::Class()) {
-      if (fCheckHeaders) {
-         if (strcmp(fListView->GetHeader(1), "Attributes")) {
-            fListView->SetDefaultHeaders();
-            TGTextButton** buttons = fListView->GetHeaderButtons();
-            if (buttons) {
-               buttons[0]->Connect("Clicked()", "TRootBrowser", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByName));
-               buttons[1]->Connect("Clicked()", "TRootBrowser", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByType));
-               buttons[2]->Connect("Clicked()", "TRootBrowser", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeBySize));
-               buttons[5]->Connect("Clicked()", "TRootBrowser", fBrowser,
-                                   Form("SetSortMode(=%d)", kViewArrangeByDate));
-            }
-         }
-         fCheckHeaders = kFALSE;
-      }
-
-      TIconBoxThumb *thumb = 0;
-      char *thumbname = gSystem->ConcatFileName(gSystem->WorkingDirectory(), name);
-      thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name :
-                                                       thumbname);
-      delete []thumbname;
-
-      if (thumb) {
-         spic = thumb->fSmall;
-         pic =  thumb->fLarge;
-      }
-
-      if (obj->InheritsFrom("TRemoteObject"))
-         // special case for remote object
-         fi = AddRemoteFile(obj, spic, pic);
-      else
-         fi = AddFile(name, spic, pic);
-      if (fi) {
-         fi->SetUserData(obj);
-         if (obj->IsA() == TSystemFile::Class()) {
-            TString str;
-            TDNDdata data;
-            str = Form("file://%s/%s\r\n",
-                    gSystem->UnixPathName(obj->GetTitle()),
-                    obj->GetName());
-            data.fData = (void *)strdup(str.Data());
-            data.fDataLength = str.Length()+1;
-            data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
-            fi->SetDNDdata(&data);
-            fi->SetDNDSource(kTRUE);
-         }
-      }
-
-      fIsEmpty = kFALSE;
-      return;
-   }
-
-   if (!fCurrentList) {
-      fCurrentList = new TRootIconList(this);
-      fGarbage->Add(fCurrentList);
-   }
-
-   fCurrentList->Add(obj);
-   fCurrentList->UpdateName();
-   fIsEmpty = kFALSE;
-
-   TGFrameElement *el;
-   TIter next(fList);
-   while ((el = (TGFrameElement *) next())) {
-      TGLVEntry *f = (TGLVEntry *) el->fFrame;
-      if (f->GetUserData() == obj) {
-         return;
-      }
-   }
-
-   if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
-      fCurrentName->SetString(fCurrentList->GetName());
-   }
-
-   EListViewMode view = fListView->GetViewMode();
-
-   if ((fCurrentList->GetSize() < fGroupSize) && !fGrouped) {
-      GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
-                     obj->GetIconName() : cl->GetName());
-
-      if (fCheckHeaders) {
-         if (strcmp(fListView->GetHeader(1), "Title")) {
-            SetObjHeaders();
-         }
-         fCheckHeaders = kFALSE;
-      }
-
-      fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, view);
-
-      fi->SetUserData(obj);
-      AddItem(fi);
-      fTotal++;
-      return;
-   }
-
-   if (fGrouped && (fCurrentList->GetSize()==1)) {
-      fCurrentName = new TGString(fCurrentList->GetName());
-      fCurrentItem = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
-                                      fCurrentName,fCurrentList, TList::Class(), view);
-      fCurrentItem->SetUserData(fCurrentList);
-      AddItem(fCurrentItem);
-      fTotal = fList->GetSize();
-      return;
-   }
-
-   if ((fCurrentList->GetSize()==fGroupSize) && !fGrouped) {
-      fGrouped = kTRUE;
-
-      // clear fList
-      TGFrameElement *el;
-      TIter nextl(fList);
-
-      while ((el = (TGFrameElement *) nextl())) {
-         el->fFrame->DestroyWindow();
-         delete el->fFrame;
-         fList->Remove(el);
-         delete el;
-      }
-
-      fCurrentName = new TGString(fCurrentList->GetName());
-      fi = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
-                            fCurrentName, fCurrentList, TList::Class(), view);
-      fi->SetUserData(fCurrentList);
-      AddItem(fi);
-
-      fCurrentList = new TRootIconList(this);
-      fGarbage->Add(fCurrentList);
-      fTotal = 1;
-      return;
-   }
-
-   if ((fCurrentList->GetSize()==fGroupSize) && fGrouped) {
-      fCurrentList = new TRootIconList(this);
-      fGarbage->Add(fCurrentList);
-      return;
-   }
-}
-
-//______________________________________________________________________________
-void TRootIconList::Browse(TBrowser *)
-{
-   // browse icon list
-
-   if (!fIconBox) return;
-
-   TObject *obj;
-   TGFileItem *fi;
-   const TGPicture *pic = 0;
-   const TGPicture *spic = 0;
-   TClass *cl;
-   TString name;
-   TKey *key = 0;
-
-   fIconBox->RemoveAll();
-   TObjLink *lnk = FirstLink();
-
-   while (lnk) {
-      obj = lnk->GetObject();
-      lnk = lnk->Next();
-
-      if (obj->IsA() == TKey::Class()) {
-         cl = TClass::GetClass(((TKey *)obj)->GetClassName());
-         key = (TKey *)obj;
-      } else if (obj->IsA() == TKeyMapFile::Class()) {
-         cl = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
-      } else if (obj->InheritsFrom("TRemoteObject")) {
-         // special case for remote object: get real object class
-         TRemoteObject *robj = (TRemoteObject *)obj;
-         cl = TClass::GetClass(robj->GetClassName());
-      } else {
-         cl = obj->IsA();
-      }
-
-      name = obj->GetName();
-
-      if (obj->IsA() == TKey::Class()) {
-         name += ";";
-         name +=  key->GetCycle();
-      }
-
-      fIconBox->GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
-                               obj->GetIconName() : cl->GetName());
-
-      fi = new TRootObjItem((const TGWindow*)fIconBox, pic, spic, new TGString(name.Data()),
-                             obj, cl, (EListViewMode)fIconBox->GetViewMode());
-      fi->SetUserData(obj);
-      fIconBox->AddItem(fi);
-      fIconBox->fTotal++;
-
-      if (obj==fIconBox->fActiveObject) {
-         fIconBox->ActivateItem((TGFrameElement*)fIconBox->fList->Last());
-      }
-   }
-
-   fIconBox->fGarbage->Remove(this);
-   fIconBox->RemoveGarbage();
-   fIconBox->fGarbage->Add(this); // delete this later
-
-   fIconBox->Refresh();
-   fIconBox->AdjustPosition();
-
-   fIconBox->fWasGrouped = kTRUE;
-}
-
-//______________________________________________________________________________
-void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
-                             Bool_t caseSensitive,Bool_t beginWith)
-{
-   // Find a frame which assosiated object has a name containing a "name" string.
-
-   if (!fGrouped) {
-      return TGContainer::FindItem(name, direction, caseSensitive, beginWith);
-   }
-
-   if (name.IsNull()) return 0;
-   int idx = kNPOS;
-
-   TGFrameElement* el = 0;
-   TString str;
-   TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
-
-   fLastDir = direction;
-   fLastCase = caseSensitive;
-   fLastName = name;
-
-   if (fLastActiveEl) {
-      el = fLastActiveEl;
-
-      if (direction) {
-         el = (TGFrameElement *)fList->After(el);
-      } else {
-         el = (TGFrameElement *)fList->Before(el);
-      }
-   } else {
-      if (direction) el = (TGFrameElement *)fList->First();
-      else el  = (TGFrameElement *)fList->Last();
-   }
-
-   TGLVEntry* lv = 0;
-   TObject* obj = 0;
-   TList* li = 0;
-
-   while (el) {
-      lv = (TGLVEntry*)el->fFrame;
-      li = (TList*)lv->GetUserData();
-
-      TIter next(li);
-
-      while ((obj=next())) {
-         str = obj->GetName();
-         idx = str.Index(name,0,cmp);
-
-         if (idx!=kNPOS) {
-            if (beginWith) {
-               if (idx==0) {
-                  fActiveObject = obj;
-                  return el;
-               }
-            } else {
-               fActiveObject = obj;
-               return el;
-            }
-         }
-      }
-      if (direction) {
-         el = (TGFrameElement *)fList->After(el);
-      } else {
-         el = (TGFrameElement *)fList->Before(el);
-      }
-   }
-   fActiveObject = 0;
-   return 0;
-}
-
-//______________________________________________________________________________
-void TRootIconBox::SetObjHeaders()
-{
-   // Set list box headers used to display detailed object iformation.
-   // Currently this is only "Name" and "Title".
-
-   fListView->SetHeaders(2);
-   fListView->SetHeader("Name",  kTextLeft, kTextLeft, 0);
-   fListView->SetHeader("Title", kTextLeft, kTextLeft, 1);
-}
-
-//______________________________________________________________________________
-void TRootIconBox::Refresh()
-{
-   // Sort icons, and send message to browser with number of objects
-   // in box.
-
-   // This automatically calls layout
-   Sort(fSortType);
-
-   // Make TRootBrowser display total objects in status bar
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
-
-   MapSubwindows();
-}
-
-//______________________________________________________________________________
-void TRootIconBox::RemoveAll()
-{
-   // Remove all items from icon box
-
-   if (fIsEmpty) return;
-
-   fCheckHeaders = kTRUE;
-   TGFileContainer::RemoveAll();
-   fGrouped = kFALSE;
-   fCurrentItem = 0;
-   fCurrentList = 0;
-   fIsEmpty = kTRUE;
-}
-
-
-
-ClassImp(TRootBrowser)
-
-//______________________________________________________________________________
-TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
+TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, 
+                           UInt_t height, Option_t *opt, Bool_t initshow) : 
+   TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height.
 
+   fActBrowser = 0;
    CreateBrowser(name);
-
    Resize(width, height);
-   if (b) Show();
+   if (initshow) {
+      InitPlugins(opt);
+      MapWindow();
+   }
+   gVirtualX->SetInputFocus(GetId());
 }
 
 //______________________________________________________________________________
 TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
-                           UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
+                           UInt_t width, UInt_t height, Option_t *opt, 
+                           Bool_t initshow) : 
+   TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height and at position x, y.
 
+   fActBrowser = 0;
    CreateBrowser(name);
-
    MoveResize(x, y, width, height);
    SetWMPosition(x, y);
-   if (b) Show();
+   if (initshow) {
+      InitPlugins(opt);
+      MapWindow();
+   }
+   gVirtualX->SetInputFocus(GetId());
 }
 
-//______________________________________________________________________________
-TRootBrowser::~TRootBrowser()
-{
-   // Browser destructor.
-
-   if (fIconPic) gClient->FreePicture(fIconPic);
-
-   delete fToolBarSep;
-
-   fToolBar->Cleanup();
-   delete fToolBar;
-   delete fStatusBar;
-   delete fV1;
-   delete fV2;
-   delete fLbl1;
-   delete fLbl2;
-   delete fHf;
-   delete fTreeHdr;
-   delete fListHdr;
-   delete fIconBox;
-   delete fListView;
-   delete fLt;
-   delete fTreeView;
-
-   delete fMenuBar;
-   delete fFileMenu;
-   delete fViewMenu;
-   delete fOptionMenu;
-   delete fHelpMenu;
-   delete fSortMenu;
-
-   delete fMenuBarLayout;
-   delete fMenuBarItemLayout;
-   delete fMenuBarHelpLayout;
-   delete fBarLayout;
-
-   delete fTextEdit;
-
-   if (fWidgets) fWidgets->Delete();
-   delete fWidgets;
-
-   fHistory->Delete();
-   delete fHistory;
-}
 
 //______________________________________________________________________________
 void TRootBrowser::CreateBrowser(const char *name)
 {
-   // Create the actual canvas.
 
-   fWidgets = new TList;
-   fHistory = new TRootBrowserHistory;
-   fHistoryCursor = 0;
-   fBrowseTextFile = kFALSE;
+   fVf = new TGVerticalFrame(this, 100, 100);
 
-   // Create menus
-   fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fFileMenu->AddEntry("&New Browser",        kFileNewBrowser);
-   fFileMenu->AddEntry("New Canvas",          kFileNewCanvas);
-   fFileMenu->AddEntry("Gui &Builder",        kFileNewBuilder);
-   fFileMenu->AddEntry("&Open...",            kFileOpen);
-   fFileMenu->AddSeparator();
-   fFileMenu->AddEntry("&Save",               kFileSave);
-   fFileMenu->AddEntry("Save As...",          kFileSaveAs);
-   fFileMenu->AddSeparator();
-   fFileMenu->AddEntry("&Print...",           kFilePrint);
-   fFileMenu->AddSeparator();
-   fFileMenu->AddEntry("&Close Browser",      kFileCloseBrowser);
-   fFileMenu->AddSeparator();
-   fFileMenu->AddEntry("&Quit ROOT",          kFileQuit);
+   fLH0 = new TGLayoutHints(kLHintsNormal);
+   fLH1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
+   fLH2 = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 1, 1, 1, 3);
+   fLH3 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX);
+   fLH4 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY,2,2,2,2);
+   fLH5 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | kLHintsExpandY);
+   fLH6 = new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
+   fLH7 = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandY);
 
-   //fFileMenu->DefaultEntry(kFileNewCanvas);
-   fFileMenu->DisableEntry(kFileSave);
-   fFileMenu->DisableEntry(kFileSaveAs);
-   fFileMenu->DisableEntry(kFilePrint);
+   // Menubar Frame
+   fTopMenuFrame = new TGHorizontalFrame(fVf, 100, 20);
 
-   fSortMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fSortMenu->AddEntry("By &Name",            kViewArrangeByName);
-   fSortMenu->AddEntry("By &Type",            kViewArrangeByType);
-   fSortMenu->AddEntry("By &Size",            kViewArrangeBySize);
-   fSortMenu->AddEntry("By &Date",            kViewArrangeByDate);
-   fSortMenu->AddSeparator();
-   fSortMenu->AddEntry("&Auto Arrange",       kViewArrangeAuto);
+   fPreMenuFrame = new TGHorizontalFrame(fTopMenuFrame, 0, 20, kRaisedFrame);
+   fMenuBar   = new TGMenuBar(fPreMenuFrame, 10, 10, kHorizontalFrame);
+   fMenuFile  = new TGPopupMenu(gClient->GetDefaultRoot());
+   fMenuFile->AddEntry("&Browse...             Ctrl+B", kBrowse);
+   fMenuFile->AddEntry("&Open...                 Ctrl+O", kOpenFile);
+   fMenuFile->AddSeparator();
+   fMenuFile->AddEntry("&Clone                   Ctrl+N", kClone);
+   fMenuFile->AddSeparator();
+   fMenuFile->AddEntry("New &Editor          Ctrl+E", kNewEditor);
+   fMenuFile->AddEntry("New &Canvas       Ctrl+C", kNewCanvas);
+   fMenuFile->AddSeparator();
+   fMenuExecPlugin = new TGPopupMenu(fClient->GetRoot());
+   fMenuExecPlugin->AddEntry("&Macro...", kExecPluginMacro);
+   fMenuExecPlugin->AddEntry("&Command...", kExecPluginCmd);
+   fMenuFile->AddPopup("Execute &Plugin...", fMenuExecPlugin);
+   fMenuFile->AddSeparator();
+   fMenuFile->AddEntry("Close &Tab           Ctrl+T", kCloseTab);
+   fMenuFile->AddEntry("Close &Window   Ctrl+W", kCloseWindow);
+   fMenuFile->AddSeparator();
+   fMenuFile->AddEntry("&Quit Root             Ctrl+Q", kQuitRoot);
+   fMenuBar->AddPopup("&Browser", fMenuFile, fLH1);
+   fMenuFile->Connect("Activated(Int_t)", "TRootBrowser", this,
+                      "HandleMenu(Int_t)");
+   fPreMenuFrame->AddFrame(fMenuBar, fLH2);
+   fTopMenuFrame->AddFrame(fPreMenuFrame, fLH0);
 
-   fSortMenu->CheckEntry(kViewArrangeAuto);
+   fMenuFrame = new TGHorizontalFrame(fTopMenuFrame, 100, 20, kRaisedFrame);
+   fTopMenuFrame->AddFrame(fMenuFrame, fLH5);
 
-   fViewMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fViewMenu->AddEntry("&Toolbar",            kViewToolBar);
-   fViewMenu->AddEntry("Status &Bar",         kViewStatusBar);
-   fViewMenu->AddSeparator();
-   fViewMenu->AddEntry("Lar&ge Icons",        kViewLargeIcons);
-   fViewMenu->AddEntry("S&mall Icons",        kViewSmallIcons);
-   fViewMenu->AddEntry("&List",               kViewList);
-   fViewMenu->AddEntry("&Details",            kViewDetails);
-   fViewMenu->AddSeparator();
-   fViewMenu->AddEntry("Show &Hidden",        kViewHidden);
-   fViewMenu->AddPopup("Arrange &Icons",      fSortMenu);
-   fViewMenu->AddEntry("Lin&e up Icons",      kViewLineUp);
-   fViewMenu->AddEntry("&Group Icons",        kViewGroupLV);
+   fVf->AddFrame(fTopMenuFrame, fLH3);
+   fActMenuBar = fMenuBar;
 
-   fViewMenu->AddSeparator();
-   fViewMenu->AddEntry("&Refresh (F5)",       kViewRefresh);
+   // Toolbar Frame
+   fToolbarFrame = new TGHorizontalFrame(fVf, 100, 20, kHorizontalFrame | 
+                                         kRaisedFrame);
+   fVf->AddFrame(fToolbarFrame, fLH3);
 
-   fViewMenu->CheckEntry(kViewToolBar);
-   fViewMenu->CheckEntry(kViewStatusBar);
+   fHf = new TGHorizontalFrame(fVf, 100, 100);
+   // Tabs & co...
+   fV1 = new TGVerticalFrame(fHf, 250, 100, kFixedWidth);
+   fV2 = new TGVerticalFrame(fHf, 600, 100);
+   fH1 = new TGHorizontalFrame(fV2, 100, 100);
+   fH2 = new TGHorizontalFrame(fV2, 100, 100, kFixedHeight);
 
-   if (fBrowser) {
-      if (gEnv->GetValue("Browser.ShowHidden", 0)) {
-         fViewMenu->CheckEntry(kViewHidden);
-         fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
-      } else {
-         fViewMenu->UnCheckEntry(kViewHidden);
-         fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
-      }
-   }
+   // Left tab
+   fTabLeft = new TGTab(fV1,100,100);
+   //fTabLeft->AddTab("Tab 1");
+   fTabLeft->Resize(fTabLeft->GetDefaultSize());
+   fV1->AddFrame(fTabLeft, fLH4);
 
-   fOptionMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fOptionMenu->AddEntry("&Show Cycles",        kOptionShowCycles);
-   fOptionMenu->AddEntry("&AutoThumbnail",      kOptionAutoThumbnail);
+   // Vertical splitter   
+   fVSplitter = new TGVSplitter(fHf, 4, 4);
+   fVSplitter->SetFrame(fV1, kTRUE);
+   fHf->AddFrame(fV1, fLH7);
+   fHf->AddFrame(fVSplitter, fLH7);
 
-   fHelpMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fHelpMenu->AddEntry("&About ROOT...",        kHelpAbout);
-   fHelpMenu->AddSeparator();
-   fHelpMenu->AddEntry("Help On Browser...",    kHelpOnBrowser);
-   fHelpMenu->AddEntry("Help On Canvas...",     kHelpOnCanvas);
-   fHelpMenu->AddEntry("Help On Menus...",      kHelpOnMenus);
-   fHelpMenu->AddEntry("Help On Graphics Editor...", kHelpOnGraphicsEd);
-   fHelpMenu->AddEntry("Help On Objects...",    kHelpOnObjects);
-   fHelpMenu->AddEntry("Help On PostScript...", kHelpOnPS);
+   // Right tab
+   fTabRight = new TGTab(fH1, 500, 100);
+   //fTabRight->AddTab("Tab 1");
+   fTabRight->Resize(fTabRight->GetDefaultSize());
+   fH1->AddFrame(fTabRight, fLH5);
+   fTabRight->Connect("Selected(Int_t)", "TRootBrowser", this, "DoTab(Int_t)");
+   fV2->AddFrame(fH1, fLH4);
+   
+   // Horizontal splitter
+   fHSplitter = new TGHSplitter(fV2, 4, 4);
+   fV2->AddFrame(fHSplitter, fLH3);
 
-   // This main frame will process the menu commands
-   fFileMenu->Associate(this);
-   fViewMenu->Associate(this);
-   fSortMenu->Associate(this);
-   fOptionMenu->Associate(this);
-   fHelpMenu->Associate(this);
+   // Bottom tab
+   fTabBottom = new TGTab(fH2, 100, 100);
+   //fTabBottom->AddTab("Tab 1");
+   fH2->AddFrame(fTabBottom, fLH4);
+   fV2->AddFrame(fH2, fLH3);
+   
+   fHSplitter->SetFrame(fH2, kFALSE);
+   fHf->AddFrame(fV2, fLH5);
+   fVf->AddFrame(fHf, fLH5);
+   AddFrame(fVf, fLH5);
 
-   // Create menubar layout hints
-   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
-   fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
-   fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
-
-   // Create menubar
-   fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
-   fMenuBar->AddPopup("&File",    fFileMenu,    fMenuBarItemLayout);
-   fMenuBar->AddPopup("&View",    fViewMenu,    fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Options", fOptionMenu,  fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
-
-   AddFrame(fMenuBar, fMenuBarLayout);
-
-   // Create toolbar and separator
-
-   fToolBarSep = new TGHorizontal3DLine(this);
-   fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
-   fFSComboBox = new TGFSComboBox(fToolBar, kFSComboBox);
-
-   fComboLayout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0, 2, 2);
-   fToolBar->AddFrame(fFSComboBox, fComboLayout);
-   fFSComboBox->Resize(150, fFSComboBox->GetDefaultHeight());
-   fFSComboBox->Associate(this);
-
-   int spacing = 8;
-
-   for (int i = 0; gToolBarData[i].fPixmap; i++) {
-      if (strlen(gToolBarData[i].fPixmap) == 0) {
-         spacing = 8;
-         continue;
-      }
-      fToolBar->AddButton(this, &gToolBarData[i], spacing);
-      spacing = 0;
-   }
-
-   fDrawOption = new TGComboBox(fToolBar, "");
-   TGTextEntry *dropt_entry = fDrawOption->GetTextEntry();
-   dropt_entry->SetToolTipText("Object Draw Option", 300);
-   fDrawOption->Resize(80, 10);
-   TGListBox *lb = fDrawOption->GetListBox();
-   lb->Resize(lb->GetWidth(), 120);
-   Int_t dropt = 1;
-   fDrawOption->AddEntry("", dropt++);
-   fDrawOption->AddEntry("same", dropt++);
-   fDrawOption->AddEntry("box", dropt++);
-   fDrawOption->AddEntry("lego", dropt++);
-   fDrawOption->AddEntry("colz", dropt++);
-   fDrawOption->AddEntry("alp", dropt++);
-   fDrawOption->AddEntry("text", dropt++);
-
-   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandY,2,2,2,0));
-   fToolBar->AddFrame(new TGLabel(fToolBar,"Option"),
-                      new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2,2,2,0));
-
-   fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
-   AddFrame(fToolBarSep, fBarLayout);
-   AddFrame(fToolBar, fBarLayout);
-
-   // Create panes
-
-   fHf = new TGHorizontalFrame(this, 10, 10);
-
-   fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
-   fV2 = new TGVerticalFrame(fHf, 10, 10);
-   fTreeHdr = new TGCompositeFrame(fV1, 10, 10, kSunkenFrame);
-   fListHdr = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame);
-
-   fLbl1 = new TGLabel(fTreeHdr, "All Folders");
-   fLbl2 = new TGLabel(fListHdr, "Contents of \".\"");
-
-   TGLayoutHints *lo;
-
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 0, 0, 0);
-   fWidgets->Add(lo);
-   fTreeHdr->AddFrame(fLbl1, lo);
-   fListHdr->AddFrame(fLbl2, lo);
-
-   lo = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 2);
-   fWidgets->Add(lo);
-   fV1->AddFrame(fTreeHdr, lo);
-   fV2->AddFrame(fListHdr, lo);
-
-   fV1->Resize(fTreeHdr->GetDefaultWidth()+100, fV1->GetDefaultHeight());
-
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
-   fWidgets->Add(lo);
-   fHf->AddFrame(fV1, lo);
-
-   TGVSplitter *splitter = new TGVSplitter(fHf);
-   splitter->SetFrame(fV1, kTRUE);
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
-   fWidgets->Add(splitter);
-   fWidgets->Add(lo);
-   fHf->AddFrame(splitter, lo);
-
-   lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY);
-   fWidgets->Add(lo);
-   fHf->AddFrame(fV2, lo);
-
-   // Create tree
-   fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder); // canvas
-   fLt = new TGListTree(fTreeView, kHorizontalFrame,fgWhitePixel); // container
-   fLt->Associate(this);
-   fLt->SetAutoTips();
-
-   fExpandLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   fWidgets->Add(fExpandLayout);
-   fV1->AddFrame(fTreeView, fExpandLayout);
-
-   // Create list view (icon box)
-   fListView = new TGListView(fV2, 520, 250); // canvas
-   // container
-   fIconBox = new TRootIconBox(this, fListView, kHorizontalFrame, fgWhitePixel);
-   fIconBox->Associate(this);
-   fListView->SetIncrements(1, 19); // set vertical scroll one line height at a time
-   fViewMode = fListView->GetViewMode();
-
-   TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
-   str.ToLower();
-   fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
-   fIconBox->fAutoThumbnail ? fOptionMenu->CheckEntry(kOptionAutoThumbnail) :
-                              fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
-
-   str = gEnv->GetValue("Browser.GroupView", "10000");
-   Int_t igv = atoi(str.Data());
-
-   if (igv>10) {
-      fViewMenu->CheckEntry(kViewGroupLV);
-      fIconBox->SetGroupSize(igv);
-   }
-
-   // reuse lo from "create tree"
-   fV2->AddFrame(fListView, fExpandLayout);
-
-   AddFrame(fHf, lo);
-
-   // Statusbar
-
-   int parts[] = { 26, 74 };
-   fStatusBar = new TGStatusBar(this, 60, 10);
+   // status bar
+   fStatusBar = new TGStatusBar(this, 400, 20);
+   Int_t parts[] = { 80, 20 };
    fStatusBar->SetParts(parts, 2);
-   lo = new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0);
-   AddFrame(fStatusBar, lo);
+   AddFrame(fStatusBar, fLH6);
 
-   fTextEdit = 0;
-
-   // Misc
+   fNbInitPlugins = 0;
+   fEditFrame = 0;
+   fEditTab   = 0;
+   fNbTab[0]  = fNbTab[1] = fNbTab[2] = 0;
+   fCrTab[0]  = fCrTab[1] = fCrTab[2] = -1;
+   
+   // Set a name to the main frame   
    SetWindowName(name);
    SetIconName(name);
-   fIconPic = SetIconPixmap("rootdb_s.xpm");
    SetClassHints("Browser", "Browser");
+   
+   if (!strcmp(gROOT->GetDefCanvasName(), "c1"))
+      gROOT->SetDefCanvasName("Canvas 1");
 
    SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
-   SetIconName("ROOT Browser");
-
-   fListLevel = 0;
-   fTreeLock  = kFALSE;
-
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), 0, kTRUE);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F5), 0, kTRUE);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kKeyMod1Mask, kTRUE);
-   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kKeyMod1Mask, kTRUE);
-   ClearHistory();
-   SetEditDisabled(kEditDisable);
-
-   gVirtualX->SetDNDAware(fId, fDNDTypeList);
-   //SetDNDTarget(kTRUE);
-   AddInput(kPointerMotionMask);
    MapSubwindows();
-   SetDefaults();
-   Resize();
-   ShowMacroButtons(kFALSE);
+   Resize(GetDefaultSize());
+   AddInput(kKeyPressMask | kKeyReleaseMask);
 
-   Connect(fLt, "Checked(TObject*, Bool_t)", "TRootBrowser",
-           this, "Checked(TObject *,Bool_t)");
+   fVf->HideFrame(fToolbarFrame);
+}  
+
+//______________________________________________________________________________
+TRootBrowser::~TRootBrowser()
+{
+   // Clean up all widgets, frames and layouthints that were used
+
+   delete fLH0;
+   delete fLH1;
+   delete fLH2;
+   delete fLH3;
+   delete fLH4;
+   delete fLH5;
+   delete fLH6;
+   delete fLH7;
+   delete fMenuExecPlugin;
+   delete fMenuFile;
+   delete fMenuBar;
+   delete fMenuFrame;
+   delete fToolbarFrame;
+   delete fVSplitter;
+   delete fHSplitter;
+   delete fTabLeft;
+   delete fTabRight;
+   delete fTabBottom;
+   delete fH1;
+   delete fH2;
+   delete fV1;
+   delete fV2;
+   delete fHf;
+   delete fStatusBar;
+   delete fVf;
+}
+
+//______________________________________________________________________________
+void TRootBrowser::Add(TObject *obj, const char *name, Int_t check)
+{
+   // Add items to the actual browser. This function has to be called
+   // by the Browse() member function of objects when they are
+   // called by a browser. If check < 0 (default) no check box is drawn,
+   // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
+
+   if (fActBrowser)
+      fActBrowser->Add(obj, name, check);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::BrowseObj(TObject *obj)
+{
+   // Browse object. This, in turn, will trigger the calling of
+   // TRootBrowser::Add() which will fill the IconBox and the tree.
+   // Emits signal "BrowseObj(TObject*)".
+
+   if (fActBrowser)
+      fActBrowser->BrowseObj(obj);
+   Emit("BrowseObj(TObject*)", (Long_t)obj);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::CloneBrowser()
+{
+   // Clone the browser. A new Browser will be created, with the same 
+   // plugins executed in the current one.
+
+   Int_t loop = 1;
+   TBrowserPlugin *plugin = 0;
+   TBrowser *b = new TBrowser();
+   TIter next(&fPlugins);
+   while ((plugin = (TBrowserPlugin *)next())) {
+      if (loop > fNbInitPlugins)
+         b->ExecPlugin(plugin->GetName(), "", plugin->fCommand.Data(), plugin->fTab, 
+                       plugin->fSubTab);
+      ++loop;
+   }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::CloseWindow()
+{
+   // Called when window is closed via the window manager.
+
+   TGFrameElement *el;
+   Int_t i;
+   Disconnect(fMenuFile, "Activated(Int_t)", this, "HandleMenu(Int_t)");
+   for (i=0;i<fTabLeft->GetNumberOfTabs();i++) {
+      el = (TGFrameElement *)fTabLeft->GetTabContainer(i)->GetList()->First();
+      if (el && el->fFrame) {
+         el->fFrame->SetFrameElement(0);
+         if (el->fFrame->InheritsFrom("TGMainFrame"))
+            ((TGMainFrame *)el->fFrame)->CloseWindow();
+         else
+            delete el->fFrame;
+         el->fFrame = 0;
+         if (el->fLayout && (el->fLayout != fgDefaultHints) &&
+            (el->fLayout->References() > 0)) {
+            el->fLayout->RemoveReference();
+         }
+         fTabLeft->GetTabContainer(i)->GetList()->Remove(el);
+         delete el;
+      }
+   }
+   for (i=0;i<fTabRight->GetNumberOfTabs();i++) {
+      el = (TGFrameElement *)fTabRight->GetTabContainer(i)->GetList()->First();
+      if (el && el->fFrame) {
+         el->fFrame->SetFrameElement(0);
+         if (el->fFrame->InheritsFrom("TGMainFrame"))
+            ((TGMainFrame *)el->fFrame)->CloseWindow();
+         else
+            delete el->fFrame;
+         el->fFrame = 0;
+         if (el->fLayout && (el->fLayout != fgDefaultHints) &&
+            (el->fLayout->References() > 0)) {
+            el->fLayout->RemoveReference();
+         }
+         fTabRight->GetTabContainer(i)->GetList()->Remove(el);
+         delete el;
+      }
+   }
+   for (i=0;i<fTabBottom->GetNumberOfTabs();i++) {
+      el = (TGFrameElement *)fTabBottom->GetTabContainer(i)->GetList()->First();
+      if (el && el->fFrame) {
+         el->fFrame->SetFrameElement(0);
+         if (el->fFrame->InheritsFrom("TGMainFrame"))
+            ((TGMainFrame *)el->fFrame)->CloseWindow();
+         else
+            delete el->fFrame;
+         el->fFrame = 0;
+         if (el->fLayout && (el->fLayout != fgDefaultHints) &&
+            (el->fLayout->References() > 0)) {
+            el->fLayout->RemoveReference();
+         }
+         fTabBottom->GetTabContainer(i)->GetList()->Remove(el);
+         delete el;
+      }
+   }
+   fActBrowser = 0;
+   DeleteWindow();
+}
+
+//______________________________________________________________________________
+void TRootBrowser::DoTab(Int_t id)
+{
+   // Handle Tab navigation.
+
+   TGTab *sender = (TGTab *)gTQSender;
+   if ((sender) && (sender == fTabRight)) {
+      SwitchMenus(sender->GetTabContainer(id));
+   }
+}
+
+//______________________________________________________________________________
+Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname, 
+                                const char *cmd, Int_t pos, Int_t subpos)
+{
+   // Execute a macro and embed the created frame in the tab "pos" 
+   // and tab element "subpos".
+
+   Long_t retval = 0;
+   TBrowserPlugin *p; 
+   TString command, pname;
+   StartEmbedding(pos, subpos);
+   if (cmd && strlen(cmd)) {
+      command = cmd;
+      pname = name ? name : Form("Plugin %d", fPlugins.GetSize());
+      p = new TBrowserPlugin(pname, command.Data(), pos, subpos);
+   }
+   else if (fname && strlen(fname)) {
+      pname = name ? name : gSystem->BaseName(fname);
+      Ssiz_t t = pname.Last('.');
+      if (t > 0) pname.Remove(t);
+      command.Form("gROOT->Macro(\"%s\");", gSystem->UnixPathName(fname));
+      p = new TBrowserPlugin(pname, command.Data(), pos, subpos);
+   }
+   else return 0;
+   fPlugins.Add(p);
+   retval = gROOT->ProcessLine(command.Data());
+   if (command.Contains("new TCanvas")) {
+      pname = gPad->GetName();
+      p->SetName(pname.Data());
+   }
+   SetTabTitle(pname, pos, subpos);
+   StopEmbedding();
+   return retval;
+}
+
+//______________________________________________________________________________
+Option_t *TRootBrowser::GetDrawOption() const
+{
+   // Returns drawing option.
+
+   if (fActBrowser)
+      return fActBrowser->GetDrawOption();
+   return 0;
+}
+
+//______________________________________________________________________________
+TGTab* TRootBrowser::GetTab(Int_t pos) const
+{
+   // Returns the TGTab at position pos.
+
+   switch (pos) {
+      case kLeft:   return fTabLeft;
+      case kRight:  return fTabRight;
+      case kBottom: return fTabBottom;
+      default:      return 0;
+   }
 }
 
 //______________________________________________________________________________
 Bool_t TRootBrowser::HandleKey(Event_t *event)
 {
-   // handle keys
+   // Handle keyboard events.
+
+   char   input[10];
+   Int_t  n;
+   UInt_t keysym;
 
    if (event->fType == kGKeyPress) {
-      UInt_t keysym;
-      char input[10];
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
+      n = strlen(input);
 
       if (!event->fState && (EKeySym)keysym == kKey_F5) {
          Refresh(kTRUE);
          return kTRUE;
       }
-      if (!event->fState && (EKeySym)keysym == kKey_Escape) {
-         if (gDNDManager->IsDragging()) gDNDManager->EndDrag();
+      switch ((EKeySym)keysym) {   // ignore these keys
+         case kKey_Shift:
+         case kKey_Control:
+         case kKey_Meta:
+         case kKey_Alt:
+         case kKey_CapsLock:
+         case kKey_NumLock:
+         case kKey_ScrollLock:
+            return kTRUE;
+         default:
+            break;
       }
-
-      if (event->fState & kKeyMod1Mask) {
-         switch ((EKeySym)keysym & ~0x20) {
-            case kKey_Right:
-               HistoryForward();
+      if (event->fState & kKeyControlMask) {   // Cntrl key modifier pressed
+         switch ((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
+            case kKey_B:
+               fMenuFile->Activated(kBrowse);
                return kTRUE;
-            case kKey_Left:
-               HistoryBackward();
+            case kKey_O:
+               fMenuFile->Activated(kOpenFile);
+               return kTRUE;
+            case kKey_E:
+               fMenuFile->Activated(kNewEditor);
+               return kTRUE;
+            case kKey_C:
+               fMenuFile->Activated(kNewCanvas);
+               return kTRUE;
+            case kKey_N:
+               fMenuFile->Activated(kClone);
+               return kTRUE;
+            case kKey_T:
+               fMenuFile->Activated(kCloseTab);
+               return kTRUE;
+            case kKey_W:
+               fMenuFile->Activated(kCloseWindow);
+               return kTRUE;
+            case kKey_Q:
+               fMenuFile->Activated(kQuitRoot);
                return kTRUE;
             default:
                break;
@@ -1261,247 +487,171 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::Add(TObject *obj, const char *name, Int_t check)
+void TRootBrowser::HandleMenu(Int_t id)
 {
-   // Add items to the browser. This function has to be called
-   // by the Browse() member function of objects when they are
-   // called by a browser. If check < 0 (default) no check box is drawn,
-   // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
+   // Handle menu entries events.
 
-   if (!obj)
+   TString cmd;
+   static Int_t eNr = 1;
+   TGPopupMenu *sender = (TGPopupMenu *)gTQSender;
+   if (sender != fMenuFile)
       return;
-   if (!name) name = obj->GetName();
-
-   AddToBox(obj, name);
-   if (check > -1) {
-      TGFrameElement *el;
-      TIter next(fIconBox->fList);
-      if (!obj->IsFolder()) {
-         while ((el = (TGFrameElement *) next())) {
-            TGLVEntry *f = (TGLVEntry *) el->fFrame;
-            if (f->GetUserData() == obj) {
-               f->SetCheckedEntry(check);
+   switch (id) {
+      case kBrowse:
+         new TBrowser();
+         break;
+      case kOpenFile:
+         {
+            static TString dir(".");
+            TGFileInfo fi;
+            fi.fFileTypes = gOpenFileTypes;
+            fi.fIniDir    = StrDup(dir);
+            new TGFileDialog(gClient->GetDefaultRoot(), this,
+                             kFDOpen,&fi);
+            dir = fi.fIniDir;
+            if (fi.fMultipleSelection && fi.fFileNamesList) {
+               TObjString *el;
+               TIter next(fi.fFileNamesList);
+               while ((el = (TObjString *) next())) {
+                  gROOT->ProcessLine(Form("new TFile(\"%s\");",
+                                     gSystem->UnixPathName(el->GetString())));
+               }
+            }
+            else if (fi.fFilename) {
+               gROOT->ProcessLine(Form("new TFile(\"%s\");",
+                                  gSystem->UnixPathName(fi.fFilename)));
             }
          }
-      }
+         break;
+      case kClone:
+         CloneBrowser();
+         break;
+      case kNewEditor:
+         cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot())");
+         ++eNr;
+         ExecPlugin(Form("Editor %d", eNr), "", cmd.Data(), 1);
+         break;
+      case kNewCanvas:
+         ExecPlugin("", "", "new TCanvas()", 1);
+         break;
+      case kExecPluginMacro:
+         {
+            static TString dir(".");
+            TGFileInfo fi;
+            fi.fFileTypes = gPluginFileTypes;
+            fi.fIniDir    = StrDup(dir);
+            new TGFileDialog(gClient->GetDefaultRoot(), this,
+                             kFDOpen,&fi);
+            dir = fi.fIniDir;
+            if (fi.fFilename) {
+               ExecPlugin(0, fi.fFilename, 0, kRight);
+            }
+         }
+         break;
+      case kExecPluginCmd:
+         {
+            char command[1024];
+            strcpy(command, "new TGLSAViewer(gClient->GetRoot(), 0);");
+            new TGInputDialog(gClient->GetRoot(), this,
+                              "Enter plugin command line:",
+                              command, command);
+            if (strcmp(command, "")) {
+               ExecPlugin("User", 0, command, kRight);
+            }
+         }
+         break;
+      case kCloseTab:
+         RemoveTab(kRight, fTabRight->GetCurrent());
+         break;
+      case kCloseWindow:
+         CloseWindow();
+         break;
+      case kQuitRoot:
+         gApplication->Terminate(0);
+         break;
+      default:
+         break;
    }
+}
 
-   // Don't show current dir and up dir links in the tree
-   if (name[0] == '.' && ((name[1] == '\0') || (name[1] == '.' && name[2] == '\0')))
+//______________________________________________________________________________
+void TRootBrowser::InitPlugins(Option_t *opt)
+{
+   // Initialize default plugins. Could be also of the form:
+   // StartEmbedding(0);
+   // TPluginHandler *ph;
+   // ph = gROOT->GetPluginManager()->FindHandler("TGClassBrowser");
+   // if (ph && ph->LoadPlugin() != -1) {
+   //    ph->ExecPlugin(3, gClient->GetRoot(), 200, 500);
+   // }
+   // StopEmbedding();
+
+   TString cmd;
+
+   if ((opt == 0) || (strlen(opt) == 0))
       return;
+   // --- Left vertical area
 
-   if (obj->IsFolder())
-      AddToTree(obj, name, check);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::AddCheckBox(TObject *obj, Bool_t check)
-{
-   // Add a checkbox in the TGListTreeItem corresponding to obj
-   // and a checkmark on TGLVEntry if check = kTRUE.
-
-   if (obj) {
-      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
-      while (item) {
-         fLt->SetCheckBox(item, kTRUE);
-         fLt->CheckItem(item, check);
-         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
-      }
-      TGFrameElement *el;
-      TIter next(fIconBox->fList);
-      while ((el = (TGFrameElement *) next())) {
-         TGLVEntry *f = (TGLVEntry *) el->fFrame;
-         if (f->GetUserData() == obj) {
-            f->SetCheckedEntry(check);
-         }
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::CheckObjectItem(TObject *obj, Bool_t check)
-{
-   // Check / uncheck the TGListTreeItem corresponding to this
-   // object and add a checkmark on TGLVEntry if check = kTRUE.
-
-   if (obj) {
-      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
-      while (item) {
-         fLt->CheckItem(item, check);
-         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
-         TGFrameElement *el;
-         TIter next(fIconBox->fList);
-         if (!obj->IsFolder()) {
-            while ((el = (TGFrameElement *) next())) {
-               TGLVEntry *f = (TGLVEntry *) el->fFrame;
-               if (f->GetUserData() == obj) {
-                  f->SetCheckedEntry(check);
-               }
-            }
-         }
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::RemoveCheckBox(TObject *obj)
-{
-   // Remove checkbox from TGListTree and checkmark from TGListView.
-
-   if (obj) {
-      TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
-      while (item) {
-         fLt->SetCheckBox(item, kFALSE);
-         item = fLt->FindItemByObj(item->GetNextSibling(), obj);
-         TGFrameElement *el;
-         TIter next(fIconBox->fList);
-         if (!obj->IsFolder()) {
-            while ((el = (TGFrameElement *) next())) {
-               TGLVEntry *f = (TGLVEntry *) el->fFrame;
-               if (f->GetUserData() == obj) {
-                  f->SetCheckedEntry(kFALSE);
-               }
-            }
-         }
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::AddToBox(TObject *obj, const char *name)
-{
-   // Add items to the iconbox of the browser.
-
-   if (obj) {
-      if (!name) name = obj->GetName() ? obj->GetName() : "NoName";
-      //const char *titlePtr = obj->GetTitle() ? obj->GetTitle() : " ";
-
-      TClass *objClass = 0;
-
-      if (obj->IsA() == TKey::Class())
-         objClass = TClass::GetClass(((TKey *)obj)->GetClassName());
-      else if (obj->IsA() == TKeyMapFile::Class())
-         objClass = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
-      else if (obj->InheritsFrom("TRemoteObject")) {
-         // special case for remote object: get real object class
-         TRemoteObject *robj = (TRemoteObject *)obj;
-         if (!strcmp(robj->GetClassName(), "TKey"))
-            objClass = TClass::GetClass(robj->GetKeyClassName());
-         else
-            objClass = TClass::GetClass(robj->GetClassName());
-      }
-      else
-         objClass = obj->IsA();
-
-      fIconBox->AddObjItem(name, obj, objClass);
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
-{
-   // Add items to the current TGListTree of the browser.
-
-   if (obj->InheritsFrom("TApplication"))
-      fListLevel = 0;
-   if (obj && !fTreeLock) {
-      if (!name) name = obj->GetName();
-      if (name[0] == '.' && name[1] == '.')
-         Info("AddToTree", "up one level %s", name);
-      if(check > -1) {
-         TGListTreeItem *item = fLt->AddItem(fListLevel, name, obj, 0, 0, kTRUE);
-         fLt->CheckItem(item, (Bool_t)check);
-         TString tip(obj->ClassName());
-         if (obj->GetTitle()) {
-            tip += " ";
-            tip += obj->GetTitle();
-         }
-         fLt->SetToolTipItem(item, tip.Data());
-      } else {
-         // special case for remote object
-         Bool_t isRemote = kFALSE;
-         if (obj->InheritsFrom("TRemoteObject"))
-            isRemote = kTRUE;
-         else if (fListLevel) {
-            // check also if one of its parents is a remote object
-            TGListTreeItem *top = fListLevel;
-            while (top->GetParent()) {
-               TObject *tobj = (TObject *) top->GetUserData();
-               if (tobj && (tobj->InheritsFrom("TRemoteObject") ||
-                  tobj->InheritsFrom("TApplicationRemote"))) {
-                  isRemote = kTRUE;
-                  break;
-               }
-               top = top->GetParent();
-            }
-         }
-         if (isRemote) {
-            // add the remote object only if not already in the list
-            if ((!fLt->FindChildByName(fListLevel, name)) &&
-                (!fLt->FindChildByData(fListLevel, obj)))
-               fLt->AddItem(fListLevel, name, obj);
-         }
-         else
-            fLt->AddItem(fListLevel, name, obj);
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::BrowseObj(TObject *obj)
-{
-   // Browse object. This, in turn, will trigger the calling of
-   // TRootBrowser::Add() which will fill the IconBox and the tree.
-   // Emits signal "BrowseObj(TObject*)".
-
-   TGPosition pos = fIconBox->GetPagePosition();
-   Emit("BrowseObj(TObject*)", (Long_t)obj);
-
-   if (obj->IsFolder()) fIconBox->RemoveAll();
-   obj->Browse(fBrowser);
-   if ((fListLevel && obj->IsFolder()) || (!fListLevel && (obj == gROOT))) {
-      fIconBox->Refresh();
+   // File Browser plugin
+   if (strchr(opt, 'F')) {
+      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500)", fBrowser);
+      ExecPlugin("Files", 0, cmd.Data(), 0);
+      ++fNbInitPlugins;
    }
 
-   if (fBrowser) {
-      fBrowser->SetRefreshFlag(kFALSE);
+   // --- Right main area
+
+   // Editor plugin...
+   if (strchr(opt, 'E')) {
+      cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot())");
+      ExecPlugin("Editor 1", 0, cmd.Data(), 1);
+      ++fNbInitPlugins;
    }
-   UpdateDrawOption();
 
-   fIconBox->SetHsbPosition(pos.fX);
-   fIconBox->SetVsbPosition(pos.fY);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::UpdateDrawOption()
-{
-   // add new draw option to the "history"
-
-   TString opt = GetDrawOption();
-   TGListBox *lb = fDrawOption->GetListBox();
-   TGLBContainer *lbc = (TGLBContainer *)lb->GetContainer();
-
-   TIter next(lbc->GetList());
-   TGFrameElement *el;
-
-   while ((el = (TGFrameElement *)next())) {
-      TGTextLBEntry *lbe = (TGTextLBEntry *)el->fFrame;
-      if (lbe->GetText()->GetString() == opt) {
-         return;
+   // HTML plugin...
+   if (strchr(opt, 'H')) {
+      if (gSystem->Load("libGuiHtml") >= 0) {
+         cmd.Form("new TGHtmlBrowser(\"http://root.cern.ch/root/html/ClassIndex.html\", \
+                  gClient->GetRoot())");
+         ExecPlugin("HTML", 0, cmd.Data(), 1);
+         ++fNbInitPlugins;
       }
    }
 
-   Int_t nn = fDrawOption->GetNumberOfEntries() + 1;
-   fDrawOption->AddEntry(opt.Data(), nn);
-   fDrawOption->Select(nn);
-}
+   // Canvas plugin...
+   if (strchr(opt, 'C')) {
+      cmd.Form("new TCanvas()");
+      ExecPlugin("c1", 0, cmd.Data(), 1);
+      ++fNbInitPlugins;
+   }
 
-//______________________________________________________________________________
-TGFileContainer *TRootBrowser::GetIconBox() const
-{
-   // returns pointer to fIconBox object
+   // GLViewer plugin...
+   if (strchr(opt, 'G')) {
+      cmd.Form("new TGLSAViewer(gClient->GetRoot(), 0)");
+      ExecPlugin("OpenGL", 0, cmd.Data(), 1);
+      ++fNbInitPlugins;
+   }
 
-   return (TGFileContainer*)fIconBox;
+   // PROOF plugin...
+   if (strchr(opt, 'P')) {
+      cmd.Form("new TSessionViewer();");
+      ExecPlugin("PROOF", 0, cmd.Data(), 1);
+      ++fNbInitPlugins;
+   }
+
+   // --- Right bottom area
+
+   // Command plugin...
+   if (strchr(opt, 'I')) {
+      cmd.Form("new TGCommandPlugin(gClient->GetRoot(), 700, 300)");
+      ExecPlugin("Command", 0, cmd.Data(), 2);
+      ++fNbInitPlugins;
+   }
+
+   // --- Select first tab everywhere
+   SetTab(0, 0);
+   SetTab(1, 0);
+   SetTab(2, 0);
 }
 
 //______________________________________________________________________________
@@ -1514,935 +664,258 @@ void TRootBrowser::ReallyDelete()
 }
 
 //______________________________________________________________________________
-void TRootBrowser::CloseWindow()
+void TRootBrowser::RecursiveRemove(TObject *obj)
 {
-   // In case window is closed via WM we get here.
+   // Recursively remove object from browser.
 
-   DeleteWindow();
+   if (fActBrowser)
+      fActBrowser->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
-void TRootBrowser::DisplayTotal(Int_t total, Int_t selected)
+void TRootBrowser::RecursiveReparent(TGPopupMenu *popup)
 {
-   // Display in statusbar total number of objects and number of
-   // selected objects in IconBox.
+   // Recursively reparent TGPopupMenu to gClient->GetDefaultRoot().
 
-   char tmp[64];
-   const char *fmt;
-
-   if (selected)
-      fmt = "%d Object%s, %d selected.";
-   else
-      fmt = "%d Object%s.";
-
-   sprintf(tmp, fmt, total, (total == 1) ? "" : "s", selected);
-   fStatusBar->SetText(tmp, 0);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::DisplayDirectory()
-{
-   // Display current directory in second label, fLbl2.
-
-   char *p, path[1024];
-
-   fLt->GetPathnameFromItem(fListLevel, path, 12);
-   p = path;
-   while (*p && *(p+1) == '/') ++p;
-   if (strlen(p) == 0)
-      fLbl2->SetText(new TGString("Contents of \".\""));
-   else
-      fLbl2->SetText(new TGString(Form("Contents of \"%s\"", p)));
-   fListHdr->Layout();
-
-   // Get full pathname for FS combobox (previously truncated to 12 levels deep)
-   fLt->GetPathnameFromItem(fListLevel, path);
-   p = path;
-   while (*p && *(p+1) == '/') ++p;
-   fFSComboBox->Update(p);
-
-   if (fListLevel) {
-      // disable/enable up level navigation
-      TGButton *btn = fToolBar->GetButton(kOneLevelUp);
-      const char *dirname = gSystem->DirName(p);
-      Bool_t disableUp;
-
-      TObject *obj = (TObject*)fListLevel->GetUserData();
-      disableUp = (strlen(dirname) == 1) && (*dirname == '/');
-
-      // normal file directory
-      if (disableUp && (obj->IsA() == TSystemDirectory::Class())) {
-         disableUp = strlen(p) == 1;
+   TGMenuEntry *entry = 0;
+   TIter next(popup->GetListOfEntries());
+   while ((entry = (TGMenuEntry *)next())) {
+      if (entry->GetPopup()) {
+         RecursiveReparent(entry->GetPopup());
       }
-      btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
-      AddToHistory(fListLevel);
+   }
+   popup->ReparentWindow(gClient->GetDefaultRoot());
+}
+
+//______________________________________________________________________________
+void TRootBrowser::Refresh(Bool_t force)
+{
+   // Refresh the actual browser contents.
+
+   if (fActBrowser)
+      fActBrowser->Refresh(force);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
+{
+   // Remove tab element "subpos" from tab "pos".
+
+   TGTab *edit = 0;
+   switch (pos) {
+      case kLeft: // left
+         edit = fTabLeft;
+         break;
+      case kRight: // right
+         edit = fTabRight;
+         fMenuFrame->HideFrame(fActMenuBar);
+         fMenuFrame->GetList()->Remove(fActMenuBar);
+         fActMenuBar = 0;
+         break;
+      case kBottom: // bottom
+         edit = fTabBottom;
+         break;
+   }
+   const char *tabName = edit->GetTabTab(subpos)->GetString();
+   TObject *obj = 0;
+   if ((obj = fPlugins.FindObject(tabName))) {
+      fPlugins.Remove(obj);
+   }
+   TGFrameElement *el = (TGFrameElement *)edit->GetTabContainer(subpos)->GetList()->First();
+   if (el && el->fFrame) {
+      el->fFrame->SetFrameElement(0);
+      if (el->fFrame->InheritsFrom("TGMainFrame"))
+         ((TGMainFrame *)el->fFrame)->CloseWindow();
+      else
+         delete el->fFrame;
+      el->fFrame = 0;
+      if (el->fLayout && (el->fLayout != fgDefaultHints) &&
+         (el->fLayout->References() > 0)) {
+         el->fLayout->RemoveReference();
+      }
+      edit->GetTabContainer(subpos)->GetList()->Remove(el);
+      delete el;
+   }
+   fNbTab[pos]--;
+   edit->RemoveTab(subpos);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::SetTab(Int_t pos, Int_t subpos)
+{
+   // Switch to Tab "subpos" in TGTab "pos".
+
+   TGTab *tab = GetTab(pos);
+   if (subpos == -1)
+      subpos = fCrTab[pos];
+
+   if (tab->SetTab(subpos, kFALSE)) { // Block signal emit
+      if (pos == kRight)
+         SwitchMenus(tab->GetTabContainer(subpos));
+      tab->Layout();
    }
 }
 
-//____________________________________________________________________________
-void TRootBrowser::ExecuteDefaultAction(TObject *obj)
+//______________________________________________________________________________
+void TRootBrowser::SetTabTitle(const char *title, Int_t pos, Int_t subpos)
 {
-   // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
-   // Emits signal "ExecuteDefaultAction(TObject*)".
+   // Set text "title" of Tab "subpos" in TGTab "pos".
 
-   TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
-   char action[512];
-   fBrowser->SetDrawOption(GetDrawOption());
-   TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
-   TFile *wasf = gFile;
+   TBrowserPlugin *p = 0;
+   TGTab *edit = GetTab(pos);
+   if (subpos == -1)
+      subpos = fCrTab[pos];
 
-   // Special case for file system objects...
-   if (obj->IsA() == TSystemFile::Class() ||
-       obj->InheritsFrom("TRemoteObject")) {
-      TString act;
-      TString ext = obj->GetName();
+   TGTabElement *el = edit->GetTabTab(subpos);
+   if (el) {
+      el->SetText(new TGString(title));
+      edit->Layout();
+      if ((p = (TBrowserPlugin *)fPlugins.FindObject(title)))
+         p->SetName(title);
+   }
+}
 
-      if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
-         act = action;
-         act.ReplaceAll("%s", obj->GetName());
-         gInterpreter->SaveGlobalsContext();
+//______________________________________________________________________________
+void TRootBrowser::ShowMenu(TGCompositeFrame *menu)
+{
+   // Show the selected frame's menu and hide previous one.
 
-         if (act[0] == '!') {
-            act.Remove(0, 1);
-            gSystem->Exec(act.Data());
-         } else {
-            // special case for remote object: remote process
-            if (obj->InheritsFrom("TRemoteObject"))
-               gApplication->SetBit(TApplication::kProcessRemotely);
-            gApplication->ProcessLine(act.Data());
-         }
-         Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+   TGFrameElement *el = 0;
+   // temporary solution until I find a proper way to handle 
+   // these bloody menus...
+   fBindList->Delete();
+   TIter nextm(fMenuBar->GetList());
+   while ((el = (TGFrameElement *) nextm())) {
+      TGMenuTitle *t = (TGMenuTitle *) el->fFrame;
+      Int_t code = t->GetHotKeyCode();
+      BindKey(fMenuBar, code, kKeyMod1Mask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyShiftMask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyLockMask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyMod2Mask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyMod2Mask | kKeyLockMask);
+      BindKey(fMenuBar, code, kKeyMod1Mask | kKeyShiftMask | kKeyMod2Mask | kKeyLockMask);
+   }
+   fMenuFrame->HideFrame(fActMenuBar);
+   fMenuFrame->ShowFrame(menu);
+   menu->Layout();
+   fMenuFrame->Layout();
+   fActMenuBar = menu;
+}
+
+//______________________________________________________________________________
+void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
+{
+   // Start embedding external frame in the tab "pos" and tab element "subpos".
+
+   fEditTab = GetTab(pos);
+
+   if (fEditFrame == 0) {
+      if (subpos == -1) {
+         fCrTab[pos] = fNbTab[pos]++;
+         fEditFrame = fEditTab->AddTab(Form("Tab %d",fNbTab[pos]));
+         fEditFrame->MapWindow();
+         TGTabElement *tabel = fEditTab->GetTabTab(fEditTab->GetNumberOfTabs()-1);
+         if(tabel) tabel->MapWindow();
+         fEditTab->SetTab(fEditTab->GetNumberOfTabs()-1);
+         fEditTab->Layout();
       }
-
-      // special case for remote object: browse real object
-      if (obj->InheritsFrom("TRemoteObject") && ext.EndsWith(".root")) {
-         TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
-         gApplication->SetBit(TApplication::kProcessRemotely);
-         gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
-         Refresh();
+      else {
+         fCrTab[pos] = subpos;
+         fEditFrame = fEditTab->GetTabContainer(subpos);
+         fEditTab->SetTab(subpos);
       }
-      ////////// new TFile was opened. Add it to the browser /////
-      if (gFile && (wasf != gFile) && ext.EndsWith(".root")) {
-         TGListTreeItem *itm = fLt->FindChildByData(0, gROOT->GetListOfFiles());
+      fEditFrame->SetEditable();
+   }
+}
 
-         if (itm) {
-            fLt->ClearHighlighted();
-            fListLevel = itm;
-            ListTreeHighlight(fListLevel);
-            fLt->OpenItem(fListLevel);
-            itm = fLt->AddItem(fListLevel, gFile->GetName());
-            itm->SetUserData(gFile);
-            fClient->NeedRedraw(fLt, kTRUE);
+//______________________________________________________________________________
+void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
+{
+   // Stop embedding external frame in the current editable frame.
+   
+   if (fEditFrame != 0) {
+      fEditFrame->SetEditable(kFALSE);
+      if (layout) {
+         TGFrameElement *el = (TGFrameElement*) fEditFrame->GetList()->Last();
+         // !!!! MT what to do with the old layout? Leak it for now ...
+         el->fLayout = layout;
+      }
+      fEditFrame->Layout();
+      if (fEditTab == fTabRight)
+         SwitchMenus(fEditFrame);
+      fEditFrame = fEditTab = 0;
+   }
+   if (name && strlen(name)) {
+      SetTabTitle(name);
+   }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
+{
+   // Move the menu from original frame to our TGMenuFrame, or display the 
+   // menu associated to the current tab.
+
+   TGFrameElement *fe = (TGFrameElement *)from->GetList()->First();
+   if (!fe) {
+      if (fActMenuBar != fMenuBar)
+         ShowMenu(fMenuBar);
+      return;
+   }
+   TGCompositeFrame *embed = (TGCompositeFrame *)fe->fFrame;
+   TGFrameElement *el = 0;
+   if (embed && embed->GetList()) {
+      TIter next(embed->GetList());
+      while ((el = (TGFrameElement *)next())) {
+         if (el->fFrame->InheritsFrom("TGMenuBar")) {
+            TGMenuBar *menu = (TGMenuBar *)el->fFrame;
+            if (fActMenuBar == menu)
+               return;
+            TGFrameElement *nw;
+            TIter nel(fMenuFrame->GetList());
+            while ((nw = (TGFrameElement *) nel())) {
+               if (nw->fFrame == menu) {
+                  ShowMenu(menu);
+                  return;
+               }
+            }
+            ((TGCompositeFrame *)menu->GetParent())->HideFrame(menu);
+            menu->ReparentWindow(fMenuFrame);
+            fMenuFrame->AddFrame(menu, fLH2);
+            TGFrameElement *mel;
+            TIter mnext(menu->GetList());
+            while ((mel = (TGFrameElement *) mnext())) {
+               TGMenuTitle *t = (TGMenuTitle *) mel->fFrame;
+               TGPopupMenu *popup = menu->GetPopup(t->GetName());
+               RecursiveReparent(popup);
+               if (popup->GetEntry("Close Canvas")) {
+                  TGMenuEntry *exit = popup->GetEntry("Close Canvas");
+                  popup->HideEntry(exit->GetEntryId());
+               }
+               if (popup->GetEntry("Close Viewer")) {
+                  TGMenuEntry *exit = popup->GetEntry("Close Viewer");
+                  popup->HideEntry(exit->GetEntryId());
+               }
+               if (popup->GetEntry("Quit ROOT")) {
+                  TGMenuEntry *exit = popup->GetEntry("Quit ROOT");
+                  popup->HideEntry(exit->GetEntryId());
+               }
+               if (popup->GetEntry("Exit")) {
+                  TGMenuEntry *exit = popup->GetEntry("Exit");
+                  popup->HideEntry(exit->GetEntryId());
+               }
+            }
+            ShowMenu(menu);
             return;
          }
       }
-
-      // only valid for local text files
-      if (!obj->InheritsFrom("TRemoteObject"))
-         BrowseTextFile(obj->GetName());
-
-      /////////////// cache and change file's icon ///////////////////////
-      TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
-
-      if (fIconBox->fAutoThumbnail && nowp && (nowp != wasp)) {
-         TSystemFile *sf = (TSystemFile*)obj;
-         const TGPicture *pic, *spic;
-
-         TIconBoxThumb *thumb = 0;
-         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() :
-                        gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
-
-         thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path);
-
-         if (thumb) {
-            spic = thumb->fSmall;
-            pic = thumb->fLarge;
-         } else {
-            TImage *img = TImage::Create();
-            nowp->Modified();
-            nowp->Update();
-            img->FromPad(nowp);
-
-            if (!img->IsValid()) {
-               return;
-            }
-
-            static const UInt_t sz = 72;
-            UInt_t w = sz;
-            UInt_t h = sz;
-
-            if (img->GetWidth() > img->GetHeight()) {
-               h = (img->GetHeight()*sz)/img->GetWidth();
-            } else {
-               w = (img->GetWidth()*sz)/img->GetHeight();
-            }
-
-            w = w < 54 ? 54 : w;
-            h = h < 54 ? 54 : h;
-
-            img->Scale(w, h);
-            img->Merge(img, "tint");   // contrasting
-            img->DrawBox(0, 0, w, h, "#ffff00", 1); // yellow frame
-
-            pic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
-            img->Scale(w/3, h/3);
-            spic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
-
-            thumb = new TIconBoxThumb(path.Data(), spic, pic);
-            fIconBox->fThumbnails->Add(thumb);
-            delete img;
-         }
-      }
-      return;
    }
-
-   // For other objects the default action is still hard coded in
-   // their Browse() member function.
+   if (fActMenuBar != fMenuBar)
+      ShowMenu(fMenuBar);
 }
 
-//______________________________________________________________________________
-Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
-{
-   // Handle menu and other command generated by the user.
-
-   TRootHelpDialog *hd;
-   TRootBrowserCursorSwitcher *cursorSwitcher = 0;
-
-   if (GET_SUBMSG(msg) != kCT_SELCHANGED) {
-      cursorSwitcher = new TRootBrowserCursorSwitcher(fIconBox, fLt);
-   }
-
-   TObject *obj;
-   TGListTreeItem *item = 0;
-
-   gVirtualX->Update();
-
-   switch (GET_MSG(msg)) {
-
-      case kC_COMMAND:
-
-         switch (GET_SUBMSG(msg)) {
-
-            case kCM_BUTTON:
-            case kCM_MENU:
-
-               switch (parm1) {
-                  // Handle File menu items...
-                  case kFileNewBrowser:
-                     new TBrowser("Browser", "ROOT Object Browser");
-                     break;
-                  case kFileNewCanvas:
-                     gROOT->MakeDefCanvas();
-                     break;
-                  case kFileNewBuilder:
-                     TGuiBuilder::Instance();
-                     break;
-                  case kFileOpen:
-                     {
-                        static TString dir(".");
-                        TGFileInfo fi;
-                        fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
-                        new TGFileDialog(fClient->GetDefaultRoot(), this,
-                                         kFDOpen,&fi);
-                        dir = fi.fIniDir;
-                        if (fi.fMultipleSelection && fi.fFileNamesList) {
-                           TObjString *el;
-                           TIter next(fi.fFileNamesList);
-                           while ((el = (TObjString *) next())) {
-                              new TFile(el->GetString(), "update");
-                           }
-                        }
-                        else if (fi.fFilename) {
-                           new TFile(fi.fFilename, "update");
-                        }
-                     }
-                     break;
-                  case kFileSave:
-                  case kFileSaveAs:
-                     break;
-                  case kFilePrint:
-                     break;
-                  case kFileCloseBrowser:
-                     SendCloseMessage();
-                     break;
-                  case kFileQuit:
-                     gApplication->Terminate(0);
-                     break;
-
-                  // Handle View menu items...
-                  case kViewToolBar:
-                     if (fViewMenu->IsEntryChecked(kViewToolBar))
-                        ShowToolBar(kFALSE);
-                     else
-                        ShowToolBar();
-                     break;
-                  case kViewStatusBar:
-                     if (fViewMenu->IsEntryChecked(kViewStatusBar))
-                        ShowStatusBar(kFALSE);
-                     else
-                        ShowStatusBar();
-                     break;
-                  case kViewLargeIcons:
-                  case kViewSmallIcons:
-                  case kViewList:
-                  case kViewDetails:
-                     SetViewMode((Int_t)parm1);
-                     break;
-                  case kViewHidden:
-                     if (fBrowser->TestBit(TBrowser::kNoHidden)) {
-                        fViewMenu->CheckEntry(kViewHidden);
-                        fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
-                     } else {
-                        fViewMenu->UnCheckEntry(kViewHidden);
-                        fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
-                     }
-                     Refresh(kTRUE);
-                     break;
-                  case kViewArrangeByName:
-                  case kViewArrangeByType:
-                  case kViewArrangeBySize:
-                  case kViewArrangeByDate:
-                     SetSortMode((Int_t)parm1);
-                     break;
-                  case kViewLineUp:
-                     break;
-                  case kViewRefresh:
-                     Refresh(kTRUE);
-                     break;
-                  case kViewGroupLV:
-                     if (!fViewMenu->IsEntryChecked(kViewGroupLV)) {
-                        fViewMenu->CheckEntry(kViewGroupLV);
-                        TString gv = gEnv->GetValue("Browser.GroupView", "10000");
-                        Int_t igv = atoi(gv.Data());
-
-                        if (igv > 10) {
-                           fIconBox->SetGroupSize(igv);
-                        }
-                     } else {
-                        fViewMenu->UnCheckEntry(kViewGroupLV);
-                        fIconBox->SetGroupSize(10000000); // very large value
-                     }
-                     break;
-
-                  // Handle Option menu items...
-                  case kOptionShowCycles:
-                     printf("Currently the browser always shows all cycles\n");
-                     break;
-
-                  case kOptionAutoThumbnail:
-                     if (fOptionMenu->IsEntryChecked(kOptionAutoThumbnail)) {
-                        fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
-                        fIconBox->fThumbnails->Delete();
-                        fIconBox->fAutoThumbnail = kFALSE;
-                        Refresh(kTRUE);
-                     } else {
-                        fOptionMenu->CheckEntry(kOptionAutoThumbnail);
-                        fIconBox->fAutoThumbnail = kTRUE;
-                     }
-                     break;
-
-                  // Handle toolbar button...
-                  case kOneLevelUp:
-                  {
-                     if (fBrowseTextFile) {
-                        HideTextEdit();
-                        break;
-                     }
-                     if (!fListLevel || !fListLevel->IsActive()) break;
-
-                     if (fListLevel && fIconBox->WasGrouped()) {
-                        if (fListLevel) {
-                           item = fListLevel->GetParent();
-                           if (item) fListLevel = item;
-                           obj = (TObject *) fListLevel->GetUserData();
-                           HighlightListLevel();
-                           if (obj) BrowseObj(obj);
-                        }
-
-                        fClient->NeedRedraw(fLt, kTRUE);
-                        break;
-                     }
-                     if (fListLevel) item = fListLevel->GetParent();
-
-
-                     if (item) {
-                        fListLevel = item;
-                        obj = (TObject *)fListLevel->GetUserData();
-                        HighlightListLevel();
-                        DisplayDirectory();
-                        if (obj) BrowseObj(obj);
-                        fClient->NeedRedraw(fLt, kTRUE);
-                     } else {
-                        obj = (TObject *)fListLevel->GetUserData();
-                        if (obj) ToSystemDirectory(gSystem->DirName(obj->GetTitle()));
-                     }
-                     break;
-                  }
-
-                  // toolbar buttons
-                  case kHistoryBack:
-                     HistoryBackward();
-                     break;
-                  case kHistoryForw:
-                     HistoryForward();
-                     break;
-
-                  case kViewFind:
-                     Search();
-                     break;
-
-                  // Handle Help menu items...
-                  case kHelpAbout:
-                     {
-#ifdef R__UNIX
-                        TString rootx;
-# ifdef ROOTBINDIR
-                        rootx = ROOTBINDIR;
-# else
-                        rootx = gSystem->Getenv("ROOTSYS");
-                        if (!rootx.IsNull()) rootx += "/bin";
-# endif
-                        rootx += "/root -a &";
-                        gSystem->Exec(rootx);
-#else
-#ifdef WIN32
-                        new TWin32SplashThread(kTRUE);
-#else
-                        char str[32];
-                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
-                        hd = new TRootHelpDialog(this, str, 600, 400);
-                        hd->SetText(gHelpAbout);
-                        hd->Popup();
-#endif
-#endif
-                     }
-                     break;
-                  case kHelpOnCanvas:
-                     hd = new TRootHelpDialog(this, "Help on Canvas...", 600, 400);
-                     hd->SetText(gHelpCanvas);
-                     hd->Popup();
-                     break;
-                  case kHelpOnMenus:
-                     hd = new TRootHelpDialog(this, "Help on Menus...", 600, 400);
-                     hd->SetText(gHelpPullDownMenus);
-                     hd->Popup();
-                     break;
-                  case kHelpOnGraphicsEd:
-                     hd = new TRootHelpDialog(this, "Help on Graphics Editor...", 600, 400);
-                     hd->SetText(gHelpGraphicsEditor);
-                     hd->Popup();
-                     break;
-                  case kHelpOnBrowser:
-                     hd = new TRootHelpDialog(this, "Help on Browser...", 600, 400);
-                     hd->SetText(gHelpBrowser);
-                     hd->Popup();
-                     break;
-                  case kHelpOnObjects:
-                     hd = new TRootHelpDialog(this, "Help on Objects...", 600, 400);
-                     hd->SetText(gHelpObjects);
-                     hd->Popup();
-                     break;
-                  case kHelpOnPS:
-                     hd = new TRootHelpDialog(this, "Help on PostScript...", 600, 400);
-                     hd->SetText(gHelpPostscript);
-                     hd->Popup();
-                     break;
-               }
-            case kCM_COMBOBOX:
-               if (parm1 == kFSComboBox) {
-                  TGTreeLBEntry *e = (TGTreeLBEntry *) fFSComboBox->GetSelectedEntry();
-                  if (e) {
-                     const char *dirname = e->GetPath()->GetString();
-                     item = fLt->FindItemByPathname(dirname);
-                     if (item) {
-                        fListLevel = item;
-                        HighlightListLevel();
-                        DisplayDirectory();
-                        fClient->NeedRedraw(fLt, kTRUE);
-                     } else {
-                        ToSystemDirectory(dirname);
-                     }
-                  }
-               }
-               break;
-            default:
-               break;
-         }
-
-         break;
-
-      case kC_LISTTREE:
-         switch (GET_SUBMSG(msg)) {
-
-            case kCT_ITEMCLICK:
-               if (parm1 == kButton1 || parm1 == kButton3) {
-                  HideTextEdit();
-                  TGListTreeItem *item;
-                  TObject *obj = 0;
-                  if ((item = fLt->GetSelected()) != 0 ) {
-                     ListTreeHighlight(item);
-                     obj = (TObject *) item->GetUserData();
-
-                     fStatusBar->SetText("", 1);   // clear
-                  }
-                  if (item && parm1 == kButton3) {
-                     Int_t x = (Int_t)(parm2 & 0xffff);
-                     Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                     obj = (TObject *) item->GetUserData();
-                     if (obj) fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
-                  }
-                  fClient->NeedRedraw(fLt);
-                  fListView->LayoutHeader(0);
-                  fListView->Layout();
-               }
-               break;
-
-            case kCT_ITEMDBLCLICK:
-               if (parm1 == kButton1) {
-                  if (fBrowseTextFile) {
-                     HideTextEdit();
-                  }
-                  if (fListLevel && fIconBox->WasGrouped()) {
-                     TObject *obj;
-                     TGListTreeItem *item;
-
-                     if (fListLevel) {
-                        item = fListLevel->GetParent();
-                        if (item) fListLevel = item;
-
-                        obj = (TObject *) fListLevel->GetUserData();
-                        HighlightListLevel();
-                        if (obj) {
-                           BrowseObj(obj);
-                        }
-                     }
-                     break;
-                  }
-               }
-
-            default:
-               break;
-         }
-         break;
-
-      case kC_CONTAINER:
-         switch (GET_SUBMSG(msg)) {
-
-            case kCT_ITEMCLICK:
-               if (fIconBox->NumSelected() == 1) {
-                  // display title of selected object
-                  TGFileItem *item;
-                  void *p = 0;
-                  if ((item = (TGFileItem *)fIconBox->GetNextSelected(&p)) != 0) {
-                     TObject *obj = (TObject *)item->GetUserData();
-
-                     TGListTreeItem *itm = 0;
-                     if (!fListLevel) itm = fLt->GetFirstItem();
-                     else itm = fListLevel->GetFirstChild();
-                     //Bool_t found = kFALSE;
-
-                     while (itm) {
-                        if (itm->GetUserData() == obj) break;
-                        itm = itm->GetNextSibling();
-                     }
-
-                     if (itm) {
-                        if ((fListLevel && fListLevel->IsOpen()) || !fListLevel) {
-                           fLt->ClearHighlighted();
-                           fLt->HighlightItem(itm);
-                           fClient->NeedRedraw(fLt, kTRUE);
-                        }
-                     }
-
-                     fStatusBar->SetText(obj->GetName(), 1);
-                  }
-               }
-               if (parm1 == kButton3) {
-                  // show context menu for selected object
-                  if (fIconBox->NumSelected() == 1) {
-                     void *p = 0;
-                     TGFileItem *item;
-                     if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                        Int_t x = (Int_t)(parm2 & 0xffff);
-                        Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                        TObject *obj = (TObject *)item->GetUserData();
-                        if (obj) {
-                           if (obj->IsA() == TKey::Class()) {
-                              TKey *key = (TKey*)obj;
-                              TClass *cl = TClass::GetClass(key->GetClassName());
-                              void *add = gROOT->FindObject((char *) key->GetName());
-                              if (cl->IsTObject()) {
-                                 obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
-                              } else {
-                                 Error("ProcessMessage","do not support non TObject (like %s) yet",
-                                       cl->GetName());
-                                 break;
-                              }
-                           }
-                           fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
-                        }
-                     }
-                  }
-               }
-               break;
-            case kCT_ITEMDBLCLICK:
-               if (parm1 == kButton1) {
-                  if (fIconBox->NumSelected() == 1) {
-                     void *p = 0;
-                     TGFileItem *item;
-                     if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                        TObject *obj = (TObject *)item->GetUserData();
-                        DoubleClicked(obj);
-                        IconBoxAction(obj);
-                        return kTRUE; //
-                     }
-                  }
-               }
-               break;
-            case kCT_SELCHANGED:
-               DisplayTotal((Int_t)parm1, (Int_t)parm2);
-               break;
-            default:
-               break;
-         }
-
-         break;
-
-      default:
-         break;
-   }
-
-   delete cursorSwitcher;
-
-   fClient->NeedRedraw(fIconBox);
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TRootBrowser::Chdir(TGListTreeItem *item)
-{
-   // Make object associated with item the current directory.
-
-   if (item) {
-      TGListTreeItem *i = item;
-      TString dir;
-      while (i) {
-         TObject *obj = (TObject*) i->GetUserData();
-         if (obj) {
-            if (obj->IsA() == TDirectoryFile::Class()) {
-               dir = "/" + dir;
-               dir = obj->GetName() + dir;
-            }
-            if (obj->IsA() == TFile::Class()) {
-               dir = ":/" + dir;
-               dir = obj->GetName() + dir;
-            }
-            if (obj->IsA() == TKey::Class()) {
-               if (strcmp(((TKey*)obj)->GetClassName(), "TDirectoryFile") == 0) {
-                  dir = "/" + dir;
-                  dir = obj->GetName() + dir;
-               }
-            }
-         }
-         i = i->GetParent();
-      }
-
-      if (gDirectory && dir.Length()) gDirectory->cd(dir.Data());
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::HighlightListLevel()
-{
-   // helper method  to track history
-
-   if (!fListLevel) return;
-
-   fLt->ClearHighlighted();
-   fLt->HighlightItem(fListLevel);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::AddToHistory(TGListTreeItem *item)
-{
-   // helper method to track history
-
-   TGButton *btn = fToolBar->GetButton(kHistoryBack);
-
-   if (!item || (fHistoryCursor &&
-       (item == ((TRootBrowserHistoryCursor*)fHistoryCursor)->fItem))) return;
-
-   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistoryCursor;
-
-   while ((cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor))) {
-      fHistory->Remove(cur);
-      delete cur;
-   }
-
-   cur = new TRootBrowserHistoryCursor(item);
-   fHistory->Add(cur);
-   fHistoryCursor = cur;
-   btn->SetState(kButtonUp);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ClearHistory()
-{
-   // clear navigation history
-
-   fHistory->Delete();
-   TGButton *btn = fToolBar->GetButton(kHistoryBack);
-   TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
-   btn->SetState(kButtonDisabled);
-   btn2->SetState(kButtonDisabled);
-}
-
-//______________________________________________________________________________
-Bool_t TRootBrowser::HistoryBackward()
-{
-   // go to the past
-
-   if (fBrowseTextFile) {
-      HideTextEdit();
-      return kFALSE;
-   }
-   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->Before(fHistoryCursor);
-   TGButton *btn = fToolBar->GetButton(kHistoryBack);
-   TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
-
-   if (!cur) {
-      btn->SetState(kButtonDisabled);
-      return kFALSE;
-   }
-
-   fLt->ClearHighlighted();
-   fHistoryCursor = cur;
-   fListLevel = cur->fItem;
-   ListTreeHighlight(fListLevel);
-   fLt->AdjustPosition();
-   fClient->NeedRedraw(fLt, kTRUE);
-
-   btn2->SetState(kButtonUp);
-   cur = (TRootBrowserHistoryCursor*)fHistory->Before(fHistoryCursor);
-   if (!cur) {
-      btn->SetState(kButtonDisabled);
-      return kFALSE;
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TRootBrowser::HistoryForward()
-{
-   //  go to the future
-
-   if (fBrowseTextFile) {
-      HideTextEdit();
-      return kFALSE;
-   }
-
-   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor);
-   TGButton *btn = fToolBar->GetButton(kHistoryForw);
-   TGButton *btn2 = fToolBar->GetButton(kHistoryBack);
-
-   if (!cur) {
-      btn->SetState(kButtonDisabled);
-      return kFALSE;
-   }
-
-   fLt->ClearHighlighted();
-   fHistoryCursor = cur;
-   fListLevel = cur->fItem;
-   ListTreeHighlight(fListLevel);
-   fLt->AdjustPosition();
-   fClient->NeedRedraw(fLt, kTRUE);
-
-   btn2->SetState(kButtonUp);
-
-   cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor);
-   if (!cur) {
-      btn->SetState(kButtonDisabled);
-      return kFALSE;
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TRootBrowser::DeleteListTreeItem(TGListTreeItem *item)
-{
-   // delete list tree item, remove it from history
-
-   ((TRootBrowserHistory*)fHistory)->DeleteItem(item);
-   fLt->DeleteItem(item);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
-{
-   // Open tree item and list in iconbox its contents.
-
-   if (item) {
-      TObject *obj = (TObject *) item->GetUserData();
-
-      if (obj) {
-         if (obj->IsA() == TKey::Class()) {
-
-            Chdir(item->GetParent());
-            TObject *k_obj = gROOT->FindObject(obj->GetName());
-
-            if (k_obj) {
-               TGListTreeItem *parent = item->GetParent();
-               DeleteListTreeItem(item);
-               TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName(), k_obj);
-               if (itm) {
-                  itm->SetUserData(k_obj);
-                  item = itm;
-                  obj = k_obj;
-               } else {
-                  item = parent;
-               }
-            }
-         } else if (obj->InheritsFrom(TDirectoryFile::Class())) {
-            Chdir(item->GetParent());
-         }
-         else if (obj->InheritsFrom("TApplicationRemote")) {
-            if (!gApplication->GetAppRemote()) {
-               gROOT->ProcessLine(Form(".R %s", item->GetText()));
-               if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]",
-                           gApplication->GetAppRemote()->ApplicationName()));
-               }
-            }
-         }
-         else if (obj->InheritsFrom("TRemoteObject")) {
-            // special case for remote object
-            TRemoteObject *robj = (TRemoteObject *)obj;
-            // the real object is a TKey
-            if (!strcmp(robj->GetClassName(), "TKey")) {
-               TGListTreeItem *parent = item;
-               TRemoteObject *probj = (TRemoteObject *)parent->GetUserData();
-               // find the TFile remote object containing the TKey
-               while ( probj && strcmp(probj->GetClassName(), "TFile")) {
-                  parent = parent->GetParent();
-                  probj = (TRemoteObject *)parent->GetUserData();
-               }
-               if (probj) {
-                  // remotely browse file (remotely call TFile::cd())
-                  gApplication->SetBit(TApplication::kProcessRemotely);
-                  gApplication->ProcessLine(
-                     Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
-                          probj->GetName()));
-               }
-            }
-         }
-         if (item->GetParent() && item->GetParent()->GetUserData() &&
-            ((TObject *)item->GetParent()->GetUserData())->InheritsFrom("TApplicationRemote")) {
-            // switch to remote session
-            if (!gApplication->GetAppRemote()) {
-               gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
-               if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, Form("\n%s:root [0]",
-                           gApplication->GetAppRemote()->ApplicationName()));
-               }
-            }
-            else if (!strcmp(item->GetText(), "ROOT Files")) {
-               // update list of files opened in the remote session
-               gApplication->SetBit(TApplication::kProcessRemotely);
-               gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
-            }
-         }
-         else {
-            // check if the listtree item is from a local session or
-            // from a remote session, then switch to the session it belongs to
-            TGListTreeItem *top = item;
-            while (top->GetParent()) {
-               top = top->GetParent();
-            }
-            TObject *topobj = (TObject *) top->GetUserData();
-            if (topobj->InheritsFrom("TApplicationRemote")) {
-               // it belongs to a remote session
-               if (!gApplication->GetAppRemote()) {
-                  // switch to remote session if not already in
-                  gROOT->ProcessLine(Form(".R %s", top->GetText()));
-                  if (gApplication->GetAppRemote()) {
-                     Getlinem(kInit, Form("\n%s:root [0]",
-                              gApplication->GetAppRemote()->ApplicationName()));
-                  }
-               }
-            }
-            else if (gApplication->GetAppRemote()) {
-               // switch back to local session if not already in
-               gApplication->ProcessLine(".R");
-               Getlinem(kInit, "\nroot [0]");
-            }
-         }
-
-         if (!fListLevel || !fListLevel->IsActive()) {
-            fListLevel = item;
-            BrowseObj(obj);
-            fLt->HighlightItem(fListLevel);
-         }
-      }
-      DisplayDirectory();
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ToSystemDirectory(const char *dirname)
-{
-   // display  directory
-
-   TString dir = dirname;
-
-   if (fListLevel) {
-      TObject* obj = (TObject*)fListLevel->GetUserData();
-
-      if (obj && (obj->IsA() == TSystemDirectory::Class())) {
-         TObject* old = obj;
-         fListLevel->Rename(dir.Data());
-         obj = new TSystemDirectory(dir.Data(), dir.Data());
-         while (fListLevel->GetFirstChild())
-            fLt->RecursiveDeleteItem(fListLevel->GetFirstChild(),
-                                     fListLevel->GetFirstChild()->GetUserData());
-
-         fListLevel->SetUserData(obj);
-         gROOT->GetListOfBrowsables()->Remove(old);
-         delete old;
-         gROOT->GetListOfBrowsables()->Add(obj);
-         fTreeLock = kTRUE;
-         BrowseObj(obj);
-         fTreeLock = kFALSE;
-
-         fClient->NeedRedraw(fLt, kTRUE);
-         fClient->NeedRedraw(fIconBox);
-         DisplayDirectory();
-         //gSystem->ChangeDirectory(dir.Data());
-         fStatusBar->SetText(dir.Data(), 1);
-         ClearHistory();   // clear browsing history
-      }
-   }
-   return;
-}
-
-//______________________________________________________________________________
-void TRootBrowser::SetDrawOption(Option_t *option)
-{
-   // sets drawing option
-
-   fDrawOption->GetTextEntry()->SetText(option);
-}
-
-//______________________________________________________________________________
-Option_t *TRootBrowser::GetDrawOption() const
-{
-   // returns drawing option
-
-   return fDrawOption->GetTextEntry()->GetText();
-}
 //______________________________________________________________________________
 void TRootBrowser::DoubleClicked(TObject *obj)
 {
@@ -2455,6 +928,7 @@ void TRootBrowser::DoubleClicked(TObject *obj)
 void TRootBrowser::Checked(TObject *obj, Bool_t checked)
 {
    // Emits signal when double clicking on icon.
+   
    Long_t args[2];
 
    args[0] = (Long_t)obj;
@@ -2464,561 +938,35 @@ void TRootBrowser::Checked(TObject *obj, Bool_t checked)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::IconBoxAction(TObject *obj)
+void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
-   // Default action when double clicking on icon.
+   // Emits signal "ExecuteDefaultAction(TObject*)".
 
-   Bool_t browsable = kFALSE;
-   const char *dirname = 0;
-   if (obj) {
+   Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+}
 
-      TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
 
-      Bool_t useLock = kTRUE;
+//______________________________________________________________________________
+TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title, 
+                                      UInt_t width, UInt_t height, 
+                                      Option_t *opt)
+{
+   // static contructor returning TBrowserImp, 
+   // as needed by the plugin mechanism.
 
-      if (obj->IsA()->GetMethodWithPrototype("Browse", "TBrowser*"))
-         browsable = kTRUE;
-
-      if (obj->InheritsFrom("TLeaf")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();",
-                                                      obj->ClassName(), obj));
-         if (!dir) {
-            browsable = kFALSE;
-         }
-      }
-      if (obj->InheritsFrom("TBranchElement")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();",
-                                                      obj->ClassName(), obj));
-         if (!dir) {
-            browsable = kFALSE;
-         }
-      }
-
-      if (obj->InheritsFrom("TKey")) {
-         TKey *key = dynamic_cast<TKey*>(obj);
-         if (key->GetClassName() && (!strcmp(key->GetClassName(), "TFormula")))
-            browsable = kFALSE;
-      }
-
-      if (obj->IsA() == TSystemDirectory::Class()) {
-         useLock = kFALSE;
-
-         TString t(obj->GetName());
-         if (t == ".") goto out;
-         if (t == "..") {
-            if (fListLevel && fListLevel->GetParent()) {
-               fListLevel = fListLevel->GetParent();
-               obj = (TObject*)fListLevel->GetUserData();
-               if (fListLevel->GetParent()) {
-                  fListLevel = fListLevel->GetParent();
-               } else  {
-                  obj = (TObject*)fListLevel->GetUserData();
-                  fListLevel = 0;
-               }
-            } else {
-               dirname = gSystem->DirName(gSystem->pwd());
-               ToSystemDirectory(dirname);
-               return;
-            }
-         }
-      }
-
-      if (obj->IsFolder()) {
-         fIconBox->RemoveAll();
-         TGListTreeItem *itm = 0;
-
-         if (fListLevel) {
-            fLt->OpenItem(fListLevel);
-            itm = fListLevel->GetFirstChild();
-         } else {
-            itm = fLt->GetFirstItem();
-         }
-
-         while (itm && (itm->GetUserData() != obj)) {
-            itm = itm->GetNextSibling();
-         }
-
-         if (!itm && fListLevel) {
-            // special case for remote objects
-            Bool_t isRemote = kFALSE;
-            if (obj->InheritsFrom("TRemoteObject"))
-               isRemote = kTRUE;
-            else if (fListLevel) {
-               // check also if one of its parents is a remote object
-               TGListTreeItem *top = fListLevel;
-               while (top->GetParent()) {
-                  TObject *tobj = (TObject *) top->GetUserData();
-                  if (tobj && (tobj->InheritsFrom("TRemoteObject") ||
-                     tobj->InheritsFrom("TApplicationRemote"))) {
-                     isRemote = kTRUE;
-                     break;
-                  }
-                  top = top->GetParent();
-               }
-            }
-            if (isRemote) {
-               // add the remote object only if not already in the list
-               if ((!fLt->FindChildByName(fListLevel, obj->GetName())) &&
-                   (!fLt->FindChildByData(fListLevel, obj))) {
-                  itm = fLt->AddItem(fListLevel, obj->GetName());
-                  if (itm) itm->SetUserData(obj);
-               }
-               else {
-                  // set the current item to the one found in the list
-                  itm = fLt->FindChildByData(fListLevel, obj) ?
-                     fLt->FindChildByData(fListLevel, obj) :
-                     fLt->FindChildByName(fListLevel, obj->GetName());
-               }
-            }
-            else {
-               itm = fLt->AddItem(fListLevel, obj->GetName());
-               if (itm) itm->SetUserData(obj);
-            }
-         }
-
-         if (itm) {
-            fListLevel = itm;
-            DisplayDirectory();
-            TObject *kobj = (TObject *)itm->GetUserData();
-
-            if (kobj->IsA() == TKey::Class()) {
-               Chdir(fListLevel->GetParent());
-               kobj = gROOT->FindObject(kobj->GetName());
-
-               if (kobj) {
-                  TGListTreeItem *parent = fListLevel->GetParent();
-                  DeleteListTreeItem(fListLevel);
-                  TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName(), kobj);
-                  if (kitem) {
-                     obj = kobj;
-                     useLock = kFALSE;
-                     kitem->SetUserData(kobj);
-                     fListLevel = kitem;
-                  } else
-                     fListLevel = parent;
-               }
-            }
-            HighlightListLevel();
-         }
-      }
-
-      if (browsable) {
-         if (useLock) fTreeLock = kTRUE;
-         Emit("BrowseObj(TObject*)", (Long_t)obj);
-         obj->Browse(fBrowser);
-         if (useLock) fTreeLock = kFALSE;
-      }
-
-out:
-      if (obj->IsA() != TSystemFile::Class()) {
-         if (obj && obj->IsFolder()) {
-            fIconBox->Refresh();
-         }
-
-         if (fBrowser) {
-            fBrowser->SetRefreshFlag(kFALSE);
-         }
-
-         fClient->NeedRedraw(fIconBox);
-         fClient->NeedRedraw(fLt, kTRUE);
-      }
-   }
+   TRootBrowser *browser = new TRootBrowser(b, title, width, height, opt);
+   return (TBrowserImp *)browser;
 }
 
 //______________________________________________________________________________
-void TRootBrowser::RecursiveRemove(TObject *obj)
+TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title, Int_t x, 
+                                      Int_t y, UInt_t width, UInt_t height, 
+                                      Option_t *opt)
 {
-   // Recursively remove object from browser.
+   // static contructor returning TBrowserImp, 
+   // as needed by the plugin mechanism.
 
-   // don't delete fIconBox items here (it's status will be updated
-   // via TBrowser::Refresh() which should be called once all objects have
-   // been removed.
-
-   if (fListLevel && (fListLevel->GetUserData() == obj)) {
-      TGListTreeItem *parent = fListLevel->GetParent();
-      if (parent) {
-         fListLevel = parent;
-         fLt->ClearHighlighted();
-         fLt->HighlightItem(fListLevel);
-         fLt->OpenItem(fListLevel);
-      }
-      else
-         fListLevel = 0;
-   }
-   if (fHistory) fHistory->RecursiveRemove(obj);
-   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
+   TRootBrowser *browser = new TRootBrowser(b, title, x, y, width, height, opt);
+   return (TBrowserImp *)browser;
 }
 
-//______________________________________________________________________________
-void TRootBrowser::Refresh(Bool_t force)
-{
-   // Refresh the browser contents.
-
-   Bool_t refresh = fBrowser && fBrowser->GetRefreshFlag();
-
-   if (fTextEdit && !gROOT->IsExecutingMacro() && force) {
-      fTextEdit->LoadFile(fTextFileName.Data());
-      fClient->NeedRedraw(fTextEdit);
-      return;
-   }
-
-   if ( (refresh || force) && !fIconBox->WasGrouped()
-      && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
-
-      TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
-      static UInt_t prev = 0;
-      UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
-      if (!prev) prev = curr;
-
-      if (prev != curr) { // refresh gROOT
-         TGListTreeItem *sav = fListLevel;
-         fListLevel = 0;
-         BrowseObj(gROOT);
-         fListLevel = sav;
-         prev = curr;
-      }
-
-      // Refresh the IconBox
-      if (fListLevel) {
-         TObject *obj = (TObject *)fListLevel->GetUserData();
-         if (obj) {
-            fTreeLock = kTRUE;
-            BrowseObj(obj);
-            fTreeLock = kFALSE;
-         }
-      }
-   }
-   fClient->NeedRedraw(fLt, kTRUE);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ShowToolBar(Bool_t show)
-{
-   // Show or hide toolbar.
-
-   if (show) {
-      ShowFrame(fToolBar);
-      ShowFrame(fToolBarSep);
-      fViewMenu->CheckEntry(kViewToolBar);
-   } else {
-      HideFrame(fToolBar);
-      HideFrame(fToolBarSep);
-      fViewMenu->UnCheckEntry(kViewToolBar);
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ShowStatusBar(Bool_t show)
-{
-   // Show or hide statusbar.
-
-   if (show) {
-      ShowFrame(fStatusBar);
-      fViewMenu->CheckEntry(kViewStatusBar);
-   } else {
-      HideFrame(fStatusBar);
-      fViewMenu->UnCheckEntry(kViewStatusBar);
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::SetDefaults(const char *iconStyle, const char *sortBy)
-{
-   // Set defaults depending on settings in the user's .rootrc.
-
-   const char *opt;
-
-   // IconStyle: big, small, list, details
-   if (iconStyle)
-      opt = iconStyle;
-   else
-      opt = gEnv->GetValue("Browser.IconStyle", "small");
-   if (!strcasecmp(opt, "big"))
-      SetViewMode(kViewLargeIcons, kTRUE);
-   else if (!strcasecmp(opt, "small"))
-      SetViewMode(kViewSmallIcons, kTRUE);
-   else if (!strcasecmp(opt, "list"))
-      SetViewMode(kViewList, kTRUE);
-   else if (!strcasecmp(opt, "details"))
-      SetViewMode(kViewDetails, kTRUE);
-   else
-      SetViewMode(kViewSmallIcons, kTRUE);
-
-   // SortBy: name, type, size, date
-   if (sortBy)
-      opt = sortBy;
-   else
-      opt = gEnv->GetValue("Browser.SortBy", "name");
-   if (!strcasecmp(opt, "name"))
-      SetSortMode(kViewArrangeByName);
-   else if (!strcasecmp(opt, "type"))
-      SetSortMode(kViewArrangeByType);
-   else if (!strcasecmp(opt, "size"))
-      SetSortMode(kViewArrangeBySize);
-   else if (!strcasecmp(opt, "date"))
-      SetSortMode(kViewArrangeByDate);
-   else
-      SetSortMode(kViewArrangeByName);
-
-   fIconBox->Refresh();
-}
-
-//______________________________________________________________________________
-void TRootBrowser::SetViewMode(Int_t new_mode, Bool_t force)
-{
-   // Set iconbox's view mode and update menu and toolbar buttons accordingly.
-
-   int i, bnum;
-   EListViewMode lv;
-
-   if (force || (fViewMode != new_mode)) {
-
-      switch (new_mode) {
-         default:
-            if (!force)
-               return;
-            else
-               new_mode = kViewLargeIcons;
-         case kViewLargeIcons:
-            bnum = 2;
-            lv = kLVLargeIcons;
-            break;
-         case kViewSmallIcons:
-            bnum = 3;
-            lv = kLVSmallIcons;
-            break;
-         case kViewList:
-            bnum = 4;
-            lv = kLVList;
-            break;
-         case kViewDetails:
-            bnum = 5;
-            lv = kLVDetails;
-            break;
-      }
-
-      fViewMode = new_mode;
-      fViewMenu->RCheckEntry(fViewMode, kViewLargeIcons, kViewDetails);
-
-      for (i = 2; i <= 5; ++i)
-         gToolBarData[i].fButton->SetState((i == bnum) ? kButtonEngaged : kButtonUp);
-
-      fListView->SetViewMode(lv);
-      TGTextButton** buttons = fListView->GetHeaderButtons();
-      if ((lv == kLVDetails) && (buttons)) {
-         if (!strcmp(fListView->GetHeader(1), "Attributes")) {
-            buttons[0]->Connect("Clicked()", "TRootBrowser", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByName));
-            buttons[1]->Connect("Clicked()", "TRootBrowser", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByType));
-            buttons[2]->Connect("Clicked()", "TRootBrowser", this,
-                                Form("SetSortMode(=%d)", kViewArrangeBySize));
-            buttons[5]->Connect("Clicked()", "TRootBrowser", this,
-                                Form("SetSortMode(=%d)", kViewArrangeByDate));
-         }
-      }
-      fIconBox->AdjustPosition();
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::SetSortMode(Int_t new_mode)
-{
-   // Set iconbox's sort mode and update menu radio buttons accordingly.
-
-   EFSSortMode smode;
-
-   switch (new_mode) {
-      default:
-         new_mode = kViewArrangeByName;
-      case kViewArrangeByName:
-         smode = kSortByName;
-         break;
-      case kViewArrangeByType:
-         smode = kSortByType;
-         break;
-      case kViewArrangeBySize:
-         smode = kSortBySize;
-         break;
-      case kViewArrangeByDate:
-         smode = kSortByDate;
-         break;
-   }
-
-   fSortMode = new_mode;
-   fSortMenu->RCheckEntry(fSortMode, kViewArrangeByName, kViewArrangeByDate);
-
-   fIconBox->Sort(smode);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::Search()
-{
-   // starts serach dialog
-
-   if (!fTextEdit) {
-      fIconBox->Search(kFALSE);
-   } else {
-      fTextEdit->Search(kFALSE);
-   }
-}
-
-//______________________________________________________________________________
-static Bool_t isBinary(const char *str, int len)
-{
-   // test
-
-   for (int i = 0; i < len; i++) {
-      char c = str[i];
-      if (((c < 32) || (c > 126)) && (c != '\t') && (c != '\r') && (c != '\n')) {
-         return kTRUE;
-      }
-   }
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-void TRootBrowser::HideTextEdit()
-{
-   // hide text edit
-
-   if (!fTextEdit) return;
-
-   ShowMacroButtons(kFALSE);
-   fTextEdit->UnmapWindow();
-   fV2->RemoveFrame(fTextEdit);
-   fV2->AddFrame(fListView, fExpandLayout);
-   TGButton *savbtn = fToolBar->GetButton(kViewSave);
-   savbtn->Disconnect();
-   fTextEdit->DestroyWindow();
-   delete fTextEdit;
-   fTextEdit = 0;
-   fListView->Resize(fV2->GetWidth(), fV2->GetHeight());
-   fV2->MapSubwindows();
-   fV2->Layout();
-   fBrowseTextFile = kFALSE;
-   fTextFileName = "";
-}
-
-//______________________________________________________________________________
-void TRootBrowser::BrowseTextFile(const char *file)
-{
-   // browse text file
-
-   Bool_t loaded = (fTextEdit != 0);
-   if (gSystem->AccessPathName(file, kReadPermission)) {
-      if (loaded) {
-         HistoryBackward();
-      }
-      return;
-   }
-   const int bufferSize = 1024;
-   char buffer[bufferSize];
-
-   FILE *fd = fopen(file, "rb");
-   int sz = fread(buffer, 1, bufferSize, fd);
-   fclose(fd);
-
-   if (isBinary(buffer, sz)) {
-      if (loaded) {
-         HistoryBackward();
-      }
-      return;
-   }
-
-   if (!fTextEdit) {
-      fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(),
-                                 kSunkenFrame | kDoubleBorder);
-      TColor *col = gROOT->GetColor(19);
-      fTextEdit->SetBackgroundColor(col->GetPixel());
-      if (TGSearchDialog::SearchDialog()) {
-         TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
-                                                 fTextEdit, "Search(char *,Bool_t,Bool_t)");
-      }
-      fV2->AddFrame(fTextEdit, fExpandLayout);
-      TGButton *savbtn = fToolBar->GetButton(kViewSave);
-      savbtn->Connect("Released()", "TGTextEdit", fTextEdit, "SaveFile(=0,kTRUE)");
-   }
-   fTextFileName = file;
-   fTextEdit->LoadFile(file);
-   if (loaded) return;
-
-   if (fTextFileName.EndsWith(".C")) {
-      ShowMacroButtons();
-   } else {
-      fTextEdit->SetReadOnly();
-   }
-   fListView->UnmapWindow();
-   fV2->RemoveFrame(fListView);
-   fTextEdit->MapWindow();
-   fV2->MapSubwindows();
-   fV2->Layout();
-   fBrowseTextFile = kTRUE;
-
-   if (fListLevel) {
-      AddToHistory(fListLevel);
-   }
-   TGButton *btn = fToolBar->GetButton(kHistoryForw);
-
-   if (btn) {
-      btn->SetState(kButtonDisabled);
-   }
-
-   TGButton *btn2 = fToolBar->GetButton(kHistoryBack);
-
-   if (btn2) {
-      btn2->SetState(kButtonUp);
-   }
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ExecMacro()
-{
-   // executed browsed text macro
-
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                           fTextFileName.Data());
-
-   gROOT->SetExecutingMacro(kTRUE);
-   fTextEdit->SaveFile(tmpfile, kFALSE);
-   gROOT->Macro(tmpfile);
-   gSystem->Unlink(tmpfile);
-   delete tmpfile;
-   gROOT->SetExecutingMacro(kFALSE);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::InterruptMacro()
-{
-   // interrupt browsed macro execution
-
-   gROOT->SetInterrupt(kTRUE);
-}
-
-//______________________________________________________________________________
-void TRootBrowser::ShowMacroButtons(Bool_t show)
-{
-   // show/hide macro buttons
-
-   TGButton *bt1 = fToolBar->GetButton(kViewExec);
-   TGButton *bt2 = fToolBar->GetButton(kViewInterrupt);
-   TGButton *bt3 = fToolBar->GetButton(kViewSave);
-
-   static Bool_t connected = kFALSE;
-
-   if (!show) {
-      bt1->UnmapWindow();
-      bt2->UnmapWindow();
-      bt3->UnmapWindow();
-   } else {
-      bt1->MapWindow();
-      bt2->MapWindow();
-      bt3->MapWindow();
-
-      if (!connected && fTextEdit) {
-         bt1->Connect("Pressed()", "TRootBrowser", this, "ExecMacro()");
-         bt2->Connect("Pressed()", "TRootBrowser", this, "InterruptMacro()");
-         connected = kTRUE;
-      }
-   }
-}

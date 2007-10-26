@@ -57,17 +57,17 @@ public:
       kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
 
-   TBrowser(const char *name="Browser", const char *title="ROOT Object Browser", TBrowserImp *extimp=0);
-   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp=0);
-   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, TBrowserImp *extimp=0);
+   TBrowser(const char *name="Browser", const char *title="ROOT Object Browser", TBrowserImp *extimp=0, Option_t *opt="");
+   TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp=0, Option_t *opt="");
+   TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, TBrowserImp *extimp=0, Option_t *opt="");
 
-   TBrowser(const char *name, TObject *obj, const char *title="ROOT Object Browser");
-   TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height);
-   TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   TBrowser(const char *name, TObject *obj, const char *title="ROOT Object Browser", Option_t *opt="");
+   TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height, Option_t *opt="");
+   TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");
 
-   TBrowser(const char *name, void *obj, TClass *cl, const char *objname="", const char *title="ROOT Foreign Browser");
-   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, UInt_t width, UInt_t height);
-   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname="", const char *title="ROOT Foreign Browser", Option_t *opt="");
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, UInt_t width, UInt_t height, Option_t *opt="");
+   TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");
 
    // In a world with only standard C++ compliant compilers, we could also add:
    // template <class T>  TBrowser(const char *name, T *obj, const char *objname="", const char *title="ROOT Foreign Browser") :
@@ -104,6 +104,15 @@ public:
    void          Show()                        { fImp->Show(); }
    void          SetDrawOption(Option_t *option="") { fImp->SetDrawOption(option); }
    Option_t     *GetDrawOption() const { return  fImp->GetDrawOption(); }
+
+   Long_t        ExecPlugin(const char *name = 0, const char *fname = 0, 
+                            const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
+                    return fImp->ExecPlugin(name, fname, cmd, pos, subpos); 
+                 }
+   void          StartEmbedding(Int_t pos, Int_t subpos) {
+                    fImp->StartEmbedding(pos, subpos); 
+                 }
+   void          StopEmbedding(const char *name = "") { fImp->StopEmbedding(name); }
 
    ClassDef(TBrowser,0)  //ROOT Object Browser
 };
