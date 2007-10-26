@@ -10,7 +10,7 @@ fi
 
 OUT=etc/svninfo.txt
 
-INFO=`svn info | awk '/Revision:/ { print $2 } /URL:/ { print $2 }'`
+INFO=`svn info | awk '/Last Changed Rev:/ { print $4 } /URL:/ { print $2 }'`
 
 HTTP="http://root.cern.ch/svn/root/"
 HTTPS="https://root.cern.ch/svn/root/"
