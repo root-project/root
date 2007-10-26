@@ -170,6 +170,8 @@
 #pragma link C++ class TVirtualMonitoringReader;
 #pragma link C++ class TObjectSpy;
 #pragma link C++ class TObjectRefSpy;
+#pragma link C++ class TUri;
+#pragma link C++ function operator==(const TUri&, const TUri&);
 #pragma link C++ class TUrl;
 #pragma link C++ class TInetAddress-;
 
