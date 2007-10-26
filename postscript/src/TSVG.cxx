@@ -35,28 +35,33 @@ ClassImp(TSVG)
 //______________________________________________________________________________
 /*Begin_Html
 <center><h2>TSVG: Graphics interface to SVG</h2></center>
-<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a> is a
-language for describing two-dimensional graphics in XML. <b>SVG</b> allows for
-three types of graphic objects: vector graphic shapes, images and text.
-Graphical objects can be grouped, styled, transformed and composed into
-previously rendered objects. The feature set includes nested transformations,
-clipping paths, alpha masks, filter effects and template objects. <b>SVG</b>
-drawings can be interactive and dynamic. Animations can be defined and
-triggered either declaratively or via scripting.
+<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a> 
+(Scalable Vector Graphics) is a language for describing two-dimensional
+graphics in XML. <b>SVG</b> allows high quality vector graphics in
+HTML pages.
 <p>
-The way to access <b>SVG</b> in <b>ROOT</b> (in my private version only) is the
-following:
+To print a ROOT canvas "c1" into an <b>SVG</b> file simply do:
 <PRE>
-   <A HREF="html/TSVG.html">TSVG</A> mysvg(&quot;myfile.svg&quot;)
-   object-&gt;Draw();
-   mysvg.Close();
+   c1->Print("c1.svg");
 </PRE>
-The result is the ASCII file <tt>myfile.svg</tt>, it is best viewed with
-Internet Explorer and you need the
+The result is the ASCII file <tt>c1.svg</tt>.
+<p>
+It can be open direclty using a web browser or included in a html document
+the following way:
+<pre>
+&lt;embed width="95%" height="500" src="c1.svg" /&gt;>
+</pre>
+It is best viewed with Internet Explorer and you need the
 <a href="http://www.adobe.com/svg/viewer/install/main.html">Adobe <b>SVG</b>
-Viewer</a>. To zoom using the Adobe <b>SVG</b> Viewer, position the mouse over
-the area you want to zoom and click the right button. To define the zoom area,
-use Control+drag to mark the boundaries of the zoom area. To pan, use Alt+drag.
+Viewer</a>.
+<p>
+To zoom using the Adobe <b>SVG</b> Viewer, position the mouse over
+the area you want to zoom and click the right button.
+<p>
+To define the zoom area,
+use Control+drag to mark the boundaries of the zoom area.
+<p>
+To pan, use Alt+drag.
 By clicking with the right mouse button on the <b>SVG</b> graphics you will get
 a pop-up menu giving other ways to interact with the image.
 <p>
