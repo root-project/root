@@ -9,18 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPostScript                                                          //
-//                                                                      //
-// Graphics interface to PostScript.                                    //
-//                                                                      //
-// This code was initially developed in the context of HIGZ and PAW     //
-// by Olivier Couet and Pierre Juillot.                                 //
-// It has been converted to a C++ class by Rene Brun.                   //
-//                                                                      //
-//Begin_Html
-/*
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>TPostScript: Graphics interface to PostScript</h2></center>
+This code was initially developed in the context of HIGZ and PAW
+by Olivier Couet and Pierre Juillot. It has been converted to a C++ class by
+Rene Brun.
 
 <P>To generate a Postscript (or encapsulated ps) file corresponding to
 a single image in a canvas, you can:
@@ -197,8 +192,7 @@ To change the color model use gStyle->SetColorModelPS(c).
 <li> c = 0 means TPostScript will use RGB color model (default)
 <li> c = 1 means TPostScript will use CMYK color model
 </ul>
-*/
-//End_Html
+End_Html */
 
 #ifdef WIN32
 #pragma optimize("",off)
