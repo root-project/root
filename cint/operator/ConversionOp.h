@@ -72,8 +72,9 @@ class D {
 #pragma link C++ class B+;
 #pragma link C++ class C+;
 #pragma link C++ class D+;
-/*
+
+#ifdef CINTFAILURE
 #pragma link C++ function D::operator*(A<int> &a);
 #pragma link C++ function D::operator/(A<float> &a);
-*/
+#endif
 #endif

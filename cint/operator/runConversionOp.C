@@ -1,3 +1,9 @@
+/*
+ Test conversion operators.
+ #define CINTFAILURE to see all failures */
+
+// #define CINTFAILURE
+
 void runConversionOp() {
    gSystem->Setenv("LINES","-1");
 

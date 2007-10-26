@@ -11,6 +11,14 @@
 #include "TClass.h"
 #include "ConversionOp.h"
 
+#ifndef CINTFAILURE
+# define REPORTCINTFAILURE(TXT) \
+  printf("KNOWN FAILURE: %s\n", TXT); \
+  if (false)
+#else
+# define REPORTCINTFAILURE(TXT)
+#endif
+
 void ConversionOp() {
    A<B> ab;
    C c;
@@ -21,18 +29,10 @@ void ConversionOp() {
    if (!&pb) printf("FOO"); // avoid unused var
 
    A<B>* pab;
-   printf("KNOWN FAILURE: b = ab\n");
-#ifdef FAIL
-   b = ab;
-#endif
-   printf("KNOWN FAILURE: pb = ab\n");
-#ifdef FAIL
-   pb = ab;
-#endif
-   printf("KNOWN FAILURE: pab = ab\n");
-#ifdef FAIL
+   //printf("KNOWN FAILURE: b = ab\n");
+   REPORTCINTFAILURE("b = ab") b = ab;
+   REPORTCINTFAILURE("pb = ab") pb = ab;
    pab = ab;
-#endif
    if (((const A<B>&)ab) < (const B&)b) printf("ab < b\n");
    else printf("ab >= b\n");
    if (ab < *pab) printf("ab < *pab\n");
@@ -40,59 +40,32 @@ void ConversionOp() {
 
 
    // C
-   printf("KNOWN FAILURE: ab = c\n");
-#ifdef FAIL
-   ab = c;
-#endif
+   REPORTCINTFAILURE("ab = c") ab = c;
    A<C> ac;
-   printf("KNOWN FAILURE: ac = c: should call C::op A<C>()\n");
-#ifdef FAIL
    ac = c;
-#endif
-   printf("KNOWN FAILURE: b = c\n");
-#ifdef FAIL
-   b = c;
-#endif
-   printf("KNOWN FAILURE: N::B nb = c\n");
-#ifdef FAIL
-   N::B nb = c;
-#endif
+   REPORTCINTFAILURE("b = c") b = c;
+   REPORTCINTFAILURE("N::B nb = c") N::B nb = c;
    A<C>* pac;
    if (!&pac) printf("FOO"); // avoid unused var
-   printf("KNOWN FAILURE: pac = c\n");
-#ifdef FAIL
-   pac = c;
-#endif
+   REPORTCINTFAILURE("pac = c") pac = c;
    const A<B>* cpab;
    if (!&cpab) printf("FOO"); // avoid unused var
-   printf("KNOWN FAILURE: cpab = c\n");
-#ifdef FAIL
-   cpab = c;
-#endif
-   printf("KNOWN FAILURE: pb = c\n");
-#ifdef FAIL
-   pb = c;
-#endif
+   REPORTCINTFAILURE("cpab = c") cpab = c;
+   REPORTCINTFAILURE("pb = c") pb = c;
    const A<C> & rac(c);
    if (!&rac) printf("FOO"); // avoid unused var
-   printf("KNOWN FAILURE: const A<B> & rab(c);\n");
-#ifdef FAIL
-   const A<B> & rab(c);
-   if (!&rab) printf("FOO"); // avoid unused var
-#endif
-   printf("KNOWN FAILURE: const B & rb(c)\n");
-#ifdef FAIL
-   const B & rb(c);
-   if (!&rb) printf("FOO"); // avoid unused var
-#endif
-
+   REPORTCINTFAILURE("const A<B> & rab(c);") {
+      const A<B> & rab(c);
+      if (!&rab) printf("FOO"); // avoid unused var
+   }
+   REPORTCINTFAILURE("const B & rb(c)") {
+      const B & rb(c);
+      if (!&rb) printf("FOO"); // avoid unused var
+   }
 
    // D
    D d;
-   printf("KNOWN FAILURE: ab = d + (ab)\n");
-#ifdef FAIL
-   ab = d + (ab);
-#endif
+   REPORTCINTFAILURE("ab = d + (ab)") ab = d + (ab);
    
    pab = d - (ab);
    /*
