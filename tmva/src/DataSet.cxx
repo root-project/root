@@ -384,13 +384,12 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          type = 1-sb;
          currentInfo.GetTree()->LoadTree(0);
+         currentInfo.GetTree()->Draw( ">>evList", sb==0 ? CutSig() : CutBkg(), "goff" );
+         TEventList* evList = (TEventList*)gDirectory->Get( "evList" );
          ChangeToNewTree( currentInfo.GetTree()->GetTree() );
 
          // count number of events in tree before cut
          nBeforeCut[sb] += currentInfo.GetTree()->GetEntries();
-
-         currentInfo.GetTree()->Draw( ">>evList", sb==0 ? CutSig() : CutBkg(), "goff" );
-         TEventList* evList = (TEventList*)gDirectory->Get( "evList" );
 
          // sanity check
          if (!evList) fLogger << kFATAL 

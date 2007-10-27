@@ -229,6 +229,10 @@ Bool_t TMVA::Factory::SetInputTrees( TString datFileS, TString datFileB,
   
    signalTree->ReadFile( datFileS );
    backgTree->ReadFile( datFileB );
+
+   fLogger << kINFO << "Create TTree objects from ASCII input files ... \n- Signal file    : \""
+           << datFileS << "\" \n- Background file: \""
+           << datFileB << "\"" << Endl;
   
    ifstream in; 
    in.open(datFileS);
