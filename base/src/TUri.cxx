@@ -21,6 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <ctype.h>    // for tolower()
 #include "TUri.h"
 #include "TObjArray.h"
 #include "TObjString.h"
