@@ -1563,6 +1563,13 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
     opengllib=$found_lib
     opengllibdir=$found_dir
 
+    # Mac OS X 10.5.0 problem
+    if test "x$platform" = "xmacosx"; then
+       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
+          opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib"
+       fi
+    fi
+
     check_library "libGLU libMesaGLU" "$enable_shared" \
 	"$keep" $opengllibdirs
     openglulib=$found_lib
