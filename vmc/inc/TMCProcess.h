@@ -17,7 +17,7 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 36;
+const Int_t kMaxMCProcess = 45;
 
 enum TMCProcess
 {
@@ -34,17 +34,25 @@ enum TMCProcess
   kPBrem,               // bremsstrahlung
   kPDeltaRay,           // delta-ray production
   kPAnnihilation,       // positron annihilation
+  kPAnnihilationRest,   // positron annihilation at rest
+  kPAnnihilationFlight, // positron annihilation in flight
 
   kPHadronic,           // hadronic interaction
   kPEvaporation,        // nuclear evaporation
   kPNuclearFission,     // nuclear fission
   kPNuclearAbsorption,  // nuclear absorption
   kPPbarAnnihilation,   // antiproton annihilation
+  kPNbarAnnihilation,   // antineutron annihilation
   kPNCapture,           // neutron capture
-  kPHElastic,           // hadronic elastic incoherent scattering
+  kPHElastic,           // hadronic elastic scattering
+  kPHIElastic,          // hadronic elastic incoherent scattering
+  kPHCElastic,          // hadronic elastic coherent scattering
   kPHInhelastic,        // hadronic inelastic scattering
+  kPPhotonInhelastic,   // photon inelastic scattering
 
   kPMuonNuclear,        // muon nuclear interaction
+  kPElectronNuclear,    // electron nuclear interaction
+  kPPositronNuclear,    // positron nuclear interaction
 
   kPTOFlimit,           // exceeded time of flight cut
   kPPhotoFission,       // nuclear photofission
@@ -66,6 +74,7 @@ enum TMCProcess
   kPLightReflection,    // Cerenkov photon reflection
   kPLightRefraction,    // Cerenkov photon refraction
   kPSynchrotron,        // synchrotron radiation generation
+  kPScintillation,      // scintillation
 
   kPTransportation,     // Transportation
 
@@ -84,15 +93,23 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Bremstrahlung",
   "Delta ray",
   "Positron annihilation",
+  "Positron annihilation at rest",
+  "Positron annihilation in flight",
   "Hadronic interaction",
   "Nuclear evaporation",
   "Nuclear fission",
   "Nuclear absorbtion",
   "Antiproton annihilation",
+  "Antineutron annihilation",
   "Neutron capture",
   "Hadronic elastic",
+  "Hadronic incoherent elastic",
+  "Hadronic coherent elastic",
   "Hadronic inelastic",
+  "Photon inelastic",
   "Muon nuclear interaction",
+  "Electron nuclear interaction",
+  "Positron nuclear interaction",
   "Time of flight limit",
   "Nuclear photofission",
   "Rayleigh effect",
@@ -107,6 +124,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Cerenkov photon reflection",
   "Cerenkov photon refraction",
   "Synchrotron radiation",
+  "Scintillation",
   "Transportation",
   "Unknown process"
 };
