@@ -959,7 +959,7 @@ TRootBrowserLite::~TRootBrowserLite()
 //______________________________________________________________________________
 void TRootBrowserLite::CreateBrowser(const char *name)
 {
-   // Create the actual canvas.
+   // Create the actual browser.
 
    fWidgets = new TList;
    fHistory = new TRootBrowserHistory;
@@ -3028,6 +3028,8 @@ TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title,
                                       UInt_t width, UInt_t height, 
                                       Option_t *opt)
 {
+   // Interface method to the old browser.
+
    TRootBrowserLite *browser = new TRootBrowserLite(b, title, width, height);
    return (TBrowserImp *)browser;
 }
@@ -3037,6 +3039,8 @@ TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t 
                                       Int_t y, UInt_t width, UInt_t height, 
                                       Option_t *opt)
 {
+   // Interface method to the old browser.
+
    TRootBrowserLite *browser = new TRootBrowserLite(b, title, x, y, width, height);
    return (TBrowserImp *)browser;
 }
