@@ -1,6 +1,55 @@
 // @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   26/09/2007
 
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TRootBrowser                                                         //
+//                                                                      //
+// This class creates a ROOT object browser, constitued by three main   //
+// tabs.                                                                //
+//                                                                      //
+// All tabs can 'swallow' frames, thanks to the new method:             //
+//   ExecPlugin(const char *name = 0, const char *fname = 0,            //
+//              const char *cmd = 0, Int_t pos = kRight,                //
+//              Int_t subpos = -1)                                      //
+// allowing to select plugins (can be a macro or a command)             //
+// to be executed, and where to embed the frame created by              //
+// the plugin (tab and tab element). Examples:                          //
+//                                                                      //
+// create a new browser:                                                //
+// TBrowser b;                                                          //
+//                                                                      //
+// create a new TCanvas in a new top right tab element:                 //
+// b.ExecPlugin("Canvas", 0, "new TCanvas()");                          //
+//                                                                      //
+// create a new top right tab element embedding the                     //
+// TGMainFrame created by the macro 'myMacro.C':                        //
+// b.ExecPlugin("MyPlugin", "myMacro.C");                               //
+//                                                                      //
+// create a new bottom tab element embedding the                        //
+// TGMainFrame created by the macro 'myMacro.C':                        //
+// b.ExecPlugin("MyPlugin", "myMacro.C", 0, TRootBrowser::kBottom);     //
+//                                                                      //
+// this browser implementation can be selected via the env              //
+// 'Browser.Name' in .rootrc, (TRootBrowser or TRootBrowserLite)        //
+// the default being TRootBrowserLite (old browser)                     //
+// a list of options (plugins) for the new TRootBrowser is also         //
+// specified via the env 'Browser.Options' in .rootrc, the default      //
+// being: FECI                                                          //
+// Here is the list of available options:                               //
+// F: File browser E: Text Editor H: HTML browser C: Canvas I: I/O      //
+// redirection P: Proof G: GL viewer                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -48,6 +97,7 @@ enum ENewBrowserMessages {
    kClone,
    kNewEditor,
    kNewCanvas,
+   kNewHtml,
    kExecPluginMacro,
    kExecPluginCmd,
    kCloseTab,
@@ -122,6 +172,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("New &Editor          Ctrl+E", kNewEditor);
    fMenuFile->AddEntry("New &Canvas       Ctrl+C", kNewCanvas);
+   fMenuFile->AddEntry("New &HTML          Ctrl+H", kNewHtml);
    fMenuFile->AddSeparator();
    fMenuExecPlugin = new TGPopupMenu(fClient->GetRoot());
    fMenuExecPlugin->AddEntry("&Macro...", kExecPluginMacro);
@@ -468,6 +519,9 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
             case kKey_C:
                fMenuFile->Activated(kNewCanvas);
                return kTRUE;
+            case kKey_H:
+               fMenuFile->Activated(kNewHtml);
+               return kTRUE;
             case kKey_N:
                fMenuFile->Activated(kClone);
                return kTRUE;
@@ -535,6 +589,9 @@ void TRootBrowser::HandleMenu(Int_t id)
          break;
       case kNewCanvas:
          ExecPlugin("", "", "new TCanvas()", 1);
+         break;
+      case kNewHtml:
+         ExecPlugin("HTML", "", "new TGHtmlBrowser(\"http://root.cern.ch\",gClient->GetRoot())", 1);
          break;
       case kExecPluginMacro:
          {
