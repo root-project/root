@@ -96,6 +96,8 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 void TRootBrowser::CreateBrowser(const char *name)
 {
 
+   // Create the actual interface.
+
    fVf = new TGVerticalFrame(this, 100, 100);
 
    fLH0 = new TGLayoutHints(kLHintsNormal);
