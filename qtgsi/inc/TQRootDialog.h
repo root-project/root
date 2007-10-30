@@ -25,7 +25,7 @@
 
 #ifndef __CINT__
 #include "qvbox.h"
-#include "qlist.h"
+#include "qglist.h"
 #include "qlineedit.h"
 #endif
 
