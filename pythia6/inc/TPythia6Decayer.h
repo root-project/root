@@ -72,9 +72,6 @@ protected:
    static TPythia6Decayer *fgInstance;
 
    // Extra functions
-   void ForceParticleDecay(Int_t particle, Int_t* products,
-   			               Int_t* mult, Int_t npart);
-   void ForceParticleDecay(Int_t particle, Int_t product, Int_t mult);
    void ForceHadronicD();
    void ForceOmega();
    Int_t CountProducts(Int_t channel, Int_t particle);
@@ -87,6 +84,9 @@ public:
    virtual Int_t   ImportParticles(TClonesArray *particles);
    virtual void    SetForceDecay(Int_t type);
    virtual void    ForceDecay();
+   void ForceParticleDecay(Int_t particle, Int_t* products,
+   			               Int_t* mult, Int_t npart);
+   void ForceParticleDecay(Int_t particle, Int_t product, Int_t mult);
    virtual Float_t GetPartialBranchingRatio(Int_t ipart);
    virtual Float_t GetLifetime(Int_t kf);
    virtual void    ReadDecayTable();
