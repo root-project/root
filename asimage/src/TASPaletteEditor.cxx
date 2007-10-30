@@ -159,22 +159,27 @@ TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
 
    // ramp: 1, 2 or 4
    TGGroupFrame *rampFrame = new TGGroupFrame(this, "Ramps");
-   AddFrame(rampFrame, new TGXYLayoutHints(50, 8.5, 14, 5.5,
+   rampFrame->SetLayoutManager(new TGXYLayout(rampFrame));
+   AddFrame(rampFrame, new TGXYLayoutHints(50, 8.5, 14, 6,
             TGXYLayoutHints::kLRubberX | TGXYLayoutHints::kLRubberY |
             TGXYLayoutHints::kLRubberH | TGXYLayoutHints::kLRubberW));
 
-   fRamps[0] = new TGRadioButton(this, "1", 1);
+   fRamps[0] = new TGRadioButton(rampFrame, "1", 1);
    fRamps[0]->SetToolTipText("Repeat the palette once");
-   AddFrame(fRamps[0], new TGXYLayoutHints(52, 10, 5, 1.8));
+   rampFrame->AddFrame(fRamps[0], new TGXYLayoutHints(2, 1.4, 5, 1.8));
 
-   fRamps[1] = new TGRadioButton(this, "2", 2);
+   fRamps[1] = new TGRadioButton(rampFrame, "2", 2);
    fRamps[1]->SetToolTipText("Repeat the palette twice");
-   AddFrame(fRamps[1], new TGXYLayoutHints(52, 12, 5, 1.8));
+   rampFrame->AddFrame(fRamps[1], new TGXYLayoutHints(2, 3.3, 5, 1.8));
 
-   fRamps[2] = new TGRadioButton(this, "4", 4);
+   fRamps[2] = new TGRadioButton(rampFrame, "4", 4);
    fRamps[2]->SetToolTipText("Repeat the palette four times");
-   AddFrame(fRamps[2], new TGXYLayoutHints(58, 12, 5, 1.8));
+   rampFrame->AddFrame(fRamps[2], new TGXYLayoutHints(8, 3.3, 5, 1.8));
 
+   fRamps[0]->Associate(this);
+   fRamps[1]->Associate(this);
+   fRamps[2]->Associate(this);
+   
    // the histogram of the data
    fHistCanvas = new TRootEmbeddedCanvas("data hist", this, 300, 50);
    AddFrame(fHistCanvas, new TGXYLayoutHints(1, 1, 48, 20,
