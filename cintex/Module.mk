@@ -118,13 +118,12 @@ check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
 		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
 
 $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
-		echo $(REFLEXLL)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< "$(REFLEXLL)"
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< "$(REFLEXLL)"
 
 $(CINTEXTESTDICTO): CXXFLAGSPCH =
 
 $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
-		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=./rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
+		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
 
 ##### extra rules ######
 ifeq ($(PLATFORM),macosx)
