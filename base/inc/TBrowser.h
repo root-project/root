@@ -109,6 +109,9 @@ public:
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
                     return fImp->ExecPlugin(name, fname, cmd, pos, subpos); 
                  }
+   void          SetStatusText(const char *txt, Int_t col) {
+                    fImp->SetStatusText(txt, col); 
+                 }
    void          StartEmbedding(Int_t pos, Int_t subpos) {
                     fImp->StartEmbedding(pos, subpos); 
                  }

@@ -146,6 +146,7 @@ public:
    virtual void Show() { MapRaised(); }
    virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
    virtual Bool_t HandleKey(Event_t *event);
+   virtual void SetStatusText(const char *txt, Int_t col);
 
    TGListTree      *GetListTree()  const { return fLt; }
    TGFileContainer *GetIconBox()   const;

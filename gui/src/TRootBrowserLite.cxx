@@ -3024,6 +3024,18 @@ void TRootBrowserLite::ShowMacroButtons(Bool_t show)
 }
 
 //______________________________________________________________________________
+void TRootBrowserLite::SetStatusText(const char *txt, Int_t col) 
+{
+   // Set text in column col in status bar.
+
+   ShowStatusBar(kTRUE);
+   TGStatusBar* status = GetStatusBar();
+   if (status!=0) {
+      status->SetText(txt, col);
+   }
+}
+
+//______________________________________________________________________________
 TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, 
                                       UInt_t width, UInt_t height, 
                                       Option_t * /*opt*/)

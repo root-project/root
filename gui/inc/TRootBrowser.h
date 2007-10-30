@@ -130,6 +130,7 @@ public:
    virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0, 
                                 const char *cmd = 0, Int_t pos = kRight, 
                                 Int_t subpos = -1);
+   virtual void      SetStatusText(const char *txt, Int_t col);
    virtual Bool_t    HandleKey(Event_t *event);
 
    // overridden from TGMainFrame

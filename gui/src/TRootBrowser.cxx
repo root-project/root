@@ -653,7 +653,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // File Browser plugin
    if (strchr(opt, 'F')) {
-      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500)", fBrowser);
+      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500);", fBrowser);
       ExecPlugin("Files", 0, cmd.Data(), 0);
       ++fNbInitPlugins;
    }
@@ -662,7 +662,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // Editor plugin...
    if (strchr(opt, 'E')) {
-      cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot())");
+      cmd.Form("new TGTextEditor((const char *)0, gClient->GetRoot());");
       ExecPlugin("Editor 1", 0, cmd.Data(), 1);
       ++fNbInitPlugins;
    }
@@ -671,7 +671,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
    if (strchr(opt, 'H')) {
       if (gSystem->Load("libGuiHtml") >= 0) {
          cmd.Form("new TGHtmlBrowser(\"http://root.cern.ch/root/html/ClassIndex.html\", \
-                  gClient->GetRoot())");
+                  gClient->GetRoot());");
          ExecPlugin("HTML", 0, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
@@ -679,14 +679,14 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // Canvas plugin...
    if (strchr(opt, 'C')) {
-      cmd.Form("new TCanvas()");
+      cmd.Form("new TCanvas();");
       ExecPlugin("c1", 0, cmd.Data(), 1);
       ++fNbInitPlugins;
    }
 
    // GLViewer plugin...
    if (strchr(opt, 'G')) {
-      cmd.Form("new TGLSAViewer(gClient->GetRoot(), 0)");
+      cmd.Form("new TGLSAViewer(gClient->GetRoot(), 0);");
       ExecPlugin("OpenGL", 0, cmd.Data(), 1);
       ++fNbInitPlugins;
    }
@@ -702,7 +702,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // Command plugin...
    if (strchr(opt, 'I')) {
-      cmd.Form("new TGCommandPlugin(gClient->GetRoot(), 700, 300)");
+      cmd.Form("new TGCommandPlugin(gClient->GetRoot(), 700, 300);");
       ExecPlugin("Command", 0, cmd.Data(), 2);
       ++fNbInitPlugins;
    }
@@ -832,6 +832,14 @@ void TRootBrowser::SetTabTitle(const char *title, Int_t pos, Int_t subpos)
       if ((p = (TBrowserPlugin *)fPlugins.FindObject(title)))
          p->SetName(title);
    }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::SetStatusText(const char* txt, Int_t col) 
+{
+   // Set text in culumn col in status bar.
+
+   fStatusBar->SetText(txt, col);
 }
 
 //______________________________________________________________________________
