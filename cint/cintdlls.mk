@@ -156,10 +156,11 @@ $(CINTDIRDLLINC)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
 
 $(CINTDIRL)/G__c_%.c: $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
-	   $(MACOSX64) -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
+	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-ifeq ($(ARCH),macosx64)
-$(CINTDIRL)/G__c_posix.c: MACOSX64 = -D__DARWIN_UNIX03
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+# MACOSX_MINOR > 4
+$(CINTDIRL)/G__c_posix.c: MACOSX_UNIX03 = -D__DARWIN_UNIX03
 endif
 
 $(CINTDIRL)/G__c_%.o: CINTCFLAGS += -I. -DG__SYSTYPES_H
@@ -207,11 +208,11 @@ clean-cintdlls:
 	@(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.o \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.o \
+	  $(CINTDIRL)/G__c_$${cintdll}.o \
 	  metautils/src/stlLoader_$${cintdll}.o; done)
 	@rm -f $(ALLCINTDLLS) \
-	  $(CINTDIRL)/posix/exten.o $(CINTDIRSTL)/posix.dll \
-	  $(CINTDIRL)/posix/G__c_posix.o \
-	  $(CINTDIRDLLS)/posix.so $(CINTDIRDLLS)/sys/ipc.so $(CINTDIRDLLS)/ipc.*
+	  $(CINTDIRL)/posix/exten.o $(CINTDIRDLLS)/posix.* \
+	  $(CINTDIRDLLS)/ipc.*
 
 clean:: clean-cintdlls
 
@@ -220,11 +221,13 @@ distclean-cintdlls: clean-cintdlls
 	@(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.* \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
+	  $(CINTDIRL)/G__c_$${cintdll}.* \
 	  metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) \
-	  $(CINTDIRL)/posix/G__c_posix.* $(CINTDIRL)/posix/mktypes$(EXEEXT)
+	  $(CINTDIRL)/posix/mktypes$(EXEEXT)
 ifeq ($(PLATFORM),macosx)
 	@rm -f  $(CINTDIRSTL)/*.so
+	@rm -rf $(CINTDIRL)/posix/mktypes.dSYM
 endif
 
 distclean:: distclean-cintdlls
