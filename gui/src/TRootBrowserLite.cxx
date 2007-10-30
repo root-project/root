@@ -3026,7 +3026,7 @@ void TRootBrowserLite::ShowMacroButtons(Bool_t show)
 //______________________________________________________________________________
 TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, 
                                       UInt_t width, UInt_t height, 
-                                      Option_t *opt)
+                                      Option_t * /*opt*/)
 {
    // Interface method to the old browser.
 
@@ -3037,7 +3037,7 @@ TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title,
 //______________________________________________________________________________
 TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t x, 
                                       Int_t y, UInt_t width, UInt_t height, 
-                                      Option_t *opt)
+                                      Option_t * /*opt*/)
 {
    // Interface method to the old browser.
 
