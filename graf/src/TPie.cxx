@@ -40,21 +40,21 @@ ClassImp(TPie)
 //End_Html
 //
 
-static Double_t gX             = 0; // Temporary pie X position.
-static Double_t gY             = 0; // Temporary pie Y position.
-static Double_t gRadius        = 0; // Temporary pie Radius of the TPie.
-static Double_t gRadiusOffset  = 0; // Temporary slice's radial offset.
-static Double_t gAngularOffset = 0; // Temporary slice's angular offset.
-static Bool_t   gIsUptSlice    = kFALSE; // True if a slice in the TPie should
-                                         // be updated.
-static Int_t    gCurrent_slice = -1;// Current slice under mouse.
-static Double_t gCurrent_phi1  = 0; // Phimin of the current slice.
-static Double_t gCurrent_phi2  = 0; // Phimax of the current slice.
-static Double_t gCurrent_rad   = 0; // Current distance from the vertex of the
-                                    // current slice.
-static Double_t gCurrent_x     = 0; // Current x in the pad metric.
-static Double_t gCurrent_y     = 0; // Current y in the pad metric.
-static Double_t gCurrent_ang   = 0; // Current angular, within current_phi1
+Double_t gX             = 0; // Temporary pie X position.
+Double_t gY             = 0; // Temporary pie Y position.
+Double_t gRadius        = 0; // Temporary pie Radius of the TPie.
+Double_t gRadiusOffset  = 0; // Temporary slice's radial offset.
+Double_t gAngularOffset = 0; // Temporary slice's angular offset.
+Bool_t   gIsUptSlice    = kFALSE; // True if a slice in the TPie should
+                                  // be updated.
+Int_t    gCurrent_slice = -1;// Current slice under mouse.
+Double_t gCurrent_phi1  = 0; // Phimin of the current slice.
+Double_t gCurrent_phi2  = 0; // Phimax of the current slice.
+Double_t gCurrent_rad   = 0; // Current distance from the vertex of the
+                             // current slice.
+Double_t gCurrent_x     = 0; // Current x in the pad metric.
+Double_t gCurrent_y     = 0; // Current y in the pad metric.
+Double_t gCurrent_ang   = 0; // Current angular, within current_phi1
                                     // and current_phi2.
 
 //______________________________________________________________________________
@@ -427,18 +427,18 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t oldpx, oldpy;
 
    // Portion of pie considered as "border"
-   static Double_t dr     = gPad->PixeltoX(3);
-   static Double_t minRad = gPad->PixeltoX(10);
+   const Double_t dr     = gPad->PixeltoX(3);
+   const Double_t minRad = gPad->PixeltoX(10);
 
    // Angular divisions in radial direction
-   static Double_t angstep1 = 0.5*TMath::PiOver4();
-   static Double_t angstep2 = 1.5*TMath::PiOver4();
-   static Double_t angstep3 = 2.5*TMath::PiOver4();
-   static Double_t angstep4 = 3.5*TMath::PiOver4();
-   static Double_t angstep5 = 4.5*TMath::PiOver4();
-   static Double_t angstep6 = 5.5*TMath::PiOver4();
-   static Double_t angstep7 = 6.5*TMath::PiOver4();
-   static Double_t angstep8 = 7.5*TMath::PiOver4();
+   const Double_t angstep1 = 0.5*TMath::PiOver4();
+   const Double_t angstep2 = 1.5*TMath::PiOver4();
+   const Double_t angstep3 = 2.5*TMath::PiOver4();
+   const Double_t angstep4 = 3.5*TMath::PiOver4();
+   const Double_t angstep5 = 4.5*TMath::PiOver4();
+   const Double_t angstep6 = 5.5*TMath::PiOver4();
+   const Double_t angstep7 = 6.5*TMath::PiOver4();
+   const Double_t angstep8 = 7.5*TMath::PiOver4();
 
    // XY metric
    Double_t radX  = fRadius;
@@ -784,7 +784,7 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 
 
 //______________________________________________________________________________
-TLegend* TPie::MakeLegend()
+TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    // This method create a legend that explains the contents
    // of the slice for this pie-chart.
@@ -794,7 +794,7 @@ TLegend* TPie::MakeLegend()
    //
    // The pointer of the TLegend is returned.
 
-   if (!fLegend) fLegend = new TLegend(.65,.65,.95,.95,GetName());
+   if (!fLegend) fLegend = new TLegend(x1,y1,x2,y2,GetName());
    else fLegend->Clear();
 
    for (Int_t i=0;i<fNvals;++i) {
@@ -819,6 +819,11 @@ void TPie::Paint(Option_t *option)
    // "3D"  Draw the pie-chart with a pseudo 3D effect.
    // "NOL" No OutLine: Don't draw the slices' outlines, any property over the
    //       slices' line is ignored.
+   // ">"   Sort the slices in increasing order.
+   // "<"   Sort the slices in decreasing order.
+   //
+   // After the use of > or < options the internal order of the TPieSlices
+   // is changed.
    //
    // Other options changing the labels' format are described in
    // TPie::SetLabelFormat().
@@ -868,6 +873,18 @@ void TPie::Paint(Option_t *option)
    // Seek if have to paint the labels along the radii
    if ( (idx=soption.Index("r"))>=0 ) {
       lblor = 1;
+      soption.Remove(idx,1);
+   }
+
+   // Seeks if has to paint sort the slices in increasing mode
+   if ( (idx=soption.Index(">"))>=0 ) {
+      SortSlices(kTRUE);
+      soption.Remove(idx,1);
+   }
+
+   // Seeks if has to paint sort the slices in decreasing mode
+   if ( (idx=soption.Index("<"))>=0 ) {
+      SortSlices(kFALSE);
       soption.Remove(idx,1);
    }
 
@@ -1450,4 +1467,34 @@ void TPie::MakeSlices(Bool_t force)
       fSlices[2*i+1] = fSlices[2*i]+dphi/2.;
       fSlices[2*i+2] = fSlices[2*i]+dphi;
    }
+}
+
+//______________________________________________________________________________
+void TPie::SortSlices(Bool_t amode)
+{
+   // This method, mainly intended for internal use, ordered the  slices accoording their values.
+   // The default (amode=kTRUE) is inscreasing order, but is also possible in decreasing order (amode=kFALSE).
+
+   // main loop to order, bubble sort, the array
+   Bool_t isDone = kFALSE;
+
+   while (isDone==kFALSE) {
+      isDone = kTRUE;
+
+      for (Int_t i=0;i<fNvals-1;++i) { // loop over the values
+         if ( (amode && (fPieSlices[i]->GetValue()>fPieSlices[i+1]->GetValue())) ||
+              (!amode && (fPieSlices[i]->GetValue()<fPieSlices[i+1]->GetValue()))
+            )
+         {
+            // exchange the order
+            TPieSlice *tmpcpy = fPieSlices[i];
+            fPieSlices[i] = fPieSlices[i+1];
+            fPieSlices[i+1] = tmpcpy;
+
+            isDone = kFALSE;
+         }
+      }  // end loop the values
+   } // end main ordering loop
+
+   MakeSlices(kTRUE);
 }

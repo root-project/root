@@ -87,7 +87,7 @@ public:
    const char    *GetValueFormat() { return fValueFormat.Data(); }
    Double_t       GetX() { return fX; }
    Double_t       GetY() { return fY; }
-   TLegend       *MakeLegend();
+   TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95);
    void           MakeSlices(Bool_t force=kFALSE);
    virtual void   Paint(Option_t *);
    void           SavePrimitive(ostream &out, Option_t *opts="");
@@ -113,6 +113,7 @@ public:
    void           SetValueFormat(const char *); // *MENU*
    void           SetX(Double_t); // *MENU*
    void           SetY(Double_t); // *MENU*
+   void           SortSlices(Bool_t amode=kTRUE);
 
    ClassDef(TPie,1) //Pie chart graphics class
 };

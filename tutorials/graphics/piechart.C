@@ -43,5 +43,5 @@ void piechart()
    pie4->SetRadius(.2);
    pie4->SetLabelsOffset(.01);
    pie4->SetLabelFormat("#splitline{%val (%perc)}{%txt}");
-   pie4->Draw("nol");
+   pie4->Draw("nol <");
 }
