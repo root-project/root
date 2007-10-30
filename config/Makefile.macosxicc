@@ -75,10 +75,7 @@ LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 FORCELINK     = no
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5)
-MACOSX_MINOR  = 4
-endif
-ifeq ($(MACOSX_MINOR),4)
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 endif
