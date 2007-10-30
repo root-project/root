@@ -401,7 +401,7 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                {
                   SetColor(parm2);
                   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
-                              parm1, parm2);
+                              fWidgetId, parm2);
                }
                break;
 
