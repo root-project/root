@@ -52,6 +52,13 @@ LDFLAGS       = $(OPT) -bind_at_load
 FORCELINK     = yes
 NEEDFINK      = yes
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+# this is set for LP64 but not for 32  bit
+CXXFLAGS     += -D__DARWIN_UNIX03=1
+CFLAGS       += -D__DARWIN_UNIX03=1
+CINTCXXFLAGS += -D__DARWIN_UNIX03=1
+CINTCFLAGS   += -D__DARWIN_UNIX03=1
+endif
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
