@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
+# Makefile of ROOT for MacOS X, using g++ 32-bit mode
 
 PLATFORM      = macosx
 
@@ -18,11 +18,6 @@ NOOPT         =
 endif
 
 # Compiler:
-# if you want to compile for 10.1 you just have to change those
-# 3 variables to:
-# CXX           = c++
-# CC            = cc
-# LD            = c++
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -W -Wall -Woverloaded-virtual \
@@ -53,7 +48,7 @@ FORCELINK     = yes
 NEEDFINK      = yes
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-# this is set for LP64 but not for 32  bit
+# this is set for 64 but not for 32  bit
 CXXFLAGS     += -D__DARWIN_UNIX03=1
 CFLAGS       += -D__DARWIN_UNIX03=1
 CINTCXXFLAGS += -D__DARWIN_UNIX03=1
