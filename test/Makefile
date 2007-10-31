@@ -468,7 +468,7 @@ distclean:      clean
 		-@mv -f linearIO.root linearIO.roott
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations
-		@rm -rf cxx_repository
+		@rm -rf cxx_repository files
 		-@mv -f linearIO.roott linearIO.root
 		-@cd RootShower && $(MAKE) distclean
 		-@cd rhtml && $(MAKE) distclean
