@@ -244,7 +244,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    // status bar
    fStatusBar = new TGStatusBar(this, 400, 20);
-   Int_t parts[] = { 80, 20 };
+   Int_t parts[] = { 26, 74 };
    fStatusBar->SetParts(parts, 2);
    AddFrame(fStatusBar, fLH6);
 
