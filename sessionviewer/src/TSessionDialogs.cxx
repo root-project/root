@@ -48,19 +48,20 @@
 ClassImp(TNewChainDlg)
 ClassImp(TNewQueryDlg)
 
-const char *partypes[] = {
+/* not yet used
+static const char *partypes[] = {
    "Par files",  "*.par",
    "All files",  "*",
     0,            0
 };
-
-const char *datasettypes[] = {
+*/
+static const char *datasettypes[] = {
    "ROOT files",    "*.root",
    "All files",     "*",
    0,               0
 };
 
-const char *filetypes[] = {
+static const char *filetypes[] = {
    "C files",       "*.[C|c]*",
    "ROOT files",    "*.root",
    "All files",     "*",
