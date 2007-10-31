@@ -188,7 +188,7 @@ void stressGraphics(Int_t verbose)
    gTestNum = 0;
    gC       = 0;
 
-   gBenchmark->Start("stress");
+   gBenchmark->Start("stressGraphics");
 
    if (!gOptionR) {
       cout << "*  Starting Basic Graphics - S T R E S S                         *" <<endl;
@@ -245,7 +245,7 @@ void stressGraphics(Int_t verbose)
    if (!gOptionR) {
       cout << "******************************************************************" <<endl;
 
-      gBenchmark->Stop("stress");
+      gBenchmark->Stop("stressGraphics");
 
       //Print table with results
       Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
@@ -263,9 +263,9 @@ void stressGraphics(Int_t verbose)
 
       printf("******************************************************************\n");
       printf("* ");
-      gBenchmark->Print("stress");
+      gBenchmark->Print("stressGraphics");
 
-      Double_t ct = gBenchmark->GetCpuTime("stress");
+      Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
       const Double_t rootmarks = 600*(4.85/ct);
 
       printf("******************************************************************\n");

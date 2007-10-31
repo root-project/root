@@ -204,7 +204,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
 
   gVerbose = verbose;
 
-  gBenchmark->Start("stress");
+  gBenchmark->Start("stressLinear");
 
   gNrLoop = nrSize-1;
   while (gNrLoop > 0 && maxSizeReq < gSizeA[gNrLoop])
@@ -286,7 +286,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     cout << "******************************************************************" <<endl;
   }
 
-  gBenchmark->Stop("stress");
+  gBenchmark->Stop("stressLinear");
 
   //Print table with results
   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
@@ -304,13 +304,13 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   }
 
   printf("******************************************************************\n");
-  gBenchmark->Print("stress");
+  gBenchmark->Print("stressLinear");
   const Int_t nr = 7;
   const Double_t x_b12[] = { 10.,   30.,   50.,   100.,  300.,  500.,    700.};
   const Double_t y_b12[] = {10.74, 15.72, 20.00, 35.79, 98.77, 415.34, 1390.33};
 
   TGraph gr(nr,x_b12,y_b12);
-  Double_t ct = gBenchmark->GetCpuTime("stress");
+  Double_t ct = gBenchmark->GetCpuTime("stressLinear");
   const Double_t rootmarks = 600*gr.Eval(maxSize)/ct;
 
   printf("******************************************************************\n");

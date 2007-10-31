@@ -613,7 +613,7 @@ Int_t stressFit(const char *theFitter, Int_t N)
   cout << "*  Starting  S T R E S S  with fitter : "<<TVirtualFitter::GetDefaultFitter() <<endl;
   cout << "******************************************************************" <<endl;
 
-  gBenchmark->Start("StressFit");
+  gBenchmark->Start("stressFit");
 
   Bool_t okRosenBrock    = kTRUE;
   Bool_t okWood          = kTRUE;
@@ -638,7 +638,7 @@ Int_t stressFit(const char *theFitter, Int_t N)
   okTrigoFletcher = RunTrigoFletcher();
   StatusPrint(7,"TrigoFletcher",okTrigoFletcher);
 
-  gBenchmark->Stop("StressFit");
+  gBenchmark->Stop("stressFit");
 
 
   //Print table with results
@@ -657,20 +657,19 @@ Int_t stressFit(const char *theFitter, Int_t N)
   }
   
   printf("******************************************************************\n");
-  gBenchmark->Print("StressFit");
+  gBenchmark->Print("stressFit");
 #ifdef __CINT__
   Double_t reftime = 86.34; //macbrun interpreted
 #else
   Double_t reftime = 12.07; //macbrun compiled
 #endif
-  const Double_t rootmarks = 800*reftime/gBenchmark->GetCpuTime("StressFit");
+  const Double_t rootmarks = 800.*reftime/gBenchmark->GetCpuTime("stressFit");
   
   printf("******************************************************************\n");
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
   printf("******************************************************************\n");
 
-  printf("Time at the end of job = %f seconds\n",timer.CpuTime());
    return 0;
 }
 
