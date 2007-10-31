@@ -59,17 +59,17 @@
 
 
 //______________________________________________________________________________
-//   The histogram painter class
-//   ===========================
-//
-//  Histograms are drawn via the THistPainter class. Each histogram has
-//  a pointer to its own painter (to be usable in a multithreaded program).
-//  When the canvas has to be redrawn, the Paint function of the objects
-//  in the pad is called. In case of histograms, TH1::Paint invokes directly
-//  THistPainter::Paint.
-//
-//    See THistPainter::Paint for the list of drawing options
-//    and examples.
+/* Begin_Html
+<center><h2>The histogram painter class</h2></center>
+
+Histograms are drawn via the THistPainter class. Each histogram has
+a pointer to its own painter (to be usable in a multithreaded program).
+When the canvas has to be redrawn, the Paint function of the objects
+in the pad is called. In case of histograms, TH1::Paint invokes directly
+THistPainter::Paint.
+<p>
+See THistPainter::Paint for the list of drawing options and examples.
+End_Html */
 
 TH1 *gCurrentHist = 0;
 
@@ -1379,7 +1379,6 @@ void THistPainter::Paint(Option_t *option)
    //End_Html
    //
    //
-   //
    //  The LEGO options
    //  ================
    //    In a lego plot the cell contents are drawn as 3-d boxes, with
@@ -1504,6 +1503,152 @@ void THistPainter::Paint(Option_t *option)
    //   By default a 3-d scatter plot is drawn
    //   If option "BOX" is specified, a 3-D box with a volume proportional
    //   to the cell content is drawn.
+   //
+   // Drawing using OpenGL
+   // ====================
+   //
+   // The class TGLHistPainter allows to paint data set using the OpenGL 3D
+   // graphics library. The plotting options start with GL keyword.
+   //
+   //   General information: plot types and supported options
+   //   =====================================================
+   //
+   //   The following types of plots are provided:
+   //
+   //   * Lego:
+   //      The supported options are:
+   //         "GLLEGO"  : Draw a lego plot.
+   //         "GLLEGO2" : Bins with color levels.
+   //         "GLLEGO3" : Cylindrical bars.
+   //
+   //   Lego painter in cartesian supports logarithmic scales for X, Y, Z.
+   //   In polar only Z axis can be logarithmic, in cylindrical only Y.
+   //
+   //   * Surfaces: (TF2 and TH2 with "GLSURF" options)
+   //      The supported options are:
+   //         "GLSURF"  : Draw a surface.
+   //         "GLSURF1" : Surface with color levels
+   //         "GLSURF2" : The same as "GLSURF1" but without polygon outlines.
+   //         "GLSURF3" : Color level projection on top of plot (works only
+   //                     in cartesian coordinate system).
+   //         "GLSURF4" : Same as "GLSURF" but without polygon outlines.
+   //
+   //   The surface painting in cartesian coordinates supports logarithmic
+   //   scales along X, Y, Z axis.
+   //   In polar coordinates only the Z axis can be logarithmic, in cylindrical
+   //   coordinates only the Y axis.
+   //
+   //   Additional options to SURF and LEGO - Coordinate systems:
+   //      " "   : Default, cartesian coordinates system.
+   //      "POL" : Polar coordinates system.
+   //      "CYL" : Cylindrical coordinates system.
+   //      "SPH" : Spherical coordinates system.
+   //
+   //   TH3 as boxes (spheres)
+   //   ======================
+   //      The supported options are:
+   //         "GLBOX" : TH3 as a set of boxes, size of box is proportional to
+   //                   bin content.
+   //         "GLBOX1": the same as "glbox", but spheres are drawn instead of
+   //                   boxes.
+   //
+   //   TH3 as iso-surface(s)
+   //   =====================
+   //      The supported option is:
+   //         "GLISO" : TH3 is drawn using iso-surfaces.
+   //
+   //   TF3 (implicit function)
+   //   =======================
+   //      The supported option is:
+   //         "GLTF3" : Draw a TF3.
+   //
+   //   Parametric surfaces
+   //   ===================
+   //      $ROOTSYS/tutorials/gl/glparametric.C</tt> shows how to create
+   //      parametric equations and visualize the surface.
+   //
+   //   Interaction with the plots
+   //   ==========================
+   //
+   //   All the interactions are implemented via standard methods
+   //   DistancetoPrimitive and ExecuteEvent. That's why all the interactions
+   //   with the OpenGL plots are possible only when the mouse cursor is in the
+   //   plot's area (the plot's area is the part of a the pad occupied by
+   //   gl-produced picture). If the mouse cursor is not above gl-picture,
+   //   the standard pad interaction is performed.
+   //
+   //   Selectable parts
+   //   ================
+   //      Different parts of the plot can be selected:
+   //         xoz, yoz, xoy back planes:
+   //            When such a plane selected, it's highlighted in green if the
+   //            dynamic slicing by this plane is supported, and it's
+   //            highlighted in red, if the dynamic slicing is not supported.
+   //         The plot itself:
+   //            On surfaces, the selected surface is outlined in red. (TF3 and
+   //            ISO are not outlined). On lego plots, the selected bin is
+   //            highlihted. The bin number and content are displayed in pad's
+   //            status bar. In box plots, the box or sphere is highlighted and
+   //            the bin info is displayed in pad's status bar.
+   //
+   //   Rotation and zooming
+   //   ====================
+   //      Rotation:
+   //         When the plot is selected, it can be rotated by pressing and
+   //         holding the left mouse button and move the cursor.
+   //      Zoom/Unzoom:
+   //         Mouse wheel or 'j', 'J', 'k', 'K' keys.
+   //
+   //   Panning
+   //   =======
+   //      The selected plot can be moved in a pad's area by pressing and
+   //      holding the left mouse button and the shift key.
+   //
+   //   Box cut
+   //   =======
+   //      Surface, iso, box, TF3 and parametric painters support box cut by
+   //      pressing the 'c' or 'C' key when the mouse cursor is in a plot's
+   //      area. That will display a transparent box, cutting away part of the
+   //      surface (or boxes) in order to show internal part of plot. This box
+   //      can be moved inside the plot's area (the full size of the box is
+   //      equal to the plot's surrounding box) by selecting one of the box
+   //      cut axes and pressing the left mouse button to move it.
+   //
+   //   Plot specific interactions (dynamic slicing etc.)
+   //   =================================================
+   //      Currently, all gl-plots support some form of slicing. When back plane
+   //      is selected (and if it's highlighted in green) you can press and hold
+   //      left mouse button and shift key and move this back plane inside
+   //      plot's area, creating the slice. During this "slicing" plot becomes
+   //      semi-transparent. To remove all slices (and projected curves for
+   //      surfaces) double click with left mouse button in a plot's area.
+   //
+   //   Surface with option "GLSURF"
+   //   ============================
+   //      The surface profile is displayed on the slicing plane.
+   //      The profile projection is drawn on the back plane
+   //      by pressing 'p' or 'P' key.
+   //
+   //   TF3
+   //   ===
+   //      The contour plot is drawn on the slicing plane. For TF3 the color
+   //      scheme can be changed by pressing 's' or 'S'.
+   //
+   //   Box
+   //   ===
+   //      The contour plot corresponding to slice plane position is drawn in
+   //      real time.
+   //
+   //   Iso
+   //   ===
+   //      Slicing is similar to "GLBOX" option.
+   //
+   //   Parametric plot
+   //   ===============
+   //      No slicing. Additional keys: 's' or 'S' to change color scheme -
+   //      about 20 color schemes supported ('s' for "scheme"); 'l' or 'L' to
+   //      increase number of polygons ('l' for "level" of details), 'w' or 'W'
+   //      to show outlines ('w' for "wireframe").
 
    if (fH->GetBuffer()) fH->BufferEmpty(-1);
 
