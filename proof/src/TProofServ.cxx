@@ -740,10 +740,10 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       UInt_t sleeptime = (UInt_t) (cputime * (fInflateFactor - 1000)) ;
       Int_t i = 0;
       for (i = kSigBus ; i <= kSigUser2 ; i++)
-          gSystem->IgnoreSignal((ESignals)i, kTRUE);
+         gSystem->IgnoreSignal((ESignals)i, kTRUE);
       gSystem->Sleep(sleeptime);
       for (i = kSigBus ; i <= kSigUser2 ; i++)
-          gSystem->IgnoreSignal((ESignals)i, kFALSE);
+         gSystem->IgnoreSignal((ESignals)i, kFALSE);
       realtime += sleeptime / 1000.;
       PDB(kLoop, 2)
          Info("GetNextPacket","slept %d millisec", sleeptime);

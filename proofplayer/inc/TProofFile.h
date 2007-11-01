@@ -17,7 +17,7 @@
 //                                                                      //
 // TProofFile                                                           //
 //                                                                      //
-// Small class to steer the merging of files produced on the workers    //
+// Small class to steer the merging of files produced on workers        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -84,7 +84,7 @@ public:
 
    static TFileMerger* GetFileMerger(Bool_t local = kFALSE); // Instance of the file merger for mode "CENTRAL"
 
-   ClassDef(TProofFile,1)
+   ClassDef(TProofFile,1) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif
