@@ -361,7 +361,7 @@ void convert_directory(const char *dir)
       hrin(id,i999,0);
       if (quest[0]) {
          printf("Error cannot read ID = %d\n",id);
-         break;
+         //break;
       }
       hdcofl();
       lcid  = hcbook[10];
