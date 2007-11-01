@@ -328,50 +328,50 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< pair<Double_t, TMVA::E
 {
    // normalises the binary-search tree to reduce the branch length and hence speed up the 
    // search procedure (in average)
-	if (leftBound == rightBound) return;
+   if (leftBound == rightBound) return;
 
-	if (actDim == fPeriod)	actDim = 0;
-		
-	for (std::vector< pair<Double_t, TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
-		i->first = i->second->GetVal( actDim );
+   if (actDim == fPeriod)   actDim = 0;
+      
+   for (std::vector< pair<Double_t, TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
+      i->first = i->second->GetVal( actDim );
    }
 
-	std::sort( leftBound, rightBound );
-	
-	std::vector< pair<Double_t, TMVA::Event*> >::iterator leftTemp  = leftBound;
-	std::vector< pair<Double_t, TMVA::Event*> >::iterator rightTemp = rightBound;
-	
-	while (true) {
+   std::sort( leftBound, rightBound );
+   
+   std::vector< pair<Double_t, TMVA::Event*> >::iterator leftTemp  = leftBound;
+   std::vector< pair<Double_t, TMVA::Event*> >::iterator rightTemp = rightBound;
+   
+   while (true) {
       rightTemp--; if (rightTemp == leftTemp ) break;
       leftTemp++;  if (leftTemp  == rightTemp) break;
-	}
-	
-	std::vector< pair<Double_t, TMVA::Event*> >::iterator mid     = leftTemp;
-	std::vector< pair<Double_t, TMVA::Event*> >::iterator midTemp = mid;
+   }
+   
+   std::vector< pair<Double_t, TMVA::Event*> >::iterator mid     = leftTemp;
+   std::vector< pair<Double_t, TMVA::Event*> >::iterator midTemp = mid;
 
-	if (mid!=leftBound) midTemp--;
+   if (mid!=leftBound) midTemp--;
 
-	while (mid != leftBound && mid->second->GetVal( actDim ) == midTemp->second->GetVal( actDim ))	{
-		mid--; 
-		midTemp--;
-	}	
+   while (mid != leftBound && mid->second->GetVal( actDim ) == midTemp->second->GetVal( actDim ))   {
+      mid--; 
+      midTemp--;
+   }   
 
-	Insert( mid->second );
-	NormalizeTree( leftBound, mid, actDim+1 );
-	mid++;
-	NormalizeTree( mid, rightBound, actDim+1 );
+   Insert( mid->second );
+   NormalizeTree( leftBound, mid, actDim+1 );
+   mid++;
+   NormalizeTree( mid, rightBound, actDim+1 );
 
-	return;	
+   return;   
 }
 
 //_______________________________________________________________________
 void TMVA::BinarySearchTree::NormalizeTree()
 {
    // Normalisation of tree
-	SetNormalize( kFALSE );
-	Clear( NULL );
-	this->SetRoot(NULL);
-	NormalizeTree( fNormalizeTreeTable.begin(), fNormalizeTreeTable.end(), 0 ); 
+   SetNormalize( kFALSE );
+   Clear( NULL );
+   this->SetRoot(NULL);
+   NormalizeTree( fNormalizeTreeTable.begin(), fNormalizeTreeTable.end(), 0 ); 
 }
 
 //_______________________________________________________________________
