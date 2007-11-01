@@ -13,12 +13,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 ifneq ($(FAIL),)
 depthTest: depth.root
-	$(CMDECHO) root.exe -q -l -b Read.C 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b Read.C 
 else
 depthTest: 
 	$(WarnFailTest)
 endif
 
 depth.root: Create.C
-	$(CMDECHO) root.exe -q -l -b Create.C > create.output
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b Create.C > create.output
 

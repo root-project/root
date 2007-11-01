@@ -23,13 +23,13 @@ endif
 # from runsometest.C
 
 minostest.log: minostest_C.$(DllSuf) classes_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q runminostest.C 2>&1 | sed -e 's/offset= *[0-9]*/offset= \[deleted from log\]/g' > minostest.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q runminostest.C 2>&1 | sed -e 's/offset= *[0-9]*/offset= \[deleted from log\]/g' > minostest.log
 
 minostest: minostest.log
 		  $(TestDiff)
 
 strtest.root: runbaseString_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q 'runbaseString.C+(0)' 2>&1 > strtest.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'runbaseString.C+(0)' 2>&1 > strtest.log
 
 baseString.clog: strtest.root
 

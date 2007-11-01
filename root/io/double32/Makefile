@@ -71,7 +71,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 template32.clog: other_C.$(DllSuf) runtemplate32_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q runtemplate32.C+ 2>&1 | sed -e 's/offset= [0-9]*/offset= \[deleted from log\]/g' \
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q runtemplate32.C+ 2>&1 | sed -e 's/offset= [0-9]*/offset= \[deleted from log\]/g' \
 	    | sed -e 's/at: .*$$/at: \[deleted from log\]/' > template32.clog
 
 template32: template32.clog

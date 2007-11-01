@@ -17,7 +17,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 #	@echo built
 
 ArraySyntax: main_C.$(DllSuf)  $(ROOTCORELIBS) $(ROOTV)
-	$(CMDECHO) root.exe -b -l -q run.C > ArraySyntax.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q run.C > ArraySyntax.log
 
 #main$(ExeSuf) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 #	$(CMDECHO) ./main

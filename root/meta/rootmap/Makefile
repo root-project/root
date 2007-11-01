@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 spaces.log: spaces_C.$(DllSuf) runspaces.C
-	$(CMDECHO) root.exe -q -b -l runspaces.C | grep -v 'duplicate entry' > spaces.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runspaces.C | grep -v 'duplicate entry' > spaces.log 
 
 spaces: spaces.log
 	$(TestDiff)

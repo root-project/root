@@ -25,7 +25,7 @@ staticConstTest : staticConstTest.log
 	$(CMDECHO) diff -b staticConstTest.log staticConstTest.ref
 
 staticConstTest.log : staticConst.C
-	$(CMDECHO) root.exe -b -l -q staticConst.C >  staticConstTest.log 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q staticConst.C >  staticConstTest.log 
 
 StaticDataMemberDict : runStaticDataMemberDict.C
 

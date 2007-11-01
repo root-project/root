@@ -63,7 +63,7 @@ clean: local_clean
 
 
 array_cxx.$(DllSuf) : array.cxx
-	root.exe -l -b -q '.L $<++' 
+	$(CALLROOTEXE) -l -b -q '.L $<++' 
 
 .C.$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

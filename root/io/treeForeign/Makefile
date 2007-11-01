@@ -15,10 +15,10 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 test.root: def.C def.h $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -b -l -q def.C+ > create.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q def.C+ > create.log 2>&1
 
 testForeignDraw.log: Run.C test.root 
-	$(CMDECHO) root.exe -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log
 
 testForeignDraw: testForeignDraw.log 
 	$(CMDECHO) diff -ubw testForeignDraw.ref testForeignDraw.log

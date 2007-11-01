@@ -13,7 +13,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 files: Event.root Event2.root
 
 treeChainFriend.log: zmumuSelDrawmail_cpp.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l zmumuSelDrawmail.cpp+ </dev/null > treeChainFriend.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l zmumuSelDrawmail.cpp+ </dev/null > treeChainFriend.log 2>&1
 
 treeChainFriend: treeChainFriend.log
 	$(CMDECHO) diff -b treeChainFriend.ref treeChainFriend.log 
@@ -22,7 +22,7 @@ unevenFriend: unevenFriend.out
 	$(CMDECHO) diff -b unevenFriend.out unevenFriend.ref
 
 unevenFriend.out:  unevenFriend.C unevenFriend.ref
-	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b unevenFriend.C > unevenFriend.out
 
 ROOTFILE := Event.root
 
@@ -38,10 +38,10 @@ ChainFriend: ChainFriend.log
 	$(TestDiff)
 
 
-#	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
+#	$(CMDECHO) $(CALLROOTEXE) -q -b -l Run.C > run.out 2>&1
 
 ChainFriendStatus: testFriend4.cc Event.root
-	$(CMDECHO) root.exe -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1
 
 FriendOfFriends.log: friendOfFriend_C.$(DllSuf) testFriends_C.$(DllSuf)
 
@@ -52,7 +52,7 @@ treefriend: treefriend.log
 	$(TestDiff)
 
 FriendsIndices.log: testFriendsIndices_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l 'testFriendsIndices.C+(7)' > FriendsIndices.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'testFriendsIndices.C+(7)' > FriendsIndices.log
 
 FriendsIndices: FriendsIndices.log
 	$(TestDiff)

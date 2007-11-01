@@ -28,7 +28,7 @@ for t in `seq 1 10` ; do
 			# ../Event $numevt
 			if [ $i != "Orig" ]; then
 				tag=`echo "sortbaskets$i" | tr A-Z a-z`
-				root.exe -b -q "../clone.C+(\"../Orig/Event.root\",\"$tag\")"
+				$(CALLROOTEXE) -b -q "../clone.C+(\"../Orig/Event.root\",\"$tag\")"
 			fi
 		fi
 

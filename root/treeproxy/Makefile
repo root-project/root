@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 leaflist.log: simPosProxy.C hsimpleProxy.C Makefile
-	$(CMDECHO) root.exe -q -b -l runleaflist.C 2>&1 | grep -v -e ACLiC -e 'Creating library' \
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runleaflist.C 2>&1 | grep -v -e ACLiC -e 'Creating library' \
 	     -e _cint.cxx -e '_[0-9].cxx' -e '_.cxx' \
 	     -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable'> leaflist.log
 
@@ -68,7 +68,7 @@ leaflist: leaflist.log
 	$(TestDiff)
 
 producereducedSpill.log: producereducedSpill.C
-	$(CMDECHO) root.exe -q -l -b producereducedSpill.C 2>&1 | $(RemoveDirs) > producereducedSpill.log
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b producereducedSpill.C 2>&1 | $(RemoveDirs) > producereducedSpill.log
 
 producereducedSpill: producereducedSpill.log
 	$(TestDiff)
@@ -79,15 +79,15 @@ reducedSpill: reducedSpill.log
 	$(TestDiff)
 
 red.h: 
-	$(CMDECHO) root.exe -q -l -b createRed.C > createRed.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b createRed.C > createRed.log 2>&1
 
 Track_C.$(DllSuf): Track.h
 
 forproxy.root: val3dimSel.h
-	$(CMDECHO) root.exe -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 	
 val3dimSel.h: createvaldim3_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 
 createvaldim3_C.$(DllSuf): createvaldim3.C Track_C.$(DllSuf)
 	$(BuildWithLib)

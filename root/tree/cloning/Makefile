@@ -20,7 +20,7 @@ Event.new.split0.root: copiedEvent$(ExeSuf) $(ROOTCORELIBS)
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) Event.new.split0.root
 
 hsimple1.root: hsimple.C
-	$(CMDECHO) root.exe -q -l -b hsimple.C > hsimple.out
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b hsimple.C > hsimple.out
 	$(CMDECHO) mv hsimple.root hsimple1.root
 	$(CMDECHO) cp hsimple1.root hsimple2.root
 
@@ -29,13 +29,13 @@ event1.root: Event.new.split0.root
 	$(CMDECHO) cp event1.root event2.root
 
 treeCloneTest.log: hsimple1.root event1.root runEvent.C run.C  $(ROOTCORELIBS) 
-	$(CMDECHO) ( root.exe -q -b -l run.C && root.exe -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
+	$(CMDECHO) ( $(CALLROOTEXE) -q -b -l run.C && $(CALLROOTEXE) -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
 
 treeCloneTest: treeCloneTest.log treeCloneTest.good 
 	$(CMDECHO) diff -ub treeCloneTest.good treeCloneTest.log
 
 treeCloneTest2.log: runtreeCloneTest2.C $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -b -q -l runtreeCloneTest2.C 2>&1 | grep -v Adding > treeCloneTest2.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runtreeCloneTest2.C 2>&1 | grep -v Adding > treeCloneTest2.log
 
 treeCloneTest2: treeCloneTest2.log 
 	$(TestDiff)
@@ -49,7 +49,7 @@ mergeWithDir: mergeWithDir.log
 	$(TestDiff)
 
 CopyTree.root: make_CopyTree.C ver_40200.root $(ROOTCORELIBS) 
-	$(CMDECHO) root.exe -q -b -l make_CopyTree.C > make_CopyTree.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l make_CopyTree.C > make_CopyTree.log 2>&1
 
 deepClass.log: CopyTree.root
 

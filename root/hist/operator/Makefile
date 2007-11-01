@@ -12,7 +12,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 addTest:
-	$(CMDECHO) root.exe -b -q -l run.C > /dev/null > run.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l run.C > /dev/null > run.log
 
 testWithFailure:
 ifeq ($(FAIL),)

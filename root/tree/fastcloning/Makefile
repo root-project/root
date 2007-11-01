@@ -21,10 +21,10 @@ REFFILE=dt_reference.root
 
 $(REFFILE) : Event.new.split9.root copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@ > $@.create.log 2>&1
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("Event.new.split9.root")' > event.new.split9.root.clone.log 2>&1 && touch $@
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("Event.new.split9.root")' > event.new.split9.root.clone.log 2>&1 && touch $@
 
 #dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
-#        @root.exe -l -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
+#        @$(CALLROOTEXE) -l -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
 #        echo "$@ made"
 
 export EVENTBUFSIZE = 20
@@ -32,15 +32,15 @@ export size = 20
 
 Event.new.split0.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")'  > $@.clone.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("$@")'  > $@.clone.log 2>&1
 
 Event.new.split1.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
 
 Event.new.split2.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
 
 Event.new.split9.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
@@ -48,13 +48,13 @@ Event.new.split9.root: copiedEvent$(ExeSuf)
 Event.old.split.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
 ifneq ($(FAIL),)
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
 endif
 
 Event.old.streamed.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
 ifneq ($(FAIL),)
-	$(CMDECHO) root.exe -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("$@")' > $@.clone.log 2>&1
 endif
 
 single.log:  $(REFFILE) $(DATAFILES) $(ROOTCORELIBS) dt_RunDrawTest_C.$(DllSuf)
@@ -94,8 +94,8 @@ $(TWOFILES): %: two/copiedEvent$(ExeSuf) two/libEvent.$(DllSuf)
 	$(CMDECHO) (cd two; $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $(@F)) > $@.create.log 2>&1
 
 merged/$(REFFILE) : merged/Event.new.split9.root copiedEvent$(ExeSuf) merged/libEvent.$(DllSuf)
-	$(CMDECHO) (cd merged; root.exe -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
-#	$(CMDECHO) root.exe -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
+	$(CMDECHO) (cd merged; $(CALLROOTEXE) -l -b -q '../dt_MakeRef.C("Event.new.split9.root",0);' > /dev/null)
+#	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'mtrans.C("Event.new.split9.root")' && touch $@
 
 merged:
 	mkdir -p merged
@@ -104,7 +104,7 @@ merged/libEvent.$(DllSuf) : copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p merged; cp libEvent.* merged	
 
 $(MERGEFILES): %: $(ONEFILES) $(TWOFILES) 
-	$(CMDECHO) mkdir -p merged; root.exe -q -b -l 'mtrans.C("$(@F)")' > $@.create.log 2>&1
+	$(CMDECHO) mkdir -p merged; $(CALLROOTEXE) -q -b -l 'mtrans.C("$(@F)")' > $@.create.log 2>&1
 
 merge.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf) dt_RunDrawTest_C.$(DllSuf)
 	$(CMDECHO) ./dt_RunDrawTest.sh 'merged/' > merge.raw.log 2>&1
@@ -121,7 +121,7 @@ merge: merge.log
 	$(TestDiff)
 
 CloneTree.root: make_CloneTree.C
-	$(CMDECHO) root.exe -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
 
 cloneChain.log: CloneTree.root
 

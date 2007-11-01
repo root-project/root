@@ -89,7 +89,7 @@ abstractInVector: abstractInVector_C.$(DllSuf)
 	$(CMDECHO) echo > /dev/null
 
 read_test.log: $(CXXSO)
-	$(CMDECHO) root.exe -b -l -q read_test.C > read_test.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q read_test.C > read_test.log
 
 read_test: read_test.log
 	$(TestDiff)

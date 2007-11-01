@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 testScanIn.root: runFormatting.C
-	$(CMDECHO) root.exe -b -l -q 'runFormatting.C(1)' > testScanIn.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'runFormatting.C(1)' > testScanIn.log 2>&1
 
 Formatting.log: testScanIn.root
 

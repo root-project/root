@@ -20,7 +20,7 @@ missingClass: read.out
 
 
 read.out: test.root copy.root
-	$(CMDECHO) root.exe -q -l -b read.C > read.out 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b read.C > read.out 2>&1 
 
 testWithFailure:
 ifeq ($(FAIL),)
@@ -28,16 +28,16 @@ ifeq ($(FAIL),)
 endif
 
 test.root: classes.C write.C
-		  $(CMDECHO) root.exe -q -l -b write.C > write.out 2>&1
+		  $(CMDECHO) $(CALLROOTEXE) -q -l -b write.C > write.out 2>&1
 
 copy.root: classes.C copy.C test.root
-		  $(CMDECHO) root.exe -q -l -b copy.C > copy.out 2>&1
+		  $(CMDECHO) $(CALLROOTEXE) -q -l -b copy.C > copy.out 2>&1
 
 test2.root: tref_test.C
-		  $(CMDECHO) root.exe -q -l -b tref_test.C > tref_test.log
+		  $(CMDECHO) $(CALLROOTEXE) -q -l -b tref_test.C > tref_test.log
 
 tref_test_rd.log: tref_test_rd.C test2.root
-		  $(CMDECHO) root.exe -q -l -b tref_test_rd.C > tref_test_rd.log
+		  $(CMDECHO) $(CALLROOTEXE) -q -l -b tref_test_rd.C > tref_test_rd.log
 
 reftest: tref_test_rd.log
 		  $(TestDiff)

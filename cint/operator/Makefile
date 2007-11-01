@@ -26,7 +26,7 @@ endif
 # from runsometest.C
 
 EqualTest.log : runEqualTest.C equal_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -l -b  runEqualTest.C | \
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runEqualTest.C | \
 	$(RemoveLeadingDirs) -e 's?FILE:.*[/\]?FILE:?' -e 's/.dll/.so/g' \
 	| grep -v -e tagnum -e 'int c' > $@ 2>&1
 

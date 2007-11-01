@@ -33,7 +33,7 @@ EVENTLIB      = libEvent.$(LibSuf)
 EVENT2LIB     = libEvent_2.$(LibSuf)
 
 schemaRun.ref: schemaRun1.C Event.root 
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
 	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
 	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
 	> schemaRun.ref
@@ -45,7 +45,7 @@ LOGFILES_TEST = $(subst .log,.test,$(LOGFILES))
 #debug := $(shell echo $(LOGFILES_TEST) 1>&2)
 
 $(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) Event.root schemaRun.ref
-	$(CMDECHO) root.exe -q -b -l  $< 2>&1 \
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l  $< 2>&1 \
 	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F | sed -e 's/45[0-9],/45,/g'  \
 	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
 	> $@

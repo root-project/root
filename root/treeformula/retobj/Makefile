@@ -16,7 +16,7 @@ include $(ROOTTEST_HOME)/scripts/Event.mk
 .SUFFIXES: .cxx .o .so
 
 retobjTest: Event.new.split0.root
-	$(CMDECHO)root.exe -q -l -b run.C > result 2>&1 && diff -bw result result.good
+	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C > result 2>&1 && diff -bw result result.good
 
 Event.new.split0.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 #	$(CMDECHO)echo creating Event.new.split0.root

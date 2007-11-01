@@ -77,7 +77,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 %.root: %.C
-	$(CMDECHO) root.exe -b -l -q export.C\(\"$*\"\) > $*.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q export.C\(\"$*\"\) > $*.log 2>&1
 
 #ams.C, brahms.C, btev.C, d0.C, e907.C, gem.C, phenix.C, phobos.C, tesla.C
 

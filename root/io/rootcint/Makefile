@@ -54,7 +54,7 @@ namespacetemp: out.$(ObjSuf)
 cltest_C.$(DllSuf): cltestClass.h cltestClass.cxx cltestLinkdef.h
 
 cltest.log: cltest_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l cltest.C+ > cltest.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l cltest.C+ > cltest.log 2>&1 
 
 ifeq ($(FAIL)$(PLATFORM),win32)
 cltest: 

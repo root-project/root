@@ -16,7 +16,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 myclass.root: RunMyClass_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q RunMyClass.C+ > myclass_root.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q RunMyClass.C+ > myclass_root.log
 
 classref.log: myclass.root
 

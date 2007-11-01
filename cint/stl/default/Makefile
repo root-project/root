@@ -19,4 +19,4 @@ dict.cc: mylist.C $(ROOTCINT)
 	$(CMDECHO) rootcint -f dict.cc -c mylist.C LinkDef.h
 
 mylist_C.so:
-	$(CMDECHO) root.exe -q -l -b build.C > build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b build.C > build.log 2>&1

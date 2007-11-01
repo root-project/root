@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 transientTest.log: TBigDSWriteEvent_cxx.$(DllSuf)  TBigDSWriteParticle_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -q -l -b run.C 2>&1 > transientTest.log
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run.C 2>&1 > transientTest.log
 
 ifeq ($(FAIL),)
 transientTest: 

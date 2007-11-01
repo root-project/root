@@ -18,7 +18,7 @@ forwardDeclAndFake: t01.out
 		  $(CMDECHO)diff -bw t01.out t01.good
 
 t01.out: t01.C
-		  $(CMDECHO)root.exe -q -b -l t01.C > t01.out 2>&1 
+		  $(CMDECHO)$(CALLROOTEXE) -q -b -l t01.C > t01.out 2>&1 
 
 testWithFailure:
 ifeq ($(FAIL),)
@@ -26,19 +26,19 @@ ifeq ($(FAIL),)
 endif
 
 little.root: produceLittleFile.C little_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q produceLittleFile.C > produceLittleFile.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q produceLittleFile.C > produceLittleFile.log
 
 printLittle.log : printLittle.C little_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q printLittle.C > printLittle.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q printLittle.C > printLittle.log 2>&1 
 
 checkLittle.log : checkLittle.C little_v2_C.$(DllSuf) little.root
-	$(CMDECHO) root.exe -b -l -q checkLittle.C > checkLittle.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q checkLittle.C > checkLittle.log 2>&1 
 
 checkLittle0.log : checkLittle.C little_v2_C.$(DllSuf) little.root
-	$(CMDECHO) root.exe -b -l -q checkLittle0.C > checkLittle0.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q checkLittle0.C > checkLittle0.log 2>&1 
 
 checkLittle1.log : checkLittle1.C little_v2_C.$(DllSuf) little.root
-	$(CMDECHO) root.exe -b -l -q checkLittle1.C > checkLittle1.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q checkLittle1.C > checkLittle1.log 2>&1 
 
 littleTest: printLittle.log checkLittle0.log checkLittle.log checkLittle1.log 
 ifeq ($(FAIL),)

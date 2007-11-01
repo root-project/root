@@ -22,11 +22,11 @@ myclgood.$(DllSuf): goodDict.$(ObjSuf)
 	$(BuildFromObj)
 
 scopeTest: run.C myclbad.$(DllSuf)
-	$(CMDECHO) root.exe -l -q -b run.C  2>&1 | grep -v Processing | $(RemoveLeadingDirs) | sed -e s/myclbad.so/mycl.so/ > output 
+	$(CMDECHO) $(CALLROOTEXE) -l -q -b run.C  2>&1 | grep -v Processing | $(RemoveLeadingDirs) | sed -e s/myclbad.so/mycl.so/ > output 
 	$(CMDECHO) diff -wb good.output output
 
 scopeTest2: run.C myclgood.$(DllSuf)
-	$(CMDECHO) root.exe -l -q -b rungood.C   2>&1 | grep -v Processing |$(RemoveLeadingDirs) |sed -e s/myclgood.so/mycl.so\ / > output  
+	$(CMDECHO) $(CALLROOTEXE) -l -q -b rungood.C   2>&1 | grep -v Processing |$(RemoveLeadingDirs) |sed -e s/myclgood.so/mycl.so\ / > output  
 	$(CMDECHO) diff -wb good.output output
 
 

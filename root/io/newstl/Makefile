@@ -122,7 +122,7 @@ $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 endif
 
 $(HELPER_DLL) : TestHelpers.C 
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
 
 #	$(CMDECHO)touch $@
 
@@ -133,25 +133,25 @@ else
 endif
 
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
 
 $(LIBDIR)runbase_C.$(DllSuf) : runbase.C directories
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1
 
 #	$(CMDECHO)touch $@
-#	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
+#	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | $(CALLROOTEXE) -l -b -n
 
 stlIoTest.log: $(DIRECTORIES) $(TEST_DLL)
-	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' | grep -v 'did not support' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' | grep -v 'did not support' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
 
 stlIoTest: stlIoTest.log
 	$(CMDECHO) diff -b stlIoTest.ref stlIoTest.log 
 
 stlNoLibTest.log: $(FILEDIR)/vector.root readNoLib.C
-	$(CMDECHO) root.exe -q -b -l readNoLib.C\(\"$(FILEDIR)/vector.root\"\) > $@ 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l readNoLib.C\(\"$(FILEDIR)/vector.root\"\) > $@ 2>&1
 
 stlNoLibTest: stlNoLibTest.log
 	$(CMDECHO) diff -b stlNoLibTest.ref stlNoLibTest.log 
@@ -162,7 +162,7 @@ ifeq ($(FAIL),)
 endif
 
 samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l sample_writer.C > samplerootfile.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l sample_writer.C > samplerootfile.log
 
 emptyCollection.log: directories samplerootfile.root $(LIBDIR)sample_bx_classes_C.$(DllSuf) sample_reader.C
 
@@ -181,7 +181,7 @@ base: base.clog
 	$(TestDiff)
 
 emulvector.root.log: writetest_emulvector.C
-	$(CMDECHO) root.exe -b -l -q writetest_emulvector.C > emulvector.root.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q writetest_emulvector.C > emulvector.root.log 2>&1
 	
 emulvector.root: emulvector.root.log emulvector.root.ref
 	$(TestDiff)

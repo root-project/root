@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 typedefAndScope.log: testclass.h testclass_h.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l testclass.h+ > typedefAndScope.log 2> typedefAndScope.build.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l testclass.h+ > typedefAndScope.log 2> typedefAndScope.build.log
 
 typedefAndScope: typedefAndScope.log
 	$(CMDECHO) diff -b typedefAndScope.log typedefAndScope.ref
@@ -29,7 +29,7 @@ ifeq ($(FAIL),)
 endif
 
 ptrptr.log: runptrptr.C ptrptr.C vclass_h.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l runptrptr.C | grep ptrptr.C | $(RemoveLeadingDirs) > ptrptr.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runptrptr.C | grep ptrptr.C | $(RemoveLeadingDirs) > ptrptr.log 
 
 ptrptr: ptrptr.log
 	$(TestDiff)

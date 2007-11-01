@@ -19,29 +19,29 @@ ClassConv: ClassConv.log
 	$(TestDiff)
 
 data.root: MyClassOld_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l write.C > write.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 
 
 readold.log: MyClassOld_cxx.$(DllSuf) data.root
-	$(CMDECHO) root.exe -q -b -l readold.C > readold.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l readold.C > readold.log 2>&1
 
 readnew.log: MyClass_C.$(DllSuf) data.root
-	$(CMDECHO) root.exe -q -b -l readnew.C > readnew.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l readnew.C > readnew.log 2>&1
 
 ClassConv.root: ClassConvOld_cxx.$(DllSuf)  ClassConvWriteOld.cxx
-	$(CMDECHO) root.exe -q -b -l ClassConvWriteOld.cxx > ClassConvWriteOld.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvWriteOld.cxx > ClassConvWriteOld.log
 
 ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root ClassConvReadOld.cxx 
-	$(CMDECHO) root.exe -q -b -l ClassConvReadOld.cxx > ClassConvReadOld.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOld.cxx > ClassConvReadOld.log
 
 ClassConvNew.root: ClassConvNew_cxx.$(DllSuf) ClassConvWriteNew.cxx
-	$(CMDECHO) root.exe -q -b -l ClassConvWriteNew.cxx > ClassConvWriteNew.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvWriteNew.cxx > ClassConvWriteNew.log
 
 ClassConv.log: ClassConv.root ClassConvNew.root ClassConvNew_cxx.$(DllSuf)  ClassConvOther_cxx.$(DllSuf) ClassConvReadOld.log
-	$(CMDECHO) root.exe -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
-	$(CMDECHO) root.exe -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1 
 
 typedef.root : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l typedefWrite.C+ > typedefWrite.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l typedefWrite.C+ > typedefWrite.log
 
 typedef.log: typedef.root
 
@@ -49,10 +49,10 @@ typedef: typedef.log
 	$(TestDiff)
 
 skipWrite.log: skipWrite_C.$(DllSuf) $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -q -b -l skipWrite.C+ > skipWrite.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l skipWrite.C+ > skipWrite.log
 
 skip.log: skipWrite.log skipRead_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log 
 
 skip: skip.log
 	$(TestDiff)
@@ -78,9 +78,9 @@ fixarr2_C.$(DllSuf) : fixarr.h
 fixarr3_C.$(DllSuf) : fixarr.h
  
 fixarr.log: fixarr1_C.$(DllSuf) fixarr2_C.$(DllSuf) fixarr3_C.$(DllSuf)
-	$(CMDECHO) ( root.exe -q -b -l fixarr1.C+ && \
-		root.exe -q -b -l fixarr2.C+ && \
-		root.exe -q -b -l fixarr3.C+ ) \
+	$(CMDECHO) ( $(CALLROOTEXE) -q -b -l fixarr1.C+ && \
+		$(CALLROOTEXE) -q -b -l fixarr2.C+ && \
+		$(CALLROOTEXE) -q -b -l fixarr3.C+ ) \
 		 > fixarr.log 2>&1
 
 fixarr: fixarr.log

@@ -23,7 +23,7 @@ ifeq ($(FAIL),)
 endif
 
 templateConstructorTest.log : constructor_C.$(DllSuf) runConstructor.C
-	$(CMDECHO) root.exe -b -l -q runConstructor.C > templateConstructorTest.log 2>> templateConstructorTest.build.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q runConstructor.C > templateConstructorTest.log 2>> templateConstructorTest.build.log
 
 templateConstructorTest: templateConstructorTest.log
 	$(CMDECHO) diff -wb templateConstructorTest.log templateConstructorTest.ref
@@ -44,7 +44,7 @@ templateMembersNoMem.log: templateMembers.log
 	$(CMDECHO) grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
 templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v -e Processing > templateMembers.log && \
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q "runtemplateMembers.C(0)" | grep -v -e Processing > templateMembers.log && \
 	grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
 templateMembers: templateMembers.log  templateMembers.ref
@@ -57,14 +57,14 @@ else
 endif
 
 templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v -e Processing -e Mem: > templateMembers.ref && \
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q "runtemplateMembers.C(1)" | grep -v -e Processing -e Mem: > templateMembers.ref && \
 	grep -v Mem: templateMembers.ref > templateMembersNoMem.ref
 
 templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSuf)
 	$(BuildWithLib)
 
 operatorEqual.log: operatorEqual_C.$(DllSuf)
-	$(CMDECHO)root.exe -q -b -l runoperatorEqual.C | grep -v FILE | grep -v tagnum |  $(RemoveDirs)| $(RemoveLeadingDirs) > operatorEqual.log
+	$(CMDECHO)$(CALLROOTEXE) -q -b -l runoperatorEqual.C | grep -v FILE | grep -v tagnum |  $(RemoveDirs)| $(RemoveLeadingDirs) > operatorEqual.log
 
 operatorEqual: operatorEqual.log
 	$(TestDiff)

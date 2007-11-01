@@ -16,7 +16,7 @@ OperatorNewTest : output
 	$(CMDECHO) diff -bw output good.output
 
 output: Classes.$(DllSuf) runClasses.C  $(ROOTCORELIBS) $(ROOTV) 
-	$(CMDECHO) root.exe -l -b -q runClasses.C > output 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q runClasses.C > output 2>&1
 
 ClassesDict.cxx:  Classes.h LinkDef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f ClassesDict.cxx -c Classes.h LinkDef.h

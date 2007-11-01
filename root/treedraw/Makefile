@@ -42,7 +42,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 hsimple.root: hsimple.C
-	$(CMDECHO) root.exe -b -q -l hsimple.C > hsimple_C.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l hsimple.C > hsimple_C.log
 
 simple.log: hsimple.root hsimple.ps.ref
 

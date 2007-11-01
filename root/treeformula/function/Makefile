@@ -16,7 +16,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 testFormulaFuncCall.log: func.C testcl.C
-	$(CMDECHO) root.exe -q -l -b func.C	> testFormulaFuncCall.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b func.C	> testFormulaFuncCall.log 2>&1
 
 testFormulaFuncCall: testFormulaFuncCall.log
 	$(CMDECHO) diff -b testFormulaFuncCall.ref testFormulaFuncCall.log
@@ -28,7 +28,7 @@ ifeq ($(FAIL),)
 endif
 
 prova.root: lista_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l lista.C+ > prova_root.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l lista.C+ > prova_root.log
 
 nestedHists.log: prova.root
 
@@ -46,7 +46,7 @@ staticFunc: staticFunc.log
 all_C.$(DllSuf): A.h B.h ALinkDef.h BLinkDef.h
 
 test.root: write.C all_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l runwrite.C > write.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runwrite.C > write.log 2>&1
 
 fullload.log: test.root
 

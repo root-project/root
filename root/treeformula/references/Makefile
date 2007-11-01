@@ -56,5 +56,5 @@ Event.old.split.root : Event$(ExeSuf) libEvent.$(DllSuf)
 	echo  "$@ made"
 
 refTest: refData ./libEvent.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q dt_RefProxyTest.C > RefProxyTest.log 2>&1 || \
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q dt_RefProxyTest.C > RefProxyTest.log 2>&1 || \
 		diff -b RefProxyTest.ref RefProxyTest.log

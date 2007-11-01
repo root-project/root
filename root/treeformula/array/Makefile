@@ -20,10 +20,10 @@ ifneq ($(FAIL),)
 endif
 
 myTree.root: runFillTree.C fillTree.cxx Data.h Data.cxx 
-	$(CMDECHO) root.exe -q -b -l runFillTree.C > filltree.output 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runFillTree.C > filltree.output 2>&1
 
 arrayDrawTest.output: runArrayTest.C myTree.root
-	$(CMDECHO) root.exe -q -b -l runArrayTest.C > arrayDrawTest.output 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runArrayTest.C > arrayDrawTest.output 2>&1 
 
 arrayDrawTest: arrayDrawTest.output
 ifeq ($(FAIL),)
@@ -33,19 +33,19 @@ endif
 	$(CMDECHO) diff -bw arrayDrawTest.good arrayDrawTest.output
 
 arrayEventListTest.log: eventlist.C
-	$(CMDECHO) root.exe -b -l -q eventlist.C > arrayEventListTest.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q eventlist.C > arrayEventListTest.log 2>&1 
 
 arrayEventListTest: arrayEventListTest.log
 	$(CMDECHO) diff -b arrayEventListTest.ref arrayEventListTest.log
 
 boolOptTest.log: boolOpt.C
-	$(CMDECHO) root.exe -b -l -q boolOpt.C > boolOptTest.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q boolOpt.C > boolOptTest.log 2>&1 
 
 boolOptTest: boolOptTest.log
 	$(CMDECHO) diff -bw boolOptTest.ref boolOptTest.log
 
 indexMultiDim.log: indexMultiDim.C orange.root
-	$(CMDECHO) root.exe -b -l -q indexMultiDim.C > indexMultiDim.log 2>&1 || \
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q indexMultiDim.C > indexMultiDim.log 2>&1 || \
 		diff -b indexMultiDim.ref indexMultiDim.log
 
 indexMultiDimTest: indexMultiDim.log

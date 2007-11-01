@@ -12,7 +12,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 customStreamerTest.log: header_C.$(DllSuf) run.C
-	$(CMDECHO) root.exe -q -b -l run.C 2>&1 | grep -v 'creating shared library ' > $@
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l run.C 2>&1 | grep -v 'creating shared library ' > $@
 
 customStreamerTest: customStreamerTest.log
 	$(CMDECHO) diff -b customStreamerTest.log customStreamerTest.ref

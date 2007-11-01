@@ -16,9 +16,9 @@ Event.root: copiedEvent$(ExeSuf)
 Simple: Event.root
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-	$(CMDECHO) root.exe -l -b -q 'Run.C(1)' > readfile.out
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(1)' > readfile.out
 else
-	$(CMDECHO) root.exe -l -b -q 'Run.C(0)' > readfile.out
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(0)' > readfile.out
 endif
 
 load.log: loadcode_C.$(DllSuf)

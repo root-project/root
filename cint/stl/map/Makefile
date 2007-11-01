@@ -15,7 +15,7 @@ mapTest: dict.o testing.o
 	$(CMDECHO) echo mytest > /dev/null
 
 stringMap.log :stringMap.cxx
-	$(CMDECHO) root.exe -q -b -l stringMap.cxx  > stringMap.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l stringMap.cxx  > stringMap.log 2>&1
 
 stringMap.log: stringMapLoad_cxx.$(DllSuf)
 
@@ -23,13 +23,13 @@ stringMapTest: stringMap.log
 	$(CMDECHO) diff -b stringMap.log stringMap.ref
 
 badstringMap.log : stringMapLoad_cxx.$(DllSuf) badstringMap.cxx MyClass_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l badstringMap.cxx  > badstringMap.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l badstringMap.cxx  > badstringMap.log 2>&1
 
 badstringMapTest: badstringMap.log
 	$(CMDECHO) diff -b badstringMap.log badstringMap.ref
 
 badOperator.log: badOperator.C MyOpClass_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q badOperator.C > badOperator.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q badOperator.C > badOperator.log 2>&1
 
 badOperatorTest: badOperator.log
 	$(CMDECHO) diff -b badOperator.log badOperator.ref

@@ -9,6 +9,15 @@ test: tests ;
 # The previous line contains just ';' in order to disable the implicit 
 # rule building an executable 'test' from test.C
 
+.PHONY: valgrind
+valgrind: 
+	(\
+	( valgrind-listener > $(ROOTTEST_HOME)/valgrind-`date +"%Y%m%d-%k%M%S"`.log 2>&1 & ) && \
+	valgrindlistenerpid=$$$$ && \
+	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) CALLROOTEXE="valgrind --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
+	killall valgrind-listener \
+	)
+
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
 # TEST_TARGETS with the list of activated test
@@ -17,7 +26,20 @@ test: tests ;
 # doing gmake VERBOSE=true allows for more output, include the original
 # commands.
 
-# doing gmake FAIL=true run the test that are known to fail
+# doing gmake FAIL=true runs the test that are known to fail
+
+# doing gmake TIME=true times the test output, suppressing 
+# doing gmake TIME=true times the test output
+
+ifneq ($(TIME),)
+ifeq ($(TIMERESOLUTION),)
+TIMERESOLUTION:=1
+endif
+TESTTIMINGFILE := roottesttiming.out
+TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
+TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  echo $$((`cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' -e 's,^0\.0*,,' -e 's,\.,,g'`/$(TIMERESOLUTION)*$(TIMERESOLUTION)))> $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
+TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && rm -f $(TESTTIMINGFILE); fi
+endif
 
 SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
@@ -73,12 +95,13 @@ $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE)
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL); \
+	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
          false ; \
+     $(TESTTIMEACTION)\
      fi )
 
 #     result=$$?; \
@@ -264,6 +287,9 @@ DllSuf        = so
 LibSuf        = dylib
 endif
 
+CALLROOTEXE  ?= root.exe
+export CALLROOTEXE
+
 # Track the version of ROOT we are runing with
 
 ROOTV=$(ROOTTEST_LOC)/root_version
@@ -352,7 +378,7 @@ endif
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
@@ -364,7 +390,7 @@ endif
 .PRECIOUS: %_C.$(DllSuf) 
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1
 
 ifneq ($(ARCH),macosx)
 

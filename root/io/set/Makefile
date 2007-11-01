@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 setLong64Test.log: set_problem_cxx.$(DllSuf) runSetProblem.C
-	$(CMDECHO) root.exe -b -l -q runSetProblem.C > setLong64Test.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q runSetProblem.C > setLong64Test.log
 
 setLong64Test: setLong64Test.log setLong64Test.ref
 	$(CMDECHO) diff -b setLong64Test.log setLong64Test.ref

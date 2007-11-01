@@ -10,7 +10,7 @@ Streamer="Event::Streamer not available,"
 
 # launch replace
 launch () {
-  (root.exe -l -b -q 'dt_wrap.C("'$1'",'$2')' 2>&1; return $?;) | \
+  ($(CALLROOTEXE) -l -b -q 'dt_wrap.C("'$1'",'$2')' 2>&1; return $?;) | \
      (eval grep -v $3 ) | \
      (if test ! "x$4" = x ; then eval grep -v $4; else cat; fi;)  | \
      (if test ! "x$5" = x ; then eval grep -v $5; else cat; fi;)  | \

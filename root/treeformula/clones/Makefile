@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 nestedClones2.log: digiRun.C
-	$(CMDECHO) root.exe -q -l -b digiRun.C >nestedClones2.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b digiRun.C >nestedClones2.log 2>&1
 
 nestedClones2: nestedClones2.log
 	$(CMDECHO) diff -b nestedClones2.log nestedClones2.ref
@@ -29,7 +29,7 @@ ifeq ($(FAIL),)
 # clones array is empty!
 	$(WarnFailTest)
 else
-	$(CMDECHO) root.exe -b -q -l runNestedClones.C
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runNestedClones.C
 endif
 
 nestedClones3: nestedClones3.log

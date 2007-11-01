@@ -23,6 +23,6 @@ ifeq ($(FAIL),)
 endif
 
 perftest:
-	$(CMDECHO) root.exe -q julius.C+
+	$(CMDECHO) $(CALLROOTEXE) -q julius.C+
 
 

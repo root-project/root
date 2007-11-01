@@ -17,6 +17,6 @@ constRetrunTest:
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 else
-	$(CMDECHO) root.exe -q -b -l run.C > run.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l run.C > run.log
 endif
 

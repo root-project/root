@@ -8,13 +8,13 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 selector.log: run.C $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -l -q -b run.C 2>&1 | grep -v reloading > selector.log
+	$(CMDECHO) $(CALLROOTEXE) -l -q -b run.C 2>&1 | grep -v reloading > selector.log
 
 SelectorTest: selector.log
 	$(CMDECHO) diff -b selector.log selector.ref
 
 SelectorCintTest.log: sel01_C.$(DllSuf) $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -q -l -b runSelectorCintTest.C 2>&1 | $(RemoveDirs) > $@ 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b runSelectorCintTest.C 2>&1 | $(RemoveDirs) > $@ 
 
 SelectorCintTest: SelectorCintTest.log
 	$(TestDiff)
