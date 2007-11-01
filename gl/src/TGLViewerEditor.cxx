@@ -441,9 +441,9 @@ void TGLViewerEditor::SetGuides()
    for (Int_t i = 1; i < 4; i++) {
       TGButton * btn = fAxesContainer->GetButton(i);
       if (fAxesType+1 == i)
-          btn->SetDown(kTRUE);
+         btn->SetDown(kTRUE);
       else
-          btn->SetDown(kFALSE);
+         btn->SetDown(kFALSE);
    }
    fAxesContainer->GetButton(4)->SetOn(axesDepthTest, kFALSE);
 

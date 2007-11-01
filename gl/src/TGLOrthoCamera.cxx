@@ -50,12 +50,10 @@ TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxe
 
    // define camera type relative to horizontal vector
    TGLVector3 v = fCamBase.GetBaseVec(1);
-   for(Int_t i=0; i<3; i++)
-   {
-      if(TMath::Abs(v[i]) == 1)
-      {
-        fType = (TGLOrthoCamera::EType)i;
-        break;
+   for(Int_t i=0; i<3; i++) {
+      if(TMath::Abs(v[i]) == 1) {
+         fType = (TGLOrthoCamera::EType)i;
+         break;
       }
    }
 }

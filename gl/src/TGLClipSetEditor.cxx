@@ -66,7 +66,7 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    static const char * const planeStr[] = { "aX + ", "bY +", "cZ + ", "d = 0" };
 
    for (Int_t i = 0; i < 4; ++i)
-     fPlaneProp[i] = TGLViewerEditor::MakeLabeledNEntry(fPlanePropFrame, planeStr[i] , 40);
+      fPlaneProp[i] = TGLViewerEditor::MakeLabeledNEntry(fPlanePropFrame, planeStr[i] , 40);
 
    // Box properties
    fBoxPropFrame = new TGCompositeFrame(this);
@@ -75,7 +75,7 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    static const char * const boxStr[] = {"Center X", "Center Y", "Center Z", "Length X", "Length Y", "Length Z" };
 
    for (Int_t i = 0; i < 6; ++i)
-     fBoxProp[i] = TGLViewerEditor::MakeLabeledNEntry(fBoxPropFrame, boxStr[i] , 60);
+      fBoxProp[i] = TGLViewerEditor::MakeLabeledNEntry(fBoxPropFrame, boxStr[i] , 60);
 
    // Apply button
    fApplyButton = new TGTextButton(this, "Apply");
