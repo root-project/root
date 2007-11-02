@@ -67,7 +67,7 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x,
 }
 
 //______________________________________________________________________________
-TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
+TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *)
 {
    // Create a batch version of TBrowserImp.
 
@@ -75,7 +75,7 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_
 }
 
 //______________________________________________________________________________
-TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt)
+TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *)
 {
    // Create a batch version of TBrowserImp.
 
