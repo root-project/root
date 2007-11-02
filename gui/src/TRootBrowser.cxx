@@ -775,6 +775,8 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
          edit = fTabBottom;
          break;
    }
+   if (!edit->GetTabTab(subpos))
+      return;
    const char *tabName = edit->GetTabTab(subpos)->GetString();
    TObject *obj = 0;
    if ((obj = fPlugins.FindObject(tabName))) {
