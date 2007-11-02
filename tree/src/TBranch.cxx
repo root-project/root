@@ -1187,6 +1187,7 @@ TFile* TBranch::GetFile(Int_t mode)
    // Open file (new file if mode = 1)
    if (mode) file = TFile::Open(bFileName, "recreate");
    else      file = TFile::Open(bFileName);
+   if (!file) return 0;
    if (file->IsZombie()) {delete file; return 0;}
    fDirectory = (TDirectory*)file;
    return file;
