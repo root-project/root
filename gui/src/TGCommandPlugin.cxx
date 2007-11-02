@@ -75,6 +75,8 @@ TGCommandPlugin::~TGCommandPlugin()
 {
    // Destructor.
 
+   TString pathtmp = Form("%s/command.%d.log", gSystem->TempDirectory(), fPid);
+   gSystem->Unlink(pathtmp);
    delete fTimer;
    Cleanup();
 }
@@ -115,7 +117,7 @@ void TGCommandPlugin::HandleCommand()
    if (strlen(string) > 1) {
       // form temporary file path
       TString sPrompt = "root []";
-      TString pathtmp = Form("%s/ride.%d.log", gSystem->TempDirectory(), fPid);
+      TString pathtmp = Form("%s/command.%d.log", gSystem->TempDirectory(), fPid);
       TApplication *app = gROOT->GetApplication();
       if (app->InheritsFrom("TRint"))
          sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
