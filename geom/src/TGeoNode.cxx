@@ -231,7 +231,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       fVolume->SelectVolume(clear=kFALSE);
       icheck++;
       for (i=0; i<18; i++) {
-         if (i<strlen(fVolume->GetName())) msg[i] = fVolume->GetName()[i];
+         if (i<(Int_t)strlen(fVolume->GetName())) msg[i] = fVolume->GetName()[i];
          else                              msg[i] = ' ';
       }   
       geom->GetGeomPainter()->OpProgress(msg,icheck,ncheck,timer,kFALSE);
