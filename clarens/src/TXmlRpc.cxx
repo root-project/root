@@ -68,7 +68,7 @@ double get_double(xmlrpc_env *env, xmlrpc_value *in)
 
 char* get_timestamp(xmlrpc_env *env, xmlrpc_value *in)
 {
-  char *s = "";
+  char *s = 0;
 
   xmlrpc_parse_value(env, in, "8", &s);
   report_error(env,"timestamp");
@@ -77,7 +77,7 @@ char* get_timestamp(xmlrpc_env *env, xmlrpc_value *in)
 
 
 char* get_string(xmlrpc_env *env, xmlrpc_value *in){
-  char* s = "";
+  char* s = 0;
 
   xmlrpc_parse_value(env, in, "s", &s);
   report_error(env,"string");
@@ -87,7 +87,7 @@ char* get_string(xmlrpc_env *env, xmlrpc_value *in){
 
 char* get_base64(xmlrpc_env *env, xmlrpc_value *in)
 {
-  char *s = "";
+  char *s = 0;
 
   xmlrpc_parse_value(env, in, "6", &s);
   report_error(env,"base64");
