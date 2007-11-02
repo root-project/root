@@ -27,6 +27,7 @@
 #endif
 
 class TGComboBox;
+class TGLabel;
 class TGLayoutHints;
 class TGMenuBar;
 class TGPopupMenu;
@@ -47,6 +48,7 @@ protected:
    TGStatusBar      *fStatusBar;          // for file name, line and col number
    TGToolBar        *fToolBar;            // toolbar with common tool buttons
    TGTextEdit       *fTextEdit;           // text edit widget
+   TGLabel          *fLabel;              // "command" label
    TGComboBox       *fComboCmd;           // commands combobox
    TGTextEntry      *fCommand;            // command text entry widget
    TGTextBuffer     *fCommandBuf;         // command text buffer

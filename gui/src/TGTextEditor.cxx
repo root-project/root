@@ -239,6 +239,16 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
    // TGTextEditor constructor with file name as first argument.
 
    Build();
+   if (p && p != gClient->GetDefaultRoot()) {
+      // special case for TRootBrowser
+      // remove the command line combo box and its associated label
+      fComboCmd->UnmapWindow();
+      fLabel->UnmapWindow();
+      fToolBar->RemoveFrame(fComboCmd);
+      fToolBar->RemoveFrame(fLabel);
+      fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
+      fToolBar->Layout();
+   }
    if (filename) {
       LoadFile((char *)filename);
    }
@@ -253,6 +263,16 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
 
    char tmp[1024];
    Build();
+   if (p && p != gClient->GetDefaultRoot()) {
+      // special case for TRootBrowser
+      // remove the command line combo box and its associated label
+      fComboCmd->UnmapWindow();
+      fLabel->UnmapWindow();
+      fToolBar->RemoveFrame(fComboCmd);
+      fToolBar->RemoveFrame(fLabel);
+      fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
+      fToolBar->Layout();
+   }
    if (macro) {
       fMacro = macro;
       TIter next(macro->GetListOfLines());
@@ -390,7 +410,7 @@ void TGTextEditor::Build()
    fToolBar->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY |
             kLHintsRight, 5, 5, 1, 1));
 
-   fToolBar->AddFrame(new TGLabel(fToolBar, "Command :"),
+   fToolBar->AddFrame(fLabel = new TGLabel(fToolBar, "Command :"),
             new TGLayoutHints(kLHintsCenterY | kLHintsRight, 5, 5, 1, 1));
    AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
             0, 0, 0, 0));
