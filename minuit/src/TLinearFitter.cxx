@@ -1235,7 +1235,7 @@ Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t
    if (fInputFunction)
       strcpy(name, fInputFunction->GetParName(ipar));
    else
-      name = "";
+      name = 0;
    return 1;
 }
 
