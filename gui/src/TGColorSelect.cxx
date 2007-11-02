@@ -400,8 +400,9 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCOL_SELCHANGED:
                {
                   SetColor(parm2);
+                  parm1 = (Long_t)fMsgWindow;  // parm1 needs to pass the widget Id 
                   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
-                              fWidgetId, parm2);
+                              parm1, parm2);
                }
                break;
 
