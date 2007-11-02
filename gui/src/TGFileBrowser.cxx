@@ -551,27 +551,6 @@ void TGFileBrowser::CheckRemote(TGListTreeItem *item)
             }
          }
       }
-      else if (obj->InheritsFrom("TRemoteObject")) {
-         // special case for remote object
-         TRemoteObject *robj = (TRemoteObject *)obj;
-         // the real object is a TKey
-         if (!strcmp(robj->GetClassName(), "TKey")) {
-         TGListTreeItem *parent = item;
-            TRemoteObject *probj = (TRemoteObject *)parent->GetUserData();
-            // find the TFile remote object containing the TKey
-            while ( probj && strcmp(probj->GetClassName(), "TFile")) {
-               parent = parent->GetParent();
-               probj = (TRemoteObject *)parent->GetUserData();
-            }
-            if (probj) {
-               // remotely browse file (remotely call TFile::cd())
-               gApplication->SetBit(TApplication::kProcessRemotely);
-               gApplication->ProcessLine(
-                  Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
-                       probj->GetName()));
-            }
-         }
-      }
       if (item->GetParent() && item->GetParent()->GetUserData() &&
          ((TObject *)item->GetParent()->GetUserData())->InheritsFrom("TApplicationRemote")) {
          // switch to remote session
@@ -764,6 +743,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    TCursorSwitcher switcher(this, fListTree);
    fListLevel = item;
    CheckRemote(item);
+   TGListTreeItem *pitem = item->GetParent();
    TObject *obj = (TObject *) item->GetUserData();
    if (obj && !obj->InheritsFrom("TSystemFile")) {
       TString ext = obj->GetName();
@@ -787,16 +767,35 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          Chdir(item);
       }
       else if (obj->InheritsFrom("TRemoteObject")) {
+         // the real object is a TKey
+         TRemoteObject *robj = (TRemoteObject *)obj;
+         if (!strcmp(robj->GetClassName(), "TKey")) {
+            TGListTreeItem *parent = item;
+            TRemoteObject *probj = (TRemoteObject *)parent->GetUserData();
+            // find the TFile remote object containing the TKey
+            while ( probj && strcmp(probj->GetClassName(), "TFile")) {
+               parent = parent->GetParent();
+               probj = (TRemoteObject *)parent->GetUserData();
+            }
+            if (probj && !strcmp(probj->GetClassName(), "TFile")) {
+               // remotely browse file (remotely call TFile::cd())
+               gApplication->SetBit(TApplication::kProcessRemotely);
+               gApplication->ProcessLine(
+                  Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");",
+                       probj->GetName()));
+               gSystem->Sleep(250);
+            }
+         }
          if (gClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
             act = action;
             act.ReplaceAll("%s", obj->GetName());
-            if (act[0] != '!') {
+            if ((act[0] != '!') && (strcmp(pitem->GetText(), "ROOT Files"))) {
                // special case for remote object: remote process
                gApplication->SetBit(TApplication::kProcessRemotely);
                gApplication->ProcessLine(act.Data());
             }
          }
-         if (ext.EndsWith(".root")) {
+         if ((ext.EndsWith(".root")) && (strcmp(pitem->GetText(), "ROOT Files"))) {
             gApplication->SetBit(TApplication::kProcessRemotely);
             gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
          }
