@@ -10,12 +10,16 @@ test: tests ;
 # rule building an executable 'test' from test.C
 
 .PHONY: valgrind
-valgrind: 
-	(\
-	( valgrind-listener > $(ROOTTEST_HOME)/valgrind-`date +"%Y%m%d-%k%M%S"`.log 2>&1 & ) && \
+scripts/analyze_valgrind: scripts/analyze_valgrind.cxx
+	$(CXX) $< -o $@
+valgrind: scripts/analyze_valgrind
+	@( export valgrindlogfile=$(ROOTTEST_HOME)/valgrind-`date +"%Y%m%d-%H%M%S"`.log; \
+	( \
+	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
 	valgrindlistenerpid=$$$$ && \
 	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) CALLROOTEXE="valgrind --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
-	killall valgrind-listener \
+	killall valgrind-listener; \
+	grep '==[[:digit:]]\+==' $$valgrindlogfile | scripts/analyze_valgrind \
 	)
 
 # The user directory should define
