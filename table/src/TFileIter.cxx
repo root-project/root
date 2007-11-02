@@ -411,7 +411,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
    while ( (key = (TKey *)SkipObjects()) ) {
       if (fDirection==kIterForward) fCursorPosition++;
       else                          fCursorPosition--;
-      if ( name != "*") {
+      if ( strcmp(name,"*")) {
          thisKey.SetKey(key->GetName());
          if (thisKey.GetName() < name)  continue;
          if (thisKey.GetName() > name) { key = 0; break; }
