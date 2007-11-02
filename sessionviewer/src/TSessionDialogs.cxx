@@ -1142,7 +1142,7 @@ void TUploadDataSetDlg::BrowseFiles()
 
    TGFileInfo fi;
    fi.fFileTypes = gDatasetTypes;
-   fi.fFilename  = "*.root";
+   fi.fFilename  = strdup("*.root");
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
    if (fi.fMultipleSelection && fi.fFileNamesList) {
       AddFiles(fi.fFileNamesList);
