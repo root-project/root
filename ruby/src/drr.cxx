@@ -658,7 +658,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
         rb_fatal("You provided a wrong prototype (%s) for (%s#%s). Aborting.", 
                     cproto, classname, classname);
 
-    addr = func.ExecInt((void*)((long)NULL + offset));
+    addr = func.ExecInt((void*)((long)0 + offset));
     rb_iv_set(self, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject *)addr));
     rb_iv_set(self, "__rr_class__", rb_str_new2 (classname));
 
