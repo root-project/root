@@ -1931,6 +1931,10 @@ void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out<<"   gaxis->SetTickSize("<<GetTickSize()<<");"<<endl;
    out<<"   gaxis->SetGridLength("<<GetGridLength()<<");"<<endl;
    out<<"   gaxis->SetTitleOffset("<<GetTitleOffset()<<");"<<endl;
+   out<<"   gaxis->SetTitleSize("<<GetTitleSize()<<");"<<endl;
+   out<<"   gaxis->SetTitleColor("<<GetTextColor()<<");"<<endl;
+   out<<"   gaxis->SetTitleFont("<<GetTextFont()<<");"<<endl;
+
    if (strlen(GetName())) {
       out<<"   gaxis->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    }
