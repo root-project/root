@@ -3603,6 +3603,8 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    localdesc->fActQuery = 0;
    localdesc->fProof = 0;
    localdesc->fProofMgr = 0;
+   localdesc->fAttached = kFALSE;
+   localdesc->fConnected = kFALSE;
    localdesc->fLocal = kTRUE;
    localdesc->fSync = kTRUE;
    localdesc->fAutoEnable = kFALSE;
@@ -4442,7 +4444,6 @@ TSessionViewer::~TSessionViewer()
 {
    // Destructor.
 
-   Cleanup();
    delete fUserGroup;
    if (gSessionViewer == this)
       gSessionViewer = 0;
@@ -4768,6 +4769,7 @@ void TSessionViewer::CloseWindow()
    // Save configuration
    if (fAutoSave)
       WriteConfiguration();
+   Cleanup();
    fSessions->Delete();
    if (fSessionItem)
       fSessionHierarchy->DeleteChildren(fSessionItem);
