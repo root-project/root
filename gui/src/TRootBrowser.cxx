@@ -799,6 +799,7 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
    }
    fNbTab[pos]--;
    edit->RemoveTab(subpos);
+   SwitchMenus(edit->GetTabContainer(edit->GetCurrent()));
 }
 
 //______________________________________________________________________________
@@ -927,6 +928,8 @@ void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
    // Move the menu from original frame to our TGMenuFrame, or display the 
    // menu associated to the current tab.
 
+   if (from == 0)
+      return;
    TGFrameElement *fe = (TGFrameElement *)from->GetList()->First();
    if (!fe) {
       if (fActMenuBar != fMenuBar)
