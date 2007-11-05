@@ -57,7 +57,6 @@ sphe.SetLineColor( ROOT.kRed )
 sphe1.SetLineColor( ROOT.kBlack )
 sphe2.SetLineColor( ROOT.kBlue )
 
-
 #  Build the geometry hierarchy
 node1 = ROOT.TNode( 'NODE1', 'NODE1', 'BRIK' )
 node1.cd()
@@ -77,6 +76,10 @@ node13 = ROOT.TNode( 'NODE13', 'NODE13', 'SPHE',    10,  -400,   500 )
 node14 = ROOT.TNode( 'NODE14', 'NODE14', 'SPHE1',   10,   250,   300 )
 node15 = ROOT.TNode( 'NODE15', 'NODE15', 'SPHE2',   10,  -100,  -200 )
 
+# for memory management
+for l, o in locals().items():
+   if isinstance( o, ROOT.TShape ) or isinstance( o, ROOT.TNode ):
+      ROOT.SetOwnership( o, False )
 
 # Draw this geometry in the current canvas
 node1.cd()
