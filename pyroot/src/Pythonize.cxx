@@ -822,9 +822,9 @@ namespace {
          return 0;
 
       if ( (int)idx == 0 )
-         return PyObject_GetAttrString( self, "first" );
+         return PyObject_GetAttrString( self, (char*)"first" );
       else if ( (int)idx == 1 )
-         return PyObject_GetAttrString( self, "second" );
+         return PyObject_GetAttrString( self, (char*)"second" );
 
    // still here? Trigger stop iteration
       PyErr_SetString( PyExc_IndexError, "out of bounds" );

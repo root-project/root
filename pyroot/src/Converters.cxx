@@ -475,7 +475,7 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, TParameter& para, 
 
 // verify (too long string will cause truncation, no crash)
    if ( fMaxSize < (UInt_t)fBuffer.size() )
-      PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
+      PyErr_Warn( PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)" );
    else if ( fMaxSize != UINT_MAX )
       fBuffer.resize( fMaxSize, '\0' );      // padd remainder of buffer as needed
 
@@ -510,7 +510,7 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 
 // verify (too long string will cause truncation, no crash)
    if ( fMaxSize < (UInt_t)PyString_GET_SIZE( value ) )
-      PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
+      PyErr_Warn( PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)" );
 
    if ( fMaxSize != UINT_MAX )
       strncpy( *(char**)address, s, fMaxSize );   // padds remainder
@@ -872,7 +872,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, TParameter& par
    if ( ObjectProxy_Check( pyobject ) ) {
       para.fv = ((ObjectProxy*)pyobject)->fObject;
       if ( func )
-         func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)pyobject)->fObject ) );
+         func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)(void*)pyobject)->fObject ) );
       return kTRUE;
    }
 

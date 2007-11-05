@@ -270,7 +270,7 @@ namespace {
    // helper to catch common code between MakeNullPointer and BindObject
 
       if ( ! PyString_Check( pyname ) ) {    // name given as string
-         PyObject* nattr = PyObject_GetAttrString( pyname, "__name__" );
+         PyObject* nattr = PyObject_GetAttrString( pyname, (char*)"__name__" );
          if ( nattr )                        // object is actually a class
             pyname = nattr;
          pyname = PyObject_Str( pyname );
@@ -381,7 +381,7 @@ namespace {
    {
       ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
-                &ObjectProxy_Type, (PyObject*)&pyobj, &PyInt_Type, &pykeep ) )
+                &ObjectProxy_Type, (void*)&pyobj, &PyInt_Type, &pykeep ) )
          return 0;
 
       (Bool_t)PyLong_AsLong( pykeep ) ? pyobj->HoldOn() : pyobj->Release();

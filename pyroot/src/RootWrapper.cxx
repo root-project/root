@@ -63,7 +63,7 @@ namespace {
       if ( ! pybases ) {
          pybases = PyTuple_New( 1 );
          Py_INCREF( &PyROOT::ObjectProxy_Type );
-         PyTuple_SET_ITEM( pybases, 0, (PyObject*)&PyROOT::ObjectProxy_Type );
+         PyTuple_SET_ITEM( pybases, 0, (PyObject*)(void*)&PyROOT::ObjectProxy_Type );
       }
 
       PyObject* pymetabases = PyTuple_New( PyTuple_GET_SIZE( pybases ) );
@@ -399,7 +399,7 @@ PyObject* PyROOT::BuildRootClassBases( const T& klass )
 // build all the bases
    if ( nbases == 0 ) {
       Py_INCREF( &ObjectProxy_Type );
-      PyTuple_SET_ITEM( pybases, 0, (PyObject*)&ObjectProxy_Type );
+      PyTuple_SET_ITEM( pybases, 0, (PyObject*)(void*)&ObjectProxy_Type );
    } else {
       for ( std::vector< std::string >::size_type ibase = 0; ibase < nbases; ++ibase ) {
          PyObject* pyclass = MakeRootClassFromString< T, B, M >( uqb[ ibase ] );

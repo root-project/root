@@ -62,4 +62,15 @@ typedef int Py_ssize_t;
 # endif
 #endif
 
+// the following should quiet Solaris
+#ifdef Py_False
+#undef Py_False
+#define Py_False ( (PyObject*)(void*)&_Py_ZeroStruct )
+#endif
+
+#ifdef Py_True
+#undef Py_True
+#define Py_True ( (PyObject*)(void*)&_Py_TrueStruct )
+#endif
+
 #endif // !PYROOT_PYROOT_H
