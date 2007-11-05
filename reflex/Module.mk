@@ -80,13 +80,14 @@ RFLX_REFLEXLL   += -ldemangle
 endif
 
 RFLX_TESTD      = $(REFLEXDIR)/test
+RFLX_TESTDL     = $(RFLX_TESTD)/lib
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
 RFLX_TESTLIBD2  = $(RFLX_TESTD)/testDict2
 RFLX_TESTLIBS1  = $(RFLX_TESTD)/Reflex_rflx.cpp
 RFLX_TESTLIBS2  = $(RFLX_TESTD)/Class2Dict_rflx.cpp
 RFLX_TESTLIBS   = $(RFLX_TESTLIBS1) $(RFLX_TESTLIBS2)
 RFLX_TESTLIBO   = $(subst .cpp,.o,$(RFLX_TESTLIBS))
-RFLX_TESTLIB    = $(subst $(RFLX_TESTD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(RFLX_TESTLIBO)))
+RFLX_TESTLIB    = $(subst $(RFLX_TESTD)/,$(RFLX_TESTDL)/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(RFLX_TESTLIBO)))
 
 RFLX_UNITTESTS = $(RFLX_TESTD)/test_Reflex_generate.cxx    \
                  $(RFLX_TESTD)/test_ReflexBuilder_unit.cxx \
@@ -181,22 +182,23 @@ distclean::     distclean-reflex
 
 check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
 ifeq ($(PLATFORM),win32)
-		@export PATH="`pwd`/bin:$(CPPUNIT)/lib:$(PATH)"; \
-		$(RFLX_TESTD)/test_Reflex_generate; \
-		$(RFLX_TESTD)/test_Reflex_simple1; \
-		$(RFLX_TESTD)/test_Reflex_simple2; \
-		$(RFLX_TESTD)/test_Reflex_unit; \
+		@export PATH="$(RFLX_TESTDL):`pwd`/bin:$(CPPUNIT)/lib:$(PATH)"; \
+		$(RFLX_TESTD)/test_Reflex_generate && \
+		$(RFLX_TESTD)/test_Reflex_simple1 && \
+		$(RFLX_TESTD)/test_Reflex_simple2 && \
+		$(RFLX_TESTD)/test_Reflex_unit && \
 		$(RFLX_TESTD)/test_ReflexBuilder_unit
 else
-		@export LD_LIBRARY_PATH=`pwd`/lib:$(CPPUNIT)/lib; \
-		$(RFLX_TESTD)/test_Reflex_generate; \
-		$(RFLX_TESTD)/test_Reflex_simple1; \
-		$(RFLX_TESTD)/test_Reflex_simple2; \
-		$(RFLX_TESTD)/test_Reflex_unit; \
+		@export LD_LIBRARY_PATH=$(RFLX_TESTDL):`pwd`/lib:$(CPPUNIT)/lib; \
+		$(RFLX_TESTD)/test_Reflex_generate && \
+		$(RFLX_TESTD)/test_Reflex_simple1 && \
+		$(RFLX_TESTD)/test_Reflex_simple2 && \
+		$(RFLX_TESTD)/test_Reflex_unit && \
 		$(RFLX_TESTD)/test_ReflexBuilder_unit
 endif
 
-lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
+$(RFLX_TESTDL)/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
+		@mkdir -p $(dir $@)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< $(RFLX_REFLEXLL)
 
 %_rflx.o : %_rflx.cpp
