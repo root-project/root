@@ -2002,6 +2002,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load)
 
    if (!gROOT->GetListOfClasses())    return 0;
 
+//printf("TClass::GetClass called, typeinfo.name=%s\n",typeinfo.name());
    TClass* cl = fgIdMap->Find(typeinfo.name());
 
    if (cl) {
@@ -2026,7 +2027,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load)
    VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
       (dict)();
-      TClass *cl = GetClass(typeinfo);
+      TClass *cl = GetClass(typeinfo,kFALSE);
       if (cl) cl->PostLoadCheck();
       return cl;
    }
