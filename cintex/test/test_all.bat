@@ -2,7 +2,7 @@ rem @echo off
 set ROOTSYS=%cd%
 set PYTHONDIR=%1\..
 
-set PATH=%cd%\bin;%cd%\cintex\test\dict;%PATH%
+set PATH=%cd%\bin;%cd%\cintex\test\dict;%cd%\cintex\test\lib;%PATH%
 set PYTHONPATH=%cd%\bin;%PYTHONPATH%
 
 bin\root -b -q -l cintex\test\test_Cintex.C

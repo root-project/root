@@ -69,10 +69,11 @@ GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py
 
 CINTEXTESTD    = $(CINTEXDIR)/test
 CINTEXTESTDICTD = $(CINTEXTESTD)/dict
+CINTEXTESTDICTL = $(CINTEXTESTDICTD)/lib
 CINTEXTESTDICTH = $(CINTEXTESTDICTD)/CintexTest.h
 CINTEXTESTDICTS = $(subst .h,_rflx.cpp,$(CINTEXTESTDICTH))
 CINTEXTESTDICTO = $(subst .cpp,.o,$(CINTEXTESTDICTS))
-CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,lib/test_,$(subst _rflx.o,Rflx.$(DICTEXT),$(CINTEXTESTDICTO)))
+CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,$(CINTEXTESTDICTD)/test_,$(subst _rflx.o,Rflx.$(DICTEXT),$(CINTEXTESTDICTO)))
 
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
@@ -118,6 +119,7 @@ check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
 		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
 
 $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
+		@mkdir -p $(CINTEXTESTDICTL)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< "$(REFLEXLL)"
 
 $(CINTEXTESTDICTO): CXXFLAGSPCH =
