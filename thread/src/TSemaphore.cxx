@@ -35,7 +35,7 @@ Int_t TSemaphore::Wait(Int_t millisec)
 {
    // If semaphore value is > 0 then decrement it and carry on. If it's
    // already 0 then block. If millisec > 0, apply a relative timeout
-   // of millisec milliseconds.
+   // of millisec milliseconds. Returns 0 in case of success, or mutex errno.
 
    Int_t rc = 0;
 
@@ -78,7 +78,7 @@ Int_t TSemaphore::Wait(Int_t millisec)
 Int_t TSemaphore::TryWait()
 {
    // If semaphore value is > 0 then decrement it and return 0. If it's
-   // already 0 then return 1.
+   // already 0 then return 1 or mutex errno.
 
    int r = fMutex.Lock();
    if (r) { Error("TryWait","Lock returns %d [%ld]", r, TThread::SelfId()); return r; }
@@ -100,8 +100,9 @@ Int_t TSemaphore::TryWait()
 //______________________________________________________________________________
 Int_t TSemaphore::Post()
 {
-   // If any threads are blocked in Wait(), wake one of them up. Otherwise
-   // increment the value of the semaphore.
+   // If any threads are blocked in Wait(), wake one of them up and
+   // increment the value of the semaphore. Returns 0 in case of success, or
+   // mutex errno.
 
    int r = fMutex.Lock();
    if (r) { Error("Post","Lock returns %d [%ld]", r, TThread::SelfId()); return r; }
