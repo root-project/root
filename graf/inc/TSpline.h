@@ -48,7 +48,9 @@ public:
    virtual ~TSpline();
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
+   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
+   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Double_t GetDelta() const {return fDelta;}
    virtual Int_t    GetNp()    const {return fNp;}
    virtual Int_t    GetNpx()   const {return fNpx;}
@@ -63,8 +65,8 @@ public:
 };
 
 
-//________________________________________________________________________
-class TSplinePoly : public TObject 
+//______________________________________________________________________________
+class TSplinePoly : public TObject
 {
 protected:
    Double_t fX;     // abscissa
@@ -86,8 +88,8 @@ public:
 };
 
 
-//________________________________________________________________________
-class TSplinePoly3 : public TSplinePoly 
+//______________________________________________________________________________
+class TSplinePoly3 : public TSplinePoly
 {
 private:
    Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
@@ -116,8 +118,8 @@ public:
 };
 
 
-//________________________________________________________________________
-class TSplinePoly5 : public TSplinePoly 
+//______________________________________________________________________________
+class TSplinePoly5 : public TSplinePoly
 {
 private:
    Double_t fB; // first order expansion coefficient :  fB*1! is the first derivative at x
@@ -151,7 +153,7 @@ public:
 };
 
 
-//________________________________________________________________________
+//______________________________________________________________________________
 class TSpline3 : public TSpline
 {
 private:
@@ -204,7 +206,7 @@ public:
 };
 
 
-//________________________________________________________________________
+//______________________________________________________________________________
 class TSpline5 : public TSpline
 {
 private:
