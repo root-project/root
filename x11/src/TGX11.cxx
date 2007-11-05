@@ -2324,9 +2324,12 @@ void TGX11::SetMarkerType(int type, int n, XPoint *xy)
 
    gMarker.type = type;
    gMarker.n = n < kMAXMK ? n : kMAXMK;
-   if (gMarker.type >= 2)
-      for (int i = 0; i < gMarker.n; i++)
-         gMarker.xy[i] = xy[i];
+   if (gMarker.type >= 2) {
+      for (int i = 0; i < gMarker.n; i++) {
+         gMarker.xy[i].x = xy[i].x;
+         gMarker.xy[i].x = xy[i].y;
+      }
+   }
 }
 
 //______________________________________________________________________________
