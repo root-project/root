@@ -163,12 +163,12 @@ void stressGeometry(const char *exp="*") {
          FILE *fp = gSystem->OpenPipe("uname -a", "r");
          char line[60];
          fgets(line,60,fp); line[59] = 0;
-         printf("*  %s\n",line);
+         printf("*  SYS: %s\n",line);
          gSystem->ClosePipe(fp);
       } else {
          const char *os = gSystem->Getenv("OS");
-         if (!os) printf("*  Windows 95\n");
-         else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+         if (!os) printf("*  SYS: Windows 95\n");
+         else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
       }
       printf("******************************************************************\n");
       if (testfailed) printf("*  stressGeometry found bad points ............. FAILED\n");
