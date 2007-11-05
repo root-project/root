@@ -190,11 +190,11 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 
 //- constructor/destructor ------------------------------------------------------
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
-   Py##name##Buffer_SeqMethods.sq_item      = name##_buffer_item;               \
-   Py##name##Buffer_SeqMethods.sq_ass_item  = name##_buffer_ass_item;           \
-   Py##name##Buffer_SeqMethods.sq_length    = buffer_length;                    \
+   Py##name##Buffer_SeqMethods.sq_item      = (ssizeargfunc)name##_buffer_item; \
+   Py##name##Buffer_SeqMethods.sq_ass_item  = (ssizeobjargproc)name##_buffer_ass_item;\
+   Py##name##Buffer_SeqMethods.sq_length    = (lenfunc)buffer_length;           \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
-   Py##name##Buffer_Type.tp_str             = name##_buffer_str;                \
+   Py##name##Buffer_Type.tp_str             = (reprfunc)name##_buffer_str;      \
    Py##name##Buffer_Type.tp_methods         = buffer_methods;                   \
    Py##name##Buffer_Type.tp_getset          = buffer_getset;
 

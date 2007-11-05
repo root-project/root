@@ -54,6 +54,9 @@ typedef int Py_ssize_t;
 #  define PY_SSIZE_T_MAX INT_MAX
 #  define PY_SSIZE_T_MIN INT_MIN
 # endif
+#define ssizeobjargproc intobjargproc
+#define lenfunc         inquiry
+#define ssizeargfunc    intargfunc
 #else
 # ifdef R__MACOSX
 #  define PY_SSIZE_T_FORMAT "%uzd"
