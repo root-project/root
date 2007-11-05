@@ -1,8 +1,14 @@
 import os, sys, ROOT
 
 def MyDraw():
+   btn = ROOT.BindObject( ROOT.gTQSender, ROOT.TGTextButton )
+   print type(ROOT.gTQSender), ROOT.gTQSender
+   print btn.WidgetId()
+   ROOT.gROOT.ProcessLine( 'cout << gTQSender << endl;' )
    ROOT.gROOT.ProcessLine( 'TGButton* btn = (TGButton*)gTQSender;' )
-   print 'MyDraw', ROOT.btn.WidgetId()
+   ROOT.gROOT.ProcessLine( 'cout << btn << endl;' )
+   ROOT.gROOT.ProcessLine( 'cout << (long)*((long*)btn) << endl;' )
+   print 'MyDraw', ROOT.btn, ROOT.btn.WidgetId()
 
 m = ROOT.TPyDispatcher( MyDraw )
 
