@@ -43,7 +43,7 @@ templateMembers_C.$(DllSuf): templateMembersDict.cxx
 templateMembersNoMem.log: templateMembers.log
 	$(CMDECHO) grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
-templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
+templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf) templateMembers.ref
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q "runtemplateMembers.C(0)" | grep -v -e Processing > templateMembers.log && \
 	grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
