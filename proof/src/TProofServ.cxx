@@ -5160,7 +5160,7 @@ void TProofServ::FlushLogFile()
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleSignalException(Int_t sig)
+void TProofServ::HandleException(Int_t sig)
 {
    // Exception handler: we do not try to recover here, just exit.
 

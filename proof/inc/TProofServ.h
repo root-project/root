@@ -216,7 +216,7 @@ public:
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);
 
-   virtual void   HandleSignalException(Int_t sig);
+   virtual void   HandleException(Int_t sig);
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();
