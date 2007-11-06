@@ -39,4 +39,13 @@ void vavilov()
    gr3->SetMarkerColor(kBlue);
    gr4->Draw("psame");
    gr4->SetMarkerColor(kGreen);
+
+   TF1 *f1 = new TF1("f1", "TMath::Vavilov(x, 0.3, 0.5)", -2, 10);
+
+   TH1F *hist = new TH1F("vavilov", "vavilov", 100, -2, 10);
+   for (int i=0; i<10000; i++) {
+      hist->Fill(f1->GetRandom());
+   }
+   hist->Scale(1/1200.);
+   hist->Draw("same");
 }
