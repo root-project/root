@@ -1,14 +1,27 @@
 import os, sys, ROOT
 
+def pygaus( x, par ):
+   import math
+   if (par[2] != 0.0):
+      arg1 = (x[0]-par[1])/par[2]
+      arg2 = (0.01*0.39894228)/par[2]
+      arg3 = par[0]/(1+par[3])
+
+      gauss = arg3*arg2*math.exp(-0.5*arg1*arg1)
+   else:
+      print 'returning 0'
+      gauss = 0.
+   return gauss
+
+tpygaus = ROOT.TF1( 'pygaus', pygaus, -4, 4, 4 )
+tpygaus.SetParameters( 1., 0., 1. )
+
 def MyDraw():
    btn = ROOT.BindObject( ROOT.gTQSender, ROOT.TGTextButton )
-   print type(ROOT.gTQSender), ROOT.gTQSender
-   print btn.WidgetId()
-   ROOT.gROOT.ProcessLine( 'cout << gTQSender << endl;' )
-   ROOT.gROOT.ProcessLine( 'TGButton* btn = (TGButton*)gTQSender;' )
-   ROOT.gROOT.ProcessLine( 'cout << btn << endl;' )
-   ROOT.gROOT.ProcessLine( 'cout << (long)*((long*)btn) << endl;' )
-   print 'MyDraw', ROOT.btn, ROOT.btn.WidgetId()
+   if btn.WidgetId() == 10:
+      global tpygaus, window
+      tpygaus.Draw()
+      ROOT.gPad.Update()
 
 m = ROOT.TPyDispatcher( MyDraw )
 
