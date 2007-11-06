@@ -104,7 +104,11 @@ public:
    Bool_t          IsChecked() const { return fChecked; }
    void            CheckAllChildren(Bool_t state = kTRUE);
    void            CheckChildren(TGListTreeItem *item, Bool_t state);
-   
+
+   Bool_t          HasCheckedChild(Bool_t first=kFALSE);
+   Bool_t          HasUnCheckedChild(Bool_t first=kFALSE);
+   void            UpdateState();
+
    Color_t         GetColor() const { return fColor; }
    void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    void            ClearColor() { fHasColor = false; }
@@ -123,6 +127,10 @@ public:
       kDefault        = 0,
       kColorUnderline = BIT(0),
       kColorBox       = BIT(1)
+   };
+   enum ECheckMode {
+      kSimple    = BIT(2),
+      kRecursive = BIT(3)
    };
 
 protected:
@@ -149,6 +157,7 @@ protected:
    Bool_t           fDisableOpen;    // disable branch opening on double-clicks
 
    EColorMarkupMode fColorMode;      // if/how to render item's main color
+   ECheckMode       fCheckMode;      // how to propagate check properties through the tree
    GContext_t       fColorGC;        // drawing context for main item color
 
    static Pixel_t        fgGrayPixel;
@@ -299,6 +308,9 @@ public:
 
    EColorMarkupMode GetColorMode() const { return fColorMode; }
    void SetColorMode(EColorMarkupMode colorMode) { fColorMode = colorMode; }
+
+   ECheckMode GetCheckMode() const { return fCheckMode; }
+   void SetCheckMode(ECheckMode mode) { fCheckMode = mode; }
 
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 

@@ -152,6 +152,68 @@ TGListTreeItem::~TGListTreeItem()
 }
 
 //______________________________________________________________________________
+Bool_t TGListTreeItem::HasCheckedChild(Bool_t first)
+{
+   // Add all child items of 'item' into the list 'checked'.
+
+   TGListTreeItem *item = this;
+
+   while (item) {
+      if (item->IsChecked()) {
+         return kTRUE;
+      }
+      if (item->GetFirstChild()) {
+         if (item->GetFirstChild()->HasCheckedChild())
+            return kTRUE;
+      }
+      if (!first)
+         item = item->GetNextSibling();
+      else
+         break;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGListTreeItem::HasUnCheckedChild(Bool_t first)
+{
+   // Add all child items of 'item' into the list 'checked'.
+
+   TGListTreeItem *item = this;
+
+   while (item) {
+      if (!item->IsChecked()) {
+         return kTRUE;
+      }
+      if (item->GetFirstChild()) {
+         if (item->GetFirstChild()->HasUnCheckedChild())
+            return kTRUE;
+      }
+      if (!first)
+         item = item->GetNextSibling();
+      else
+         break;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGListTreeItem::UpdateState()
+{
+   // Update the state of the node 'item' according to the children states.
+
+   if ((!fChecked && HasCheckedChild(kTRUE)) ||
+       (fChecked && HasUnCheckedChild(kTRUE))) {
+      SetCheckBoxPictures(gClient->GetPicture("checked_dis_t.xpm"),
+                          gClient->GetPicture("unchecked_dis_t.xpm"));
+   }
+   else {
+      SetCheckBoxPictures(gClient->GetPicture("checked_t.xpm"),
+                          gClient->GetPicture("unchecked_t.xpm"));
+   }
+}
+
+//______________________________________________________________________________
 void TGListTreeItem::CheckAllChildren(Bool_t state)
 {
    // Set all child items of this one checked if state=kTRUE,
@@ -164,8 +226,8 @@ void TGListTreeItem::CheckAllChildren(Bool_t state)
       if (IsChecked())
          Toggle();
    }
-
    CheckChildren(GetFirstChild(), state);
+   UpdateState();   
 }
 
 //______________________________________________________________________________
@@ -187,6 +249,7 @@ void TGListTreeItem::CheckChildren(TGListTreeItem *item, Bool_t state)
       if (item->GetFirstChild()) {
          CheckChildren(item->GetFirstChild(), state);
       }
+      item->UpdateState();   
       item = item->GetNextSibling();
    }
 }
@@ -293,6 +356,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fMargin   = 2;
 
    fColorMode = kDefault;
+   fCheckMode = kSimple;
    if (fCanvas) fCanvas->GetVScrollbar()->SetSmallIncrement(20);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -336,6 +400,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fMargin   = 2;
 
    fColorMode = kDefault;
+   fCheckMode = kSimple;
    if (fCanvas) fCanvas->GetVScrollbar()->SetSmallIncrement(20);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
@@ -463,6 +528,9 @@ Bool_t TGListTree::HandleButton(Event_t *event)
                fLastY = event->fY;
                ToggleItem(item);
                UpdateChecked(item, kTRUE);
+               if (fCheckMode == kRecursive) {
+                  CheckAllChildren(item, item->IsChecked());
+               }
                Checked((TObject *)item->GetUserData(), item->IsChecked());
                return kTRUE;
             }
@@ -1445,7 +1513,8 @@ void TGListTree::InsertChild(TGListTreeItem *parent, TGListTreeItem *item)
       }
 
    }
-   UpdateChecked(item);
+   if (item->HasCheckBox())
+      UpdateChecked(item);
 }
 
 //______________________________________________________________________________
@@ -2307,54 +2376,23 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 
    if (fAutoCheckBoxPic == kFALSE) return;
 
-   Bool_t diff = kFALSE;
-   TGListTreeItem *current = item;
-
-   if (item->GetParent()) {
-      current = item->GetParent()->GetFirstChild();
-   }
-   while (current) {
-      TGListTreeItem *parent = current->GetParent();
-      if ((parent) && (parent->HasCheckBox())) {
-         if ( ((parent->IsChecked()) && (!current->IsChecked())) ||
-              ((!parent->IsChecked()) && (current->IsChecked())) ) {
-            diff = kTRUE;
-            break;
-         }
-      }
-      current = current->fNextsibling;
-   }
-   if ((item->GetParent()) && (item->GetParent()->HasCheckBox())) {
-      if (diff) {
-         item->GetParent()->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
-                                                fClient->GetPicture("unchecked_dis_t.xpm"));
+   TGListTreeItem *parent;
+   TGListTreeItem *current;
+   // get top level parent with check box
+   current = item->GetFirstChild();
+   parent  = current ? current : item;
+   while (parent && parent->HasCheckBox()) {
+      if ((!parent->IsChecked() && parent->HasCheckedChild(kTRUE)) ||
+          (parent->IsChecked() && parent->HasUnCheckedChild(kTRUE))) {
+         parent->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
+                                     fClient->GetPicture("unchecked_dis_t.xpm"));
       }
       else {
-         item->GetParent()->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
-                                                fClient->GetPicture("unchecked_t.xpm"));
+         parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
+                                     fClient->GetPicture("unchecked_t.xpm"));
       }
+      parent = parent->GetParent();
    }
-   diff = kFALSE;
-   current = item->GetFirstChild();
-   while (current) {
-      if (current->HasCheckBox()) {
-         if ( ((current->IsChecked()) && (!item->IsChecked())) ||
-              ((!current->IsChecked()) && (item->IsChecked())) ) {
-            diff = kTRUE;
-            break;
-         }
-      }
-      current = current->GetNextSibling();
-   }
-   if (diff) {
-      item->SetCheckBoxPictures(fClient->GetPicture("checked_dis_t.xpm"),
-                                fClient->GetPicture("unchecked_dis_t.xpm"));
-   }
-   else {
-      item->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
-                                fClient->GetPicture("unchecked_t.xpm"));
-   }
-
    if (redraw) {
       ClearViewPort();
    }
