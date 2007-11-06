@@ -35,7 +35,7 @@ ClassImp(TQueryResult)
 //______________________________________________________________________________
 TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                            Long64_t entries, Long64_t first, const char *selec)
-             : fSeqNum(seqnum), fStatus(kSubmitted), fOptions(opt),
+             : fSeqNum(seqnum), fStatus(kSubmitted), fUsedCPU(0.), fOptions(opt),
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
                fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
