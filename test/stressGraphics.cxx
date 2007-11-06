@@ -281,12 +281,12 @@ void stressGraphics(Int_t verbose = 0)
          FILE *fp = gSystem->OpenPipe("uname -a", "r");
          Char_t line[60];
          fgets(line,60,fp); line[59] = 0;
-         printf("*  %s\n",line);
+         printf("*  SYS: %s\n",line);
          gSystem->ClosePipe(fp);
       } else {
          const Char_t *os = gSystem->Getenv("OS");
-         if (!os) printf("*  Windows 95\n");
-         else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+         if (!os) printf("*  SYS: Windows 95\n");
+         else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
       }
 
       printf("**********************************************************************\n");
