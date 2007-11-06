@@ -42,7 +42,8 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
 fi
 
 EXPLLINKLIBS="\$LinkedLibs"
-if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ]; then
+if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
+   [ "$ARCH" = "macosx64" ] || [ "$ARCH" = "macosxicc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
@@ -123,4 +124,3 @@ else
 )
 
 exit 0
-
