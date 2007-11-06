@@ -507,9 +507,17 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       sprintf(buf, "%.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
       fRate->SetText(buf);
       // Fill rate graph
-      if (evtrti > 0.) {
-         fRatePoints->Fill(procTime, evtrti, mbrti);
-         fRatePlot->SetState(kButtonUp);
+      Bool_t useAvg = gEnv->GetValue("Proof.RatePlotUseAvg", 0);
+      if (useAvg) {
+         if (fAvgRate > 0.) {
+            fRatePoints->Fill(procTime, fAvgRate, fAvgMBRate);
+            fRatePlot->SetState(kButtonUp);
+         }
+      } else {
+         if (evtrti > 0.) {
+            fRatePoints->Fill(procTime, evtrti, mbrti);
+            fRatePlot->SetState(kButtonUp);
+         }
       }
 
       if (fProof) {
@@ -763,8 +771,10 @@ void TProofProgressDialog::DoPlotRateGraph()
 
    // Create a canvas
    TCanvas *c1 = new TCanvas("c1","Rate vs Time",200,10,700,500);
-   c1->SetFillColor(42);
+   c1->SetFillColor(0);
    c1->SetGrid();
+   c1->SetBorderMode(0);
+   c1->SetFrameBorderMode(0);
 
    // Fill TGraph
    Int_t np = (Int_t)fRatePoints->GetEntries();
@@ -804,11 +814,11 @@ void TProofProgressDialog::DoPlotRateGraph()
    Double_t yax0 = 0.;
    Double_t yax1 = ymx*1.1;
    Double_t x0 = xax0 + 0.05 * (xax1 - xax0);
-   Double_t x1 = xax0 + 0.40 * (xax1 - xax0);
-   Double_t y0 = yax0 + 0.08 * (yax1 - yax0);
-   Double_t y1 = yax0 + 0.16 * (yax1 - yax0);
+   Double_t x1 = xax0 + 0.60 * (xax1 - xax0);
+   Double_t y0 = yax0 + 0.10 * (yax1 - yax0);
+   Double_t y1 = yax0 + 0.20 * (yax1 - yax0);
    TPaveText *pt = new TPaveText(x0, y0, x1, y1, "br");
-   pt->SetFillColor(19);
+   pt->SetFillColor(0);
    pt->AddText(Form("Global average: %.2f evts/sec", fAvgRate));
    pt->Draw();
 
