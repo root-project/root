@@ -5,6 +5,24 @@
 //    ROOT  Graphics test suite and benchmarks.
 //
 // The suite of programs below tests many elements of the graphics classes
+// 
+// The test can be run as a standalone program or with the interpreter.
+//
+// To run as a standalone program:
+// 
+//    make stressGraphics
+//    stressGraphics
+//
+// To get a short help:
+//    stressGraphics -h
+// 
+// To run interactively, do
+// root
+//  Root > .L stressGraphics.cxx
+//  Root > stressGraphics()
+
+
+#ifndef __CINT__
 
 #include <Riostream.h>
 #include <time.h>
@@ -40,17 +58,20 @@
 #include <TGaxis.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
+#include <TGraphBentErrors.h>
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
 #include <TImage.h>
 #include <TMath.h>
+#include <TSystem.h>
 
 
-void     stressGraphics (Int_t verbose=0);
+void     stressGraphics (Int_t verbose);
 void     StatusPrint    (Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err);
 Int_t    AnalysePS      (const TString &filename);
-void     StartTest      (Int_t w, Int_t h);
-void     EndTest        (const TString &title, Int_t nPS);
+TCanvas *StartTest      (Int_t w, Int_t h);
+void     EndTest        (TCanvas *C, const TString &title, Int_t nPS);
 
 // Tests functions.
 void     tline          ();
@@ -73,7 +94,8 @@ void     tellipse       ();
 void     feynman        ();
 void     tgraph1        ();
 void     tgraph2        ();
-void     tmultigraph    ();
+void     tmultigraph1   ();
+void     tmultigraph2   ();
 void     options2d1     ();
 void     options2d2     ();
 void     options2d3     ();
@@ -86,24 +108,27 @@ void     tgraph2d3      ();
 void     ntuple1        ();
 void     quarks         ();
 void     timage         ();
+void     zoomtf1        ();
+void     zoomfit        ();
 
 // Auxiliary functions
 void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
 void     tmarker_draw   (Double_t x, Double_t y, Int_t mt, Double_t d);
 void     cleanup        ();
+#endif
 
 // Global variables.
-Int_t    gVerbose;
-Int_t    gTestNum;
-TCanvas *gC;
-Int_t    gRefNb[33];
-Int_t    gErrNb[33];
-Bool_t   gOptionR;
-Bool_t   gOptionK;
-TH2F    *gH2;
-TFile   *gFile;
+Int_t     gVerbose;
+Int_t     gTestNum;
+Int_t     gRefNb[36];
+Int_t     gErrNb[36];
+Bool_t    gOptionR;
+Bool_t    gOptionK;
+TH2F     *gH2;
+TFile    *gFile;
 
 
+#ifndef __CINT__
 //______________________________________________________________________________
 int main(int argc,const char *argv[])
 {
@@ -145,10 +170,11 @@ int main(int argc,const char *argv[])
    cleanup();
    return 0;
 }
+#endif
 
 
 //______________________________________________________________________________
-void stressGraphics(Int_t verbose)
+void stressGraphics(Int_t verbose = 0)
 {
    // Run all graphics stress tests.
 
@@ -177,73 +203,75 @@ void stressGraphics(Int_t verbose)
    if (gOptionR) {
       cout << "Test#   Ref#   Err#   Time" <<endl;
    } else {
-      cout << "******************************************************************" <<endl;
-      cout << "*  Starting  Graphics - S T R E S S suite                        *" <<endl;
-      cout << "******************************************************************" <<endl;
+      cout << "**********************************************************************" <<endl;
+      cout << "*  Starting  Graphics - S T R E S S suite                            *" <<endl;
+      cout << "**********************************************************************" <<endl;
    }
 
    gROOT->SetBatch();
 
    gVerbose = verbose;
    gTestNum = 0;
-   gC       = 0;
 
    gBenchmark->Start("stressGraphics");
 
    if (!gOptionR) {
-      cout << "*  Starting Basic Graphics - S T R E S S                         *" <<endl;
-      cout << "******************************************************************" <<endl;
+      cout << "*  Starting Basic Graphics - S T R E S S                             *" <<endl;
+      cout << "**********************************************************************" <<endl;
    }
-   tline       ();
-   tmarker     ();
-   tpolyline   ();
-   patterns    ();
-   ttext1      ();
-   ttext2      ();
-   tlatex1     ();
-   tlatex2     ();
-   tlatex3     ();
-   tlatex4     ();
-   tlatex5     ();
-   transpad    ();
+   tline        ();
+   tmarker      ();
+   tpolyline    ();
+   patterns     ();
+   ttext1       ();
+   ttext2       ();
+   tlatex1      ();
+   tlatex2      ();
+   tlatex3      ();
+   tlatex4      ();
+   tlatex5      ();
+   transpad     ();
    if (!gOptionR) {
-      cout << "******************************************************************" <<endl;
-      cout << "*  Starting High Level 2D Primitives - S T R E S S               *" <<endl;
-      cout << "******************************************************************" <<endl;
+      cout << "**********************************************************************" <<endl;
+      cout << "*  Starting High Level 2D Primitives - S T R E S S                   *" <<endl;
+      cout << "**********************************************************************" <<endl;
    }
-   tgaxis1     ();
-   tgaxis2     ();
-   tgaxis3     ();
-   tgaxis4     ();
-   tellipse    ();
-   feynman     ();
-   tgraph1     ();
-   tgraph2     ();
-   tmultigraph ();
+   tgaxis1      ();
+   tgaxis2      ();
+   tgaxis3      ();
+   tgaxis4      ();
+   tellipse     ();
+   feynman      ();
+   tgraph1      ();
+   tgraph2      ();
+   tmultigraph1 ();
+   tmultigraph2 ();
    if (!gOptionR) {
-      cout << "******************************************************************" <<endl;
-      cout << "*  Starting High Level 3D Primitives - S T R E S S               *" <<endl;
-      cout << "******************************************************************" <<endl;
+      cout << "**********************************************************************" <<endl;
+      cout << "*  Starting High Level 3D Primitives - S T R E S S                   *" <<endl;
+      cout << "**********************************************************************" <<endl;
    }
-   options2d1  ();
-   options2d2  ();
-   options2d3  ();
-   options2d4  ();
-   options2d5  ();
-   earth       ();
-   tgraph2d1   ();
-   tgraph2d2   ();
-   tgraph2d3   ();
+   options2d1   ();
+   options2d2   ();
+   options2d3   ();
+   options2d4   ();
+   options2d5   ();
+   earth        ();
+   tgraph2d1    ();
+   tgraph2d2    ();
+   tgraph2d3    ();
    if (!gOptionR) {
-      cout << "******************************************************************" <<endl;
-      cout << "*  Starting complex drawing and TPad - S T R E S S               *" <<endl;
-      cout << "******************************************************************" <<endl;
+      cout << "**********************************************************************" <<endl;
+      cout << "*  Starting complex drawing and TPad - S T R E S S                   *" <<endl;
+      cout << "**********************************************************************" <<endl;
    }
-   ntuple1     ();
-   quarks      ();
-   timage      ();
+   ntuple1      ();
+   quarks       ();
+   timage       ();
+   zoomtf1      ();
+   zoomfit      ();
    if (!gOptionR) {
-      cout << "******************************************************************" <<endl;
+      cout << "**********************************************************************" <<endl;
 
       gBenchmark->Stop("stressGraphics");
 
@@ -261,17 +289,17 @@ void stressGraphics(Int_t verbose)
          else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
       }
 
-      printf("******************************************************************\n");
+      printf("**********************************************************************\n");
       printf("* ");
       gBenchmark->Print("stressGraphics");
 
       Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
       const Double_t rootmarks = 600*(4.85/ct);
 
-      printf("******************************************************************\n");
+      printf("**********************************************************************\n");
       printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
              gROOT->GetVersionDate(),gROOT->GetVersionTime());
-      printf("******************************************************************\n");
+      printf("**********************************************************************\n");
    }
 }
 
@@ -288,11 +316,11 @@ void StatusPrint(Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err
       TString header = TString("Test ")+number+" : "+title;
       const Int_t nch = header.Length();
       if (TMath::Abs(res-ref)<=err) {
-         for (Int_t i = nch; i < 63; i++) header += '.';
+         for (Int_t i = nch; i < 67; i++) header += '.';
          cout << header <<  " OK" << endl;
          if (!gOptionK) gSystem->Unlink(Form("sg%2.2d.ps",id));
       } else {
-         for (Int_t i = nch; i < 59; i++) header += '.';
+         for (Int_t i = nch; i < 63; i++) header += '.';
          cout << header << " FAILED" << endl;
          cout << "          Result    = "  << res << endl;
          cout << "          Reference = "  << ref << endl;
@@ -335,17 +363,18 @@ Int_t AnalysePS(const TString &filename)
 
 
 //______________________________________________________________________________
-void StartTest(Int_t w, Int_t h)
+TCanvas *StartTest(Int_t w, Int_t h)
 {
    // Start Test:
-   // Open the TCanvas gC and set the acceptable error (number of characters)
+   // Open the TCanvas C and set the acceptable error (number of characters)
 
    gTestNum++;
-   gC = new TCanvas("gC","gC",0,0,w,h);
+   TCanvas *C = new TCanvas("C","C",0,0,w,h);
+   return C;
 }
 
 //______________________________________________________________________________
-void EndTest(const TString &title)
+void EndTest(TCanvas *C, const TString &title)
 {
    // End Test:
    // Draw the canvas generate as PostScript, count the number of characters in
@@ -354,14 +383,15 @@ void EndTest(const TString &title)
    TString fileName = Form("sg%2.2d.ps",gTestNum);
    
    TPostScript *ps = new TPostScript(fileName,111);
-   gC->Draw();
+   C->Draw();
    ps->Close();
 
    StatusPrint(gTestNum, title, AnalysePS(fileName),
                                 gRefNb[gTestNum-1],
                                 gErrNb[gTestNum-1]);
 
-   if (gC) {delete gC; gC = 0;}
+   if (C) delete C;
+
    return;
 }
 
@@ -371,7 +401,7 @@ void tline()
 {
    // Test TLine.
 
-   StartTest(800,800);
+   TCanvas *C = StartTest(800,800);
 
    TLine *l1 = new TLine(0.1,0.1,0.9,0.1);
    l1->SetLineColor(1); l1->SetLineWidth(1) ; l1->SetLineStyle(1) ; l1->Draw();
@@ -392,7 +422,7 @@ void tline()
    TLine *l9 = new TLine(0.1,0.9,0.9,0.9);
    l9->SetLineColor(9); l9->SetLineWidth(9) ; l9->SetLineStyle(9) ; l9->Draw();
 
-   EndTest("TLine");
+   EndTest(C, "TLine");
 };
 
 
@@ -401,11 +431,11 @@ void tmarker()
 {
    // Test TMarker
 
-   StartTest(100,800);
+   TCanvas *C = StartTest(100,800);
 
-   gC->Range(0,0,1,1);
-   gC->SetFillColor(0);
-   gC->SetBorderSize(2);
+   C->Range(0,0,1,1);
+   C->SetFillColor(0);
+   C->SetBorderSize(2);
    int i;
    Double_t x = 0.5;
    Double_t y = 0.1;
@@ -419,7 +449,7 @@ void tmarker()
       y = y+dy;
    }
 
-   EndTest("TMarker");
+   EndTest(C, "TMarker");
 };
 
 
@@ -455,9 +485,9 @@ void tpolyline()
 {
    // Test TPolyLine
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
-   gC->Range(0,30,11,650);
+   C->Range(0,30,11,650);
    Double_t x[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
    Double_t y[10] = {200, 300, 300, 200, 200, 100, 10, 580, 10, 600};
    TPolyLine *p = new TPolyLine(10,x,y);
@@ -466,7 +496,7 @@ void tpolyline()
    p->Draw("F");
    p->Draw("");
 
-   EndTest("TPolyLine");
+   EndTest(C, "TPolyLine");
 };
 
 
@@ -475,11 +505,11 @@ void patterns()
 {
    // Test Patterns
 
-   StartTest(700,900);
+   TCanvas *C = StartTest(700,900);
 
-   gC->Range(0,0,1,1);
-   gC->SetBorderSize(2);
-   gC->SetFrameFillColor(0);
+   C->Range(0,0,1,1);
+   C->SetBorderSize(2);
+   C->SetFrameFillColor(0);
    Double_t bh = 0.059;
    Double_t db = 0.01; 
    Double_t y  = 0.995;
@@ -516,7 +546,7 @@ void patterns()
       y = y-bh-db;
    }
 
-   EndTest("Fill patterns");
+   EndTest(C, "Fill patterns");
 };
 
 
@@ -553,11 +583,11 @@ void ttext1()
 {
    // 1st TText test.
 
-   StartTest(900,500);
+   TCanvas *C = StartTest(900,500);
 
-   gC->Range(0,0,1,1);
-   gC->SetBorderSize(2);
-   gC->SetFrameFillColor(0);
+   C->Range(0,0,1,1);
+   C->SetBorderSize(2);
+   C->SetFrameFillColor(0);
    TLine *lv = new TLine(0.5,0.0,0.5,1.0);
    lv->Draw();
    for (float s=0.1; s<1.0 ; s+=0.1) {
@@ -603,7 +633,7 @@ void ttext1()
    tex5->SetTextSize(0.1);
    tex5->Draw();
 
-   EndTest("TText 1 (Text attributes)");
+   EndTest(C, "TText 1 (Text attributes)");
 }
 
 
@@ -612,13 +642,13 @@ void ttext2()
 {
    // 2nd TText test. A very long text string.
 
-   StartTest(600,600);
+   TCanvas *C = StartTest(600,600);
 
    TText t(0.001,0.5,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
    t.SetTextFont(42); t.SetTextSize(0.02);
    t.Draw();
 
-   EndTest("TText 2 (A very long text string)");
+   EndTest(C, "TText 2 (A very long text string)");
 }
 
 
@@ -627,7 +657,7 @@ void tlatex1()
 {
    // 1st TLatex test.
 
-   StartTest(600,700);
+   TCanvas *C = StartTest(600,700);
 
    TLatex l;
    l.SetTextAlign(12);
@@ -638,7 +668,7 @@ void tlatex1()
    l.DrawLatex(0.1,0.3,"4) F(t) = #sum_{i=-#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
    l.DrawLatex(0.1,0.1,"5) {}_{3}^{7}Li");
 
-   EndTest("TLatex 1");
+   EndTest(C, "TLatex 1");
 }
 
 
@@ -647,7 +677,7 @@ void tlatex2()
 {
    // 2nd TLatex test.
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
    TLatex l;
    l.SetTextAlign(23);
@@ -657,7 +687,7 @@ void tlatex2()
    l.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}+m#bar{#psi})=0#Leftrightarrow(#Box+m^{2})#psi=0");
    l.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} , J^{#mu}_{em}=#bar{I}#gamma_{#mu}I , M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
 
-   EndTest("TLatex 2");
+   EndTest(C, "TLatex 2");
 }
 
 
@@ -666,7 +696,7 @@ void tlatex3()
 {
    // 3rd TLatex test.
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
    TPaveText pt(.05,.1,.95,.8);
    pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = \
@@ -680,7 +710,7 @@ void tlatex3()
    pt.SetLabel("Born equation");
    pt.Draw();
 
-   EndTest("TLatex 3 (TLatex in TPaveText)");
+   EndTest(C, "TLatex 3 (TLatex in TPaveText)");
 }
 
 
@@ -689,7 +719,7 @@ void tlatex4()
 {
    // 4th TLatex test.
 
-   StartTest(600,700);
+   TCanvas *C = StartTest(600,700);
 
    TLatex l;
    l.SetTextSize(0.03);
@@ -757,7 +787,7 @@ void tlatex4()
    y = 0.1500 ; l.DrawLatex(x1, y, "varphi : ")     ; l.DrawLatex(x2, y, "#varphi");
    y = 0.0375 ; l.DrawLatex(x1, y, "varomega : ")   ; l.DrawLatex(x2, y, "#varomega");
 
-   EndTest("TLatex 4 (Greek letters)");
+   EndTest(C, "TLatex 4 (Greek letters)");
 }
 
 
@@ -766,7 +796,7 @@ void tlatex5()
 {
    // 5th TLatex test.
 
-   StartTest(600,600);
+   TCanvas *C = StartTest(600,600);
 
    TLatex l;
    l.SetTextSize(0.03);
@@ -859,7 +889,7 @@ void tlatex5()
    y -= step ; l.DrawLatex(x1, y-0.015, "#int")      ; l.DrawText(x2, y, "#int");
    y -= step ; l.DrawLatex(x1, y, "#odot")           ; l.DrawText(x2, y, "#odot");
 
-   EndTest("TLatex 5 (Mathematical Symbols)");
+   EndTest(C, "TLatex 5 (Mathematical Symbols)");
 }
 
 
@@ -868,7 +898,7 @@ void transpad()
 {
    // Transparent pad.
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
    TPad *pad1 = new TPad("pad1","",0,0,1,1);
    TPad *pad2 = new TPad("pad2","",0,0,1,1);
@@ -890,7 +920,7 @@ void transpad()
    TPaveStats *ps1 = (TPaveStats*)ht1->GetListOfFunctions()->FindObject("stats");
    ps1->SetX1NDC(0.4); ps1->SetX2NDC(0.6);
    pad1->Modified();
-   gC->cd();
+   C->cd();
    
    //compute the pad range with suitable margins
    Double_t ymin = 0;
@@ -914,7 +944,7 @@ void transpad()
    axis->SetLabelColor(kRed);
    axis->Draw();
       
-   EndTest("Transparent pad");
+   EndTest(C, "Transparent pad");
 }
 
 
@@ -923,9 +953,9 @@ void tgaxis1()
 {
    // 1st TGaxis test.
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
-   gC->Range(-10,-1,10,1);
+   C->Range(-10,-1,10,1);
    TGaxis *axis1 = new TGaxis(-4.5,-0.2,5.5,-0.2,-6,8,510,"");
    axis1->SetName("axis1");
    axis1->Draw();
@@ -959,7 +989,7 @@ void tgaxis1()
    axis8->SetName("axis8");
    axis8->Draw();
 
-   EndTest("TGaxis 1");
+   EndTest(C, "TGaxis 1");
 }
 
 
@@ -968,9 +998,9 @@ void tgaxis2()
 {
    // 2nd TGaxis test.
 
-   StartTest(600,700);
+   TCanvas *C = StartTest(600,700);
 
-   gC->Range(-10,-1,10,1);
+   C->Range(-10,-1,10,1);
    TGaxis *axis1 = new TGaxis(-5,-0.2,6,-0.2,-6,8,510,"");
    axis1->SetName("axis1");
    axis1->Draw();
@@ -997,7 +1027,7 @@ void tgaxis2()
    axis7->SetLabelOffset(0.01);
    axis7->Draw();
 
-   EndTest("TGaxis 2");
+   EndTest(C, "TGaxis 2");
 }
 
 
@@ -1006,14 +1036,14 @@ void tgaxis3()
 {
    // 3rd TGaxis test.
 
-   StartTest(700,900);
+   TCanvas *C = StartTest(700,900);
 
    time_t script_time;
    script_time = time(0);
    script_time = 3600*(int)(script_time/3600);
    gStyle->SetTimeOffset(script_time);
-   gC->Divide(1,3);
-   gC->SetFillColor(28);
+   C->Divide(1,3);
+   C->SetFillColor(28);
    int i;
    gStyle->SetTitleH(0.08);
    float noise;
@@ -1025,7 +1055,7 @@ void tgaxis3()
       }
       ht->SetBinContent(i,noise);
    }
-   gC->cd(1);
+   C->cd(1);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetLabelSize(0.05);
    ht->Draw();
@@ -1037,7 +1067,7 @@ void tgaxis3()
    }
    TGraph *gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
-   gC->cd(2);
+   C->cd(2);
    gt->SetFillColor(19);
    gt->SetLineColor(5);
    gt->SetLineWidth(2);
@@ -1052,7 +1082,7 @@ void tgaxis3()
    }
    TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
-   gC->cd(3);
+   C->cd(3);
    gt2->SetFillColor(19);
    gt2->SetMarkerColor(4);
    gt2->SetMarkerStyle(29);
@@ -1062,7 +1092,7 @@ void tgaxis3()
    gt2->GetXaxis()->SetTimeDisplay(1);
    gt2->GetXaxis()->SetTimeFormat("y. %Y");
    
-   EndTest("TGaxis 3 (Time on axis)");
+   EndTest(C, "TGaxis 3 (Time on axis)");
 }
 
 
@@ -1071,7 +1101,7 @@ void tgaxis4()
 {
    // 4th TGaxis test.
 
-   StartTest(600,700);
+   TCanvas *C = StartTest(600,700);
 
    TDatime T0(2003,1,1,0,0,0);
    int X0 = T0.Convert();
@@ -1091,7 +1121,7 @@ void tgaxis4()
    h1->GetXaxis()->SetTimeFormat("%Y:%m:%d");
    h1->Draw();
 
-   EndTest("TGaxis 4 (Time on axis)");
+   EndTest(C, "TGaxis 4 (Time on axis)");
    delete h1;
 }
 
@@ -1101,9 +1131,9 @@ void tellipse()
 {
    // TEllipse test.
 
-   StartTest(700,800);
+   TCanvas *C = StartTest(700,800);
 
-   gC->Range(0,0,1,1);
+   C->Range(0,0,1,1);
    TPaveLabel pel(0.1,0.8,0.9,0.95,"Examples of Ellipses");
    pel.SetFillColor(42);
    pel.Draw();
@@ -1125,7 +1155,7 @@ void tellipse()
    el4.SetLineWidth(6);
    el4.Draw();
 
-   EndTest("TEllipse");
+   EndTest(C, "TEllipse");
 }
 
 
@@ -1134,9 +1164,9 @@ void feynman()
 {
    // Feynman diagrams test.
 
-   StartTest(600,300);
+   TCanvas *C = StartTest(600,300);
 
-   gC->Range(0, 0, 140, 60);
+   C->Range(0, 0, 140, 60);
    Int_t linsav = gStyle->GetLineWidth();
    gStyle->SetLineWidth(3);
    TLatex t;
@@ -1173,10 +1203,10 @@ void feynman()
    t.DrawLatex(135,6,"#bar{q}");
    t.DrawLatex(135,55,"q");
    t.DrawLatex(135,30,"g");
-   gC->Update();
+   C->Update();
    gStyle->SetLineWidth(linsav);
 
-   EndTest("Feynman diagrams");
+   EndTest(C, "Feynman diagrams");
 }
 
 
@@ -1185,10 +1215,10 @@ void tgraph1()
 {
    // 1st TGraph test.
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
-   gC->SetFillColor(42);
-   gC->SetGrid();
+   C->SetFillColor(42);
+   C->SetGrid();
    const Int_t n = 20;
    Double_t x[n], y[n];
    for (Int_t i=0;i<n;i++) {
@@ -1204,11 +1234,11 @@ void tgraph1()
    gr->GetXaxis()->SetTitle("X title");
    gr->GetYaxis()->SetTitle("Y title");
    gr->Draw("ACP");
-   gC->Update();
-   gC->GetFrame()->SetFillColor(21);
-   gC->GetFrame()->SetBorderSize(12);
+   C->Update();
+   C->GetFrame()->SetFillColor(21);
+   C->GetFrame()->SetBorderSize(12);
 
-   EndTest("TGraph 1");
+   EndTest(C, "TGraph 1");
 }
 
 
@@ -1217,9 +1247,9 @@ void tgraph2()
 {
    // 2nd TGraph test.
    
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
-   gC->SetGrid();
+   C->SetGrid();
    TMultiGraph *mg = new TMultiGraph();
    mg->SetTitle("Exclusion graphs");
    const Int_t n = 35;
@@ -1251,19 +1281,19 @@ void tgraph2()
    mg->Add(gr3);
    mg->Draw("AC");
 
-   EndTest("TGraph 2 (Exclusion Zone)");
+   EndTest(C, "TGraph 2 (Exclusion Zone)");
 }
 
 
 //______________________________________________________________________________
-void tmultigraph()
+void tmultigraph1()
 {
    // TMultigraph and TGraphErrors test
 
-   StartTest(700,500);
+   TCanvas *C = StartTest(700,500);
 
    gStyle->SetOptFit();
-   gC->SetGrid();
+   C->SetGrid();
    TMultiGraph *mg = new TMultiGraph();
    Int_t n1 = 10;
    Double_t x1[]  = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
@@ -1286,16 +1316,124 @@ void tmultigraph()
    gr2->Fit("pol5","q");
    mg->Add(gr2);
    mg->Draw("ap");
-   gC->Update();
+   C->Update();
    TPaveStats *stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
    TPaveStats *stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
    stats1->SetTextColor(kBlue); 
    stats2->SetTextColor(kRed); 
    stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
    stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
-   gC->Modified();
+   C->Modified();
 
-   EndTest("TMultigraph and TGraphErrors");
+   EndTest(C, "TMultigraph and TGraphErrors");
+}
+
+
+//______________________________________________________________________________
+void tmultigraph2()
+{
+   // All Kind of TMultigraph test
+
+   TCanvas *C = StartTest(800,800);
+
+   gStyle->SetOptFit();
+
+   C->SetGrid();
+   C->Divide(2,2);
+
+   // Draw a frame to define the range
+   TMultiGraph *mg1 = new TMultiGraph();
+   TMultiGraph *mg2 = new TMultiGraph();
+   TMultiGraph *mg3 = new TMultiGraph();
+   TMultiGraph *mg4 = new TMultiGraph();
+
+   // Vectors used to build the graphs
+   Int_t n1 = 10;
+   Double_t x1[]    = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+   Double_t y1[]    = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t exl1[]  = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t eyl1[]  = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   Double_t exh1[]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Double_t eyh1[]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Double_t exld1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyld1[] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+   Double_t exhd1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyhd1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+
+   Int_t n2 = 10;
+   Float_t  x2[]    = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
+   Float_t  y2[]    = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
+   Float_t  exl2[]  = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
+   Float_t  eyl2[]  = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
+   Float_t  exh2[]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Float_t  eyh2[]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Float_t  exld2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  eyld2[] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  exhd2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  eyhd2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+
+   // Create 1st multigraph
+   C->cd(1);
+   TGraph *gr11 = new TGraph(n1,x1,y1);
+   gr11->SetMarkerColor(kBlue);
+   gr11->SetMarkerStyle(20);
+   TGraph *gr12 = new TGraph(n2,x2,y2);
+   gr12->SetMarkerColor(kRed);
+   gr12->SetMarkerStyle(23);
+   mg1->Add(gr11,"pc");
+   mg1->Add(gr12);
+   mg1->Draw("ap");
+   TLatex *tex1 = new TLatex(-0.3,10.0,"TGraph");
+   tex1->Draw();
+
+   // Create 2nd multigraph
+   C->cd(2);
+   TGraphErrors *gr21 = new TGraphErrors(n1,x1,y1,exl1,eyl1);
+   gr21->SetMarkerColor(kBlue+1);
+   gr21->SetMarkerStyle(21);
+   TGraphErrors *gr22 = new TGraphErrors(n2,x2,y2,exl2,eyl2);
+   gr22->SetMarkerColor(kRed+1);
+   gr22->SetMarkerStyle(20);
+   gr22->Fit("pol3","q");
+   mg2->Add(gr21,"pl");
+   mg2->Add(gr22);
+   mg2->Draw("ap");
+   TLatex *tex2 = new TLatex(-0.3,10.0,"TGraphErrors");
+   tex2->Draw();
+
+   // Create 3rd multigraph
+   C->cd(3);
+   TGraphAsymmErrors *gr31 = new TGraphAsymmErrors(n1,x1,y1,exl1,exh1,eyl1,eyh1);
+   gr31->SetMarkerColor(kBlue-1);
+   gr31->SetMarkerStyle(21);
+   TGraphAsymmErrors *gr32 = new TGraphAsymmErrors(n2,x2,y2,exl2,exh2,eyl2,eyh2);
+   gr32->SetMarkerColor(kRed-1);
+   gr32->SetMarkerStyle(20);
+   gr32->Fit("pol4","q");
+   mg3->Add(gr31,"pl");
+   mg3->Add(gr32);
+   mg3->Draw("ap");
+   TLatex *tex3 = new TLatex(-0.3,10.0,"TGraphAsymmErrors");
+   tex3->Draw();
+
+   // Create 4th multigraph
+   C->cd(4);
+   TGraphBentErrors *gr41 = new TGraphBentErrors(n1,x1,y1,exl1,exh1,eyl1,eyh1,exld1,exhd1,eyld1,eyhd1);
+   gr41->SetMarkerColor(kGreen);
+   gr41->SetMarkerStyle(21);
+   TGraphBentErrors *gr42 = new TGraphBentErrors(n2,x2,y2,exl2,exh2,eyl2,eyh2,exld2,exhd2,eyld2,eyhd2);
+   gr42->SetMarkerColor(kViolet);
+   gr42->SetMarkerStyle(20);
+   gr42->Fit("pol5","q");
+   mg4->Add(gr41,"pc");
+   mg4->Add(gr42);
+   mg4->Draw("ap");
+   TLatex *tex4 = new TLatex(-0.3,10.0,"TGraphBentErrors");
+   tex4->Draw();
+
+   C->Modified();
+
+   EndTest(C, "All Kind of TMultigraph");
 }
 
 
@@ -1304,7 +1442,7 @@ void options2d1()
 {
    // 1st 2D options Test 
    
-   StartTest(800,600);
+   TCanvas *C = StartTest(800,600);
 
    gStyle->SetOptStat(0);
    gStyle->SetPalette(1);
@@ -1319,18 +1457,18 @@ void options2d1()
 
    TPaveLabel pl;
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
-   gC->Divide(2,2);
-   gC->SetFillColor(17);
-   gC->cd(1);
+   C->Divide(2,2);
+   C->SetFillColor(17);
+   C->cd(1);
    gH2->Draw();       pl.DrawPaveLabel(x1,y1,x2,y2,"SCAT","brNDC");
-   gC->cd(2);
+   C->cd(2);
    gH2->Draw("box");  pl.DrawPaveLabel(x1,y1,x2,y2,"BOX","brNDC");
-   gC->cd(3);
+   C->cd(3);
    gH2->Draw("arr");  pl.DrawPaveLabel(x1,y1,x2,y2,"ARR","brNDC");
-   gC->cd(4);
+   C->cd(4);
    gH2->Draw("colz"); pl.DrawPaveLabel(x1,y1,x2,y2,"COLZ","brNDC");
    
-   EndTest("Basic 2D options");
+   EndTest(C, "Basic 2D options");
 }
 
 
@@ -1339,16 +1477,16 @@ void options2d2()
 {
    // 2nd 2D options Test 
    
-   StartTest(800,600);
+   TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl;
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
    gPad->SetGrid();
-   gC->SetFillColor(17);
-   gC->SetGrid();
+   C->SetFillColor(17);
+   C->SetGrid();
    gH2->Draw("text"); pl.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
    
-   EndTest("Text option");
+   EndTest(C, "Text option");
 }
 
 
@@ -1357,26 +1495,26 @@ void options2d3()
 {
    // 3rd 2D options Test 
    
-   StartTest(800,600);
+   TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl;
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
-   gC->Divide(2,2);
+   C->Divide(2,2);
    gPad->SetGrid();
-   gC->SetFillColor(17);
-   gC->cd(1);
+   C->SetFillColor(17);
+   C->cd(1);
    gH2->Draw("contz"); pl.DrawPaveLabel(x1,y1,x2,y2,"CONTZ","brNDC");
-   gC->cd(2);
+   C->cd(2);
    gPad->SetGrid();
    gH2->Draw("cont1"); pl.DrawPaveLabel(x1,y1,x2,y2,"CONT1","brNDC");
-   gC->cd(3);
+   C->cd(3);
    gPad->SetGrid();
    gH2->Draw("cont2"); pl.DrawPaveLabel(x1,y1,x2,y2,"CONT2","brNDC");
-   gC->cd(4);
+   C->cd(4);
    gPad->SetGrid();
    gH2->Draw("cont3"); pl.DrawPaveLabel(x1,y1,x2,y2,"CONT3","brNDC");
    
-   EndTest("Contour options");
+   EndTest(C, "Contour options");
 }
 
 
@@ -1385,24 +1523,24 @@ void options2d4()
 {
    // 4th 2D options Test 
    
-   StartTest(800,600);
+   TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl;
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
-   gC->Divide(2,2);
-   gC->SetFillColor(17);
-   gC->cd(1);
+   C->Divide(2,2);
+   C->SetFillColor(17);
+   C->cd(1);
    gH2->Draw("lego");     pl.DrawPaveLabel(x1,y1,x2,y2,"LEGO","brNDC");
-   gC->cd(2);
+   C->cd(2);
    gH2->Draw("lego1");    pl.DrawPaveLabel(x1,y1,x2,y2,"LEGO1","brNDC");
-   gC->cd(3);
+   C->cd(3);
    gPad->SetTheta(61); gPad->SetPhi(-82);
    gH2->Draw("surf1pol"); pl.DrawPaveLabel(x1,y1,x2+0.05,y2,"SURF1POL","brNDC");
-   gC->cd(4);
+   C->cd(4);
    gPad->SetTheta(21); gPad->SetPhi(-90);
    gH2->Draw("surf1cyl"); pl.DrawPaveLabel(x1,y1,x2+0.05,y2,"SURF1CYL","brNDC");
    
-   EndTest("Lego options");
+   EndTest(C, "Lego options");
 }
 
 
@@ -1411,22 +1549,22 @@ void options2d5()
 {
    // 5th 2D options Test 
    
-   StartTest(800,600);
+   TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl;
    Float_t x1=0.67, y1=0.875, x2=0.85, y2=0.95;
-   gC->Divide(2,2);
-   gC->SetFillColor(17);
-   gC->cd(1);
+   C->Divide(2,2);
+   C->SetFillColor(17);
+   C->cd(1);
    gH2->Draw("surf1");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF1","brNDC");
-   gC->cd(2);
+   C->cd(2);
    gH2->Draw("surf2z");  pl.DrawPaveLabel(x1,y1,x2,y2,"SURF2Z","brNDC");
-   gC->cd(3);
+   C->cd(3);
    gH2->Draw("surf3");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF3","brNDC");
-   gC->cd(4);
+   C->cd(4);
    gH2->Draw("surf4");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF4","brNDC");
 
-   EndTest("Surface options");
+   EndTest(C, "Surface options");
    delete gH2;
 }
 
@@ -1436,12 +1574,12 @@ void earth()
 {
    // 5th 2D options Test 
    
-   StartTest(1000,800);
+   TCanvas *C = StartTest(1000,800);
    
    gStyle->SetPalette(1);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
-   gC->Divide(2,2);
+   C->Divide(2,2);
    TH2F *h1 = new TH2F("h1","Aitoff",    50, -180, 180, 50, -89.5, 89.5);
    TH2F *h2 = new TH2F("h2","Mercator",  50, -180, 180, 50, -80.5, 80.5);
    TH2F *h3 = new TH2F("h3","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
@@ -1458,12 +1596,12 @@ void earth()
      h4->Fill(x,y, 1);
    }
    in.close();
-   gC->cd(1); h1->Draw("z aitoff");
-   gC->cd(2); h2->Draw("z mercator");
-   gC->cd(3); h3->Draw("z sinusoidal");
-   gC->cd(4); h4->Draw("z parabolic");
+   C->cd(1); h1->Draw("z aitoff");
+   C->cd(2); h2->Draw("z mercator");
+   C->cd(3); h3->Draw("z sinusoidal");
+   C->cd(4); h4->Draw("z parabolic");
 
-   EndTest("Special contour options (AITOFF etc.)");
+   EndTest(C, "Special contour options (AITOFF etc.)");
    delete h1;
    delete h2;
    delete h3;
@@ -1476,7 +1614,7 @@ void tgraph2d1()
 {
    // 1st TGraph2D Test 
    
-   StartTest(600,600);
+   TCanvas *C = StartTest(600,600);
 
    Double_t P = 5.;
    Int_t npx  = 20 ;
@@ -1506,7 +1644,7 @@ void tgraph2d1()
    dt->SetMarkerSize(1);
    dt->Draw("tri2p0Z  ");
 
-   EndTest("TGraph2D 1 (TRI2 and P0)");
+   EndTest(C, "TGraph2D 1 (TRI2 and P0)");
    delete dt;
 }
 
@@ -1516,7 +1654,7 @@ void tgraph2d2()
 {
    // 2nd TGraph2D Test 
    
-   StartTest(600,600);
+   TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
    gStyle->SetFrameBorderMode(0);
@@ -1540,7 +1678,7 @@ void tgraph2d2()
    dt->SetMarkerStyle(20);
    dt->Draw("PCOL");
    
-   EndTest("TGraph2D 2 (COL and P)");
+   EndTest(C, "TGraph2D 2 (COL and P)");
    delete dt;
 }
 
@@ -1550,7 +1688,7 @@ void tgraph2d3()
 {
    // 3rd TGraph2D Test 
    
-   StartTest(600,600);
+   TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
    gStyle->SetFrameBorderMode(0);
@@ -1573,7 +1711,7 @@ void tgraph2d3()
    dt->SetFillColor(0);
    dt->Draw("CONT5  ");
 
-   EndTest("TGraph2D 3 (CONT5)");
+   EndTest(C, "TGraph2D 3 (CONT5)");
    delete dt;
 }
 
@@ -1583,7 +1721,7 @@ void ntuple1()
 {
    // 1st complex drawing and TPad test
    
-   StartTest(700,780);
+   TCanvas *C = StartTest(700,780);
 
    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98,21);
    TPad *pad2 = new TPad("pad2","This is pad2",0.52,0.52,0.98,0.98,21);
@@ -1644,7 +1782,7 @@ void ntuple1()
    l4->Draw();
    gStyle->SetStatColor(19);
 
-   EndTest("Ntuple drawing and TPad");
+   EndTest(C, "Ntuple drawing and TPad");
 }
 
 
@@ -1653,9 +1791,9 @@ void quarks()
 {
    // 2nd complex drawing and TPad test
    
-   StartTest(630,760);
+   TCanvas *C = StartTest(630,760);
 
-   gC->SetFillColor(kBlack);
+   C->SetFillColor(kBlack);
    Int_t quarkColor  = 50;
    Int_t leptonColor = 16;
    Int_t forceColor  = 38;
@@ -1715,9 +1853,9 @@ void quarks()
    tex.DrawLatex(.5,.5,"#tau");
    pad->cd(16); gPad->SetFillColor(forceColor);  gPad->SetBorderSize(border);
    tex.DrawLatex(.5,.5,"W");
-   gC->cd();
+   C->cd();
 
-   EndTest("Divided pads and TLatex");
+   EndTest(C, "Divided pads and TLatex");
 }
 
 
@@ -1726,7 +1864,7 @@ void timage()
 {
    // TImage test
    
-   StartTest(800,800);
+   TCanvas *C = StartTest(800,800);
 
    TImage *img = TImage::Open("../tutorials/image/rose512.jpg");
    if (!img) {
@@ -1753,21 +1891,66 @@ void timage()
    p1->Draw();
    p1->cd();
    i1->Draw();
-   gC->cd();
+   C->cd();
    p2->Draw();
    p2->cd();
    i2->Draw();
-   gC->cd();
+   C->cd();
    p3->Draw();
    p3->cd();
    i3->Draw();
-   gC->cd();
+   C->cd();
    p4->Draw();
    p4->cd();
    i4->Draw();
-   gC->cd();
+   C->cd();
 
-   EndTest("TImage");
+   EndTest(C, "TImage");
+}
+
+
+//______________________________________________________________________________
+double fg(double *x, double *p) {return sin((*p)*(*x));}
+void zoomtf1()
+{
+   // Zoom/UnZoom a collection of TF1
+   
+   TCanvas *C = StartTest(800,800);
+
+   TF1* f[6];
+
+   for (int i=0;i<6;++i) {
+      f[i]=new TF1(Form("f%d",i),fg, 0,2, 1);
+      f[i]->SetParameter(0,i+1);
+      f[i]->SetLineColor(i+1);
+      f[i]->Draw(i?"same":"");
+   }
+   f[0]->GetXaxis()->SetRangeUser(.1,.3);
+   gPad->Update();
+   f[0]->GetXaxis()->UnZoom();
+   gPad->Modified();
+
+   EndTest(C, "Zoom/UnZoom a collection of TF1");
+}
+
+
+//______________________________________________________________________________
+void zoomfit()
+{
+   // Zoom/UnZoom a fitted histogram
+
+   TCanvas *C = StartTest(800,800);
+
+   TH1 *hpx = (TH1*)gFile->Get("hpx");
+   hpx->Fit("gaus","q");
+   hpx->GetXaxis()->SetRangeUser(.1,.3);
+   gPad->Modified();
+   gPad->Update();
+   hpx->GetXaxis()->UnZoom();
+   gPad->Modified();
+   gPad->Update();
+
+   EndTest(C, "Zoom/UnZoom a fitted histogram");
 }
 
 
