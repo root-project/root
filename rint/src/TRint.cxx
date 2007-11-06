@@ -522,6 +522,22 @@ Bool_t TRint::HandleTermInput()
 }
 
 //______________________________________________________________________________
+void TRint::HandleException(Int_t sig)
+{
+   // Handle exceptions (kSigBus, kSigSegmentationViolation,
+   // kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
+   // Specific TApplication implementations may want something different here.
+
+   if (TROOT::Initialized()) {
+      if (gException) {
+         Getlinem(kCleanUp, 0);
+         Getlinem(kInit, "Root > ");
+      }
+   }
+   TApplication::HandleException(sig);
+}
+
+//______________________________________________________________________________
 void TRint::Terminate(Int_t status)
 {
    // Terminate the application. Reset the terminal to sane mode and call

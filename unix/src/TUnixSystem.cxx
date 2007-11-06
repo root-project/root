@@ -972,18 +972,10 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigFloatingException:
       Break("TUnixSystem::DispatchSignals", UnixSigname(sig));
       StackTrace();
-      if (TROOT::Initialized()) {
-         if (gException) {
-            if (gApplication && gApplication->InheritsFrom("TRint")) {
-               Getlinem(kCleanUp, 0);
-               Getlinem(kInit, "Root > ");
-            }
-            gInterpreter->RewindDictionary();
-            gInterpreter->ClearFileBusy();
-         }
-         Throw(sig);
-      }
-      Exit(sig);
+      if (gApplication)
+         gApplication->HandleException(sig);
+      else
+         Exit(sig);
       break;
    case kSigSystem:
    case kSigPipe:

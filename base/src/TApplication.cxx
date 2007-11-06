@@ -24,6 +24,7 @@
 #include "RConfigure.h"
 #include "Riostream.h"
 #include "TApplication.h"
+#include "TException.h"
 #include "TGuiFactory.h"
 #include "TVirtualX.h"
 #include "TROOT.h"
@@ -429,6 +430,23 @@ void TApplication::HandleIdleTimer()
       ProcessLine(GetIdleCommand());
 
    Emit("HandleIdleTimer()");
+}
+
+//______________________________________________________________________________
+void TApplication::HandleException(Int_t sig)
+{
+   // Handle exceptions (kSigBus, kSigSegmentationViolation,
+   // kSigIllegalInstruction and kSigFloatingException) trapped in TSystem.
+   // Specific TApplication implementations may want something different here.
+
+   if (TROOT::Initialized()) {
+      if (gException) {
+         gInterpreter->RewindDictionary();
+         gInterpreter->ClearFileBusy();
+      }
+      Throw(sig);
+   }
+   gSystem->Exit(sig);
 }
 
 //______________________________________________________________________________
