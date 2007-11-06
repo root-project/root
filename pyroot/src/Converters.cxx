@@ -905,6 +905,13 @@ Bool_t PyROOT::TVoidPtrPtrConverter::SetArg( PyObject* pyobject, TParameter& par
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TVoidPtrPtrConverter::FromMemory( void* address )
+{
+// read a void** from address; since this is unknown, long is used (user can cast)
+   return PyLong_FromLong( (long)*((long**)address) );
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TPyObjectConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // by definition: set and declare success

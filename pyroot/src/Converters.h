@@ -193,6 +193,7 @@ namespace PyROOT {
    class TVoidPtrPtrConverter : public TConverter {
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );
+      virtual PyObject* FromMemory( void* address );
    };
 
    PYROOT_DECLARE_BASIC_CONVERTER( PyObject );

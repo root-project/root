@@ -189,7 +189,10 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 // initialize from <gbl> info
    fOffset    = (Long_t)gbl->GetAddress();
    fProperty  = gbl->Property() | kIsStatic;    // force static flag
-   fConverter = CreateConverter( gbl->GetFullTypeName(), gbl->GetMaxIndex( 0 ) );
+   std::string fullType = gbl->GetFullTypeName();
+   if ( fullType == "void*" ) // actually treated as address to void*
+      fullType = "void**";
+   fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
    fName      = gbl->GetName();
 
 // no owner (global scope)
