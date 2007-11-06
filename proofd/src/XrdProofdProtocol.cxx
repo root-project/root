@@ -4073,7 +4073,7 @@ int XrdProofdProtocol::Create()
       int setupOK = 0;
 
       XrdOucString pmsg = "child process ";
-      pmsg += getpid();
+      pmsg += (int) getpid();
       MTRACE(FORK, "xpd: ", pmsg.c_str());
 
       // We set to the user environment
