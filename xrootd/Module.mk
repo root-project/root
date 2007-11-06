@@ -142,7 +142,8 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		linuxx8664icc:*) xopt="--ccflavour=iccx8664 --use-xrd-strlcpy";; \
 		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
 		linux*:*)        xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
-		macos*:*)        xopt="--ccflavour=macos";; \
+		macosx64:*)      xopt="--ccflavour=macos64";; \
+		macosx*:*)       xopt="--ccflavour=macos";; \
 		solaris*:*:i86pc:x86*) xopt="--ccflavour=sunCCamd --use-xrd-strlcpy";; \
 		solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
 		solarisgcc:5.8)  xopt="--ccflavour=gcc";; \
