@@ -1,6 +1,7 @@
 void Draw_Slave_Access(TTree *perfstats);
 
-void Draw_Slave_Access(const Char_t* filename, const Char_t* perfstatsname) {
+void Draw_Slave_Access(const Char_t* filename,
+                       const Char_t* perfstatsname = "PROOF_PerfStats") {
    // Open the file called filename and get
    // the perftstats tree (name perfstatsname)
    // from the file
