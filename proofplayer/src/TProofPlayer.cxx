@@ -1705,7 +1705,14 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 {
    // Progress signal.
 
-   fProof->Progress(total, processed);
+   if (IsClient()) {
+      fProof->Progress(total, processed);
+   } else {
+      // Send to the previous tier
+      TMessage m(kPROOF_PROGRESS);
+      m << total << processed;
+      gProofServ->GetSocket()->Send(m);
+   }
 }
 
 //______________________________________________________________________________
@@ -1719,7 +1726,15 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed,
    PDB(kGlobal,1)
       Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
                                              initTime, procTime, evtrti, mbrti);
-   fProof->Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti);
+
+   if (IsClient()) {
+      fProof->Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti);
+   } else {
+      // Send to the previous tier
+      TMessage m(kPROOF_PROGRESS);
+      m << total << processed << bytesread << initTime << procTime << evtrti << mbrti;
+      gProofServ->GetSocket()->Send(m);
+   }
 }
 
 //______________________________________________________________________________
@@ -1836,7 +1851,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
             }
             TString sessionPath(gProofServ->GetSessionDir());
             // Take into account a prefix, if any
-            TString pfx  = gEnv->GetValue("ProofServ.Localroot","");
+            TString pfx  = gEnv->GetValue("Path.Localroot","");
             if (!pfx.IsNull())
                sessionPath.Remove(0, pfx.Length());
             of += Form("/%s/%s", sessionPath.Data(), pf->GetFileName());
@@ -2688,9 +2703,19 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                // setup progress info
                fSlaves.AddLast(sl);
                fSlaveProgress.Set(fSlaveProgress.GetSize()+1);
-               fSlaveProgress[fSlaveProgress.GetSize()-1]=0;
+               fSlaveProgress[fSlaveProgress.GetSize()-1] = 0;
                fSlaveTotals.Set(fSlaveTotals.GetSize()+1);
-               fSlaveTotals[fSlaveTotals.GetSize()-1]=nentries;
+               fSlaveTotals[fSlaveTotals.GetSize()-1] = nentries;
+               fSlaveBytesRead.Set(fSlaveBytesRead.GetSize()+1);
+               fSlaveBytesRead[fSlaveBytesRead.GetSize()-1] = 0;
+               fSlaveInitTime.Set(fSlaveInitTime.GetSize()+1);
+               fSlaveInitTime[fSlaveInitTime.GetSize()-1] = -1.;
+               fSlaveProcTime.Set(fSlaveProcTime.GetSize()+1);
+               fSlaveProcTime[fSlaveProcTime.GetSize()-1] = -1.;
+               fSlaveEvtRti.Set(fSlaveEvtRti.GetSize()+1);
+               fSlaveEvtRti[fSlaveEvtRti.GetSize()-1] = -1.;
+               fSlaveMBRti.Set(fSlaveMBRti.GetSize()+1);
+               fSlaveMBRti[fSlaveMBRti.GetSize()-1] = -1.;
             }
          }
       }
@@ -2733,21 +2758,112 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t proc
 }
 
 //______________________________________________________________________________
+void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
+                                       Long64_t processed, Long64_t bytesread,
+                                       Float_t initTime, Float_t procTime,
+                                       Float_t evtrti, Float_t mbrti)
+{
+   // Report progress.
+
+   Info("Progress","%s: %lld %lld %f %f %f %f", sl->GetName(),
+                   processed, bytesread, initTime, procTime, evtrti, mbrti);
+
+   Int_t idx = fSlaves.IndexOf(sl);
+   if (fSlaveTotals[idx] != total)
+      Warning("Progress", "total events has changed for slave %s", sl->GetName());
+   fSlaveTotals[idx] = total;
+   fSlaveProgress[idx] = processed;
+   fSlaveBytesRead[idx] = bytesread;
+   fSlaveInitTime[idx] = (initTime > -1.) ? initTime : fSlaveInitTime[idx];
+   fSlaveProcTime[idx] = (procTime > -1.) ? procTime : fSlaveProcTime[idx];
+   fSlaveEvtRti[idx] = (evtrti > -1.) ? evtrti : fSlaveEvtRti[idx];
+   fSlaveMBRti[idx] = (mbrti > -1.) ? mbrti : fSlaveMBRti[idx];
+
+   Int_t i;
+   Long64_t tot = 0;
+   Long64_t proc = 0;
+   Long64_t bytes = 0;
+   Float_t init = -1.;
+   Float_t ptime = -1.;
+   Float_t erti = 0.;
+   Float_t srti = 0.;
+   Int_t nerti = 0;
+   Int_t nsrti = 0;
+   for (i = 0; i < fSlaveTotals.GetSize(); i++) {
+      tot += fSlaveTotals[i];
+      if (i < fSlaveProgress.GetSize())
+         proc += fSlaveProgress[i];
+      if (i < fSlaveBytesRead.GetSize())
+         bytes += fSlaveBytesRead[i];
+      if (i < fSlaveInitTime.GetSize())
+         if (fSlaveInitTime[i] > -1. && (init < 0. || fSlaveInitTime[i] < init))
+            init = fSlaveInitTime[i];
+      if (i < fSlaveProcTime.GetSize())
+         if (fSlaveProcTime[i] > -1. && (ptime < 0. || fSlaveProcTime[i] > ptime))
+            ptime = fSlaveProcTime[i];
+      if (i < fSlaveEvtRti.GetSize())
+         if (fSlaveEvtRti[i] > -1.) {
+            erti += fSlaveEvtRti[i];
+            nerti++;
+         }
+      if (i < fSlaveMBRti.GetSize())
+         if (fSlaveMBRti[i] > -1.) {
+            srti += fSlaveMBRti[i];
+            nsrti++;
+         }
+   }
+   erti = (nerti > 0) ? erti / nerti : 0.;
+   srti = (nsrti > 0) ? srti / nerti : 0.;
+
+   Progress(tot, proc, bytes, init, ptime, erti, srti);
+}
+
+//______________________________________________________________________________
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 {
    // Send progress and feedback to client.
 
    if (fFeedbackTimer == 0) return kFALSE; // timer stopped already
 
-   Long64_t tot = 0;
    Int_t i;
-   for (i = 0; i < fSlaveTotals.GetSize(); i++) tot += fSlaveTotals[i];
+   Long64_t tot = 0;
    Long64_t proc = 0;
-   for (i = 0; i < fSlaveProgress.GetSize(); i++) proc += fSlaveProgress[i];
+   Long64_t bytes = 0;
+   Float_t init = -1.;
+   Float_t ptime = -1.;
+   Float_t erti = 0.;
+   Float_t srti = 0.;
+   Int_t nerti = 0;
+   Int_t nsrti = 0;
+   for (i = 0; i < fSlaveTotals.GetSize(); i++) {
+      tot += fSlaveTotals[i];
+      if (i < fSlaveProgress.GetSize())
+         proc += fSlaveProgress[i];
+      if (i < fSlaveBytesRead.GetSize())
+         bytes += fSlaveBytesRead[i];
+      if (i < fSlaveInitTime.GetSize())
+         if (fSlaveInitTime[i] > -1. && (init < 0. || fSlaveInitTime[i] < init))
+            init = fSlaveInitTime[i];
+      if (i < fSlaveProcTime.GetSize())
+         if (fSlaveProcTime[i] > -1. && (ptime < 0. || fSlaveProcTime[i] > ptime))
+            ptime = fSlaveProcTime[i];
+      if (i < fSlaveEvtRti.GetSize())
+         if (fSlaveEvtRti[i] > -1.) {
+            erti += fSlaveEvtRti[i];
+            nerti++;
+         }
+      if (i < fSlaveMBRti.GetSize())
+         if (fSlaveMBRti[i] > -1.) {
+            srti += fSlaveMBRti[i];
+            nsrti++;
+         }
+   }
+   erti = (nerti > 0) ? erti / nerti : 0.;
+   srti = (nsrti > 0) ? srti / nerti : 0.;
 
    TMessage m(kPROOF_PROGRESS);
 
-   m << tot << proc;
+   m << tot << proc << bytes << init << ptime << erti << srti;
 
    // send message to client;
    gProofServ->GetSocket()->Send(m);

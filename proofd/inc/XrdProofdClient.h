@@ -93,8 +93,8 @@ class XrdProofdClient {
    int                     AddNewSession(const char *tag);
    int                     GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
                                           XrdOucString *tag = 0);
-   int                     GuessTag(XrdOucString &tag, int ridx = 1);
-   int                     MvOldSession(const char *tag);
+   int                     GuessTag(XrdOucString &tag, int ridx = 1, bool notify = 1);
+   int                     MvOldSession(const char *tag, bool notify = 1);
 
    static void             SetMaxOldLogs(int mx) { fgMaxOldLogs = mx; }
 

@@ -97,6 +97,7 @@ char                 *XrdProofdProtocol::fgSecLib   = 0;
 //
 char                 *XrdProofdProtocol::fgPoolURL = 0;
 char                 *XrdProofdProtocol::fgNamespace = strdup("/proofpool");
+XrdOucString          XrdProofdProtocol::fgLocalroot;
 //
 XrdSysSemWait         XrdProofdProtocol::fgForkSem;   // To serialize fork requests
 //
@@ -1107,7 +1108,7 @@ int XrdProofdProtocol::Config(const char *cfn)
    XrdOucStream Config(&fgEDest, getenv("XRDINSTANCE"));
    char *var;
    int cfgFD, NoGo = 0;
-   int nmTmp = -1, nmInternalWait = -1, nmMaxOldLogs = -1,
+   int nmTmp = -1, nmInternalWait = -1, nmMaxOldLogs = -1, nmMastersAllowed = -1,
        nmPoolUrl = -1, nmNamespace = -1, nmSuperUsers = -1, nmSchedOpt = -1;
 
    // Open and attach the config file
@@ -1123,6 +1124,10 @@ int XrdProofdProtocol::Config(const char *cfn)
          if ((val = Config.GetToken()) && val[0]) {
             SafeFree(fgSecLib);
             fgSecLib = strdup(val);
+         }
+      } else if (!(strncmp("oss.localroot", var, 13))) {
+         if ((val = Config.GetToken()) && val[0]) {
+            fgLocalroot = val;
          }
       } else if (!(strncmp("xpd.", var, 4)) && var[4]) {
          var += 4;
@@ -1263,6 +1268,11 @@ int XrdProofdProtocol::Config(const char *cfn)
                   int maxoldlogs = XPC_DEFMAXOLDLOGS;
                   XPDSETINT(nm, nmMaxOldLogs, maxoldlogs, tval);
                   XrdProofdClient::SetMaxOldLogs(maxoldlogs);
+               } else if (!strcmp("allow",var)) {
+                  // Masters allowed to connect
+                  if (XPDCOND(nm,nmMastersAllowed)) {
+                     fgMastersAllowed.push_back(new XrdOucString(tval));
+                  }
                } else if (!strcmp("poolurl",var)) {
                   // Local pool entry point
                   XPDSETSTRING(nm, nmPoolUrl, fgPoolURL, tval);
@@ -1379,7 +1389,7 @@ int XrdProofdProtocol::Reconfig()
    XrdOucStream Config(&fgEDest, getenv("XRDINSTANCE"));
    char *var;
    int cfgFD;
-   int nmTmp = -1, nmInternalWait = -1, nmMaxOldLogs = -1,
+   int nmTmp = -1, nmInternalWait = -1, nmMaxOldLogs = -1, nmMastersAllowed = -1,
        nmPoolUrl = -1, nmNamespace = -1, nmSuperUsers = -1;
 
    // Open and attach the config file
@@ -1417,7 +1427,11 @@ int XrdProofdProtocol::Reconfig()
    char mess[512];
    char *val = 0;
    while ((var = Config.GetMyFirstWord())) {
-      if (!(strncmp("xpd.", var, 4)) && var[4]) {
+      if (!(strncmp("oss.localroot", var, 13))) {
+         if ((val = Config.GetToken()) && val[0]) {
+            fgLocalroot = val;
+         }
+      } else if (!(strncmp("xpd.", var, 4)) && var[4]) {
          var += 4;
          // Get the value
          val = Config.GetToken();
@@ -1559,8 +1573,9 @@ int XrdProofdProtocol::Reconfig()
                   XrdProofdClient::SetMaxOldLogs(maxoldlogs);
                } else if (!strcmp("allow",var)) {
                   // Masters allowed to connect
-                  if (nm == -1 || nm > 0)
+                  if (XPDCOND(nm,nmMastersAllowed)) {
                      fgMastersAllowed.push_back(new XrdOucString(tval));
+                  }
                } else if (!strcmp("poolurl",var)) {
                   // Local pool entry point
                   XPDADOPTSTRING(nm, nmPoolUrl, fgPoolURL, tval);
@@ -1933,11 +1948,9 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                      XrdSysMutexHelper xpmh(psrv->Mutex());
 
                      // Send a terminate signal to the proofserv
-                     if (LogTerminatedProc(psrv->TerminateProofServ()) != 0)
+                     if (LogTerminatedProc(psrv->TerminateProofServ()) < 0)
                         // Try hard kill
-                        if (LogTerminatedProc(KillProofServ(psrv->SrvID(), 1)) != 0) {
-                           TRACEI(XERR, "Recycle: problems terminating proofsrv");
-                        }
+                        LogTerminatedProc(KillProofServ(psrv->SrvID(), 1));
 
                      // Reset instance
                      psrv->Reset();
@@ -2089,10 +2102,11 @@ int XrdProofdProtocol::GetWorkers(XrdOucString &lw, XrdProofServProxy *xps)
    std::list<XrdProofWorker *>::iterator iw;
    for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
       XrdProofWorker *w = *iw;
+      // Add separator if not the first
+      if (lw.length() > 0)
+         lw += '&';
       // Add export version of the info
       lw += w->Export();
-      // Add separator
-      lw += '&';
       // Count
       xps->AddWorker(w);
       w->fProofServs.push_back(xps);
@@ -3103,10 +3117,8 @@ int XrdProofdProtocol::Destroy()
             }
 
             // Send a terminate signal to the proofserv
-            if (LogTerminatedProc(xps->TerminateProofServ()) != 0)
-               if (LogTerminatedProc(KillProofServ(xps->SrvID(), 1)) != 0) {
-                  TRACEI(XERR, "Destroy: problems terminating request to proofsrv");
-               }
+            if (LogTerminatedProc(xps->TerminateProofServ()) < 0)
+               LogTerminatedProc(KillProofServ(xps->SrvID(), 1));
 
             // Reset instance
             xps->Reset();
@@ -3578,6 +3590,7 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    sprintf(stag,"%s-%d-%d",host.c_str(),(int)time(0),getpid());
 
    // Session dir
+   XrdOucString topstag = stag;
    XrdOucString sessiondir = udir;
    if (fSrvType == kXPD_TopMaster) {
       sessiondir += "/session-";
@@ -3586,6 +3599,8 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    } else {
       sessiondir += "/";
       sessiondir += xps->Tag();
+      topstag = xps->Tag();
+      topstag.replace("session-","");
    }
    MTRACE(DBG, "xpd:child: ", "SetProofServEnv: session dir "<<sessiondir);
    // Make sure the directory exists ...
@@ -3641,6 +3656,12 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    fprintf(frc,"# XrdProofdProtocol listening port\n");
    fprintf(frc, "ProofServ.XpdPort: %d\n", fgMgr.Port());
 
+   // Local root prefix
+   if (fgLocalroot.length() > 0) {
+      fprintf(frc,"# Prefix to be prepended to local paths\n");
+      fprintf(frc, "Path.Localroot: %s\n", fgLocalroot.c_str());
+   }
+
    // The session working dir depends on the role
    fprintf(frc,"# The session working dir\n");
    fprintf(frc,"ProofServ.SessionDir: %s\n", swrkdir.c_str());
@@ -3694,9 +3715,15 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    fprintf(frc,"# Users sandbox\n");
    fprintf(frc, "ProofServ.Sandbox: %s\n", udir.c_str());
 
+   // Image
+   if (strlen(fgMgr.Image()) > 0) {
+      fprintf(frc,"# Server image\n");
+      fprintf(frc, "ProofServ.Image: %s\n", fgMgr.Image());
+   }
+
    // Session tag
    fprintf(frc,"# Session tag\n");
-   fprintf(frc, "ProofServ.SessionTag: %s\n", stag);
+   fprintf(frc, "ProofServ.SessionTag: %s\n", topstag.c_str());
 
    // Whether user specific config files are enabled
    if (fgWorkerUsrCfg) {
@@ -3727,9 +3754,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    fprintf(frc, "ProofServ.ClientVersion: %d\n", fPClient->Version());
 
    // Config file
+   fprintf(frc,"# Config file\n");
    if (cfg && strlen(cfg) > 0) {
-      fprintf(frc,"# Config file\n");
+      // User defined
       fprintf(frc, "ProofServ.ProofConfFile: %s\n", cfg);
+   } else {
+      if (fgMgr.IsSuperMst())
+         fprintf(frc, "ProofServ.ProofConfFile: sm:\n");
    }
 
    // Additional rootrcs (xpd.putrc directive)
@@ -3954,6 +3985,9 @@ int XrdProofdProtocol::Create()
 
    // Extract session tag
    XrdOucString tag(buf,len);
+
+   TRACEI(DBG, "Create: received buf: "<<tag);
+
    tag.erase(tag.find('|'));
    xps->SetTag(tag.c_str());
    TRACEI(DBG, "Create: tag: "<<tag);
@@ -4038,7 +4072,9 @@ int XrdProofdProtocol::Create()
 
       int setupOK = 0;
 
-      MTRACE(FORK, "xpd: ", "child process");
+      XrdOucString pmsg = "child process ";
+      pmsg += getpid();
+      MTRACE(FORK, "xpd: ", pmsg.c_str());
 
       // We set to the user environment
       if (SetUserEnvironment() != 0) {
@@ -4112,7 +4148,7 @@ int XrdProofdProtocol::Create()
       exit(1);
    }
 
-   TRACEP(FORK,"Parent process");
+   TRACEP(FORK,"Parent process: child is "<<pid);
 
    // Wakeup colleagues
    fgForkSem.Post();
@@ -4130,41 +4166,63 @@ int XrdProofdProtocol::Create()
    // Read status-of-setup from pipe
    XrdOucString emsg;
    int setupOK = 0;
-   if (read(fp[0], &setupOK, sizeof(setupOK)) == sizeof(setupOK)) {
-   // now we wait for the callback to be (successfully) established
-
-      if (setupOK > 0) {
-         // Receive path of the log file
-         int lfout = setupOK;
-         char *buf = new char[lfout + 1];
-         int n, nr = 0;
-         for (n = 0; n < lfout; n += nr) {
-            while ((nr = read(fp[0], buf + n, lfout - n)) == -1 && errno == EINTR)
-               errno = 0;   // probably a SIGCLD that was caught
-            if (nr == 0)
-               break;          // EOF
-            if (nr < 0) {
-               // Failure
-               setupOK= -1;
-               emsg += ": failure receiving logfile path";
-               break;
-            }
-         }
+   struct pollfd fds_r;
+   fds_r.fd = fp[0];
+   fds_r.events = POLLIN;
+   int pollRet = 0;
+   // We wait for 14 secs max (7 x 2000 millisecs): this is enough to
+   // cover possible delays due to heavy load; the client will anyhow
+   // retry a few times
+   int ntry = 7;
+   while (pollRet == 0 && ntry--) {
+      while ((pollRet = poll(&fds_r, 1, 2000)) < 0 &&
+             (errno == EINTR)) { }
+      if (pollRet == 0)
+         TRACE(FORK,"Create: "
+                    "receiving status-of-setup from pipe: waiting 2 s ..."<<pid);
+   }
+   if (pollRet > 0) {
+      if (read(fp[0], &setupOK, sizeof(setupOK)) == sizeof(setupOK)) {
+         // now we wait for the callback to be (successfully) established
          if (setupOK > 0) {
-            buf[lfout] = 0;
-            xps->SetFileout(buf);
-            // Set also the session tag
-            XrdOucString stag(buf);
-            stag.erase(stag.rfind('/'));
-            stag.erase(0, stag.find("session-") + strlen("session-"));
-            xps->SetTag(stag.c_str());
+            // Receive path of the log file
+            int lfout = setupOK;
+            char *buf = new char[lfout + 1];
+            int n, nr = 0;
+            for (n = 0; n < lfout; n += nr) {
+               while ((nr = read(fp[0], buf + n, lfout - n)) == -1 && errno == EINTR)
+                  errno = 0;   // probably a SIGCLD that was caught
+               if (nr == 0)
+                  break;          // EOF
+               if (nr < 0) {
+                  // Failure
+                  setupOK= -1;
+                  emsg += ": failure receiving logfile path";
+                  break;
+               }
+            }
+            if (setupOK > 0) {
+               buf[lfout] = 0;
+               xps->SetFileout(buf);
+               // Set also the session tag
+               XrdOucString stag(buf);
+               stag.erase(stag.rfind('/'));
+               stag.erase(0, stag.find("session-") + strlen("session-"));
+               xps->SetTag(stag.c_str());
+            }
+            delete[] buf;
+         } else {
+            emsg += ": proofserv startup failed";
          }
-         delete[] buf;
       } else {
-         emsg += ": proofserv startup failed";
+         emsg += ": problems receiving status-of-setup after forking";
       }
    } else {
-      emsg += ": problems receiving status-of-setup after forking";
+      if (pollRet == 0) {
+         emsg += ": timed-out receiving status-of-setup from pipe";
+      } else {
+         emsg += ": failed to receive status-of-setup from pipe";
+      }
    }
 
    // Cleanup
@@ -4464,7 +4522,13 @@ int XrdProofdProtocol::SendMsg()
    static const char *crecv[4] = {"master proofserv", "top master",
                                   "client", "undefined"};
    int rc = 1;
+   if (!fPClient) {
+      TRACEP(XERR, "SendMsg: client undefined!!! ");
+      fResponse.Send(kXR_InvalidRequest,"SendMsg: client undefined!!! ");
+      return rc;
+   }
 
+   XrdSysMutexHelper mhc(fPClient->Mutex());
    XrdSysMutexHelper mh(fResponse.fMutex);
 
    // Unmarshall the data
@@ -4745,19 +4809,47 @@ int XrdProofdProtocol::Admin()
       int ridx = ntohl(fRequest.proof.int2);
 
       // Find out for which session is this request
-      char *stag = 0;
+      XrdOucString stag, master, user, buf;
       int len = fRequest.header.dlen;
       if (len > 0) {
-         char *buf = fArgp->buff;
-         if (buf[0] != '*') {
-            stag = new char[len+1];
-            memcpy(stag, buf, len);
-            stag[len] = 0;
+         buf.assign(fArgp->buff,0,len-1);
+         int im = buf.find("|master:");
+         int iu = buf.find("|user:");
+         stag = buf;
+         stag.erase(stag.find("|"));
+         if (im != STR_NPOS) {
+            master.assign(buf, im + strlen("|master:"));
+            master.erase(master.find("|"));
+            TRACEP(DBG,"Admin: master: "<<master);
          }
+         if (iu != STR_NPOS) {
+            user.assign(buf, iu + strlen("|user:"));
+            user.erase(user.find("|"));
+            TRACEP(DBG,"Admin: user: "<<user);
+         }
+         if (stag.beginswith('*'))
+            stag = "";
       }
 
-      XrdOucString tag = (!stag && ridx >= 0) ? "last" : stag;
-      if (!stag && fPClient->GuessTag(tag, ridx) != 0) {
+      XrdProofdClient *client = (user.length() > 0) ? 0 : fPClient;
+      if (!client) {
+         // Find the client instance
+         std::list<XrdProofdClient *>::iterator i;
+         for (i = fgProofdClients.begin(); i != fgProofdClients.end(); ++i) {
+            if ((client = *i) && client->Match(user.c_str(),0)) {
+               break;
+            }
+            client = 0;
+         }
+      }
+      if (!client) {
+         TRACEP(XERR, "Admin: query sess logs: client for '"<<user<<"' not found");
+         fResponse.Send(kXR_InvalidRequest,"Admin: query log: client not found");
+         return rc;
+      }
+
+      XrdOucString tag = (stag == "" && ridx >= 0) ? "last" : stag;
+      if (stag == "" && client->GuessTag(tag, ridx) != 0) {
          TRACEP(XERR, "Admin: query sess logs: session tag not found");
          fResponse.Send(kXR_InvalidRequest,"Admin: query log: session tag not found");
          return rc;
@@ -4766,14 +4858,15 @@ int XrdProofdProtocol::Admin()
       // Return message
       XrdOucString rmsg;
 
-      // The session tag first
-      rmsg += tag; rmsg += "|";
-
-      // The pool URL second
-      rmsg += fgPoolURL; rmsg += "|";
+      if (master.length() <= 0) {
+         // The session tag first
+         rmsg += tag; rmsg += "|";
+         // The pool URL second
+         rmsg += fgPoolURL; rmsg += "|";
+      }
 
       // Locate the local log file
-      XrdOucString sdir(fPClient->Workdir());
+      XrdOucString sdir(client->Workdir());
       sdir += "/session-";
       sdir += tag;
 
@@ -4786,17 +4879,19 @@ int XrdProofdProtocol::Admin()
          fResponse.Send(kXR_InvalidRequest, msg.c_str());
          return rc;
       }
-      // Scan the directory
-      bool found = 0;
-      struct dirent *ent = 0;
-      while ((ent = (struct dirent *)readdir(dir))) {
-         if (!strncmp(ent->d_name, "master-", 7) &&
-              strstr(ent->d_name, ".log")) {
-            rmsg += "|0 proof://"; rmsg += fgMgr.Host(); rmsg += ':';
-            rmsg += fgMgr.Port(); rmsg += '/';
-            rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
-            found = 1;
-            break;
+      // Scan the directory to add the top master (only if top master)
+      if (master.length() <= 0) {
+         bool found = 0;
+         struct dirent *ent = 0;
+         while ((ent = (struct dirent *)readdir(dir))) {
+            if (!strncmp(ent->d_name, "master-", 7) &&
+               strstr(ent->d_name, ".log")) {
+               rmsg += "|0 proof://"; rmsg += fgMgr.Host(); rmsg += ':';
+               rmsg += fgMgr.Port(); rmsg += '/';
+               rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
+               found = 1;
+               break;
+            }
          }
       }
       // Close dir
@@ -4826,9 +4921,28 @@ int XrdProofdProtocol::Admin()
                      *pp = 0;
                      pp++;
                      // Record now
-                     rmsg += "|"; rmsg += po;
-                     rmsg += " "; rmsg += ln; rmsg += '/';
+                     rmsg += "|"; rmsg += po; rmsg += " ";
+                     if (master.length() > 0) {
+                        rmsg += master;
+                        rmsg += ",";
+                     }
+                     rmsg += ln; rmsg += '/';
                      rmsg += pp;
+                     // If the line is for a submaster, we have to get the info
+                     // about its workers
+                     bool ismst = (strstr(pp, "master-")) ? 1 : 0;
+                     if (ismst) {
+                        XrdOucString msg(stag);
+                        msg += "|master:";
+                        msg += ln;
+                        msg += "|user:";
+                        msg += XrdClientUrlInfo(ln).User;
+                        char *bmst = ReadLogPaths((const char *)&ln[0], msg.c_str(), ridx);
+                        if (bmst) {
+                           rmsg += bmst;
+                           free(bmst);
+                        }
+                     }
                   }
                }
             }
@@ -4840,6 +4954,8 @@ int XrdProofdProtocol::Admin()
       fResponse.Send((void *) rmsg.c_str(), rmsg.length()+1);
 
    } else if (type == kCleanupSessions) {
+
+      XrdOucString cmsg;
 
       // Target client (default us)
       XrdProofdClient *tgtclnt = fPClient;
@@ -4905,24 +5021,24 @@ int XrdProofdProtocol::Admin()
          TRACEI(ADMIN, "Admin: client '"<<usr<<"' has no sessions - do nothing");
       }
 
+      // The clients to cleaned
+      std::list<XrdProofdClient *> *clnts;
+      if (all) {
+         // The full list
+         clnts = &fgProofdClients;
+      } else {
+         clnts = new std::list<XrdProofdClient *>;
+         clnts->push_back(tgtclnt);
+      }
+
+      std::list<XrdProofdClient *>::iterator i;
+      XrdProofdClient *c = 0;
       if (clntfound) {
-
-         // The clients to cleaned
-         std::list<XrdProofdClient *> *clnts;
-         if (all) {
-            // The full list
-            clnts = &fgProofdClients;
-         } else {
-            clnts = new std::list<XrdProofdClient *>;
-            clnts->push_back(tgtclnt);
-         }
-
          // List of process IDs asked to terminate
          std::list<int *> signalledpid;
 
          // Loop over them
-         XrdProofdClient *c = 0;
-         std::list<XrdProofdClient *>::iterator i;
+         c = 0;
          for (i = clnts->begin(); i != clnts->end(); ++i) {
             if ((c = *i)) {
 
@@ -4947,6 +5063,12 @@ int XrdProofdProtocol::Admin()
                   }
                }
 
+               // Asynchronous notification to requester
+               if (fgMgr.SrvType() != kXPD_WorkerServer) {
+                  cmsg = "Reset: signalling active sessions for termination";
+                  fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
+               }
+
                // Loop over client sessions and terminated them
                int is = 0;
                XrdProofServProxy *s = 0;
@@ -4956,13 +5078,8 @@ int XrdProofdProtocol::Admin()
                      int *pid = new int;
                      *pid = s->SrvID();
                      TRACEI(HDBG, "Admin: CleanupSessions: terminating " << *pid);
-                     if (s->TerminateProofServ() != 0) {
-                        if (KillProofServ(*pid, 0) != 0) {
-                           XrdOucString msg = "Admin: CleanupSessions: WARNING: process ";
-                           msg += *pid;
-                           msg += " could not be signalled for termination";
-                           TRACEI(XERR, msg.c_str());
-                        } else
+                     if (s->TerminateProofServ() < 0) {
+                        if (KillProofServ(*pid, 0) == 0)
                            signalledpid.push_back(pid);
                      } else
                         signalledpid.push_back(pid);
@@ -4971,6 +5088,12 @@ int XrdProofdProtocol::Admin()
                   }
                }
             }
+         }
+
+         // Asynchronous notification to requester
+         if (fgMgr.SrvType() != kXPD_WorkerServer) {
+            cmsg = "Reset: verifying termination status (may take up to 10 seconds)";
+            fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
          }
 
          // Now we give sometime to sessions to terminate (10 sec).
@@ -4994,11 +5117,47 @@ int XrdProofdProtocol::Admin()
          }
       }
 
+      // Lock the interested client mutexes (no action is allowed while
+      // doing this
+      if (clnts) {
+         for (i = clnts->begin(); i != clnts->end(); ++i)
+            if ((c = *i))
+               c->Mutex()->Lock();
+      }
+
+      // Asynchronous notification to requester
+      if (fgMgr.SrvType() != kXPD_WorkerServer) {
+         cmsg = "Reset: terminating the remaining sessions";
+         fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
+      }
+
       // Now we cleanup what left (any zombies or super resistent processes)
       CleanupProofServ(all, usr);
 
       // Cleanup all possible sessions around
-      fgMgr.Broadcast(type, usr, &fResponse);
+      // (forward down the tree only if not leaf)
+      if (fgMgr.SrvType() != kXPD_WorkerServer) {
+
+         // Asynchronous notification to requester
+         cmsg = "Reset: forwarding the reset request to next tier(s)";
+         fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
+
+         fgMgr.Broadcast(type, usr, &fResponse);
+
+         // Asynchronous notification to requester
+         cmsg = "Reset: wait 2 seconds for completion";
+         fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
+
+         // At least 2 seconds to complete
+         sleep(2);
+      }
+
+      // Unlock the locked client mutexes
+      if (clnts) {
+         for (i = clnts->begin(); i != clnts->end(); ++i)
+            if ((c = *i))
+               c->Mutex()->UnLock();
+      }
 
       // Cleanup usr
       SafeDelArray(usr);
@@ -5065,6 +5224,8 @@ int XrdProofdProtocol::Admin()
       fResponse.Send();
 
    } else if (type == kGroupProperties) {
+
+      XrdSysMutexHelper mh(fPClient->Mutex());
       //
       // Specific info about a session
       XrdProofServProxy *xps = 0;
@@ -5074,8 +5235,6 @@ int XrdProofdProtocol::Admin()
          fResponse.Send(kXR_InvalidRequest,"Admin: session ID not found");
          return rc;
       }
-
-      XrdSysMutexHelper mtxh(&fgXPDMutex);
 
       // User's group
       int   len = fRequest.header.dlen;
@@ -5756,8 +5915,19 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
          fclose(ffn);
          // If this is a good candidate, kill it
          if (!xname && !xpid && !xppid && !xuid) {
-            if (KillProofServ(pid, 1) == 0)
-               nk++;
+
+            bool muok = 1;
+            if (fgMultiUser && !all) {
+               // We need to check the user name: we may be the owner of somebody
+               // else process
+               muok = 0;
+               XrdProofServProxy *srv = fgMgr.GetActiveSession(pid);
+               if (srv && !strcmp(usr, srv->Client()))
+                  muok = 1;
+            }
+            if (muok)
+               if (KillProofServ(pid, 1) == 0)
+                  nk++;
          }
       }
    }
@@ -5827,8 +5997,18 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
 
          // If this is a good candidate, kill it
          if (!xname && !xppid && !xuid) {
-            if (KillProofServ(psi.pr_pid, 1) == 0)
-               nk++;
+            bool muok = 1;
+            if (fgMultiUser && !all) {
+               // We need to check the user name: we may be the owner of somebody
+               // else process
+               muok = 0;
+               XrdProofServProxy *srv = fgMgr.GetActiveSession(psi.pr_pid);
+               if (srv && !strcmp(usr, srv->Client()))
+                  muok = 1;
+            }
+            if (muok)
+               if (KillProofServ(psi.pr_pid, 1) == 0)
+                  nk++;
          }
       }
    }
@@ -5866,10 +6046,21 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
                   }
                }
             }
-            if (!xppid)
-               // Good candidate to be shot
-               if (KillProofServ(pl[np].kp_proc.p_pid, 1))
-                  nk++;
+            if (!xppid) {
+               bool muok = 1;
+               if (fgMultiUser && !all) {
+                  // We need to check the user name: we may be the owner of somebody
+                  // else process
+                  muok = 0;
+                  XrdProofServProxy *srv = fgMgr.GetActiveSession(pl[np].kp_proc.p_pid);
+                  if (srv && !strcmp(usr, srv->Client()))
+                     muok = 1;
+               }
+               if (muok)
+                  // Good candidate to be shot
+                  if (KillProofServ(pl[np].kp_proc.p_pid, 1))
+                     nk++;
+            }
          }
       }
    }
@@ -5924,9 +6115,19 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
          if (busr)
             from += strlen(cusr);
          int pid = (int) XrdProofdAux::GetLong(&line[from]);
-         // Kill it
-         if (KillProofServ(pid, 1) == 0)
-            nk++;
+         bool muok = 1;
+         if (fgMultiUser && !all) {
+            // We need to check the user name: we may be the owner of somebody
+            // else process
+            muok = 0;
+            XrdProofServProxy *srv = fgMgr.GetActiveSession(pid);
+            if (srv && !strcmp(usr, srv->Client()))
+               muok = 1;
+         }
+         if (muok)
+            // Kill it
+            if (KillProofServ(pid, 1) == 0)
+               nk++;
       }
       pclose(fp);
    } else {
@@ -6005,17 +6206,13 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill)
             }
          // Add to the list of termination attempts
          if (signalled) {
-            TRACE(DBG, "KillProofServ: "<<pid<<" signalled");
+            // Avoid after notification after this point: it may create dead-locks
             if (fPClient) {
                // Record this session in the sandbox as old session
                XrdOucString tag = "-";
                tag += pid;
-               if (fPClient->GuessTag(tag) == 0) {
-                  if (fPClient->MvOldSession(tag.c_str()) == -1)
-                     TRACE(XERR, "KillProofServ: problems recording session as old in sandbox");
-               } else {
-                     TRACE(DBG, "KillProofServ: problems guessing tag");
-               }
+               if (fPClient->GuessTag(tag, 1, 0) == 0)
+                  fPClient->MvOldSession(tag.c_str(), 0);
             }
          } else {
             TRACE(DBG, "KillProofServ: process ID "<<pid<<" not found in the process table");
@@ -6038,12 +6235,25 @@ int XrdProofdProtocol::ReadBuffer()
    XrdOucString emsg;
 
    // Find out the file name
+   char *url = 0;
    char *file = 0;
    int dlen = fRequest.header.dlen;
    if (dlen > 0 && fArgp->buff) {
-      file = new char[dlen+1];
-      memcpy(file, fArgp->buff, dlen);
-      file[dlen] = 0;
+      int flen = dlen;
+      int ulen = 0;
+      int offs = 0;
+      char *p = (char *) strstr(fArgp->buff, ",");
+      if (p) {
+         ulen = (int) (p - fArgp->buff);
+         url = new char[ulen+1];
+         memcpy(url, fArgp->buff, ulen);
+         url[ulen] = 0;
+         offs = ulen + 1;
+         flen -= offs;
+      }
+      file = new char[flen+1];
+      memcpy(file, fArgp->buff+offs, flen);
+      file[flen] = 0;
    } else {
       emsg = "ReadBuffer: file name not not found";
       TRACEP(XERR, emsg);
@@ -6059,6 +6269,7 @@ int XrdProofdProtocol::ReadBuffer()
 
    // Check if local
    bool local = 0;
+   int blen = dlen;
    XrdClientUrlInfo ui(file);
    if (ui.Host.length() > 0) {
       // Fully qualified name
@@ -6068,6 +6279,7 @@ int XrdProofdProtocol::ReadBuffer()
                  !strcmp(fgMgr.Host(),fqn))) {
          memcpy(file, ui.File.c_str(), ui.File.length());
          file[ui.File.length()] = 0;
+         blen = ui.File.length();
          local = 1;
          TRACEI(DBG, "ReadBuffer: file is LOCAL");
       }
@@ -6076,15 +6288,55 @@ int XrdProofdProtocol::ReadBuffer()
 
    // Get the buffer
    int lout = len;
-   char *buf = (local) ? ReadBufferLocal(file, ofs, lout)
-                       : ReadBufferRemote(file, ofs, lout);
+   char *buf = 0;
+   char *filen = 0;
+   char *pattern = 0;
+   int grep = ntohl(fRequest.readbuf.int1);
+   if (grep > 0) {
+      // 'grep' operation: len is the length of the 'pattern' to be grepped
+      pattern = new char[len + 1];
+      int j = blen - len;
+      int i = 0;
+      while (j < blen)
+         pattern[i++] = file[j++];
+      pattern[i] = 0;
+      filen = strdup(file);
+      filen[blen - len] = 0;
+      TRACEI(DBG, "ReadBuffer: grep operation "<<grep<<", pattern:"<<pattern);
+   }
+   if (local) {
+      if (grep > 0) {
+         // Grep local file
+         lout = blen; // initial length
+         buf = ReadBufferLocal(filen, pattern, lout, grep);
+      } else {
+         // Read portion of local file
+         buf = ReadBufferLocal(file, ofs, lout);
+      }
+   } else {
+      // Read portion of remote file
+      buf = ReadBufferRemote(url, file, ofs, lout, grep);
+   }
+
    if (!buf) {
-      emsg = "ReadBuffer: could not read buffer from ";
-      emsg += (local) ? "local file " : "remote file ";
-      emsg += file;
-      TRACEP(XERR, emsg);
-      fResponse.Send(kXR_InvalidRequest, emsg.c_str());
-      return rc;
+      if (grep > 0) {
+         if (TRACING(DBG)) {
+            emsg = "ReadBuffer: nothing found by 'grep' in ";
+            emsg += filen;
+            emsg += ", pattern: ";
+            emsg += pattern;
+            TRACEP(DBG, emsg);
+         }
+         fResponse.Send();
+         return rc;
+      } else {
+         emsg = "ReadBuffer: could not read buffer from ";
+         emsg += (local) ? "local file " : "remote file ";
+         emsg += file;
+         TRACEP(XERR, emsg);
+         fResponse.Send(kXR_InvalidRequest, emsg.c_str());
+         return rc;
+      }
    }
 
    // Send back to user
@@ -6092,6 +6344,9 @@ int XrdProofdProtocol::ReadBuffer()
 
    // Cleanup
    SafeFree(buf);
+   SafeDelArray(file);
+   SafeFree(filen);
+   SafeDelArray(pattern);
 
    // Done
    return rc;
@@ -6140,7 +6395,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
    fst = (fst < 0) ? 0 : ((fst >= ltot) ? ltot - 1 : fst);
    // End at ...
    kXR_int64 end = fst + len;
-   off_t lst = (end >= ltot) ? ltot : ((end > fst) ? end  : fst);
+   off_t lst = (end >= ltot) ? ltot : ((end > fst) ? end  : ltot);
    TRACEI(DBG, "ReadBufferLocal: file size: "<<ltot<<
                ", read from: "<<fst<<" to "<<lst);
 
@@ -6190,33 +6445,138 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
 }
 
 //______________________________________________________________________________
-char *XrdProofdProtocol::ReadBufferRemote(const char *url,
-                                          kXR_int64 ofs, int &len)
+char *XrdProofdProtocol::ReadBufferLocal(const char *file,
+                                         const char *pat, int &len, int opt)
+{
+   // Grep lines matching 'pat' form 'file'; the returned buffer (length in 'len')
+   // must be freed by the caller.
+   // Returns 0 in case of error.
+
+   XrdOucString emsg;
+   TRACEI(ACT, "ReadBufferLocal: file: "<<file<<", pat: "<<pat<<", len: "<<len);
+
+   // Check input
+   if (!file || strlen(file) <= 0) {
+      TRACEI(XERR, "ReadBufferLocal: file path undefined!");
+      return (char *)0;
+   }
+
+   // Size of the output
+   struct stat st;
+   if (stat(file, &st) != 0) {
+      emsg = "ReadBufferLocal: could not get size of file with stat: errno: ";
+      emsg += (int)errno;
+      TRACEI(XERR, emsg);
+      return (char *)0;
+   }
+   off_t ltot = st.st_size;
+
+   // Open the file in read mode
+   FILE *fp = fopen(file, "r");
+   if (!fp) {
+      emsg = "ReadBufferLocal: could not open ";
+      emsg += file;
+      TRACEI(XERR, emsg);
+      return (char *)0;
+   }
+
+   // Check pattern
+   bool keepall = (pat && strlen(pat) > 0) ? 0 : 1; 
+
+   // Fill option
+   bool keep = 1;
+   if (opt == 2) {
+      // '-v' functionality
+      keep = 0;
+   } else if (opt != 1 ) {
+      emsg = "ReadBufferLocal: unknown option: ";
+      emsg += opt;
+      TRACEI(XERR, emsg);
+      return (char *)0;
+   }
+
+   // Read line by line
+   len = 0;
+   char *buf = 0;
+   char line[2048];
+   int bufsiz = 0, left = 0, lines = 0;
+   while ((ltot > 0) && fgets(line, sizeof(line), fp)) {
+      int llen = strlen(line);
+      ltot -= llen;
+      // Filter out
+      bool haspattern = (strstr(line, pat)) ? 1 : 0;
+      if (!keepall && ((keep && !haspattern) || (!keep && haspattern)))
+         // Skip
+         continue;
+      // Good line
+      lines++;
+      // (Re-)allocate the buffer
+      if (!buf || (llen > left)) {
+         int dsiz = 100 * ((int) ((len + llen) / lines) + 1);
+         dsiz = (dsiz > llen) ? dsiz : llen;
+         bufsiz += dsiz;
+         buf = (char *)realloc(buf, bufsiz + 1);
+         left += dsiz;
+      }
+      if (!buf) {
+         emsg = "ReadBufferLocal: could not allocate enough memory on the heap: errno: ";
+         emsg += (int)errno;
+         XPDERR(emsg);
+         fclose(fp);
+         return (char *)0;
+      }
+      // Add line to the buffer
+      memcpy(buf+len, line, llen);
+      len += llen;
+      left -= llen;
+      if (TRACING(HDBG))
+         fprintf(stderr, "line: %s", line);
+   }
+
+   // Check the result and terminate the buffer
+   if (buf) {
+      if (len > 0) {
+         buf[len] = 0;
+      } else {
+         free(buf);
+         buf = 0;
+      }
+   }
+
+   // Close file
+   fclose(fp);
+
+   // Done
+   return buf;
+}
+
+//______________________________________________________________________________
+char *XrdProofdProtocol::ReadBufferRemote(const char *url, const char *file,
+                                          kXR_int64 ofs, int &len, int grep)
 {
    // Send a read buffer request of length 'len' at offset 'ofs' for remote file
    // defined by 'url'; the returned buffer must be freed by the caller.
    // Returns 0 in case of error.
 
    TRACEI(ACT, "ReadBufferRemote: url: "<<(url ? url : "undef")<<
-                                       ", ofs: "<<ofs<<", len: "<<len);
+               ", file: "<<(file ? file : "undef")<<", ofs: "<<ofs<<
+               ", len: "<<len<<", grep: "<<grep);
 
    // Check input
-   if (!url || strlen(url) <= 0) {
-      TRACEI(XERR, "ReadBufferRemote: url undefined!");
+   if (!file || strlen(file) <= 0) {
+      TRACEI(XERR, "ReadBufferRemote: file undefined!");
       return (char *)0;
    }
+   if (!url || strlen(url) <= 0) {
+      // Use file as url
+      url = file;
+   }
 
-   // We try only once
-   int maxtry_save = -1;
-   int timewait_save = -1;
-   XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
-   XrdProofConn::SetRetryParam(1, 1);
-
-   // Open the connection
-   XrdOucString msg = "readbuffer request from ";
-   msg += fgMgr.Host();
-   char m = 'A'; // log as admin
-   XrdProofConn *conn = new XrdProofConn(url, m, -1, -1, 0, msg.c_str());
+   // We log in as the effective user to minimize the number of connections to the
+   // other servers
+   XrdClientUrlInfo u(url);
+   u.User = fgMgr.EffectiveUser();
+   XrdProofConn *conn = fgMgr.GetProofConn(u.GetUrl().c_str());
 
    char *buf = 0;
    if (conn && conn->IsValid()) {
@@ -6227,8 +6587,9 @@ char *XrdProofdProtocol::ReadBufferRemote(const char *url,
       reqhdr.header.requestid = kXP_readbuf;
       reqhdr.readbuf.ofs = ofs;
       reqhdr.readbuf.len = len;
-      reqhdr.header.dlen = strlen(url);
-      const void *btmp = (const void *) url;
+      reqhdr.readbuf.int1 = grep;
+      reqhdr.header.dlen = strlen(file);
+      const void *btmp = (const void *) file;
       void **vout = (void **)&buf;
       // Send over
       XrdClientMessage *xrsp =
@@ -6243,15 +6604,63 @@ char *XrdProofdProtocol::ReadBufferRemote(const char *url,
 
       // Clean the message
       SafeDelete(xrsp);
-
-      // Close physically the connection
-      conn->Close("S");
-      // Delete it
-      SafeDelete(conn);
    }
 
-   // Restore original retry parameters
-   XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
+   // Done
+   return buf;
+}
+
+//______________________________________________________________________________
+char *XrdProofdProtocol::ReadLogPaths(const char *url, const char *msg, int isess)
+{
+   // Get log paths from next tier; used in multi-master setups
+   // Returns 0 in case of error.
+
+   TRACEI(ACT, "ReadLogPaths: url: "<<(url ? url : "undef")<<
+               ", msg: "<<(msg ? msg : "undef")<<", isess: "<<isess);
+
+   // Check input
+   if (!url || strlen(url) <= 0) {
+      TRACEI(XERR, "ReadLogPaths: url undefined!");
+      return (char *)0;
+   }
+
+   // We log in as the effective user to minimize the number of connections to the
+   // other servers
+   XrdClientUrlInfo u(url);
+   u.User = fgMgr.EffectiveUser();
+   XrdProofConn *conn = fgMgr.GetProofConn(u.GetUrl().c_str());
+
+   char *buf = 0;
+   if (conn && conn->IsValid()) {
+      // Prepare request
+      XPClientRequest reqhdr;
+      memset(&reqhdr, 0, sizeof(reqhdr));
+      conn->SetSID(reqhdr.header.streamid);
+      reqhdr.header.requestid = kXP_admin;
+      reqhdr.proof.int1 = kQueryLogPaths;
+      reqhdr.proof.int2 = isess;
+      reqhdr.proof.sid = -1;
+      reqhdr.header.dlen = strlen(msg);
+      const void *btmp = (const void *) msg;
+      void **vout = (void **)&buf;
+      // Send over
+      XrdClientMessage *xrsp =
+         conn->SendReq(&reqhdr, btmp, vout, "XrdProofdProtocol::ReadLogPaths");
+
+      // If positive answer
+      if (xrsp && buf && (xrsp->DataLen() > 0)) {
+         int len = xrsp->DataLen();
+         buf = (char *) realloc((void *)buf, len+1);
+         if (buf)
+            buf[len] = 0;
+      } else {
+         SafeFree(buf);
+      }
+
+      // Clean the message
+      SafeDelete(xrsp);
+   }
 
    // Done
    return buf;

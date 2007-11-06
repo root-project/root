@@ -53,8 +53,9 @@
 // Version index: start from 1001 (0x3E9) to distinguish from 'proofd'
 // To be increment when non-backward compatible changes are introduced
 //  1001 (0x3E9) -> 1002 (0x3EA) : support for flexible env setting
-#define XPROOFD_VERSBIN 0x000003EA
-#define XPROOFD_VERSION "0.2"
+//  1002 (0x3EA) -> 1003 (0x3EB) : many new features
+#define XPROOFD_VERSBIN 0x000003EB
+#define XPROOFD_VERSION "0.3"
 
 #define XPD_LOGGEDIN       1
 #define XPD_NEED_AUTH      2
@@ -116,7 +117,10 @@ public:
    int           Process2();
    int           ReadBuffer();
    char         *ReadBufferLocal(const char *file, kXR_int64 ofs, int &len);
-   char         *ReadBufferRemote(const char *file, kXR_int64 ofs, int &len);
+   char         *ReadBufferLocal(const char *file, const char *pat, int &len, int opt);
+   char         *ReadBufferRemote(const char *url, const char *file,
+                                  kXR_int64 ofs, int &len, int grep);
+   char         *ReadLogPaths(const char *url, const char *stag, int isess);
    void          Reset();
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
@@ -189,6 +193,7 @@ public:
    // 
    static char                  *fgPoolURL;    // Local pool URL
    static char                  *fgNamespace;  // Local pool namespace
+   static XrdOucString           fgLocalroot;  // Local root prefix (directive oss.localroot)
    //
    static XrdSysSemWait          fgForkSem;   // To serialize fork requests
    //

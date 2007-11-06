@@ -43,6 +43,7 @@
 #include "XrdProofdManager.h"
 #include "XrdProofWorker.h"
 #include "XrdProofServProxy.h"
+#include "XrdProofGroup.h"
 
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdOuc/XrdOucStream.hh"
@@ -225,7 +226,7 @@ int XrdProofSched::Config(const char *cfg)
 }
 
 //______________________________________________________________________________
-int XrdProofSched::GetNumWorkers(XrdProofServProxy */*xps*/)
+int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
 {
    // Calculate the number of workers to be used given the state of the cluster
 
@@ -241,7 +242,20 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy */*xps*/)
          nFreeCPUs++;
    }
 
-   int nWrks = (int)(nFreeCPUs * fNodesFraction) + fMinForQuery;
+   float priority = 1;
+   if (xps->Group()) {
+      std::list<XrdProofServProxy *> *sessions = fMgr->GetActiveSessions();
+      std::list<XrdProofServProxy *>::iterator sesIter;
+      float summedPriority = 0;
+      for (sesIter = sessions->begin(); sesIter != sessions->end(); ++sesIter) {
+         if ((*sesIter)->Group())
+            summedPriority += (*sesIter)->Group()->Priority();
+      }
+      if (summedPriority > 0)
+         priority = (xps->Group()->Priority() * sessions->size()) / summedPriority;
+
+   }
+   int nWrks = (int)(nFreeCPUs * fNodesFraction * priority) + fMinForQuery;
    nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
    TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< nWrks);
 

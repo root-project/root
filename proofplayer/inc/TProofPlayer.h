@@ -27,6 +27,9 @@
 #ifndef ROOT_TArrayL64
 #include "TArrayL64.h"
 #endif
+#ifndef ROOT_TArrayF
+#include "TArrayF.h"
+#endif
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
@@ -141,6 +144,11 @@ public:
    void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                       Float_t initTime, Float_t procTime,
                       Float_t evtrti, Float_t mbrti); // *SIGNAL*
+   void      Progress(TSlave *, Long64_t total, Long64_t processed, Long64_t bytesread,
+                      Float_t initTime, Float_t procTime,
+                      Float_t evtrti, Float_t mbrti)
+                { Progress(total, processed, bytesread, initTime, procTime,
+                           evtrti, mbrti); } // *SIGNAL*
    void      Feedback(TList *objs); // *SIGNAL*
 
    TDrawFeedback *CreateDrawFeedback(TProof *p);
@@ -244,6 +252,11 @@ public:
    void           Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                            Float_t initTime, Float_t procTime,
                            Float_t evtrti, Float_t mbrti); // *SIGNAL*
+   void           Progress(TSlave *, Long64_t total, Long64_t processed, Long64_t bytesread,
+                           Float_t initTime, Float_t procTime,
+                           Float_t evtrti, Float_t mbrti)
+                      { Progress(total, processed, bytesread, initTime, procTime,
+                           evtrti, mbrti); } // *SIGNAL*
    void           Feedback(TList *objs); // *SIGNAL*
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
 
@@ -285,6 +298,11 @@ class TProofPlayerSuperMaster : public TProofPlayerRemote {
 private:
    TArrayL64 fSlaveProgress;
    TArrayL64 fSlaveTotals;
+   TArrayL64 fSlaveBytesRead;
+   TArrayF   fSlaveInitTime;
+   TArrayF   fSlaveProcTime;
+   TArrayF   fSlaveEvtRti;
+   TArrayF   fSlaveMBRti;
    TList     fSlaves;
    Bool_t    fReturnFeedback;
 
@@ -308,6 +326,9 @@ public:
                     { TProofPlayerRemote::Progress(total, processed, bytesread,
                                                    initTime, procTime, evtrti, mbrti); }
    void  Progress(TSlave *sl, Long64_t total, Long64_t processed);
+   void  Progress(TSlave *sl, Long64_t total, Long64_t processed, Long64_t bytesread,
+                  Float_t initTime, Float_t procTime,
+                  Float_t evtrti, Float_t mbrti);
 
    ClassDef(TProofPlayerSuperMaster,0)  // PROOF player running on super master
 };

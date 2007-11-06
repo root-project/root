@@ -35,6 +35,8 @@
 #  include "XrdSys/XrdSysPthread.hh"
 #endif
 #include "XrdProofdAux.h"
+#include "XrdProofConn.h"
+#include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 
 class XrdClientMessage;
@@ -62,8 +64,11 @@ class XrdProofdManager {
                                                          return &fActiveSessions; }
    void              AddActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
                                                               fActiveSessions.push_back(p); }
+   XrdProofServProxy *GetActiveSession(int pid);
    void              RemoveActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
                                                                  fActiveSessions.remove(p); }
+   // Connections to other xrootd running XrdProofdProtocols
+   XrdProofConn     *GetProofConn(const char *url);
 
    // Node properties
    int               SrvType() const { return fSrvType; }
@@ -73,6 +78,8 @@ class XrdProofdManager {
    const char       *Image() const { return fImage.c_str(); }
    const char       *WorkDir() const { return fWorkDir.c_str(); }
    const char       *DataSetDir() const { return fDataSetDir.c_str(); }
+
+   bool              IsSuperMst() const { return fSuperMst; }
 
    // This part may evolve in the future due to better understanding of
    // how resource brokering will work; for the time being we just move in
@@ -87,6 +94,7 @@ class XrdProofdManager {
    XrdSysRecMutex    fMutex;        // Atomize this instance
 
    XrdProofdFile     fCfgFile;      // Configuration file
+   bool              fSuperMst;     // true if this node is a SuperMst
 
    int               fSrvType;      // Master, Submaster, Worker or any
    XrdOucString      fEffectiveUser;  // Effective user
@@ -104,6 +112,8 @@ class XrdProofdManager {
    std::list<XrdProofServProxy *> fActiveSessions; // List of active sessions (non-idle)
 
    XrdSysError      *fEDest;        // Error message handler
+
+   XrdOucHash<XrdProofConn> fProofConnHash; // Available connections
 
    void              CreateDefaultPROOFcfg();
    int               ReadPROOFcfg();

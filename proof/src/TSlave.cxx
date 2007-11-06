@@ -341,7 +341,7 @@ void TSlave::Print(Option_t *) const
    const char *sst[] = { "invalid" , "valid", "inactive" };
    Int_t st = fSocket ? ((fStatus == kInactive) ? 2 : 1) : 0;
 
-   Printf("*** Slave %s  (%s)", fOrdinal.Data(), sst[st]);
+   Printf("*** Worker %s  (%s)", fOrdinal.Data(), sst[st]);
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    Printf("    ROOT version|rev|tag:    %s", GetROOTVersion());

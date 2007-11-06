@@ -137,6 +137,11 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
 
    Bool_t status = kTRUE;
 
+   // Skip prefix (e.g. "sm:") if any
+   const char *p = (const char *) strstr(fileName,":");
+   if (p)
+      fileName = p+1;
+
    // Use file specified by the cluster administrator, if any
    const char *cf = gSystem->Getenv("ROOTPROOFCONF");
    if (cf && !(gSystem->AccessPathName(cf, kReadPermission))) {
@@ -146,20 +151,26 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
          PDB(kGlobal,1)
             Info("ReadConfigFile", "file %s cannot be read:"
                  " check existence and/or permissions", (cf ? cf : ""));
-      // Use user defined file or default
-      // Add a proper path to the file name
-      fFileName.Form("%s/.%s", gSystem->HomeDirectory(), fileName);
-      PDB(kGlobal,2)
-         Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
-      if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-         fFileName.Form("%s/etc/proof/%s", confDir, fileName);
+      if (fileName && strlen(fileName) > 0) {
+         // Use user defined file or default
+         // Add a proper path to the file name
+         fFileName.Form("%s/.%s", gSystem->HomeDirectory(), fileName);
          PDB(kGlobal,2)
             Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
          if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-            PDB(kAll,1)
-               Info("ReadConfigFile", "no PROOF config file found");
-            return kFALSE;
+            fFileName.Form("%s/etc/proof/%s", confDir, fileName);
+            PDB(kGlobal,2)
+               Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
+            if (gSystem->AccessPathName(fFileName, kReadPermission)) {
+               PDB(kAll,1)
+                  Info("ReadConfigFile", "no PROOF config file found");
+               return kFALSE;
+            }
          }
+      } else {
+         PDB(kAll,1)
+            Info("ReadConfigFile", "no PROOF config file specified");
+         return kFALSE;
       }
    }
    PDB(kGlobal,1)
@@ -331,11 +342,7 @@ void TProofResourcesStatic::SetOption(TProofNodeInfo *nodeinfo,
    } else if (option == "config") {
       nodeinfo->fConfig = value;
    } else if (option == "msd") {
-      if (nodeinfo->fNodeType == TProofNodeInfo::GetNodeType("submaster")) {
-         nodeinfo->fMsd = value;
-      } else {
-         ::Error("SetOption","msd only valid for submasters [ignored]");
-      }
+      nodeinfo->fMsd = value;
    } else if (option == "port") {
       nodeinfo->fPort = value.Atoi();
    } else {

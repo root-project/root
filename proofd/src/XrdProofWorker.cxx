@@ -114,13 +114,9 @@ void XrdProofWorker::Reset(const char *str)
          fPerfIdx = strtol(tok.c_str(), (char **)0, 10);
       } else {
          // Unknown
-         TRACE(XERR, "XrdProofWorker::Reset: unknown option "<<tok);
+         TRACE(DBG, "XrdProofWorker::Reset: ignoring unknown option '"<<tok<<"'");
       }
    }
-
-   // Default image is the host name
-   if (fImage.length() <= 0)
-      fImage.assign(fHost, fHost.find('@')+1);
 }
 
 //__________________________________________________________________________

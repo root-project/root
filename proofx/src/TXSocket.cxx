@@ -116,7 +116,8 @@ Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
-           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE), fXrdProofdVersion(-1)
+           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE), fRDInterrupt(kFALSE),
+           fXrdProofdVersion(-1)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -211,8 +212,10 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
       fUser = fConn->fUser.c_str();
       fHost = fConn->fHost.c_str();
       fPort = fConn->fPort;
-      if (m == 'C')
+      if (m == 'C') {
+         fXrdProofdVersion = fConn->fRemoteProtocol;
          fRemoteProtocol = fConn->fRemoteProtocol;
+      }
 
       // Also in the base class
       fUrl = fConn->fUrl.GetUrl().c_str();
@@ -301,7 +304,7 @@ void TXSocket::Close(Option_t *opt)
    // A session ID can be given using #...# signature, e.g. "#1#".
    // Default is opt = "".
 
-   // Remove any reference in the glovbal pipe and ready-sock queue
+   // Remove any reference in the global pipe and ready-sock queue
    TXSocket::FlushPipe(this);
 
    // Make sure we are connected
@@ -873,111 +876,120 @@ Bool_t TXSocket::Create()
       return kFALSE;
    }
 
-   XPClientRequest reqhdr;
+   Int_t retriesleft = gEnv->GetValue("XProof.CreationRetries", 4);
 
-   // We fill the header struct containing the request for login
-   memset( &reqhdr, 0, sizeof(reqhdr));
-   fConn->SetSID(reqhdr.header.streamid);
+   while (retriesleft--) {
 
-   // This will be a kXP_attach or kXP_create request
-   if (fMode == 'A') {
-      reqhdr.header.requestid = kXP_attach;
-      reqhdr.proof.sid = fSessionID;
-   } else {
-      reqhdr.header.requestid = kXP_create;
-   }
+      XPClientRequest reqhdr;
 
-   // Send log level
-   reqhdr.proof.int1 = fLogLevel;
+      // We fill the header struct containing the request for login
+      memset( &reqhdr, 0, sizeof(reqhdr));
+      fConn->SetSID(reqhdr.header.streamid);
 
-   // Send also the chosen alias
-   const void *buf = (const void *)(fBuffer.Data());
-   reqhdr.header.dlen = fBuffer.Length();
-   if (gDebug >= 2)
-      Info("Create", "sending %d bytes to server", reqhdr.header.dlen);
-
-   // We call SendReq, the function devoted to sending commands.
-   if (gDebug > 1)
-      Info("Create", "creating session of server %s", fUrl.Data());
-
-   // server response header
-   struct ServerResponseBody_Protocol *srvresp = 0;
-   XrdClientMessage *xrsp = fConn->SendReq(&reqhdr, buf,
-                                          (void **)&srvresp, "TXSocket::Create");
-
-   // In any, the URL the data pool entry point will be stored here
-   fBuffer = "";
-   if (xrsp) {
-
-      //
-      // Pointer to data
-      void *pdata = (void *)(xrsp->GetData());
-      Int_t len = xrsp->DataLen();
-
-      if (len >= (Int_t)sizeof(kXR_int32)) {
-         // The first 4 bytes contain the session ID
-         kXR_int32 psid = 0;
-         memcpy(&psid, pdata, sizeof(kXR_int32));
-         fSessionID = net2host(psid);
-         pdata = (void *)((char *)pdata + sizeof(kXR_int32));
-         len -= sizeof(kXR_int32);
+      // This will be a kXP_attach or kXP_create request
+      if (fMode == 'A') {
+         reqhdr.header.requestid = kXP_attach;
+         reqhdr.proof.sid = fSessionID;
       } else {
-         Error("Create","session ID is undefined!");
+         reqhdr.header.requestid = kXP_create;
       }
 
-      if (len >= (Int_t)sizeof(kXR_int16)) {
-         // The second 2 bytes contain the remote PROOF protocol version
-         kXR_int16 dver = 0;
-         memcpy(&dver, pdata, sizeof(kXR_int16));
-         fRemoteProtocol = net2host(dver);
-         pdata = (void *)((char *)pdata + sizeof(kXR_int16));
-         len -= sizeof(kXR_int16);
-      } else {
-         Warning("Create","protocol version of the remote PROOF undefined!");
-      }
+      // Send log level
+      reqhdr.proof.int1 = fLogLevel;
 
-      if (fRemoteProtocol == 0) {
-         // We are dealing with an older server: the PROOF protocol is on 4 bytes
-         len += sizeof(kXR_int16);
-         kXR_int32 dver = 0;
-         memcpy(&dver, pdata, sizeof(kXR_int32));
-         fRemoteProtocol = net2host(dver);
-         pdata = (void *)((char *)pdata + sizeof(kXR_int32));
-         len -= sizeof(kXR_int32);
-      } else {
+      // Send also the chosen alias
+      const void *buf = (const void *)(fBuffer.Data());
+      reqhdr.header.dlen = fBuffer.Length();
+      if (gDebug >= 2)
+         Info("Create", "sending %d bytes to server", reqhdr.header.dlen);
+
+      // We call SendReq, the function devoted to sending commands.
+      if (gDebug > 1)
+         Info("Create", "creating session of server %s", fUrl.Data());
+
+      // server response header
+      struct ServerResponseBody_Protocol *srvresp = 0;
+      XrdClientMessage *xrsp = fConn->SendReq(&reqhdr, buf,
+                                             (void **)&srvresp, "TXSocket::Create");
+
+      // In any, the URL the data pool entry point will be stored here
+      fBuffer = "";
+      if (xrsp) {
+
+         //
+         // Pointer to data
+         void *pdata = (void *)(xrsp->GetData());
+         Int_t len = xrsp->DataLen();
+
+         if (len >= (Int_t)sizeof(kXR_int32)) {
+            // The first 4 bytes contain the session ID
+            kXR_int32 psid = 0;
+            memcpy(&psid, pdata, sizeof(kXR_int32));
+            fSessionID = net2host(psid);
+            pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+            len -= sizeof(kXR_int32);
+         } else {
+            Error("Create","session ID is undefined!");
+         }
+
          if (len >= (Int_t)sizeof(kXR_int16)) {
-            // The third 2 bytes contain the remote XrdProofdProtocol version
+            // The second 2 bytes contain the remote PROOF protocol version
             kXR_int16 dver = 0;
             memcpy(&dver, pdata, sizeof(kXR_int16));
-            fXrdProofdVersion = net2host(dver);
+            fRemoteProtocol = net2host(dver);
             pdata = (void *)((char *)pdata + sizeof(kXR_int16));
             len -= sizeof(kXR_int16);
          } else {
-            Warning("Create","version of the remote XrdProofdProtocol undefined!");
+            Warning("Create","protocol version of the remote PROOF undefined!");
          }
+
+         if (fRemoteProtocol == 0) {
+            // We are dealing with an older server: the PROOF protocol is on 4 bytes
+            len += sizeof(kXR_int16);
+            kXR_int32 dver = 0;
+            memcpy(&dver, pdata, sizeof(kXR_int32));
+            fRemoteProtocol = net2host(dver);
+            pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+            len -= sizeof(kXR_int32);
+         } else {
+            if (len >= (Int_t)sizeof(kXR_int16)) {
+               // The third 2 bytes contain the remote XrdProofdProtocol version
+               kXR_int16 dver = 0;
+               memcpy(&dver, pdata, sizeof(kXR_int16));
+               fXrdProofdVersion = net2host(dver);
+               pdata = (void *)((char *)pdata + sizeof(kXR_int16));
+               len -= sizeof(kXR_int16);
+            } else {
+               Warning("Create","version of the remote XrdProofdProtocol undefined!");
+            }
+         }
+
+         if (len > 0) {
+            // From top masters, the url of the data pool
+            char *url = new char[len+1];
+            memcpy(url, pdata, len);
+            url[len] = 0;
+            fBuffer = url;
+            delete[] url;
+         }
+
+         // Cleanup
+         SafeDelete(xrsp);
+         if (srvresp)
+            free(srvresp);
+
+         // Notify
+         return kTRUE;
+      } else {
+         // Print error mag, if any
+         if (fConn->GetLastErr())
+            Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
       }
 
-      if (len > 0) {
-         // From top masters, the url of the data pool
-         char *url = new char[len+1];
-         memcpy(url, pdata, len);
-         url[len] = 0;
-         fBuffer = url;
-         delete[] url;
-      }
+      Info("Create",
+           "creation/attachment attempt failed: %d attempts left", retriesleft);
 
-      // Cleanup
-      SafeDelete(xrsp);
-      if (srvresp)
-         free(srvresp);
-
-      // Notify
-      return kTRUE;
-   } else {
-      // Print error mag, if any
-      if (fConn->GetLastErr())
-         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
-   }
+   } // Creation retries
 
    // Notify failure
    Error("Create:",
@@ -1033,13 +1045,15 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
       // ok
       return nsent;
    } else {
-      // Print error mag, if any
+      // Print error message, if any
       if (fConn->GetLastErr())
          Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
+      else
+         Printf("%s: error occured but no message from server", fHost.Data());
    }
 
    // Failure notification (avoid using the handler: we may be exiting)
-   Error("SendRaw", "problems sending data to server");
+   Error("SendRaw", "%s: problems sending data to server", fHost.Data());
 
    return -1;
 }
@@ -1111,10 +1125,10 @@ Int_t TXSocket::PickUpReady()
 
    // User can choose whether to wait forever or for a fixed amount of time
    if (!fDontTimeout) {
-      static Int_t timeout = gEnv->GetValue("XProof.ReadTimeout", 60) * 1000;
+      static Int_t timeout = gEnv->GetValue("XProof.ReadTimeout", 300) * 1000;
       static Int_t dt = 2000;
       Int_t to = timeout;
-      while (to) {
+      while (to && !fRDInterrupt) {
          if (fASem.Wait(dt) != 0) {
             to -= dt;
             if (to <= 0) {
@@ -1126,6 +1140,12 @@ Int_t TXSocket::PickUpReady()
             }
          } else
             break;
+      }
+      // We wait forever
+      if (fRDInterrupt) {
+         Error("PickUpReady","interrupted");
+         fRDInterrupt = kFALSE;
+         return -1;
       }
    } else {
       // We wait forever
@@ -1454,8 +1474,8 @@ Int_t TXSocket::Recv(TMessage *&mess)
 }
 
 //______________________________________________________________________________
-TObjString *TXSocket::SendCoordinator(Int_t kind,
-                                      const char *msg, Int_t int2, Long64_t l64)
+TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
+                                      Long64_t l64, Int_t int3, const char *)
 {
    // Send message to intermediate coordinator.
    // If any output is due, this is returned as an obj string to be
@@ -1509,6 +1529,12 @@ TObjString *TXSocket::SendCoordinator(Int_t kind,
          reqhdr.header.requestid = kXP_readbuf;
          reqhdr.readbuf.ofs = l64;
          reqhdr.readbuf.len = int2;
+         if (int3 > 0 && fXrdProofdVersion < 1003) {
+            Info("SendCoordinator", "kReadBuffer: old server (ver %d < 1003):"
+                 " grep functionality not supported", fXrdProofdVersion);
+            return sout;
+         }
+         reqhdr.readbuf.int1 = int3;
          if (!msg || strlen(msg) <= 0) {
             Info("SendCoordinator", "kReadBuffer: file path undefined");
             return sout;
@@ -1625,7 +1651,10 @@ void TXSocket::InitEnvs()
    if (denyCO.Length() > 0)
       EnvPutString(NAME_CONNECTDOMAINDENY_RE, denyCO.Data());
 
-   // Connect Timeout
+   // Max number of retries on first connect and related timeout
+   XrdProofConn::SetRetryParam(-1, -1);
+   Int_t maxRetries = gEnv->GetValue("XProof.FirstConnectMaxCnt",5);
+   EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxRetries);
    Int_t connTO = gEnv->GetValue("XProof.ConnectTimeout", 2);
    EnvPutInt(NAME_CONNECTTIMEOUT, connTO);
 
@@ -1643,12 +1672,19 @@ void TXSocket::InitEnvs()
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
 
-   // Max number of retries on first connect
-   Int_t maxRetries = gEnv->GetValue("XProof.FirstConnectMaxCnt",5);
-   EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxRetries);
-
    // No automatic proofd backward-compatibility
    EnvPutInt(NAME_KEEPSOCKOPENIFNOTXRD, 0);
+
+   // Dynamic forwarding (SOCKS4)
+   TString socks4Host = gEnv->GetValue("XNet.SOCKS4Host","");
+   Int_t socks4Port = gEnv->GetValue("XNet.SOCKS4Port",-1);
+   if (socks4Port > 0) {
+      if (socks4Host.IsNull())
+         // Default
+         socks4Host = "127.0.0.1";
+      EnvPutString(NAME_SOCKS4HOST, socks4Host.Data());
+      EnvPutInt(NAME_SOCKS4PORT, socks4Port);
+   }
 
    // For password-based authentication
    TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");

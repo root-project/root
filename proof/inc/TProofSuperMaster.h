@@ -48,7 +48,8 @@ protected:
 
 public:
    TProofSuperMaster(const char *masterurl, const char *conffile = kPROOF_ConfFile,
-                     const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
+                     const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
+                     const char *alias = 0, TProofMgr *mgr = 0);
    virtual ~TProofSuperMaster() { }
 
    ClassDef(TProofSuperMaster,0) //PROOF control class for making submasters

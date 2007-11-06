@@ -517,6 +517,11 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
    // with GetPathsInfo.
    // Return the number of paths found or -1 if any error occured.
 
+   if (!paths) {
+      Warning("Prepare", "input list is empty!");
+      return -1;
+   }
+
    Int_t npaths = 0;
 
    TXNetSystemConnectGuard cg(this, "");

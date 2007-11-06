@@ -54,6 +54,12 @@ friend class TPacketizerProgressive;
 friend class TPacketizerUnit;
 
 private:
+   enum EUseEstOpt {        // Option for usage of estimated values
+      kEstOff     = 0,
+      kEstCurrent = 1,
+      kEstAverage = 2
+   };
+
    Long64_t  fProcessed;    // number of entries processed
    Long64_t  fBytesRead;    // number of bytes processed
    TTimer   *fProgress;     // progress updates timer
@@ -68,7 +74,9 @@ private:
    Float_t   fTimeUpdt;     // time between updates
    TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
                             // rate calculations
-   Long_t     fCircN;       // Circularity
+   Long_t    fCircN;        // Circularity
+
+   EUseEstOpt fUseEstOpt;   // Control usage of estimated values for the progress info
 
    TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
    void operator=(const TVirtualPacketizer &);      // error on accidental usage
@@ -91,6 +99,8 @@ public:
    Bool_t                  IsValid() const { return fValid; }
    Long64_t                GetEntriesProcessed() const { return fProcessed; }
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
+   virtual Int_t           GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes)
+                           { ent = fProcessed; bytes = fBytesRead; return 0; }
    Long64_t                GetTotalEntries() const { return fTotalEntries; }
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            SetInitTime();

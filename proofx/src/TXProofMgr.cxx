@@ -418,7 +418,8 @@ Int_t TXProofMgr::Reset(const char *usr)
 }
 
 //_____________________________________________________________________________
-TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
+TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
+                                      const char *stag, const char *pattern)
 {
    // Get logs or log tails from last session associated with this manager
    // instance.
@@ -428,6 +429,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
    //              so -1 and 1 are equivalent.
    //      stag    specifies the unique tag of the wanted session
    // If 'stag' is specified 'isess' is ignored.
+   // If 'pattern' is specified only the lines containing it are retrieved
+   // (remote grep functionality); to filter out a pattern 'pat' use
+   // pattern = "-v pat".
    // Returns a TProofLog object (to be deleted by the caller) on success,
    // 0 if something wrong happened.
 
@@ -489,8 +493,12 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
       // Cleanup
       SafeDelete(os);
       // Retrieve the default part
-      if (pl)
-         pl->Retrieve();
+      if (pl) {
+         if (pattern && strlen(pattern) > 0)
+            pl->Retrieve("*", TProofLog::kGrep, 0, pattern);
+         else
+            pl->Retrieve();
+      }
    }
 
    // Done
@@ -510,7 +518,43 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
    }
 
    // Send the request
-   return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs);
+   return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs, 0);
+}
+
+//______________________________________________________________________________
+TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
+{
+   // Read, via the coordinator, lines containing 'pattern' in 'file'.
+   // Returns a TObjString with the content or 0, in case of failure
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("ReadBuffer","invalid TXProofMgr - do nothing");
+      return (TObjString *)0;
+   }
+
+   // Grep option
+   Int_t k = 0;
+   Int_t opt = 1;
+   if (!strncmp(pattern,"-v ",3)) {
+      opt = 2;
+      k = 3;
+   }
+
+   // Prepare the buffer
+   Int_t i = k;
+   Int_t plen = strlen(pattern);
+
+   Int_t len = strlen(fin) + plen - k;
+   char *buf = new char[len + 1];
+   memcpy(buf, fin, strlen(fin));
+   Int_t j = strlen(fin);
+   for (i = k; i < plen; i++)
+      buf[j++] = pattern[i];
+   buf[len] = 0;
+
+   // Send the request
+   return fSocket->SendCoordinator(TXSocket::kReadBuffer, buf, plen - k, 0, opt);
 }
 
 //______________________________________________________________________________

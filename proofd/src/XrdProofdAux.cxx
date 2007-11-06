@@ -438,6 +438,7 @@ int XrdProofdAux::GetNumCPUs()
    // Use cached value, if any
    if (ncpu > 0)
       return ncpu;
+   ncpu = 0;
 
 #if defined(linux)
    // Look for in the /proc/cpuinfo file
@@ -445,13 +446,13 @@ int XrdProofdAux::GetNumCPUs()
    FILE *fc = fopen(fcpu.c_str(), "r");
    if (!fc) {
       if (errno == ENOENT) {
-         MTRACE(DBG, MHEAD, "GetNumCPUs: /proc/cpuinfo missing!!! Something very bad going on");
+         MPRINT(MHEAD, "GetNumCPUs: /proc/cpuinfo missing!!! Something very bad going on");
       } else {
          XrdOucString emsg("GetNumCPUs: cannot open ");
          emsg += fcpu;
          emsg += ": errno: ";
          emsg += errno;
-         MTRACE(XERR, MHEAD, emsg.c_str());
+         MPRINT(MHEAD, emsg.c_str());
       }
       return -1;
    }
@@ -486,6 +487,8 @@ int XrdProofdAux::GetNumCPUs()
       pclose(fp);
    }
 #endif
+
+   MPRINT(MHEAD, "GetNumCPUs: # of cores found: "<<ncpu);
 
    // Done
    return (ncpu <= 0) ? (int)(-1) : ncpu ;

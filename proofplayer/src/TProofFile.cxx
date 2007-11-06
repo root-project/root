@@ -55,7 +55,7 @@ TProofFile::TProofFile(const char* path, const char* location, const char* mode)
    if (fDir == "file:") {
       fIsLocal = kTRUE;
       // The directory for the file will be the sandbox
-      TString pfx  = gEnv->GetValue("ProofServ.Localroot","");
+      TString pfx  = gEnv->GetValue("Path.Localroot","");
       fDir = Form("root://%s",gSystem->HostName());
       if (gSystem->Getenv("XRDPORT")) {
          TString sp(gSystem->Getenv("XRDPORT"));

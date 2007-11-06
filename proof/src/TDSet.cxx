@@ -330,9 +330,9 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   // Take into acoount possible prefixes
+   // Take into account possible prefixes
    TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   TString fname = gEnv->GetValue("Path.Localroot","");
    if (!fname.IsNull())
       typ = TFile::GetType(GetName(), "", &fname);
    if (typ != TFile::kLocal)
@@ -348,8 +348,13 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
       return -1;
    }
 
-   // Record end-point Url and mark as looked-up
-   fName = ((TUrl *)file->GetEndpointUrl())->GetUrl();
+   // Record end-point Url and mark as looked-up; be careful to change
+   // nothing in the file name, otherwise some cross-checks may fail
+   TUrl *eu = (TUrl *) file->GetEndpointUrl();
+   if (strlen(eu->GetProtocol()) > 0 && strcmp(eu->GetProtocol(), "file"))
+      fName = eu->GetUrl();
+   else
+      fName = eu->GetFileAndOptions();
    SetBit(kHasBeenLookedUp);
 
    TDirectory *dirsave = gDirectory;
@@ -1018,7 +1023,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
 
    // Take into acoount possible prefixes
    TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   TString fname = gEnv->GetValue("Path.Localroot","");
    if (!fname.IsNull())
       typ = TFile::GetType(filename, "", &fname);
    if (typ != TFile::kLocal)
@@ -1293,7 +1298,7 @@ void TDSet::Validate(TDSet* dset)
       if (!elem->GetValid()) continue;
       TString dir_file_obj = elem->GetDirectory();
       dir_file_obj += "_";
-      dir_file_obj += elem->GetFileName();
+      dir_file_obj += TUrl(elem->GetFileName()).GetFileAndOptions();
       dir_file_obj += "_";
       dir_file_obj += elem->GetObjName();
       TPair *p = dynamic_cast<TPair*>(bestElements.FindObject(dir_file_obj));
@@ -1317,7 +1322,7 @@ void TDSet::Validate(TDSet* dset)
       if (!elem->GetValid()) {
          TString dir_file_obj = elem->GetDirectory();
          dir_file_obj += "_";
-         dir_file_obj += elem->GetFileName();
+         dir_file_obj += TUrl(elem->GetFileName()).GetFileAndOptions();
          dir_file_obj += "_";
          dir_file_obj += elem->GetObjName();
          if (TPair *p = dynamic_cast<TPair*>(bestElements.FindObject(dir_file_obj))) {

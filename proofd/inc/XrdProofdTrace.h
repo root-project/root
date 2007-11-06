@@ -49,7 +49,7 @@
 R__EXTERN XrdOucTrace *XrdProofdTrace;
 
 // Auxilliary macro
-#define TRACING(x) (XrdProofdTrace->What & TRACE_ ## x)
+#define TRACING(x) (XrdProofdTrace && (XrdProofdTrace->What & TRACE_ ## x))
 #define TRACESET(act,on) \
         if (on) { \
            XrdProofdTrace->What |= TRACE_ ## act; \

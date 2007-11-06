@@ -24,6 +24,10 @@
 
 #define DFLT_CONNECTMAXTRY           10
 
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#endif
+
 #ifndef ROOT_XProofProtocol
 #include "XProofProtocol.h"
 #endif
@@ -130,7 +134,7 @@ public:
    const char         *GetUrl() { return (const char *) fUrl.GetUrl().c_str(); }
    const char         *GetLastErr() { return fLastErrMsg.c_str(); }
 
-   bool                IsValid() const { return fConnected; }
+   bool                IsValid() const;
 
    // Send, Recv interfaces
    virtual int         ReadRaw(void *buf, int len);

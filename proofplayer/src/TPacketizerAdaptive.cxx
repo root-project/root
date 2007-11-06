@@ -419,6 +419,21 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          fgMaxSlaveCnt =  si.fCpus;
    }
 
+   // if forceLocal parameter is set to 1 then eliminate the cross-worker
+   // processing;
+   // This minimizes the network usage on the PROOF cluser at the expense of
+   // longer jobs processing times.
+   // To process successfully the session must have workers with all the data!
+   fForceLocal = kFALSE;
+   Long_t forceLocal = 0;
+   if (TProof::GetParameter(input, "PROOF_ForceLocal", forceLocal) == 0) {
+      if (forceLocal == 1)
+         fForceLocal = kTRUE;
+      else
+         Info("Process",
+            "The only accepted value of PROOF_ForceLocal parameter is 1 !");
+   }
+
    // Below we provide a possibility to change the way packet size is
    // calculated or define the packet time directly.
    // fPacketAsAFraction can be interpreted as follows:
@@ -1198,8 +1213,12 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          // local file node exists and has more events to process.
          fUnAllocated->Sort();
          TFileNode* firstNonLocalNode = (TFileNode*)fUnAllocated->First();
-         Bool_t nonLocalNodePossible =
-            firstNonLocalNode?(firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
+         Bool_t nonLocalNodePossible;
+         if (fForceLocal)
+            nonLocalNodePossible = 0;
+         else
+            nonLocalNodePossible = firstNonLocalNode?
+               (firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible ) {
@@ -1246,12 +1265,12 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       }
 
       // try to find an unused filenode first
-      if(file == 0) {
+      if(file == 0 && !fForceLocal) {
          file = GetNextUnAlloc();
       }
 
       // then look at the active filenodes
-      if(file == 0) {
+      if(file == 0 && !fForceLocal) {
          file = GetNextActive();
       }
 
@@ -1300,4 +1319,66 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
    return slstat->fCurElem;
+}
+
+//______________________________________________________________________________
+Int_t TPacketizerAdaptive::GetEstEntriesProcessed(Float_t t,
+                                                  Long64_t &ent, Long64_t &bytes)
+{
+   // Get estimation for the number of processed entries and bytes read at time t,
+   // based on the numbers already processed and the latests worker measured speeds.
+   // Only the estimation for the entries is currently implemented.
+   // This is needed to smooth the instantaneous rate plot.
+
+   // Default value
+   ent = fProcessed;
+   bytes = fBytesRead;
+
+   // Parse option
+   if (fUseEstOpt == kEstOff)
+      // Do not use estimation
+      return 0;
+   Bool_t current = (fUseEstOpt == kEstCurrent) ? kTRUE : kFALSE;
+
+   // Loop over the workers
+   Float_t trate = 0.;
+   if (fSlaveStats && fSlaveStats->GetSize() > 0) {
+      ent = 0;
+      TIter nxw(fSlaveStats);
+      TObject *key;
+      while ((key = nxw()) != 0) {
+         TSlaveStat *slstat = (TSlaveStat *) fSlaveStats->GetValue(key);
+         if (slstat) {
+            // Those surely processed
+            Long64_t e = slstat->fProcessed;
+            // Time elapsed since last update
+            Float_t dt = (t > slstat->fProcTime) ? t - slstat->fProcTime : 0;
+            // Add estimated entries processed since last update
+            Float_t rate = (current && slstat->GetCurRate() > 0) ? slstat->GetCurRate()
+                                                                 : slstat->GetAvgRate();
+            trate += rate;
+            // Add estimated entries processed since last update
+            e += (Long64_t) (dt * rate);
+            // Add to the total
+            ent += e;
+            // Notify
+            PDB(kPacketizer,3)
+               Info("GetEstEntriesProcessed","%s: e:%lld rate:%f dt:%f e:%lld",
+                                          slstat->fSlave->GetOrdinal(),
+                                          slstat->fProcessed, rate, dt, e);
+         }
+      }
+   }
+   // Notify
+   PDB(kPacketizer,2)
+      Info("GetEstEntriesProcessed",
+           "estimated entries: %lld, bytes read: %lld rate: %f", ent, bytes, trate);
+
+   // Check values
+   ent = (ent > 0) ? ent : fProcessed;
+   ent = (ent <= fTotalEntries) ? ent : fTotalEntries;
+   bytes = (bytes > 0) ? bytes : fBytesRead;
+
+   // Done
+   return 0;
 }

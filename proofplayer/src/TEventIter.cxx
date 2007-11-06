@@ -127,7 +127,7 @@ Int_t TEventIter::LoadDir()
 
       // Take into acoount possible prefixes
       TFile::EFileType typ = TFile::kDefault;
-      TString fname = gEnv->GetValue("ProofServ.Localroot","");
+      TString fname = gEnv->GetValue("Path.Localroot","");
       if (!fname.IsNull())
          typ = TFile::GetType(fFilename, "", &fname);
       if (typ != TFile::kLocal)
@@ -434,7 +434,7 @@ TTree* TEventIterTree::Load(TDSetElement *e)
    const char *tn = e->GetObjName();
 
    TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("ProofServ.Localroot","");
+   TString fname = gEnv->GetValue("Path.Localroot","");
    if (!fname.IsNull())
       typ = TFile::GetType(fn, "", &fname);
    if (typ != TFile::kLocal)

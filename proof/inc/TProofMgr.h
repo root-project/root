@@ -73,14 +73,16 @@ public:
    virtual void        DetachSession(Int_t, Option_t * = "");
    virtual TProofDesc *GetProofDesc(Int_t id);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
-   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0)
+   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0, const char * = 0)
                                                       { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual void        ShowROOTVersions() { }
    virtual TList      *QuerySessions(Option_t *opt = "S");
-   virtual TObjString *ReadBuffer(const char * = 0, Long64_t = 0,
-                             Int_t = 0) { return (TObjString *)0; }
+   virtual TObjString *ReadBuffer(const char *, Long64_t, Int_t)
+                                        { return (TObjString *)0; }
+   virtual TObjString *ReadBuffer(const char *, const char *)
+                                        { return (TObjString *)0; }
    virtual Int_t       Reset(const char *usr = 0);
    virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }

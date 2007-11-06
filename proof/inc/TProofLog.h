@@ -46,7 +46,8 @@ public:
    enum ELogLocationBit {
       kLogToBox = BIT(16)
    };
-   enum ERetrieveOpt   { kLeading = 0x1, kTrailing = 0x2, kAll = 0x3 };
+   enum ERetrieveOpt   { kLeading = 0x1, kTrailing = 0x2,
+                         kAll = 0x3, kGrep = 0x4 };
 
    TProofLog(const char *stag, const char *url, TProofMgr *mgr);
    virtual ~TProofLog();
@@ -56,7 +57,7 @@ public:
    void Prt(const char *what);
    Int_t Retrieve(const char *ord = "*",
                   TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
-                  const char *fname = 0);
+                  const char *fname = 0, const char *pattern = 0);
    Int_t Save(const char *ord = "*", const char *fname = 0);
    Int_t Grep(const char *txt, Int_t from = 0);
 
@@ -89,7 +90,8 @@ public:
    void Display(Int_t from = 0, Int_t to = -1);
    void Print(Option_t *opt = 0) const;
    void Prt(const char *what);
-   Int_t Retrieve(TProofLog::ERetrieveOpt opt = TProofLog::kTrailing);
+   Int_t Retrieve(TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
+                  const char *pattern = 0);
    Int_t Grep(const char *txt, TString &res, Int_t from = 0);
 
    static Long64_t GetMaxTransferSize();

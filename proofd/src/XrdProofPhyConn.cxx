@@ -68,6 +68,9 @@ bool XrdProofPhyConn::Init(const char *url)
 {
    // Initialization
 
+   // Mutex
+   fMutex = new XrdSysRecMutex();
+
    // Save url
    fUrl.TakeUrl(XrdOucString(url));
 

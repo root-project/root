@@ -373,14 +373,15 @@ void XrdProofdClient::SaveUNIXPath()
    fUNIXSockSaved = 1;
 }
 //______________________________________________________________________________
-int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx)
+int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx, bool notify)
 {
    // Guess session tag completing 'tag' (typically "-<pid>") by scanning the
    // active session file or the session dir.
    // In case of success, tag is filled with the full tag and 0 is returned.
    // In case of failure, -1 is returned.
 
-   TRACE(ACT, "GuessTag: enter: tag: "<<tag);
+   if (notify)
+      TRACE(ACT, "GuessTag: enter: tag: "<<tag);
 
    bool found = 0;
    bool last = (tag == "last") ? 1 : 0;
@@ -414,19 +415,22 @@ int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx)
             // Unlock the file
             lseek(fileno(fact), 0, SEEK_SET);
             if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-               TRACE(DBG, "GuessTag: cannot unlock file "<<fn<<" ; fact: "<<fact<<
-                          ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
+               if (notify)
+                  TRACE(DBG, "GuessTag: cannot unlock file "<<fn<<" ; fact: "<<fact<<
+                             ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
 
          } else {
-            TRACE(DBG, "GuessTag: cannot lock file: "<<fn<<" ; fact: "<<fact<<
-                       ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
+            if (notify)
+               TRACE(DBG, "GuessTag: cannot lock file: "<<fn<<" ; fact: "<<fact<<
+                          ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
          }
          // Close the file
          fclose(fact);
 
       } else {
-         TRACE(DBG, "GuessTag: cannot open file "<<fn<<
-                    " for reading (errno: "<<errno<<")");
+         if (notify)
+            TRACE(DBG, "GuessTag: cannot open file "<<fn<<
+                       " for reading (errno: "<<errno<<")");
       }
    }
 
@@ -434,14 +438,16 @@ int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx)
 
       // Search the tag in the dirs
       std::list<XrdOucString *> staglst;
+      staglst.clear();
       int rc = GetSessionDirs(3, &staglst, &tag);
       if (rc < 0) {
-         TRACE(XERR, "GuessTag: cannot scan dir "<<Workdir());
+         if (notify)
+            TRACE(XERR, "GuessTag: cannot scan dir "<<Workdir());
          return -1;
       }
       found = (rc == 1) ? 1 : 0;
 
-      if (!found) {
+      if (!found && staglst.size() > 0) {
          // Take last one, if required
          if (last) {
             tag = staglst.front()->c_str();
@@ -468,7 +474,8 @@ int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx)
       if (found) {
          tag.replace("session-", "");
       } else {
-         TRACE(DBG, "GuessTag: tag "<<tag<<" not found in dir");
+         if (notify)
+            TRACE(DBG, "GuessTag: tag "<<tag<<" not found in dir");
       }
    }
 
@@ -549,7 +556,7 @@ int XrdProofdClient::AddNewSession(const char *tag)
 }
 
 //______________________________________________________________________________
-int XrdProofdClient::MvOldSession(const char *tag)
+int XrdProofdClient::MvOldSession(const char *tag, bool notify)
 {
    // Move record for tag from the active sessions file to the old 
    // sessions file (<SandBox>/.sessions). The active file is removed if
@@ -564,10 +571,12 @@ int XrdProofdClient::MvOldSession(const char *tag)
 
    // Check inputs
    if (!tag) {
-      TRACE(XERR, "MvOldSession: invalid input");
+      if (notify)
+         TRACE(XERR, "MvOldSession: invalid input");
       return -1;
    }
-   TRACE(ACT, "MvOldSession: enter: tag:"<<tag<<", maxold:"<<fgMaxOldLogs);
+   if (notify)
+      TRACE(ACT, "MvOldSession: enter: tag:"<<tag<<", maxold:"<<fgMaxOldLogs);
 
    // Update of the active file
    XrdOucString fna = Workdir();
@@ -576,15 +585,17 @@ int XrdProofdClient::MvOldSession(const char *tag)
    // Open the file
    FILE *fact = fopen(fna.c_str(), "a+");
    if (!fact) {
-      TRACE(XERR, "MvOldSession: cannot open file "<<fna<<
-                 " (errno: "<<errno<<")");
+      if (notify)
+         TRACE(XERR, "MvOldSession: cannot open file "<<fna<<
+                     " (errno: "<<errno<<")");
       return -1;
    }
 
    // Lock the file
    if (lockf(fileno(fact), F_LOCK, 0) == -1) {
-      TRACE(XERR, "MvOldSession: cannot lock file "<<fna<<
-                 " (errno: "<<errno<<")");
+      if (notify)
+         TRACE(XERR, "MvOldSession: cannot lock file "<<fna<<
+                     " (errno: "<<errno<<")");
       fclose(fact);
       return -1;
    }
@@ -605,8 +616,9 @@ int XrdProofdClient::MvOldSession(const char *tag)
 
    // Truncate the file
    if (ftruncate(fileno(fact), 0) == -1) {
-      TRACE(XERR, "MvOldSession: cannot truncate file "<<fna<<
-                 " (errno: "<<errno<<")");
+      if (notify)
+         TRACE(XERR, "MvOldSession: cannot truncate file "<<fna<<
+                     " (errno: "<<errno<<")");
       lseek(fileno(fact), 0, SEEK_SET);
       lockf(fileno(fact), F_ULOCK, 0);
       fclose(fact);
@@ -627,8 +639,9 @@ int XrdProofdClient::MvOldSession(const char *tag)
    // Unlock the file
    lseek(fileno(fact), 0, SEEK_SET);
    if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-      TRACE(XERR, "MvOldSession: cannot unlock file "<<fna<<
-                  " (errno: "<<errno<<")");
+      if (notify)
+         TRACE(XERR, "MvOldSession: cannot unlock file "<<fna<<
+                     " (errno: "<<errno<<")");
 
    // Close the file
    fclose(fact);
@@ -636,8 +649,9 @@ int XrdProofdClient::MvOldSession(const char *tag)
    // Unlink the file if empty
    if (unlk)
       if (unlink(fna.c_str()) == -1) 
-         TRACE(XERR, "MvOldSession: cannot unlink file "<<fna<<
-                    " (errno: "<<errno<<")");
+         if (notify)
+            TRACE(XERR, "MvOldSession: cannot unlink file "<<fna<<
+                        " (errno: "<<errno<<")");
 
    // Flag the session as closed
    XrdOucString fterm = Workdir();
@@ -647,8 +661,9 @@ int XrdProofdClient::MvOldSession(const char *tag)
    // Create the file
    FILE *ft = fopen(fterm.c_str(), "w");
    if (!ft) {
-      TRACE(XERR, "MvOldSession: cannot open file "<<fterm<<
-                 " (errno: "<<errno<<")");
+      if (notify)
+         TRACE(XERR, "MvOldSession: cannot open file "<<fterm<<
+                     " (errno: "<<errno<<")");
       return -1;
    }
    fclose(ft);
@@ -658,22 +673,28 @@ int XrdProofdClient::MvOldSession(const char *tag)
 
       // Get list of terminated session working dirs
       std::list<XrdOucString *> staglst;
+      staglst.clear();
       if (GetSessionDirs(2, &staglst) != 0) {
-         TRACE(XERR, "MvOldSession: cannot get list of dirs ");
+         if (notify)
+            TRACE(XERR, "MvOldSession: cannot get list of dirs ");
          return -1;
       }
-      TRACE(DBG, "MvOldSession: number of working dirs: "<<staglst.size());
+      if (notify)
+         TRACE(DBG, "MvOldSession: number of working dirs: "<<staglst.size());
 
-      std::list<XrdOucString *>::iterator i;
-      for (i = staglst.begin(); i != staglst.end(); ++i) {
-         TRACE(HDBG, "MvOldSession: found "<<(*i)->c_str());
+      if (notify) {
+         std::list<XrdOucString *>::iterator i;
+         for (i = staglst.begin(); i != staglst.end(); ++i) {
+            TRACE(HDBG, "MvOldSession: found "<<(*i)->c_str());
+         }
       }
 
       // Remove the oldest, if needed
       while ((int)staglst.size() > fgMaxOldLogs) {
          XrdOucString *s = staglst.back();
          if (s) {
-            TRACE(HDBG, "MvOldSession: removing "<<s->c_str());
+            if (notify)
+               TRACE(HDBG, "MvOldSession: removing "<<s->c_str());
             // Remove associated workdir
             XrdOucString rmcmd = "/bin/rm -rf ";
             rmcmd += Workdir();

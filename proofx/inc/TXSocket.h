@@ -104,6 +104,7 @@ private:
 
    // Whether to timeout or not
    Bool_t              fDontTimeout;   // If true wait forever for incoming messages
+   Bool_t              fRDInterrupt;   // To interrupt waiting for messages
 
    // Version of the remote XrdProofdProtocol
    Int_t               fXrdProofdVersion;
@@ -137,7 +138,7 @@ private:
    static void         DumpReadySock(); // Dump content of the ready-socket list
 
 public:
-   // Should be the same as in proofd/src/XrdProofdProtocol.cxx (local definitions)
+   // Should be the same as in proofd/inc/XProofProtocol.h (local definitions)
    enum ECoordMsgType { kQuerySessions = 1000,
                         kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers,
                         kCleanupSessions,
@@ -145,7 +146,7 @@ public:
                         kReadBuffer,
                         kQueryROOTVersions,
                         kROOTVersion,
-                        kGroupProperties };
+                        kGroupProperties};
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 
@@ -190,8 +191,8 @@ public:
    Int_t               SendRaw(const void *buf, Int_t len,
                                ESendRecvOptions opt = kDontBlock);
 
-   TObjString         *SendCoordinator(Int_t kind,
-                                       const char *msg = 0, Int_t int2 = 0, Long64_t l64 = 0);
+   TObjString         *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0,
+                                       Long64_t l64 = 0, Int_t int3 = 0, const char *opt = 0);
 
 
    // Recv interfaces
@@ -213,7 +214,8 @@ public:
    void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
 
    // Interrupt the low level socket
-   void                SetInterrupt() { if (fConn) fConn->SetInterrupt(); }
+   void                SetInterrupt() { fRDInterrupt = kTRUE;
+                                        if (fConn) fConn->SetInterrupt(); }
 
    // Flush the asynchronous queue
    Int_t               Flush();
