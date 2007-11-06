@@ -17,6 +17,7 @@
 
 // ROOT
 #include "TClass.h"
+#include "TMethod.h"
 #include "TCollection.h"
 #include "TDirectory.h"
 #include "TSeqCollection.h"
@@ -38,6 +39,8 @@
 #include <string>
 #include <stdio.h>
 #include <utility>
+
+#include <iostream>
 
 
 namespace {
@@ -1662,13 +1665,17 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
-      std::string itername = name + "::iterator";
+      TClass* klass = TClass::GetClass( name.c_str() );
+      TMethod* meth = klass->GetMethodAllAny( "begin" );
 
-      Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
-      TClass* klass = TClass::GetClass( itername.c_str() );
-      gErrorIgnoreLevel = oldl;
+      TClass* iklass = 0;
+      if ( meth ) {
+         Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
+         iklass = TClass::GetClass( meth->GetReturnTypeName() );
+         gErrorIgnoreLevel = oldl;
+      }
 
-      if ( klass && klass->GetClassInfo() ) {
+      if ( iklass && iklass->GetClassInfo() ) {
          Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
       } else if ( HasAttrDirect( pyclass, "__getitem__" ) && HasAttrDirect( pyclass, "__len__" ) ) {
          Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
