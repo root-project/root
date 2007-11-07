@@ -527,10 +527,10 @@ Bool_t TGListTree::HandleButton(Event_t *event)
                (event->fX > minxchk)) {
                fLastY = event->fY;
                ToggleItem(item);
-               UpdateChecked(item, kTRUE);
                if (fCheckMode == kRecursive) {
                   CheckAllChildren(item, item->IsChecked());
                }
+               UpdateChecked(item, kTRUE);
                Checked((TObject *)item->GetUserData(), item->IsChecked());
                return kTRUE;
             }
@@ -2378,9 +2378,9 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 
    TGListTreeItem *parent;
    TGListTreeItem *current;
-   // get top level parent with check box
    current = item->GetFirstChild();
    parent  = current ? current : item;
+   // recursively check parent/children status
    while (parent && parent->HasCheckBox()) {
       if ((!parent->IsChecked() && parent->HasCheckedChild(kTRUE)) ||
           (parent->IsChecked() && parent->HasUnCheckedChild(kTRUE))) {
@@ -2392,6 +2392,20 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
                                      fClient->GetPicture("unchecked_t.xpm"));
       }
       parent = parent->GetParent();
+      if (parent && fCheckMode == kRecursive) {
+         if (!parent->IsChecked() && parent->GetFirstChild() && 
+             !parent->GetFirstChild()->HasUnCheckedChild()) {
+            parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
+                                        fClient->GetPicture("unchecked_t.xpm"));
+            parent->CheckItem(kTRUE);
+         }
+         else if (parent->IsChecked() && parent->GetFirstChild() && 
+                  !parent->GetFirstChild()->HasCheckedChild()) {
+            parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
+                                        fClient->GetPicture("unchecked_t.xpm"));
+            parent->CheckItem(kFALSE);
+         }
+      }
    }
    if (redraw) {
       ClearViewPort();
