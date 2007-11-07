@@ -93,12 +93,13 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fFirstIndexToPrefetch = 0;
    fAsyncReading = gEnv->GetValue("TFile.AsyncReading", 1);
    if (fAsyncReading) {
-      // If asynchronous reading is not supported by this TFile specialization
+      // Check if asynchronous reading is supported by this TFile specialization
+      fAsyncReading = kFALSE;
+      if (file && !(file->ReadBufferAsync(0, 0)))
+         fAsyncReading = kTRUE;
+   } else {
       // we use sync primitives, hence we need the local buffer
-      if (file && file->ReadBufferAsync(0, 0)) {
-         fAsyncReading = kFALSE;
-         fBuffer    = new char[fBufferSize];
-      }
+      fBuffer = new char[fBufferSize];
    }
 
    fIsSorted    = kFALSE;
