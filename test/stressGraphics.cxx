@@ -572,7 +572,7 @@ void patterns_box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2
    TLatex l;
    l.SetTextAlign(22);
    l.SetTextSize(h);
-   char s[1];
+   char s[32];
    sprintf(s,"%d",pat);
    l.DrawLatex((x1+x2)/2, (y1+y2)/2, s);
 }
