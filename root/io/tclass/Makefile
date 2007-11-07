@@ -22,8 +22,13 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+ifeq ($(FAIL)$(PLATFORM),win32)
+TestTClassGlobalIsA:
+	$(WarnFailTest)
+else
 TestTClassGlobalIsA: TestTClassGlobalIsA.log
 	$(CMDECHO) diff -ub  TestTClassGlobalIsA.ref  TestTClassGlobalIsA.log
+endif
 
 TestTClassGlobalIsA.log : TestTClassGlobalIsA_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l TestTClassGlobalIsA.C+ > TestTClassGlobalIsA.log 
