@@ -1,8 +1,8 @@
- 
-#include "Class.h"
-
 #define private public
 #define protected public 
+
+#include "Class.h"
+
 bool ClassTrick() {
   MyClass m;
 #ifndef _WIN32
