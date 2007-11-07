@@ -42,7 +42,7 @@ class ParamFunctionBase {
   public: 
    virtual ~ParamFunctionBase() {}
 //   virtual double operator() (const double * x, const double *p) const = 0; 
-   virtual double operator() (double * x, double *p) const = 0; 
+   virtual double operator() (double * x, double *p) = 0; 
    virtual ParamFunctionBase * Clone() const = 0; 
 };
 
@@ -74,7 +74,7 @@ public:
 
 
    // for 1D functions
-   inline double operator() (double x, double *p) const { 
+   inline double operator() (double x, double *p)  { 
       return fFunc(x,p); 
    }  
 //    inline double operator() (double x, const double *p) const { 
@@ -84,7 +84,7 @@ public:
 //    inline double operator() (const double * x, const double *p) const { 
 //       return fFunc(x,p); 
 //    }  
-   inline double operator() (double * x, double *p) const { 
+   inline double operator() (double * x, double *p)  { 
       return FuncEvaluator<Func>::Eval(fFunc,x,p); 
    }  
 
@@ -100,7 +100,7 @@ private :
 
    // structure to distinguish pointer types
    template <typename F> struct FuncEvaluator { 
-      inline static double Eval( const F & f, double *x, double * p) { 
+      inline static double Eval( F & f, double *x, double * p) { 
          return f(x,p);
       }
    };
@@ -128,7 +128,7 @@ public:
 
    ParamFunctorHandler(TRootIOCtor  *) {}
 
-   double operator() (double *, double * ) const { return 0; } 
+   double operator() (double *, double * )  { return 0; } 
    // clone (use same pointer)
    ParamFunctorHandler  * Clone() const { 
       return 0; 
@@ -163,7 +163,7 @@ public:
 //       return ((*fObj).*fMemFn)(x,p);  
 //    }  
 
-   inline double operator() (double x, double * p) const { 
+   inline double operator() (double x, double * p)  { 
       return ((*fObj).*fMemFn)(x,p);  
    }  
        
@@ -171,7 +171,7 @@ public:
 //       return ((*fObj).*fMemFn)(x,p);  
 //    }
 
-   inline double operator() (double * x, double * p) const { 
+   inline double operator() (double * x, double * p)  { 
       return ((*fObj).*fMemFn)(x,p);  
    }  
 
@@ -285,7 +285,7 @@ public:
    }
 
 
-   double operator() (double * x, double * p) const { 
+   double operator() (double * x, double * p)  { 
       return (*fImpl)(x,p); 
    }  
 

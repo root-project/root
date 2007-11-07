@@ -25,7 +25,6 @@
 #include "Math/Util.h"
 #endif
 
-#include <vector>
 
 #include <cassert> 
 
@@ -99,14 +98,14 @@ public:
    It is a derived class from IFunction
    @ingroup  CppFunctions
 */ 
-template<class DimensionType = MultiDim> 
-class IParametricFunction : 
-         virtual public IBaseFunction<DimensionType>, 
+//template<class DimensionType = MultiDim> 
+class IParametricFunctionMultiDim : 
+         virtual public IBaseFunctionMultiDim , 
          public IBaseParam {
 
 public: 
 
-   typedef IBaseFunction<DimensionType>  BaseFunc; 
+   typedef IBaseFunctionMultiDim  BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamFunction() : 
@@ -135,15 +134,15 @@ public:
 
    @ingroup  CppFunctions
 */ 
-template<> 
-class IParametricFunction<ROOT::Math::OneDim> : 
-         virtual public IBaseFunction<ROOT::Math::OneDim>, 
+//template<> 
+class IParametricFunctionOneDim : 
+         virtual public IBaseFunctionOneDim, 
          public IBaseParam { 
 
 
 public: 
 
-   typedef IBaseFunction<ROOT::Math::OneDim>   BaseFunc; 
+   typedef IBaseFunctionOneDim   BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamFunction() : 
@@ -182,16 +181,16 @@ public:
    the gradient
    @ingroup  CppFunctions
 */ 
-template<class DimensionType=MultiDim> 
-class IParametricGradFunction : 
-         public IParametricFunction<DimensionType>, 
-         public IGradientFunction<DimensionType>   {
+//template<class DimensionType=MultiDim> 
+class IParametricGradFunctionMultiDim : 
+         public IParametricFunctionMultiDim, 
+         public IGradientFunctionMultiDim   {
 
 public: 
 
-   typedef IParametricFunction<DimensionType>                     BaseParamFunc; 
-   typedef IGradientFunction<DimensionType>                  BaseGradFunc; 
-   typedef typename IParametricFunction<DimensionType>::BaseFunc  BaseFunc; 
+   typedef IParametricFunctionMultiDim                BaseParamFunc; 
+   typedef IGradientFunctionMultiDim                  BaseGradFunc; 
+   typedef IParametricFunctionMultiDim::BaseFunc  BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamGradFunction() :
@@ -203,7 +202,7 @@ public:
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~IParametricGradFunction ()  {}  
+   virtual ~IParametricGradFunctionMultiDim ()  {}  
 
 
    //using BaseFunc::operator();
@@ -240,22 +239,22 @@ private:
 
    @ingroup  CppFunctions
 */ 
-template<> 
-class IParametricGradFunction<ROOT::Math::OneDim> : 
-         public IParametricFunction<ROOT::Math::OneDim>, 
-         public IGradientFunction<ROOT::Math::OneDim>   {
+//template<> 
+class IParametricGradFunctionOneDim : 
+         public IParametricFunctionOneDim, 
+         public IGradientFunctionOneDim   {
 
 public: 
 
-   typedef IParametricFunction<ROOT::Math::OneDim>            BaseParamFunc; 
-   typedef IGradientFunction<ROOT::Math::OneDim>              BaseGradFunc; 
-   typedef IParametricFunction<ROOT::Math::OneDim>::BaseFunc  BaseFunc; 
+   typedef IParametricFunctionOneDim            BaseParamFunc; 
+   typedef IGradientFunctionOneDim              BaseGradFunc; 
+   typedef IParametricFunctionOneDim::BaseFunc  BaseFunc; 
 
 
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~IParametricGradFunction ()  {}  
+   virtual ~IParametricGradFunctionOneDim ()  {}  
 
 
    //using BaseFunc::operator();

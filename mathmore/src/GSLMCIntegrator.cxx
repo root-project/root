@@ -93,7 +93,7 @@ GSLMCIntegrator::~GSLMCIntegrator()
   
          
 GSLMCIntegrator::GSLMCIntegrator(const GSLMCIntegrator &) : 
-   VirtualIntegrator()
+   VirtualIntegratorMultiDim()
 {}
 
 GSLMCIntegrator & GSLMCIntegrator::operator=(const GSLMCIntegrator &) { return *this; }

@@ -14,82 +14,169 @@
 #ifndef ROOT_Math_IntegratorMultiDim
 #define ROOT_Math_IntegratorMultiDim
 
+
 #ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
 #endif
 
+#ifndef ROOT_Math_IntegrationTypes
+#include "Math/AllIntegrationTypes.h"
+#endif
+
+
+#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
+#endif
+
+#ifndef __CINT__
+
+#ifndef ROOT_Math_WrappedFunction
+#include "Math/WrappedFunction.h"
+#endif
+
+#endif
 
 namespace ROOT {
 namespace Math {
 
 
 /**
-   class for adaptive quadrature integration in multi-dimensions
-   Algorithm from  A.C. Genz, A.A. Malik, 
-    1.A.C. Genz and A.A. Malik, An adaptive algorithm for numerical integration over 
-    an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
+   User class for performing multidimensional integration 
 
-   Converted/adapted by R.Brun to C++ from Fortran CERNLIB routine RADMUL (D120)
-   The new code features many changes compared to the Fortran version.
+   By default uses adaptive multi-dimenaional integration using the algorithm from Genz Mallik
+   implemented in the class ROOT::Math::AdaptiveIntegratorMultiDim
+
+   @ingroup Integration
+
   
  */
 
-class IntegratorMultiDim : public VirtualIntegrator{
-   public:
-   // constructors
+class IntegratorMultiDim {
+
+public:
+
+
+  
+    /** Generic constructor of multi dimensional Integrator. By default uses the Adaptive integration method 
+
+       @param type   integration type (adaptive, MC methods, etc..)
+       @param absTol desired absolute Error
+       @param relTol desired relative Error
+       @param size maximum number of sub-intervals
+    */
    explicit 
-   IntegratorMultiDim(double absTol = 1.E-6, double relTol = 1E-6, unsigned int size = 100000);
+   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
+   }
+   
+    /** Generic Constructor of multi dimensional Integrator passing a function. By default uses the adaptive integration method 
 
+       @param f      integration function (multi-dim interface) 
+       @param type   integration type (adaptive, MC methods, etc..)
+       @param absTol desired absolute Error
+       @param relTol desired relative Error
+       @param ncall  number of function calls (apply only to MC integratioon methods)
+    */
    explicit
-   IntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 100000);
+   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+      fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
+      SetFunction(f);            
+   }
+   
+    /** Template Constructor of multi dimensional Integrator passing a generic function. By default uses the adaptive integration method 
 
+       @param f      integration function (generic function implementin operator()(const double *) 
+       @param dim    function dimension 
+       @param type   integration type (adaptive, MC methods, etc..)
+       @param absTol desired absolute Error
+       @param relTol desired relative Error
+       @param ncall  number of function calls (apply only to MC integratioon methods)
+    */
+#ifdef LATER
+   template<class Function>
+   IntegratorMultiDim(Function &f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+      fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
+      SetFunction(f, dim); 
+   }
+#endif
 
-   virtual ~IntegratorMultiDim() {}
+   /// destructor
+   virtual ~IntegratorMultiDim() { 
+      if (fIntegrator) delete fIntegrator;
+   }
 
-   //private:
-   //   Integrator(const Integrator &);
-   //   Integrator & operator=(const Integrator &);
+   // disable copy constructur and assignment operator 
+
+private:
+   IntegratorMultiDim(const IntegratorMultiDim &) {}
+   IntegratorMultiDim & operator=(const IntegratorMultiDim &) { return *this; }
+
+public:
 
 
    /**
       evaluate the integral with the previously given function between xmin[] and xmax[]  
    */
-   double Integral(const double* xmin, const double * xmax);
-
-   using VirtualIntegrator::Integral;
+   double Integral(const double* xmin, const double * xmax) {
+      return fIntegrator == 0 ? 0 : fIntegrator->Integral(xmin,xmax);
+   }
 
    /// evaluate the integral passing a new function
-   double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
+   double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax) {
+      SetFunction(f);
+      return Integral(xmin,xmax);
+   }
 
-   void SetFunction(const IMultiGenFunction &f);
-   using VirtualIntegrator::SetFunction;
-   /// return result of integration 
-   double Result() const { return fResult; }
+   /// evaluate the integral passing a new generic function
+   template<class Function>
+   double Integral(Function f, unsigned int dim, const double* xmin, const double * xmax) {
+      SetFunction(f,dim);
+      return Integral(xmin, xmax);
+   }
 
-   // return integration error 
-   double Error() const { return fError; } 
+
+   /** 
+       set integration function using a generic function implementing the operator()(double *x)
+       The dimension of the function is in this case required 
+   */
+   template <class Function> 
+   void SetFunction(Function f, unsigned int dim) { 
+      ROOT::Math::WrappedMultiFunction<Function> wf(f, dim); 
+      SetFunction(wf);
+   }
+   void SetFunction(const IMultiGenFunction &f) { 
+      if (fIntegrator) fIntegrator->SetFunction(f);
+   }
+
+   /// return result of last integration 
+   double Result() const { return fIntegrator == 0 ? 0 : fIntegrator->Result(); }
+
+   /// return integration error 
+   double Error() const { return fIntegrator == 0 ? 0 : fIntegrator->Error(); } 
+
+   ///  return the Error Status of the last Integral calculation
+   int Status() const { return fIntegrator == 0 ? -1 : fIntegrator->Status(); }
 
    // return number of function evaluations in calculating the integral 
-   unsigned int NEval() const { return fNEval; }
+   //unsigned int NEval() const { return fNEval; }
  
-   void SetRelTolerance(double relTol);
-   void SetAbsTolerance(double absTol);
+   /// set the relative tolerance
+   void SetRelTolerance(double relTol) { if (fIntegrator) fIntegrator->SetRelTolerance(relTol); }
 
+   /// set absolute tolerance
+   void SetAbsTolerance(double absTol)  { if (fIntegrator) fIntegrator->SetAbsTolerance(absTol); }
+
+   /// return a pointer to integrator object 
+   VirtualIntegratorMultiDim * GetIntegrator() { return fIntegrator; }  
+
+protected:
+
+   VirtualIntegratorMultiDim * CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall);
 
  private:
 
-   unsigned int fDim; // dimentionality of integrand
+   VirtualIntegratorMultiDim * fIntegrator;
 
-   double fAbsTol;
-   double fRelTol;
-   unsigned int fSize;
-
-   double fResult;
-   double fError;
-   unsigned int  fNEval;
-
-   const IMultiGenFunction* fFun;
 
 };
 

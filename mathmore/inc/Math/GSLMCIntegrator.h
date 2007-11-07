@@ -89,7 +89,7 @@ namespace Math {
    */
    
    
-   class GSLMCIntegrator : public VirtualIntegrator{
+   class GSLMCIntegrator : public VirtualIntegratorMultiDim {
       
    public:
                   
@@ -146,7 +146,7 @@ public:
          
          
       void SetFunction(const IMultiGenFunction &f); 
-      using VirtualIntegrator::SetFunction;
+
 
       typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);    
       
@@ -168,8 +168,6 @@ public:
         
       double Integral(const double* a, const double* b);
 
-      using VirtualIntegrator::Integral;
-    
       
       //double Integral(GSLMonteFuncPointer f, void * p, double* a, double* b);
   

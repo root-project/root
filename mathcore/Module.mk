@@ -26,11 +26,11 @@ MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDO32 := $(MATHCOREDS32:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
+MATHCOREDH1  :=  $(MODDIRI)/Math/Vector2D.h \
+                 $(MODDIRI)/Math/Point2D.h \
+                 $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
                  $(MODDIRI)/Math/Vector4D.h \
-                 $(MODDIRI)/Math/Vector2D.h \
-                 $(MODDIRI)/Math/Point2D.h \
                  $(MODDIRI)/Math/Rotation3D.h \
                  $(MODDIRI)/Math/RotationZYX.h \
                  $(MODDIRI)/Math/RotationX.h \
@@ -52,11 +52,14 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/DistFuncMathCore.h \
                  $(MODDIRI)/Math/IParamFunction.h \
                  $(MODDIRI)/Math/IFunction.h \
+                 $(MODDIRI)/Math/Functor.h \
                  $(MODDIRI)/Math/Minimizer.h \
                  $(MODDIRI)/Math/Integrator.h \
                  $(MODDIRI)/Math/VirtualIntegrator.h \
                  $(MODDIRI)/Math/AllIntegrationTypes.h \
+                 $(MODDIRI)/Math/AdaptiveIntegratorMultiDim.h \
                  $(MODDIRI)/Math/IntegratorMultiDim.h 
+#                 $(MODDIRI)/Math/Functor.h \
 
 
 MATHCOREDH132:=  $(MODDIRI)/Math/Vector2D.h \
@@ -131,4 +134,7 @@ distclean::     distclean-mathcore
 test-mathcore:	all-mathcore
 		@cd $(MATHCOREDIR)/test; make
 
+##### extra rules ######
+$(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR
+$(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR
 

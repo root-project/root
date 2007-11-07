@@ -18,6 +18,7 @@ namespace ROOT {
 
    namespace Math { 
 
+#ifdef OLD
       template<class DimensionType> class IBaseFunction; 
       template<class DimensionType> class IGradientFunction; 
 
@@ -34,6 +35,19 @@ namespace ROOT {
 
       typedef IGradientFunction<OneDim>        IGradFunction; 
       typedef IGradientFunction<MultiDim>      IMultiGradFunction; 
+#endif
+
+      class IBaseFunctionOneDim; 
+      class IGradientFunctionOneDim; 
+      class IBaseFunctionMultiDim; 
+      class IGradientFunctionMultiDim; 
+
+
+      typedef IBaseFunctionOneDim        IGenFunction;   
+      typedef IBaseFunctionMultiDim      IMultiGenFunction; 
+
+      typedef IGradientFunctionOneDim        IGradFunction; 
+      typedef IGradientFunctionMultiDim      IMultiGradFunction; 
       
 
    } // end namespace Math

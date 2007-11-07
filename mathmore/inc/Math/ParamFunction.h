@@ -38,6 +38,8 @@
 #include "Math/IParamFunction.h"
 #endif
 
+#include <vector>
+
 namespace ROOT {
 namespace Math {
 

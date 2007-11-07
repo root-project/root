@@ -27,14 +27,22 @@
 #include <functional>
 #include <vector>
 
+//#define EXPFUNC
+#ifndef EXPFUNC
+
 #define NLOOP 100
 #define NTIMES 500000
-#define FUNC x[0]+x[1]
-//#define FUNC x[0]*std::exp(x[1])
-//#define FUNC 100 * (x[1]-x[0]*x[0])*(x[1]-x[0]*x[0]) + (1.-x[0])*(1-x[0])
-
 #define FUNC1D x+x; 
-//#define FUNC1D std::exp(x); 
+#define FUNC x[0]+x[1]
+
+#else 
+
+#define NLOOP 10
+#define NTIMES 500000
+#define FUNC1D std::exp(x); 
+#define FUNC  std::exp( x[0] + x[1] );
+
+#endif
 
 double freeFunction(const double * x ) { 
    return FUNC; 
@@ -329,7 +337,7 @@ int main() {
    ROOT::Math::WrappedMultiTF1 f7b(tf1);
    TestTime(f7b);
 
-   ROOT::Math::WrappedParamFunction<> wf7(freeRootFunc2D,2,0,0);
+   ROOT::Math::WrappedParamFunction<> wf7(&freeRootFunc2D,2,0,0);
    TestTimePF(wf7);
 
    // use the fact that TF1 implements operator(double *, double *) 

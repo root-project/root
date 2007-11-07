@@ -17,17 +17,17 @@ namespace Math {
   
 
 
-  double beta_cdf_c(double x, double a, double b) {
-     // use the fact that I(x,a,b) = 1. - I(1-x,b,a)
-     return ROOT::Math::inc_beta(1-x, b, a);
-  }
+   double beta_cdf_c(double x, double a, double b) {
+      // use the fact that I(x,a,b) = 1. - I(1-x,b,a)
+      return ROOT::Math::inc_beta(1-x, b, a);
+   }
 
 
-  double beta_cdf(double x, double a, double b ) {
+   double beta_cdf(double x, double a, double b ) {
 
-     return ROOT::Math::inc_beta(x, a, b);
+      return ROOT::Math::inc_beta(x, a, b);
 
-  }
+   }
 
    
 

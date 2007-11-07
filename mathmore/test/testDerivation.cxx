@@ -304,7 +304,7 @@ void testDerivPerfParam() {
   std::cout << "Time using ROOT::Math::Derivator (1D) :\t" << timer.RealTime() << std::endl; 
   int pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
 
-  ROOT::Math::WrappedParamFunction<> f2(gausFunc,1,params,params+3); 
+  ROOT::Math::WrappedParamFunction<> f2(&gausFunc,1,params,params+3); 
   double xx[1]; 
 
   timer.Start(); 

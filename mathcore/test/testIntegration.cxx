@@ -1,4 +1,5 @@
 #include "Math/Integrator.h"
+#include "Math/IntegratorMultiDim.h"
 #include "Math/AllIntegrationTypes.h"
 #include "Math/WrappedFunction.h"
 
@@ -38,21 +39,21 @@ void testIntegrationMultiDim() {
    double a[2] = {0,0};
    double b[2] = {1,1};
 
-   ROOT::Math::Integrator ig(ROOT::Math::IntegrationMultiDim::ADAPTIVE); 
+   ROOT::Math::IntegratorMultiDim ig(ROOT::Math::IntegrationMultiDim::ADAPTIVE); 
    ig.SetFunction(wf);
    double val = ig.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
 
-   ROOT::Math::Integrator ig2(ROOT::Math::IntegrationMultiDim::VEGAS); 
+   ROOT::Math::IntegratorMultiDim ig2(ROOT::Math::IntegrationMultiDim::VEGAS); 
    ig2.SetFunction(wf);
    val = ig2.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
 
-   ROOT::Math::Integrator ig3(wf,ROOT::Math::IntegrationMultiDim::PLAIN); 
+   ROOT::Math::IntegratorMultiDim ig3(wf,ROOT::Math::IntegrationMultiDim::PLAIN); 
    val = ig3.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
 
-   ROOT::Math::Integrator ig4(wf,ROOT::Math::IntegrationMultiDim::MISER); 
+   ROOT::Math::IntegratorMultiDim ig4(wf,ROOT::Math::IntegrationMultiDim::MISER); 
    val = ig4.Integral(a,b);
    std::cout << "integral result is " << val << std::endl;
 

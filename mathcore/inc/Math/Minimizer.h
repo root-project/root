@@ -172,7 +172,7 @@ public:
    virtual unsigned int NFree() const = 0;  
 
    /// minimizer provides error and error matrix
-   virtual bool providesError() const = 0; 
+   virtual bool ProvidesError() const = 0; 
 
    /// return errors at the minimum 
    virtual const double * Errors() const = 0;

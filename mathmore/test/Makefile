@@ -78,20 +78,23 @@ STATFUNCOBJ      = testStatFunc.$(ObjSuf)
 STATFUNCSRC      = testStatFunc.$(SrcSuf)
 STATFUNC         = testStatFunc$(ExeSuf)
 
-
-
 TESTFUNCTOROBJ      = testFunctor.$(ObjSuf)
 TESTFUNCTORSRC      = testFunctor.$(SrcSuf)
 TESTFUNCTOR         = testFunctor$(ExeSuf)
 
+SIMANTSPOBJ      = simanTSP.$(ObjSuf)
+SIMANTSPSRC      = simanTSP.$(SrcSuf)
+SIMANTSP         = simanTSP$(ExeSuf)
+
+
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(INTEGRATIONMDOBJ) $(ROOTFINDEROBJ) \
                   $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
-	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ)
+	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ) $(SIMANTSPOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(INTEGRATIONMD) $(ROOTFINDER) \
                   $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)  \
-	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR)
+	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(SIMANTSP)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -152,6 +155,9 @@ $(TESTFUNCTOR): $(TESTFUNCTOROBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(SIMANTSP):  	$(SIMANTSPOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
 
 
 

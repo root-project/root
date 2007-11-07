@@ -85,6 +85,21 @@ double erf( double a );
 double erfc( double a );
 
 
+// inverse function
+
+/* normal quantile */ 
+double ndtri (double y); 
+
+/* normal quantile */ 
+double ndtri (double y); 
+
+/* inverse of incomplete gamma */ 
+double igami (double a, double y); 
+
+/* inverse of incomplete beta */ 
+double incbi (double a, double b, double y); 
+
+
 } // end namespace Cephes
 
 /* routines for efficient polynomial evaluation*/

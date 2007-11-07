@@ -23,13 +23,13 @@
 #include "TStopwatch.h"
 #endif
 #include <cmath>
+#include <iostream>
 
 #include "Math/Integrator.h"
 #include "Math/Functor.h"
 #include "Math/IFunction.h"
 #include "Math/WrappedParamFunction.h"
-#include <iostream>
-#include "Math/IntegratorMultiDim.h"
+#include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/IFunctionfwd.h"
 #include "Math/GSLMCIntegrator.h"
 
@@ -45,7 +45,7 @@
 //#include "TLegend.h"
 
 
-#define n 3 //default dimensionality
+const int n = 3; //default dimensionality
 
 Double_t Sum( const double* x, const double *p)
 {
@@ -93,7 +93,7 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   TStopwatch timer; 
   timer.Start();
   ROOT::Math::WrappedParamFunction<> funptr1(&SimpleFun, dim, p, p+1);
-  ROOT::Math::IntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, (unsigned int)1.E7);
+  ROOT::Math::AdaptiveIntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, (unsigned int)1.E7);
   //  std::cout << "1. integral= " << std::endl; 
   ig1.SetFunction(funptr1); 
   ig1.Integral(a, b);

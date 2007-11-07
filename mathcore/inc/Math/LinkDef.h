@@ -13,11 +13,43 @@
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
 
-#pragma link C++ class ROOT::Math::Minimizer+;
-#pragma link C++ class ROOT::Math::IntegratorMultiDim+;
-#pragma link C++ class ROOT::Math::Integrator+;
-#pragma link C++ class ROOT::Math::VirtualIntegrator+;
 
+#pragma link C++ typedef ROOT::Math::IGenFunction;
+#pragma link C++ typedef ROOT::Math::IMultiGenFunction;
+#pragma link C++ typedef ROOT::Math::IGradFunction;
+#pragma link C++ typedef ROOT::Math::IMultiGradFunction;
+
+
+
+#pragma link C++ class ROOT::Math::IBaseFunctionOneDim+;
+#pragma link C++ class ROOT::Math::IGradientOneDim+;
+#pragma link C++ class ROOT::Math::IGradientFunctionOneDim+;
+#pragma link C++ class ROOT::Math::IBaseParam+;
+
+#pragma link C++ class ROOT::Math::IParametricFunctionOneDim+;
+#pragma link C++ class ROOT::Math::IParametricGradFunctionOneDim+;
+
+#pragma link C++ class ROOT::Math::IBaseFunctionMultiDim+;
+#pragma link C++ class ROOT::Math::IGradientMultiDim+;
+#pragma link C++ class ROOT::Math::IGradientFunctionMultiDim+;
+#pragma link C++ class ROOT::Math::IParametricFunctionMultiDim+;
+#pragma link C++ class ROOT::Math::IParametricGradFunctionMultiDim+;
+
+
+// #pragma link C++ class ROOT::Math::Functor<ROOT::Math::IBaseFunctionMultiDim>+;
+// #pragma link C++ class ROOT::Math::Functor<ROOT::Math::IGradientFunctionMultiDim>+;
+// #pragma link C++ class ROOT::Math::Functor1D<ROOT::Math::IBaseFunctionOneDim>+;
+// #pragma link C++ class ROOT::Math::Functor1D<ROOT::Math::IGradientFunctionOneDim>+;
+
+
+#pragma link C++ class ROOT::Math::Minimizer+;
+#pragma link C++ class ROOT::Math::IntegratorOneDim+;
+#pragma link C++ class ROOT::Math::IntegratorMultiDim+;
+#pragma link C++ class ROOT::Math::VirtualIntegrator+;
+#pragma link C++ class ROOT::Math::VirtualIntegratorOneDim+;
+#pragma link C++ class ROOT::Math::VirtualIntegratorMultiDim+;
+#pragma link C++ class ROOT::Math::AdaptiveIntegratorMultiDim+;
+#pragma link C++ typedef ROOT::Math::Integrator;
 
 
 #include "LinkDef_Func.h" 

@@ -27,6 +27,9 @@
 // virtual inheritance gives problem when making dictionary on Windows 
 #pragma link C++ class ROOT::Math::ParamFunction+;
 #pragma link C++ class ROOT::Math::Polynomial+;
+#else 
+#pragma link C++ class ROOT::Math::ParamFunction-;
+#pragma link C++ class ROOT::Math::Polynomial-;
 #endif
 
 #pragma link C++ class ROOT::Math::Chebyshev+;
@@ -65,6 +68,9 @@
 
 #pragma link C++ class ROOT::Math::GSLMinimizer+;
 #pragma link C++ class ROOT::Math::GSLSimAnMinimizer+;
+#pragma link C++ class ROOT::Math::GSLSimAnFunc+;
+#pragma link C++ class ROOT::Math::GSLSimAnParams+;
+#pragma link C++ class ROOT::Math::GSLSimAnnealing+;
 
 #ifndef _WIN32  // exclude for same problem of virtual inheritance
 #pragma link C++ class ROOT::Math::GSLNLSMinimizer;

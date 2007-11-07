@@ -101,7 +101,7 @@ namespace Math {
     */
    
    
-   class GSLIntegrator : public VirtualIntegrator  {
+   class GSLIntegrator : public VirtualIntegratorOneDim  {
       
    public:
       
@@ -152,11 +152,12 @@ namespace Math {
           This is used by the plug-in manager (need a char * instead of enumerations)
          
          @param type type of integration. The possible types are defined in the Integration::Type enumeration
+         @param rule Gauss-Kronrod rule (from 1 to 6)
          @param absTol desired absolute Error
          @param relTol desired relative Error
          @param size maximum number of sub-intervals
          */            
-      GSLIntegrator(const char *  type, double absTol, double relTol, size_t size );
+      GSLIntegrator(const char *  type, int rule, double absTol, double relTol, size_t size );
       
       virtual ~GSLIntegrator();
       //~GSLIntegrator();
@@ -181,7 +182,6 @@ namespace Math {
          
          
       void SetFunction(const IGenFunction &f, bool copyFunc = false); 
-      using VirtualIntegrator::SetFunction;
 
       
       void SetFunction( GSLFuncPointer f, void * p = 0); 
@@ -256,7 +256,7 @@ namespace Math {
        */
       
       double Integral(double a, double b);
-      using VirtualIntegrator::Integral;
+
       
       /**
          evaluate the Integral over the infinite interval (-inf,+inf) using the function previously set with GSLIntegrator::SetFunction method.

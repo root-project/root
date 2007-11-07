@@ -141,7 +141,7 @@ public:
    virtual unsigned int NFree() const { return fDim; }  
 
    /// minimizer provides error and error matrix
-   virtual bool providesError() const { return false; } 
+   virtual bool ProvidesError() const { return false; } 
 
    /// return errors at the minimum 
    virtual const double * Errors() const { return 0; }

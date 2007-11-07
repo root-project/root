@@ -46,7 +46,7 @@ namespace Math {
 
 /**
 
-User Class for performing numerical integration of a function in one or multi dimension.
+User Class for performing numerical integration of a function in one dimension.
 It uses the plug-in manager to load advanced numerical integration algorithms from GSL, which reimplements the
 algorithms used in the QUADPACK, a numerical integration package written in Fortran.
 
@@ -76,7 +76,7 @@ For detailed description on GSL integration algorithms see the
 */
 
 
-class Integrator {
+class IntegratorOneDim {
 
 public:
 
@@ -85,103 +85,107 @@ public:
     // constructors
 
 
-    /** Constructor of one dimensional Integrator 
+    /** Constructor of one dimensional Integrator, default type is adaptive
 
        @param type   integration type (adaptive, non-adaptive, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
+       @param rule  Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
+                     
+       Possible rule values are GAUS15 (rule = 1), GAUS21( rule = 2), GAUS31(rule =3), GAUS41 (rule=4), GAUS51 (rule =5), GAUS61(rule =6)
+       lower rules are indicated for singular funcitons while higher for smooth functions to get better accuracies
     */
-
     explicit
-    Integrator(IntegrationOneDim::Type type = IntegrationOneDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000);
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) { 
+       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
+    }
     
-    /** Constructor of one dimensional Integrator passing the function
+    /** Constructor of one dimensional Integrator passing a function interface
 
-       @param f      integration function (1D interface)
+       @param f      integration function (1D interface). It is copied inside
        @param type   integration type (adaptive, non-adaptive, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
+       @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
     */
-    Integrator(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000);
+   explicit 
+   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
+      fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
+      SetFunction(f,true);
+   }
 
-    /** Constructor of multi dimensional Integrator 
+    /** Template Constructor of one dimensional Integrator passing a generic function object
 
-       @param type   integration type (adaptive, MC methods, etc..)
+       @param f      integration function (any C++ callable object implementing operator()(double x)
+       @param type   integration type (adaptive, non-adaptive, etc..)
        @param absTol desired absolute Error
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
+       @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
     */
-    Integrator(IntegrationMultiDim::Type type , double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000);
-
-    /** Constructor of multi dimensional Integrator 
-
-       @param f      integration function (multi-dim interface) 
-       @param type   integration type (adaptive, MC methods, etc..)
-       @param absTol desired absolute Error
-       @param relTol desired relative Error
-       @param size maximum number of sub-intervals
-    */
-    Integrator(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000);
-
-
-
-#ifdef LATER0 // exclude (pass a rule) 
-    /**
-       generic constructor for GSL Integrator
-
-       @param type type of integration. The possible types are defined in the Integration::Type enumeration
-       @param rule Gauss-Kronrod rule. It is used only for ADAPTIVE::Integration types. The possible rules are defined in the Integration::GKRule enumeration
-       @param absTol desired absolute Error
-       @param relTol desired relative Error
-       @param size maximum number of sub-intervals
-
-    */
-
-    Integrator(Integration::Type type, Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
-
-    Integrator(const IGenFunction &f, Integration::Type type, Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
-
+#ifdef LATER
+   template<class Function>
+   explicit
+   IntegratorOneDim(Function f, IntegrationOneDim::Type type = IntegrationOneDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
+      fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
+       SetFunction(f);
+   }
 #endif
 
    /// destructor (will delete contained pointer)
-   virtual ~Integrator();
+   virtual ~IntegratorOneDim() { 
+      if (fIntegrator) delete fIntegrator;
+   }
 
-   // disable copy constructur and assignment operator
+   // disable copy constructur and assignment operator 
 
 private:
-     Integrator(const Integrator &);
-    Integrator & operator=(const Integrator &);
+   IntegratorOneDim(const IntegratorOneDim &) {}
+   IntegratorOneDim & operator=(const IntegratorOneDim &) { return *this; }
+
 public:
 
 
    // template methods for generic functors
 
    /**
-      method to set the a generic integration function
-      
+      method to set the a generic integration function      
       @param f integration function. The function type must implement the assigment operator, <em>  double  operator() (  double  x ) </em>
 
    */
 
+   template<class Function>
+inline void SetFunction(Function f); 
 
    /** 
        set one dimensional function for 1D integration
     */
-   void SetFunction(const IGenFunction &f) { 
-      fIntegrator->SetFunction(f);
+   //template<>
+   //void SetFunction<const ROOT::Math::IGenFunction &> (const IGenFunction &f) 
+
+void SetFunction  (const IGenFunction &f, bool copy = false) { 
+  if (fIntegrator) fIntegrator->SetFunction(f,copy);
    }
    
-   /** 
-       set a multi-dimensional function for multi-dim integration
-   */
-   void SetFunction( const IMultiGenFunction &f) { 
-      fIntegrator->SetFunction(f);
+
+    // integration methods using a function 
+
+    /**
+       evaluate the Integral of a function f over the defined interval (a,b)
+       @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
+       @param a lower value of the integration interval
+       @param b upper value of the integration interval
+    */
+
+
+   template<class Function> 
+   double Integral(Function f, double a, double b) { 
+     SetFunction(f); 
+      return Integral(a,b);
    }
 
-
-    // integration methods using a function
 
     /**
        evaluate the Integral of a function f over the defined interval (a,b)
@@ -189,17 +193,63 @@ public:
        @param a lower value of the integration interval
        @param b upper value of the integration interval
     */
-
    double Integral(const IGenFunction & f, double a, double b) { 
-      SetFunction(f); 
-      return fIntegrator->Integral(a,b);
+     SetFunction(f,false); 
+      return Integral(a,b);
    }
 
-   // multi-dim integration routine
-   double Integral(const IMultiGenFunction & f, const double * a, const double * b) { 
-      SetFunction(f); 
-      return fIntegrator->Integral(a,b);
+
+
+   /**
+      evaluate the Integral of a function f over the infinite interval (-inf,+inf)
+      @param f integration function. The function type must implement the mathlib::IGenFunction interface
+   */
+   double Integral(const IGenFunction & f) { 
+     SetFunction(f,false); 
+      return Integral(); 
    }
+
+   /**
+      evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
+      @param f integration function. The function type must implement the mathlib::IGenFunction interface
+      @param a lower value of the integration interval
+
+   */
+   double IntegralUp(const IGenFunction & f, double a ) { 
+     SetFunction(f,false); 
+      return IntegralUp(a); 
+   }
+
+   /**
+      evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
+      @param f integration function. The function type must implement the mathlib::IGenFunction interface
+      @param b upper value of the integration interval
+   */
+   double IntegralLow(const IGenFunction & f, double b ) { 
+     SetFunction(f,false); 
+      return IntegralLow(b); 
+   }
+
+   /**
+      evaluate the Integral of a function f with known singular points over the defined Integral (a,b)
+      @param f integration function. The function type must implement the mathlib::IGenFunction interface
+      @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
+
+   */
+   double Integral(const IGenFunction & f, const std::vector<double> & pts ) { 
+     SetFunction(f,false); 
+      return Integral(pts); 
+   }
+
+   /**
+      evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
+
+   */
+   double IntegralCauchy(const IGenFunction & f, double a, double b, double c) { 
+     SetFunction(f,false); 
+      return IntegralCauchy(a,b,c); 
+   }
+
 
 
    // integration method using cached function
@@ -211,104 +261,65 @@ public:
    */
 
    double Integral(double a, double b) { 
-      return fIntegrator->Integral(a,b);
+      return fIntegrator == 0 ? 0 : fIntegrator->Integral(a,b);
    }
-
-   double Integral(const double * a, const double * b) { 
-      return fIntegrator->Integral(a,b);
-   }
-
-
-#ifdef LATER0
-   /**
-      evaluate the Integral of a function f over the infinite interval (-inf,+inf)
-      @param f integration function. The function type must implement the mathlib::IGenFunction interface
-   */
-   double Integral(const IGenFunction & f);
-
-   /**
-      evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
-      @param f integration function. The function type must implement the mathlib::IGenFunction interface
-      @param a lower value of the integration interval
-
-   */
-   double IntegralUp(const IGenFunction & f, double a );
-
-   /**
-      evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
-      @param f integration function. The function type must implement the mathlib::IGenFunction interface
-      @param b upper value of the integration interval
-   */
-   double IntegralLow(const IGenFunction & f, double b );
-
-   /**
-      evaluate the Integral of a function f with known singular points over the defined Integral (a,b)
-      @param f integration function. The function type must implement the mathlib::IGenFunction interface
-      @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
-
-   */
-   double Integral(const IGenFunction & f, const std::vector<double> & pts );
-
-   /**
-      evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
-
-   */
-   double IntegralCauchy(const IGenFunction & f, double a, double b, double c);
-
-#endif
-
-
-#ifdef LATER0
 
 
    /**
       evaluate the Integral over the infinite interval (-inf,+inf) using the function previously set with Integrator::SetFunction method.
    */
 
-   double Integral( );
+   double Integral( ) { 
+      return fIntegrator == 0 ? 0 : fIntegrator->Integral();
+   }
 
    /**
       evaluate the Integral of a function f over the semi-infinite interval (a,+inf) using the function previously set with Integrator::SetFunction method.
       @param a lower value of the integration interval
    */
-   double IntegralUp(double a );
+   double IntegralUp(double a ) { 
+      return fIntegrator == 0 ? 0 : fIntegrator->IntegralUp(a);
+   }
 
    /**
       evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b) using the function previously set with Integrator::SetFunction method.
       @param b upper value of the integration interval
    */
-   double IntegralLow( double b );
+   double IntegralLow( double b ) { 
+      return fIntegrator == 0 ? 0 : fIntegrator->IntegralLow(b);
+   }
 
    /**
       evaluate the Integral over the defined interval (a,b) using the function previously set with Integrator::SetFunction method. The function has known singular points.
       @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
 
    */
-   double Integral( const std::vector<double> & pts);
+   double Integral( const std::vector<double> & pts) { 
+      return fIntegrator == 0 ? 0 : fIntegrator->Integral(pts);
+   }
 
    /**
       evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
 
    */
-   double IntegralCauchy(double a, double b, double c);
+   double IntegralCauchy(double a, double b, double c) { 
+      return fIntegrator == 0 ? 0 : fIntegrator->IntegralCauchy(a,b,c);
+   }
 
-#endif
-
-#ifdef LATER
    /**
       return  the Result of the last Integral calculation
    */
-   double Result() const;
+   double Result() const { return fIntegrator == 0 ? 0 : fIntegrator->Result(); }
 
    /**
       return the estimate of the absolute Error of the last Integral calculation
    */
-   double Error() const;
+   double Error() const { return fIntegrator == 0 ? 0 : fIntegrator->Error(); }
 
    /**
       return the Error Status of the last Integral calculation
    */
-   int Status() const;
+   int Status() const { return fIntegrator == 0 ? -1 : fIntegrator->Status(); }
 
 
    // setter for control Parameters  (getters are not needed so far )
@@ -316,36 +327,55 @@ public:
    /**
       set the desired relative Error
    */
-   void SetRelTolerance(double relTolerance);
+   void SetRelTolerance(double relTolerance) { if (fIntegrator) fIntegrator->SetRelTolerance(relTolerance); }
 
 
    /**
       set the desired absolute Error
    */
-   void SetAbsTolerance(double absTolerance);
+   void SetAbsTolerance(double absTolerance) { if (fIntegrator) fIntegrator->SetRelTolerance(absTolerance); }
 
    /**
-      set the integration rule (Gauss-Kronrod rule).
-      The possible rules are defined in the Integration::GKRule enumeration.
-      The integration rule can be modified only for ADAPTIVE type integrations
+      return a pointer to integrator object 
    */
-   void SetIntegrationRule(Integration::GKRule );
+   VirtualIntegratorOneDim * GetIntegrator() { return fIntegrator; }  
 
-#endif
 
+protected: 
+
+   VirtualIntegratorOneDim * CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule);
 
 private:
 
-   VirtualIntegrator * fIntegrator;
+   VirtualIntegratorOneDim * fIntegrator;
 
 };
 
 
-
+   typedef IntegratorOneDim Integrator; 
 
 
 } // namespace Math
 } // namespace ROOT
+
+
+#ifndef __CINT__
+
+
+#ifndef ROOT_Math_WrappedFunction
+#include "Math/WrappedFunction.h"
+#endif
+
+template<class Function>
+void ROOT::Math::IntegratorOneDim::SetFunction(Function f) {
+  ROOT::Math::WrappedFunction<Function> wf(f); 
+  // need to copy the wrapper function, the instance created here will be deleted after SetFunction()
+  if (fIntegrator) fIntegrator->SetFunction(wf, true);
+}
+
+
+#endif
+
 
 
 #endif /* ROOT_Math_Integrator */

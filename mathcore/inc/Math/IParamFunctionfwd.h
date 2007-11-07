@@ -22,6 +22,8 @@ namespace ROOT {
    namespace Math { 
 
 
+#ifdef OLD
+
       template<class DimensionType> class IParametricFunction; 
       template<class DimensionType> class IParametricGradFunction; 
 
@@ -31,6 +33,18 @@ namespace ROOT {
       typedef IParametricGradFunction<OneDim>        IParamGradFunction; 
       typedef IParametricGradFunction<MultiDim>      IParamMultiGradFunction; 
 
+#endif
+
+      class IParametricFunctionOneDim; 
+      class IParametricGradFunctionOneDim; 
+      class IParametricFunctionMultiDim; 
+      class IParametricGradFunctionMultiDim; 
+
+      typedef IParametricFunctionOneDim        IParamFunction;   
+      typedef IParametricFunctionMultiDim      IParamMultiFunction; 
+
+      typedef IParametricGradFunctionOneDim        IParamGradFunction; 
+      typedef IParametricGradFunctionMultiDim      IParamMultiGradFunction; 
 
 
    } // end namespace Math

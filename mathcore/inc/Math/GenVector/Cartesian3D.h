@@ -236,12 +236,9 @@ public :
 
 private:
 
-   /**
-      (Contiguous) data containing the coordinates values x,y,z
-   */
-   T fX;
-   T fY;
-   T fZ; 
+   T fX;  // x coordinate
+   T fY;  // y coordinate
+   T fZ;  // z coordinate
 };
 
 

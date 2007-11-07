@@ -176,7 +176,11 @@ namespace Math {
    */
 
    double inc_beta( double x, double a, double b); 
-   
+
+
+   double erf_inv (double x); 
+   double inc_gamma_inv (double x, double a); 
+   double inc_beta_inv (double x, double a, double b); 
    
    
 

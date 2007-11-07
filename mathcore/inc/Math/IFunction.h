@@ -41,26 +41,26 @@ namespace Math {
        - 
        @ingroup  CppFunctions
    */
-   template<class DimensionType = MultiDim> 
-   class IBaseFunction {
+   //template<class DimensionType = MultiDim> 
+   class IBaseFunctionMultiDim {
            
    public: 
 
-      typedef  IBaseFunction BaseFunc; 
+      typedef  IBaseFunctionMultiDim BaseFunc; 
 
 
-      IBaseFunction() {}
+      IBaseFunctionMultiDim() {}
 
       /**
          virtual destructor 
        */
-      virtual ~IBaseFunction() {}
+      virtual ~IBaseFunctionMultiDim() {}
 
       /** 
           Clone a function. 
           Each derived class will implement his version of the Clone method
       */
-      virtual IBaseFunction * Clone() const = 0;  
+      virtual IBaseFunctionMultiDim * Clone() const = 0;  
 
       /**
          Retrieve the dimension of the function
@@ -106,25 +106,25 @@ namespace Math {
         
        @ingroup  CppFunctions
    */
-   template <>
-   class IBaseFunction<ROOT::Math::OneDim> { 
+   //template <>
+   class IBaseFunctionOneDim { 
 
    public: 
 
-      typedef  IBaseFunction BaseFunc; 
+      typedef  IBaseFunctionOneDim BaseFunc; 
 
-      IBaseFunction() {}
+      IBaseFunctionOneDim() {}
 
       /**
          virtual destructor 
        */
-      virtual ~IBaseFunction() {}
+      virtual ~IBaseFunctionOneDim() {}
 
       /** 
           Clone a function. 
           Each derived class will implement his version of the provate DoClone method
       */
-      virtual IBaseFunction * Clone() const = 0;  
+      virtual IBaseFunctionOneDim * Clone() const = 0;  
 
       /** 
           Evaluate the function at a point x 
@@ -160,13 +160,13 @@ namespace Math {
 
       @ingroup  CppFunctions
     */
-   template <class DimensionType = ROOT::Math::MultiDim> 
-   class IGradient { 
+   //template <class DimensionType = ROOT::Math::MultiDim> 
+   class IGradientMultiDim { 
 
       public: 
 
       /// virual destructor 
-      virtual ~IGradient() {}
+      virtual ~IGradientMultiDim() {}
 
       /** 
           Evaluate all the vector of function derivatives (gradient)  at a point x.
@@ -207,13 +207,13 @@ namespace Math {
 
       @ingroup  CppFunctions
     */
-   template <> 
-   class IGradient<ROOT::Math::OneDim> { 
+   //template <> 
+   class IGradientOneDim { 
 
    public: 
 
       /// virual destructor 
-      virtual ~IGradient() {}
+      virtual ~IGradientOneDim() {}
 
       /**
          Return the derivative of the funcition at a point x 
@@ -254,16 +254,16 @@ namespace Math {
    while the former can be overloaded if for the particular function can be implemented more efficiently.  
    @ingroup  CppFunctions
 */ 
-   template<class DimensionType = ROOT::Math::MultiDim> 
-   class IGradientFunction : 
-      virtual public IBaseFunction<DimensionType> , 
-      public IGradient<DimensionType> { 
+   //template<class DimensionType = ROOT::Math::MultiDim> 
+   class IGradientFunctionMultiDim : 
+      virtual public IBaseFunctionMultiDim , 
+      public IGradientMultiDim { 
      
 
    public: 
 
-      typedef IBaseFunction<DimensionType> BaseFunc; 
-      typedef IGradient<DimensionType> BaseGrad; 
+      typedef IBaseFunctionMultiDim BaseFunc; 
+      typedef IGradientMultiDim BaseGrad; 
 
 //       // need default constructor with initialization of parent classes
 //       IGradientFunction() : 
@@ -275,7 +275,7 @@ namespace Math {
       /** 
           Virtual Destructor (no operations)
       */ 
-      virtual ~IGradientFunction () {}
+      virtual ~IGradientFunctionMultiDim () {}
 
       /** 
           Evaluate all the vector of function derivatives (gradient)  at a point x.
@@ -323,16 +323,16 @@ namespace Math {
    while the former can be overloaded if for the particular function can be implemented more efficiently.  
    @ingroup  CppFunctions
 */ 
-   template <>
-   class IGradientFunction<ROOT::Math::OneDim> : 
-      virtual public IBaseFunction<ROOT::Math::OneDim> , 
-      public IGradient<OneDim> { 
+   //template <>
+   class IGradientFunctionOneDim : 
+      virtual public IBaseFunctionOneDim , 
+      public IGradientOneDim { 
      
 
    public: 
 
-      typedef IBaseFunction<ROOT::Math::OneDim> BaseFunc; 
-      typedef IGradient<ROOT::Math::OneDim> BaseGrad; 
+      typedef IBaseFunctionOneDim BaseFunc; 
+      typedef IGradientOneDim BaseGrad; 
 
 //       // need default constructor with initialization of parent classes
 //       IGradientFunction() : 
@@ -344,12 +344,12 @@ namespace Math {
       /** 
           Virtual Destructor (no operations)
       */ 
-      virtual ~IGradientFunction () {}
+      virtual ~IGradientFunctionOneDim () {}
 
 
       /** 
           Optimized method to evaluate at the same time the function value and derivative at a point x.
-          Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+           Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
           Derived class should implement this method if performances play an important role and if it is faster to 
           evaluate value and derivative at the same time
        

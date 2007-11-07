@@ -9,29 +9,6 @@
  **********************************************************************/
 #ifdef __CINT__
 
-
-#pragma link C++ typedef ROOT::Math::IGenFunction;
-#pragma link C++ typedef ROOT::Math::IMultiGenFunction;
-#pragma link C++ typedef ROOT::Math::IGradFunction;
-#pragma link C++ typedef ROOT::Math::IMultiGradFunction;
-
-
-#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::MultiDim>+;
-#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::MultiDim>+;
-
-#pragma link C++ class ROOT::Math::IParametricFunction<ROOT::Math::OneDim>+;
-#pragma link C++ class ROOT::Math::IParametricFunction<ROOT::Math::MultiDim>+;
-#pragma link C++ class ROOT::Math::IParametricGradFunction<ROOT::Math::MultiDim>+;
-
-// some problem in CINT with template specialized class 
-#ifdef LATER
-#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::OneDim>+;
-#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::OneDim>+;
-#pragma link C++ class ROOT::Math::IParametricGradFunction<ROOT::Math::OneDim>+;
-#endif
-
-
-
 #pragma link C++ function ROOT::Math::erf( double );
 #pragma link C++ function ROOT::Math::erfc( double );
 #pragma link C++ function ROOT::Math::tgamma( double );

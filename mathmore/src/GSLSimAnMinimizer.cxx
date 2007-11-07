@@ -97,7 +97,7 @@ void GSLSimAnMinimizer::SetFunction(const Minimizer::IObjFunction & func) {
    // keep pointers to the chi2 function
    fObjFunc = &func; 
    fDim = func.NDim();
- }
+}
 
 void GSLSimAnMinimizer::SetFunction(const Minimizer::IGradObjFunction & /* func */) { 
    // set the function to minimizer (need to clone ??)
@@ -118,8 +118,8 @@ bool GSLSimAnMinimizer::Minimize() {
    std::vector<unsigned int> freeVars; 
    std::vector<double> fixedValues; 
 
-   std::cout << " fDim " << fDim << std::endl;
-   std::cout << " fVarFix.size " << fVarFix.size() << std::endl;
+   //std::cout << " fDim " << fDim << std::endl;
+   //std::cout << " fVarFix.size " << fVarFix.size() << std::endl;
 
    assert ( fVarFix.size() == fDim);
 
@@ -133,7 +133,6 @@ bool GSLSimAnMinimizer::Minimize() {
    }
 
    fNFix = fixedVars.size(); 
-   std::cout << "number of fixed variables " << fNFix << std::endl;
    // need to create an adapter 
    if ( fNFix > 0) 
       fObjFunc = new ROOT::Math::WrappedParamFunctionGen<const ROOT::Math::IMultiGenFunction *> (fObjFunc, fDim-fNFix, fNFix, &fixedValues.front(), &fixedVars.front() ); 

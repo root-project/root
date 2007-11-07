@@ -15,6 +15,8 @@
 #include "gsl/gsl_siman.h"
 
 #include "Math/IFunction.h"
+#include "Math/GSLRndmEngines.h"
+#include "GSLRngWrapper.h"
 
 
 #include <cassert> 
@@ -27,63 +29,81 @@ namespace ROOT {
    namespace Math { 
 
 
-/**
-   structure to hold objetive function and variables passed to gsl 
-   sim annealing functions
- */
-class GSLSimAnFunc { 
-public: 
+// implementation of GSLSimAnFunc
 
-   GSLSimAnFunc(const ROOT::Math::IMultiGenFunction & func, const double * x) : 
-      fX( std::vector<double>(x, x + func.NDim() ) ), 
-      fScale( std::vector<double>(func.NDim() )), 
-      fFunc(&func)
-   {
-      // set scale factors to 1
-      fScale.assign(fScale.size(), 1.);
+GSLSimAnFunc::GSLSimAnFunc(const ROOT::Math::IMultiGenFunction & func, const double * x) : 
+   fX( std::vector<double>(x, x + func.NDim() ) ), 
+   fScale( std::vector<double>(func.NDim() )), 
+   fFunc(&func)
+{
+   // set scale factors to 1
+   fScale.assign(fScale.size(), 1.);
+}
+
+GSLSimAnFunc::GSLSimAnFunc(const ROOT::Math::IMultiGenFunction & func, const double * x, const double * scale) : 
+   fX( std::vector<double>(x, x + func.NDim() ) ), 
+   fScale( std::vector<double>(scale, scale + func.NDim() ) ), 
+   fFunc(&func) 
+{}
+
+      
+double GSLSimAnFunc::Energy() const { 
+   // evaluate the energy
+   return   (*fFunc)(&fX.front() );
+}
+
+void GSLSimAnFunc::Step(const GSLRandomEngine & random, double maxstep) { 
+   // x  -> x + Random[-step,step]     for each coordinate
+   unsigned int ndim = NDim();
+   for (unsigned int i = 0; i < ndim; ++i) { 
+      double urndm = random(); 
+      double sstep = maxstep * fScale[i];
+      fX[i] +=  2 * sstep * urndm - sstep; 
    }
+}
 
-   GSLSimAnFunc(const ROOT::Math::IMultiGenFunction & func, const double * x, const double * scale) : 
-      fX( std::vector<double>(x, x + func.NDim() ) ), 
-      fScale( std::vector<double>(scale, scale + func.NDim() ) ), 
-      fFunc(&func) 
-   {}
 
-   double operator()() const { 
-      return   (*fFunc)(&fX.front() ); 
+double GSLSimAnFunc::Distance(const GSLSimAnFunc & f) const { 
+   // calculate the distance with respect onother configuration
+   const std::vector<double> & x = fX;
+   const std::vector<double> & y = f.X();
+   unsigned int n = x.size();
+   assert (n == y.size());
+   if (n > 1) { 
+      double d2 = 0; 
+      for (unsigned int i = 0; i < n; ++i) 
+         d2 += ( x[i] - y[i] ) * ( x[i] - y[i] ); 
+      return std::sqrt(d2); 
    }
+   else 
+      // avoid doing a sqrt for 1 dim
+      return std::abs( x[0] - y[0] );
+} 
 
-   void SetX(const double * x) { 
-      std::copy(x, x+ fX.size(), fX.begin() );
+void GSLSimAnFunc::Print() { 
+   // print the position  x in standard ostream 
+   // GSL prints also niter-  ntrials - temperature and then the energy and energy min value (from 1.10)
+   std::cout << "\tx = ( "; 
+   unsigned n = NDim(); 
+   for (unsigned int i = 0; i < n-1; ++i) { 
+      std::cout << fX[i] << " , "; 
    }
+   std::cout << fX.back() << " )\t";
+   // energy us printed by GSL (and also end-line) 
+   std::cout << "E  / E_best = ";   // GSL print then E and E best  
+}
 
-   template <class IT> 
-   void SetX(IT begin, IT end) { 
-      std::copy(begin, end, fX.begin() );
-   }
-
-   unsigned int NDim() const { return fX.size(); } 
-
-   double X(unsigned int i) const { return fX[i]; }
-
-   const std::vector<double> &  X() const { return fX; }
-
-   double Scale(unsigned int i) const { return fScale[i]; }
-
-   void SetX(unsigned int i, double x) { fX[i] = x; } 
-
-   // use compiler generated  copy ctror and assignment operators 
-
-private: 
-
-   std::vector<double>  fX; 
-   std::vector<double>  fScale; 
-   const ROOT::Math::IMultiGenFunction * fFunc;
-   
-}; 
+GSLSimAnFunc &  GSLSimAnFunc::FastCopy(const GSLSimAnFunc & rhs) { 
+   // copy only the information which is changed during the process 
+   // in this case only the x values 
+   std::copy(rhs.fX.begin(), rhs.fX.end(), fX.begin() ); 
+   return *this;
+}
 
 
-// static functions required by GSL 
+
+// definition and implementations of the static functions required by GSL 
+
 namespace GSLSimAn { 
 
 
@@ -91,22 +111,19 @@ namespace GSLSimAn {
       // evaluate the energy given a state xp 
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp); 
       assert (fx != 0);
-      return (*fx)(); 
+      return fx->Energy(); 
    }
 
    void Step( const gsl_rng * r, void * xp, double step_size) { 
       // change xp according to  the random step 
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp); 
-      assert (fx != 0);
-      
-      unsigned int ndim = fx->NDim();
-      for (unsigned int i = 0; i < ndim; ++i) { 
-         double u = gsl_rng_uniform(r); 
-         double xold = fx->X(i);
-         double sstep = step_size * fx->Scale(i);
-         double xnew = u * 2 * sstep - sstep + xold; 
-         fx->SetX(i, xnew);
-      }
+      assert (fx != 0);      
+      // create GSLRandomEngine class 
+      // cast away constness (we make sure we don't delete (no call to Terminate() )
+      GSLRngWrapper  rng(const_cast<gsl_rng *>(r));
+      GSLRandomEngine random(&rng);
+      // wrapper classes random and rng must exist during call to Step()
+      fx->Step(random, step_size);
    }
  
    double Dist( void * xp, void * yp) { 
@@ -116,23 +133,15 @@ namespace GSLSimAn {
       
       assert (fx != 0);
       assert (fy != 0);
-      
-      // change step size 
-      
-      return std::fabs( (*fx)() - (*fy)() ); 
+      return fx->Distance(*fy);
    }
 
    void Print(void * xp) { 
-      // print a configuration xp
+      // print the position  xp
+      // GSL prints also first niter-  ntrials - temperature and then the energy 
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp); 
       assert (fx != 0);
-      
-      std::cout << "x = ( "; 
-      for (unsigned int i = 0; i < fx->NDim()-1; ++i) { 
-         std::cout << fx->X(i) << " , "; 
-      }
-      std::cout << fx->X(fx->NDim()-1) << " )\n";
-      std::cout << "f(x) = " << (*fx)()  << std::endl;
+      fx->Print();
    }   
 
 // static function to pass to GSL copy - create and destroy the object 
@@ -142,13 +151,13 @@ namespace GSLSimAn {
       assert (fx != 0);
       GSLSimAnFunc * gx = reinterpret_cast<GSLSimAnFunc *> (dest); 
       assert (gx != 0);
-      gx->operator=(*fx); 
+      gx->FastCopy(*fx); 
    }
 
    void * CopyCtor( void * xp) { 
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp); 
       assert (fx != 0);
-      return static_cast<void *> ( new GSLSimAnFunc(*fx) ); 
+      return static_cast<void *> ( fx->Clone() ); 
    }
 
    void Destroy( void * xp) { 
@@ -169,26 +178,45 @@ GSLSimAnnealing::GSLSimAnnealing()
 
 
 
-// function for solving 
+// function for solving (from a Genfunction interface)  
+
 int GSLSimAnnealing::Solve(const ROOT::Math::IMultiGenFunction & func, const double * x0, const double * scale, double * xmin, bool debug) { 
-   // solve the simulated annealing problem given starting point and function
-   
-   gsl_rng * r = gsl_rng_alloc(gsl_rng_mt19937); 
+   // solve the simulated annealing problem given starting point and objective function interface
+    
 
    // initial conditions
    GSLSimAnFunc   fx(func, x0, scale); 
 
-   gsl_siman_params_t simanParams; 
-   // parameters for the simulated annealing
+   int iret =  Solve(fx, debug); 
 
-   simanParams.n_tries =    200;     /* how many points to try for each step */
-   simanParams.iters_fixed_T =  10;  /* how many iterations at each temperature? */ 
-   simanParams.step_size =   10;     /* max step size in the random walk */
+   if (iret == 0) { 
+      // copy value of the minimum in xmin
+      std::copy(fx.X().begin(), fx.X().end(), xmin);
+   }
+   return iret; 
+
+}
+
+int GSLSimAnnealing::Solve(GSLSimAnFunc & fx, bool debug) { 
+   // solve the simulated annealing problem given starting point and GSLSimAnfunc object
+    
+   gsl_rng * r = gsl_rng_alloc(gsl_rng_mt19937); 
+
+
+
+   gsl_siman_params_t simanParams; 
+
+   // parameters for the simulated annealing
+   // copy them in GSL structure
+
+   simanParams.n_tries =        fParams.n_tries;     /* how many points to try for each step */
+   simanParams.iters_fixed_T =  fParams.iters_fixed_T;  /* how many iterations at each temperature? */ 
+   simanParams.step_size =      fParams.step_size;     /* max step size in the random walk */
    // the following parameters are for the Boltzmann distribution */
-   simanParams.k = 1.0; 
-   simanParams.t_initial =  0.002; 
-   simanParams.mu_t =  1.005; 
-   simanParams.t_min = 2.0E-6;
+   simanParams.k =              fParams.k;  
+   simanParams.t_initial =      fParams.t_initial; 
+   simanParams.mu_t =           fParams.mu;
+   simanParams.t_min =          fParams.t_min;
 
 
    if (debug) 
@@ -199,11 +227,8 @@ int GSLSimAnnealing::Solve(const ROOT::Math::IMultiGenFunction & func, const dou
       gsl_siman_solve(r, &fx, &GSLSimAn::E, &GSLSimAn::Step, &GSLSimAn::Dist, 
                    0, &GSLSimAn::Copy, &GSLSimAn::CopyCtor , &GSLSimAn::Destroy, 0, simanParams );
 
-
-   // copy value of the minimum
-   std::copy(fx.X().begin(), fx.X().end(), xmin);
-
    return 0; 
+
 }
 
 

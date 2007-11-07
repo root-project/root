@@ -102,7 +102,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    
 }
 
-GSLIntegrator::GSLIntegrator(const char * type , double absTol, double relTol, size_t size) :
+   GSLIntegrator::GSLIntegrator(const char * type , int rule, double absTol, double relTol, size_t size) :
    fRule(Integration::GAUSS31),
    fAbsTol(absTol),
    fRelTol(relTol),
@@ -127,6 +127,8 @@ GSLIntegrator::GSLIntegrator(const char * type , double absTol, double relTol, s
    // allocate workspace (only if not adaptive algorithm)
    if (fType !=  Integration::NONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
+
+   SetIntegrationRule((Integration::GKRule) rule);
    
 }
 
@@ -139,7 +141,7 @@ GSLIntegrator::~GSLIntegrator()
 }
 
 GSLIntegrator::GSLIntegrator(const GSLIntegrator &)  : 
-   VirtualIntegrator()                                                    
+   VirtualIntegratorOneDim() 
 {
    // dummy copy ctr
 }

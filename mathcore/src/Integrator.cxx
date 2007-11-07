@@ -9,17 +9,19 @@
   **********************************************************************/
 
 #include "Math/IFunction.h"
-#include "Math/Integrator.h"
-
 #include "Math/VirtualIntegrator.h"
+#include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"
 
+#include "Math/AdaptiveIntegratorMultiDim.h"
 
-#define MATH_PLUGIN_MANAGER
-#ifdef MATH_PLUGIN_MANAGER
+
+
+#ifndef MATH_NO_PLUGIN_MANAGER
 #include "TROOT.h"
 #include "TPluginManager.h"
-#else
+
+#else // case no plugin manager is available
 #include "Math/GSLIntegrator.h"
 #include "Math/GSLMCIntegrator.h"
 #endif
@@ -30,16 +32,19 @@ namespace ROOT {
 namespace Math {
 
 
-VirtualIntegrator * CreateOneDimIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size) { 
+   VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
 
-   VirtualIntegrator * ig = 0; 
+   VirtualIntegratorOneDim * ig = 0; 
 
-#ifdef MATH_PLUGIN_MANAGER  
+#ifdef MATH_NO_PLUGIN_MANAGER    // no PM available
+   ig =  new GSLIntegrator(type, absTol, relTol, size);
+#else 
+
    TPluginHandler *h; 
    //gDebug = 3; 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLIntegrator"))) {
       if (h->LoadPlugin() == -1) {
-         MATH_ERROR_MSG("Error loading one dimensional GSL integrator"); 
+         MATH_ERROR_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator"); 
          return 0; 
       }
 
@@ -51,37 +56,39 @@ VirtualIntegrator * CreateOneDimIntegrator(IntegrationOneDim::Type type , double
 
             
 
-      ig = reinterpret_cast<ROOT::Math::VirtualIntegrator *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, size ) ); 
+      ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) ); 
       assert(ig != 0);
+      
 
 #ifdef DEBUG
       std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif
    }
-#else 
-   ig =  new GSLIntegrator(type, absTol, relTol, size);
-#endif
+
+#endif 
+
    return ig;  
 }
 
-VirtualIntegrator * CreateMultiDimIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) { 
+VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) { 
+   // create base class for multidimensional integration 
 
-   VirtualIntegrator * ig = 0; 
-   
-#ifdef MATH_PLUGIN_MANAGER  
+   // no need for PM in the adaptive  case using Genz method (class is in MathCore)
+   if (type == IntegrationMultiDim::ADAPTIVE)
+      return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
+      
+   VirtualIntegratorMultiDim * ig = 0; 
 
-   if (type == IntegrationMultiDim::ADAPTIVE) { 
-      // no need of PM for adaptive method (is in mathcore)
-      return new IntegratorMultiDim(absTol, relTol, ncall);
-   }
+#ifdef MATH_NO_PLUGIN_MANAGER  // no PM available 
+   ig =  new GSLMCIntegrator(type, absTol, relTol, ncall);
 
-
-
+#else  // use ROOT PM 
+      
    TPluginHandler *h; 
    //gDebug = 3; 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::VirtualIntegrator", "GSLMCIntegrator"))) {
       if (h->LoadPlugin() == -1) {
-         MATH_ERROR_MSG("Error loading multidim integrator"); 
+         MATH_ERROR_MSG("IntegratorMultiDim::CreateIntegrator","Error loading multidim integrator"); 
          return 0; 
       }
 
@@ -93,72 +100,17 @@ VirtualIntegrator * CreateMultiDimIntegrator(IntegrationMultiDim::Type type , do
          typeName = "PLAIN";
 
       
-      ig = reinterpret_cast<ROOT::Math::VirtualIntegrator *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) ); 
+      ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) ); 
       assert(ig != 0);
 
 #ifdef DEBUG
       std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
 #endif
    }
-#else 
-   if (type == IntegrationMultiDim::ADAPTIVE)
-      ig = new IntegratorMultiDim(absTol, relTol, ncall);
-   else {
-      // do later 
-      //ig =  new GSLMCIntegrator(type, absTol, relTol, ncall);
-   }
 #endif
    return ig;  
 }
 
-// 1D constructors
-
-Integrator::Integrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size)  
-{
-   // construtor of 1D integrator - create a GSLIntegrator
-   fIntegrator = CreateOneDimIntegrator(type, absTol, relTol, size); 
-}
-  
-
-Integrator::Integrator(const IGenFunction &f, IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size) {
-   // constructor with IGenFunction
-   fIntegrator = CreateOneDimIntegrator(type, absTol, relTol, size); 
-   fIntegrator->SetFunction(f);
-}
-
-// multi-dim constructors
-
-Integrator::Integrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall)  
-{
-   // construtor of multi-dima integrator 
-   fIntegrator = CreateMultiDimIntegrator(type, absTol, relTol, ncall); 
-}
-
-Integrator::Integrator(const IMultiGenFunction &f, IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall)  
-{
-   // construtor of multi-dim integrator using a funciton interface
-   fIntegrator = CreateMultiDimIntegrator(type, absTol, relTol, ncall); 
-   fIntegrator->SetFunction(f);   
-}
-  
-
-Integrator::~Integrator()
-{
-   // destructor 
-   if (fIntegrator) delete fIntegrator;
-}
-
-Integrator::Integrator(const Integrator &)
-{
-}
-
-Integrator & Integrator::operator = (const Integrator &rhs)
-{
-   // private assigment op.
-   if (this == &rhs) return *this;  // time saving self-test
-   
-   return *this;
-}
 
 
 

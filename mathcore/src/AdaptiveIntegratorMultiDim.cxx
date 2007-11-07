@@ -1,8 +1,9 @@
 // Implementation file for class
-// IntegratorMultiDim
+// AdaptiveIntegratorMultiDim
 //
 #include "Math/IFunction.h"
-#include "Math/IntegratorMultiDim.h"
+#include "Math/AdaptiveIntegratorMultiDim.h"
+#include "Math/Error.h"
 
 #include <cmath>
 
@@ -11,7 +12,7 @@ namespace Math {
 
 
 
-IntegratorMultiDim::IntegratorMultiDim(double absTol, double relTol, unsigned int size):
+AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int size):
    fDim(0), 
    fAbsTol(absTol),
    fRelTol(relTol),
@@ -22,7 +23,7 @@ IntegratorMultiDim::IntegratorMultiDim(double absTol, double relTol, unsigned in
    fFun = 0; 
 }
 
-IntegratorMultiDim::IntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int size):
+AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int size):
    fDim(f.NDim()), 
    fAbsTol(absTol),
    fRelTol(relTol),
@@ -34,23 +35,23 @@ IntegratorMultiDim::IntegratorMultiDim( const IMultiGenFunction &f, double absTo
 
 
 
-//double IntegratorMultiDim::Result() const { return fIntegrator->Result(); }
-//double IntegratorMultiDim::Error() const { return fIntegrator->Error(); }
+//double AdaptiveIntegratorMultiDim::Result() const { return fIntegrator->Result(); }
+//double AdaptiveIntegratorMultiDim::Error() const { return fIntegrator->Error(); }
 
-void IntegratorMultiDim::SetFunction(const IMultiGenFunction &f)
+void AdaptiveIntegratorMultiDim::SetFunction(const IMultiGenFunction &f)
 {
    // set the integration function
-  fFun = &f;
-  fDim = f.NDim();
+   fFun = &f;
+   fDim = f.NDim();
 }
 
-void IntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol = relTol; }
+void AdaptiveIntegratorMultiDim::SetRelTolerance(double relTol){ this->fRelTol = relTol; }
 
 
-void IntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
+void AdaptiveIntegratorMultiDim::SetAbsTolerance(double absTol){ this->fAbsTol = absTol; }
 
 
-double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
+double AdaptiveIntegratorMultiDim::Integral(const double* xmin, const double * xmax)
 {
    // References:
    //
@@ -69,7 +70,7 @@ double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
    unsigned int maxpts = fSize;//specified maximal number of function evaluations
    double eps = fRelTol; //specified relative accuracy
    //output parameters
-   int ifail; //report status
+   fStatus = 0; //report status
    unsigned int nfnevl; //nr of function evaluations
    double relerr; //an estimation of the relative accuracy of the result
 
@@ -86,41 +87,45 @@ double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
    static const double wp4 = 25./729;
 
    static const double wn1[14] = {     -0.193872885230909911, -0.555606360818980835,
-     -0.876695625666819078, -1.15714067977442459,  -1.39694152314179743,
-     -1.59609815576893754,  -1.75461057765584494,  -1.87247878880251983,
-     -1.94970278920896201,  -1.98628257887517146,  -1.98221815780114818,
-     -1.93750952598689219,  -1.85215668343240347,  -1.72615963013768225};
+                                       -0.876695625666819078, -1.15714067977442459,  -1.39694152314179743,
+                                       -1.59609815576893754,  -1.75461057765584494,  -1.87247878880251983,
+                                       -1.94970278920896201,  -1.98628257887517146,  -1.98221815780114818,
+                                       -1.93750952598689219,  -1.85215668343240347,  -1.72615963013768225};
 
    static const double wn3[14] = {     0.0518213686937966768,  0.0314992633236803330,
-     0.0111771579535639891,-0.00914494741655235473,-0.0294670527866686986,
-    -0.0497891581567850424,-0.0701112635269013768, -0.0904333688970177241,
-    -0.110755474267134071, -0.131077579637250419,  -0.151399685007366752,
-    -0.171721790377483099, -0.192043895747599447,  -0.212366001117715794};
+                                       0.0111771579535639891,-0.00914494741655235473,-0.0294670527866686986,
+                                       -0.0497891581567850424,-0.0701112635269013768, -0.0904333688970177241,
+                                       -0.110755474267134071, -0.131077579637250419,  -0.151399685007366752,
+                                       -0.171721790377483099, -0.192043895747599447,  -0.212366001117715794};
 
    static const double wn5[14] = {         0.871183254585174982e-01,  0.435591627292587508e-01,
-     0.217795813646293754e-01,  0.108897906823146873e-01,  0.544489534115734364e-02,
-     0.272244767057867193e-02,  0.136122383528933596e-02,  0.680611917644667955e-03,
-     0.340305958822333977e-03,  0.170152979411166995e-03,  0.850764897055834977e-04,
-     0.425382448527917472e-04,  0.212691224263958736e-04,  0.106345612131979372e-04};
+                                           0.217795813646293754e-01,  0.108897906823146873e-01,  0.544489534115734364e-02,
+                                           0.272244767057867193e-02,  0.136122383528933596e-02,  0.680611917644667955e-03,
+                                           0.340305958822333977e-03,  0.170152979411166995e-03,  0.850764897055834977e-04,
+                                           0.425382448527917472e-04,  0.212691224263958736e-04,  0.106345612131979372e-04};
 
    static const double wpn1[14] = {   -1.33196159122085045, -2.29218106995884763,
-     -3.11522633744855959, -3.80109739368998611, -4.34979423868312742,
-     -4.76131687242798352, -5.03566529492455417, -5.17283950617283939,
-     -5.17283950617283939, -5.03566529492455417, -4.76131687242798352,
-     -4.34979423868312742, -3.80109739368998611, -3.11522633744855959};
+                                      -3.11522633744855959, -3.80109739368998611, -4.34979423868312742,
+                                      -4.76131687242798352, -5.03566529492455417, -5.17283950617283939,
+                                      -5.17283950617283939, -5.03566529492455417, -4.76131687242798352,
+                                      -4.34979423868312742, -3.80109739368998611, -3.11522633744855959};
 
    static const double wpn3[14] = {     0.0445816186556927292, -0.0240054869684499309,
-    -0.0925925925925925875, -0.161179698216735251,  -0.229766803840877915,
-    -0.298353909465020564,  -0.366941015089163228,  -0.435528120713305891,
-    -0.504115226337448555,  -0.572702331961591218,  -0.641289437585733882,
-    -0.709876543209876532,  -0.778463648834019195,  -0.847050754458161859};
+                                        -0.0925925925925925875, -0.161179698216735251,  -0.229766803840877915,
+                                        -0.298353909465020564,  -0.366941015089163228,  -0.435528120713305891,
+                                        -0.504115226337448555,  -0.572702331961591218,  -0.641289437585733882,
+                                        -0.709876543209876532,  -0.778463648834019195,  -0.847050754458161859};
 
    double result = 0;
    double abserr = 0;
-   ifail  = 3;
+   fStatus  = 3;
    nfnevl = 0;
    relerr = 0;
-   if (n < 2 || n > 15) return 0;
+   // does not work for 1D functions
+   if (n < 2 || n > 15) { 
+      MATH_WARN_MSGVAL("AdaptiveIntegratorMultiDim::Integral","Wrong function dimension",n); 
+      return 0;
+   }
 
    double twondm = std::pow(2.0,static_cast<int>(n));
    //unsigned int minpts = Int_t(twondm)+ 2*n*(n+1)+1;
@@ -143,8 +148,8 @@ double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
 
    unsigned int j; 
    for (j=0; j<n; j++) {
-     ctr[j] = (xmax[j] + xmin[j])*0.5;//center of a hypercube
-     wth[j] = (xmax[j] - xmin[j])*0.5;//its width
+      ctr[j] = (xmax[j] + xmin[j])*0.5;//center of a hypercube
+      wth[j] = (xmax[j] - xmin[j])*0.5;//its width
    }
 
    double rgnvol, sum1, sum2, sum3, sum4, sum5, difmax, f2, f3, dif, aresult;
@@ -157,8 +162,8 @@ double IntegratorMultiDim::Integral(const double* xmin, const double * xmax)
 L20:
    rgnvol = twondm;//=2^n
    for (j=0; j<n; j++) {
-     rgnvol *= wth[j]; //region volume
-     z[j]    = ctr[j]; //temporary node
+      rgnvol *= wth[j]; //region volume
+      z[j]    = ctr[j]; //temporary node
    }
    sum1 = (*fFun)((const double*)z);//EvalPar(z,fParams); //evaluate function
 
@@ -217,7 +222,7 @@ L20:
       wthl[j] = -xl5*wth[j];
       z[j] = ctr[j] + wthl[j];
    }
- L90: //sum over end nodes ~gray codes
+L90: //sum over end nodes ~gray codes
    if (fgAbsValue) sum5 += std::abs((*fFun)(z));
    else            sum5 += (*fFun)(z);
    for (j=0;j<n;j++) {
@@ -240,13 +245,13 @@ L20:
    aresult = std::abs(result);
    //if (result > 0 && aresult< 1e-100) {
    //   delete [] wk;
-   //   ifail = 0;  //function is probably symmetric ==> integral is null: not an error
+   //   fStatus = 0;  //function is probably symmetric ==> integral is null: not an error
    //   return result;
    //}
 
    //if division
    if (ldv) {
-L110:
+   L110:
       isbtmp = 2*isbrgn;
       if (isbtmp > isbrgs) goto L160;
       if (isbtmp < isbrgs) {
@@ -270,7 +275,7 @@ L140:
       goto L140;
    }
 
- L160: //to divide or not
+L160: //to divide or not
    wk[isbrgn-1] = rgnerr;//storing value & error in last 
    wk[isbrgn-2] = rgnval;//table records
    wk[isbrgn-3] = double(idvaxn);//coordinate with biggest error
@@ -280,7 +285,7 @@ L140:
       wk[isbtmp-1] = wth[j];
    }
    if (ldv) {//divison along chosen coordinate
-     ldv = kFALSE;
+      ldv = kFALSE;
       ctr[idvax0-1] += 2*wth[idvax0-1];
       isbrgs += irgnst;//updating the number of nodes/regions(?)
       isbrgn  = isbrgs;
@@ -291,23 +296,23 @@ L140:
    if (aresult != 0)  relerr = abserr/aresult;
 
 
-   if (relerr < 1e-1 && aresult < 1e-20) ifail = 0;
-   if (relerr < 1e-3 && aresult < 1e-10) ifail = 0;
-   if (relerr < 1e-5 && aresult < 1e-5)  ifail = 0;
-   if (isbrgs+irgnst > iwk) ifail = 2;
+   if (relerr < 1e-1 && aresult < 1e-20) fStatus = 0;
+   if (relerr < 1e-3 && aresult < 1e-10) fStatus = 0;
+   if (relerr < 1e-5 && aresult < 1e-5)  fStatus = 0;
+   if (isbrgs+irgnst > iwk) fStatus = 2;
    if (ifncls+2*irlcls > maxpts) {
       if (sum1==0 && sum2==0 && sum3==0 && sum4==0 && sum5==0){
-         ifail = 0;
+         fStatus = 0;
          result = 0;
       }
       else
-         ifail = 1;
+         fStatus = 1;
    }
    //..and accuracy appropriare
-   //! if (relerr < eps && ifncls >= minpts) ifail = 0;
-   if (relerr < eps* aresult && abserr < eps && ifncls >= minpts) ifail = 0;
-   if (ifail == 3) {
-     ldv = kTRUE;
+   //! if (relerr < eps && ifncls >= minpts) fStatus = 0;
+   if (relerr < eps* aresult && abserr < eps && ifncls >= minpts) fStatus = 0;
+   if (fStatus == 3) {
+      ldv = kTRUE;
       isbrgn  = irgnst;
       abserr -= wk[isbrgn-1];
       result -= wk[isbrgn-2];
@@ -332,10 +337,11 @@ L140:
 
 
   
-double IntegratorMultiDim::Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax)
+double AdaptiveIntegratorMultiDim::Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax)
 {
-  fFun = &f;
-  return Integral(xmin, xmax);
+   // calculate integral passing a function object
+   fFun = &f;
+   return Integral(xmin, xmax);
 
 }
 

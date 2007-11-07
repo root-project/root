@@ -39,31 +39,35 @@
 #define ROOT_MATH_LOG
 #endif
 
-#define MATH_INFO_MSG(str) \
-   ROOT_MATH_OS << "Info in ROOT::Math: " << str \
-       << std::endl;
-#define MATH_ERROR_MSG(str) \
-   ROOT_MATH_OS << "Error in ROOT::Math: " << str \
-       << std::endl;
-# define MATH_INFO_VAL(x) \
-   ROOT_MATH_OS << "Info in ROOT::Math: " << #x << " = " << (x) << std::endl; 
-# define MATH_ERROR_VAL(x) \
-   ROOT_MATH_OS << "Info in ROOT::Math: " << #x << " = " << (x) << std::endl; 
+// giving a location + string
 
-
-// same giving a location
-
-#define MATH_INFO_MSG2(loc,str) \
-  ROOT_MATH_OS << "Info in ROOT::Math " << loc << " : " << str \
+#define MATH_INFO_MSG(loc,str)                   \
+   ROOT_MATH_OS << "Info in ROOT::Math::" << loc << ">: "  << str \
        << std::endl;
-#define MATH_ERROR_MSG2(loc,str) \
-   ROOT_MATH_OS << "Error in ROOT::Math " << loc << " : " << str \
+#define MATH_WARN_MSG(loc,str)                      \
+   ROOT_MATH_OS << "Warning in ROOT::Math::" << loc << ">: " << str \
        << std::endl;
-# define MATH_INFO_VAL2(loc,x) \
-   ROOT_MATH_OS << "Info in ROOT::Math " << loc  << " : " << #x << " = " << (x) << std::endl;
-# define MATH_ERROR_VAL2(loc,x) \
-   ROOT_MATH_OS << "Info in ROOT::Math " << loc << " : " << #x << " = " << (x) << std::endl; 
+#define MATH_ERROR_MSG(loc,str)                   \
+   ROOT_MATH_OS << "Error in ROOT::Math::" << loc << ">: " << str \
+       << std::endl;
 
+// giving location +  a value
+
+# define MATH_INFO_VAL(loc,x)                                           \
+   ROOT_MATH_OS << "Info in <ROOT::Math::" << loc << ">: " << #x << " = " << (x) << std::endl; 
+# define MATH_WARN_VAL(loc,x)                                           \
+   ROOT_MATH_OS << "Warning in ROOT::Math::" << loc << ">: " << #x << " = " << (x) << std::endl; 
+# define MATH_ERROR_VAL(loc,x)                                          \
+   ROOT_MATH_OS << "Error in ROOT::Math::" << loc << ">: " << #x << " = " << (x) << std::endl; 
+
+// giving a location + string + value
+
+# define MATH_INFO_MSGVAL(loc,str,x)                                    \
+   ROOT_MATH_OS << "Info in <ROOT::Math::" << loc << ">: "  << str << "; " << #x << " = " << (x) << std::endl; 
+# define MATH_WARN_MSGVAL(loc,str,x)                                    \
+   ROOT_MATH_OS << "Warning in ROOT::Math::" << loc << ">: " << str << "; " << #x << " = " << (x) << std::endl; 
+# define MATH_ERROR_MSGVAL(loc,str,x)                                   \
+   ROOT_MATH_OS << "Error in ROOT::Math::" << loc << ">: " << str << "; " << #x << " = " << (x) << std::endl; 
 
 
 #else
@@ -72,23 +76,40 @@
 #include "TError.h"
 #include "Math/Util.h"
 
-#define  MATH_INFO_MSG(str) \
+#define  MATH_INFO_MSG(loc,str)                 \
    ::Info("ROOT::Math",str);
-#define  MATH_ERROR_MSG(str) \
+#define  MATH_WARN_MSG(loc,str)                 \
+   ::Warning("ROOT::Math",str);
+#define  MATH_ERROR_MSG(loc,str)                \
    ::Error("ROOT::Math",str);
-# define MATH_INFO_VAL(x) \
-   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("ROOT::Math",str.c_str() );} 
-# define MATH_ERROR_VAL(x) \
-   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("ROOT::Math",str.c_str() );} 
 
-# define MATH_INFO_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("ROOT::Math",str.c_str() );} 
-# define MATH_ERROR_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("ROOT::Math",str.c_str() );} 
+# define MATH_INFO_VAL(loc,x)                                           \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Info(sl.c_str(),str.c_str() );} 
+# define MATH_WARN_VAL(loc,x)                                           \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Warning(sl.c_str(),str.c_str() );} 
+# define MATH_ERROR_VAL(loc,x)                                          \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Error(sl.c_str(),str.c_str() );} 
+
+
+# define MATH_INFO_MSGVAL(loc,txt,x)                    \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Info(sl.c_str(),str.c_str() );} 
+# define MATH_WARN_MSGVAL(loc,txt,x)                      \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Warning(sl.c_str(),str.c_str() );} 
+# define MATH_ERROR_MSGVAL(loc,txt,x)                     \
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+   std::string str = std::string(txt) + std::string("; ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Error(sl.c_str(),str.c_str() );} 
+
 
 
 #endif

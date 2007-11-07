@@ -77,7 +77,7 @@ public:
          // bfgs2 is available only for v>= 1.9 
          fType = gsl_multimin_fdfminimizer_vector_bfgs2; 
 #else 
-         MATH_INFO_MSG("minimizer BFSG2 does not exist with this GSL version , use BFGS");
+         MATH_INFO_MSG("GSLMultiMinimizer","minimizer BFSG2 does not exist with this GSL version , use BFGS");
          fType = gsl_multimin_fdfminimizer_vector_bfgs;
 #endif 
          break; 
