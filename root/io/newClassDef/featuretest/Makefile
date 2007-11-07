@@ -10,4 +10,8 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 run.out: Run.C ClassTrick_C.$(DllSuf)  Class_C.$(DllSuf) typeidtest_C.$(DllSuf)
 	$(CMDECHO)root -q -l -b Run.C >run.out 2>&1
 
+ifeq ($(FAIL)$(PLATFORM),win32)
+feature:
+else
 feature: run.out
+endif
