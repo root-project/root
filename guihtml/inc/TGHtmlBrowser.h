@@ -69,6 +69,7 @@ public:
    void              Stop();
    void              MouseOver(char *);
    void              MouseDown(char *);
+   void              Clicked(char *uri) { Emit("Clicked(char *)",uri); } // *SIGNAL*
    
    ClassDef(TGHtmlBrowser, 0) // very simple html browser
 };

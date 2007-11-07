@@ -272,6 +272,7 @@ void TGHtmlBrowser::Selected(const char *uri)
    if (surl.EndsWith(".root")) {
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kWatch));
       gROOT->ProcessLine(Form("TFile::Open(\"%s\");", surl.Data()));
+      Clicked((char *)surl.Data());
       gROOT->RefreshBrowsers();
       gVirtualX->SetCursor(fHtml->GetId(), gVirtualX->CreateCursor(kPointer));
       return;
