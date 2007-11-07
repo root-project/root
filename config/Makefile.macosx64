@@ -52,8 +52,6 @@ SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
-CXXFLAGS     += -fvisibility-inlines-hidden
-CINTCXXFLAGS += -fvisibility-inlines-hidden
 else
 ifeq ($(MACOSX_MINOR),3)
 SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
