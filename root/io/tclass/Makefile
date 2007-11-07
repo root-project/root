@@ -24,7 +24,6 @@ endif
 
 ifeq ($(FAIL)$(PLATFORM),win32)
 TestTClassGlobalIsA:
-	$(WarnFailTest)
 else
 TestTClassGlobalIsA: TestTClassGlobalIsA.log
 	$(CMDECHO) diff -ub  TestTClassGlobalIsA.ref  TestTClassGlobalIsA.log
