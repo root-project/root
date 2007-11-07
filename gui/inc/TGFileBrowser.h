@@ -81,6 +81,7 @@ public:
    void        GetFilePictures(const TGPicture **pic, Int_t file_type, Bool_t is_link, const char *name);
    void        GetObjPicture(const TGPicture **pic, TObject *obj);
    void        GotoDir(const char *path);
+   void        Selected(char *);
    
    ClassDef(TGFileBrowser, 0) // File browser.
 };

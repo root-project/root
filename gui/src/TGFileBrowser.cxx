@@ -167,6 +167,8 @@ void TGFileBrowser::CreateBrowser()
    else
       fShowHidden = kFALSE;
 
+   TQObject::Connect("TGHtmlBrowser", "Clicked(char*)", 
+                     "TGFileBrowser", this, "Selected(char*)");
    fListLevel = 0;
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -420,6 +422,7 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
 {
    // Refresh content of the list tree.
 
+   return; // disable refresh for the time being...
    TCursorSwitcher cursorSwitcher(this, fListTree);
    static UInt_t prev = 0;
    UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
@@ -1078,5 +1081,22 @@ void TGFileBrowser::GotoDir(const char *path)
    }
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(item);
+}
+
+//______________________________________________________________________________
+void TGFileBrowser::Selected(char *)
+{
+   // A ROOT File has been selected in TGHtmlBrowser.
+
+   TGListTreeItem *itm = fListTree->FindChildByData(0, gROOT->GetListOfFiles());
+   if (itm) {
+      fListTree->ClearHighlighted();
+      fListLevel = itm;
+      fListTree->HighlightItem(fListLevel);
+      fListTree->OpenItem(fListLevel);
+      BrowseObj(gROOT->GetListOfFiles());
+      fListTree->ClearViewPort();
+      fListTree->AdjustPosition(fListLevel);
+   }
 }
 
