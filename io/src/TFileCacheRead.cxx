@@ -97,7 +97,8 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
       fAsyncReading = kFALSE;
       if (file && !(file->ReadBufferAsync(0, 0)))
          fAsyncReading = kTRUE;
-   } else {
+   }
+   if (!fAsyncReading) {
       // we use sync primitives, hence we need the local buffer
       fBuffer = new char[fBufferSize];
    }
