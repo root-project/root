@@ -887,7 +887,7 @@ int G__getstream_template(char* source, int* isrc, char* string, char* endmark)
                   }
                   break;
                }
-               else if ('*' == string[i-1]) {
+               else if (i>0 && '*' == string[i-1]) {
                   pflag = 1;
                }
                ignoreflag = 1;
