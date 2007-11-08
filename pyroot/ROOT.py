@@ -71,6 +71,11 @@ except:
 if hasattr(sys,'argv') and '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
    del os.environ[ 'DISPLAY' ]       
 
+## special filter on MacOS X (warnings caused by linking that is still required)
+if sys.platform == 'darwin':
+   import warnings
+   warnings.filterwarnings( action='ignore', category=RuntimeWarning, module='ROOT',\
+      message='class \S* already in TClassTable$' )
 
 ### load PyROOT C++ extension module, special case for linux and Sun ------------
 needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
@@ -385,6 +390,7 @@ class ModuleFacade( object ):
       if c.CreatePyROOTApplication():
          c.InitROOTGlobals()
          c.InitCINTMessageCallback();
+         c.InitROOTMessageCallback();
 
     # must be called after gApplication creation:
       if __builtins__.has_key( '__IPYTHON__' ):

@@ -11,6 +11,7 @@
 
 // ROOT
 #include "TClassEdit.h"
+#include "TError.h"
 
 // CINT
 #include "Api.h"
@@ -348,6 +349,30 @@ void PyROOT::Utility::ErrMsgCallback( char* msg )
    else   // unknown: printing it to screen is the safest action
       fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
 }
+
+//____________________________________________________________________________
+void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* location, const char* msg )
+{
+// Translate ROOT error/warning to python
+
+// initialization from gEnv (the default handler will return w/o msg b/c level too low)
+   if ( gErrorIgnoreLevel == kUnset )
+      ::DefaultErrorHandler( kUnset - 1, kFALSE, "", "" );
+
+   if ( level < gErrorIgnoreLevel )
+      return;
+
+// turn warnings into python warnings
+   if (level >= kError)
+      ::DefaultErrorHandler( level, abort, location, msg );
+   else if ( level >= kWarning ) {
+   // either printout or raise exception, depending on user settings
+      PyErr_WarnExplicit( NULL, msg, location, 0, (char*)"ROOT", NULL );
+   }
+   else
+      ::DefaultErrorHandler( level, abort, location, msg );
+}
+
 
 //____________________________________________________________________________
 Bool_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 

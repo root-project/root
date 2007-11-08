@@ -98,6 +98,7 @@ namespace PyROOT {
 
    // CINT integration
       void ErrMsgCallback( char* msg );
+      void ErrMsgHandler( int level, Bool_t abort, const char* location, const char* msg );
 
       Bool_t InstallMethod( Cint::G__ClassInfo* scope, PyObject* callback,
          const std::string& mtName, const char* signature, void* func );

@@ -11,6 +11,7 @@
 #include "TSystem.h"
 #include "TBenchmark.h"
 #include "TStyle.h"
+#include "TError.h"
 #include "Getline.h"
 
 // CINT
@@ -128,5 +129,15 @@ Bool_t PyROOT::TPyROOTApplication::InitCINTMessageCallback()
 // python exceptions. Always returns true.
 
    G__set_errmsgcallback( (void*)&Utility::ErrMsgCallback );
+   return kTRUE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TPyROOTApplication::InitROOTMessageCallback()
+{
+// Install ROOT message handler which will turn ROOT error message into
+// python exceptions. Always returns true.
+
+   SetErrorHandler( (ErrorHandlerFunc_t)&Utility::ErrMsgHandler );
    return kTRUE;
 }

@@ -26,6 +26,7 @@ public:
 
    static Bool_t InitROOTGlobals();
    static Bool_t InitCINTMessageCallback();
+   static Bool_t InitROOTMessageCallback();
 
 public:
    TPyROOTApplication(
