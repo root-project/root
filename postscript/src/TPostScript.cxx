@@ -1834,7 +1834,7 @@ void TPostScript::Range(Float_t xsize, Float_t ysize)
 {
    // Set the range for the paper in centimeters
 
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
+   Float_t xps=0, yps=0, xncm=0, yncm=0, dxwn=0, dywn=0, xwkwn=0, ywkwn=0, xymax=0;
 
    fXsize = xsize;
    fYsize = ysize;
