@@ -132,6 +132,7 @@ public:
    static const TString PctEncode(const TString &source);
    static const TString PctDecode(const TString &source);
    static const TString PctDecodeUnreserved(const TString &source);
+   static const TString PctNormalise(const TString &source);
 
    static Bool_t IsScheme(const TString&);
    static Bool_t IsHierPart(const TString&);
