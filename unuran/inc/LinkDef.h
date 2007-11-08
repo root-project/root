@@ -16,6 +16,7 @@
 
 
 #pragma link C++ class TUnuran+;
+#pragma link C++ class TUnuranBaseDist+;
 #pragma link C++ class TUnuranContDist+;
 #pragma link C++ class TUnuranMultiContDist+;
 #pragma link C++ class TUnuranDiscrDist+;

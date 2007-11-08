@@ -98,14 +98,13 @@ MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls) const {
 }
 
 MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
-
+   // get crossing value in the upper parameter direction 
 
 #ifdef DEBUG
    std::cout << "\n--------- MnMinos --------- \n Determination of positive Minos error for parameter " 
              << par << std::endl;
 #endif
 
-   // get crossing value in the upper parameter direction 
    assert(fMinimum.IsValid());  
    assert(!fMinimum.UserState().Parameter(par).IsFixed());
    assert(!fMinimum.UserState().Parameter(par).IsConst());

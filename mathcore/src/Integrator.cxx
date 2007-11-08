@@ -33,6 +33,7 @@ namespace Math {
 
 
    VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
+   // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
 
    VirtualIntegratorOneDim * ig = 0; 
 
@@ -71,7 +72,7 @@ namespace Math {
 }
 
 VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMultiDim::Type type , double absTol, double relTol, unsigned int ncall) { 
-   // create base class for multidimensional integration 
+   // create concrete class for multidimensional integration 
 
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
    if (type == IntegrationMultiDim::ADAPTIVE)

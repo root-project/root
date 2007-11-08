@@ -18,7 +18,7 @@
 ClassImp(TUnuranContDist)
 
 
-TUnuranContDist::TUnuranContDist (const TF1 * pdf, const TF1 * deriv, bool isLogPdf  ) : 
+TUnuranContDist::TUnuranContDist (TF1 * pdf, TF1 * deriv, bool isLogPdf  ) : 
    fPdf(pdf),
    fDPdf(deriv),
    fCdf(0), 
@@ -32,6 +32,7 @@ TUnuranContDist::TUnuranContDist (const TF1 * pdf, const TF1 * deriv, bool isLog
    fHasArea(0)
 {
    // Constructor from a TF1 objects
+   //  passed as non-const because EvalPar and InitArgs are non-const methods
 } 
 
 
@@ -46,7 +47,7 @@ TUnuranContDist & TUnuranContDist::operator = (const TUnuranContDist &rhs)
 {
    // Implementation of assignment operator.
    if (this == &rhs) return *this;  // time saving self-test
-    fPdf   = rhs.fPdf;
+   fPdf   = rhs.fPdf;
    fDPdf  = rhs.fDPdf;
    fCdf   = rhs.fCdf; 
    fXmin  = rhs.fXmin;  
@@ -61,15 +62,21 @@ TUnuranContDist & TUnuranContDist::operator = (const TUnuranContDist &rhs)
 }
 
 double TUnuranContDist::Pdf ( double x) const { 
-   // evaluate the pdf of the destribution    
+   // evaluate the pdf of the distribution    
    assert(fPdf != 0);
-   return fPdf->Eval(x); 
+   fX[0] = x; 
+   fPdf->InitArgs(fX,(double*)0);
+   return fPdf->EvalPar(fX); 
 }
 
 double TUnuranContDist::DPdf( double x) const { 
    // evaluate the derivative of the pdf
    // if derivative function is not given is evaluated numerically
-   if (fDPdf != 0) return fDPdf->Eval(x); 
+   if (fDPdf != 0) { 
+      fX[0] = x; 
+      fDPdf->InitArgs(fX,(double*)0);
+      return fDPdf->EvalPar(fX); 
+   }
    // do numerical derivation using algorithm in TF1
    assert(fPdf != 0);
    return fPdf->Derivative(x); 
@@ -78,7 +85,9 @@ double TUnuranContDist::DPdf( double x) const {
 double TUnuranContDist::Cdf(double x) const {   
    // evaluate the integral (cdf)  on the domain
    assert (fCdf != 0); 
-   return fCdf->Eval(x);
+   fX[0] = x; 
+   fCdf->InitArgs(fX,(double*)0);
+   return fCdf->EvalPar(fX);
    // t.b.t if the cdf function is not provided evaluate numerically 
    // (need methods for undefined integration in mathmore), cannot use TF1::Integral
    // assert(fPdf != 0);

@@ -52,6 +52,7 @@ TUnuranMultiContDist & TUnuranMultiContDist::operator = (const TUnuranMultiContD
 double TUnuranMultiContDist::Pdf ( const double * x) const {  
    // evaluate the distribution 
    assert(fPdf != 0);
+   fPdf->InitArgs(x, (double *) 0);
    return fPdf->EvalPar(x); 
 }
 

@@ -17,7 +17,7 @@
 #include <cassert>
 
 
-TUnuranDiscrDist::TUnuranDiscrDist (const TF1 * func) : 
+TUnuranDiscrDist::TUnuranDiscrDist (TF1 * func) : 
    fPmf(func), 
    fCdf(0), 
    fXmin(1), 
@@ -64,14 +64,18 @@ double TUnuranDiscrDist::Pmf ( int x) const {
       if (x < static_cast<int>(fPVec.size()) || x >= static_cast<int>(fPVec.size()) ) return 0; 
       return fPVec[x]; 
    }
-   return fPmf->Eval(double(x)); 
+   fX[0] = x; 
+   fPmf->InitArgs(fX,(double*)0);
+   return fPmf->EvalPar(fX); 
 }
 
 double TUnuranDiscrDist::Cdf ( int x) const {  
    // evaluate the cumulative distribution 
    // otherwise evaluate from the sum of the probabilities 
    assert(fCdf != 0); 
-   return fCdf->Eval(double(x)); 
+   fX[0] = x; 
+   fCdf->InitArgs(fX,(double*)0);
+   return fCdf->EvalPar(fX);
 //naive numerical estimation is too slow  
 //    double cdf = 0; 
 //    int i0 = ( fHasDomain) ? fXmin : 0; 

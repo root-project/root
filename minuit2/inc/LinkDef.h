@@ -28,5 +28,7 @@
 #pragma link C++ class ROOT::Minuit2::FCNGradientBase;
 #pragma link C++ class ROOT::Minuit2::FumiliFCNBase;
 
+#pragma link C++ class ROOT::Minuit2::Minuit2Minimizer;
+
 
 #endif

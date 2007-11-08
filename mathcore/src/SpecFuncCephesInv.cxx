@@ -66,7 +66,6 @@ namespace Cephes {
  * ndtri domain       x >= 1         MAXNUM
  *
  */
-
 
 /*
 Cephes Math Library Release 2.8:  June, 2000
@@ -273,7 +272,7 @@ double igami( double a, double y0 )
    }
 
 /* Resort to interval halving if Newton iteration did not converge. */
- ihalve:
+ihalve:
 
    d = 0.0625;
    if( x0 == kMAXNUM )
@@ -343,7 +342,7 @@ double igami( double a, double y0 )
 //    if( x == 0.0 )
 //       mtherr( "igami", UNDERFLOW );
 
- done:
+done:
    return( x );
 }
 
@@ -464,7 +463,7 @@ double incbi( double aa, double bb, double yy0 )
       goto newt;
 
 /* Resort to interval halving if not close enough. */
- ihalve:
+ihalve:
 
    dir = 0;
    di = 0.5;
@@ -568,7 +567,7 @@ double incbi( double aa, double bb, double yy0 )
       goto done;
    }
 
- newt:
+newt:
 
    if( nflg )
       goto done;
@@ -634,7 +633,7 @@ double incbi( double aa, double bb, double yy0 )
    dithresh = 256.0 * kMACHEP;
    goto ihalve;
 
- done:
+done:
 
    if( rflg )
    {

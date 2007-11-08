@@ -47,7 +47,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    // of aopt is within tla of previous value of aopt
    double up = fFCN.Up();
    double tlf = tlr*up;
-   double mgr_tlr = 0.05 * up;   // to be conistent with F77 version 
+   double mgr_tlr = 0.05 * up;   // to be consistent with F77 version 
    double tla = tlr;
    unsigned int maxitr = 15;
    unsigned int ipt = 0;

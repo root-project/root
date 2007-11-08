@@ -36,7 +36,7 @@ public:
    /** 
       Constructor from a TF1 objects specifying the pdf
    */ 
-   TUnuranDiscrDist (const TF1 * func = 0);
+   TUnuranDiscrDist (TF1 * func = 0);
 
    /** 
       Constructor from a vector of probability
@@ -168,8 +168,8 @@ protected:
 private: 
 
    std::vector<double> fPVec;    //Vector of the probabilities 
-   const TF1 * fPmf;             //pointer to a function calculating the probability 
-   const TF1 * fCdf;             //pointer to the cumulative distribution function
+   mutable TF1 * fPmf;             //pointer to a function calculating the probability 
+   mutable TF1 * fCdf;             //pointer to the cumulative distribution function
    int   fXmin;                  //lower value of the domain
    int   fXmax;                  //upper value of the domain
    int   fMode;                  //mode of the distribution
@@ -178,6 +178,7 @@ private:
    bool  fHasDomain;             //flag to control if distribution has a defined domain (otherwise is [0,INT_MAX])
    bool  fHasMode;               //flag to control if distribution has a pre-computed mode
    bool  fHasSum;                //flag to control if distribution has a pre-computed sum of the probabilities
+   mutable double fX[1];         //! cached vector for using TF1::EvalPar
 
    ClassDef(TUnuranDiscrDist,1)  //Wrapper class for one dimensional discrete distribution
 
