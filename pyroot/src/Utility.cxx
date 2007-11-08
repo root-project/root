@@ -367,7 +367,7 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
       ::DefaultErrorHandler( level, abort, location, msg );
    else if ( level >= kWarning ) {
    // either printout or raise exception, depending on user settings
-      PyErr_WarnExplicit( NULL, msg, location, 0, (char*)"ROOT", NULL );
+      PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
    }
    else
       ::DefaultErrorHandler( level, abort, location, msg );
