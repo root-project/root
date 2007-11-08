@@ -959,15 +959,19 @@ TString const TUri::PctDecodeUnreserved(const TString &source)
    Int_t i = 0;
    while (i < source.Length()) {
       if (source[i] == '%') {
+         if (source.Length() < i+2) {
+            // abort if out of bounds
+            return sink;
+         } 
          // two hex digits follow -> decode to ASCII
          // upper nibble, bits 4-7
          char c1 = tolower(source[i + 1]) - '0';
          if (c1 > 9) // a-f
-            c1 -= 30;
+            c1 -= 39;
          // lower nibble, bits 0-3
          char c0 = tolower(source[i + 2]) - '0';
          if (c0 > 9) // a-f
-            c0 -= 30;
+            c0 -= 39;
          char decoded = c1 << 4 | c0;
          if (TPRegexp(kURI_unreserved).Match(decoded) > 0)
             sink = sink + decoded;
@@ -994,15 +998,19 @@ TString const TUri::PctDecode(const TString &source)
    Int_t i = 0;
    while (i < source.Length()) {
       if (source[i] == '%') {
+         if (source.Length() < i+2) {
+            // abort if out of bounds
+            return sink;
+         }
          // two hex digits follow -> decode to ASCII
          // upper nibble, bits 4-7
          char c1 = tolower(source[i + 1]) - '0';
          if (c1 > 9) // a-f
-            c1 -= 30;
+            c1 -= 39;
          // lower nibble, bits 0-3
          char c0 = tolower(source[i + 2]) - '0';
          if (c0 > 9) // a-f
-            c0 -= 30;
+            c0 -= 39;
          sink = sink + (char)(c1 << 4 | c0);
          // advance 2 characters
          i += 2;
