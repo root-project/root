@@ -1861,12 +1861,12 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
          TIter nxs(al);
          TSocket *xs = 0;
          while ((xs = (TSocket *)nxs())) {
-           TSlave *wrk = FindSlave(xs);
-           if (wrk)
-              Info("Collect","   %s", wrk->GetName());
-           else
-              Info("Collect","   %p: %s:%d", xs, xs->GetInetAddress().GetHostName(),
-                                                 xs->GetInetAddress().GetPort());
+            TSlave *wrk = FindSlave(xs);
+            if (wrk)
+               Info("Collect","   %s", wrk->GetName());
+            else
+               Info("Collect","   %p: %s:%d", xs, xs->GetInetAddress().GetHostName(),
+                                                  xs->GetInetAddress().GetPort());
          }
       }
       mon->DeActivateAll();
@@ -5570,7 +5570,7 @@ void TProof::ValidateDSet(TDSet *dset)
    }
 
    PDB(kGlobal,1)
-     Info("ValidateDSet","Calling Collect");
+      Info("ValidateDSet","Calling Collect");
    Collect(&usedslaves);
    SetDSet(0);
 }
