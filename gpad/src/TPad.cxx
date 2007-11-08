@@ -4541,8 +4541,8 @@ void TPad::RedrawAxis(Option_t *option)
    while ((obj = next())) {
       if (obj->InheritsFrom("TH1")) {
          TH1 *hobj = (TH1*)obj;
-         if (opt.Contains("g")) hobj->Draw("sameaxig");
-         else                   hobj->Draw("sameaxis");
+         if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
+         else                   hobj->DrawCopy("sameaxis");
          return;
       }
       if (obj->InheritsFrom("TMultiGraph")) {
