@@ -18,7 +18,7 @@ if test "x$1" = "xrpm" ; then
 	    *asimage)							;;
 	    *castor)	echo "BuildRequires: castor-devel"		;;
 	    *chirp)							;;
-	    *clarens)							;;
+	    *clarens)	echo "BuildRequires: xmlrpc-c-devel"		;;
 	    *dcache)							;;
 	    *fumili)							;;
 	    *fftw3)							;;
@@ -66,7 +66,7 @@ BuildRequires: qt3-devel
 %endif
 %endif
 %else
-BuildRequires: qt-devel
+BuildRequires: qt-devel >= 3.3.0
 %endif
 EOF
 ;;
@@ -119,11 +119,11 @@ for i in $* ; do
 	*fumili)   							;;
 	*gl)	   
 	    echo -n ", libglu1-mesa-dev | libglu1-xorg-dev "
-	    echo -n "| xlibmesa-glu-dev |  libglu-dev"			;;
+	    echo -n "| xlibmesa-glu-dev |  libglu-dev, ftgl-dev"	;;
 	*globus)   echo -n ", globus"					;;
 	*hbook)	   
-	    echo -n ", libpacklib1-dev [!kfreebsd-i386]"
-	    echo -n ", g77|fortran-compiler" 				;;
+	    echo -n ", libpacklib1-dev [!kfreebsd-i386 !kfreebsd-amd64]"
+	    echo -n ", gfortran|fortran-compiler" 			;;
 	*krb5)		 
 	    if test $have_krb -lt 1 ; then 
 		echo -n ", libkrb5-dev|heimdal-dev"
@@ -149,8 +149,11 @@ for i in $* ; do
 	*pythia6)  echo -n ", pythia6-dev"				;;
 	*python)   echo -n ", python-support (>= 0.3)"			;;
 	*qt)	   
-	    echo -n ", libqt3-mt-dev, libqt3-headers" 
-            echo -n ", qt3-dev-tools, libqt3-compat-headers"		;;
+	    echo -n ", libqt4-dev (>= 4.3.0) | libqt3-mt-dev (>= 3.3.0)"
+	    echo -n ", qt4-dev-tools (>= 4.3.0) | qt3-dev-tools (>= 3.3.0)"
+	    ;;
+	    #echo -n ", libqt3-mt-dev, libqt3-headers" 
+            #echo -n ", qt3-dev-tools, libqt3-compat-headers"		;;
 	*quadp)	   							;;
 	*roofit)   							;;
 	*ruby)	   echo -n ", ruby (>= 1.8), ruby1.8-dev | ruby-dev (>= 1.8)";;
@@ -158,6 +161,7 @@ for i in $* ; do
 	*sql)	   							;;
 	*srp)	   echo -n ", libsrputil-dev"				;;
         *tmva)	   							;;
+	*unuran)                                                        ;;
 	*venus)	   echo -n ", libvenus-dev"				;;
 	*xml)	   echo -n ", libxml2-dev"				;;
 	root-system-proofd)						;;

@@ -24,9 +24,16 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
-#include "qvbox.h"
-#include "qglist.h"
-#include "qlineedit.h"
+# include "qlineedit.h"
+# include "qnamespace.h"
+# if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+#  include "qlist.h"
+#  include "q3vbox.h"
+typedef Q3VBox QVBox;
+using namespace Qt;
+# else
+#  include "qvbox.h"
+# endif
 #endif
 
 #ifndef ROOT_TObject
@@ -37,10 +44,16 @@ class TMethod;
 class TCanvas;
 
 class QLineEdit;
-class QVBox;
 class QWidget;
 #ifdef __CINT__
-class QList<QLineEdit>;
+template <typename T> class QList;
+class QLineEdit;
+class QList<QLineEdit*>;
+class QVBox;
+#if QTVERS > 3
+class WindowFlags;
+typedef WindowFlags WFlags;
+#endif
 #endif
 
 class TQRootDialog: public QVBox
@@ -72,8 +85,11 @@ protected:
    TMethod *fCurMethod;    // method to be executed
    TCanvas* fCurCanvas;    // current canvas
    QWidget* fParent;       // parent widget
+# if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+   QList<QLineEdit*> fList; // list of widget corresponding to the number of arguments
+#else
    QList<QLineEdit> fList; // list of widget corresponding to the number of arguments
-      
+#endif      
    ClassDef(TQRootDialog,1)  //prompt for the arguments of an object's member function
 };
 

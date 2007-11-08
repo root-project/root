@@ -29,7 +29,7 @@ class RooAbsAnaConvPdf ;
 class RooConvCoefVar : public RooAbsReal {
 public:
   // Constructors, assignment etc.
-  inline RooConvCoefVar() { }
+  RooConvCoefVar() { }
   RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
   RooConvCoefVar(const RooConvCoefVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooConvCoefVar(*this,newname); }

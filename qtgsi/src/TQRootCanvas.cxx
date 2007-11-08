@@ -15,6 +15,12 @@
 #include "qpushbutton.h"
 #include "qlabel.h"
 #include "qpainter.h"
+#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+# include "qnamespace.h"
+using namespace Qt;
+# include "q3dragobject.h"
+typedef Q3TextDrag QTextDrag;
+#endif
 
 #include "TQRootCanvas.h"
 #include "TROOT.h"
@@ -313,7 +319,13 @@ void TQRootCanvas::dropEvent( QDropEvent *Event )
          }
       }
       else
-         cout << "object " << str <<  " not found by ROOT" << endl;
+	cout << "object " << 
+#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+	  str.data() 
+#else 
+	  str
+#endif
+	     <<  " not found by ROOT" << endl;
    }
 }
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.16 2007/05/11 15:02:30 rdm Exp $
+# $Id: makedebdir.sh,v 1.17 2007/05/14 07:42:44 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -71,13 +71,14 @@ purge ()
 	build/package/debian/root-cint.postrm.in		\
 	build/package/debian/root-cint.prerm.in			\
 	build/package/debian/ttf-root.copyright			\
+	build/package/debian/dirs				\
+	build/package/debian/root-system-proofd.postinst.in	\
+	build/package/debian/root-system-rootd.postinst.in	\
 	build/package/lib/makerpmspecs.sh			\
 	fonts/LICENSE						
-    rm -rf asimage/src/libAfterImage				
-    rm -rf xrootd/src/xrootd 
-    rm -rf roofit/src/
-    rm -rf roofit/inc/
-    rm -rf unuran/src/unuran-*-root
+    # rm -rf asimage/src/libAfterImage				
+    # rm -rf xrootd/src/xrootd 
+    # rm -rf unuran/src/unuran-*-root
     for i in fonts/*.ttf ; do 
 	if test ! -f ${i} ; then continue ; fi 
 	case $i in 
@@ -99,38 +100,41 @@ purge ()
     echo -n "Extracting tar-balls ... "
     # Xrootd
     xtar=`find xrootd/src/ -name "*.tgz"` 
-    echo -n "$xtar ... "
-    tar -xzf $xtar -C xrootd/src/
-    touch xrootd/src/headers.d
-    rm -f unuran/src/unuran-*-root/config.status
-    rm -f unuran/src/unuran-*-root/config.log
-    rm -f $xtar
+    if test "x$xtar" != "x" ; then 
+	rm -rf xrootd/src/xrootd 
+	echo -n "$xtar ... "
+	tar -xzf $xtar -C xrootd/src/
+	touch xrootd/src/headers.d
+	rm -f unuran/src/unuran-*-root/config.status
+	rm -f unuran/src/unuran-*-root/config.log
+	rm -f $xtar
+    fi
     # ASImage
     atar=`find asimage/src/ -name "*.tar.gz"` 
-    echo -n "$atar ... "
-    tar -xzf $atar -C asimage/src/
-    touch asimage/src/headers.d
-    rm -f $atar
-    # Some extra files to delete from the unpacked sources of libAfterimage
-    rm -rf asimage/src/libAfterImage/Makefile		\
-	asimage/src/libAfterImage/afterbase.h		\
-	asimage/src/libAfterImage/afterimage-config	\
-	asimage/src/libAfterImage/afterimage-libs	\
-	asimage/src/libAfterImage/config.h		\
-	asimage/src/libAfterImage/config.log		\
-	asimage/src/libAfterImage/config.status
+    if test "x$atar" != "x" ; then 
+	rm -rf asimage/src/libAfterImage
+	echo -n "$atar ... "
+	tar -xzf $atar -C asimage/src/
+	touch asimage/src/headers.d
+	rm -f $atar
+        # Some extra files to delete from the unpacked sources of libAfterimage
+	rm -rf asimage/src/libAfterImage/Makefile		\
+	    asimage/src/libAfterImage/afterbase.h		\
+	    asimage/src/libAfterImage/afterimage-config	\
+	    asimage/src/libAfterImage/afterimage-libs	\
+	    asimage/src/libAfterImage/config.h		\
+	    asimage/src/libAfterImage/config.log		\
+	    asimage/src/libAfterImage/config.status
+    fi
     # Unuran
     utar=`find unuran/src/ -name "*.tar.gz"` 
-    echo -n "$utar ... "
-    tar -xzf $utar -C unuran/src/
-    touch unuran/src/headers.d
-    rm -f $utar
-    # ROOFit
-    ftar=`find roofit/ -name "*.tgz"` 
-    echo -n "$ftar ... "
-    tar -xzf $ftar -C roofit/
-    touch roofit/headers.d
-    rm -f $ftar
+    if test "x$utar" != "x" ; then 
+	rm -rf unuran/src/unuran-*-root
+	echo -n "$utar ... "
+	tar -xzf $utar -C unuran/src/
+	touch unuran/src/headers.d
+	rm -f $utar
+    fi
     echo "done"
 }
 
@@ -144,7 +148,6 @@ clean()
     make maintainer-clean \
 	ASTEPVERS=.bogus ASTEPETAG=	\
 	XROOTDDIRD=      XROOTDETAG=	\
-	ROOFITDIRS=      ROOFITDIRI=    ROOFITETAG= \
 	UNRVERS=.bogus   UNURANETAG=
     rm -f unuran/src/.bogus.tar.gz
     rm -rf debian

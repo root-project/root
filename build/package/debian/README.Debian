@@ -16,7 +16,7 @@ analysis frame work written in C++.
 
 Meta package: 
 
-* root                  This will install the core of ROOT, plus some
+* root-system           This will install the core of ROOT, plus some
                         of the most useful packages.  Note, this works
                         best on Debian as Debian has a higher level of
                         granularity than Red Hat when it comes to
@@ -24,17 +24,17 @@ Meta package:
 
 The core packages are:
 
-* root-common		Common files for ROOT
 * libroot               Basic ROOT libraries
-* root-bin              The interactive interface and utilities
 * libroot-dev           The header files for the ROOT libraries
-* root-doc              Examples and tutorials
+* root-system-common	Common files for ROOT
+* root-system-bin       The interactive interface and utilities
+* root-system-doc       Examples and tutorials
 
 A few `server' packages are available 
 
-* root-rootd            Remote fileserver 
-* root-proofd           PROOF environment
-* root-xrootd		Extendend ROOT Remote File server
+* root-system-rootd     Remote fileserver 
+* root-system-proofd    PROOF environment
+* root-system-xrootd	Extendend ROOT Remote File server
 
 A few `extension' packages 
 
@@ -106,7 +106,7 @@ The latest Debian GNU/Linux packages should be available from [1], and
 a back catalogue as well as latest build should be available from the
 ROOT web-site [2].
 
-[1] deb http://mirror.phy.bnl.gov/debian-root root main
+[1] deb http://mirror.phy.bnl.gov/debian-root unstable main contrib
 [2] http://root.cern.ch
 
 Original Sources:
@@ -160,11 +160,11 @@ will happily answer questions in that forum.
 Pure CINT and ROOT's CINT:
 ==========================
 To facilitate a parallel installation of a Pure CINT on a Debian
-GNU/Linux system, the `root-bin' package exploits the "alternatives"
-feature of dpkg.  Since most ROOT users never use the Pure CINT
-programs "cint" and "makecint" is is reasonably safe to have a Pure
-CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
-being maintained by Richard B. Kreckel.
+GNU/Linux system, the `root-system-bin' package exploits the
+"alternatives" feature of dpkg.  Since most ROOT users never use the
+Pure CINT programs "cint" and "makecint" is is reasonably safe to have
+a Pure CINT installation next to ROOT.  A Debian GNU/Linux package of
+CINT is being maintained by Richard B. Kreckel.
 
 The pure CINT packages have not been in Debian for some time now.
 However, the alternatives are still used, as the pure CINT packages
@@ -504,14 +504,20 @@ Thanks:
   maintainer, for inspirring correspondence, advice, and great
   cooperation.
 
+* Boris (?) <boris@mogwitz.eu> for porting to mips
+
 * James Ferrando <ferrando@mail.desy.de> for the i386
   `sarge' (stable) builds. 
+
+* Dirk Van Hertem <dirk.vanhertem@ieee.org> for porting to hppa
 
 * John Kehayias <John.Kehayias@bnl.gov> for the amd64 `sid' (unstable)
    builds. 
 
 * Frederic Lehobey <Frederic.Lehobey@free.fr> for linux-sparc64,
   linux-powerpc, and gnu-kfreebsd-i386 testing and builds. 
+
+* Frank Lichtenheld <djpig@debian.org> for help on porting to sparc.
 
 * Kevin McCarty <kmccarty@Princeton.edu> for his many suggestions,
   testing, and sponsorship, as well as some amd64 builds. 
@@ -522,11 +528,15 @@ Thanks:
 * Charles Plessy <charles-debian-nospam@plessy.org> for powerpc64
   testing and builds. 
 
+* Thiemo Seufer <ths@networkno.de> for help on MIPS - his huge 
+  expertise on the architecture was quite instructive. 
+
 * Brett Viren <bv@bnl.gov> for hosting the repository as well as doing
   alpha and beta  testing of the Debian GNU/Linux packages.
 
 * Ricardo Yanez <Ricardo.Yanez@calel.org> for suggestions, testing and
   stable i386 builds. 
+
 
  -- Christian Holm Christensen <cholm@nbi.dk>, Mon, 21 Feb 2005 16:28:37 +0100
 

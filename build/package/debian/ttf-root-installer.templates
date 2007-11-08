@@ -13,7 +13,7 @@ Template: ttf-root-installer/dldir
 Type: string
 _Description: Directory holding MS fonts (if already downloaded):
  If you have already downloaded Microsoft's TrueType Core Fonts from the
- ROOT FTP server (ftp://root.cern.ch/root/ttf/ttf-fonts.tar.gz), type the
+ ROOT FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), type the
  name of the directory which contains the archive.
  .
  If you haven't yet downloaded these fonts, leave this blank and the fonts
@@ -32,7 +32,7 @@ _Description: Font files not found
 
 Template: ttf-root-installer/savedir
 Type: string
-_Description: Where should these files be be archived (optional):
+_Description: Archive these files to (optional):
  If you would like to keep a permanent archive of the compressed Microsoft
  Core fonts, enter the directory where you'd like them stored.  If you
  leave this blank, the files will be deleted after installation.

@@ -313,7 +313,8 @@ PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
                           $(FPYTHIA6LIB)
 X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
 TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
-GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed -lFTGL
+GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed  \
+                          $(FTGLLIBDIR) $(FTGLLIBS)
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer -lRIO
 GEOMLIBEXTRA            = -Llib -lRIO
 GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad -lRIO

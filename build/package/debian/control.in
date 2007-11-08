@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: root-system
 Architecture: all
-Depends: root-system-bin, libroot, libroot-dev
+Depends: root-system-bin, libroot-dev
 Recommends: @plugins@
 Suggests: @extras@
 Description: Meta package to install all ROOT packages
@@ -25,11 +25,11 @@ Description: Meta package to install all ROOT packages
  analysis system that can query and process the data interactively or
  in batch mode.
  .
- Thanks to the built in CINT C++ interpreter the command language, the
- scripting, or macro, language and the programming language are all
+ Thanks to the built-in CINT C++ interpreter, the command language, the
+ scripting, or macro, language, and the programming language are all
  C++. The interpreter allows for fast prototyping of the macros since
  it removes the time consuming compile/link cycle. It also provides a
- good environment to learn C++. If more performance is needed the
+ good environment to learn C++. If more performance is needed, the
  interactively developed macros can be compiled using a C++ compiler.
  .
  The system has been designed in such a way that it can query its

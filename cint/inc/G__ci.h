@@ -1554,13 +1554,37 @@ typedef struct {
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 
-#elif (defined(__mips)&&defined(linux))
+#elif (defined(__mips__)&&defined(__linux__))
 /**********************************************
 * MIPS, Linux
+* 3 different calling conventions:
+*                             | mips   | mipsn32   | mips64
+*                             | mipsel | mipsn32el | mips64el
+*  ---------------------------+--------+---------------------
+*  G__VAARG_INC_COPY_N        |   4    |     8     |    8
+*  G__VAARG_PASS_BY_REFERENCE |   4    |     8     |    8
+*
+* Assuming that 
+*    G__VAARG_INC_COPY_N 
+*       is meant to be the size of the argument registers, 
+*    G__VAARG_PASS_BY_REFERENCE
+*       is the number of arguments passed by reference through 
+*       registers.
+*
+* Thanks to Thiemo Seufer <ths@networkno.de> of Debian
 **********************************************/
-# define G__VAARG_INC_COPY_N 4
-# define G__VAARG_PASS_BY_REFERENCE 8
-
+# if _MIPS_SIM == _ABIO32 /* mips or mipsel */
+#  define G__VAARG_INC_COPY_N 4
+#  define G__VAARG_PASS_BY_REFERENCE 4
+# elif _MIPS_SIM == _ABIN32 /* mipsn32 or mipsn32el */
+#  define G__VAARG_INC_COPY_N 8
+#  define G__VAARG_PASS_BY_REFERENCE 8
+# elif _MIPS_SIM == _ABI64 /* mips64 or mips64el */
+#  define G__VAARG_INC_COPY_N 8
+#  define G__VAARG_PASS_BY_REFERENCE 8
+# else 
+#  define G__VAARG_NOSUPPORT
+# endif
 #else
 /**********************************************
  * Other platforms,

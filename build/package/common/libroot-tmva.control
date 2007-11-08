@@ -29,7 +29,7 @@ Description: Toolkit for multivariate data analysis
 Package: libroot-tmva-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-tmva@libvers@ (= ${Source-Version}), libroot-dev
+Depends: libroot-tmva@libvers@ (= ${binary:Version}), libroot-dev
 Description: Toolkit for multivariate data analysis - development files
  The Toolkit for Multivariate Analysis (TMVA) provides a
  ROOT-integrated environment for the parallel processing and

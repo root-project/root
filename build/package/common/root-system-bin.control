@@ -23,7 +23,7 @@ Description: Numerical data analysis framework - general applications
  .
  The system has been designed in such a way that it can query its
  databases in parallel on MPP machines or on clusters of workstations
- or high-end PC's. ROOT is an open system that can be dynamically
+ or high-end PCs. ROOT is an open system that can be dynamically
  extended by linking external libraries. This makes ROOT a premier
  platform on which to build data acquisition, simulation and data
  analysis systems.

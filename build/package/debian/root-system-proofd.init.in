@@ -126,7 +126,7 @@ case "$1" in
 	log_end_msg $ret
 	;;
   *)
-	N=@sysconfdir@/init.d/root-$NAME
+	N=@sysconfdir@/init.d/root-system-$NAME
 	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
 	echo "Usage: $N {start|stop|restart|force-reload}" >&2
 	exit 1

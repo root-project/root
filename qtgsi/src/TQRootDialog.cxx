@@ -15,6 +15,10 @@
 #include "qlabel.h"
 #include "qobject.h"
 #include "qlineedit.h"
+#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+# include "q3hbox.h"
+typedef Q3HBox QHBox;
+#endif
 
 #include "TQRootDialog.h"
 #include "TMethod.h"
@@ -57,11 +61,20 @@ void TQRootDialog::ExecuteMethod()
 
    //if (fCurObj)
    TObjArray tobjlist(fCurMethod->GetListOfMethodArgs()->LastIndex()+1);
+#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+   typedef QList<QLineEdit*>::iterator iter;
+   for (iter st = fList.begin(); st != fList.end(); ++st) {
+     QString s = (*st)->text();
+      TObjString *t = new TObjString( (const char*) s );
+      tobjlist.AddLast((TObject*) t) ;
+   }
+#else
    for ( QLineEdit* st = fList.first(); st; st = fList.next()) {
       QString s = st->text();
       TObjString *t = new TObjString( (const char*) s );
       tobjlist.AddLast((TObject*) t) ;
    }
+#endif
    // handle command if existing object
    if ( fCurObj ) {
       if( strcmp(fCurMethod->GetName(),"Delete") == 0  ) {
@@ -74,10 +87,17 @@ void TQRootDialog::ExecuteMethod()
       else if (  strcmp(fCurMethod->GetName(),"SetCanvasSize") == 0 ) {
          int value[2];
          int l=0;
+#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+	 for (iter st = fList.begin(); st != fList.end(); ++st) {
+	   QString s = (*st)->text();
+	   value[l++] = atoi ( s );
+	 }
+#else
          for ( QLineEdit* st = fList.first(); st; st = fList.next()) {
             QString s = st->text();
             value[l++] = atoi ( s );
          }
+#endif
          fParent->resize(value[0],value[1]);
       }
       else {
@@ -104,7 +124,12 @@ TQRootDialog::~TQRootDialog()
 
    if (fArgBox) delete fArgBox;
    if (fLineEdit) delete fLineEdit;
+#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+   // Perhaps we need to deallocate all? 
+   fList.erase(fList.begin(),fList.end());
+#else
    fList.remove();
+#endif
 }
 
 //______________________________________________________________________________

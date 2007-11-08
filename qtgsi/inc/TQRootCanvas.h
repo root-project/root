@@ -28,7 +28,9 @@
 #ifndef __CINT__
 #include "qwidget.h"
 #include "qstring.h"
-#include "qdragobject.h"
+#if !(QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 3
+# include "qdragobject.h"
+#endif
 #endif
 
 #ifndef ROOT_TVirtualPad

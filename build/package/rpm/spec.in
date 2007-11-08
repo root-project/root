@@ -5,6 +5,7 @@
 #
 # Macro definitions
 %define ver    		@version@
+%define sovers		@sovers@
 %define rel    		1
 %define _prefix         /usr
 %define _sysconfdir     /etc
@@ -64,13 +65,12 @@ ROOT web-site: http://root.cern.ch
 #
 #
 %build
-sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 ./configure @confargs@						\
 	    --prefix=%_prefix 					\
-	    --libdir=%_prefix/lib/root/${sovers}		\
+	    --libdir=%_prefix/lib/root/%{sovers}		\
 	    --mandir=%_prefix/share/man/man1			\
 	    --docdir=%_defaultdocdir				\
-	    --cintincdir=%_prefix/lib/root/${sovers}/cint 	\
+	    --cintincdir=%_prefix/lib/root/%{sovers}/cint 	\
 	    --etcdir=%_sysconfdir/root				\
             --with-sys-iconpath=%_datadir/pixmaps 		
 
@@ -108,12 +108,11 @@ cp build/package/debian/application-x-root.png \
 	${RPM_BUILD_ROOT}/%{_icontheme}/mimetypes/application-x-root.png
 
 # Make links from version specific directory to `normal' libary dir
-sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 (cd ${RPM_BUILD_ROOT}%{_prefix}/lib/root && \
-    for i in ${sovers}/*.so.${sovers} ${sovers}/libXrd*.so ; do  \
+    for i in %{sovers}/*.so.%{sovers} %{sovers}/libXrd*.so ; do  \
         ln -sf $i . ; \
-        ln -sf $i `basename $i .${sovers}` ; done; \
-    ln -sf ${sovers}/cint .)
+        ln -sf $i `basename $i .%{sovers}` ; done; \
+    ln -sf %{sovers}/cint .)
 
 # Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
 # to end in `.bin' and make wrapper script in /usr/bin 
@@ -123,7 +122,7 @@ for i in proofserv xrdgsiproxy xrdpwdadmin xrd xrdcp ; do
     mv ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 		\
 	 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i.bin 
     sed -e 's,@prefix@,%{_prefix},g'			\
-	-e 's,@libvers@,${sovers},g'			\
+	-e 's,@libvers@,%{sovers},g'			\
 	< build/package/common/$i.in			\
 	> ${RPM_BUILD_ROOT}%{_prefix}/bin/$i
     chmod 755 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 
@@ -179,9 +178,7 @@ done
 
 # Remove bad files - this is to quiet RPM about installed but unpackaged files
 rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd			\
-      ${RPM_BUILD_ROOT}%{_prefix}/include/root/config.h			\
-      ${RPM_BUILD_ROOT}%{_prefix}/lib/root/${sovers}/libAfterImage.a	\
-      ${RPM_BUILD_ROOT}%{_prefix}/share/man/man1/rlibmap.1		\
+      ${RPM_BUILD_ROOT}%{_prefix}/lib/root/%{sovers}/libAfterImage.a	\
       ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/BlackChancery.ttf	\
       ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/LICENSE		\
       ${RPM_BUILD_ROOT}%{_prefix}/share/root/fonts/arial.ttf		\

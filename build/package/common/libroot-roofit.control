@@ -23,7 +23,7 @@ Description: ROOT extension for modeling expected distribtions - libraries
 Package: libroot-roofit-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-roofit@libvers@ (= ${Source-Version}), libroot-dev, libroot-minuit-dev
+Depends: libroot-roofit@libvers@ (= ${binary:Version}), libroot-dev, libroot-minuit-dev
 Description: ROOT extension for modeling expected distribtions - development
  The RooFit packages provide a toolkit for modeling the expected
  distribution of events in a physics analysis. Models can be used to

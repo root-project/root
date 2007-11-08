@@ -29,6 +29,7 @@ options="                    \
    enable_asimage            \
    enable_astiff             \
    enable_builtin_afterimage \
+   enable_builtin_ftgl       \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
@@ -255,18 +256,18 @@ check_lib64() {
     logmsg "Checking if $chklib64 is a 64bit library"
     if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
         # we have an archive .a file
-	logmsg "objdump -a $chklib64 | grep 'x86-64'"
+	logmsg " objdump -a $chklib64 | grep 'x86-64'"
         objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1
 	ret=$?
     else
-	logmsg "file -L $chklib64 | grep '64-bit'"
+	logmsg " file -L $chklib64 | grep '64-bit'"
         file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1
 	ret=$?
     fi
-    logmsg "result: $ret"
+    logmsg " result: $ret"
     if test $ret -eq 0 ; then
         is_lib64=1
-	logmsg "is a 64bit library"
+	logmsg " is a 64bit library"
     fi
 }
 
@@ -348,21 +349,21 @@ check_library() {
             i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
             i="$i64"
         fi
-	logmsg "Checking in directories $i for $libs"
+	logmsg " Checking in directories $i for $libs"
         for l in $i ; do
             l=`echo $l | sed 's,^//,/,'`
             if test ! -d $l ; then
 		continue
             fi
             for j in ${libs} ; do
-		logmsg "Checking for library $j in directory $i"
+		logmsg "  Checking for library $j in directory $i"
 	        # if we found the file (it's readable by user), we set the
 	        # logical variables and are on our way, otherwise we continue
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
                 for n in ${liblist} ; do
-		    logmsg "Checking $n"
+		    logmsg "   Checking $n"
                     if test -f $n ; then
-			logmsg "Found file $n"
+			logmsg "   Found file $n"
                         if test "x$checklib64" = "xyes" ; then
                             check_lib64 $n
                             if test $is_lib64 -eq 1 ; then
@@ -384,7 +385,7 @@ check_library() {
                             fi
                         fi
 		    else
-			logmsg "$j not found in $j"
+			logmsg "  $j not found in $j"
                     fi
                 done
             done
@@ -398,7 +399,7 @@ check_library() {
     if test "x$found_dir" = "xno" || test "x$found_lib" = "xno" ; then
 	found_dir=""
 	found_lib=""
-	logmsg "library not found"
+	logmsg " library not found"
     else
 	flib=""
         maclib=""
@@ -482,13 +483,13 @@ check_header()  {
     # find any of the library files as determind above.
 
     for i in $hdrdirs; do
-	logmsg "Checking in directory $i"
+	logmsg " Checking in directory $i"
         for j in ${hdrs} ; do
-	    logmsg "Checking for $j in directory $i"
+	    logmsg "  Checking for $j in directory $i"
 	    # if we found the file (it's readable by user), we set the
 	    # logical variables and are on our way, otherwise we continue
             if test -r $i/$j ; then
-		logmsg "$i/$j is read-able"
+		logmsg "  $i/$j is read-able"
                 found_dir=$i
                 found_hdr=$j
                 # skip cygwin headers when in pure Win32 mode
@@ -591,13 +592,13 @@ check_symbol() {
     fi
 
     for d in "$symboldir" $usrlib ; do
-	logmsg "Checking in $d"
+	logmsg " Checking in $d"
 	if test ! -r $d/$symbollib ; then
-	    logmsg "$d/$symbollib not readable"
+	    logmsg "  $d/$symbollib not readable"
 	    for i in $exts ; do
-		logmsg "Checking extension $i with $d/$symbollib"
+		logmsg "   Checking extension $i with $d/$symbollib"
 		if test -r $d/$symbollib$i ; then
-		    logmsg "$d/$symbollib$i readable"
+		    logmsg "   $d/$symbollib$i readable"
 		    symbolfile=$d/$symbollib$i
 		    break 2
                 fi
@@ -611,7 +612,7 @@ check_symbol() {
 
     if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
        found_symbol=0
-       logmsg "Symbol not found"
+       logmsg " Symbol not found"
        return 1
     fi
 
@@ -619,11 +620,11 @@ check_symbol() {
     nm $symbolfile 2>&1 | grep $symbol > /dev/null 2>&1
     if test $? -eq 0 ; then
         found_symbol=1
-        logmsg "Symbol found"
+        logmsg " Symbol found"
     else
 	nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
 	if test $? -eq 0 ; then
-	    logmsg "$symbolfile is stripped, trying a link"
+	    logmsg " $symbolfile is stripped, trying a link"
 	    # stripped library - only safe test is to link against the
 	    # library!  However, we do not know what compiler to use
 	    # so we can not do the test.  Assume the symbol is in
@@ -639,10 +640,10 @@ EOF
 	    $gnumake -f conftest.mk >> $logfile 2>&1
 	    if test $? -eq 0 ; then
 		found_symbol=1
-		logmsg "Link OK"
+		logmsg " Link OK"
 	    else
 		found_symbol=0
-		logmsg "Failed code was"
+		logmsg " Failed code was"
 		cat conftest.mk >> $logfile
 	    fi
 	    rm -rf conftest.c conftest.mk conftest
@@ -699,7 +700,10 @@ guess_architecture () {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:hppa*:*)         arch=linux           ;;
+        linux:mips:*)          arch=linuxmips       ;;
         linux:sparc*:*)        arch=linux           ;;
+        linux:parisc*:*)       arch=linuxhppa       ;;
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
         linux:ppc*:*)          arch=linuxppcgcc     ;;
         linux:i*86:*)          arch=linux           ;;
@@ -717,8 +721,12 @@ guess_architecture () {
         cygwin_*:ia64)         arch=win32           ;;
         *)
             echo "Attempts at guessing your architecture failed."
+	    echo "(triplet is $arch:$chip:$rele)"
             echo "Please specify the architecture as the first argument."
             echo "Do '$0 --help' for a list of avaliable architectures."
+            echo "Or file a bug at https://savannah.cern.ch/projects/savroot/"
+            echo "including the full config.log and a dump of" 
+            echo "  touch dummy_file.c; gcc -E -dM dummy_file.c"
             exit 1
             ;;
     esac
@@ -849,6 +857,7 @@ enable/disable options, prefix with either --enable- or --disable-
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
+  builtin-ftgl       Built included libFTGL, or use system libftgl_pic
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
@@ -915,6 +924,8 @@ with options, prefix with --with-, enables corresponding support
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
+  ftgl-incdir        FTGL support, location of FTGL.h
+  ftgl-libdir        FTGL support, location of libftgl_pic
   fftw3-incdir       FFTW3 support, location of fftw3.h
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
   gfal-incdir        GFAL support, location of gfal_api.h
@@ -997,7 +1008,7 @@ else
           guess_architecture
           ;;
        *) arch=$1
-	  logmsg "Architecture set to $arch by user"
+          logmsg " Architecture set to $arch by user"
           shift
           ;;
    esac
@@ -1107,6 +1118,8 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
+      --with-ftgl-incdir=*)    ftglincdir=$optarg    ; enable_builtin_ftgl=no;;
+      --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
@@ -1170,31 +1183,31 @@ if test $# -gt 0 ; then
       # features
       #
       --enable-*)
-	f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
-	eval ${f}=yes
-	eval ${f}_explicit=yes
-	for c in $options ; do
-	   if test "x$c" = "x$f" ; then
-	      f=""
-	   fi
-	done
-	if test "x$f" != "x" ; then
-	   echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
-	fi
-	;;
+        f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
+        eval ${f}=yes
+        eval ${f}_explicit=yes
+        for c in $options ; do
+           if test "x$c" = "x$f" ; then
+              f=""
+        fi
+        done
+        if test "x$f" != "x" ; then
+           echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
+        fi
+        ;;
       --disable-*)
-	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
-	eval ${f}=no
-	eval ${f}_explicit=no
-	for c in $options ; do
-	   if test "x$c" = "x$f" ; then
-	      f=""
-	   fi
-	done
-	if test "x$f" != "x" ; then
-	   echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
-	fi
-	;;
+        f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
+        eval ${f}=no
+        eval ${f}_explicit=no
+        for c in $options ; do
+           if test "x$c" = "x$f" ; then
+              f=""
+           fi
+        done
+        if test "x$f" != "x" ; then
+           echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
+        fi
+        ;;
       ################################################################
       #
       # Build steering option
@@ -1281,51 +1294,51 @@ fi
 #
 if test ! "$platform" = "win32"; then
     check_library "libX11" "yes" "$x11libdir" \
-	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
-	/usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
-	/usr/X11/lib /usr/lib/X11R5
+        /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
+        /usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+        /usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
-	result "`basename $0`: libX11 (package libX11-devel) MUST be installed"
+        result "`basename $0`: libX11 (package libX11-devel) MUST be installed"
         exit 1
     fi
 
     check_header "X11/Xlib.h" "" \
-	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
-	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-	/usr/X11/include /usr/include/X11R5
+        /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+        /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+        /usr/X11/include /usr/include/X11R5
 
     if test "x$found_dir" = "x" ; then
-	result "`basename $0`: X11 headers (package x11-devel) MUST be installed"
+        result "`basename $0`: X11 headers (package x11-devel) MUST be installed"
         exit 1
     fi
 
     check_header "X11/Xft/Xft.h" "" \
-	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
-	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-	/usr/X11/include /usr/include/X11R5
+        /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+        /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+        /usr/X11/include /usr/include/X11R5
 
     if test "x$found_dir" = "x" ; then
         enable_xft="no"
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
-	$XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
-	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-	/usr/X11/lib
+        $XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
+        /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+        /usr/X11/lib
     xpmlib=$found_lib
     xpmlibdir=$found_dir
 
     if test "x$xpmlib" = "x" ; then
-	result "`basename $0`: libXpm MUST be installed"
+        result "`basename $0`: libXpm MUST be installed"
         exit 1
     fi
 
     check_library "libXft" "$enable_shared" "" \
-	/usr/local/lib /usr/lib /usr/lib/X11 \
-	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-	/usr/X11/lib
+        /usr/local/lib /usr/lib /usr/lib/X11 \
+        /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+        /usr/X11/lib
     xftlib=$found_lib
 
     if test "x$xftlib" = "x" ; then
@@ -1463,6 +1476,38 @@ if test "x$enable_builtin_freetype" = "x" || \
 fi
 message "Checking whether to build included libfreetype6"
 result "$enable_builtin_freetype"
+
+######################################################################
+#
+### echo %%% libftgl (builtin or system) - Mandatory lib
+#
+# Mandatory test, must succeed 
+# (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL) 
+#
+ftglincdir=include
+ftgllibdir=-Llib
+ftgllibs=-lFTGL
+if test "x$enable_builtin_ftgl" = "x" || \
+   test "x$enable_builtin_ftgl" = "xno" ; then
+
+   # check if we have pkg-config 
+   if `$cwhich pkg-config > /dev/null 2>&1` ; then
+
+      message "Checking for libftgl"
+      if pkg-config --exists ftgl ; then 
+	  result "ok"
+	  ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'` 
+	  ftgllibs=`pkg-config --libs-only-l ftgl | sed s'/-lftgl/-lftgl_pic/'` 
+	  ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`  
+	  enable_builtin_ftgl=no
+      else 
+	  enable_builtin_ftgl=yes
+	  result "no"
+      fi
+   fi
+fi
+message "Checking whether to build included libftgl"
+result "$enable_builtin_ftgl"
 
 ######################################################################
 #
@@ -1828,146 +1873,160 @@ check_explicit "$enable_odbc" "$enable_odbc_explicit" \
 # If the user has not set the flags "--enable-qt" or "--enable-qtgsi",
 # we don't check for Qt at all.
 #
+check_qtvers()
+{
+    qttestdir=$1 ; shift
+    qtverneed=$1 ; shift
+    qttoonew=$1  ; shift
+    message " Checking whether $qtverneed <= Qt version < $qttoonew under $qttestdir/qglobal.h "
+    logmsg " grep '# *define *QT_VERSION_STR *' $qttestdir/qglobal.h"
+    qtverstr=`grep "# *define *QT_VERSION_STR *" $qttestdir/qglobal.h | \
+        sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
+    qtvers=0
+    if test $? -eq 0 ; then
+	logmsg " Got Qt version $qtverstr"
+	qtgot=`echo $qtverstr | \
+	    awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`;
+	qtneed=`echo $qtverneed | \
+	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
+	qtnew=`echo $qttoonew | \
+	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
+	logmsg " Got $qtgot, min $qtneed, max $qtnew"
+	if test $qtgot -lt $qtneed ; then
+	    logmsg " Please update to Qt $qtverneed"
+	    res="no"
+	elif test $qtgot -ge $qtnew; then
+	    logmsg " Qt $qtverstr too new (>= $qttoonew)"
+	    res="no"
+	else
+	    res="$qtverstr"
+	    qtvers=`echo $qtverstr | awk 'BEGIN{FS="."}{print $1}'`
+	fi
+    else
+	res="no"
+    fi
+    result $res
+}
+
 if test ! "x$enable_qt" = "xno" || \
    test ! "x$enable_qtgsi" = "xno"; then
     # Check for Qt include and library
-    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
-        /usr/local/include  /usr/local/qt/include /usr/include \
-        /usr/include/qt /usr/include/qt3
-    qtinc=$found_hdr
-    if  test "x$qtinc" = "x"; then
-      echo No Qt3 was found, let\'s try to find Qt4 instead from $qtincdir
-        check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
-          /usr/local/include/  /usr/local/qt/include  \
-          /usr/include
-      if ! test "x$found_hdr" = "x"; then
+    # Check for Qt 4 first 
+    check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
+        /usr/local/include/  /usr/local/qt/include  \
+        /usr/include /usr/include/qt4
+    qtvers=
+    if ! test "x$found_hdr" = "x"; then
+	qtvers=4
         qt4="yes"
         qtinc=$found_hdr
         qtmainincdir=$found_dir
         qtincdir=$qtmainincdir
         qtdirlist=`ls $qtmainincdir`
         for i in $qtdirlist ; do
-          if test -r $qtmainincdir/$i ; then
-           qtincdir="$qtincdir  $qtmainincdir/$i"
-          fi
+            if test -r $qtmainincdir/$i ; then
+		qtincdir="$qtincdir  $qtmainincdir/$i"
+            fi
         done
-      fi
-   else
-      qtincdir=$found_dir
-   fi
-   if  test "x$qt4" = "x"; then
-    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" "$enable_shared" \
-        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-        /usr/lib /usr/qt/lib
-    qtlib=$found_lib
-    qtlibdir=$found_dir
-   else
-     qt4suffix="4"
-     if test "x$enable_winrtdebug" = "xyes"; then
-        qt4suffix="d4"
-     fi
-     check_library "libQtCore QtCore QtCore$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         /usr/lib /usr/qt/lib
-     qtlib=$found_lib
-     check_library "libQtGui QtGui QtGui$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         "$found_raw_dir"  ""
-     qtlib="$qtlib $found_lib"
-     check_library "libQt3Support Qt3Support Qt3Support$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         "$found_raw_dir"  ""
-     qtlib="$qtlib $found_lib"
-     check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         "$found_raw_dir"  ""
-     qtlib="$qtlib $found_lib"
-     check_library "libQtSvg QtSvg QtSvg$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         "$found_raw_dir"  ""
-     qtlib="$qtlib $found_lib"
-     check_library "libQtXml QtXml QtXml$qt4suffix" "$enable_shared" \
-         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-         "$found_raw_dir"  ""
-     qtlib="$qtlib $found_lib"
-     qtlibdir=$found_dir
-   fi
+	qtverneed="4.3.0"
+	qttoonew="5.0.0"
+	if test "x$platform" = xwin32 ; then
+	    qttestdir=$qtmainincdir/../src/corelib/global
+	else
+	    qttestdir=$qtmainincdir/Qt
+	fi
+	check_qtvers "$qttestdir" $qtverneed $qttoonew
+	if test $qtvers -eq 4 ; then 
+	    check_library "libQtCore QtCore QtCore4" "$enable_shared" \
+		"$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
+		/usr/local/qt/lib /usr/lib /usr/qt/lib
+	    qtlib=$found_lib
+	    qtlibdir=$found_dir
+	    check_library "libQtGui QtGui QtGui4" "$enable_shared" \
+		"$found_raw_dir"  "" 
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQt3Support Qt3Support Qt3Support4" \
+		"$enable_shared" "$found_raw_dir"  ""
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQtOpenGL QtOpenGL QtOpenGL4" "$enable_shared" \
+		"$found_raw_dir"  ""
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQtSvg QtSvg QtSvg4" "$enable_shared" \
+		"$found_raw_dir"  ""
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQtXml QtXml QtXml4" "$enable_shared" \
+		"$found_raw_dir"  ""
+	    qtlib="$qtlib $found_lib"
+	else
+            qtinc=
+            qtmainincdir=
+            qtincdir=
+	fi
+    fi
+
+    if test $qtvers -eq 0 ; then 
+	logmsg "No Qt4 was found, let's try to find Qt3 instead"
+	check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
+            /usr/local/include  /usr/local/qt/include /usr/include \
+            /usr/include/qt /usr/include/qt3
+	qtinc=$found_hdr
+	qtincdir=$found_dir
+	if ! test "x$found_hdr" = "x" ; then 
+	    qtverneed="3.3.0"
+	    qttoonew="4.0.0"
+	    qttestdir=$qtincdir
+	    check_qtvers "$qttestdir" $qtverneed $qttoonew
+	fi
+	if test $qtvers -eq 3 ; then 
+	    check_library \
+		"libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" \
+		"$enable_shared" "$qtlibdir" \
+		$QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib /usr/lib \
+		/usr/qt/lib
+	    qtlib=$found_lib
+	    qtlibdir=$found_dir
+	else
+	    qtinc=
+	    qtincdir=
+	fi
+    fi
 
     message "Checking for moc or moc.exe"
-#  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
-#  we can pick the wrong moc this way  --  if test $? -ne 0 ; then
-       for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
-           /usr/qt3/bin /usr/share/qt3/bin ; do
-	  logmsg "Checking for $qtmocexe in $i"
-	  if test -x $i/moc ; then
-	      qtmocexe=$i/moc
-	      logmsg "$qtmocexe is executable"
-	      break
-	  elif test -x $i/moc.exe ; then
-	      qtmocexe=$i/moc.exe
-	      logmsg "$qtmocexe is executable"
-	      break
-	  fi
-       done
-        # Correct path for win32
-        if test "x$platform" = "xwin32"; then
-            if test ! "x$qtmocexe" = "x" ; then
-                qtmocexe=`cygpath -u $qtmocexe`
-            fi
+    #  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
+    #  we can pick the wrong moc this way  --  if test $? -ne 0 ; then
+    for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
+        /usr/qt3/bin /usr/share/qt3/bin ; do
+	logmsg " Checking for $qtmocexe in $i"
+	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
+	do
+	    if test -x $j ; then 
+		moc_vers=`$j -v >/dev/stdout 2>&1 | \
+		    sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9]*)//'`
+		if test $moc_vers -ne $qtvers ; then 
+		    # Moc version does not match Qt version 
+		    continue
+		fi
+		qtmocexe=$j
+		logmsg " $qtmocexe is executable"
+		break
+	    fi
+	done
+	if ! test "x$qtmocexe" = "x" ; then break ; fi 
+    done
+
+    # Correct path for win32
+    if test "x$platform" = "xwin32"; then
+        if test ! "x$qtmocexe" = "x" ; then
+            qtmocexe=`cygpath -u $qtmocexe`
         fi
-#  we can pick the wrong moc this way  --  fi
+    fi
+    #  we can pick the wrong moc this way  --  fi
     result "$qtmocexe"
 
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
-	test "x$qtmocexe" = "x"; then
+	test "x$qtmocexe" = "x" || test $qtvers -eq 0 ; then
         enable_qt="no"
         enable_qtgsi="no"
-    else
-   qttestdir=$qtincdir
-   if test "x$qt4" = "x"; then
-	qtverneed="3.3.0"
-	qttoonew="4.0.0"
-     qttestdir=$qtincdir
-   else
-	  qtverneed="4.3.0"
-	  qttoonew="5.0.0"
-     if test "x$platform" = xwin32 ; then
-        qttestdir=$qtmainincdir/../src/corelib/global
-     else
-        qttestdir=$qtmainincdir/Qt
-     fi
-   fi
-        message "Checking whether $qtverneed <= Qt version < $qttoonew under $qttestdir/qglobal.h "
-	logmsg "grep '# *define *QT_VERSION_STR *' $qttestdir/qglobal.h"
-	qtverstr=`grep "# *define *QT_VERSION_STR *" $qttestdir/qglobal.h | \
-          sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
-	if test $? -eq 0 ; then
-	    logmsg "Got Qt version $qtverstr"
-	    qtgot=`echo $qtverstr | \
-	      awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`;
-	    qtneed=`echo $qtverneed | \
-	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
-	    qtnew=`echo $qttoonew | \
-	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
-	    logmsg "Got $qtgot, min $qtneed, max $qtnew"
-	    if test $qtgot -lt $qtneed ; then
-		logmsg "Please update to Qt $qtverneed"
-		enable_qt="no"
-		enable_qtgsi="no"
-		result "no"
-	    elif test $qtgot -ge $qtnew; then
-		logmsg "Qt $qtverstr too new (>= $qttoonew)"
-		enable_qt="no"
-		enable_qtgsi="no"
-		result "no"
-	    else
-		result "$qtverstr"
-	    fi
-	else
-	    result "no"
-	    enable_qt="no"
-	    enable_qtgsi="no"
-	fi
     fi
 fi
 check_explicit "$enable_qt" "$enable_qt_explicit" \
@@ -1994,7 +2053,7 @@ if test ! "x$enable_rfio" = "xno" ; then
 
     if test ! "x$shiftincdir" = "x"; then
         message "Checking whether rfio_fchmod declared in $shiftinc"
-	logmsg "grep rfio_fchmod $shiftincdir/$shiftinc"
+	logmsg " grep rfio_fchmod $shiftincdir/$shiftinc"
         if `grep rfio_fchmod $shiftincdir/$shiftinc >> $logfile 2>&1` ; then
             result "yes"
         else
@@ -2020,14 +2079,14 @@ if test ! "x$enable_rfio" = "xno" ; then
            linux)      shiftlib="$shiftlib -lnsl"
 		for i in "" -ladns ; do
 		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-		    logmsg "Checking if we can link against $shiflib"
-		    logmsg "gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
+		    logmsg " Checking if we can link against $shiflib"
+		    logmsg " gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
 		    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest >> $logfile 2>&1
 		    if test $? -eq 0 ; then
 			shiftlib="$shiftlib $i" ;
 			break ;
 		    else
-			logmsg "Failed program was:"
+			logmsg " Failed program was:"
 			cat conftest.c >> $logfile
 		    fi
 		done
@@ -2063,7 +2122,7 @@ if test ! "x$enable_castor" = "xno" ; then
 
     if test ! "x$castorincdir" = "x"; then
         message "Checking whether rfio_fchmod declared in $castorinc"
-	logmsg "grep rfio_fchmod $castorincdir/$castorinc"
+	logmsg " grep rfio_fchmod $castorincdir/$castorinc"
         if `grep rfio_fchmod $castorincdir/$castorinc >> $logfile 2>&1` ; then
             result "yes"
         else
@@ -2109,14 +2168,14 @@ if test ! "x$enable_castor" = "xno" ; then
            linux)      castorlib="$castorlib -lnsl"
 		for i in "" -ladns ; do
 		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-		    logmsg "Checking if we can link against $castorlib"
-		    logmsg "gcc conftest.c $castorlibdir $castorlib $i -o conftest"
+		    logmsg " Checking if we can link against $castorlib"
+		    logmsg " gcc conftest.c $castorlibdir $castorlib $i -o conftest"
 		    gcc conftest.c $castorlibdir $castorlib $i -o conftest >> $logfile 2>&1
 		    if test $? -eq 0 ; then
 			castorlib="$castorlib $i" ;
 			break ;
 		    else
-			logmsg "Failed program was:"
+			logmsg " Failed program was:"
 			cat conftest.c >> $logfile
 		    fi
 		done
@@ -3926,11 +3985,21 @@ if test ! "x$enable_clarens" = "xno" ; then
     myxmlrpc=`$cwhich xmlrpc-c-config 2> /dev/null`
     if test ! "x$myxmlrpc" = "x" && test -x "$myxmlrpc" ; then
         clarensincdir=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
+	if test $? -ne 0 ; then clarensincdir= ; fi
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
+	if test $? -ne 0 ; then clarenslibs= ; fi
 	if test "x$clarensincdir" = "x" ; then
-	    clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
-	    clarenslibs=`xmlrpc-c-config --ldadd 2> /dev/null`
-	fi
+            clarensincdir=`xmlrpc-c-config client --cflags 2> /dev/null`
+	    if test $? -ne 0 ; then clarensincdir= ; fi
+            clarenslibs=`xmlrpc-c-config client --ldadd 2> /dev/null`
+	    if test $? -ne 0 ; then clarenslibs= ; fi
+        fi
+        if test "x$clarensincdir" = "x" ; then
+            clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
+	    if test $? -ne 0 ; then clarensincdir= ; fi
+            clarenslibs=`xmlrpc-c-config --ldadd 2> /dev/null`
+	    if test $? -ne 0 ; then clarenslibs= ; fi
+        fi
     else
         clarensincdir=""
         clarenslibs=""
@@ -4287,6 +4356,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
+    -e "s|@buildftgl@|$enable_builtin_ftgl|"      \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
     -e "s|@buildxrd@|$buildxrd|"                \
@@ -4317,6 +4387,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
+    -e "s|@ftglincdir@|$ftglincdir|"            \
+    -e "s|@ftgllibdir@|$ftgllibdir|"            \
+    -e "s|@ftgllibs@|$ftgllibs|"                \
     -e "s|@gslflags@|$gslflags|"                \
     -e "s|@gsllibdir@|$gsllibdir|"              \
     -e "s|@gsllibs@|$gsllibs|"                  \
@@ -4407,6 +4480,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@qtincdir@|$qtincdir|"                \
     -e "s|@qtlib@|$qtlib|"                      \
     -e "s|@qtlibdir@|$qtlibdir|"                \
+    -e "s|@qtvers@|$qtvers|"                    \
     -e "s|@qtmocexe@|$qtmocexe|"                \
     -e "s|@resolvlib@|$resolvlib|"              \
     -e "s|@rootbuild@|$rootbuild|"              \

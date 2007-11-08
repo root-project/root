@@ -1,3 +1,75 @@
+root-system (5.17.05-5) unstable; urgency=low
+
+  * Fixes to Qt discovery and code in qtgsi.
+  * Better support for MIPS (thanks to Thiemo Seufer 
+    <ths@networkno.de> of Debian)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 07 Nov 2007 09:40:11 +0100
+
+root-system (5.17.05-4) unstable; urgency=low
+
+  * Upstream fix to TGX11::DrawPolyMarker.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 06 Nov 2007 14:17:06 +0000
+
+root-system (5.17.05-3) unstable; urgency=low
+
+  * Do not try to make libFTGL nor put it in the libRGL.rootmap file, 
+    since we use the system libftgl_pic.a to link in the functionality. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 01 Nov 2007 23:05:53 +0000
+
+root-system (5.17.05-2) unstable; urgency=low
+
+  * Forgot top copy over the changes in makelist script, so that 
+    standard library container dictionaries was missing.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 31 Oct 2007 00:21:41 +0000
+
+root-system (5.17.05-1) unstable; urgency=low
+
+  * New development release. 
+  * Add proper fortran dependencies and discovery code (Closes: #429186).
+  * Add archicture discovery for mips (Closes: #434855).
+  * Add archicture discovery for hppa (Closes: #425257).
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 23 Oct 2007 15:06:37 +0200
+
+root-system (5.16.00-2) unstable; urgency=low
+
+  * Fix missing lib*Dict.so for precompiled dictionaries of standard 
+    library containers, like vector, map, etc. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 23 Oct 2007 12:28:42 +0200
+
+root-system (5.16.00-1) unstable; urgency=low
+
+  * New upstream version.  This is a production version, so it's 
+    targeted at unstable. 
+  * Fix some stuff on dependencies and the like. 
+  * Updated README.Debian for new package names.
+  * Added gfortran switch for amd64 et al (Closes: #429186).
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 26 Jul 2007 23:34:19 +0200
+ 
+root-system (5.15.07-4) experimental; urgency=low
+
+  * Attempt to fix broken Python dependencies on Ubuntu.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 14 May 2007 17:17:50 +0200
+
+root-system (5.15.07-3) experimental; urgency=low
+
+  * [Kevin] Corrected some english in the control file
+  * [Kevin] Removed root-system dependency on libroot. 
+  * [Kevin] Removed postinst stubs for root-system-{rootd,proofd}
+  * [Kevin] Removed various directories from root-system.
+  * [Kevin] Fixed script name in /etc/init.d/root-system-{rootd,proofd}.
+    Perhaps it's time to look into 'upstart' scripts?
+  * Fixed package names in README.Debian.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 12 May 2007 10:43:24 +0200
+
 root-system (5.15.07-2) experimental; urgency=low
 
   * Previous source package broken due to tar-balls not unpacked.
@@ -523,6 +595,4 @@ root (2.26.00-1) unstable; urgency=low
 
  -- Christian Holm <cholm@nbi.dk>  Fri, 16 Feb 2001 23:59:04 +0100
 
-Local variables:
-mode: debian-changelog
-End:
+

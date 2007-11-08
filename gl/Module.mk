@@ -101,4 +101,4 @@ $(GLDIRS)/gl2ps.o: CFLAGS += $(OPENGLINCDIR:%=-I%)
 gl/src/TGLText.o: \
                 $(FREETYPEDEP)
 gl/src/TGLText.o: \
-                CXXFLAGS += $(FREETYPEINC)
+                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)

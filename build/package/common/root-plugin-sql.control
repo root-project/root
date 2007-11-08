@@ -4,7 +4,7 @@ Depends: ${shlibs:Depends}
 Recommends: root-db-client | root-plugin-mysql
 Description: SQL plugin for ROOT
  This package contains the SQL plug-in for ROOT, that allows
- transparent access to files data via an SQL database, using ROOT's
+ transparent access to files data via an SQL database, using ROOTs
  TFile interface.
  .
  ROOT web-site: http://root.cern.ch

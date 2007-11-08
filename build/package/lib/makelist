@@ -29,11 +29,15 @@ ifneq ($(DIRS),)
 include config/Makefile.config 
 include $(foreach i, $(DIRS), $(i)/Module.mk)
 endif
+ifneq ($(filter cint,$(DIRS)),)
+include cint/cintdlls.mk
+DICTLIBS += $(patsubst lib/%, $(RLIBD)/%, $(filter lib/%, $(CINTDICTDLLS)))
+endif
 
 # Default target and message 
 all:	hello liblist devlist binlist
 hello:
-	@echo "Making list for $(DIRS) ($(SLIB),$(DEV),$(SBIN))"
+	@echo "Making list for '$(DIRS)' ($(SLIB),$(DEV),$(SBIN))"
 #	@echo "ALLLIBS=$(ALLLIBS) ALLMAPS=$(ALLMAPS) PKGLIBS=$(PKGLIBS)"
 
 # If we have a development package, get the list of headers. 
@@ -49,7 +53,10 @@ ifneq ($(LIB),$(DEV))
 PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) 	\
 	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) 	\
 	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)		\
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER)) 		
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER)) 		\
+	   $(DICTLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) 	\
+	   $(DICTLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) 	\
+	   $(DICTLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)		
 DEVLIBS := $(ALLLIBS) 
 else # ! $(LIB) = $(DEV)
 # If the development and library package is the same (plugins), then we need

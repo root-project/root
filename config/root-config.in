@@ -202,6 +202,12 @@ linux)
    auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxmips)
+   # Linux on mips with gcc >= 3.x
+   auxcflags="-mapi=32"
+   auxldflags="-mapi=32"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 linuxdeb | linuxsuse6)
    # Linux with gcc on Debian and SuSE
    auxcflags=
@@ -215,6 +221,12 @@ linuxdeb2ppc)
 linuxkcc)
    # Linux with the KAI compiler
    auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxhppa)
+   # Linux on hppa with the GCC compiler
+   auxcflags=
+   auxldflags=
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxicc)

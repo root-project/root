@@ -99,6 +99,7 @@ BUILDQTGSI     := @buildqtgsi@
 QTLIBDIR       := @qtlibdir@
 QTLIB          := @qtlib@
 QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
+QTVERS	       := @qtvers@
 QTMOCEXE       := @qtmocexe@
 
 BUILDRFIO      := @buildrfio@
@@ -117,6 +118,11 @@ BUILDDCAP      := @builddcap@
 DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
 DCAPINCDIR     := $(filter-out /usr/include, @dcapincdir@)
+
+BUILDFTGL      := @buildftgl@
+FTGLLIBDIR     := @ftgllibdir@
+FTGLLIBS       := @ftgllibs@
+FTGLINCDIR     := $(filter-out /usr/include, @ftglincdir@)
 
 BUILDGFAL      := @buildgfal@
 GFALLIBDIR     := @gfallibdir@

@@ -16,7 +16,14 @@
 #include "qpushbutton.h"
 #include "qlabel.h"
 #include "qpainter.h"
-#include "qpopupmenu.h"
+#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+# include "qmenu.h"
+# include "q3popupmenu.h"
+typedef Q3PopupMenu QPopupMenu;
+#else
+# include "qpopupmenu.h"
+#endif
+
 
 #include "TQCanvasMenu.h"
 #include "TClass.h"

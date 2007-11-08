@@ -66,11 +66,11 @@ msgstr "Katalog hvor MS fontene er (hvis allerede hentet):"
 #: ../ttf-root-installer.templates:2001
 msgid ""
 "If you have already downloaded Microsoft's TrueType Core Fonts from the ROOT "
-"FTP server (ftp://root.cern.ch/root/ttf/ttf-fonts.tar.gz), type the name of "
+"FTP server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), type the name of "
 "the directory which contains the archive."
 msgstr ""
 "Hvis du allerede har hentet Microsofts TrueType Core Fonte fra ROOTs FTP "
-"server (ftp://root.cern.ch/root/ttf/ttf-fonts.tar.gz), skriv navnet på det "
+"server (ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz), skriv navnet på det "
 "katalog hvor arkivet er."
 
 #. Type: string
@@ -115,8 +115,8 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../ttf-root-installer.templates:4001
-msgid "Where should these files be be archived (optional):"
-msgstr "Hvor skal disse filer arkiveres? (optional):"
+msgid "Archive these files to (optional):"
+msgstr "Arkiver disse filer i (optional):"
 
 #. Type: string
 #. Description
