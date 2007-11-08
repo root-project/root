@@ -125,6 +125,10 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
               gROOT->GetVersion());
    }
 
+   if (IsRaw()) {
+      EnvPutInt(NAME_READAHEADSIZE, 0);
+   }
+
    // Remove anchors from the URL!
    urlnoanchor.SetAnchor("");
 
@@ -601,8 +605,6 @@ Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
                               " %lld", bufferLength, offs);
    return result;
 }
-
-
 
 //______________________________________________________________________________
 Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
