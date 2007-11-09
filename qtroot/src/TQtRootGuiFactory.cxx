@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtRootGuiFactory.cxx,v 1.7 2006/12/18 23:07:27 fine Exp $
+** $Id: TQtRootGuiFactory.cxx,v 1.12 2007/11/02 17:19:04 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -31,7 +31,7 @@
 #include "TSystem.h"
 #ifdef R__QTWIN32
 #  if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
-# include "TWin32Application.h" 
+#    include "TWin32Application.h" 
 #  endif
 #else
 # include "TROOT.h"
@@ -40,7 +40,7 @@
 
 #include "TGClient.h"
 #include "TRootCanvas.h"
-#include "TRootBrowserLite.h"
+#include "TRootBrowser.h"
 #include "TRootControlBar.h"
 #include "TContextMenu.h"
 #include "TRootContextMenu.h"
@@ -54,11 +54,9 @@ TQtRootGuiFactory::TQtRootGuiFactory()
    : TGuiFactory("QtRootProxy","Qt-based ROOT GUI Factory"),fGuiProxy(0)
 {
    // TQtRootGuiFactory ctor.
-   // Restore the right TVirtulaX pointer      
+   // Restore the right TVirtualX pointer      
    if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,15,9)
-   gSystem->Load("libGui");
-#endif   
+   // gSystem->Load("libGui");
    fGuiProxy = new TRootGuiFactory(); 
 }
 
@@ -67,11 +65,9 @@ TQtRootGuiFactory::TQtRootGuiFactory(const char *name, const char *title)
    : TGuiFactory(name, title),fGuiProxy(0)
 {
    // TQtRootGuiFactory ctor.
-   // Restore the right TVirtulaX pointer      
+   // Restore the right TVirtualX pointer      
    if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,15,9)
-   gSystem->Load("libGui");
-#endif   
+   // gSystem->Load("libGui");
    fGuiProxy = new TRootGuiFactory(name,title); 
 }
 //______________________________________________________________________________
@@ -95,6 +91,7 @@ void TQtRootGuiFactory::CreateQClient()
     gfQtClient = new TGClient();
    // ((TQt *)TQt::GetVirtualX())->SetQClientFilter(new TQClientFilter(new TGClient()));
 }
+
 //______________________________________________________________________________
 TCanvasImp *TQtRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height)
 { return fGuiProxy ? fGuiProxy->CreateCanvasImp( c, title, width, height) : 0; }
@@ -104,12 +101,40 @@ TCanvasImp *TQtRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, In
 { return fGuiProxy ? fGuiProxy->CreateCanvasImp(c, title, x, y, width, height) : 0 ;}
 
 //______________________________________________________________________________
-TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
-{ return fGuiProxy ? fGuiProxy->CreateBrowserImp(b, title, width, height, opt) : 0; }
+TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height)
+{
+   return CreateBrowserImp(b, title, width, height, (Option_t *)0);
+}
 
 //______________________________________________________________________________
-TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt)
-{ return fGuiProxy ? fGuiProxy->CreateBrowserImp(b, title, x, y, width, height, opt): 0 ; }
+TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
+{
+  return CreateBrowserImp(b, title, x, y, width, height, (Option_t *)0);
+}
+
+//______________________________________________________________________________
+TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height,Option_t *opt)
+{ 
+   return fGuiProxy ? 
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,17,5)
+      fGuiProxy->CreateBrowserImp(b, title, width, height)
+#else
+      fGuiProxy->CreateBrowserImp(b, title, width, height, opt)
+#endif
+      : 0; 
+}
+
+//______________________________________________________________________________
+TBrowserImp *TQtRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height,Option_t *opt)
+{ 
+   return fGuiProxy ? 
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,17,5)
+      fGuiProxy->CreateBrowserImp(b, title, x, y, width, height)
+#else
+      fGuiProxy->CreateBrowserImp(b, title, x, y, width, height, opt)
+#endif
+      : 0 ; 
+}
 
 //______________________________________________________________________________
 TContextMenuImp *TQtRootGuiFactory::CreateContextMenuImp(TContextMenu *c, const char *name, const char *title)
