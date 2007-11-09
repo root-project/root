@@ -314,10 +314,8 @@ void StatusPrint(Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err
 {
    // Print test program number and its title
 
-   Char_t number[4];
-   sprintf(number,"%2d",id);
    if (!gOptionR) {
-      TString header = TString("Test ")+number+" : "+title;
+      TString header = TString("Test ")+Form("%2d",id)+" : "+title;
       const Int_t nch = header.Length();
       if (TMath::Abs(res-ref)<=err) {
          for (Int_t i = nch; i < 67; i++) header += '.';
@@ -462,11 +460,9 @@ void tmarker_draw(Double_t x, Double_t y, Int_t mt, Double_t d)
 {
    // Auxiliary function used by "tmarker"
 
-   char val[3];
-   sprintf(val,"%d",mt);
    double dy=d/3;
    TMarker *m  = new TMarker(x+0.1, y, mt);
-   TText   *t  = new TText(x-0.1, y, val);
+   TText   *t  = new TText(x-0.1, y, Form("%d",mt));
    TLine   *l1 = new TLine(0,y,1,y);
    TLine   *l2 = new TLine(0,y+dy,1,y+dy);
    TLine   *l3 = new TLine(0,y-dy,1,y-dy);
@@ -576,9 +572,7 @@ void patterns_box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2
    TLatex l;
    l.SetTextAlign(22);
    l.SetTextSize(h);
-   char s[32];
-   sprintf(s,"%d",pat);
-   l.DrawLatex((x1+x2)/2, (y1+y2)/2, s);
+   l.DrawLatex((x1+x2)/2, (y1+y2)/2, Form("%d",pat));
 }
 
 
