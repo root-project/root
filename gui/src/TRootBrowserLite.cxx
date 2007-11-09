@@ -1215,8 +1215,6 @@ void TRootBrowserLite::CreateBrowser(const char *name)
    SetEditDisabled(kEditDisable);
 
    gVirtualX->SetDNDAware(fId, fDNDTypeList);
-   //SetDNDTarget(kTRUE);
-   AddInput(kPointerMotionMask);
    MapSubwindows();
    SetDefaults();
    Resize();
