@@ -219,7 +219,7 @@ extern long int sysconf(int name);
  * good solution. Why I didn't do that at the first place??? */
 #ifdef __MAKECINT__
 #if defined(__SUNPRO_C) || defined(G__SUNPRO_C) \
-   || (defined(G__GLIBC_) && (G__GLIBC_>=202))
+   || (defined(G__GLIBC_) && (G__GLIBC_>=202)) || defined(__APPLE__)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);
