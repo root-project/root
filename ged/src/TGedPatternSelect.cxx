@@ -580,6 +580,7 @@ Bool_t TGedPatternSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    if (GET_MSG(msg) == kC_PATTERNSEL && GET_SUBMSG(msg) == kPAT_SELCHANGED)
    {
       SetPattern(parm2);
+      parm1 = (Long_t)fWidgetId;
       SendMessage(fMsgWindow, MK_MSG(kC_PATTERNSEL, kPAT_SELCHANGED),
                   parm1, parm2);
    }
