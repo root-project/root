@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.22 2007/04/02 09:42:28 rdm Exp $
+# $Id: Module.mk,v 1.21 2007/10/29 23:34:51 fine Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -40,11 +40,20 @@ GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 
+QT4           :=  $(findstring QtCore, $(QTINCDIR))
+
 QT3CPPFLAGS   := -DQT_DLL  -DQT_NO_DEBUG  -DQT_THREAD_SUPPORT
 QT4CPPFLAGS   := -DQT_QT3SUPPORT_LIB -DQT3_SUPPORT -DQT_GUI_LIB -DQT_CORE_LIB 
 QT3QT4CPPFLAGS:= -DQT_SHARED
 
-GQTCXXFLAGS   := $(QT4CPPFLAGS) $(QT3CPPFLAGS) $(QT3QT4CPPFLAGS) -I$(QTDIR)/mkspecs/default -I. $(QTINCDIR:%=-I%)
+GQTCXXFLAGS   :=  $(QT4CPPFLAGS) $(QT3CPPFLAGS) $(QT3QT4CPPFLAGS)
+ifeq ($(ARCH),win32)
+GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/win32-msvc2005
+else
+GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/default 
+endif
+
+GQTCXXFLAGS   +=  -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 GQTMAP        := $(GQTLIB:.$(SOEXT)=.rootmap)
@@ -106,7 +115,11 @@ $(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
 $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
 
 $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
-	$(QTMOCEXE) $< -o $@
+ifeq (,$(QT4))
+	$(QTMOCEXE)  $< -o $@
+else
+	$(QTMOCEXE) $(GQTCXXFLAGS) $< -o $@
+endif
 
 ##### cintdlls ######
 
