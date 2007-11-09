@@ -52,7 +52,7 @@ public:
    TAxis3D();
    TAxis3D(Option_t *option);
    TAxis3D(const TAxis3D &axis);
-   virtual ~ TAxis3D(){;}
+   virtual ~TAxis3D(){;}
 
    virtual void     Browse(TBrowser *b);
 
