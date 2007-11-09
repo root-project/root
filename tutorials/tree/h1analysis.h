@@ -529,6 +529,6 @@ Bool_t h1analysis::Notify()
 //   called when loading a new file
 //   get branch pointers
 
-   printf("Processing file: %s\n",fChain->GetCurrentFile()->GetName());
+   Info("Notify","processing file: %s",fChain->GetCurrentFile()->GetName());
    return kTRUE;
 }
