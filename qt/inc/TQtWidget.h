@@ -93,6 +93,7 @@ private:
    enum {
       kBitMask       = 0x00ffffff
    };
+   bool fNeedStretch;
 protected:
    void Init();
 public:

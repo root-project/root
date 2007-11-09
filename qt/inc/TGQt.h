@@ -96,7 +96,7 @@ class TGQt  : public TVirtualX  {
    friend class TQtImage;
    friend class TQtClientGuard;
    friend class TQtClientFilter;
-   
+
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
@@ -145,8 +145,8 @@ protected:
 //  Colors staff
 //
 
-//   QMemArray<QColor> fPallete;
-    QMap<Color_t,QColor> fPallete;
+//   QMemArray<QColor> QMap<Key, T>::const_iterator;
+    QMap<Color_t,QColor*> fPallete;
     TQtClientFilter *fQClientFilter;
     TQtEventQueue   *fQClientFilterBuffer;
     TQtClientGuard       fQClientGuard;  // guard TQtClientWibdget against of dead pointers
@@ -177,7 +177,7 @@ protected:
    void UpdatePen();
    void UpdateBrush();
    void UpdateClipRectangle();
-   
+
    QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
 #endif
