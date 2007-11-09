@@ -152,12 +152,11 @@ Bool_t TGedMarkerSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    if (GET_MSG(msg) == kC_MARKERSEL && GET_SUBMSG(msg) == kMAR_SELCHANGED) {
       SetMarkerStyle(parm2);
+      parm1 = (Long_t)fWidgetId;
       SendMessage(fMsgWindow, MK_MSG(kC_MARKERSEL, kMAR_SELCHANGED),
-                  fWidgetId, parm2);
+                  parm1, parm2);
    }
 
-   if (parm1)     // no warning
-      ;
    return kTRUE;
 }
 
