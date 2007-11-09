@@ -34,7 +34,8 @@ public:
 #if QT_VERSION >= 0x40000
    Event_t *data() const { return fEvent;}
    void setData(Event_t *ev) { delete data(); fEvent=ev;}
-   TQUserEvent(const Event_t &pData) : QEvent(Type(QEvent::User+Type(1)))
+   TQUserEvent(const Event_t &pData) : QEvent(Type(QEvent::User+Type(1))),
+		   fEvent(0)
 #else
    TQUserEvent(const Event_t &pData) : QCustomEvent(Id(),0)
 #endif
