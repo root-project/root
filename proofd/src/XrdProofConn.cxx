@@ -917,8 +917,11 @@ bool XrdProofConn::Login()
    reqhdr.login.capver[0] = (char)fCapVer;
 
    // We call SendReq, the function devoted to sending commands.
-   TRACE(REQ,"XrdProofConn::Login: logging into server "<<URLTAG<<
-         "; pid="<<reqhdr.login.pid<<"; uid=" << reqhdr.login.username);
+   if (TRACING(REQ)) {
+      XrdOucString usr((const char *)&reqhdr.login.username[0], 8);
+      TRACE(REQ,"XrdProofConn::Login: logging into server "<<URLTAG<<
+                "; pid="<<reqhdr.login.pid<<"; uid=" << usr);
+   }
 
    // Finish to fill up and ...
    SetSID(reqhdr.header.streamid);
