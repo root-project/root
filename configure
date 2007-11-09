@@ -1915,7 +1915,7 @@ if test ! "x$enable_qt" = "xno" || \
     check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
         /usr/local/include/  /usr/local/qt/include  \
         /usr/include /usr/include/qt4
-    qtvers=
+    qtvers=0
     if ! test "x$found_hdr" = "x"; then
 	qtvers=4
         qt4="yes"
@@ -2021,7 +2021,11 @@ if test ! "x$enable_qt" = "xno" || \
         fi
     fi
     #  we can pick the wrong moc this way  --  fi
-    result "$qtmocexe"
+    if test ! "x$qtmocexe" = "x" ; then
+        result "$qtmocexe"
+    else
+        result "no"
+    fi
 
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
 	test "x$qtmocexe" = "x" || test $qtvers -eq 0 ; then
