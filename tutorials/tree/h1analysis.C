@@ -111,8 +111,6 @@ const Double_t dxbin = (0.17-0.13)/40;   // Bin-width
 const Double_t sigma = 0.0012;
 TEventList *elist = 0;
 Bool_t useList, fillList;
-TH1F *hdmd;
-TH2F *h2;
 
 //_____________________________________________________________________
 Double_t fdm5(Double_t *xx, Double_t *par)
@@ -147,13 +145,6 @@ void h1analysis::Begin(TTree * /*tree*/)
    //print the option specified in the Process function.
    TString option = GetOption();
    printf("Starting h1analysis with process option: %s\n",option.Data());
-
-   //some cleanup in case this function had already been executed
-   //delete any previously generated histograms or functions
-   gDirectory->Delete("hdmd");
-   gDirectory->Delete("h2*");
-   delete gROOT->GetFunction("f5");
-   delete gROOT->GetFunction("f2");
 }
 
 //_____________________________________________________________________
@@ -170,13 +161,6 @@ void h1analysis::SlaveBegin(TTree *tree)
    //print the option specified in the Process function.
    TString option = GetOption();
    printf("Starting h1analysis with process option: %s\n",option.Data());
-
-   //some cleanup in case this function had already been executed
-   //delete any previously generated histograms or functions
-   gDirectory->Delete("hdmd");
-   gDirectory->Delete("h2*");
-   delete gROOT->GetFunction("f5");
-   delete gROOT->GetFunction("f2");
 
    //create histograms
    hdmd = new TH1F("hdmd","dm_d",40,0.13,0.17);
@@ -258,6 +242,8 @@ void h1analysis::Terminate()
    hdmd->GetXaxis()->SetTitleOffset(1.4);
 
    //fit histogram hdmd with function f5 using the loglikelihood option
+   if (gROOT->GetListOfFunctions()->FindObject("f5"))
+      delete gROOT->GetFunction("f5");
    TF1 *f5 = new TF1("f5",fdm5,0.139,0.17,5);
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
    hdmd->Fit("f5","lr");
@@ -273,6 +259,8 @@ void h1analysis::Terminate()
    // with function f2 and make a histogram for each fit parameter
    // Note that the generated histograms are added to the list of objects
    // in the current directory.
+   if (gROOT->GetListOfFunctions()->FindObject("f2"))
+      delete gROOT->GetFunction("f2");
    TF1 *f2 = new TF1("f2",fdm2,0.139,0.17,2);
    f2->SetParameters(10000, 10);
    h2->FitSlicesX(f2,0,0,1,"qln");
