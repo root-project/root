@@ -138,6 +138,11 @@ TXProofMgr::~TXProofMgr()
    if (fSocket)
       fSocket->Close("P");
    SafeDelete(fSocket);
+
+   // Avoid destroying twice
+   {  R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Remove(this);
+   }
 }
 
 //______________________________________________________________________________

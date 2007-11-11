@@ -34,8 +34,6 @@
 #include "XrdProofServProxy.h"
 #include "XrdProofWorker.h"
 
-#define XPD_DEF_PORT 1093
-
 // Tracing utilities
 #include "XrdProofdTrace.h"
 static const char *gTraceID = " ";
@@ -58,6 +56,7 @@ XrdProofdManager::XrdProofdManager()
    fPROOFcfg.fName = "";
    fPROOFcfg.fMtime = 0;
    fWorkers.clear();
+   fNodes.clear();
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
    fEDest = 0;
    fSuperMst = 0;
@@ -74,6 +73,7 @@ XrdProofdManager::~XrdProofdManager()
       delete *w;
       w = fWorkers.erase(w);
    }
+   // The nodes list points to the same object, no cleanup is needed
 }
 
 //__________________________________________________________________________
@@ -300,11 +300,11 @@ int XrdProofdManager::Broadcast(int type, const char *msg, XrdProofdResponse *r)
 
    TRACE(ACT, "Broadcast: enter: type: "<<type);
 
-   // Loop over worker nodes
-   std::list<XrdProofWorker *>::iterator iw = fWorkers.begin();
+   // Loop over unique nodes
+   std::list<XrdProofWorker *>::iterator iw = fNodes.begin();
    XrdProofWorker *w = 0;
    XrdClientMessage *xrsp = 0;
-   while (iw != fWorkers.end()) {
+   while (iw != fNodes.end()) {
       if ((w = *iw) && w->fType != 'M') {
          // Do not send it to ourselves
          bool us = (((w->fHost.find("localhost") != STR_NPOS ||
@@ -463,12 +463,14 @@ void XrdProofdManager::CreateDefaultPROOFcfg()
    // Create 'localhost' lines for each worker
    int nwrk = fNumLocalWrks;
    if (nwrk > 0) {
+      mm = "worker localhost port=";
+      mm += fPort;
       while (nwrk--) {
-         mm = "worker localhost port=";
-         mm += fPort;
          fWorkers.push_back(new XrdProofWorker(mm.c_str()));
          TRACE(DBG, "CreateDefaultPROOFcfg: added line: " << mm);
       }
+      // One line for the nodes
+      fNodes.push_back(new XrdProofWorker(mm.c_str()));
    }
 
    XPDPRT("CreateDefaultPROOFcfg: done: "<<fWorkers.size()-1<<" workers");
@@ -518,6 +520,26 @@ std::list<XrdProofWorker *> *XrdProofdManager::GetActiveWorkers()
 }
 
 //__________________________________________________________________________
+std::list<XrdProofWorker *> *XrdProofdManager::GetNodes()
+{
+   // Return the list of unique nodes after having made sure that the info is
+   // up-to-date
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   if (fResourceType == kRTStatic && fPROOFcfg.fName.length() > 0) {
+      // Check if there were any changes in the config file
+      if (ReadPROOFcfg() != 0) {
+         TRACE(XERR, "GetNodes: unable to read the configuration file");
+         return (std::list<XrdProofWorker *> *)0;
+      }
+   }
+   XPDPRT( "GetNodes: returning list with "<<fNodes.size()<<" entries");
+
+   return &fNodes;
+}
+
+//__________________________________________________________________________
 int XrdProofdManager::ReadPROOFcfg()
 {
    // Read PROOF config file and load the information in fWorkers.
@@ -547,6 +569,8 @@ int XrdProofdManager::ReadPROOFcfg()
       delete *w;
       w = fWorkers.erase(w);
    }
+   // Cleanup the nodes list
+   fNodes.clear();
 
    // Save the modification time
    fPROOFcfg.fMtime = st.st_mtime;
@@ -602,6 +626,25 @@ int XrdProofdManager::ReadPROOFcfg()
 
    // Close files
    fclose(fin);
+
+   // Build the list of unique nodes (skip the master line);
+   if (fWorkers.size() > 0) {
+      w = fWorkers.begin();
+      w++;
+      for ( ; w != fWorkers.end(); w++) {
+         bool add = 1;
+         std::list<XrdProofWorker *>::iterator n;
+         for (n = fNodes.begin() ; n != fNodes.end(); n++) {
+            if ((*n)->Matches(*w)) {
+               add = 0;
+               break;
+            }
+         }
+         if (add)
+            fNodes.push_back(*w);
+      }
+   }
+   TRACE(DBG, "ReadPROOFcfg: found " << fNodes.size() <<" unique nodes");
 
    // We are done
    return ((nw == 0) ? -1 : 0);

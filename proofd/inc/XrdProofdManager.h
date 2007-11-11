@@ -56,6 +56,8 @@ class XrdProofdManager {
 
    // List of available workers (on master only)
    std::list<XrdProofWorker *> *GetActiveWorkers();
+   // List of unique nodes (on master only)
+   std::list<XrdProofWorker *> *GetNodes();
    // Type of resource from which the info is taken
    int               ResourceType() const { return fResourceType; }
 
@@ -107,7 +109,8 @@ class XrdProofdManager {
    int               fResourceType; // resource type
    XrdProofdFile     fPROOFcfg;     // PROOF static configuration
 
-   std::list<XrdProofWorker *> fWorkers;  // vector of possible workers
+   std::list<XrdProofWorker *> fWorkers;  // List of possible workers
+   std::list<XrdProofWorker *> fNodes;   // List of worker unique nodes
 
    std::list<XrdProofServProxy *> fActiveSessions; // List of active sessions (non-idle)
 

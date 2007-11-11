@@ -40,6 +40,7 @@ class XrdProofWorker {
    const char             *Export();
 
    bool                    Matches(const char *host);
+   bool                    Matches(XrdProofWorker *wrk);
    int                     GetNActiveSessions();
 
    static void             Sort(std::list<XrdProofWorker *> *lst,
@@ -55,7 +56,8 @@ class XrdProofWorker {
    // Worker definitions
    XrdOucString            fExport;      // export string
    char                    fType;        // type: worker ('W') or submaster ('S')
-   XrdOucString            fHost;        // user@host
+   XrdOucString            fUser;        // user
+   XrdOucString            fHost;        // host FQDN
    int                     fPort;        // port
    int                     fPerfIdx;     // performance index
    XrdOucString            fImage;       // image name

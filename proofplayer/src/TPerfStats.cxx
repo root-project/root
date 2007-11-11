@@ -146,14 +146,15 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       Double_t min_time = 0;
       Int_t ntime_bins = 1000;
 
-      fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Slave",
+      fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Worker",
                               fSlaves, 0, fSlaves);
       fPacketsHist->SetDirectory(0);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
 
-      fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Slave",
+      fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Worker",
                              fSlaves, 0, fSlaves);
+      fEventsHist->SetFillColor(kGreen);
       fEventsHist->SetDirectory(0);
       fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
@@ -165,7 +166,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
 
-      fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Slave",
+      fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
       fLatencyHist->SetDirectory(0);
@@ -173,7 +174,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fLatencyHist->SetBit(TH1::kCanRebin);
       output->Add(fLatencyHist);
 
-      fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Slave",
+      fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Worker",
                                fSlaves, 0, fSlaves,
                                ntime_bins, min_time, time_per_bin);
       fProcTimeHist->SetDirectory(0);
@@ -181,7 +182,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fProcTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fProcTimeHist);
 
-      fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Slave",
+      fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
       fCpuTimeHist->SetDirectory(0);
@@ -294,6 +295,10 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fTrace->Fill();
       fPerfEvent = 0;
    }
+
+   PDB(kGlobal,1)
+      Info("PacketEvent","%s: fDoHist: %d, fPacketsHist: %p, eventsprocessed: %lld",
+                         slave, fDoHist, fPacketsHist, eventsprocessed);
 
    if (fDoHist && fPacketsHist != 0) {
       fPacketsHist->Fill(slave, 1);

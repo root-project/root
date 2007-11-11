@@ -242,6 +242,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
    Long64_t totev = 0;
    if (r->BufferSize() > r->Length()) (*r) >> totev;
+   Long64_t numev = totev - slstat->fProcessed;
 
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s: fProcessed %lld\t", sl->GetOrdinal(), fProcessed);
@@ -250,10 +251,10 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
                            sl->GetOrdinal(), sl->GetName(),
-                           fProcessing, latency, proctime, proccpu, bytesRead);
+                           numev, latency, proctime, proccpu, bytesRead);
 
    if (gPerfStats != 0) {
-      gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), "", fProcessing,
+      gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), "", numev,
                               latency, proctime, proccpu, bytesRead);
    }
 

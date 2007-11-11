@@ -128,7 +128,10 @@ private:
 
    Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
 
-   static Int_t  fgMaxQueries;      //Max number of queries fully kept
+   // Quotas (-1 to disable)
+   Int_t         fMaxQueries;       //Max number of queries fully kept
+   Long64_t      fMaxBoxSize;       //Max size of the sandbox
+   Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
 
    void          RedirectOutput();
    Int_t         CatMotd();
@@ -139,6 +142,7 @@ private:
 
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
+   Int_t         ApplyMaxQueries();
    Int_t         CleanupQueriesDir();
    void          FinalizeQuery(TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);

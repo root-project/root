@@ -654,6 +654,7 @@ public:
 
    //-- input list parameter handling
    void        SetParameter(const char *par, const char *value);
+   void        SetParameter(const char *par, Int_t value);
    void        SetParameter(const char *par, Long_t value);
    void        SetParameter(const char *par, Long64_t value);
    void        SetParameter(const char *par, Double_t value);
@@ -748,6 +749,7 @@ public:
 
    // Input/output list utilities
    static Int_t         GetParameter(TCollection *c, const char *par, TString &value);
+   static Int_t         GetParameter(TCollection *c, const char *par, Int_t &value);
    static Int_t         GetParameter(TCollection *c, const char *par, Long_t &value);
    static Int_t         GetParameter(TCollection *c, const char *par, Long64_t &value);
    static Int_t         GetParameter(TCollection *c, const char *par, Double_t &value);

@@ -39,6 +39,7 @@ public:
       kFeedback      = 128,
       kCondor        = 256,
       kDraw          = 512,
+      kAsyn          = 1024,
 
       kAll           = 0xFFFFFFFF
    };

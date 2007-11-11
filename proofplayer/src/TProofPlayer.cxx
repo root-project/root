@@ -557,11 +557,6 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
       fSelectorClass = fSelector->IsA();
       fSelector->SetOption(qr->GetOptions());
 
-      // Draw needs to reinit temp histos
-      if (stdselec) {
-         fSelector->SetInputList(qr->GetInputList());
-         ((TProofDraw *)fSelector)->DefVar();
-      }
    } else {
       if (compselec) {
          gErrorIgnoreLevel = iglevelsave; // restore ignore level
@@ -582,10 +577,8 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
                   }
                }
                // Retry now, if the case
-               if (retry && (fSelector = TSelector::GetSelector(selec))) {
-                  fSelectorClass = fSelector->IsA();
-                  fSelector->SetOption(qr->GetOptions());
-               }
+               if (retry)
+                  fSelector = TSelector::GetSelector(selec);
             }
          }
       }
@@ -595,6 +588,16 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
                                    " automatic reload unsuccessful:"
                                    " please load manually the correct library");
          rc = -1;
+      }
+   }
+   if (fSelector) {
+      // Draw needs to reinit temp histos
+      fSelector->SetInputList(qr->GetInputList());
+      if (stdselec) {
+         ((TProofDraw *)fSelector)->DefVar();
+      } else {
+         // variables may have been initialized in Begin()
+         fSelector->Begin(0);
       }
    }
 
@@ -1480,7 +1483,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
                output->Add(obj);
          }
 
-         PDB(kLoop,1) Info("Process","Call Terminate()");
+         PDB(kLoop,1) Info("Finalize","Call Terminate()");
          fOutput->Clear("nodelete");
          fSelector->Terminate();
 

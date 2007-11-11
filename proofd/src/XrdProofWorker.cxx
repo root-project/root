@@ -26,7 +26,9 @@
 #include "XrdProofdAux.h"
 #include "XrdProofWorker.h"
 #include "XrdProofServProxy.h"
+#include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
+#include "XProofProtocol.h"
 
 // Tracing utilities
 #include "XrdProofdTrace.h"
@@ -85,10 +87,19 @@ void XrdProofWorker::Reset(const char *str)
    else if (tok == "master")
       fType = 'M';
 
-   // Next token is the user@host string
+   // Next token is the user@host string, make sure it is a full qualified host name
    if ((from = s.tokenize(tok, from, ' ')) == STR_NPOS)
       return;
-   fHost = tok;
+   XrdClientUrlInfo ui(tok.c_str());
+   fUser = ui.User;
+   char *err;
+   char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
+   if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
+      TRACE(XERR, "XrdProofWorker::Reset: DNS could not resolve '"<<ui.Host<<"'");
+      return;
+   }
+   fHost = fullHostName;
+   SafeFree(fullHostName);
 
    // and then the remaining options
    while ((from = s.tokenize(tok, from, ' ')) != STR_NPOS) {
@@ -125,13 +136,29 @@ bool XrdProofWorker::Matches(const char *host)
    // Check compatibility of host with this instance.
    // return 1 if compatible.
 
-   XrdOucString thishost;
-   thishost.assign(fHost, fHost.find('@'));
-   char *h = XrdNetDNS::getHostName(thishost.c_str());
-   thishost = (h ? h : "");
-   SafeFree(h);
+   return ((fHost.matches(host)) ? 1 : 0);
+}
 
-   return ((thishost.matches(host)) ? 1 : 0);
+//__________________________________________________________________________
+bool XrdProofWorker::Matches(XrdProofWorker *wrk)
+{
+   // Check if 'wrk' is on the same node that 'this'; used to find the unique
+   // worker nodes.
+   // return 1 if the node is the same.
+
+   if (wrk) {
+      // Check Host names
+      if (wrk->fHost == fHost) {
+         // Check ports
+         int pa = (fPort > 0) ? fPort : XPD_DEF_PORT;
+         int pb = (wrk->fPort > 0) ? wrk->fPort : XPD_DEF_PORT;
+         if (pa == pb)
+            return 1;
+      }
+   }
+
+   // They do not match
+   return 0;
 }
 
 //__________________________________________________________________________
@@ -139,12 +166,16 @@ const char *XrdProofWorker::Export()
 {
    // Export current content in a form understood by parsing algorithms
    // inside the PROOF session, i.e.
-   // <type>|<host@user>|<port>|-|-|<perfidx>|<img>|<workdir>|<msd>
+   // <type>|<user@host>|<port>|-|-|<perfidx>|<img>|<workdir>|<msd>
 
    fExport = fType;
 
    // Add user@host
-   fExport += '|' ; fExport += fHost;
+   fExport += '|' ;
+   if (fUser.length() > 0) {
+      fExport += fUser; fExport += "@";
+   }
+   fExport += fHost;
 
    // Add port
    if (fPort > 0) {

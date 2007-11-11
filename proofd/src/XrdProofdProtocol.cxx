@@ -503,8 +503,8 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       // This function is called early on to determine the port we need to use. The
       // The default is ostensibly 1093 but can be overidden; which we allow.
 
-      // Default 1093
-      int port = (pi && pi->Port > 0) ? pi->Port : 1093;
+      // Default XPD_DEF_PORT (1093)
+      int port = (pi && pi->Port > 0) ? pi->Port : XPD_DEF_PORT;
       return port;
 }}
 
@@ -5349,8 +5349,8 @@ int XrdProofdProtocol::Admin()
    } else if (type == kROOTVersion) {
 
       // Change default ROOT version
-      const char *t = (const char *) fArgp->buff;
-      int len = fRequest.header.dlen;
+      const char *t = fArgp ? (const char *) fArgp->buff : "default";
+      int len = fArgp ? fRequest.header.dlen : strlen("default");
       XrdOucString tag(t,len);
 
       // If a user name is given separate it out and check if
@@ -5919,10 +5919,10 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
             bool muok = 1;
             if (fgMultiUser && !all) {
                // We need to check the user name: we may be the owner of somebody
-               // else process
+               // else process; if not session is attached, we kill it
                muok = 0;
                XrdProofServProxy *srv = fgMgr.GetActiveSession(pid);
-               if (srv && !strcmp(usr, srv->Client()))
+               if (!srv || (srv && !strcmp(usr, srv->Client())))
                   muok = 1;
             }
             if (muok)
@@ -6000,10 +6000,10 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
             bool muok = 1;
             if (fgMultiUser && !all) {
                // We need to check the user name: we may be the owner of somebody
-               // else process
+               // else process; if no session is attached , we kill it
                muok = 0;
                XrdProofServProxy *srv = fgMgr.GetActiveSession(psi.pr_pid);
-               if (srv && !strcmp(usr, srv->Client()))
+               if (!srv || (srv && !strcmp(usr, srv->Client())))
                   muok = 1;
             }
             if (muok)
@@ -6050,10 +6050,10 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
                bool muok = 1;
                if (fgMultiUser && !all) {
                   // We need to check the user name: we may be the owner of somebody
-                  // else process
+                  // else process; if no session is attached, we kill it
                   muok = 0;
                   XrdProofServProxy *srv = fgMgr.GetActiveSession(pl[np].kp_proc.p_pid);
-                  if (srv && !strcmp(usr, srv->Client()))
+                  if (!srv || (srv && !strcmp(usr, srv->Client())))
                      muok = 1;
                }
                if (muok)
@@ -6118,10 +6118,10 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
          bool muok = 1;
          if (fgMultiUser && !all) {
             // We need to check the user name: we may be the owner of somebody
-            // else process
+            // else process; if no session is attached, we kill it
             muok = 0;
             XrdProofServProxy *srv = fgMgr.GetActiveSession(pid);
-            if (srv && !strcmp(usr, srv->Client()))
+            if (!srv || (srv && !strcmp(usr, srv->Client())))
                muok = 1;
          }
          if (muok)
@@ -6319,23 +6319,32 @@ int XrdProofdProtocol::ReadBuffer()
    }
 
    if (!buf) {
-      if (grep > 0) {
+      if (lout > 0) {
+         if (grep > 0) {
+            if (TRACING(DBG)) {
+               emsg = "ReadBuffer: nothing found by 'grep' in ";
+               emsg += filen;
+               emsg += ", pattern: ";
+               emsg += pattern;
+               TRACEP(DBG, emsg);
+            }
+            fResponse.Send();
+            return rc;
+         } else {
+            emsg = "ReadBuffer: could not read buffer from ";
+            emsg += (local) ? "local file " : "remote file ";
+            emsg += file;
+            TRACEP(XERR, emsg);
+            fResponse.Send(kXR_InvalidRequest, emsg.c_str());
+            return rc;
+         }
+      } else {
+         // Just got an empty buffer
          if (TRACING(DBG)) {
-            emsg = "ReadBuffer: nothing found by 'grep' in ";
-            emsg += filen;
-            emsg += ", pattern: ";
-            emsg += pattern;
+            emsg = "ReadBuffer: nothing found in ";
+            emsg += file;
             TRACEP(DBG, emsg);
          }
-         fResponse.Send();
-         return rc;
-      } else {
-         emsg = "ReadBuffer: could not read buffer from ";
-         emsg += (local) ? "local file " : "remote file ";
-         emsg += file;
-         TRACEP(XERR, emsg);
-         fResponse.Send(kXR_InvalidRequest, emsg.c_str());
-         return rc;
       }
    }
 
@@ -6599,6 +6608,9 @@ char *XrdProofdProtocol::ReadBufferRemote(const char *url, const char *file,
       if (xrsp && buf && (xrsp->DataLen() > 0)) {
          len = xrsp->DataLen();
       } else {
+         if (xrsp && !(xrsp->IsError()))
+            // The buffer was just empty: do not call it error
+            len = 0;
          SafeFree(buf);
       }
 

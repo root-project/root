@@ -10,6 +10,8 @@
 
 #include "XProtocol/XProtocol.hh"
 
+#define XPD_DEF_PORT 1093
+
 // KINDS of SERVERS
 //
 //
