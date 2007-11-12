@@ -218,7 +218,7 @@ protected:
    Bool_t      ParseXLFD(const char *string, XLFDAttributes_t *xa);
    TGFont     *GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr);
    int         FindStateNum(const FontStateMap_t *map, const char *strKey);
-   char       *FindStateString(const FontStateMap_t *map, int numKey);
+   const char *FindStateString(const FontStateMap_t *map, int numKey);
    Bool_t      FieldSpecified(const char *field);
    TGFont     *GetNativeFont(const char *name, Bool_t fixedDefault = kTRUE);
    TGFont     *MakeFont(TGFont *font, FontStruct_t fontStruct, const char *fontName);

@@ -179,26 +179,26 @@ enum ECharType { kCharNormal, kCharReplace, kCharSkip };
 // the fields in the FontAttributes_t structure and the strings used when
 // parsing both option-value format and style-list format font name strings.
 
-struct FontStateMap_t { Int_t fNumKey; char *fStrKey; };
+struct FontStateMap_t { Int_t fNumKey; const char *fStrKey; };
 
-static FontStateMap_t gWeightMap[] = {
+static const FontStateMap_t gWeightMap[] = {
    { kFontWeightNormal,  "normal" },
    { kFontWeightBold,    "bold"   },
    { kFontWeightUnknown, 0        }
 };
 
-static FontStateMap_t gSlantMap[] = {
+static const FontStateMap_t gSlantMap[] = {
    { kFontSlantRoman,   "roman"  },
    { kFontSlantItalic,  "italic" },
    { kFontSlantUnknown, 0        }
 };
 
-static FontStateMap_t gUnderlineMap[] = {
+static const FontStateMap_t gUnderlineMap[] = {
    { 1, "underline" },
    { 0, 0           }
 };
 
-static FontStateMap_t gOverstrikeMap[] = {
+static const FontStateMap_t gOverstrikeMap[] = {
    { 1, "overstrike" },
    { 0, 0            }
 };
@@ -206,7 +206,7 @@ static FontStateMap_t gOverstrikeMap[] = {
 // The following structures are used when parsing XLFD's into a set of
 // FontAttributes_t.
 
-static FontStateMap_t gXlfdgWeightMap[] = {
+static const FontStateMap_t gXlfdgWeightMap[] = {
    { kFontWeightNormal, "normal"   },
    { kFontWeightNormal, "medium"   },
    { kFontWeightNormal, "book"     },
@@ -217,14 +217,14 @@ static FontStateMap_t gXlfdgWeightMap[] = {
    { kFontWeightNormal,  0         }  // Assume anything else is "normal".
 };
 
-static FontStateMap_t gXlfdSlantMap[] = {
+static const FontStateMap_t gXlfdSlantMap[] = {
    { kFontSlantRoman,   "r"  },
    { kFontSlantItalic,  "i"  },
    { kFontSlantOblique, "o"  },
    { kFontSlantRoman,   0    }  // Assume anything else is "roman".
 };
 
-static FontStateMap_t gXlfdSetwidthMap[] = {
+static const FontStateMap_t gXlfdSetwidthMap[] = {
    { kFontSWNormal,   "normal"        },
    { kFontSWCondence, "narrow"        },
    { kFontSWCondence, "semicondensed" },
@@ -232,7 +232,7 @@ static FontStateMap_t gXlfdSetwidthMap[] = {
    { kFontSWUnknown,  0               }
 };
 
-static FontStateMap_t gXlfdCharsetMap[] = {
+static const FontStateMap_t gXlfdCharsetMap[] = {
    { kFontCSNormal, "iso8859" },
    { kFontCSSymbol, "adobe"   },
    { kFontCSSymbol, "sun"     },
@@ -1681,7 +1681,7 @@ TGFont *TGFontPool::GetFont(const char *family, Int_t ptsize, Int_t weight, Int_
    //    TGFont *font = fpool->GetFont("helvetica", -9, kFontWeightNormal, kFontSlantRoman);
    //    font->Print();
 
-   char *s;
+   const char *s;
    TString tmp;
 
    tmp.Form("%s %d", family, ptsize);
@@ -2198,7 +2198,7 @@ Int_t TGFontPool::FindStateNum(const FontStateMap_t *map, const char *strKey)
 }
 
 //______________________________________________________________________________
-char *TGFontPool::FindStateString(const FontStateMap_t *map, Int_t numKey)
+const char *TGFontPool::FindStateString(const FontStateMap_t *map, Int_t numKey)
 {
    // Given a lookup table, map a number to a string in the table.
    //
