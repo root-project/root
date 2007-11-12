@@ -2023,7 +2023,7 @@ start:
 
       item = FindChildByName(item, dirname);
 
-      if (!diritem && dirname) {
+      if (!diritem && dirname[0]) {
          fulldir += "/";
          fulldir += dirname;
 
