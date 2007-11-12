@@ -474,6 +474,26 @@ int G__class_autoloading(int tagnum)
       if (G__p_class_autoloading) {
          G__enable_autoloading = 0;
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
+         if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
+            if (strstr(G__struct.name[tagnum],"<") != 0) {
+               // Kill this entry.      
+               int found_tagnum = G__defined_tagname(G__struct.name[tagnum],3);
+               if (found_tagnum != tagnum) {
+                  // The autoload has seemingly failed!
+                  // This can happens in 'normal' case if the string representation of the
+                  // type registered by the autoloading mechanism is actually a typedef
+                  // to the real type (aka mytemp<Long64_t> vs mytemp<long long> or the
+                  // stl containers with or without their (default) allocators.
+                  char *old = G__struct.name[tagnum];
+
+                  G__struct.name[tagnum] = (char*)malloc(strlen(old)+50);
+                  strcpy(G__struct.name[tagnum],"@@ ex autload entry @@");
+                  strcat(G__struct.name[tagnum],old);
+                  G__struct.type[tagnum] = 0;
+                  free(old);
+               }
+            }
+         }
          G__enable_autoloading = 1;
          delete[] copyLibname;
          return res;
