@@ -60,6 +60,9 @@ public:
    // Add user defined particles (optional)
    virtual void AddParticles() {}
 
+   // Add user defined ions (optional)
+   virtual void AddIons() {}
+
    // Generate primary particles
    virtual void GeneratePrimaries() = 0;
 

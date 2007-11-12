@@ -193,6 +193,16 @@ void TMCVerbose::AddParticles()
 }
 
 //_____________________________________________________________________________
+void TMCVerbose::AddIons()
+{
+// Add ions info
+// ---
+
+   if (fLevel>0)
+      cout << "--- Add ions " << endl;
+}
+
+//_____________________________________________________________________________
 void TMCVerbose::GeneratePrimaries()
 {
 // Generate primaries info

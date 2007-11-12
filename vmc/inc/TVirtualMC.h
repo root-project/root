@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Id$
+// @(#)root/vmc:$Name:  $:$Id$
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    virtual ~TVirtualMC();
 
    // Static access method
-   static TVirtualMC* GetMC();
+   static TVirtualMC* GetMC() { return fgMC; }
 
    //
    // ------------------------------------------------
@@ -470,13 +470,86 @@ public:
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
    // already exists and error report is printed.
+   //   pdg           PDG encoding  
+   //   name          particle name
+   //   mcType        VMC Particle type
+   //   mass          mass [GeV]
+   //   charge        charge [eplus]
+   //   lifetime      time of life [s]
+   //   pType         particle type as in Geant4
+   //   width         width [GeV]
+   //   iSpin         spin
+   //   iParity       parity
+   //   iConjugation  conjugation
+   //   iIsospin      isospin 
+   //   iIsospinZ     isospin - #rd component 
+   //   gParity       gParity
+   //   lepton        lepton number 
+   //   baryon        baryon number
+   //   stable        stability
+   //   shortlived    is shorlived?
+   //   subType       particle subType as in Geant4
+   //   antiEncoding  anti encoding
+   //   magMoment     magnetic moment
+   //   excitation    excitation energy [GeV]
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
-                        TMCParticleType pType,
-                        Double_t mass, Double_t charge, Double_t lifetime) = 0;
+                        TMCParticleType mcType, 
+                        Double_t mass, Double_t charge, Double_t lifetime);
+                        
+   // Set a user defined particle
+   // Function is ignored if particle with specified pdg
+   // already exists and error report is printed.
+   //   pdg           PDG encoding  
+   //   name          particle name
+   //   mcType        VMC Particle type
+   //   mass          mass [GeV]
+   //   charge        charge [eplus]
+   //   lifetime      time of life [s]
+   //   pType         particle type as in Geant4
+   //   width         width [GeV]
+   //   iSpin         spin
+   //   iParity       parity
+   //   iConjugation  conjugation
+   //   iIsospin      isospin 
+   //   iIsospinZ     isospin - #rd component 
+   //   gParity       gParity
+   //   lepton        lepton number 
+   //   baryon        baryon number
+   //   stable        stability
+   //   shortlived    is shorlived?
+   //   subType       particle subType as in Geant4
+   //   antiEncoding  anti encoding
+   //   magMoment     magnetic moment
+   //   excitation    excitation energy [GeV]
+   virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
+                        TMCParticleType mcType, 
+                        Double_t mass, Double_t charge, Double_t lifetime, 
+                        const TString& pType, Double_t width, 
+                        Int_t iSpin, Int_t iParity, Int_t iConjugation, 
+                        Int_t iIsospin, Int_t iIsospinZ, Int_t gParity,
+                        Int_t lepton, Int_t baryon,
+                        Bool_t stable, Bool_t shortlived = kFALSE,
+                        const TString& subType = "",
+                        Int_t antiEncoding = 0, Double_t magMoment = 0.0,
+                        Double_t excitation = 0.0);
 
    // Set a user defined ion.
+   //   name          ion name
+   //   Z             atomic number
+   //   A             atomic mass
+   //   Q             charge [eplus}
+   //   excitation    excitation energy [GeV]
+   //   mass          mass  [GeV] (if not specified by user, approximative 
+   //                 mass is calculated)                  
    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,
                         Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0;
+
+   // Set a user phase space decay for a particle
+   //   pdg           particle PDG encoding
+   //   bratios       the array with branching ratios (in %)
+   //   mode[6][3]    the array with daughters particles PDG codes  for each 
+   //                 decay channel
+   virtual Bool_t   SetDecayMode(Int_t pdg, Float_t bratio[6], Int_t mode[6][3]);
 
    // Calculate X-sections
    // (Geant3 only)
@@ -827,6 +900,34 @@ inline Int_t TVirtualMC::MediumId(const Text_t* /*mediumName*/) const {
    return 0;
 }
 
+inline Bool_t TVirtualMC::DefineParticle(Int_t /*pdg*/, const char* /*name*/,
+                            TMCParticleType /*mcType*/, 
+                            Double_t /*mass*/, Double_t /*charge*/, Double_t /*lifetime*/) {   
+   Warning("DefineParticle", 
+           "Deprecated function - a new function with more arguments should be used.");
+   return false;
+}
+
+inline Bool_t TVirtualMC::DefineParticle(Int_t /*pdg*/, const char* /*name*/,
+                            TMCParticleType /*mcType*/, 
+                            Double_t /*mass*/, Double_t /*charge*/, Double_t /*lifetime*/, 
+                            const TString& /*pType*/, Double_t /*width*/, 
+                            Int_t /*iSpin*/, Int_t /*iParity*/, Int_t /*iConjugation*/, 
+                            Int_t /*iIsospin*/, Int_t /*iIsospinZ*/, Int_t /*gParity*/,
+                            Int_t /*lepton*/, Int_t /*baryon*/,
+                            Bool_t /*stable*/, Bool_t /*shortlived*/,
+                            const TString& /*subType*/,
+                            Int_t /*antiEncoding*/, Double_t /*magMoment*/,
+                            Double_t /*excitation*/) {                            
+   Warning("DefineParticle", "New function - not yet implemented.");
+   return false;
+}
+                        
+inline Bool_t TVirtualMC::SetDecayMode(Int_t /*pdg*/, 
+                            Float_t /*bratio*/[6], Int_t /*mode*/[6][3]) {
+   Warning("SetDecayMode", "New function - not yet implemented.");
+   return false;
+}
 
 R__EXTERN TVirtualMC *gMC;
 

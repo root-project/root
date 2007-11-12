@@ -85,16 +85,6 @@ TVirtualMC::~TVirtualMC()
 
 
 //_____________________________________________________________________________
-TVirtualMC* TVirtualMC::GetMC()
-{
-//
-// Return the static instance.
-//
-
-   return fgMC;
-}
-
-//_____________________________________________________________________________
 void TVirtualMC::SetStack(TVirtualMCStack* stack)
 {
 //
