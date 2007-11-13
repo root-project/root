@@ -300,7 +300,7 @@ TThread::~TThread()
 }
 
 //______________________________________________________________________________
-Int_t TThread::Delete(TThread *th)
+Int_t TThread::Delete(TThread *&th)
 {
    // Static method to delete the specified thread.
 

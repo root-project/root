@@ -154,7 +154,7 @@ public:
    static Int_t     Sleep(ULong_t secs, ULong_t nanos = 0);
    static Int_t     GetTime(ULong_t *absSec, ULong_t *absNanoSec);
 
-   static Int_t     Delete(TThread *th);
+   static Int_t     Delete(TThread *&th);
    static void    **Tsd(void *dflt, Int_t k);
 
    // Cancellation
