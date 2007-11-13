@@ -975,7 +975,7 @@ TGeoBatemanSol::TGeoBatemanSol(TGeoElementRN *elem)
    Double_t t12 = elem->HalfLife();
    if (t12 == 0.) t12 = 1.e-30;
    if (elem->Stable()) fCoeff[0].lambda = 0.;
-   else                fCoeff[0].lambda = 1./t12;
+   else                fCoeff[0].lambda = TMath::Log(2.)/t12;
 }
 
 //______________________________________________________________________________
@@ -1158,13 +1158,13 @@ void TGeoBatemanSol::FindSolution(const TObjArray *array)
       halflife = elem->HalfLife();
       if (halflife==0.) halflife = 1.e-30;
       if (elem->Stable()) lambda[i] = 0.;
-      else                lambda[i] = 1./halflife;
+      else                lambda[i] = TMath::Log(2.)/halflife;
       if (i==n-1) {
          elem = dc->Daughter();
          halflife = elem->HalfLife();
          if (halflife==0.) halflife = 1.e-30;
          if (elem->Stable()) lambda[n] = 0.;
-         else                lambda[n] = 1./halflife;
+         else                lambda[n] = TMath::Log(2.)/halflife;
       }
    }
    // Check if we have equal lambdas
