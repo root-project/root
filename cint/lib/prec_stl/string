@@ -24,7 +24,8 @@
 #include <stddef.h>
 #include <iostream>
 
-#if (defined (G__VISUAL) && (G__MSC_VER>=1310))
+#if (defined (G__VISUAL) && (G__MSC_VER>=1310)) || (G__GNUC_VER>=3001)
+// for reverse_iterator
 #include <iterator>
 #endif
 
@@ -161,12 +162,14 @@ class string {
 			const iterator& _Right);
 	};
 
-	typedef std::reverse_iterator<iterator> reverse_iterator;
-	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-
 #else
   typedef char* iterator;
   typedef const char* const_iterator;
+#endif
+
+#if (defined (G__VISUAL) && (G__MSC_VER>=1310)) || (G__GNUC_VER>=3001)
+   typedef std::reverse_iterator<iterator> reverse_iterator;
+   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 #endif
 
 # if defined(G__GNUC_VER) && (G__GNUC_VER>=3000) && !defined(G__INTEL_COMPILER)
