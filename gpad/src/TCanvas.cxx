@@ -1679,7 +1679,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
    out <<"}"<<endl;
    out.close();
-   Printf("C++ Macro file: %s has been generated", fname);
+   Info("SaveSource","C++ Macro file: %s has been generated", fname);
 
    //    reset bit TClass::kClassSaved for all classes
    next.Reset();
