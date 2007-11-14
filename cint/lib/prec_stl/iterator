@@ -302,7 +302,7 @@ _Iter_cat(const T*) {
 /***************************************************************************
 * VC++6.0, VC++7.0?
 ***************************************************************************/
-#elif (G__MSC_VER<=1400)
+#else
 
 // Many of the MS C++ 7.x class have one additional 
 // typedef
@@ -476,7 +476,12 @@ class reverse_iterator
 		    typename iterator_traits<_RanIt>::reference>
 {	// wrap iterator to run it backwards
 public:
+#if (G__MSC_VER < 1500)
   typedef reverse_iterator<_RanIt> _Myt;
+#else
+// private typedef
+#endif
+public:
   typedef typename iterator_traits<_RanIt>::difference_type difference_type;
   typedef typename iterator_traits<_RanIt>::pointer pointer;
   typedef typename iterator_traits<_RanIt>::reference reference;
@@ -491,18 +496,18 @@ public:
 
   reference operator*() const;
   pointer operator->() const;
-  _Myt& operator++();
-  _Myt operator++(int);
-  _Myt& operator--();
-  _Myt operator--(int);
-  bool _Equal(const _Myt& _Right) const;
-  _Myt& operator+=(difference_type _Off);
-  _Myt operator+(difference_type _Off) const;
-  _Myt& operator-=(difference_type _Off);
-  _Myt operator-(difference_type _Off) const;
+  reverse_iterator<_RanIt>& operator++();
+  reverse_iterator<_RanIt> operator++(int);
+  reverse_iterator<_RanIt>& operator--();
+  reverse_iterator<_RanIt> operator--(int);
+  bool _Equal(const reverse_iterator<_RanIt>& _Right) const;
+  reverse_iterator<_RanIt>& operator+=(difference_type _Off);
+  reverse_iterator<_RanIt> operator+(difference_type _Off) const;
+  reverse_iterator<_RanIt>& operator-=(difference_type _Off);
+  reverse_iterator<_RanIt> operator-(difference_type _Off) const;
   reference operator[](difference_type _Off) const;
-  bool _Less(const _Myt& _Right) const;
-  difference_type _Minus(const _Myt& _Right) const;
+  bool _Less(const reverse_iterator<_RanIt>& _Right) const;
+  difference_type _Minus(const reverse_iterator<_RanIt>& _Right) const;
 
 protected:
   
@@ -644,18 +649,9 @@ template<class _Category,
 	typedef _Diff distance_type;	// retained
 	typedef _Pointer pointer;
 	typedef _Reference reference;
-	};
-#endif
-
-/***************************************************************************
-* Unknown VC++ version
-***************************************************************************/
-#else // MSC_VER
-
-// not yet
-
-#endif  // MSC_VER
-
+		};
+#endif // G__OLDIMPLEMENTATION1966
+#endif // MSC_VER
 #endif // VISUAL
 
 
