@@ -2760,6 +2760,7 @@ Int_t TFile::SysClose(Int_t fd)
 {
    // Interface to system close. All arguments like in POSIX close().
 
+   if (fd < 0) return 0;
    return ::close(fd);
 }
 
