@@ -164,7 +164,7 @@ explicitely by the user.</FONT></P>
 given in the constructor. The network is described by a simple
 string: The input/output layers are defined by giving the expression for
 each neuron, separated by comas. Hidden layers are just described
-by the number of neurons. The layers are separated by semicolons.
+by the number of neurons. The layers are separated by colons.
 In addition, input/output layer formulas can be preceded by '@' (e.g "@out")
 if one wants to also normalize the data from the TTree.
 Input and outputs are taken from the TTree given as second argument.
@@ -288,7 +288,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // The input/output layers are defined by giving
    // the branch names separated by comas.
    // Hidden layers are just described by the number of neurons.
-   // The layers are separated by semicolons.
+   // The layers are separated by colons.
    // Ex: "x,y:10:5:f"
    // The output can be prepended by '@' if the variable has to be
    // normalized.
@@ -345,7 +345,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // The input/output layers are defined by giving
    // the branch names separated by comas.
    // Hidden layers are just described by the number of neurons.
-   // The layers are separated by semicolons.
+   // The layers are separated by colons.
    // Ex: "x,y:10:5:f"
    // The output can be prepended by '@' if the variable has to be
    // normalized.
@@ -400,7 +400,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // The input/output layers are defined by giving
    // the branch names separated by comas.
    // Hidden layers are just described by the number of neurons.
-   // The layers are separated by semicolons.
+   // The layers are separated by colons.
    // Ex: "x,y:10:5:f"
    // The output can be prepended by '@' if the variable has to be
    // normalized.
@@ -465,7 +465,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // The input/output layers are defined by giving
    // the branch names separated by comas.
    // Hidden layers are just described by the number of neurons.
-   // The layers are separated by semicolons.
+   // The layers are separated by colons.
    // Ex: "x,y:10:5:f"
    // The output can be prepended by '@' if the variable has to be
    // normalized.
