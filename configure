@@ -1485,8 +1485,13 @@ result "$enable_builtin_freetype"
 # (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL) 
 #
 ftglincdir=include
-ftgllibdir=-Llib
-ftgllibs=-lFTGL
+if test "x$platform" = "xwin32"; then
+   ftgllibdir=
+   ftgllibs=lib/libFTGL.lib
+else
+   ftgllibdir=-Llib
+   ftgllibs=-lFTGL
+fi
 if test "x$enable_builtin_ftgl" = "x" || \
    test "x$enable_builtin_ftgl" = "xno" ; then
 

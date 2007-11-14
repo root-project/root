@@ -66,7 +66,7 @@ include/%.h:    $(GLDIRI)/%.h
 $(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
-		   "$(GLLIBEXTRA) $(GLLIBS)"
+		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLLIBS)"
 
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
