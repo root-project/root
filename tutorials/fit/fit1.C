@@ -3,7 +3,7 @@ void fit1() {
    //To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
    //Author: Rene Brun
    
-   TCanvas *c1 = new TCanvas("c1","The Fit Canvas",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1_fit1","The Fit Canvas",200,10,700,500);
    c1->SetGridx();
    c1->SetGridy();
    c1->GetFrame()->SetFillColor(21);
