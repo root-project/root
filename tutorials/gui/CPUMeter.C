@@ -10,6 +10,7 @@
 class TGShapedMain : public TGMainFrame {
 
 protected:
+   const TGPicture   *fBgnd;           // picture used as mask
    TGSpeedo          *fSpeedo;          // analog meter
    TTimer            *fTimer;           // update timer
    Int_t              fActInfo;         // actual information value
@@ -49,6 +50,12 @@ TGShapedMain::TGShapedMain(const TGWindow *p, int w, int h) :
    fSpeedo->SetDisplayText("Used RAM", "[MB]");
    fTimer = new TTimer(100);
    fTimer->SetCommand("Update()");
+
+   fBgnd = fSpeedo->GetPicture();
+   gVirtualX->ShapeCombineMask(GetId(), 0, 0, fBgnd->GetMask());
+   SetBackgroundPixmap(fBgnd->GetPicture());
+   SetWMSizeHints(fBgnd->GetWidth(), fBgnd->GetHeight(), fBgnd->GetWidth(),
+                  fBgnd->GetHeight(), 1, 1);
 
    MapSubwindows();
    MapWindow();
@@ -104,6 +111,8 @@ void Update()
    CpuInfo_t cpuInfo;
    Float_t act_load = 0.0;
    Int_t memUsage = 0;
+   prev_load = act_load;
+   old_memUsage = memUsage;
 
    // Get CPU informations
    gSystem->GetCpuInfo(&cpuInfo, 100);
