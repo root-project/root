@@ -1,4 +1,5 @@
 #include "TFile.h"
+#include "TClonesArray.h"
 #include "clonesA_Event.h"
 
 ClassImp(TUsrHit)

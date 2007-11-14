@@ -100,7 +100,7 @@ void findPeak2() {
 }
 void peaks2(Int_t maxpeaks=50) {
    s = new TSpectrum2(2*maxpeaks);
-   while (1) {
+   for (int i=0; i<10; ++i) {
       npeaks = (Int_t)gRandom->Uniform(5,maxpeaks);
       findPeak2();
    }
