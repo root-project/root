@@ -235,6 +235,7 @@ Bool_t TTreeCache::FillBuffer()
 {
    // Fill the cache buffer with the branches in the cache.
 
+
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
@@ -456,10 +457,14 @@ void TTreeCache::StopLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCache::UpdateBranches(TTree *tree)
+void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
 {
    //update pointer to current Tree and recompute pointers to the branches in the cache
 
+   if (owner) {
+      fOwner = tree;
+      SetFile(tree->GetCurrentFile());
+   }
    fTree = tree;
 
    fEntryMin  = 0;
@@ -467,6 +472,7 @@ void TTreeCache::UpdateBranches(TTree *tree)
    fEntryNext = fEntryMin + fgLearnEntries;
    fZipBytes  = 0;
    fNbranches = 0;
+
    TIter next(fBrNames);
    TObjString *os;
    while ((os = (TObjString*)next())) {

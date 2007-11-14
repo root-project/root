@@ -72,7 +72,7 @@ public:
    static void         SetLearnEntries(Int_t n = 100);
    void                StartLearningPhase();
    void                StopLearningPhase();
-   void                UpdateBranches(TTree *tree);
+   void                UpdateBranches(TTree *tree, Bool_t owner = kFALSE);
 
    ClassDef(TTreeCache,2)  //Specialization of TFileCacheRead for a TTree
 };
