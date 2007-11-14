@@ -3372,19 +3372,41 @@ void TWinNTSystem::Abort(int)
 //---- Standard output redirection ---------------------------------------------
 
 //______________________________________________________________________________
-Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode)
+Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
+                                   RedirectHandle_t *h)
 {
    // Redirect standard output (stdout, stderr) to the specified file.
    // If the file argument is 0 the output is set again to stderr, stdout.
    // The second argument specifies whether the output should be added to the
    // file ("a", default) or the file be truncated before ("w").
+   // This function saves internally the current state into a static structure.
+   // The call can be made reentrant by specifying the opaque structure pointed
+   // by 'h', which is filled with the relevant information. The handle 'h'
+   // obtained on the first call must then be used in any subsequent call,
+   // included ShowOutput, to display the redirected output.
    // Returns 0 on success, -1 in case of error.
 
+   // Instance to be used if the caller does not passes 'h'
+   static RedirectHandle_t loch;
    Int_t rc = 0;
+
+   // Which handle to use ?
+   RedirectHandle_t *xh = (h) ? h : &loch;
 
    if (file) {
       // Make sure mode makes sense; default "a"
       const char *m = (mode[0] == 'a' || mode[0] == 'w') ? mode : "a";
+
+      // Current file size
+      xh->fReadOffSet = 0;
+      if (m[0] == 'a') {
+         // If the file exists, save the current size
+         FileStat_t st;
+         if (!gSystem->GetPathInfo(file, st))
+            xh->fReadOffSet = (st.fSize > 0) ? st.fSize : xh->fReadOffSet;
+      }
+      xh->fFile = file;
+
       // redirect stdout & stderr
       if (freopen(file, m, stdout) == 0) {
          SysError("RedirectOutput", "could not freopen stdout");
@@ -3407,6 +3429,9 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode)
          SysError("RedirectOutput", "could not restore stderr");
          rc = -1;
       }
+      // Reset the static instance, if using that
+      if (xh == &loch)
+         xh->Reset();
    }
    return rc;
 }

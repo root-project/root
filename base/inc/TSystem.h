@@ -206,6 +206,19 @@ struct ProcInfo_t {
                   fMemVirtual(0) { }
 };
 
+struct RedirectHandle_t {
+   TString   fFile;        // File where the output was redirected
+   TString   fStdOutTty;   // tty associated with stdout, if any (e.g. from ttyname(...))
+   TString   fStdErrTty;   // tty associated with stderr, if any (e.g. from ttyname(...))
+   Int_t     fStdOutDup;   // Duplicated descriptor for stdout
+   Int_t     fStdErrDup;   // Duplicated descriptor for stderr
+   Int_t     fReadOffSet;  // Offset where to start reading the file (used by ShowOutput(...))
+   RedirectHandle_t(const char *n = 0) : fFile(n), fStdOutDup(-1),
+                                         fStdErrDup(-1), fReadOffSet(-1) { }
+   void Reset() { fFile = ""; fStdOutTty = ""; fStdErrTty = "";
+                  fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
+};
+
 typedef void* Func_t;
 
 R__EXTERN const char  *gRootDir;
@@ -422,7 +435,8 @@ public:
    virtual void            Closelog();
 
    //---- Standard Output redirection
-   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a");
+   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0);
+   virtual void            ShowOutput(RedirectHandle_t *h);
 
    //---- Dynamic Loading
    virtual const char     *GetDynamicPath();

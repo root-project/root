@@ -1417,16 +1417,82 @@ void TSystem::Closelog()
 //---- Standard output redirection ---------------------------------------------
 
 //______________________________________________________________________________
-Int_t TSystem::RedirectOutput(const char *, const char *)
+Int_t TSystem::RedirectOutput(const char *, const char *, RedirectHandle_t *)
 {
    // Redirect standard output (stdout, stderr) to the specified file.
    // If the file argument is 0 the output is set again to stderr, stdout.
    // The second argument specifies whether the output should be added to the
    // file ("a", default) or the file be truncated before ("w").
+   // The implementations of this function save internally the current state into
+   // a static structure.
+   // The call can be made reentrant by specifying the opaque structure pointed
+   // by 'h', which is filled with the relevant information. The handle 'h'
+   // obtained on the first call must then be used in any subsequent call,
+   // included ShowOutput, to display the redirected output.
    // Returns 0 on success, -1 in case of error.
 
    AbstractMethod("RedirectOutput");
    return -1;
+}
+
+//______________________________________________________________________________
+void TSystem::ShowOutput(RedirectHandle_t *h)
+{
+   // Display the content associated with the redirection described by the
+   // opaque handle 'h'.
+
+   // Check input ...
+   if (!h) {
+      Error("ShowOutput", "handle not specified");
+      return;
+   }
+
+   // ... and file access
+   if (gSystem->AccessPathName(h->fFile, kReadPermission)) {
+      Error("ShowOutput", "file '%s' cannot be read", h->fFile.Data());
+      return;
+   }
+
+   // Open the file
+   FILE *f = 0;
+   if (!(f = fopen(h->fFile.Data(), "r"))) {
+      Error("ShowOutput", "file '%s' cannot be open", h->fFile.Data());
+      return;
+   }
+
+   // Determine the number of bytes to be read from the file.
+   off_t ltot = lseek(fileno(f), (off_t) 0, SEEK_END);
+   Int_t begin = (h->fReadOffSet > 0 && h->fReadOffSet < ltot) ? h->fReadOffSet : 0;
+   lseek(fileno(f), (off_t) begin, SEEK_SET);
+   Int_t left = ltot - begin;
+
+   // Now readout from file
+   const Int_t kMAXBUF = 16384;
+   char buf[kMAXBUF];
+   Int_t wanted = (left > kMAXBUF-1) ? kMAXBUF-1 : left;
+   Int_t len;
+   do {
+      while ((len = read(fileno(f), buf, wanted)) < 0 &&
+               TSystem::GetErrno() == EINTR)
+         TSystem::ResetErrno();
+
+      if (len < 0) {
+         SysError("ShowOutput", "error reading log file");
+         break;
+      }
+
+      // Null-terminate
+      buf[len] = 0;
+      fprintf(stderr,"%s", buf);
+
+      // Update counters
+      left -= len;
+      wanted = (left > kMAXBUF) ? kMAXBUF : left;
+
+   } while (len > 0 && left > 0);
+
+   // Do not display twice the same thing
+   h->fReadOffSet = ltot;
 }
 
 //---- Dynamic Loading ---------------------------------------------------------

@@ -176,7 +176,8 @@ public:
    void              Closelog();
 
    //---- Standard Output redirection --------------------------
-   Int_t             RedirectOutput(const char *name, const char *mode = "a");
+   Int_t             RedirectOutput(const char *name, const char *mode = "a",
+                                    RedirectHandle_t *h = 0);
 
    //---- Dynamic Loading --------------------------------------
    const char       *GetDynamicPath();

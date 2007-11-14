@@ -126,7 +126,10 @@ private:
    TFile(const TFile &);            //Files cannot be copied
    void operator=(const TFile &);
 
-   static void CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
+   static void   CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
+   static TFile *OpenFromCache(const char *name, Option_t *option = "",
+                               const char *ftitle = "", Int_t compress = 1,
+                               Int_t netopt = 0);
 
 public:
    // TFile status bits

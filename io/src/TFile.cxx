@@ -2353,18 +2353,201 @@ void TFile::WriteStreamerInfo()
 }
 
 //______________________________________________________________________________
-TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
+TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftitle,
+                   Int_t compress, Int_t netopt)
+{
+   // Static member function allowing to open a file for reading through the file
+   // cache. The file will be downloaded to the cache and opened from there.
+   // If the download fails, it will be opened remotely.
+   // The file will be downloaded to the directory specified by SetCacheFileDir().
+
+   TFile *f = 0;
+
+   const char *defaultreadoption = "READ";
+   if (fgCacheFileDir == "") {
+      ::Warning("TFile::OpenFromCache",
+                "you want to read through a cache, but you have no valid cache "
+                "directory set - reading remotely");
+      ::Info("TFile::OpenFromCache", "set cache directory using TFile::SetCacheFileDir()");
+      option = defaultreadoption;
+   } else {
+      TUrl fileurl(name);
+      TUrl tagurl;
+
+      if ((!strcmp(fileurl.GetProtocol(), "file"))) {
+         // it makes no sense to read local files through a file cache
+         if (!fgCacheFileForce)
+            ::Warning("TFile::OpenFromCache",
+                      "you want to read through a cache, but you are reading "
+                      "local files - CACHEREAD disabled");
+         option = defaultreadoption;
+      } else {
+         // this is a remote file and worthwhile to be put into the local cache
+         // now create cachepath to put it
+         TString cachefilepath;
+         TString cachefilepathbasedir;
+         cachefilepath = fgCacheFileDir;
+         cachefilepath += fileurl.GetFile();
+         cachefilepathbasedir = gSystem->DirName(cachefilepath);
+         if ((gSystem->mkdir(cachefilepathbasedir, kTRUE) < 0) &&
+               (gSystem->AccessPathName(cachefilepathbasedir, kFileExists))) {
+            ::Warning("TFile::OpenFromCache","you want to read through a cache, but I "
+                      "cannot create the directory %s - CACHEREAD disabled",
+                      cachefilepathbasedir.Data());
+            option = defaultreadoption;
+         } else {
+            // check if this should be a zip file
+            if (strlen(fileurl.GetAnchor())) {
+               // remove the anchor and change the target name
+               cachefilepath += "__";
+               cachefilepath += fileurl.GetAnchor();
+               fileurl.SetAnchor("");
+            }
+            if (strstr(name,"zip=")) {
+               // filter out this option and change the target cache name
+               TString urloptions = fileurl.GetOptions();
+               TString newoptions;
+               TObjArray *objOptions = urloptions.Tokenize("&");
+               Int_t optioncount = 0;
+               TString zipname;
+               for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+                  TString loption = ((TObjString*)objOptions->At(n))->GetName();
+                  TObjArray *objTags = loption.Tokenize("=");
+                  if (objTags->GetEntries() == 2) {
+                     TString key   = ((TObjString*)objTags->At(0))->GetName();
+                     TString value = ((TObjString*)objTags->At(1))->GetName();
+                     if (key.CompareTo("zip", TString::kIgnoreCase)) {
+                        if (optioncount!=0) {
+                           newoptions += "&";
+                           newoptions += key;
+                           newoptions += "=";
+                           newoptions += value;
+                           optioncount++;
+                        }
+                     } else {
+                        zipname = value;
+                     }
+                  }
+                  delete objTags;
+               }
+               delete objOptions;
+               fileurl.SetOptions(newoptions.Data());
+               cachefilepath += "__";
+               cachefilepath += zipname;
+               fileurl.SetAnchor("");
+            }
+
+            Bool_t need2copy = kFALSE;
+
+            // check if file is in the cache
+            Long_t id;
+            Long64_t size;
+            Long_t flags;
+            Long_t modtime;
+            if (!gSystem->GetPathInfo(cachefilepath, &id, &size, &flags, &modtime)) {
+               // file is in the cache
+               if (!fgCacheFileDisconnected) {
+                  char cacheblock[256];
+                  char remotblock[256];
+                  // check the remote file for it's size and compare some magic bytes
+                  TString cfurl;
+                  cfurl = cachefilepath;
+                  cfurl += "?filetype=raw";
+                  TUrl rurl(name);
+                  TString ropt = rurl.GetOptions();
+                  ropt += "&filetype=raw";
+                  rurl.SetOptions(ropt);
+
+                  TFile *cachefile = TFile::Open(cfurl, "READ");
+                  TFile *remotfile = TFile::Open(rurl.GetUrl(), "READ");
+
+                  cachefile->Seek(0);
+                  remotfile->Seek(0);
+
+                  if (!cachefile) {
+                     need2copy = kTRUE;
+                     ::Error("TFile::OpenFromCache",
+                             "cannot open the cache file to check cache consistency");
+                  }
+
+                  if (!remotfile) {
+                     ::Error("TFile::OpenFromCache",
+                             "cannot open the remote file to check cache consistency");
+                     return 0;
+                  }
+
+                  if ((!cachefile->ReadBuffer(cacheblock,256)) &&
+                      (!remotfile->ReadBuffer(remotblock,256))) {
+                     if (memcmp(cacheblock, remotblock, 256)) {
+                        ::Warning("TFile::OpenFromCache", "the header of the cache file "
+                                  "differs from the remote file - forcing an update");
+                        need2copy = kTRUE;
+                     }
+                  } else {
+                     ::Warning("TFile::OpenFromCache", "the header of the cache and/or "
+                               "remote file are not readable - forcing an update");
+                     need2copy = kTRUE;
+                  }
+
+                  delete remotfile;
+                  delete cachefile;
+               }
+            } else {
+               need2copy = kTRUE;
+            }
+
+            // try to fetch the file (disable now the forced caching)
+            Bool_t forcedcache = fgCacheFileForce;
+            fgCacheFileForce = kFALSE;
+            if (need2copy && !TFile::Cp(name, cachefilepath)) {
+               ::Warning("TFile::OpenFromCache", "you want to read through a cache, but I "
+                         "cannot make a cache copy of %s - CACHEREAD disabled",
+                         cachefilepathbasedir.Data());
+               option = defaultreadoption;
+               fgCacheFileForce = forcedcache;
+               if (fgOpenTimeout != 0)
+                  return 0;
+            } else {
+               fgCacheFileForce = forcedcache;
+               ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]",
+                       name, cachefilepath.Data());
+               // finally we have the file and can open it locally
+               fileurl.SetProtocol("file");
+               fileurl.SetFile(cachefilepath);
+
+               tagurl = fileurl;
+               TString tagfile;
+               tagfile = cachefilepath;
+               tagfile += ".ROOT.cachefile";
+               tagurl.SetFile(tagfile);
+               // we symlink this file as a ROOT cached file
+               gSystem->Symlink(cachefilepath, tagfile);
+               return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
+            }
+         }
+      }
+   }
+
+   // Failed
+   return f;
+}
+
+//______________________________________________________________________________
+TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    // Static member function allowing the creation/opening of either a
    // TFile, TNetFile, TWebFile or any TFile derived class for which an
    // plugin library handler has been registered with the plugin manager
    // (for the plugin manager see the TPluginManager class). The returned
-   // type of TFile depends on the file name. If the file starts with
-   // "root:", "roots:" or "rootk:" a TNetFile object will be returned,
-   // with "http:" a TWebFile, with "file:" a local TFile, etc. (see the
-   // list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc for regular
-   // expressions that will be checked) and as last a local file will be tried.
+   // type of TFile depends on the file name specified by 'url'.
+   // If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
+   // sequentially in the specified order until a successful open.
+   // If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
+   // will be returned, with "http:" a TWebFile, with "file:" a local TFile,
+   // etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
+   // for regular expressions that will be checked) and as last a local file will
+   // be tried.
    // Before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
@@ -2382,235 +2565,127 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 
    TPluginHandler *h;
    TFile *f = 0;
+   EFileType type = kFile;
 
    if (!option) option = "";
 
-   // check if we read through a file cache
-   const char *defaultreadoption = "READ";
-   if (!strcasecmp(option, "CACHEREAD") ||
-       ((!strcasecmp(option,"READ") || !strlen(option)) && fgCacheFileForce)) {
-      if (fgCacheFileDir == "") {
-         ::Warning("TFile::Open", "you want to read through a cache, but you have no valid cache directory set - reading remotely");
-         ::Info("TFile::Open", "set cache directory using TFile::SetCacheFileDir()");
-         option = defaultreadoption;
-      } else {
-         TUrl fileurl(name);
-         TUrl tagurl;
+   // Check input
+   if (!url || strlen(url) <= 0) {
+      ::Error("TFile::Open", "no url specified");
+      return f;
+   }
 
-         if ((!strcmp(fileurl.GetProtocol(), "file"))) {
-            // it makes no sense to read local files through a file cache
-            if (!fgCacheFileForce)
-               ::Warning("TFile::Open", "you want to read through a cache, but you are reading local files - CACHEREAD disabled");
-            option = defaultreadoption;
-         } else {
-            // this is a remote file and worthwhile to be put into the local cache
-            // now create cachepath to put it
-            TString cachefilepath;
-            TString cachefilepathbasedir;
-            cachefilepath = fgCacheFileDir;
-            cachefilepath += fileurl.GetFile();
-            cachefilepathbasedir = gSystem->DirName(cachefilepath);
-            if ((gSystem->mkdir(cachefilepathbasedir, kTRUE) < 0) &&
-                (gSystem->AccessPathName(cachefilepathbasedir, kFileExists))) {
-               ::Warning("TFile::Open","you want to read through a cache, but I cannot create the directory %s - CACHEREAD disabled", cachefilepathbasedir.Data());
-               option = defaultreadoption;
-            } else {
-               // check if this should be a zip file
-               if (strlen(fileurl.GetAnchor())) {
-                  // remove the anchor and change the target name
-                  cachefilepath += "__";
-                  cachefilepath += fileurl.GetAnchor();
-                  fileurl.SetAnchor("");
-               }
-               if (strstr(name,"zip=")) {
-                  // filter out this option and change the target cache name
-                  TString urloptions = fileurl.GetOptions();
-                  TString newoptions;
-                  TObjArray *objOptions = urloptions.Tokenize("&");
-                  Int_t optioncount = 0;
-                  TString zipname;
-                  for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
-                     TString loption = ((TObjString*)objOptions->At(n))->GetName();
-                     TObjArray *objTags = loption.Tokenize("=");
-                     if (objTags->GetEntries() == 2) {
-                        TString key   = ((TObjString*)objTags->At(0))->GetName();
-                        TString value = ((TObjString*)objTags->At(1))->GetName();
-                        if (key.CompareTo("zip", TString::kIgnoreCase)) {
-                           if (optioncount!=0) {
-                              newoptions += "&";
-                              newoptions += key;
-                              newoptions += "=";
-                              newoptions += value;
-                              optioncount++;
-                           }
-                        } else {
-                           zipname = value;
-                        }
-                     }
-                     delete objTags;
-                  }
-                  delete objOptions;
-                  fileurl.SetOptions(newoptions.Data());
-                  cachefilepath += "__";
-                  cachefilepath += zipname;
-                  fileurl.SetAnchor("");
-               }
+   // Many URLs? Redirect output and print errors in case of global failure
+   TString namelist(url);
+   Ssiz_t ip = namelist.Index("|");
+   Bool_t rediroutput = (ip != kNPOS &&
+                         ip != namelist.Length()-1 && gDebug <= 0) ? kTRUE : kFALSE;
+   RedirectHandle_t rh;
+   if (rediroutput) {
+      TString outf = ".TFileOpen_";
+      FILE *fout = gSystem->TempFileName(outf);
+      if (fout) {
+         fclose(fout);
+         gSystem->RedirectOutput(outf, "w", &rh);
+      }
+   }
 
-               Bool_t need2copy = kFALSE;
+   // Try sequentially all names in 'names'
+   TString name;
+   Ssiz_t from = 0;
+   while (namelist.Tokenize(name, from, "|") && !f) {
 
-               // check if file is in the cache
-               Long_t id;
-               Long64_t size;
-               Long_t flags;
-               Long_t modtime;
-               if (!gSystem->GetPathInfo(cachefilepath, &id, &size, &flags, &modtime)) {
-                  // file is in the cache
-                  if (!fgCacheFileDisconnected) {
-                     char cacheblock[256];
-                     char remotblock[256];
-                     // check the remote file for it's size and compare some magic bytes
-                     TString cfurl;
-                     cfurl = cachefilepath;
-                     cfurl += "?filetype=raw";
-                     TUrl rurl(name);
-                     TString ropt = rurl.GetOptions();
-                     ropt += "&filetype=raw";
-                     rurl.SetOptions(ropt);
+      // check if we read through a file cache
+      if (!strcasecmp(option, "CACHEREAD") ||
+         ((!strcasecmp(option,"READ") || !strlen(option)) && fgCacheFileForce)) {
+         // Try opening the file from the cache
+         if ((f = TFile::OpenFromCache(name, option, ftitle, compress, netopt)))
+            return f;
+      }
 
-                     TFile *cachefile = TFile::Open(cfurl, "READ");
-                     TFile *remotfile = TFile::Open(rurl.GetUrl(), "READ");
+      IncrementFileCounter();
 
-                     cachefile->Seek(0);
-                     remotfile->Seek(0);
+      // change names from e.g. /castor/cern.ch/alice/file.root to
+      // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+      TUrl urlname(name, kTRUE);
+      name = urlname.GetUrl();
+      // Check first if a pending async open request matches this one
+      if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
+         TIter nxr(fgAsyncOpenRequests);
+         TFileOpenHandle *fh = 0;
+         while ((fh = (TFileOpenHandle *)nxr()))
+            if (fh->Matches(name))
+               return TFile::Open(fh);
+      }
 
-                     if (!cachefile) {
-                        need2copy = kTRUE;
-                        ::Error("TFile::Open", "cannot open the cache file to check cache consistency");
-                     }
+      // Resolve the file type; this also adjusts names
+      type = GetType(name, option);
 
-                     if (!remotfile) {
-                        ::Error("TFile::Open", "cannot open the remote file to check cache consistency");
-                        return 0;
-                     }
+      if (type == kLocal) {
 
-                     if ((!cachefile->ReadBuffer(cacheblock,256)) && (!remotfile->ReadBuffer(remotblock,256))) {
-                        if (memcmp(cacheblock, remotblock, 256)) {
-                           ::Warning("TFile::Open", "the header of the cache file differs from the remote file - forcing an update");
-                           need2copy = kTRUE;
-                        }
-                     } else {
-                        ::Warning("TFile::Open", "the header of the cache and/or remote file are not readable - forcing an update");
-                        need2copy = kTRUE;
-                     }
+         // Local files
+         urlname.SetHost("");
+         urlname.SetProtocol("file");
+         f = new TFile(urlname.GetUrl(), option, ftitle, compress);
 
-                     delete remotfile;
-                     delete cachefile;
-                  }
-               } else {
-                  need2copy = kTRUE;
-               }
+      } else if (type == kNet) {
 
-               // try to fetch the file (disable now the forced caching)
-               Bool_t forcedcache = fgCacheFileForce;
-               fgCacheFileForce = kFALSE;
-               if (need2copy && !TFile::Cp(name, cachefilepath)) {
-                  ::Warning("TFile::Open", "you want to read through a cache, but I cannot make a cache copy of %s - CACHEREAD disabled", cachefilepathbasedir.Data());
-                  option = defaultreadoption;
-                  fgCacheFileForce = forcedcache;
-                  if (fgOpenTimeout != 0)
-                     return 0;
-               } else {
-                  fgCacheFileForce = forcedcache;
-                  ::Info("TFile::Open", "using local cache copy of %s [%s]", name, cachefilepath.Data());
-                  // finally we have the file and can open it locally
-                  fileurl.SetProtocol("file");
-                  fileurl.SetFile(cachefilepath);
-
-                  tagurl = fileurl;
-                  TString tagfile;
-                  tagfile = cachefilepath;
-                  tagfile += ".ROOT.cachefile";
-                  tagurl.SetFile(tagfile);
-                  // we symlink this file as a ROOT cached file
-                  gSystem->Symlink(cachefilepath, tagfile);
-                  return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
-               }
-            }
+         // Network files
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+            if (h->LoadPlugin() == -1)
+               return 0;
+            f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
          }
+
+      } else if (type == kWeb) {
+
+         // Web files
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+            if (h->LoadPlugin() == -1)
+               return 0;
+            f = (TFile*) h->ExecPlugin(1, name.Data());
+         }
+
+      } else if (type == kFile) {
+
+         // 'file:' protocol
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+            h->LoadPlugin() == 0) {
+            name.ReplaceAll("file:", "");
+            f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+         } else
+            f = new TFile(name.Data(), option, ftitle, compress);
+
+      } else {
+
+         // no recognized specification: try the plugin manager
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
+            if (h->LoadPlugin() == -1)
+               return 0;
+            TClass *cl = TClass::GetClass(h->GetClass());
+            if (cl && cl->InheritsFrom("TNetFile"))
+               f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
+            else
+               f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+         } else
+            // just try to open it locally
+            f = new TFile(name.Data(), option, ftitle, compress);
+      }
+
+      if (f && f->IsZombie()) {
+         delete f;
+         f = 0;
       }
    }
 
-   IncrementFileCounter();
-
-   // change names from e.g. /castor/cern.ch/alice/file.root to
-   // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
-   TUrl urlname(name, kTRUE);
-   name = urlname.GetUrl();
-   // Check first if a pending async open request matches this one
-   if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
-      TIter nxr(fgAsyncOpenRequests);
-      TFileOpenHandle *fh = 0;
-      while ((fh = (TFileOpenHandle *)nxr()))
-         if (fh->Matches(name))
-            return TFile::Open(fh);
-   }
-
-   // Resolve the file type; this also adjusts names
-   EFileType type = GetType(name, option);
-
-   if (type == kLocal) {
-
-      // Local files
-      urlname.SetHost("");
-      urlname.SetProtocol("file");
-      f = new TFile(urlname.GetUrl(), option, ftitle, compress);
-
-   } else if (type == kNet) {
-
-      // Network files
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
-      }
-
-   } else if (type == kWeb) {
-
-      // Web files
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         f = (TFile*) h->ExecPlugin(1, name);
-      }
-
-   } else if (type == kFile) {
-
-      // 'file:' protocol
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-          h->LoadPlugin() == 0)
-         f = (TFile*) h->ExecPlugin(4, name+5, option, ftitle, compress);
-      else
-         f = new TFile(name, option, ftitle, compress);
-
-   } else {
-
-      // no recognized specification: try the plugin manager
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         TClass *cl = TClass::GetClass(h->GetClass());
-         if (cl && cl->InheritsFrom("TNetFile"))
-            f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
-         else
-            f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
-      } else
-         // just try to open it locally
-         f = new TFile(name, option, ftitle, compress);
-   }
-
-   if (f && f->IsZombie()) {
-      delete f;
-      f = 0;
+   if (rediroutput) {
+      // Restore output to stdout
+      gSystem->RedirectOutput(0, "", &rh);
+      // If we failed print error messages
+      if (!f)
+         gSystem->ShowOutput(&rh);
+      // Remove the file
+      gSystem->Unlink(rh.fFile);
    }
 
    // if the file is writable, non local, and not opened in raw mode
@@ -2620,14 +2695,14 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       new TFileCacheWrite(f, 1);
    }
 
-   if (gMonitoringWriter && (!f->IsWritable()))
+   if (gMonitoringWriter && f && (!f->IsWritable()))
       gMonitoringWriter->SendFileReadProgress(f,true);
 
    return f;
 }
 
 //______________________________________________________________________________
-TFileOpenHandle *TFile::AsyncOpen(const char *name, Option_t *option,
+TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
                                   const char *ftitle, Int_t compress,
                                   Int_t netopt)
 {
@@ -2657,27 +2732,65 @@ TFileOpenHandle *TFile::AsyncOpen(const char *name, Option_t *option,
    TFile *f = 0;
    Bool_t notfound = kTRUE;
 
-   // change names from e.g. /castor/cern.ch/alice/file.root to
-   // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
-   TUrl urlname(name, kTRUE);
-   name = urlname.GetUrl();
+   // Check input
+   if (!url || strlen(url) <= 0) {
+      ::Error("TFile::AsyncOpen", "no url specified");
+      return fh;
+   }
 
-   // Resolve the file type; this also adjusts names
-   EFileType type = GetType(name, option);
-
-   // Here we send the asynchronous request if the functionality is implemented
-   if (type == kNet) {
-      // Network files
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-           !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0) {
-         f = (TFile*) h->ExecPlugin(6, name, option, ftitle, compress, netopt, kTRUE);
-         notfound = kFALSE;
+   // Many URLs? Redirect output and print errors in case of global failure
+   TString namelist(url);
+   Ssiz_t ip = namelist.Index("|");
+   Bool_t rediroutput = (ip != kNPOS &&
+                         ip != namelist.Length()-1 && gDebug <= 0) ? kTRUE : kFALSE;
+   RedirectHandle_t rh;
+   if (rediroutput) {
+      TString outf = ".TFileAsyncOpen_";
+      FILE *fout = gSystem->TempFileName(outf);
+      if (fout) {
+         fclose(fout);
+         gSystem->RedirectOutput(outf, "w", &rh);
       }
    }
-   if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-        !strcmp(h->GetClass(),"TAlienFile") && h->LoadPlugin() == 0) {
-      f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, kTRUE);
-      notfound = kFALSE;
+
+   // Try sequentially all names in 'names'
+   TString name;
+   Ssiz_t from = 0;
+   while (namelist.Tokenize(name, from, "|") && !f) {
+
+      // change names from e.g. /castor/cern.ch/alice/file.root to
+      // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+      TUrl urlname(name, kTRUE);
+      name = urlname.GetUrl();
+
+      // Resolve the file type; this also adjusts names
+      EFileType type = GetType(name, option);
+
+      // Here we send the asynchronous request if the functionality is implemented
+      if (type == kNet) {
+         // Network files
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+            !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0) {
+            f = (TFile*) h->ExecPlugin(6, name.Data(), option, ftitle, compress, netopt, kTRUE);
+            notfound = kFALSE;
+         }
+      }
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+         !strcmp(h->GetClass(),"TAlienFile") && h->LoadPlugin() == 0) {
+         f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, kTRUE);
+         notfound = kFALSE;
+      }
+
+   }
+
+   if (rediroutput) {
+      // Restore output to stdout
+      gSystem->RedirectOutput(0, "", &rh);
+      // If we failed print error messages
+      if (!notfound && !f)
+         gSystem->ShowOutput(&rh);
+      // Remove the file
+      gSystem->Unlink(rh.fFile);
    }
 
    // Make sure that no error occured

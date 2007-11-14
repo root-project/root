@@ -75,6 +75,7 @@
 #pragma link C++ struct CpuInfo_t;
 #pragma link C++ struct MemInfo_t;
 #pragma link C++ struct ProcInfo_t;
+#pragma link C++ struct RedirectHandle_t;
 
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;

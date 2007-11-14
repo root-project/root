@@ -2308,39 +2308,58 @@ void TUnixSystem::Closelog()
 //---- Standard output redirection ---------------------------------------------
 
 //______________________________________________________________________________
-Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
+Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
+                                  RedirectHandle_t *h)
 {
    // Redirect standard output (stdout, stderr) to the specified file.
    // If the file argument is 0 the output is set again to stderr, stdout.
    // The second argument specifies whether the output should be added to the
    // file ("a", default) or the file be truncated before ("w").
+   // This function saves internally the current state into a static structure.
+   // The call can be made reentrant by specifying the opaque structure pointed
+   // by 'h', which is filled with the relevant information. The handle 'h'
+   // obtained on the first call must then be used in any subsequent call,
+   // included ShowOutput, to display the redirected output.
    // Returns 0 on success, -1 in case of error.
 
-   static char stdoutsav[128] = {0};
-   static char stderrsav[128] = {0};
-   static Int_t stdoutdup = -1;
-   static Int_t stderrdup = -1;
+   // Instance to be used if the caller does not passes 'h'
+   static RedirectHandle_t loch;
+
    Int_t rc = 0;
+
+   // Which handle to use ?
+   RedirectHandle_t *xh = (h) ? h : &loch;
 
    if (file) {
       // Save the paths
-      if (!strlen(stdoutsav)) {
+      if (xh->fStdOutTty.IsNull()) {
          const char *tty = ttyname(STDOUT_FILENO);
          if (tty)
-            strcpy(stdoutsav, tty);
+            xh->fStdOutTty = tty;
          else
-            stdoutdup = dup(STDOUT_FILENO);
+            xh->fStdOutDup = dup(STDOUT_FILENO);
       }
-      if (!strlen(stderrsav)) {
+      if (xh->fStdErrTty.IsNull()) {
          const char *tty = ttyname(STDERR_FILENO);
          if (tty)
-            strcpy(stderrsav, tty);
+            xh->fStdErrTty = tty;
          else
-            stderrdup = dup(STDERR_FILENO);
+            xh->fStdErrDup = dup(STDERR_FILENO);
       }
 
       // Make sure mode makes sense; default "a"
       const char *m = (mode[0] == 'a' || mode[0] == 'w') ? mode : "a";
+
+      // Current file size
+      xh->fReadOffSet = 0;
+      if (m[0] == 'a') {
+         // If the file exists, save the current size
+         FileStat_t st;
+         if (!gSystem->GetPathInfo(file, st))
+            xh->fReadOffSet = (st.fSize > 0) ? st.fSize : xh->fReadOffSet;
+      }
+      xh->fFile = file;
+
       // Redirect stdout & stderr
       if (freopen(file, m, stdout) == 0) {
          SysError("RedirectOutput", "could not freopen stdout");
@@ -2348,35 +2367,40 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
       }
       if (freopen(file, m, stderr) == 0) {
          SysError("RedirectOutput", "could not freopen stderr");
-         freopen(stderrsav, "a", stderr);
+         freopen(xh->fStdErrTty.Data(), "a", stderr);
          return -1;
       }
    } else {
       // Restore stdout & stderr
       fflush(stdout);
-      if (stdoutsav[0]) {
-         if (freopen(stdoutsav, "a", stdout) == 0) {
+      if (!(xh->fStdOutTty.IsNull())) {
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0) {
             SysError("RedirectOutput", "could not restore stdout");
             rc = -1;
          }
+         xh->fStdOutTty = "";
       } else {
-         if (dup2(stdoutdup, STDOUT_FILENO) < 0) {
+         if (dup2(xh->fStdOutDup, STDOUT_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stdout (back to original redirected file)");
             rc = -1;
          }
       }
       fflush(stderr);
-      if (stderrsav[0]) {
-         if (freopen(stderrsav, "a", stderr) == 0) {
+      if (!(xh->fStdErrTty.IsNull())) {
+         if (freopen(xh->fStdErrTty.Data(), "a", stderr) == 0) {
             SysError("RedirectOutput", "could not restore stderr");
             rc = -1;
          }
+         xh->fStdErrTty = "";
       } else {
-         if (dup2(stderrdup, STDERR_FILENO) < 0) {
+         if (dup2(xh->fStdErrDup, STDERR_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stderr (back to original redirected file)");
             rc = -1;
          }
       }
+      // Reset the static instance, if using that
+      if (xh == &loch)
+         xh->Reset();
    }
    return rc;
 }
