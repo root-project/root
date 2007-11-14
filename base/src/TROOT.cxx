@@ -882,6 +882,10 @@ TObject *TROOT::GetFunction(const char *name) const
 {
    // Return pointer to function with name.
 
+   if (name == 0 || name[0] == 0) {
+      return 0;
+   }
+
    TObject *f1 = fFunctions->FindObject(name);
    if (f1) return f1;
 
