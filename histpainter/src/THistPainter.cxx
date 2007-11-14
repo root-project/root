@@ -1772,7 +1772,7 @@ void THistPainter::Paint(Option_t *option)
 
    //          do not draw histogram if error bars required
    if (!Hoption.Error) {
-      if (Hoption.Hist) PaintHist(option);
+      if (Hoption.Hist && !Hoption.Bar) PaintHist(option);
    }
 
    //         test for error bars or option E
