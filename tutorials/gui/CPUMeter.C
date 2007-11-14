@@ -103,7 +103,7 @@ void Update()
    MemInfo_t memInfo;
    CpuInfo_t cpuInfo;
    Float_t act_load = 0.0;
-   Int_t i, memUsage = 0;
+   Int_t memUsage = 0;
 
    // Get CPU informations
    gSystem->GetCpuInfo(&cpuInfo, 100);
