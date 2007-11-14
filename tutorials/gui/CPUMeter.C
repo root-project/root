@@ -22,6 +22,8 @@ public:
    TGSpeedo         *GetSpeedo() const { return fSpeedo; }
    Int_t             GetActInfo() const { return fActInfo; }
    void              ToggleInfos();
+
+   ClassDef(TGShapedMain, 0)
 };
 
 
