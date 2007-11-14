@@ -269,7 +269,7 @@ $(STRESSG):     $(STRESSGO)
 
 $(STRESSSP):    $(STRESSSPO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libSpectrum.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libSpectrum.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lSpectrum $(OutPutOpt)$@
@@ -278,7 +278,7 @@ endif
 
 $(STRESSVEC):   $(STRESSVECO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libMathCore.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libMathCore.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
@@ -292,7 +292,7 @@ $(TESTBITS):    $(TESTBITSO)
 
 $(THREADS):     $(THREADSO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libThread.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libThread.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 else
@@ -306,7 +306,7 @@ endif
 
 $(QPRANDOM):    $(QPRANDOMO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libQuadp.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
@@ -330,7 +330,7 @@ $(STRESS):      $(STRESSO) $(EVENT)
 
 $(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libGeom.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
@@ -339,7 +339,7 @@ endif
 
 $(STRESSSHAPES):  $(STRESSSHAPESO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libGeom.lib' $(OutPutOpt)$@
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
