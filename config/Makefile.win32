@@ -32,7 +32,7 @@ else
   BLDF77FLAGS = -MD
 endif
 
-ifeq ($(VC_MAJOR),14)
+ifneq (,$(findstring $(VC_MAJOR),14 15))
   BLDCXXFLAGS+= -EHa -W3 -wd4244
   BLDCFLAGS  += -EHa -W3
   DEBUGFLAGS  = -Zi

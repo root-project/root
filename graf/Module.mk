@@ -86,5 +86,7 @@ graf/src/TTF.o graf/src/TText.o graf/src/TLatex.o: \
                 CXXFLAGS += $(FREETYPEINC)
 
 ifeq ($(PLATFORM),win32)
+ifeq (,$(findstring $(VC_MAJOR),14 15))
 graf/src/TLatex.o: OPT = $(NOOPT)
+endif
 endif
