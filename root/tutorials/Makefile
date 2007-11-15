@@ -31,12 +31,28 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   math/normalDist \
   math/tStudent net/authserv net/hcons net/hprod net/hserv2 net/hserv \
   net/LDAPExample net/pserv net/spyserv \
-  proof/getProof \
+  proof/getProof proof/runProof \
   pythia/pythiaExample \
   sql/sqlcanvas \
   sql/sqlcreatedb sql/sqlfilldb sql/sqlselect \
   tree/hsimpleProxy tree/tree0 tree/tree2a \
   tree/copytree2 tree/copytree3 tree/copytree
+
+TUTORIALSTESTS_NEEDS_MIUNIT2 := fit/fit2dHist fit/fit2dHist \
+fit/fitCircle fit/minuit2FitBench2D fit/minuit2FitBench2D \
+fit/minuit2FitBench fit/minuit2FitBench fit/minuit2GausFit fit/minuit2GausFit
+
+ifeq (,$(wildcard $(ROOTSYS)/lib/libMinuit2.*))
+TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NEEDS_MIUNIT2)
+endif
+
+ifeq (,$(wildcard $(ROOTSYS)/lib/libRooFit.*))
+TUTORIALSTESTS_VETO += fit/RoofitDemo
+endif
+
+ifeq (,$(wildcard $(ROOTSYS)/lib/libUnuran.*))
+TUTORIALSTESTS_VETO += math/testrandom unuran/unuranDemo unuran/unuranFoamTest
+endif
 
 # I believe these fail due to CINT bugs:
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
