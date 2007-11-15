@@ -1,0 +1,1 @@
+// The code for compile.C is in rootalias.C

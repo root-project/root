@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) *.rootmap *.success
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -109,3 +109,29 @@ ClonesArrayEvo.log: Event_3_cxx.$(DllSuf)
 
 ClonesArrayEvo: ClonesArrayEvo.log
 	$(TestDiff)
+
+FILES = int.root float16.root double32.root regular.root char.root  \
+       short.root long.root longlong.root uchar.root ushort.root \
+       uint.root ulong.root ulonglong.root float.root double.root \
+       double32enough.root double32tooshort.root double32mantis.root \
+       float16enough.root float16tooshort.root float16mantis.root
+
+files: $(FILES)
+
+logs: $(patsubst %.root,check%.log,$(FILES))
+
+NumericalTypeEvolution: $(patsubst %.root,check%.success,$(FILES))
+
+.PRECIOUS: lib%.$(DllSuf) %.root
+
+lib%.$(DllSuf): rootalias.C float16.cxx float16.h
+	$(CMDECHO) root.exe -b -l -q 'compile.C("$*")' > $*.log 2>&1
+	
+%.root: lib%.$(DllSuf) rootalias.C
+	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
+
+check%.log: %.root files
+	$(CMDECHO) root.exe -b -l -q 'read.C("$*")'  2>&1 | grep -v Processing  >$@ 
+	
+check%.success: check%.log
+	$(CMDECHO) diff check.ref $< && touch $@
