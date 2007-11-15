@@ -36,12 +36,9 @@ valgrind: scripts/analyze_valgrind
 # doing gmake TIME=true times the test output
 
 ifneq ($(TIME),)
-ifeq ($(TIMERESOLUTION),)
-TIMERESOLUTION:=1
-endif
 TESTTIMINGFILE := roottesttiming.out
 TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
-TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  echo $$((`cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' -e 's,^0\.0*,,' -e 's,\.,,g'`/$(TIMERESOLUTION)*$(TIMERESOLUTION)))> $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
+TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
 TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && rm -f $(TESTTIMINGFILE); fi
 endif
 
