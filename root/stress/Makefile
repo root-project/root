@@ -38,7 +38,7 @@ define RootsysTestDiff
 	| grep -v 'does not exist in' \
 	| grep -v 'or has wrong file extension' \
 	| grep -v 'MB/s' \
-	| sed -r 's,([[:space:]]?[.[:digit:]]+e[+-])0([[:digit:]]{2}), \1\2,g' \
+	| sed 's,\([[:space:]]\?[.[:digit:]]\+e[+-]\)0\([[:digit:]]\{2\}\), \1\2,g' \
 	> $<.nomark || true
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
 	   diff -b $@.ref$(ROOTBITS) $<.nomark ; \
