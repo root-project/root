@@ -1194,6 +1194,8 @@ void TGeoBatemanSol::FindSolution(const TObjArray *array)
    }
    fNcoeff = order;
    Normalize(fFactor);
+   delete [] lambda;
+   delete [] br;
 }
 
 //______________________________________________________________________________
