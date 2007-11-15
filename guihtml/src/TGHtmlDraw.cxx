@@ -158,7 +158,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
 
    static struct {
       int value;
-      char *name;
+      const char *name;
    } values[] = {
       { 1000, "m"  },
       {  999, "im" },

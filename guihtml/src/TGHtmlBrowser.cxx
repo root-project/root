@@ -203,8 +203,8 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fStatusBar->SetParts(partsusBar,2);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX));
 
-   fHtml->Connect("MouseOver(char *)", "TGHtmlBrowser", this, "MouseOver(char *)");
-   fHtml->Connect("MouseDown(char *)", "TGHtmlBrowser", this, "MouseDown(char *)");
+   fHtml->Connect("MouseOver(const char *)", "TGHtmlBrowser", this, "MouseOver(const char *)");
+   fHtml->Connect("MouseDown(const char *)", "TGHtmlBrowser", this, "MouseDown(const char *)");
 
    Selected(filename);
 
@@ -401,7 +401,7 @@ void TGHtmlBrowser::Stop()
 }
 
 //______________________________________________________________________________
-void TGHtmlBrowser::MouseOver(char *url)
+void TGHtmlBrowser::MouseOver(const char *url)
 {
    // Handle "MouseOver" TGHtml signal.
 
@@ -409,7 +409,7 @@ void TGHtmlBrowser::MouseOver(char *url)
 }
 
 //______________________________________________________________________________
-void TGHtmlBrowser::MouseDown(char *url)
+void TGHtmlBrowser::MouseDown(const char *url)
 {
    // Handle "MouseDown" TGHtml signal.
 

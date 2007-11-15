@@ -224,7 +224,7 @@ void TGHtml::UpdateBackgroundStart()
 void TGHtml::FreeColor(ColorStruct_t *color)
 {
    //
-  
+
    gVirtualX->FreeColor(gClient->GetDefaultColormap(), color->fPixel);
    delete color;
 }
@@ -321,12 +321,12 @@ int TGHtml::ParseText(char *text, const char *index)
       }
    } else if (pFirst) {
       paraAlignment = ALIGN_None;
-      rowAlignment = ALIGN_None; 
+      rowAlignment = ALIGN_None;
       anchorFlags = 0;
       inDt = 0;
       anchorStart = 0;
-      formStart = 0;  
-      innerList = 0;  
+      formStart = 0;
+      innerList = 0;
       nInput = 0;
       AddStyle(pFirst);
    }
@@ -384,7 +384,7 @@ void TGHtml::UnderlineLinks(int onoff)
                anchorStart = 0;
                anchorFlags = 0;
             }
-            char *z = p->MarkupArg("href", 0);
+            const char *z = p->MarkupArg("href", 0);
             if (z) {
                style.color = GetLinkColor(z);
                if (underlineLinks) style.flags |= STY_Underline;
@@ -423,7 +423,7 @@ int TGHtml::GotoAnchor(const char *name)
 {
    //
 
-   char *z;
+   const char *z;
    TGHtmlElement *p;
 
    for (p = pFirst; p; p = p->pNext) {
@@ -512,7 +512,7 @@ void TGHtml::Redraw()
    int clipwinH, clipwinW;  // Width and height of the clipping window
    TGHtmlBlock *pBlock;      // For looping over blocks to be drawn
    int redoSelection = 0;   // kTRUE to recompute the selection
-  
+
    // Don't do anything if we are in the middle of a parse.
 
    if (inParse) {
@@ -549,7 +549,7 @@ void TGHtml::Redraw()
    // a complete RELAYOUT.  Someday, we need to fix EXTEND_LAYOUT so
    // that it works right...
 
-   if ((flags & (RELAYOUT | EXTEND_LAYOUT)) != 0 
+   if ((flags & (RELAYOUT | EXTEND_LAYOUT)) != 0
       && (flags & STYLER_RUNNING) == 0) {
       nextPlaced = 0;
       //nInput = 0;
@@ -667,7 +667,7 @@ void TGHtml::Redraw()
       gVirtualX->FillRectangle(pixmap, fWhiteGC.GetGC(), 0, 0, w, h);
       UpdateBackgroundStart();  // back to original
 #endif
-                       
+
       // Render all visible HTML onto the pixmap
       for (pBlock = firstBlock; pBlock; pBlock = pBlock->bNext) {
          if (pBlock->top <= y+h && pBlock->bottom >= y-10 &&
@@ -675,7 +675,7 @@ void TGHtml::Redraw()
             BlockDraw(pBlock, pixmap, x, y, w, h, pixmap);
          }
       }
-     
+
       // Finally, copy the pixmap onto the window and delete the pixmap
       gVirtualX->CopyArea(pixmap, fCanvas->GetId(),
                           gcBg, 0, 0, w, h, dirtyLeft, dirtyTop);
@@ -701,7 +701,7 @@ void TGHtml::Redraw()
             if (pElem->redrawNeeded == 0) continue;
             imageTop = pElem->y - pElem->ascent;
             if (imageTop > bottom || imageTop + pElem->h < top
-               || pElem->x > right || pElem->x + pElem->w < left) continue; 
+               || pElem->x > right || pElem->x + pElem->w < left) continue;
 
             DrawImage(pElem, fCanvas->GetId(), left, top, right, bottom);
          }
@@ -731,7 +731,7 @@ void TGHtml::ScheduleRedraw()
 }
 
 //______________________________________________________________________________
-Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle) 
+Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
 {
    //
 
@@ -746,7 +746,7 @@ Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
 void TGHtml::RedrawArea(int left, int top, int right, int bottom)
 {
    // If any part of the screen needs to be redrawn, then call this routine
-   // with the values of a box (in window coordinates) that needs to be 
+   // with the values of a box (in window coordinates) that needs to be
    // redrawn. This routine will schedule an idle handler to do the redraw.
    //
    // The box coordinates are relative to the clipping window (fCanvas).
@@ -763,7 +763,7 @@ void TGHtml::RedrawArea(int left, int top, int right, int bottom)
 }
 
 //______________________________________________________________________________
-void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) 
+void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //
 
@@ -849,7 +849,7 @@ void TGHtml::RedrawText(int y)
    // virtual canvas coordinate of Y and beyond to be redrawn.
 
    int clipHeight;     // Height of the clipping window
-  
+
    clipHeight = fCanvas->GetHeight();
    y -= fVisible.fY;
    if (y < clipHeight) {
@@ -1116,7 +1116,7 @@ Bool_t TGHtml::HandleButton(Event_t *event)
    if ((event->fType == kButtonPress) && (event->fCode == kButton1)) {
       int x = event->fX + fVisible.fX;
       int y = event->fY + fVisible.fY;
-      char *uri = GetHref(x, y);
+      const char *uri = GetHref(x, y);
 
 #if 0  // insertion cursor test
     char ix[20];
@@ -1148,7 +1148,7 @@ Bool_t TGHtml::HandleMotion(Event_t *event)
 
    int x = event->fX + fVisible.fX;
    int y = event->fY + fVisible.fY;
-   char *uri = GetHref(x, y);
+   const char *uri = GetHref(x, y);
 
    if (uri) {
       gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
@@ -1193,7 +1193,7 @@ TGFont *TGHtml::GetFont(int iFont)
 
    if (aFont[iFont] == 0) {
       char name[200];         // Name of the font
-      char *familyStr = "";
+      const char *familyStr = "";
       int iFamily;
       int iSize;
       int size;
@@ -1297,12 +1297,12 @@ int TGHtml::InArea(TGHtmlMapArea *p, int left, int top, int x, int y)
 }
 
 //______________________________________________________________________________
-TGHtmlElement *TGHtml::GetMap(char *name)
+TGHtmlElement *TGHtml::GetMap(const char *name)
 {
    //
 
    TGHtmlElement *p = pFirst;
-   char *z, *zb;
+   const char *z, *zb;
 
    while (p) {
       if (p->type == Html_MAP) {
@@ -1332,7 +1332,7 @@ float TGHtml::colorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
 }
 
 //______________________________________________________________________________
-int TGHtml::GetColorByName(char *zColor)
+int TGHtml::GetColorByName(const char *zColor)
 {
    // This routine returns an index between 0 and N_COLOR-1 which indicates
    // which ColorStruct_t structure in the apColor[] array should be used to describe
@@ -1485,8 +1485,8 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    b = pRef->fBlue & COLOR_MASK;
    for (i = 0; i < N_COLOR; i++) {
       ColorStruct_t *p = apColor[i];
-      if (p && 
-         ((p->fRed & COLOR_MASK) == r) && 
+      if (p &&
+         ((p->fRed & COLOR_MASK) == r) &&
          ((p->fGreen & COLOR_MASK) == g) &&
          ((p->fBlue & COLOR_MASK) == b)) {
          colorUsed |= (1<<i);
@@ -1530,7 +1530,7 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
 }
 
 //______________________________________________________________________________
-char *TGHtml::GetHref(int x, int y, char **target)
+const char *TGHtml::GetHref(int x, int y, const char **target)
 {
    // This routine searchs for a hyperlink beneath the coordinates x,y
    // and returns a pointer to the HREF for that hyperlink. The text
@@ -1608,10 +1608,10 @@ int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
 }
 
 //______________________________________________________________________________
-TGHtmlElement *TGHtml::AttrElem(char *name, char *value)
+TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
 {
    TGHtmlElement *p;
-   char *z;
+   const char *z;
 
    for (p = pFirst; p; p = p->pNext) {
       if (p->type != Html_A) continue;
@@ -1679,7 +1679,7 @@ void TGHtml::UpdateSelection(int forceUpdate)
 void TGHtml::UpdateSelectionDisplay()
 {
    // The pSelStartBlock and pSelEndBlock values have been changed.
-   // This routine's job is to loop over all TGHtmlBlocks and either 
+   // This routine's job is to loop over all TGHtmlBlocks and either
    // set or clear the HTML_Selected bits in the .flags field
    // as appropriate.  For every TGHtmlBlock where the bit changes,
    // mark that block for redrawing.

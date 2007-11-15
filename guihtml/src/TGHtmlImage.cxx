@@ -79,12 +79,12 @@ int TGHtml::GetImageAlignment(TGHtmlElement *p)
 {
    // Find the alignment for an image
 
-   char *z;
+   const char *z;
    int i;
    int result;
 
    static struct {
-      char *zName;
+      const char *zName;
       int iValue;
    } aligns[] = {
       { "bottom",    IMAGE_ALIGN_Bottom    },
@@ -157,9 +157,9 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    // Given an <IMG> markup, find or create an appropriate TGHtmlImage
    // object and return a pointer to that object. NULL might be returned.
 
-   char *zWidth;
-   char *zHeight;
-   char *zSrc;
+   const char *zWidth;
+   const char *zHeight;
+   const char *zSrc;
    TGHtmlImage *pImage;
 
    if (p->type != Html_IMG) { CANT_HAPPEN; return 0; }
@@ -288,12 +288,12 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
 }
 
 //______________________________________________________________________________
-char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
+const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
 {
    // Return the height and width, converting to percent if required
 
    int n, m, val;
-   char *tz, *z;
+   const char *tz, *z;
    TGHtmlElement *pElem = p;
 
    z = pElem->MarkupArg(opt, "");

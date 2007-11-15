@@ -127,12 +127,13 @@ void TGHtml::DeleteControls()
 
 // Return an appropriate type value for the given <INPUT> markup.
 
-static int InputType(TGHtmlElement *p) {
+static int InputType(TGHtmlElement *p)
+{
   int type = INPUT_TYPE_Unknown;
-  char *z;
+  const char *z;
   int i;
   static struct {
-    char *zName;
+    const char *zName;
     int type;
   } types[] = {
     { "checkbox",  INPUT_TYPE_Checkbox },
@@ -306,7 +307,7 @@ void TGHtml::AddSelectOptions(TGListBox *lb,
     if (p->type == Html_OPTION) {
       TGString *str;
 
-      char *zValue = p->MarkupArg("value", "");
+      const char *zValue = p->MarkupArg("value", "");
       //int selected = (p->MarkupArg("selected", 0) != 0);
 
       p = p->pNext;
@@ -347,7 +348,7 @@ void TGHtml::AddSelectOptions(TGListBox *lb,
 
 int TGHtml::ControlSize(TGHtmlInput *pElem) {
   int incomplete = 0;    // kTRUE if data is incomplete
- 
+
   if (pElem->sized) return 0;
 
   pElem->itype = InputType(pElem);   //// pElem->InputType();
@@ -390,7 +391,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
 
     case INPUT_TYPE_Reset: {
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("value", 0);
+      const char *z = pElem->MarkupArg("value", 0);
       if (!z) z = "Reset";
       TGTextButton *f = new TGTextButton(fCanvas, new TGHotString(z), pElem->cnt);
       f->RequestFocus();
@@ -403,7 +404,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
     case INPUT_TYPE_Button:
     case INPUT_TYPE_Submit: {
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("value", 0);
+      const char *z = pElem->MarkupArg("value", 0);
       if (!z) z = "Submit";
       TGTextButton *f = new TGTextButton(fCanvas, new TGHotString(z), pElem->cnt);
       f->RequestFocus();
@@ -416,7 +417,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
 
     case INPUT_TYPE_Text: {
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("maxlength", 0);
+      const char *z = pElem->MarkupArg("maxlength", 0);
       int maxlen = z ? atoi(z) : 256;
       if (maxlen < 2) maxlen = 2;
       z = pElem->MarkupArg("size", 0);
@@ -432,7 +433,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
 
     case INPUT_TYPE_Password: {
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("maxlength", 0);
+      const char *z = pElem->MarkupArg("maxlength", 0);
       int maxlen = z ? atoi(z) : 256;
       if (maxlen < 2) maxlen = 2;
       z = pElem->MarkupArg("size", 0);
@@ -450,7 +451,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
 
     case INPUT_TYPE_Select: {  // listbox or dd-listbox?
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("size", 0);
+      const char *z = pElem->MarkupArg("size", 0);
       int size = z ? atoi(z) : 1;
 
       if (size == 1) {
@@ -475,7 +476,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
 
     case INPUT_TYPE_TextArea: {
       pElem->cnt = ++nInput;
-      char *z = pElem->MarkupArg("rows", 0);
+      const char *z = pElem->MarkupArg("rows", 0);
       //int rows = z ? atoi(z) : 10;
       z = pElem->MarkupArg("cols", 0);
       //int cols = z ? atoi(z) : 10;
@@ -539,7 +540,7 @@ int TGHtml::FormCount(TGHtmlInput *p, int radio) {
 void TGHtml::AddFormInfo(TGHtmlElement *p) {
   TGHtmlElement *q;
   TGHtmlForm *f;
-  char *name, *z;
+  const char *name, *z;
   int t;
 
   switch (p->type) {

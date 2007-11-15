@@ -150,21 +150,22 @@ void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
 }
 
 //______________________________________________________________________________
-int TGHtml::GetLinkColor(char *zURL)
+int TGHtml::GetLinkColor(const char *zURL)
 {
    // For the markup <a href=XXX>, find out if the URL has been visited
-   // before or not.  Return COLOR_Visited or COLOR_Unvisited, as 
+   // before or not.  Return COLOR_Visited or COLOR_Unvisited, as
    // appropriate.
 
    return IsVisited(zURL) ? COLOR_Visited : COLOR_Unvisited;
 }
 
 //______________________________________________________________________________
-static int *GetCoords(char *str, int *nptr)
+static int *GetCoords(const char *str, int *nptr)
 {
    //
 
-   char *cp = str, *ncp;
+   const char *cp = str;
+   char *ncp;
    int  *cr, i, n = 0, sz = 4;
 
    cr = new int[sz];
@@ -219,7 +220,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
    int rowAlign;             // Current table row alignment
    SHtmlStyle nextStyle;     // Style for next token if useNextStyle==1
    int useNextStyle = 0;     // True if nextStyle is valid
-   char *z;                  // A tag parameter's value
+   const char *z;            // A tag parameter's value
 
    // The size of header fonts relative to the current font size
    static int header_sizes[] = { +2, +1, 1, 1, -1, -1 };
@@ -232,6 +233,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
    // variables. This is purely a matter of convenience...
 
    style = GetCurrentStyle();
+   nextStyle = style;   //ia: nextStyle was not initialized
    paraAlign = paraAlignment;
    rowAlign = rowAlignment;
 
@@ -402,10 +404,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_BASE:
             z = p->MarkupArg("href", 0);
             if (z) {
-               z = ResolveUri(z);
-               if (z != 0) {
+               char *z1 = ResolveUri(z);
+               if (z1 != 0) {
                   if (zBaseHref) delete[] zBaseHref;
-                  zBaseHref = z;
+                  zBaseHref = z1;
                }
             }
             break;
@@ -562,8 +564,8 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_FORM: {
             TGHtmlForm *form = (TGHtmlForm *) p;
 
-            char *zUrl;
-            char *zMethod;
+            const char *zUrl;
+            const char *zMethod;
             TGString cmd("");
             int result;
             char zToken[50];
@@ -1017,13 +1019,14 @@ void TGHtml::TableBgndImage(TGHtmlElement *p)
 {
    //
 
-   char *z;
+   const char *z;
 
    z = p->MarkupArg("background", 0);
    if (!z) return;
 
-   z = ResolveUri(z);
-   TImage *img = LoadImage(z, 0, 0);
+   char *z1 = ResolveUri(z);
+   TImage *img = LoadImage(z1, 0, 0);
+   delete [] z1;
 
    switch (p->type) {
       case Html_TABLE: {
@@ -1038,7 +1041,7 @@ void TGHtml::TableBgndImage(TGHtmlElement *p)
             ref->bgImage = img;
             break;
       }
-      case Html_TH:     
+      case Html_TH:
       case Html_TD: {
          TGHtmlCell *cell = (TGHtmlCell *) p;
          if (cell->bgImage) delete cell->bgImage;
@@ -1075,7 +1078,7 @@ void TGHtml::Sizer()
    TGFont *font=0;
    int spaceWidth = 0;
    FontMetrics_t fontMetrics;
-   char *z;
+   const char *z;
    int stop = 0;
 
    if (pFirst == 0) return;

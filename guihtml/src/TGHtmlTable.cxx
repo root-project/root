@@ -52,7 +52,7 @@ int TGHtml::CellSpacing(TGHtmlElement *pTable)
 {
    // Return the appropriate cell spacing for the given table.
 
-   char *z;
+   const char *z;
    int relief;
    int cellSpacing;
 
@@ -107,7 +107,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
    //
    // flags - include images
 
-   int j, h, w, 
+   int j, h, w,
       Nest = 0,
  //     intext = 0,
       rows = 0,
@@ -232,7 +232,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
                }
             }
             cp = substr.GetString();
-          
+
             j = 0;
             while ((cspans - j) > 0) {
                str->Append(cp);
@@ -276,7 +276,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
 
          case Html_IMG:  // Images return: row col charoffset tokenid
             if (!images) break;
-            sprintf(buf, "%d %d %d %d ", rows-1, cols-1, 
+            sprintf(buf, "%d %d %d %d ", rows-1, cols-1,
                     substr.GetLength(), p->id);
             imgstr.Append(buf);
             break;
@@ -355,7 +355,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    // pStart points to a <table>.  Compute the number of columns, the
    // minimum and maximum size for each column and the overall minimum
    // and maximum size for this table and store these value in the
-   // pStart structure.  Return a pointer to the </table> element, 
+   // pStart structure.  Return a pointer to the </table> element,
    // or to NULL if there is no </table>.
    //
    // The min and max size for column N (where the leftmost column has
@@ -385,7 +385,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int noWrap;                        // true for NOWRAP cells
    int colspan;                       // Column span for the current cell
    int rowspan;                       // Row span for the current cell
-   char *z;                           // Value of a <table> parameter
+   const char *z;                     // Value of a <table> parameter
    int cellSpacing;                   // Value of CELLSPACING parameter
    int cellPadding;                   // Value of CELLPADDING parameter
    int tbw;                           // Width of border around whole table
@@ -409,7 +409,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int colMin[HTML_MAX_COLUMNS+1][HTML_MAX_COLUMNS+1];
 # define ColMin(A,B) colMin[(A)-1][(B)-1]
 # define ColReq(A,B) colMin[(B)-1][(A)-1]
-  
+
    if (pStart == 0 || pStart->type != Html_TABLE) return pStart;
 
    if (pStart->bgImage) pStart->hasbg = 1;
@@ -468,7 +468,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    maxTableWidth -= 2 * margin;
    SETMAX(maxTableWidth, 1);
 
-   TRACE(HtmlTrace_Table1, ("lineWidth = %d, maxTableWidth = %d, margin = %d\n", 
+   TRACE(HtmlTrace_Table1, ("lineWidth = %d, maxTableWidth = %d, margin = %d\n",
          lineWidth, maxTableWidth, margin));
 
    for (p = pStart->pNext; p; p = pNext) {
@@ -503,7 +503,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
             break;
 
          case Html_CAPTION:
-            while (p && p->type != Html_EndTABLE 
+            while (p && p->type != Html_EndTABLE
                    && p->type != Html_EndCAPTION) p = p->pNext;
             break;
 
@@ -623,7 +623,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
 #ifdef DEBUG
    if (HtmlTraceMask & HtmlTrace_Table6) {
-      char *zSpace = "";
+      const char *zSpace = "";
       TRACE_INDENT;
       for (i = 1; i <= pStart->nCol; i++) {
          printf("%s%d:%d..%d", zSpace, i, pStart->minW[i], pStart->maxW[i]);
@@ -643,7 +643,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                TRACE_INDENT;
                printf("ColReq(%d,%d) = %d\n", i, j, ColReq(i, j));
             }
-         } 
+         }
       }
    }
 #endif
@@ -658,7 +658,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
          pStart->maxW[i] = MAX(pStart->minW[i], reqW[i]);
       }
 
-      // Expand the width of columns marked with "colspan=0". 
+      // Expand the width of columns marked with "colspan=0".
 
       if (min0span[i] > 0 || max0span[i] > 0) {
          int n = pStart->nCol - i + 1;
@@ -748,7 +748,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
 #ifdef DEBUG
    if (HtmlTraceMask & HtmlTrace_Table6) {
-      char *zSpace = "";
+      const char *zSpace = "";
       TRACE_INDENT;
       for (i = 1; i <= pStart->nCol; i++) {
          printf("%s%d:%d..%d", zSpace, i, pStart->minW[i], pStart->maxW[i]);
@@ -793,7 +793,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    SETMAX(maxTableWidth, pStart->minW[0]);
    if (lineWidth && (requestedW > lineWidth)) {
 
-      TRACE(HtmlTrace_Table5, ("RequestedW reduced to lineWidth: %d -> %d\n", 
+      TRACE(HtmlTrace_Table5, ("RequestedW reduced to lineWidth: %d -> %d\n",
             requestedW, lineWidth));
 
       requestedW = lineWidth;
@@ -977,7 +977,7 @@ TGHtmlElement *TGHtml::MinMax(TGHtmlElement *p, int *pMin, int *pMax,
             x1 = table->maxW[0] + indent + obstacle;
             x2 = table->minW[0] + indent;
             SETMAX(max, x1);
-            SETMAX(min, x2);	
+            SETMAX(min, x2);
             x1 = indent + obstacle;
             x2 = indent;
             if (pNext && pNext->type == Html_EndTABLE) pNext = pNext->pNext;
@@ -1076,7 +1076,7 @@ TGHtmlElement *TGHtml::MinMax(TGHtmlElement *p, int *pMin, int *pMax,
 }
 
 
-// Vertical alignments: 
+// Vertical alignments:
 
 #define VAlign_Unknown    0
 #define VAlign_Top        1
@@ -1090,7 +1090,7 @@ int TGHtmlMarkupElement::GetVerticalAlignment(int dflt)
 {
    // Return the vertical alignment specified by the given element.
 
-   char *z;
+   const char *z;
    int rc;
 
    z = MarkupArg("valign", 0);
@@ -1128,7 +1128,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int tbw;                 // Width of the 3D border around the whole table
    int cbw;                 // Width of the 3D border around a cell
    int pad;                 // cellPadding + borderwidth
-   char *z;                 // A string
+   const char *z;           // A string
    int left_margin;         // The left edge of space available for drawing
    int lineWidth;           // Total horizontal space available for drawing
    int specWidth;           // Total horizontal drawing width per width= attr
@@ -1143,7 +1143,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int hspace;              // Value of the hspace= parameter to <table>
    int rowBottom;           // Bottom edge of content in the current row
    int defaultVAlign;       // Default vertical alignment for the current row
-   char *zAlign;            // Value of the ALIGN= attribute of the <TABLE>
+   const char *zAlign;      // Value of the ALIGN= attribute of the <TABLE>
 #define N (HTML_MAX_COLUMNS+1)
    int y[N];                // Top edge of each cell's content
    int x[N];                // Left edge of each cell's content
@@ -1162,10 +1162,10 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    if (pTable == 0 || pTable->type != Html_TABLE) return pTable;
 
    TRACE_PUSH(HtmlTrace_Table2);
-   TRACE(HtmlTrace_Table2, ("Starting TableLayout() at %s\n", 
+   TRACE(HtmlTrace_Table2, ("Starting TableLayout() at %s\n",
                           html->GetTokenName(pTable)));
 
-   // Figure how much horizontal space is available for rendering 
+   // Figure how much horizontal space is available for rendering
    // this table.  Store the answer in lineWidth.  left_margin is
    // the left-most X coordinate of the table.  btm stores the top-most
    // Y coordinate.
@@ -1186,12 +1186,12 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    if (lineWidth < pTable->minW[0]) {
       WidenLine(pTable->minW[0], &left_margin, &btm, &lineWidth);
 
-      TRACE(HtmlTrace_Table2, ("Widen to btm=%d left=%d width=%d\n", 
+      TRACE(HtmlTrace_Table2, ("Widen to btm=%d left=%d width=%d\n",
                              btm, left_margin, lineWidth));
    }
    savedContext = *this;
-  
-  // Figure out how wide to draw the table 
+
+  // Figure out how wide to draw the table
    z = pTable->MarkupArg("width", 0);
    if (z) {
       int len = strlen(z);
@@ -1322,7 +1322,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
          TRACE(HtmlTrace_Table3, ("Skipping token %s\n", html->GetTokenName(p)));
 
-         p = p->pNext; 
+         p = p->pNext;
       }
       if (p == 0) break;
 
@@ -1416,7 +1416,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
                   TRACE(HtmlTrace_Table2,
                         ("Column %d top=%d bottom=%d h=%d left=%d w=%d\n",
-                        iCol, y[iCol], ymax[iCol], ymax[iCol]-y[iCol], 
+                        iCol, y[iCol], ymax[iCol], ymax[iCol]-y[iCol],
                         cell->x, cell->w));
 
                   // Advance the column counter for cells spaning multiple columns
@@ -1455,7 +1455,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
          int dy = 0;    // Extra space at top of cell used for vertical alignment
          TGHtmlCell *apCell = (TGHtmlCell *) apElem[iCol];
 
-         // Skip any unused cells or cells that extend down thru 
+         // Skip any unused cells or cells that extend down thru
          // subsequent rows
          if (apElem[iCol] == 0 ||
              (iRow != pTable->nRow && lastRow[iCol] > iRow)) continue;
@@ -1500,7 +1500,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
       if (pCaption) {
       }
 
-      // Whenever we do any table layout, we need to recompute all the 
+      // Whenever we do any table layout, we need to recompute all the
       // TGHtmlBlocks. The following statement forces this.
       html->ResetBlocks(); // html->firstBlock = html->lastBlock = 0;
 

@@ -63,8 +63,8 @@ extern SHtmlTokenMap HtmlMarkupMap[];
 // structure
 
 struct sgEsc {
-   char *zName;            // The name of this escape sequence.  ex:  "amp"
-   char  value[8];         // The value for this sequence.       ex:  "&"
+   const char *zName;      // The name of this escape sequence.  ex:  "amp"
+   const char  value[8];   // The value for this sequence.       ex:  "&"
    sgEsc *pNext;           // Next sequence with the same hash on zName
 };
 
@@ -182,7 +182,7 @@ static struct sgEsc esc_sequences[] = {
 #define ESC_HASH_SIZE (sizeof(esc_sequences)/sizeof(esc_sequences[0])+7)
 
 
-// The hash table 
+// The hash table
 //
 // If the name of an escape sequence hashes to the value H, then
 // apEscHash[H] will point to a linked list of Esc structures, one of
@@ -220,7 +220,7 @@ static void EscHashStats() {
   struct sgEsc *p;
 
   for (i = 0; i < sizeof(esc_sequences) / sizeof(esc_sequences[0]); i++) {
-    cnt = 0; 
+    cnt = 0;
     p = apEscHash[i];
     if (p) notempty++;
     while (p) {
@@ -231,7 +231,7 @@ static void EscHashStats() {
     if (cnt > max) max = cnt;
   }
   printf("Longest chain=%d  avg=%g  slots=%d  empty=%d (%g%%)\n",
-     max, (double)sum/(double)notempty, i, i-notempty, 
+     max, (double)sum/(double)notempty, i, i-notempty,
      100.0*(i-notempty)/(double)i);
 }
 #endif
@@ -343,7 +343,7 @@ void HtmlTranslateEscapes(char *z)
                v = acMsChar[v & 0x1f];
             }
 
-            // Put the character in the output stream in place of the "&#000;". 
+            // Put the character in the output stream in place of the "&#000;".
             // How we do this depends on whether or not we are using UTF-8.
 
             z[to++] = v;
@@ -356,7 +356,7 @@ void HtmlTranslateEscapes(char *z)
             z[i] = 0;
             h = EscHash(&z[from+1]);
             p = apEscHash[h];
-            while (p && strcmp(p->zName, &z[from+1]) != 0) p = p->pNext; 
+            while (p && strcmp(p->zName, &z[from+1]) != 0) p = p->pNext;
             z[i] = c;
             if (p) {
                int j;
@@ -439,7 +439,7 @@ static void HtmlHashStats() {
   struct sgMap *p;
 
    for (i = 0; i < HTML_MARKUP_COUNT; i++) {
-      cnt = 0; 
+      cnt = 0;
       p = apMap[i];
       if (p) notempty++;
       while (p) {
@@ -553,7 +553,7 @@ int TGHtml::Tokenize()
    // the number of characters actually processed.
    //
    // This routine may invoke a callback procedure which could delete
-   // the HTML widget. 
+   // the HTML widget.
    //
    // This routine is not reentrant for the same HTML widget.  To
    // prevent reentrancy (during a callback), the p->iCol field is
@@ -567,11 +567,11 @@ int TGHtml::Tokenize()
    int inpCol;          // Column of input
    int i, j;            // Loop counters
    int h;               // Result from HtmlHash()
-   TGHtmlElement *pElem; // A new HTML element
+   TGHtmlElement *pElem;// A new HTML element
    int selfClose;       // True for content free elements. Ex: <br/>
    int argc;            // The number of arguments on a markup
    SHtmlTokenMap *pMap; // For searching the markup name hash table
-# define mxARG 200     // Maximum number of parameters in a single markup
+# define mxARG 200      // Maximum number of parameters in a single markup
    char *argv[mxARG];   // Pointers to each markup argument.
    int arglen[mxARG];   // Length of each markup argument
    //int rl, ol;
@@ -591,7 +591,7 @@ int TGHtml::Tokenize()
    while ((c = z[n]) != 0) {
 
       sawdot--;
-      if (c == -64 && z[n+1] == -128) { 
+      if (c == -64 && z[n+1] == -128) {
          n += 2;
          continue;
       }
@@ -603,7 +603,7 @@ int TGHtml::Tokenize()
          // same way.
 
          TGHtmlScript *pScr = pScript;
-         char *zEnd;
+         const char *zEnd;
          int nEnd;
          //int curline, curch, curlast = n;
          int sqcnt;
@@ -695,7 +695,7 @@ int TGHtml::Tokenize()
         strcpy(((TGHtmlTextElement *)pElem)->zText, " ");
         pElem->id = ++idind;
         pElem->offs = n;
-        pElem->count = 1; 
+        pElem->count = 1;
         AppendElement(pElem);
       }
 #endif
@@ -720,7 +720,7 @@ int TGHtml::Tokenize()
       AppendElement(pElem);
       n += i;
 
-      } else if (c != '<' || iPlaintext != 0 || 
+      } else if (c != '<' || iPlaintext != 0 ||
          (!isalpha(z[n+1]) && z[n+1] != '/' && z[n+1] != '!' && z[n+1] != '?')) {
 
       // Ordinary text
@@ -801,6 +801,7 @@ int TGHtml::Tokenize()
       // Markup.
       //
       // First get the name of the markup
+      static char null[1] = { "" };
 doMarkup:
       argc = 1;
       argv[0] = &z[n+1];
@@ -829,7 +830,7 @@ doMarkup:
          if (c == 0) goto incomplete;
          argc++;
          if (c != '=') {
-            argv[argc] = "";
+            argv[argc] = null;
             arglen[argc] = 0;
             argc++;
             continue;
@@ -872,7 +873,7 @@ doMarkup:
       }
       n += i + 1;
 
-      // Lookup the markup name in the hash table 
+      // Lookup the markup name in the hash table
 
       if (!isInit) {
          HtmlHashInit();
@@ -1321,9 +1322,12 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
 //#ifdef DEBUG
    static char zBuf[200];
    int j;
-   char *zName;
+   const char *zName;
 
-   if (p == 0) return "NULL";
+   if (p == 0) {
+      sprintf(zBuf, "NULL");
+      return zBuf;
+   }
    switch (p->type) {
       case Html_Text:
          sprintf(zBuf, "text: \"%.*s\"", p->count, ((TGHtmlTextElement *)p)->zText);
@@ -1350,7 +1354,7 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
       }
 
       default:
-         if (p->type >= HtmlMarkupMap[0].type 
+         if (p->type >= HtmlMarkupMap[0].type
              && p->type <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].type) {
             zName = HtmlMarkupMap[p->type - HtmlMarkupMap[0].type].zName;
          } else {
@@ -1401,10 +1405,13 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
 
    static char zBuf[200];
    //int j;
-   char *zName;
+   const char *zName;
 
    zBuf[0] = 0;
-   if (p == 0) return "NULL";
+   if (p == 0) {
+      strcpy(zBuf, "NULL");
+      return zBuf;
+   }
    switch (p->type) {
       case Html_Text:
       case Html_Space:
@@ -1442,7 +1449,7 @@ TGString *TGHtml::ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd)
 
    TGString *str;
    int i;
-   char *zName;
+   const char *zName;
    char zLine[100];
 
    str = new TGString("");
@@ -1500,7 +1507,7 @@ void TGHtml::PrintList(TGHtmlElement *first, TGHtmlElement *last)
    for (p = first; p != last; p = p->pNext) {
       if (p->type == Html_Block) {
          TGHtmlBlock *block = (TGHtmlBlock *) p;
-         char *z = block->z;
+         const char *z = block->z;
          int n = block->n;
          if (n == 0 || z == 0) {
             n = 1;

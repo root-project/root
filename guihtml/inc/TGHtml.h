@@ -258,7 +258,7 @@ public:
   TGHtmlElement(int etype = 0);
 
   virtual int  IsMarkup() const { return (type > Html_Block); }
-  virtual char *MarkupArg(const char * /*tag*/, char * /*zDefault*/) { return 0; }
+  virtual const char *MarkupArg(const char * /*tag*/, const char * /*zDefault*/) { return 0; }
   virtual int  GetAlignment(int dflt) { return dflt; }
   virtual int  GetOrderedListType(int dflt) { return dflt; }
   virtual int  GetUnorderedListType(int dflt) { return dflt; }
@@ -328,7 +328,7 @@ public:
   TGHtmlMarkupElement(int type, int argc, int arglen[], char *argv[]);
   virtual ~TGHtmlMarkupElement();
 
-  virtual char *MarkupArg(const char *tag, char *zDefault);
+  virtual const char *MarkupArg(const char *tag, const char *zDefault);
   virtual int  GetAlignment(int dflt);
   virtual int  GetOrderedListType(int dflt);
   virtual int  GetUnorderedListType(int dflt);
@@ -535,18 +535,18 @@ public:
   TGHtmlImageMarkup(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_u8 align;           // Alignment. See IMAGE_ALIGN_ defines below
-  Html_u8 textAscent;      // Ascent of text font in force at the <IMG>
-  Html_u8 textDescent;     // Descent of text font in force at the <IMG>
-  Html_u8 redrawNeeded;    // Need to redraw this image because the image
-                           // content changed.
-  Html_16 h;               // Actual height of the image
-  Html_16 w;               // Actual width of the image
-  Html_16 ascent;          // How far image extends above "y"
-  Html_16 descent;         // How far image extends below "y"
-  Html_16 x;               // X coordinate of left edge of the image
-  Html_32 y;               // Y coordinate of image baseline
-  char *zAlt;              // Alternative text
+  Html_u8 align;            // Alignment. See IMAGE_ALIGN_ defines below
+  Html_u8 textAscent;       // Ascent of text font in force at the <IMG>
+  Html_u8 textDescent;      // Descent of text font in force at the <IMG>
+  Html_u8 redrawNeeded;     // Need to redraw this image because the image
+                            // content changed.
+  Html_16 h;                // Actual height of the image
+  Html_16 w;                // Actual width of the image
+  Html_16 ascent;           // How far image extends above "y"
+  Html_16 descent;          // How far image extends below "y"
+  Html_16 x;                // X coordinate of left edge of the image
+  Html_32 y;                // Y coordinate of image baseline
+  const char *zAlt;         // Alternative text
   TGHtmlImage *pImage;      // Corresponding TGHtmlImage object
   TGHtmlElement *pMap;      // usemap
   TGHtmlImageMarkup *iNext; // Next markup using the same TGHtmlImage object
@@ -835,7 +835,7 @@ struct SHtmlIndex {
 // Used by the tokenizer
 
 struct SHtmlTokenMap {
-  char *zName;                // Name of a markup
+  const char *zName;          // Name of a markup
   Html_16 type;               // Markup type code
   Html_16 objType;            // Which kind of TGHtml... object to alocate
   SHtmlTokenMap *pCollide;    // Hash table collision chain
@@ -958,12 +958,12 @@ public:
   int GetMarginWidth() { return margins.fL + margins.fR; }
   int GetMarginHeight() { return margins.fT + margins.fB; }
 
-  char *GetHref(int x, int y, char **target = 0);
+  const char *GetHref(int x, int y, const char **target = 0);
   
   TGHtmlImage *GetImage(TGHtmlImageMarkup *p);
   
   int  InArea(TGHtmlMapArea *p, int left, int top, int x, int y);
-  TGHtmlElement *GetMap(char *name);
+  TGHtmlElement *GetMap(const char *name);
 
   void ResetBlocks() { firstBlock = lastBlock = 0; }
   int  ElementCoords(TGHtmlElement *p, int i, int pct, int *coords);
@@ -996,7 +996,7 @@ protected:
   float colorDistance(ColorStruct_t *pA, ColorStruct_t *pB);
   int isDarkColor(ColorStruct_t *p);
   int isLightColor(ColorStruct_t *p);
-  int GetColorByName(char *zColor);
+  int GetColorByName(const char *zColor);
   int GetDarkShadowColor(int iBgColor);
   int GetLightShadowColor(int iBgColor);
   int GetColorByValue(ColorStruct_t *pRef);
@@ -1010,7 +1010,7 @@ protected:
   void ImageChanged(TGHtmlImage *image, int newWidth, int newHeight);
   int  GetImageAlignment(TGHtmlElement *p);
   int  GetImageAt(int x, int y);
-  char *GetPctWidth(TGHtmlElement *p, char *opt, char *ret);
+  const char *GetPctWidth(TGHtmlElement *p, char *opt, char *ret);
   void TableBgndImage(TGHtmlElement *p);
   
   TGHtmlElement *FillOutBlock(TGHtmlBlock *p);
@@ -1092,13 +1092,13 @@ protected:
   SHtmlStyle PopStyleStack(int tag);
   
   void MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last);
-  int  GetLinkColor(char *zURL);
+  int  GetLinkColor(const char *zURL);
   void AddStyle(TGHtmlElement *p);
   void Sizer();
   
   int  NextMarkupType(TGHtmlElement *p);
 
-  TGHtmlElement *AttrElem(char *name, char *value);
+  TGHtmlElement *AttrElem(const char *name, char *value);
   
 public:
   void AppendArglist(TGString *str, TGHtmlMarkupElement *pElem);
@@ -1106,8 +1106,8 @@ public:
   TGString *ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd);
   TGString *TableText(TGHtmlTable *pTable, int flags);
 
-  virtual void MouseOver(char *uri) { Emit("MouseOver(char *)",uri); } // *SIGNAL*
-  virtual void MouseDown(char *uri)  { Emit("MouseDown(char *)",uri); } // *SIGNAL*
+  virtual void MouseOver(const char *uri) { Emit("MouseOver(const char *)",uri); } // *SIGNAL*
+  virtual void MouseDown(const char *uri)  { Emit("MouseDown(const char *)",uri); } // *SIGNAL*
 
 protected:
   virtual void UpdateBackgroundStart();
@@ -1244,7 +1244,7 @@ protected:
   int tableRelief;              // 3d effects on <TABLE>
   int ruleRelief;               // 3d effects on <HR>
   int rulePadding;              // extra pixels above and below <HR>
-  char *zBase;                  // The base URI
+  const char *zBase;            // The base URI
   char *zBaseHref;              // zBase as modified by <BASE HREF=..> markup
   Cursor_t cursor;		// Current cursor for window, or None.
   int maxX, maxY;               // Maximum extent of any "paint" that appears
@@ -1261,9 +1261,9 @@ protected:
   
   SHtmlExtensions *exts;        // Pointer to user extension data
 
-  THashTable *fUidTable;    // Hash table for some used string values
+  THashTable *fUidTable;        // Hash table for some used string values
                                 // like color names, etc.
-  char *_lastUri;               // Used in HandleMotion
+  const char *_lastUri;         // Used in HandleMotion
   int _exiting;                 // True if the widget is being destroyed
 
 ClassDef(TGHtml, 0);

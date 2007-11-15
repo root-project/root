@@ -51,7 +51,7 @@ void TGHtmlLayoutContext::Reset()
 
    headRoom = 0;
    top = 0;
-   bottom = 0;   
+   bottom = 0;
    ClearMarginStack(&leftMargin);
    ClearMarginStack(&rightMargin);
 }
@@ -136,7 +136,7 @@ void TGHtmlLayoutContext::PopMargin(SHtmlMargin **ppMargin, int tag)
 //______________________________________________________________________________
 void TGHtmlLayoutContext::PopExpiredMargins(SHtmlMargin **ppMarginStack, int y)
 {
-   // Pop all expired margins from the stack. 
+   // Pop all expired margins from the stack.
    //
    // An expired margin is one with a non-negative bottom parameter
    // that is less than the value "y". "y" is the Y-coordinate of
@@ -455,7 +455,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
    TGHtmlElement *p;       // For looping
    int y;                 // Y coordinate of the baseline
    int dy2center;         // Distance from baseline to text font center
-   int max = 0; 
+   int max = 0;
 
    if (actualWidth > 0) {
       for (p = p_start; p && p != p_end && p->type != Html_Text; p = p->pNext) {}
@@ -507,7 +507,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
             case Html_LI: {
                TGHtmlLi *li = (TGHtmlLi *) p;
                li->x += dx;
-               if (li->x > max) max = li->x; 
+               if (li->x > max) max = li->x;
                break;
             }
 
@@ -634,7 +634,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
          }
       }
 
-//    TRACE(HtmlTrace_FixLine, 
+//    TRACE(HtmlTrace_FixLine,
 //       ("Setting baseline to %d. bottom=%d ascent=%d descent=%d dx=%d\n",
 //       y, bottom, maxAscent, maxDescent, dx));
 
@@ -822,7 +822,7 @@ TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
    // that lacks a </TABLE>), then NULL is returned.
 
    TGHtmlElement *pNext = p->pNext;
-   char *z;
+   const char *z;
    int x, y, w;
 
    switch (p->type) {

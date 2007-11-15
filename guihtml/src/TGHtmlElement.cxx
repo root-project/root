@@ -48,15 +48,15 @@ TGHtmlElement::TGHtmlElement(int etype)
    //
 
    pNext = pPrev = 0;
-   style.font = 0;   
-   style.color = 0;  
+   style.font = 0;
+   style.color = 0;
    style.subscript = 0;
    style.align = 0;
    style.bgcolor = 0;
    style.expbg = 0;
-   style.flags = 0;  
-   type = etype;     
-   flags = 0;        
+   style.flags = 0;
+   type = etype;
+   flags = 0;
    count = 0;
    id = 0;
    offs = 0;
@@ -106,7 +106,7 @@ TGHtmlMarkupElement::TGHtmlMarkupElement(int type, int argc,
             HtmlTranslateEscapes(argv[i-1]);
             if ((i & 1) == 1) ToLower(argv[i-1]);
          }
-      }  
+      }
       argv[argc-1] = 0;
 
       // Following is just a flag that this is unmodified
@@ -126,13 +126,13 @@ TGHtmlMarkupElement::~TGHtmlMarkupElement()
       for (int i = 0; i < count; ++i) delete [] argv[i];
       delete [] argv;
    }
-}  
-   
+}
+
 //______________________________________________________________________________
-char *TGHtmlMarkupElement::MarkupArg(const char *tag, char *zDefault)
+const char *TGHtmlMarkupElement::MarkupArg(const char *tag, const char *zDefault)
 {
    // Lookup an argument in the given markup with the name given.
-   // Return a pointer to its value, or the given default  
+   // Return a pointer to its value, or the given default
    // value if it doesn't appear.
 
    int i;
@@ -140,7 +140,7 @@ char *TGHtmlMarkupElement::MarkupArg(const char *tag, char *zDefault)
    for (i = 0; i < count; i += 2) {
       if (strcmp(argv[i], tag) == 0) return argv[i+1];
    }
-   return zDefault; 
+   return zDefault;
 }
 
 //______________________________________________________________________________
@@ -150,7 +150,7 @@ int TGHtmlMarkupElement::GetAlignment(int dflt)
    // given markup. The given default value is returned if no alignment is
    // specified.
 
-   char *z = MarkupArg("align", 0);
+   const char *z = MarkupArg("align", 0);
    int rc = dflt;
 
    if (z) {
@@ -161,8 +161,8 @@ int TGHtmlMarkupElement::GetAlignment(int dflt)
       } else if (strcasecmp(z, "center") == 0) {
          rc = ALIGN_Center;
       }
-   }  
-     
+   }
+
    return rc;
 }
 
@@ -170,13 +170,11 @@ int TGHtmlMarkupElement::GetAlignment(int dflt)
 int TGHtmlMarkupElement::GetOrderedListType(int dflt)
 {
    // The "type" argument to the given element might describe the type
-   // for an ordered list. Return the corresponding LI_TYPE_* entry  
+   // for an ordered list. Return the corresponding LI_TYPE_* entry
    // if this is the case, or the default value if it isn't.
    // (this and the following should be defined only for TGHtmlLi)
 
-   char *z;
-
-   z = MarkupArg("type", 0);
+   const char *z = MarkupArg("type", 0);
    if (z) {
       switch (*z) {
          case 'A': dflt = LI_TYPE_Enum_A; break;
@@ -186,8 +184,8 @@ int TGHtmlMarkupElement::GetOrderedListType(int dflt)
          case 'i': dflt = LI_TYPE_Enum_i; break;
          default:  break;
       }
-   }  
-     
+   }
+
    return dflt;
 }
 
@@ -198,9 +196,7 @@ int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
    // for an unordered list.  Return the corresponding LI_TYPE entry
    // if this is the case, or the default value if it isn't.
 
-   char *z;
-
-   z = MarkupArg("type", 0);
+   const char *z = MarkupArg("type", 0);
    if (z) {
       if (strcasecmp(z, "disc") == 0) {
          dflt = LI_TYPE_Bullet1;
@@ -210,7 +206,7 @@ int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
          dflt = LI_TYPE_Bullet3;
       }
    }
- 
+
    return dflt;
 }
 
@@ -251,7 +247,7 @@ TGHtmlCell::TGHtmlCell(int type, int argc, int arglen[], char *argv[]) :
    pTable = 0;
    pRow = 0;
    pEnd = 0;
-   bgImage = 0;  
+   bgImage = 0;
 }
 
 //______________________________________________________________________________
@@ -320,10 +316,10 @@ TGHtmlImageMarkup::TGHtmlImageMarkup(int type, int argc,
    x = 0; y = 0; w = 0; h = 0;
    ascent = 0;
    descent = 0;
-   zAlt = 0;   
+   zAlt = 0;
    pImage = 0;
-   pMap = 0; 
-   iNext = 0;  
+   pMap = 0;
+   iNext = 0;
 }
 
 //______________________________________________________________________________
@@ -378,7 +374,7 @@ TGHtmlMapArea::TGHtmlMapArea(int type, int argc, int arglen[], char *argv[]) :
    coords = 0;
    num = 0;
 }
-   
+
 
 //----------------------------------------------------------------------
 
@@ -399,19 +395,19 @@ TGHtmlInput::TGHtmlInput(int type, int argc, int arglen[], char *argv[]) :
    pForm = 0;
    iNext = 0;
    frame = 0;
-   html = 0; 
+   html = 0;
    pEnd = 0;
    inpId = 0; subId = 0;
    x = 0; y = 0; w = 0; h = 0;
    padLeft = 0;
-   align = 0;  
+   align = 0;
    textAscent = 0;
    textDescent = 0;
    itype = 0;
    sized = 0;
-   cnt = 0;  
+   cnt = 0;
 }
-   
+
 //______________________________________________________________________________
 void TGHtmlInput::Empty()
 {

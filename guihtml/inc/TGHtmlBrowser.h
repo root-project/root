@@ -67,8 +67,8 @@ public:
    void              Forward();
    void              Reload();
    void              Stop();
-   void              MouseOver(char *);
-   void              MouseDown(char *);
+   void              MouseOver(const char *);
+   void              MouseDown(const char *);
    void              Clicked(char *uri) { Emit("Clicked(char *)",uri); } // *SIGNAL*
    
    ClassDef(TGHtmlBrowser, 0) // very simple html browser
