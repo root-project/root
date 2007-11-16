@@ -617,6 +617,8 @@ void TGraphPainter::PaintPolyMarker(Option_t *option)
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
    for (it=0; it<fNpoints; it++) {
+      xm[it] = 0;
+      ym[it] = 0;
       if(fX[it] < fXmin || fX[it] > fXmax) continue;
       if(fY[it] < fYmin || fY[it] > fYmax) continue;
       npd++;
