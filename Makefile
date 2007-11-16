@@ -73,10 +73,10 @@ SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
 endif
+ifeq ($(BUILDGL),yes)
 ifeq ($(BUILDFTGL),yes)
 MODULES      += ftgl
 endif
-ifeq ($(BUILDGL),yes)
 MODULES      += gl
 endif
 ifeq ($(BUILDMYSQL),yes)
