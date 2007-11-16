@@ -1058,9 +1058,9 @@ void TASImage::Draw(Option_t *option)
       h = Int_t(h*cx) + 28;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
-		rname += Form("\", \"%s (%d x %d)", rname.Data(), fImage->width, fImage->height);
-		rname = "new TCanvas(\"" + rname + Form("\", %d, %d);", w, h);
-		gROOT->ProcessLineFast(rname.Data());
+      rname += Form("\", \"%s (%d x %d)", rname.Data(), fImage->width, fImage->height);
+      rname = "new TCanvas(\"" + rname + Form("\", %d, %d);", w, h);
+      gROOT->ProcessLineFast(rname.Data());
    }
 
    if (!opt.Contains("x")) {
@@ -5770,19 +5770,20 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
    // Buffer must be deallocated after usage.
    // This method can be used for sending images over network.
 
-   if (!fImage) return;
-
    static ASImageExportParams params;
    Bool_t ret = kFALSE;
    int   isize = 0;
    char *ibuff = 0;
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   if (!img) return;
 
    switch (type) {
       case TImage::kXpm:
-         ret = ASImage2xpmRawBuff(fImage, (CARD8 **)buffer, size, 0);
+         ret = ASImage2xpmRawBuff(img, (CARD8 **)buffer, size, 0);
          break;
       default:
-         ret = ASImage2PNGBuff(fImage, (CARD8 **)buffer, size, &params);
+         ret = ASImage2PNGBuff(img, (CARD8 **)buffer, size, &params);
    }
 
    if (!ret) {
