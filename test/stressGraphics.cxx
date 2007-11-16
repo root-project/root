@@ -93,6 +93,7 @@ void     tgaxis1        ();
 void     tgaxis2        ();
 void     tgaxis3        ();
 void     tgaxis4        ();
+void     labels1        ();
 void     tellipse       ();
 void     feynman        ();
 void     tgraph1        ();
@@ -113,6 +114,7 @@ void     quarks         ();
 void     timage         ();
 void     zoomtf1        ();
 void     zoomfit        ();
+void     parallelcoord  ();
 void     clonepad       ();
 
 // Auxiliary functions
@@ -124,8 +126,8 @@ void     cleanup        ();
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
-Int_t     gRefNb[37];
-Int_t     gErrNb[37];
+Int_t     gRefNb[39];
+Int_t     gErrNb[39];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
@@ -249,6 +251,7 @@ void stressGraphics(Int_t verbose = 0)
    tgaxis2      ();
    tgaxis3      ();
    tgaxis4      ();
+   labels1      ();
    tellipse     ();
    feynman      ();
    tgraph1      ();
@@ -279,7 +282,8 @@ void stressGraphics(Int_t verbose = 0)
    timage       ();
    zoomtf1      ();
    zoomfit      ();
-///clonepad     ();
+   parallelcoord();
+//////clonepad     ();
    if (!gOptionR) {
       cout << "**********************************************************************" <<endl;
 
@@ -1206,6 +1210,46 @@ void tgaxis4()
 
 
 //______________________________________________________________________________
+void labels1()
+{
+   // Alphanumeric labels in a 1-d histogram
+
+   TCanvas *C = StartTest(900,500);
+
+   const Int_t nx = 20;
+   char *people[nx] = {"Jean","Pierre","Marie","Odile","Sebastien","Fons","Rene",
+   "Nicolas","Xavier","Greg","Bjarne","Anton","Otto","Eddy","Peter","Pasha",
+   "Philippe","Suzanne","Jeff","Valery"};
+
+   C->SetGrid();
+   C->SetBottomMargin(0.15);
+   TH1F *hlab1 = new TH1F("hlab1","hlab1",nx,0,nx);
+   hlab1->SetFillColor(38);
+   for (Int_t i=0;i<5000;i++) {
+      hlab1->Fill(gRandom->Gaus(0.5*nx,0.2*nx));
+   }
+   hlab1->SetStats(0);
+   for (Int_t i=1;i<=nx;i++) {
+      hlab1->GetXaxis()->SetBinLabel(i,people[i-1]);
+   }
+   hlab1->Draw();
+   TPaveText *pt = new TPaveText(0.6,0.7,0.98,0.98,"brNDC");
+   pt->SetFillColor(18);
+   pt->SetTextAlign(12);
+   pt->AddText("Use the axis Context Menu LabelsOption");
+   pt->AddText(" \"a\"   to sort by alphabetic order");
+   pt->AddText(" \">\"   to sort by decreasing vakues");
+   pt->AddText(" \"<\"   to sort by increasing vakues");
+   pt->Draw();
+
+   TestReport1(C, "Alphanumeric labels in a 1-d histogram");
+   DoCcode(C);
+   TestReport2(C);
+   delete hlab1;
+}
+
+
+//______________________________________________________________________________
 void tellipse()
 {
    // TEllipse test.
@@ -2041,8 +2085,8 @@ void timage()
    C->cd();
 
    TestReport1(C, "TImage");
-///DoCcode(C);
-///TestReport2(C);
+   DoCcode(C);
+   TestReport2(C);
 }
 
 
@@ -2090,6 +2134,28 @@ void zoomfit()
    gPad->Update();
 
    TestReport1(C, "Zoom/UnZoom a fitted histogram");
+   DoCcode(C);
+   TestReport2(C);
+}
+
+
+//______________________________________________________________________________
+void parallelcoord()
+{
+   // Parallel Coordinates
+
+   TCanvas *C = StartTest(800,700);
+
+   TNtuple *ntuple = (TNtuple*)gFile->Get("ntuple");
+
+   C->Divide(1,2);
+
+   C->cd(1);
+   ntuple->Draw("px:py:pz:random:px*py*pz","","para");
+   C->cd(2);
+   ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
+
+   TestReport1(C, "Parallel Coordinates");
    DoCcode(C);
    TestReport2(C);
 }
