@@ -69,7 +69,7 @@ void sample_volume(Int_t ivol)
    char result[16];
    sprintf(result, "FAILED");
    if (dvv<2*sigma) sprintf(result, "OK");
-   printf("---> testing %-4s ............ vol = %7.1f +/- %5.1f ... %s\n", vol->GetName(), vv, sigma, result);
+   printf("---> testing %-4s ............... %s\n", vol->GetName(), result);
 }
 
 void length()
