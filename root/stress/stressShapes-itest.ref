@@ -10,22 +10,22 @@ Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
 Info in <TGeoManager::CloseGeometry>: 17 nodes/ 17 volume UID's in arbitrary shapes
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 === testing shapes ...
----> testing BOX  ............ vol = 40000.0 +/-  40.0 ... OK
----> testing TRD1 ............ vol = 36028.3 +/-  41.6 ... OK
----> testing TRD2 ............ vol = 39978.7 +/-  63.2 ... OK
----> testing PARA ............ vol = 48001.3 +/-  77.6 ... OK
----> testing ARB8 ............ vol = 28481.2 +/-  40.7 ... OK
----> testing SPHE ............ vol =  8726.2 +/-  14.2 ... OK
----> testing TUBE ............ vol = 42345.5 +/-  79.7 ... OK
----> testing TUBS ............ vol =  9808.2 +/-  17.4 ... OK
----> testing ELTU ............ vol = 12566.8 +/-  14.2 ... OK
----> testing CTUB ............ vol = 64655.6 +/- 177.0 ... OK
----> testing CONE ............ vol = 37730.4 +/-  90.3 ... OK
----> testing CONS ............ vol = 23579.7 +/-  65.9 ... OK
----> testing PCON ............ vol = 25559.5 +/-  67.8 ... OK
----> testing PGON ............ vol = 18418.3 +/-  46.2 ... OK
----> testing TRAP ............ vol = 49960.2 +/-  74.3 ... OK
----> testing GTRA ............ vol = 47771.1 +/-  77.3 ... OK
+---> testing BOX  ............... OK
+---> testing TRD1 ............... OK
+---> testing TRD2 ............... OK
+---> testing PARA ............... OK
+---> testing ARB8 ............... OK
+---> testing SPHE ............... OK
+---> testing TUBE ............... OK
+---> testing TUBS ............... OK
+---> testing ELTU ............... OK
+---> testing CTUB ............... OK
+---> testing CONE ............... OK
+---> testing CONS ............... OK
+---> testing PCON ............... OK
+---> testing PGON ............... OK
+---> testing TRAP ............... OK
+---> testing GTRA ............... OK
 === testing global tracking ...
     10 percent
     20 percent
