@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) *.rootmap *.success
-TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo
+TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -120,7 +120,7 @@ LIBS := $(patsubst %.root,lib%.$(DllSuf),$(FILES))
 
 files: $(FILES)
 
-logs: $(patsubst %.root,check%.log,$(FILES))
+logs: $(patsubst %.root,check.%.log,$(FILES))
 
 NumericalTypeEvolution: $(patsubst %.root,check%.success,$(FILES))
 
@@ -132,8 +132,8 @@ $(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h
 %.root: lib%.$(DllSuf) rootalias.C
 	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
 
-check%.log: %.root files
-	$(CMDECHO) root.exe -b -l -q 'read.C("$*")'  2>&1 | grep -v Processing  >$@ 
+check.%.log: %.root files
+	$(CMDECHO) root.exe -b -l -q 'read.C("$*")' 2>&1 | grep -v Processing > $@ 
 	
-check%.success: check%.log
+check%.success: check.%.log
 	$(CMDECHO) diff check.ref $< && touch $@

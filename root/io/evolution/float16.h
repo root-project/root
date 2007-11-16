@@ -2,6 +2,7 @@
 #define FLOAT16_H
 
 #include "TFile.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 class myclass {
@@ -50,7 +51,7 @@ public:
    Double32_t d;   //[0,20,2]
 #elif defined(CASE_double32mantis)
    Double32_t b;   //[0,0,3]
-   Double32_t c;   //[0,0,3]
+   Double32_t c;   //[0,0,5]
    Double32_t s;   //[0,0,3]
    Double32_t i;   //[0,0,3]
    Double32_t l;   //[0,0,3]
@@ -106,7 +107,7 @@ public:
    Float16_t d;   //[0,20,2]
 #elif defined(CASE_float16mantis)
    Float16_t b;   //[0,0,3]
-   Float16_t c;   //[0,0,3]
+   Float16_t c;   //[0,0,5]
    Float16_t s;   //[0,0,3]
    Float16_t i;   //[0,0,3]
    Float16_t l;   //[0,0,3]
@@ -153,7 +154,7 @@ public:
       b = true;
       c = '2';
       s = 3;
-      i = 6;
+      i = 4;
       l = 5;
       ll = 6;
       uc = 7;
@@ -166,9 +167,19 @@ public:
    }
 };
 
+template <typename T>
+T diff(const T& left, const T& right)
+{
+   if (left > right) {
+      return left - right;
+   } else {
+      return right - left;
+   }
+}
+
 template <typename T> 
 bool Compare(const T& ref, const T&obj, const char *name) {
-   bool result = ref == obj;
+   bool result = diff(ref,obj) <= 1;
    if (!result) {
       cout << "Value of " << name << " is " << obj << " instead of " << ref << endl;
    }
@@ -177,7 +188,7 @@ bool Compare(const T& ref, const T&obj, const char *name) {
 
 bool Compare(myclass *ref, myclass *obj) {
    bool result = true;
-//   result = Compare(ref->b,obj->b,"b") && result;
+   result = Compare(ref->b,obj->b,"b") && result;
    result = Compare(ref->c,obj->c,"c") && result;
    result = Compare(ref->s,obj->s,"s") && result;
    result = Compare(ref->i,obj->i,"i") && result;
@@ -202,7 +213,7 @@ void write(const char *filename)
    f->Write();
 }
 
-bool readfile(const char *filename)
+bool readfile(const char *filename, Bool_t checkValue = kTRUE)
 {
    TFile *f = TFile::Open(filename,"READ");
    if (f==0) return false;
@@ -211,7 +222,12 @@ bool readfile(const char *filename)
    myclass *c; f->GetObject("myobj",c);
    myclass *ref = new myclass;
    ref->Seed();
-   return Compare(ref,c);
+
+   if (checkValue) {
+      return Compare(ref,c);
+   } else {
+      return c != 0;
+   }
 }
 
 #ifdef __MAKECINT__
@@ -220,4 +236,4 @@ bool readfile(const char *filename)
 #pragma link C++ function write;
 #endif
 
-#endif`
+#endif
