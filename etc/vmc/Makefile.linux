@@ -1,0 +1,56 @@
+# $Id$
+
+# Linux platform dependent definitions
+
+# The compilers
+CXX   = g++ 
+F77	  = g77
+CC	  = gcc
+
+# Global optimisation
+OPT   = -O2 -g
+
+# Shared library suffix
+SL	  = so
+
+# AWK
+AWK	  = awk
+
+# The options
+#
+# starting from root.2.22 on Linux the flags -fno-rtti -fno-exceptions are
+# not necessary any more
+#
+CXXOPTS       = $(OPT) -Wall -W -fPIC -pipe -Woverloaded-virtual
+COPT	      = $(OPT)
+FOPT	      = $(OPT) -fno-second-underscore
+
+GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
+                  grep version | cut -d' ' -f3  | cut -d'.' -f1)
+ifneq ($(GCC_MAJOR),3)
+   FOPT      := $(filter-out -O%,$(FOPT))
+endif
+
+# CERNLIB defines
+
+CLIBDEFS      = -DCERNLIB_LINUX -DCERNLIB_BLDLIB -DCERNLIB_CZ
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS)
+CLIBFOPT      = $(CLIBDEFS)
+
+LD            = g++
+LDFLAGS       = $(OPT)
+
+SHLD	      = $(LD)
+SOFLAGS       = -Wl,-soname,$(notdir $@) -shared 
+SHLIB         = -lg2c
+
+# Graphics
+#  
+X11FLAGS  := -I/usr/include/X11/extensions -I/usr/include/X11
+XMFLAGS   := -I/usr/X11R6/include
+ifndef OGLFLAGS
+  ifneq ($(OGLHOME),/usr) 
+    OGLFLAGS  := -I$(OGLHOME)/include
+  endif 
+endif

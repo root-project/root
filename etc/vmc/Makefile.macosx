@@ -1,0 +1,70 @@
+# $Id$
+
+# MacOSX platform dependent definitions
+
+# OS version
+MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
+
+# Architecture: PPC or x86
+ARCH_PPCI386 := $(shell arch)
+
+# fink directories
+FINK_ROOT := $(shell which fink | sed -e 's?/bin/fink??')
+
+# The compilers
+CXX   	  = g++ 
+CC	  = gcc
+
+ifeq (g95,$(findstring g95,$(ROOTBUILD)))
+F77	      = g95
+else
+F77	      = gfortran
+endif
+
+# Global optimisation
+OPT   = -g #-O
+
+# Shared library suffix
+SL	  = dylib
+
+# AWK
+AWK	  = awk
+
+# The options
+#
+#
+CXXOPTS       = $(OPT) -pipe -Wall -W -Woverloaded-virtual  
+COPT	      = $(OPT) 
+FOPT	      = $(OPT) -fno-second-underscore -fsloppy-char 
+
+# CERNLIB defines
+
+CLIBDEFS_TMP  = -DCERNLIB_LINUX -DCERNLIB_BLDLIB -DCERNLIB_CZ 
+ifeq (i386,$(findstring i386,$(ARCH_PPCI386)))
+CLIBDEFS      = $(CLIBDEFS_TMP) 
+else
+CLIBDEFS      = $(CLIBDEFS_TMP) -DCERNLIB_PPC
+endif
+
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS)
+CLIBFOPT      = $(CLIBDEFS)
+
+LD            = export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) ; \
+		unset LD_PREBIND ; \
+		g++
+
+LDFLAGS       = $(OPT) -bind_at_load
+
+SHLD	      = $(LD)
+SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
+
+ifeq (g95,$(findstring g95,$(ROOTBUILD)))
+SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
+else
+SHLIB += -ldl -L$(shell gfortran --print-search-dirs | sed -n -e 's/install: //p') -lgfortranbegin -lgfortran
+endif
+
+
+
