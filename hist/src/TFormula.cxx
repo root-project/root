@@ -3072,6 +3072,7 @@ void TFormula::ProcessLinear(TString &formula)
          Error("TFormula", "f_linear not allocated");
          return;
       }
+      gROOT->GetListOfFunctions()->Remove(f);
       fLinearParts.Add(f);
    }
    oa->Delete();
