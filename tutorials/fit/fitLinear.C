@@ -13,7 +13,7 @@ void fitLinear()
    //Example of fitting with a linear function, using the TLinearFitter class
    //This example is for a TGraphErrors, but it can also be used when fitting
    //a histogram, a TGraph2D or a TMultiGraph
-   //Author: Anan Kreshuk
+   //Author: Anna Kreshuk
    
    Int_t n = 40;
    Double_t *x = new Double_t[n];
