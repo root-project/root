@@ -136,15 +136,13 @@ namespace {
 
    Bool_t LoadDictionaryForSTLType( const std::string& tname, void* klass )
    {
-   // if name is of a known STL class, load the appropriate CINT dll(s), always reset klass
+   // if name is of a known STL class, tell CINT to load the dll(s), always reset klass
 
       std::string sub = tname.substr( 0, tname.find( "<" ) );
       if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
       // removal is required or the dictionary can't be updated properly
          if ( klass != 0 )
             TClass::RemoveClass( (TClass*)klass );
-
-         Bool_t result = kTRUE;
 
       // make sure to only load once
          if ( gLoadedSTLTypes.find( sub ) == gLoadedSTLTypes.end() ) {
@@ -153,37 +151,16 @@ namespace {
             if ( sub.substr( 0, 5 ) == "std::" )
                sub = sub.substr( 5, std::string::npos );
 
-         // attempt to load file (may not be built and therefore unavailable)
-            int loadOk = G__loadfile( (sub+".dll").c_str() );
-            if ( 0 <= loadOk ) {
-            // special case for map and multimap, which are spread over 2 files
-               if ( sub == "map" || sub == "multimap" ) {
-                  loadOk = G__loadfile( (sub+"2.dll").c_str() );
-               }
+         // tell CINT to go for it
+            gROOT->ProcessLine( (std::string( "#include <" ) + sub + ">").c_str() );
 
-            // success; prevent second attempt to load by erasing name
-               gLoadedSTLTypes.insert( sub );
-               gLoadedSTLTypes.insert( "std::" + sub );
-            }
-
-         // on success, synchronize gROOT and CINT, otherwise warn user of doom
-            if ( 0 <= loadOk ) {
-               gInterpreter->UpdateListOfTypes();
-            } else {
-               PyErr_Warn( PyExc_RuntimeWarning,
-                  const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
-               result = kFALSE;
-            }
+         // prevent second attempt to load by erasing name
+            gLoadedSTLTypes.insert( sub );
+            gLoadedSTLTypes.insert( "std::" + sub );
 
          }
 
-      // verify that CINT understands the class, then add it for gROOT
-         if ( G__ClassInfo( tname.c_str() ).IsValid() ) {
-            TClass* cl = new TClass( tname.c_str() );
-            TClass::AddClass( cl );
-         }
-
-         return result;
+         return kTRUE;
       }
 
    // this point is only reached if this is not an STL class, but that's ok
