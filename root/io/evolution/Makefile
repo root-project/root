@@ -110,11 +110,13 @@ ClonesArrayEvo.log: Event_3_cxx.$(DllSuf)
 ClonesArrayEvo: ClonesArrayEvo.log
 	$(TestDiff)
 
-FILES = int.root float16.root double32.root regular.root char.root  \
+FILES := int.root float16.root double32.root regular.root char.root  \
        short.root long.root longlong.root uchar.root ushort.root \
        uint.root ulong.root ulonglong.root float.root double.root \
        double32enough.root double32tooshort.root double32mantis.root \
        float16enough.root float16tooshort.root float16mantis.root
+
+LIBS := $(patsubst %.root,lib%.$(DllSuf),$(FILES))
 
 files: $(FILES)
 
@@ -124,7 +126,7 @@ NumericalTypeEvolution: $(patsubst %.root,check%.success,$(FILES))
 
 .PRECIOUS: lib%.$(DllSuf) %.root
 
-lib%.$(DllSuf): rootalias.C float16.cxx float16.h
+$(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h
 	$(CMDECHO) root.exe -b -l -q 'compile.C("$*")' > $*.log 2>&1
 	
 %.root: lib%.$(DllSuf) rootalias.C

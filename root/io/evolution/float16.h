@@ -82,7 +82,7 @@ public:
    Float16_t s;   //[0,20,10]
    Float16_t i;   //[0,20,10]
    Float16_t l;   //[0,20,10]
-   Float16_t ll;  //[0,20,10]
+   Float16_t ll;  //[0,20,20]
    Float16_t uc;  //[0,20,10]
    Float16_t us;  //[0,20,10]
    Float16_t ui;  //[0,20,10]
@@ -153,7 +153,7 @@ public:
       b = true;
       c = '2';
       s = 3;
-      i = 4;
+      i = 6;
       l = 5;
       ll = 6;
       uc = 7;
