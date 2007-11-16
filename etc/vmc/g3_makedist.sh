@@ -26,7 +26,7 @@ elif [ "x$2" = "xlib" ]; then
 else
    GCC_VERS=$1
 fi
-VERSION=`cat geant3/config/version_number`
+VERSION=`cat geant3/version_number`
 MACHINE=`root-config --arch`
 if [ "x$MAKELIB" = "xlib" ]; then
    if [ "x$GCC_VERS" = "x" ]; then  
@@ -50,7 +50,7 @@ else
    TAR=$TAR" zcvf"
    rm -f $TARFILE.gz
    TARFILE=$TARFILE".gz"
-   EXCLUDE="--exclude CVS --exclude tmp --exclude geant3/tgt_*"
+   EXCLUDE="--exclude .svn --exclude tmp --exclude geant3/tgt_*"
 fi
 
 SOURCES=`ls geant3`

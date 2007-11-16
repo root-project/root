@@ -26,7 +26,7 @@ elif [ "x$2" = "xlib" ]; then
 else
    GCC_VERS=$1
 fi
-VERSION=`cat geant4_vmc/config/version_number`
+VERSION=`cat geant4_vmc/version_number`
 MACHINE=`root-config --arch`
 if [ "x$MAKELIB" = "xgeant4_vmc/lib" ]; then
    if [ "x$GCC_VERS" = "x" ]; then  
@@ -50,7 +50,7 @@ else
    TAR=$TAR" zcvf"
    rm -f $TARFILE.gz
    TARFILE=$TARFILE".gz"
-   EXCLUDE="--exclude CVS"
+   EXCLUDE="--exclude .svn"
 fi
 
 $TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/"history" geant4_vmc/config  \
