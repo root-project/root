@@ -146,7 +146,7 @@ public:
    static TVirtualStreamerInfo *Factory(TClass *cl);
 
    //WARNING this class version must be the same as TStreamerInfo
-   ClassDef(TVirtualStreamerInfo,5)  //Abstract Interface describing Streamer information for one class
+   ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
 };
 
 #endif

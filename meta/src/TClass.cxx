@@ -4073,10 +4073,13 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    // Algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
    // if code==1 data members of type enum are not counted in the checksum
+   // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.  
+   //            This is needed for backward compatibility.
 
-   if (fCheckSum && code != 1) return fCheckSum;
+   if (fCheckSum && code == 0) return fCheckSum;
 
    UInt_t id = 0;
+
    int il;
    TString name = GetName();
    TString type;
@@ -4124,10 +4127,22 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          if (prop&kIsArray) {
             for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);
          }
-
+         if (code != 2) {
+            const char *left = strstr(tdm->GetTitle(),"[");
+            if (left) {
+               const char *right = strstr(left,"]");
+               if (right) {
+                  ++left;
+                  while (left != right) {
+                     id = id*3 + *left;
+                     ++left;
+                  }
+               }
+            }
+         }
       }/*EndMembLoop*/
    }
-   ((TClass*)this)->fCheckSum = id;
+   if (code==0) ((TClass*)this)->fCheckSum = id;
    return id;
 }
 

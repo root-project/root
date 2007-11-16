@@ -447,7 +447,6 @@ void TStreamerInfo::BuildCheck()
          if (fClassVersion == 1) {
             TStreamerInfo* v1 = (TStreamerInfo*) array->At(1);
             if (v1) {
-               // FIXME: This is crazy.
                if (fCheckSum != v1->GetCheckSum()) {
                   searchOnChecksum = kTRUE;
                   fClassVersion = array->GetLast() + 1;
@@ -458,7 +457,7 @@ void TStreamerInfo::BuildCheck()
       if (!searchOnChecksum) {
          info = (TStreamerInfo*) array->At(fClassVersion);
       } else {
-         Int_t ninfos = array->GetEntriesFast();
+         Int_t ninfos = array->GetEntriesFast() - 1;
          for (Int_t i = -1; i < ninfos; ++i) {
             info = (TStreamerInfo*) array->UncheckedAt(i);
             if (!info) {
@@ -481,7 +480,30 @@ void TStreamerInfo::BuildCheck()
          Bool_t match = kTRUE;
          Bool_t done = kFALSE;
          if (!fClass->TestBit(TClass::kWarned) && (fClassVersion == info->GetClassVersion()) && (fCheckSum != info->GetCheckSum())) {
+
             match = kFALSE;
+
+            if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->GetListOfDataMembers() && (fClass->GetClassInfo())) {
+               // In the case where the read-in TStreamerInfo does not
+               // match in the 'current' in memory TStreamerInfo for
+               // a non foreign class (we can not get here if this is
+               // a foreign class so we do not need to test it),
+               // we need to add this one more test since the CINT behaviour
+               // with enums changed over time, so verify the checksum ignoring
+               // members of type enum. We also used to not count the //[xyz] comment
+               // in the checksum, so test for that too.
+               if (  (fCheckSum == fClass->GetCheckSum() || fCheckSum == fClass->GetCheckSum(1) || fCheckSum == fClass->GetCheckSum(2))
+                   &&(info->GetCheckSum() == fClass->GetCheckSum() || info->GetCheckSum() == fClass->GetCheckSum(1) || info->GetCheckSum() == fClass->GetCheckSum(2))
+                  )
+               {
+                  match = kTRUE;
+               }
+               if (fOldVersion <= 2) {
+                  // Names of STL base classes was modified in vers==3. Allocators removed
+                  // (We could be more specific (see test for the same case below)
+                  match = kTRUE;
+               }
+            }
          }
          if (info->IsBuilt()) {
             SetBit(kCanDelete);
@@ -498,23 +520,6 @@ void TStreamerInfo::BuildCheck()
                }
                if (strlen(e1->GetTitle()) != strlen(e2->GetTitle())) {
                   e2->SetTitle(e1->GetTitle());
-               }
-            }
-            if (!match && fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->GetListOfDataMembers() && (fCheckSum != fClass->GetCheckSum()) && (fClass->GetClassInfo())) {
-               // In the case where the read-in TStreamerInfo does not
-               // match in the 'current' in memory TStreamerInfo for
-               // a non foreign class (we can get here if this is
-               // a foreign class so we do not need to test it),
-               // we need to add this one more test since the CINT behaviour
-               // with enums changed over time, so verify the checksum ignoring
-               // members of type enum
-               if (fCheckSum == fClass->GetCheckSum(1)) {
-                  match = kTRUE;
-               }
-               if (fOldVersion <= 2) {
-                  // Names of STL base classes was modified in vers==3. Allocators removed
-                  // (We could be more specific (see test for the same case below)
-                  match = kTRUE;
                }
             }
             done = kTRUE;
@@ -543,11 +548,12 @@ void TStreamerInfo::BuildCheck()
       }
       if (fClass->GetListOfDataMembers() && (fClassVersion == fClass->GetClassVersion()) && (fCheckSum != fClass->GetCheckSum()) && (fClass->GetClassInfo())) {
          // Give a last chance. Due to a new CINT behaviour with enums
-         //verify the checksum ignoring members of type enum
-         if (fCheckSum != fClass->GetCheckSum(1)) {
+         //verify the checksum ignoring members of type enum and 
+         //verify the checksum without the comments annotation (//[xyz])
+         if (fCheckSum != fClass->GetCheckSum(1) && fCheckSum != fClass->GetCheckSum(2)) {
             if (fClass->IsForeign()) {
                // Find an empty slot.
-               Int_t ninfos = array->GetEntriesFast();
+               Int_t ninfos = array->GetEntriesFast() - 1;
                Int_t slot = 2; // Start of Class version 2.
                while ((slot < ninfos) && (array->UncheckedAt(slot) != 0)) {
                   ++slot;
@@ -1311,6 +1317,7 @@ void TStreamerInfo::Compile()
    fMethod = new ULong_t[ndata];
 
    TStreamerElement* element;
+   TStreamerElement* previous = 0;
    Int_t keep = -1;
    Int_t i;
 
@@ -1345,7 +1352,25 @@ void TStreamerInfo::Compile()
       fElem[fNdata] = (ULong_t) element;
       fMethod[fNdata] = element->GetMethod();
       // try to group consecutive members of the same type
-      if (!TestBit(kCannotOptimize) && (keep >= 0) && (element->GetType() < 10) && (fType[fNdata] == fNewType[fNdata]) && (fMethod[keep] == 0) && (element->GetType() > 0) && (element->GetArrayDim() == 0) && (fType[keep] < kObject) && (fType[keep] != kCharStar) /* do not optimize char* */ && (element->GetType() == (fType[keep]%kRegrouped)) && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)) {
+      if (!TestBit(kCannotOptimize) 
+          && (keep >= 0) 
+          && (element->GetType() < 10) 
+          && (fType[fNdata] == fNewType[fNdata]) 
+          && (fMethod[keep] == 0) 
+          && (element->GetType() > 0) 
+          && (element->GetArrayDim() == 0) 
+          && (fType[keep] < kObject) 
+          && (fType[keep] != kCharStar) /* do not optimize char* */ 
+          && (element->GetType() == (fType[keep]%kRegrouped)) 
+          && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)
+          && ((fOldVersion<6) || !previous || /* In version of TStreamerInfo less than 6, the Double32_t were merged even if their annotation (aka factor) were different */
+              ((element->GetFactor() == previous->GetFactor())
+               && (element->GetXmin() == previous->GetXmin())
+               && (element->GetXmax() == previous->GetXmax())
+              )
+             )
+         ) 
+      {
          if (fLength[keep] == 0) {
             fLength[keep]++;
          }
@@ -1371,6 +1396,7 @@ void TStreamerInfo::Compile()
          }
          fNdata++;
       }
+      previous = element;
    }
 
    for (i = 0; i < fNdata; ++i) {
