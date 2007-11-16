@@ -4547,7 +4547,7 @@ touch Makefile
 #
 if test "x$platform" = "xwin32"  && test ! -d CVS ; then
    message "Converting files in tutorials and test to DOS format"
-   for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
+   for i in tutorials/*.C tutorials/sql/*.sql test/*.cxx test/*.h \
             test/Makefile* test/README etc/system.rootrc
    do
       sed 's/$//' $i > r__tmp
