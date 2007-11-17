@@ -1059,7 +1059,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    if (ipl<0) ipl=0;
    else if (ipl==fNz-1) ipl=fNz-2;
    dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-   if (dz<1E-8) {
+   if (dz<1E-8 && (ipl+2<fNz)) {
       ipl++;
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
    }   
