@@ -1817,11 +1817,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
             //--- left
             ddx1 = xbmin-xxmin;
             ddx2 = xbmax-xxmax;
-            if ((id==0) || (ddx1>-1E-8)) {
+            if ((id==0) || (ddx1>-1E-10)) {
                extra_left[nleft++] = ic;
             }   
             //---right
-            if ((id==(fNoz-1)) || (ddx2<1E-8)) {
+            if ((id==(fNoz-1)) || (ddx2<1E-10)) {
                extra_right[nright++] = ic;
             }   
          }
@@ -1938,11 +1938,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
             //--- left
             ddx1 = xbmin-xxmin;
             ddx2 = xbmax-xxmax;
-            if ((id==0) || (ddx1>-1E-8)) {
+            if ((id==0) || (ddx1>-1E-10)) {
                extra_left[nleft++] = ic;
             }   
             //---right
-            if ((id==(fNoz-1)) || (ddx2<1E-8)) {
+            if ((id==(fNoz-1)) || (ddx2<1E-10)) {
                extra_right[nright++] = ic;
             }   
          }
@@ -2059,11 +2059,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
             //--- left
             ddx1 = xbmin-xxmin;
             ddx2 = xbmax-xxmax;
-            if ((id==0) || (ddx1>-1E-8)) {
+            if ((id==0) || (ddx1>-1E-10)) {
                extra_left[nleft++] = ic;
             }   
             //---right
-            if ((id==(fNoz-1)) || (ddx2<1E-8)) {
+            if ((id==(fNoz-1)) || (ddx2<1E-10)) {
                extra_right[nright++] = ic;
             }   
          }
