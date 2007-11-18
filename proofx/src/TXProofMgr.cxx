@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
+#ifdef WIN32
+#include <io.h>
+#endif
 
 #include "TList.h"
 #include "TObjArray.h"
