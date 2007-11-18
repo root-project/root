@@ -580,6 +580,8 @@ int TGHtml::Tokenize()
    int pIsInNoFrames = 0;
    int sawdot = 0;
    int inLi = 0;
+   
+   static char null[1] = { "" };
 
    inpCol = iCol;
    n = nComplete;
@@ -801,7 +803,6 @@ int TGHtml::Tokenize()
       // Markup.
       //
       // First get the name of the markup
-      static char null[1] = { "" };
 doMarkup:
       argc = 1;
       argv[0] = &z[n+1];
