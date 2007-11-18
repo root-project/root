@@ -270,11 +270,11 @@ void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
       GContext_t gcLight, gcDark;
 
       if (relief != HTML_RELIEF_FLAT) {
-         int iLight, iDark;
-         iLight = GetLightShadowColor(src->style.bgcolor);
-         gcLight = GetGC(iLight, FONT_Any);
-         iDark = GetDarkShadowColor(src->style.bgcolor);
-         gcDark = GetGC(iDark, FONT_Any);
+         int iLight1, iDark1;
+         iLight1 = GetLightShadowColor(src->style.bgcolor);
+         gcLight = GetGC(iLight1, FONT_Any);
+         iDark1 = GetDarkShadowColor(src->style.bgcolor);
+         gcDark = GetGC(iDark1, FONT_Any);
          if (relief == HTML_RELIEF_SUNKEN) {
             GContext_t gcTemp = gcLight;
             gcLight = gcDark;

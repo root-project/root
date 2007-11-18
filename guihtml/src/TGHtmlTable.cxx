@@ -98,14 +98,14 @@ void TGHtml::StringHW(const char *str, int *h, int *w)
 }
 
 //______________________________________________________________________________
-TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
+TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
 {
    // Return text and images from a table as lists.
    // The first list is a list of rows (which is a list of cells).
    // An optional second list is a list of images: row col charoffset tokenid.
    // Note: weve added the option to store data/attrs in array var directly.
    //
-   // flags - include images
+   // flag - include images
 
    int j, h, w,
       Nest = 0,
@@ -116,8 +116,8 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
       maxh = 1;
    int cspans = 0,
       rspanstart = 0,
-      images = flags & 1,
-      attrs = flags & 2;
+      images = flag & 1,
+      attrs = flag & 2;
    unsigned short maxw[HTML_MAX_COLUMNS];
    short rspans[HTML_MAX_COLUMNS];
    char buf[100];
@@ -260,7 +260,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flags)
             for (j = 0; j < p->count; j++) {
                substr.Append(" ");
             }
-//        if ((p->flags & HTML_NewLine) != 0)
+//        if ((p->flag & HTML_NewLine) != 0)
 //          substr.Append("\n");
             break;
 
@@ -373,12 +373,12 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    // pStart    - The <table> markup
    // lineWidth - Total width available to the table
 
-   TGHtmlElement *p;                   // Element being processed
-   TGHtmlElement *pNext;               // Next element to process
-   int iCol = 0;                      // Current column number.  1..N
+   TGHtmlElement *p;                  // Element being processed
+   TGHtmlElement *pNext;              // Next element to process
+   int iCol1 = 0;                     // Current column number.  1..N
    int iRow = 0;                      // Current row number
-   TGHtmlElement *inRow = 0;           // Pointer to <TR>
-   TGHtmlElement *inCol = 0;           // Pointer to <TD>
+   TGHtmlElement *inRow = 0;          // Pointer to <TR>
+   TGHtmlElement *inCol = 0;          // Pointer to <TD>
    int i, j;                          // Loop counters
    int n;                             // Number of columns
    int minW, maxW, requestedW;        // min, max, requested width for a cell
@@ -497,7 +497,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
             ((TGHtmlRef *)p)->pOther = pStart;
             iRow++;
             pStart->nRow++;
-            iCol = 0;
+            iCol1 = 0;
             inRow = p;
             availWidth = maxTableWidth;
             break;
@@ -526,14 +526,14 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                break;
             }
             do {
-               iCol++;
-            } while (iCol <= pStart->nCol && fromAbove[iCol] > iRow);
+               iCol1++;
+            } while (iCol1 <= pStart->nCol && fromAbove[iCol1] > iRow);
             cell->pTable = pStart;
             cell->pRow = inRow;
             colspan = cell->colspan;
             if (colspan == 0) colspan = 1;
-            if (iCol + colspan - 1 > pStart->nCol) {
-               int nCol = iCol + colspan - 1;
+            if (iCol1 + colspan - 1 > pStart->nCol) {
+               int nCol = iCol1 + colspan - 1;
                if (nCol > HTML_MAX_COLUMNS) nCol = HTML_MAX_COLUMNS;
                for (i = pStart->nCol + 1; i <= nCol; i++) {
                   fromAbove[i] = 0;
@@ -568,7 +568,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
             TRACE(HtmlTrace_Table1,
                   ("Row %d Column %d: min=%d max=%d req=%d stop at %s\n",
-                  iRow, iCol, minW, maxW, requestedW,
+                  iRow, iCol1, minW, maxW, requestedW,
                   GetTokenName(((TGHtmlCell *)p)->pEnd)));
 
             if (noWrap) {
@@ -578,25 +578,25 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                   minW = maxW;
                }
             }
-            if (iCol + cell->colspan <= HTML_MAX_COLUMNS) {
+            if (iCol1 + cell->colspan <= HTML_MAX_COLUMNS) {
                int min = 0;
                if (cell->colspan == 0) {
-                  SETMAX(min0span[iCol], minW);
-                  SETMAX(max0span[iCol], maxW);
-                  min = min0span[iCol] + separation;
+                  SETMAX(min0span[iCol1], minW);
+                  SETMAX(max0span[iCol1], maxW);
+                  min = min0span[iCol1] + separation;
                } else if (colspan == 1) {
-                  SETMAX(pStart->minW[iCol], minW);
-                  SETMAX(pStart->maxW[iCol], maxW);
-                  SETMAX(reqW[iCol], requestedW);
-                  min = pStart->minW[iCol] + separation;
+                  SETMAX(pStart->minW[iCol1], minW);
+                  SETMAX(pStart->maxW[iCol1], maxW);
+                  SETMAX(reqW[iCol1], requestedW);
+                  min = pStart->minW[iCol1] + separation;
                } else {
                   int n = cell->colspan;
                   int per = maxW / n;
                   int ix;
-                  SETMAX(ColMin(iCol, iCol+n-1), minW);
-                  SETMAX(ColReq(iCol, iCol+n-1), requestedW);
+                  SETMAX(ColMin(iCol1, iCol1+n-1), minW);
+                  SETMAX(ColReq(iCol1, iCol1+n-1), requestedW);
                   min = minW + separation;
-                  for (ix = iCol; ix < iCol + n; ix++) {
+                  for (ix = iCol1; ix < iCol1 + n; ix++) {
                      if (minW != maxW) {  //-- without this some tables are not displayed properly
                         SETMAX(pStart->maxW[ix], per);
                      }
@@ -607,14 +607,14 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
             rowspan = cell->rowspan;
             if (rowspan == 0) rowspan = LARGE_NUMBER;
             if (rowspan > 1) {
-               for (i = iCol; i < iCol + cell->colspan && i < HTML_MAX_COLUMNS; i++) {
+               for (i = iCol1; i < iCol1 + cell->colspan && i < HTML_MAX_COLUMNS; i++) {
                   fromAbove[i] = iRow + rowspan;
                }
             }
             if (cell->colspan > 1) {
-               iCol += cell->colspan - 1;
+               iCol1 += cell->colspan - 1;
             } else if (cell->colspan == 0) {
-               iCol = HTML_MAX_COLUMNS + 1;
+               iCol1 = HTML_MAX_COLUMNS + 1;
             }
             break;
          }
@@ -1117,7 +1117,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    // Do all layout for a single table.  Return the </table> element or
    // NULL if the table is unterminated.
 
-   TGHtmlElement *pEnd;        // The </table> element
+   TGHtmlElement *pEnd1;       // The </table> element
    TGHtmlElement *p;           // For looping thru elements of the table
    TGHtmlElement *pNext;       // Next element in the loop
    TGHtmlElement *pCaption;    // Start of the caption text.  The <caption>
@@ -1177,7 +1177,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
    // figure out how much space the table wants for each column,
    // and in total..
-   pEnd = html->TableDimensions(pTable, lineWidth);
+   pEnd1 = html->TableDimensions(pTable, lineWidth);
 
    // If we don't have enough horizontal space to accomodate the minimum table
    // width, then try to move down past some obstruction (such as an
@@ -1243,7 +1243,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    if (n <= 0 || pTable->maxW[0] <= 0) {
       // Abort if the table has no columns at all or if the total width
       // of the table is zero or less.
-      return pEnd;
+      return pEnd1;
    }
 
    zAlign = pTable->MarkupArg("align", "");
@@ -1316,7 +1316,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
       while (p && p->type != Html_TR) {
          if (p->type == Html_CAPTION) {
             pCaption = p;
-            while (p && p != pEnd && p->type != Html_EndCAPTION) p = p->pNext;
+            while (p && p != pEnd1 && p->type != Html_EndCAPTION) p = p->pNext;
             pEndCaption = p;
          }
 
@@ -1334,7 +1334,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
          if (lastRow[iCol] < iRow) ymax[iCol] = 0;
       }
       iCol = 0;
-      for (p = p->pNext; p && p->type != Html_TR && p != pEnd; p = pNext) {
+      for (p = p->pNext; p && p->type != Html_TR && p != pEnd1; p = pNext) {
          pNext = p->pNext;
 
          TRACE(HtmlTrace_Table3, ("Processing token %s\n", html->GetTokenName(p)));
@@ -1432,7 +1432,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
             // Gotta remember where the caption is so we can render it
             // at the end
             pCaption = p;
-            while (pNext && pNext != pEnd && pNext->type != Html_EndCAPTION) {
+            while (pNext && pNext != pEnd1 && pNext->type != Html_EndCAPTION) {
                pNext = pNext->pNext;
             }
             pEndCaption = pNext;
@@ -1524,24 +1524,24 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
       TRACE(HtmlTrace_Table2, (
             "Done with TableLayout().  x=%d y=%d w=%d h=%d Return %s\n",
             pTable->x, pTable->y, pTable->w, pTable->h,
-            html->GetTokenName(pEnd)));
+            html->GetTokenName(pEnd1)));
       TRACE_POP(HtmlTrace_Table2);
 
-   return pEnd;
+   return pEnd1;
 }
 
 
 // Move all elements in the given list vertically by the amount dy
 //
 // p     - First element to move
-// pLast - Last element.  Do move this one
+// pLast1 - Last element.  Do move this one
 // dy    - Amount by which to move
 
-void TGHtml::MoveVertically(TGHtmlElement *p, TGHtmlElement *pLast, int dy) {
+void TGHtml::MoveVertically(TGHtmlElement *p, TGHtmlElement *pLast1, int dy) {
 
   if (dy == 0) return;
 
-  while (p && p != pLast) {
+  while (p && p != pLast1) {
     switch (p->type) {
       case Html_A:
         ((TGHtmlAnchor *)p)->y += dy;

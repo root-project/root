@@ -58,7 +58,7 @@ void TGHtmlLayoutContext::Reset()
 
 //______________________________________________________________________________
 void TGHtmlLayoutContext::PushMargin(SHtmlMargin **ppMargin,
-                                    int indent, int bottom, int tag)
+                                    int indent, int mbottom, int tag)
 {
    // Push a new margin onto the given margin stack.
    //
@@ -72,7 +72,7 @@ void TGHtmlLayoutContext::PushMargin(SHtmlMargin **ppMargin,
    //
    //  ppMargin - The margin stack onto which to push
    //  indent   - The indentation for the new margin
-   //  bottom   - The margin expires at this Y coordinate
+   //  mbottom  - The margin expires at this Y coordinate
    //  tag      - Markup that will cancel this margin
 
    SHtmlMargin *pNew = new SHtmlMargin;
@@ -82,7 +82,7 @@ void TGHtmlLayoutContext::PushMargin(SHtmlMargin **ppMargin,
    } else {
       pNew->indent = indent;
    }
-   pNew->bottom = bottom;
+   pNew->bottom = mbottom;
    pNew->tag = tag;
    *ppMargin = pNew;
 }
@@ -428,8 +428,8 @@ void TGHtmlLayoutContext::FixAnchors(TGHtmlElement *p, TGHtmlElement *p_end, int
 
 //______________________________________________________________________________
 int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
-               TGHtmlElement *p_end, int bottom, int width,
-               int actualWidth, int leftMargin, int *max_x)
+               TGHtmlElement *p_end, int mbottom, int width,
+               int actualWidth, int lMargin, int *max_x)
 {
    // This routine computes the X and Y coordinates for all elements of
    // a line that has been gathered using GetLine() above. It also figures
@@ -441,10 +441,10 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
    //
    // p_start     - Start of tokens for this line
    // p_end       - First token past end of this line. Maybe NULL
-   // bottom      - Put the top of this line here
+   // mbottom     - Put the top of this line here
    // width       - This is the space available to the line
    // actualWidth - This is the actual width needed by the line
-   // leftMargin  - The current left margin
+   // lMargin     - The current left margin
    // max_x       - Write maximum X coordinate of ink here
 
    int dx;                // Amount by which to increase all X coordinates
@@ -452,7 +452,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
    int maxTextAscent;     // Maximum height above baseline for text
    int maxDescent;        // Maximum depth below baseline
    int ascent, descent;   // Computed ascent and descent for one element
-   TGHtmlElement *p;       // For looping
+   TGHtmlElement *p;      // For looping
    int y;                 // Y coordinate of the baseline
    int dy2center;         // Distance from baseline to text font center
    int max = 0;
@@ -464,11 +464,11 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
       for (p = p_start; p && p != p_end; p = p->pNext) {
          int ss;
          if (p->style.align == ALIGN_Center) {
-            dx = leftMargin + (width - actualWidth) / 2;
+            dx = lMargin + (width - actualWidth) / 2;
          } else if (p->style.align == ALIGN_Right) {
-            dx = leftMargin + (width - actualWidth);
+            dx = lMargin + (width - actualWidth);
          } else {
-            dx = leftMargin;
+            dx = lMargin;
          }
          if (dx < 0) dx = 0;
          if (p->style.flags & STY_Invisible) continue;
@@ -572,7 +572,7 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
       }
 
       *max_x = max;
-      y = maxAscent + bottom;
+      y = maxAscent + mbottom;
       maxDescent = 0;
 
       for (p = p_start; p && p != p_end; p = p->pNext) {
@@ -635,12 +635,12 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
       }
 
 //    TRACE(HtmlTrace_FixLine,
-//       ("Setting baseline to %d. bottom=%d ascent=%d descent=%d dx=%d\n",
-//       y, bottom, maxAscent, maxDescent, dx));
+//       ("Setting baseline to %d. mbottom=%d ascent=%d descent=%d dx=%d\n",
+//       y, mbottom, maxAscent, maxDescent, dx));
 
    } else {
       maxDescent = 0;
-      y = bottom;
+      y = mbottom;
    }
 
    return y + maxDescent;
@@ -1076,7 +1076,7 @@ void TGHtmlLayoutContext::LayoutBlock()
       int lineWidth;
       int actualWidth;
       int y = 0;
-      int leftMargin;
+      int lMargin;
       int max_x = 0;
 
       // Do as much break markup as we can.
@@ -1101,10 +1101,10 @@ void TGHtmlLayoutContext::LayoutBlock()
       while (1) {
 
          // Compute margins
-         ComputeMargins(&leftMargin, &y, &lineWidth);
+         ComputeMargins(&lMargin, &y, &lineWidth);
 
          // Layout a single line of text
-         pNext = GetLine(p, pEnd, lineWidth, left-leftMargin, &actualWidth);
+         pNext = GetLine(p, pEnd, lineWidth, left-lMargin, &actualWidth);
 //      TRACE(HtmlTrace_GetLine,
 //         ("GetLine page=%d left=%d right=%d available=%d used=%d\n",
 //         pageWidth, left, right, lineWidth, actualWidth));
@@ -1120,7 +1120,7 @@ void TGHtmlLayoutContext::LayoutBlock()
          }
 
          // Lock the line into place and exit the loop
-         y = FixLine(p, pNext, y, lineWidth, actualWidth, leftMargin, &max_x);
+         y = FixLine(p, pNext, y, lineWidth, actualWidth, lMargin, &max_x);
          break;
       }
 
