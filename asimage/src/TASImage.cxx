@@ -262,8 +262,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 {
    // Image copy ctor.
 
-   fImage         = 0;
-   fPaintMode     = 1;
+   SetDefaults();
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
@@ -290,6 +289,8 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 TASImage &TASImage::operator=(const TASImage &img)
 {
    // Image assignment operator.
+
+   SetDefaults();
 
    if (this != &img && img.IsValid()) {
       TImage::operator=(img);
@@ -348,7 +349,7 @@ static void init_icon_paths()
 
    TString guiIcons = gEnv->GetValue("Gui.IconPath", "");
 
-   gIconPaths[0] = ".";
+   gIconPaths[0] = StrDup(".");
    gIconPaths[1] = StrDup(homeIcons.Data());
    gIconPaths[2] = StrDup(rootIcons.Data());
    gIconPaths[3] = StrDup(guiIcons.Data());
@@ -361,7 +362,7 @@ static void init_icon_paths()
    gIconPaths[5] = EXTRAICONPATH;
 #endif
 
-   gIconPaths[6] = "";
+   gIconPaths[6] = 0;
 }
 
 //______________________________________________________________________________
@@ -1088,7 +1089,7 @@ void TASImage::Draw(Option_t *option)
 //______________________________________________________________________________
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
                               Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc,
-                              Option_t * /*opt*/)
+                              Option_t *opt)
 {
    // Draw asimage on drawable.
 
@@ -1170,6 +1171,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 
       Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
       if (pic) {
+         TString option = opt;
+         option.ToLower();
+         if (!option.Contains("opaque")) {
+            SETBIT(wsrc,31);
+            SETBIT(hsrc,31);
+         }
          gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
          gVirtualX->DeletePixmap(pic);
       } else {
@@ -6508,10 +6515,13 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    TString name = GetName();
    name.ReplaceAll(".", "_");
    TString str = buf;
+   static int ii = 0;
+   ii++;
 
    str.ReplaceAll("static", "");
    TString xpm = "xpm_";
    xpm += name;
+   xpm += ii;
    str.ReplaceAll("asxpm", xpm.Data());
    out << endl << str << endl << endl;
    out << "   TImage *";

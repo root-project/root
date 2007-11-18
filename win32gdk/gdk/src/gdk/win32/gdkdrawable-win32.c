@@ -737,6 +737,9 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
       if ((hgdiobj = SelectObject(srcdc, GDK_DRAWABLE_XID(src))) == NULL)
          WIN32_GDI_FAILED("SelectObject");
 
+      if (transp && (GetDeviceCaps(hdc, BITSPIXEL) < 32))
+         transp = FALSE;
+
       if (transp) {
          if (!AlphaBlend(hdc, xdest, ydest, width, height,
                          srcdc, xsrc, ysrc, width, height, fnc))
