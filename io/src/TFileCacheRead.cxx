@@ -271,7 +271,7 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
             fFile->Seek(pos);
             // Notify if troubles arise
             if (fFile->ReadBuffer(buf, len))
-            return -1;
+               return -1;
             fFile->Seek(pos+len);
          }
          fBytesToPrefetch += len;
@@ -288,8 +288,10 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    } else {
       Int_t loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
       if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
-         memcpy(buf,&fBuffer[fSeekPos[loc]],len);
-         fFile->Seek(pos+len);
+         if (buf) {
+            memcpy(buf,&fBuffer[fSeekPos[loc]],len);
+            fFile->Seek(pos+len);
+         }
          return 1;
       }
    }
