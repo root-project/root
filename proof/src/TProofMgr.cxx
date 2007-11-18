@@ -162,6 +162,21 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
 }
 
 //______________________________________________________________________________
+Int_t TProofMgr::SendMsgToUsers(const char *, const char *)
+{
+   // Send a message to connected users. Only superusers can do this.
+   // The first argument specifies the message or the file from where to take
+   // the message.
+   // The second argument specifies the user to which to send the message: if
+   // empty or null the message is send to all the connected users.
+   // return 0 in case of success, -1 in case of error
+
+   Warning("SendMsgToUsers","functionality not supported");
+
+   return -1;
+}
+
+//______________________________________________________________________________
 Int_t TProofMgr::Reset(const char *)
 {
    // Send a cleanup request for the sessions associated with the current

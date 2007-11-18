@@ -20,6 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <errno.h>
+
 #include "TList.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -604,4 +606,97 @@ void TXProofMgr::SetROOTVersion(const char *tag)
 
    // We are done
    return;
+}
+
+//______________________________________________________________________________
+Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
+{
+   // Send a message to connected users. Only superusers can do this.
+   // The first argument specifies the message or the file from where to take
+   // the message.
+   // The second argument specifies the user to which to send the message: if
+   // empty or null the message is send to all the connected users.
+   // return 0 in case of success, -1 in case of error
+
+   Int_t rc = 0;
+
+   // Check input
+   if (!msg || strlen(msg) <= 0) {
+      Error("SendMsgToUsers","no message to send - do nothing");
+      return -1;
+   }
+
+   // Buffer (max 32K)
+   const Int_t kMAXBUF = 32768;
+   char buf[kMAXBUF] = {0};
+   char *p = &buf[0];
+   Int_t space = kMAXBUF - 1;
+   Int_t len = 0;
+   Int_t lusr = 0;
+
+   // A specific user?
+   if (usr && strlen(usr) > 0 && (strlen(usr) != 1 || usr[0] != '*')) {
+      lusr = (strlen(usr) + 3);
+      sprintf(buf, "u:%s ", usr);
+      p += lusr;
+      space -= lusr;
+   }
+
+   // Is it from file ?
+   if (!gSystem->AccessPathName(msg, kFileExists)) {
+      // From file: can we read it ?
+      if (gSystem->AccessPathName(msg, kReadPermission)) {
+         Error("SendMsgToUsers","request to read message from unreadable file '%s'", msg);
+         return -1;
+      }
+      // Open the file
+      FILE *f = 0;
+      if (!(f = fopen(msg, "r"))) {
+         Error("SendMsgToUsers", "file '%s' cannot be open", msg);
+         return -1;
+      }
+      // Determine the number of bytes to be read from the file.
+      Int_t left = (Int_t) lseek(fileno(f), (off_t) 0, SEEK_END);
+      lseek(fileno(f), (off_t) 0, SEEK_SET);
+      // Now readout from file
+      Int_t wanted = left;
+      if (wanted > space) {
+         wanted = space;
+         Warning("SendMsgToUsers",
+                 "requested to send %d bytes: max size is %d bytes: truncating", left, space);
+      }
+      do {
+         while ((len = read(fileno(f), p, wanted)) < 0 &&
+                  TSystem::GetErrno() == EINTR)
+            TSystem::ResetErrno();
+         if (len < 0) {
+            SysError("SendMsgToUsers", "error reading file");
+            break;
+         }
+
+         // Update counters
+         left -= len;
+         p += len;
+         wanted = (left > kMAXBUF-1) ? kMAXBUF-1 : left;
+
+      } while (len > 0 && left > 0);
+   } else {
+      // Add the message to the buffer
+      len = strlen(msg);
+      if (len > space) {
+         Warning("SendMsgToUsers",
+                 "requested to send %d bytes: max size is %d bytes: truncating", len, space);
+         len = space;
+      }
+      memcpy(p, msg, len);
+   }
+
+   // Null-terminate
+   buf[len + lusr] = 0;
+//   fprintf(stderr,"%s\n", buf);
+
+   // Send the request
+   fSocket->SendCoordinator(TXSocket::kSendMsgToUser, buf);
+
+   return rc;
 }

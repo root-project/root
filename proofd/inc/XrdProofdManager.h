@@ -86,9 +86,9 @@ class XrdProofdManager {
    // This part may evolve in the future due to better understanding of
    // how resource brokering will work; for the time being we just move in
    // here the functionality we have now
-   int               Broadcast(int type, const char *msg, XrdProofdResponse *r);
+   int               Broadcast(int type, const char *msg, XrdProofdResponse *r, bool notify = 0);
    XrdClientMessage *Send(const char *url, int type,
-                          const char *msg, int srvtype, XrdProofdResponse *r);
+                          const char *msg, int srvtype, XrdProofdResponse *r, bool notify = 0);
 
    const char       *PROOFcfg() const { return fPROOFcfg.fName.c_str(); }
 
@@ -108,6 +108,8 @@ class XrdProofdManager {
    int               fNumLocalWrks; // Number of workers to be started locally
    int               fResourceType; // resource type
    XrdProofdFile     fPROOFcfg;     // PROOF static configuration
+
+   int               fRequestTO;    // Timeout on broadcast request
 
    std::list<XrdProofWorker *> fWorkers;  // List of possible workers
    std::list<XrdProofWorker *> fNodes;   // List of worker unique nodes

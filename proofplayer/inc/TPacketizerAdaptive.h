@@ -56,8 +56,6 @@ public:              // public because of Sun CC bug
    class TSlaveStat;
 
 private:
-   TList         *fPackets;      // all processed packets
-
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
    TList         *fActive;       // nodes with unfinished files

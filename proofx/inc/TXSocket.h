@@ -146,7 +146,8 @@ public:
                         kReadBuffer,
                         kQueryROOTVersions,
                         kROOTVersion,
-                        kGroupProperties};
+                        kGroupProperties,
+                        kSendMsgToUser};
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 

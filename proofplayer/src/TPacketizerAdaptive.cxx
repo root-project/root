@@ -148,7 +148,7 @@ public:
 
    void Add(TDSetElement *elem)
    {
-      TFileStat *f = new TFileStat(this,elem);
+      TFileStat *f = new TFileStat(this, elem);
       fFiles->Add(f);
       if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
    }
@@ -336,12 +336,13 @@ private:
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
    Long64_t       fProcessed;    // number of entries processed
    Float_t        fProcTime;     // sum of processing time of packets
-   Long64_t       fCurProcessed; // eventst processed in the current file
+   Long64_t       fCurProcessed; // events processed in the current file
    Float_t        fCurProcTime;  // proc time spent on the current file
+   TList         *fDSubSet;      // packets processed by this worker
 
 public:
    TSlaveStat(TSlave *slave);
-
+   ~TSlaveStat();
    TFileNode  *GetFileNode() const { return fFileNode; }
    const char *GetName() const { return fSlave->GetName(); }
    Long64_t    GetEntriesProcessed() const { return fProcessed; }
@@ -353,6 +354,8 @@ public:
       return (fCurProcTime?fCurProcessed/fCurProcTime:0); }
    Int_t       GetLocalEventsLeft() {
       return fFileNode?(fFileNode->GetEventsLeftPerSlave()):0; }
+   TList      *GetProcessedSubSet() { return fDSubSet; }
+   Int_t       AddProcessed();   // Add curent packet to the list of processed.
 };
 
 //______________________________________________________________________________
@@ -361,6 +364,14 @@ TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
      fProcTime(0), fCurProcessed(0), fCurProcTime(0)
 {
    //constructor
+   fDSubSet = new TList();
+   fDSubSet->SetOwner();
+}
+
+//______________________________________________________________________________
+TPacketizerAdaptive::TSlaveStat::~TSlaveStat()
+{
+   SafeDelete(fDSubSet);
 }
 
 //______________________________________________________________________________
@@ -379,6 +390,17 @@ void TPacketizerAdaptive::TSlaveStat::UpdateRates(Long64_t nEvents,
    fProcessed += nEvents;
    fCurFile->GetNode()->IncProcessed(nEvents);
 }
+
+//______________________________________________________________________________
+Int_t TPacketizerAdaptive::TSlaveStat::AddProcessed()
+{
+   if (fDSubSet && fCurElem) {
+      fDSubSet->Add(fCurElem);
+      return 0;
+   } else
+      return -1;
+}
+
 //------------------------------------------------------------------------------
 
 ClassImp(TPacketizerAdaptive)
@@ -400,7 +422,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
    // Init pointer members
    fSlaveStats = 0;
-   fPackets = 0;
    fSlaveStats = 0;
    fUnAllocated = 0;
    fActive = 0;
@@ -467,9 +488,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    Double_t baseLocalPreference = 1.2;
    TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
    fBaseLocalPreference = (Float_t)baseLocalPreference;
-
-   fPackets = new TList;
-   fPackets->SetOwner();
 
    fFileNodes = new TList;
    fFileNodes->SetOwner();
@@ -683,7 +701,6 @@ TPacketizerAdaptive::~TPacketizerAdaptive()
       fSlaveStats->DeleteValues();
    }
 
-   SafeDelete(fPackets);
    SafeDelete(fSlaveStats);
    SafeDelete(fUnAllocated);
    SafeDelete(fActive);
@@ -917,8 +934,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                Info("ValidateFiles",
                     "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                    dset->IsTree() ? "tree" : "objects",
-                    elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
+                    dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
+                    elem->GetDirectory(), elem->GetObjName());
          }
       }
 
@@ -931,7 +948,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal(), sl->GetName());
+               Info("ValidateFiles", "   slave-%s (%s)",
+                    sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
@@ -973,7 +991,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          continue;
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
-         Error("ValidateFiles", "unexpected message type (%d) from slave-%s (%s)",
+         Error("ValidateFiles",
+               "unexpected message type (%d) from slave-%s (%s)",
                reply->What(), slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
@@ -999,7 +1018,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
 
          if (!e->GetEntryList()) {
             if ( e->GetFirst() > entries ) {
-               Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
+               Error("ValidateFiles",
+                     "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
 
                // disable element
@@ -1031,7 +1051,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          //fValid = kFALSE; // all element must be readable!
          if (gProofServ) {
             TMessage m(kPROOF_MESSAGE);
-            m << TString(Form("Cannot get entries for file: %s - skipping", e->GetFileName()));
+            m << TString(Form("Cannot get entries for file: %s - skipping",
+                              e->GetFileName()));
             gProofServ->GetSocket()->Send(m);
          }
 
@@ -1145,7 +1166,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
       Long64_t numev = slstat->fCurElem->GetNum();
 
-      fPackets->Add(slstat->fCurElem);
+      slstat->AddProcessed();
       (*r) >> latency >> proctime >> proccpu;
       // only read new info if available
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
@@ -1161,6 +1182,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
       // update processing rate
       slstat->UpdateRates(numev, proctime);
+
       fCumProcTime += proctime;
 
       PDB(kPacketizer,2)

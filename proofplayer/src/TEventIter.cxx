@@ -26,9 +26,11 @@
 #include "TSelector.h"
 #include "TTimeStamp.h"
 #include "TTree.h"
+#include "TTreeCache.h"
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
 #include "TEntryList.h"
+#include "TList.h"
 #include "TMap.h"
 #include "TObjString.h"
 #include "TRegexp.h"
@@ -363,6 +365,26 @@ Long64_t TEventIterObj::GetNextEvent()
 
 //------------------------------------------------------------------------
 
+//______________________________________________________________________________
+TEventIterTree::TFileTree::TFileTree(const char *name, TFile *f)
+               : TNamed(name, ""), fUsed(kFALSE), fFile(f)
+{
+   // Default ctor.
+
+   fTrees = new TList;
+   fTrees->SetOwner();
+}
+//______________________________________________________________________________
+TEventIterTree::TFileTree::~TFileTree()
+{
+   // Default cdtor.
+
+   // Avoid destroying the cache; must be placed before deleting the trees
+   fFile->SetCacheRead(0);
+   SafeDelete(fTrees);
+   SafeDelete(fFile);
+}
+
 ClassImp(TEventIterTree)
 
 //______________________________________________________________________________
@@ -371,6 +393,7 @@ TEventIterTree::TEventIterTree()
    // Default ctor.
 
    fTree = 0;
+   fTreeCache = 0;
 }
 
 //______________________________________________________________________________
@@ -381,6 +404,10 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 
    fTreeName = dset->GetObjName();
    fTree = 0;
+   fTreeCache = 0;
+   fFileTrees = new TList;
+   fFileTrees->SetOwner();
+   fUseTreeCache = gEnv->GetValue("ProofPlayer.UseTreeCache", 1);
 }
 
 //______________________________________________________________________________
@@ -388,7 +415,9 @@ TEventIterTree::~TEventIterTree()
 {
    // Destructor
 
-   SafeDelete(fTree);
+   // The cache is deleted in here
+   SafeDelete(fFileTrees);
+   SafeDelete(fTreeCache);
 }
 
 //______________________________________________________________________________
@@ -397,25 +426,54 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    // Create a Tree for the main TDSetElement and for all the friends.
    // Returns the main tree or 0 in case of an error.
 
-   TTree* main = Load(elem);
-   if (!main)
-      return 0;
+   // Reset used flags
+   TIter nxft(fFileTrees);
+   TFileTree *ft = 0;
+   while ((ft = (TFileTree *)nxft()))
+      ft->fUsed = kFALSE;
 
-   TList *friends = elem->GetListOfFriends();
-   if (friends) {
-      TIter nxf(friends);
-      TPair *p = 0;
-      while ((p = (TPair *) nxf())) {
-         TDSetElement *dse = (TDSetElement *) p->Key();
-         TObjString *str = (TObjString *) p->Value();
-         TTree* friendTree = Load(dse);
-         if (friendTree) {
-            main->AddFriend(friendTree, str->GetName());
+   TTree* main = Load(elem);
+
+   if (main && main != fTree) {
+      // Set the file cache
+      if (fUseTreeCache) {
+         TFile *curfile = main->GetCurrentFile();
+         if (!fTreeCache) {
+            main->SetCacheSize();
+            fTreeCache = (TTreeCache *)curfile->GetCacheRead();
          } else {
-            return 0;
+            curfile->SetCacheRead(fTreeCache);
+            fTreeCache->UpdateBranches(main, kTRUE);
+         }
+      }
+      // Also the friends
+      TList *friends = elem->GetListOfFriends();
+      if (friends) {
+         TIter nxf(friends);
+         TPair *p = 0;
+         while ((p = (TPair *) nxf())) {
+            TDSetElement *dse = (TDSetElement *) p->Key();
+            TObjString *str = (TObjString *) p->Value();
+            TTree* friendTree = Load(dse);
+            if (friendTree) {
+               main->AddFriend(friendTree, str->GetName());
+            } else {
+               return 0;
+            }
          }
       }
    }
+
+   // Remove instances not used
+   nxft.Reset();
+   while ((ft = (TFileTree *)nxft())) {
+      if (!(ft->fUsed)) {
+         fFileTrees->Remove(ft);
+         delete ft;
+      }
+   }
+
+   // Done, successfully or not
    return main;
 }
 
@@ -433,18 +491,53 @@ TTree* TEventIterTree::Load(TDSetElement *e)
    const char *dn = e->GetDirectory();
    const char *tn = e->GetObjName();
 
-   TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("Path.Localroot","");
-   if (!fname.IsNull())
-      typ = TFile::GetType(fn, "", &fname);
-   if (typ != TFile::kLocal)
-      fname = fn;
+   TFile *f = 0;
 
-   // Open the file
-   TFile *f = TFile::Open(fname);
+   // Check if the file is already open
+   TString names(fn);
+   TString name;
+   Ssiz_t from = 0;
+   TFileTree *ft = 0;
+   while (names.Tokenize(name,from,"|")) {
+      TString key(TUrl(name).GetFileAndOptions());
+      if ((ft = (TFileTree *) fFileTrees->FindObject(key.Data()))) {
+         f = ft->fFile;
+         break;
+      }
+   }
+
+   // Open the file, if needed
    if (!f) {
-      Error("GetTrees","file '%s' ('%s') could not be open", fn, fname.Data());
-      return (TTree *)0;
+      TFile::EFileType typ = TFile::kDefault;
+      TString fname = gEnv->GetValue("Path.Localroot","");
+      if (!fname.IsNull())
+         typ = TFile::GetType(fn, "", &fname);
+      if (typ != TFile::kLocal)
+         fname = fn;
+
+      // Open the file
+      f = TFile::Open(fname);
+      if (!f) {
+         Error("GetTrees","file '%s' ('%s') could not be open", fn, fname.Data());
+         return (TTree *)0;
+      }
+
+      // Create TFileTree instance in the list
+      ft = new TFileTree(TUrl(f->GetName()).GetFileAndOptions(), f);
+      fFileTrees->Add(ft);
+   }
+
+   // Check if the tree is already loaded
+   if (ft && ft->fTrees->GetSize() > 0) {
+      TTree *t = 0;
+      if (!strcmp(tn, "*"))
+         t = (TTree *) ft->fTrees->First();
+      else
+         t = (TTree *) ft->fTrees->FindObject(tn);
+      if (t) {
+         ft->fUsed = kTRUE;
+         return t;
+      }
    }
 
    TDirectory *dd = f;
@@ -499,6 +592,10 @@ TTree* TEventIterTree::Load(TDSetElement *e)
       return (TTree*)0;
    }
 
+   // Add track in the cache
+   ft->fTrees->Add(tree);
+   ft->fUsed = kTRUE;
+
    // Done
    return tree;
 }
@@ -540,7 +637,7 @@ Long64_t TEventIterTree::GetNextEvent()
          return -1;
       }
       if (newTree != fTree) {
-         SafeDelete(fTree);
+         // The old tree is wonwd by TFileTree and will be deleted there
          fTree = newTree;
          attach = kTRUE;
          fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
@@ -587,7 +684,7 @@ Long64_t TEventIterTree::GetNextEvent()
    }
 
    if ( attach ) {
-      PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
+      PDB(kLoop,1) Info("GetNextEvent","Call Init(%p) and Notify()",fTree);
       fSel->Init(fTree);
       fSel->Notify();
       TIter next(fSel->GetOutputList());
@@ -608,17 +705,20 @@ Long64_t TEventIterTree::GetNextEvent()
       --fElemNum;
       rv = fEntryList->GetEntry(fEntryListPos);
       fEntryListPos++;
-      return rv;
    } else if (fEventList) {
       --fElemNum;
       rv = fEventList->GetEntry(fEventListPos);
       fEventListPos++;
-      return rv;
    } else {
       --fElemNum;
       ++fElemCur;
       --fNum;
       ++fCur;
-      return fElemCur;
+      rv = fElemCur;
    }
+
+   // For prefetching
+   fTree->LoadTree(rv);
+
+   return rv;
 }

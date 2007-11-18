@@ -83,7 +83,8 @@ enum EAdminMsgType {
    kReadBuffer        = 1007,
    kQueryROOTVersions = 1008,
    kROOTVersion       = 1009,
-   kGroupProperties   = 1010
+   kGroupProperties   = 1010,
+   kSendMsgToUser     = 1011
 };
 
 // XPROOFD Worker CPU load sharing options

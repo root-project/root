@@ -619,9 +619,29 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_srvmsg:
          //
          // Service message
-         Printf(" ");
-         Printf("| Message from server:");
-         Printf("| %.*s", len, (char *)pdata);
+         {
+            // The next 4 bytes may contain a flag to control the way the message is displayed
+            kXR_int32 opt = 0;
+            memcpy(&opt, pdata, sizeof(kXR_int32));
+            opt = net2host(opt);
+            if (opt == 0 || opt == 1) {
+               // Update pointer to data
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            } else {
+               opt = 1;
+            }
+
+            if (opt == 0) {
+               // One line
+               Printf("| %.*s", len, (char *)pdata);
+            } else {
+               // A small header
+               Printf(" ");
+               Printf("| Message from server:");
+               Printf("| %.*s", len, (char *)pdata);
+            }
+         }
          break;
       case kXPD_errmsg:
          //
@@ -1509,6 +1529,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          break;
       case kQueryLogPaths:
          vout = (void **)&bout;
+      case kSendMsgToUser:
       case kGroupProperties:
       case kSessionTag:
       case kSessionAlias:

@@ -66,6 +66,9 @@
 #include "TDrawFeedback.h"
 #include "TList.h"
 
+// By default we start a cluster on the local machine
+const char *refloc = "proof://localhost";
+
 #include "getProof.C"
 
 void runProof(const char *what = "simple",
@@ -100,6 +103,10 @@ void runProof(const char *what = "simple",
    } else {
       fprintf(fs,"session-%s\n", proof->GetSessionTag());
       fclose(fs);
+   }
+   if (!proof) {
+      Printf("runProof: could not start/attach a PROOF session");
+      return;
    }
 
    // Set the number of workers (may only reduce the number of active workers

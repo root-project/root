@@ -19,8 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -34,6 +34,7 @@ class TSelector;
 class TList;
 class TIter;
 class TTree;
+class TTreeCache;
 class TEventList;
 class TEntryList;
 
@@ -123,12 +124,24 @@ public:
 
 
 //------------------------------------------------------------------------
-
 class TEventIterTree : public TEventIter {
 
 private:
-   TString     fTreeName;    // name of the tree object to iterate over
-   TTree      *fTree;        // tree we are iterating over
+   TString     fTreeName;     // name of the tree object to iterate over
+   TTree      *fTree;         // tree we are iterating over
+   TTreeCache *fTreeCache;    // instance of the tree cache for the tree
+   Bool_t      fUseTreeCache; // Control usage of the tree cache
+   TList      *fFileTrees;    // Files && Trees currently open
+
+   // Auxilliary class to keep track open files and loaded trees
+   class TFileTree : public TNamed {
+   public:
+      Bool_t    fUsed;
+      TFile    *fFile;
+      TList    *fTrees;
+      TFileTree(const char *name, TFile *f);
+      virtual ~TFileTree();
+   };
 
    TTree* Load(TDSetElement *elem);
    TTree* GetTrees(TDSetElement *elem);

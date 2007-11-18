@@ -22,6 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "XrdClient/XrdClientConst.hh"
+#include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
@@ -60,6 +62,7 @@ XrdProofdManager::XrdProofdManager()
    fNumLocalWrks = XrdProofdAux::GetNumCPUs();
    fEDest = 0;
    fSuperMst = 0;
+   fRequestTO = 30;
 }
 
 //__________________________________________________________________________
@@ -194,7 +197,12 @@ int XrdProofdManager::Config(const char *fn, XrdSysError *e)
                   }
                }
 
-            } else {
+            } else if (!strcmp("adminreqto",var)) {
+               // Timeout on requested broadcasted to workers; there are 4 attempts,
+               // so the real timeout is 4 x fRequestTO
+               int to = strtol(val, 0, 10);
+               fRequestTO = (to > 0) ? to : fRequestTO;
+           } else {
 
                // Save 'val' first
                XrdOucString tval = val;
@@ -292,7 +300,8 @@ int XrdProofdManager::Config(const char *fn, XrdSysError *e)
 }
 
 //__________________________________________________________________________
-int XrdProofdManager::Broadcast(int type, const char *msg, XrdProofdResponse *r)
+int XrdProofdManager::Broadcast(int type, const char *msg,
+                                XrdProofdResponse *r, bool notify)
 {
    // Broadcast request to known potential sub-nodes.
    // Return 0 on success, -1 on error
@@ -324,7 +333,7 @@ int XrdProofdManager::Broadcast(int type, const char *msg, XrdProofdResponse *r)
                                             : (kXR_int32) kXPD_WorkerServer;
             TRACE(HDBG,"Broadcast: sending request to "<<u);
             // Send request
-            if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r))) {
+            if (!(xrsp = Send(u.c_str(), type, msg, srvtype, r, notify))) {
                TRACE(XERR,"Broadcast: problems sending request to "<<u);
             }
             // Cleanup answer
@@ -343,6 +352,8 @@ int XrdProofdManager::Broadcast(int type, const char *msg, XrdProofdResponse *r)
 XrdProofConn *XrdProofdManager::GetProofConn(const char *url)
 {
    // Get a XrdProofConn for url; create a new one if not available
+
+   XrdSysMutexHelper mhp(&fMutex);
 
    XrdProofConn *p = 0;
    if (fProofConnHash.Num() > 0) {
@@ -366,6 +377,9 @@ XrdProofConn *XrdProofdManager::GetProofConn(const char *url)
    XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
    XrdProofConn::SetRetryParam(1, 1);
 
+   // Request Timeout
+   EnvPutInt(NAME_REQUESTTIMEOUT, fRequestTO);
+
    if ((p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str()))) 
       // Cache it
       fProofConnHash.Rep(url, p, 0, Hash_keepdata);
@@ -380,7 +394,7 @@ XrdProofConn *XrdProofdManager::GetProofConn(const char *url)
 //__________________________________________________________________________
 XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
                                          const char *msg, int srvtype,
-                                         XrdProofdResponse *r)
+                                         XrdProofdResponse *r, bool notify)
 {
    // Broadcast request to known potential sub-nodes.
    // Return 0 on success, -1 on error
@@ -394,8 +408,17 @@ XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
    // Get a connection to the server
    XrdProofConn *conn = GetProofConn(url);
 
+   XrdSysMutexHelper mhp(&fMutex);
+
+   // For requests we try 4 times
+   int maxtry_save = -1;
+   int timewait_save = -1;
+   XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
+   XrdProofConn::SetRetryParam(4, timewait_save);
+
    bool ok = 1;
    if (conn && conn->IsValid()) {
+      XrdOucString notifymsg("Send: ");
       // Prepare request
       XPClientRequest reqhdr;
       const void *buf = 0;
@@ -406,10 +429,18 @@ XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
       reqhdr.proof.int1 = type;
       switch (type) {
          case kROOTVersion:
+            notifymsg += "change-of-ROOT version request to ";
+            notifymsg += url;
+            notifymsg += " msg: ";
+            notifymsg += msg;
             reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
             buf = (msg) ? (const void *)msg : buf;
             break;
          case kCleanupSessions:
+            notifymsg += "cleanup request to ";
+            notifymsg += url;
+            notifymsg += " for user: ";
+            notifymsg += msg;
             reqhdr.proof.int2 = (kXR_int32) srvtype;
             reqhdr.proof.sid = -1;
             reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
@@ -420,6 +451,10 @@ XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
             TRACE(XERR,"Send: invalid request type "<<type);
             break;
       }
+
+      // Notify the client that we are sending the request
+      if (r && notify)
+         r->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notifymsg.c_str(), notifymsg.length());
 
       // Send over
       if (ok)
@@ -441,6 +476,9 @@ XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
          r->Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
       }
    }
+
+   // Restore original retry parameters
+   XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
 
    // Done
    return xrsp;

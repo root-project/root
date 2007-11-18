@@ -3074,7 +3074,7 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
       Broadcast(m, kActive);
       Collect(kActive, fCollectTimeout);
 
-      // Archive ir locally, if required
+      // Archive it locally, if required
       if (path) {
 
          // Get pointer to query

@@ -85,6 +85,7 @@ public:
                                         { return (TObjString *)0; }
    virtual Int_t       Reset(const char *usr = 0);
    virtual void        ShowWorkers();
+   virtual Int_t       SendMsgToUsers(const char *, const char * = 0);
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        SetROOTVersion(const char *) { }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
