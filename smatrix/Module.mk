@@ -20,6 +20,7 @@ SMATRIXDS32 := $(MODDIRS)/G__Smatrix32.cxx
 SMATRIXDO   := $(SMATRIXDS:.cxx=.o)
 SMATRIXDO32 := $(SMATRIXDS32:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
+SMATRIXDH32 := $(SMATRIXDS32:.cxx=.h)
 
 SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h \
 		$(MODDIRI)/Math/SVector.h
@@ -65,7 +66,7 @@ include/Math/%.icc: $(SMATRIXDIRI)/%.icc
 $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libSmatrix.$(SOEXT) $@     \
-		   "$(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)"             \
+		   "$(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)" \
 		   "$(SMATRIXLIBEXTRA)"
 
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
@@ -93,12 +94,13 @@ endif
 all-smatrix:   $(SMATRIXLIB) $(SMATRIXMAP)
 
 clean-smatrix:
-		@rm -f $(SMATRIXO) $(SMATRIXDO)
+		@rm -f $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)
 
 clean::         clean-smatrix
 
 distclean-smatrix: clean-smatrix
-		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDH) $(SMATRIXLIB) $(SMATRIXMAP)
+		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDS32) $(SMATRIXDH) \
+		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP)
 		@rm -rf include/Math
 		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean
 
