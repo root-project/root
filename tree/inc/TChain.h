@@ -73,7 +73,7 @@ public:
    virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = kBigNumber);
    virtual TFriendElement *AddFriend(const char* chainname, const char* dummy = "");
    virtual TFriendElement *AddFriend(const char* chainname, TFile* dummy);
-   virtual TFriendElement *AddFriend(TTree* chain, const char* alias, Bool_t warn = kFALSE);
+   virtual TFriendElement *AddFriend(TTree* chain, const char* alias = "", Bool_t warn = kFALSE);
    virtual void      Browse(TBrowser*);
    virtual void      CanDeleteRefs(Bool_t flag = kTRUE);
    virtual void      CreatePackets();
