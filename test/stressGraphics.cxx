@@ -73,7 +73,7 @@ Int_t    StatusPrint    (TString &filename, Int_t id, const TString &title, Int_
 Int_t    AnalysePS      (const TString &filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
 void     TestReport1    (TCanvas *C, const TString &title);
-void     TestReport2    (TCanvas *C);
+void     TestReport2    ();
 void     DoCcode        (TCanvas *C);
 
 // Tests functions.
@@ -427,12 +427,12 @@ void DoCcode(TCanvas *C)
 
 
 //______________________________________________________________________________
-void TestReport2(TCanvas *C)
+void TestReport2()
 {
    // Report 2:
    // Draw the canvas generate as .C, generate the corresponding PostScript
-   // file, count the number of characters in it and compare the result with 
-   // the reference value.
+   // file (using gPad), count the number of characters in it and compare the
+   // result with the reference value.
 
    TString f2 = Form("sg2_%2.2d.ps",gTestNum);
 
@@ -479,7 +479,7 @@ void tline()
 
    TestReport1(C, "TLine");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 };
 
 
@@ -508,7 +508,7 @@ void tmarker()
 
    TestReport1(C, "TMarker");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 };
 
 
@@ -555,7 +555,7 @@ void tpolyline()
 
    TestReport1(C, "TPolyLine");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 };
 
 
@@ -607,7 +607,7 @@ void patterns()
 
    TestReport1(C, "Fill patterns");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 };
 
 
@@ -694,7 +694,7 @@ void ttext1()
 
    TestReport1(C, "TText 1 (Text attributes)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -711,7 +711,7 @@ void ttext2()
 
    TestReport1(C, "TText 2 (A very long text string)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -733,7 +733,7 @@ void tlatex1()
 
    TestReport1(C, "TLatex 1");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -754,7 +754,7 @@ void tlatex2()
 
    TestReport1(C, "TLatex 2");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -779,7 +779,7 @@ void tlatex3()
 
    TestReport1(C, "TLatex 3 (TLatex in TPaveText)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -858,7 +858,7 @@ void tlatex4()
 
    TestReport1(C, "TLatex 4 (Greek letters)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -962,7 +962,7 @@ void tlatex5()
 
    TestReport1(C, "TLatex 5 (Mathematical Symbols)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1019,7 +1019,7 @@ void transpad()
       
    TestReport1(C, "Transparent pad");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1066,7 +1066,7 @@ void tgaxis1()
 
    TestReport1(C, "TGaxis 1");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1106,7 +1106,7 @@ void tgaxis2()
 
    TestReport1(C, "TGaxis 2");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1173,7 +1173,7 @@ void tgaxis3()
    
    TestReport1(C, "TGaxis 3 (Time on axis)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1204,7 +1204,7 @@ void tgaxis4()
 
    TestReport1(C, "TGaxis 4 (Time on axis)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
    delete h1;
 }
 
@@ -1244,7 +1244,7 @@ void labels1()
 
    TestReport1(C, "Alphanumeric labels in a 1-d histogram");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
    delete hlab1;
 }
 
@@ -1280,7 +1280,7 @@ void tellipse()
 
    TestReport1(C, "TEllipse");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1333,7 +1333,7 @@ void feynman()
 
    TestReport1(C, "Feynman diagrams");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1367,7 +1367,7 @@ void tgraph1()
 
    TestReport1(C, "TGraph 1");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1412,7 +1412,7 @@ void tgraph2()
 
    TestReport1(C, "TGraph 2 (Exclusion Zone)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1458,7 +1458,7 @@ void tmultigraph1()
 
    TestReport1(C, "TMultigraph and TGraphErrors");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1568,7 +1568,7 @@ void tmultigraph2()
 
    TestReport1(C, "All Kind of TMultigraph");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1605,7 +1605,7 @@ void options2d1()
    
    TestReport1(C, "Basic 2D options");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1625,7 +1625,7 @@ void options2d2()
    
    TestReport1(C, "Text option");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1655,7 +1655,7 @@ void options2d3()
    
    TestReport1(C, "Contour options");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1683,7 +1683,7 @@ void options2d4()
    
    TestReport1(C, "Lego options");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -1709,7 +1709,7 @@ void options2d5()
 
    TestReport1(C, "Surface options");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
    delete gH2;
 }
 
@@ -1754,7 +1754,7 @@ void earth()
 
    TestReport1(C, "Special contour options (AITOFF etc.)");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
    delete h1;
    delete h2;
    delete h3;
@@ -1805,7 +1805,7 @@ void tgraph2d1()
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
 	 
-   TestReport2(C);
+   TestReport2();
    delete dt;
 }
 
@@ -1846,7 +1846,7 @@ void tgraph2d2()
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
 	 
-   TestReport2(C);
+   TestReport2();
    delete dt;
 }
 
@@ -1886,7 +1886,7 @@ void tgraph2d3()
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
 	 
-   TestReport2(C);
+   TestReport2();
    delete dt;
 }
 
@@ -1959,7 +1959,7 @@ void ntuple1()
 
    TestReport1(C, "Ntuple drawing and TPad");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -2034,7 +2034,7 @@ void quarks()
 
    TestReport1(C, "Divided pads and TLatex");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -2086,7 +2086,7 @@ void timage()
 
    TestReport1(C, "TImage");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -2113,7 +2113,7 @@ void zoomtf1()
 
    TestReport1(C, "Zoom/UnZoom a collection of TF1");
 ///DoCcode(C);
-///TestReport2(C);
+///TestReport2();
 }
 
 
@@ -2135,7 +2135,7 @@ void zoomfit()
 
    TestReport1(C, "Zoom/UnZoom a fitted histogram");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
@@ -2157,7 +2157,7 @@ void parallelcoord()
 
    TestReport1(C, "Parallel Coordinates");
    DoCcode(C);
-   TestReport2(C);
+   TestReport2();
 }
 
 
