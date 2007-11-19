@@ -154,9 +154,9 @@ char  *TColorWheel::GetObjectInfo(Int_t px, Int_t py) const
    // Return the color number pointed by the mouse
    
    Int_t n = GetColor(px,py);
-   if (n < 0) return "";
+   if (n < 0) return (char*)"";
    TColor *color = gROOT->GetColor(n);
-   if (!color) return "";
+   if (!color) return (char*)"";
    static char info[50];
    Int_t r = (Int_t)(255.01*color->GetRed());
    Int_t g = (Int_t)(255.01*color->GetGreen());
