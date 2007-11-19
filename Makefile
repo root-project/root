@@ -746,7 +746,7 @@ endif
 	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
 	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
 	@rm -f etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d
-	@rm -f macros/html.C
+	@rm -f etc/svninfo.txt macros/html.C
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@cd test && $(MAKE) distclean
