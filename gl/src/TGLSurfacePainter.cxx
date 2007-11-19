@@ -49,7 +49,7 @@ char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
          return fSelectedPart < fSelectionBase ? (char *)"TF2" : (char *)"Switch to true-color mode to obtain correct info";
       return fSelectedPart < fSelectionBase ? (char *)"TF2" : WindowPointTo3DPoint(px, py);
    }
-   return "";
+   return (char *)"";
 }
 
 //______________________________________________________________________________
@@ -1019,7 +1019,7 @@ char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 {
    //Find 3d coords using mouse cursor coords.
    if (!MakeGLContextCurrent())
-      return "Apocalipshit!";
+      return (char *)"Apocalipshit!";
 
    py = fCamera->GetHeight() - py;
 
