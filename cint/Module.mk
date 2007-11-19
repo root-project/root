@@ -267,7 +267,8 @@ clean::         clean-cint
 distclean-cint: clean-cint
 		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
 		   $(CINT) $(CINTTMP) $(MAKECINT) $(CINTDIRM)/*.exp \
-		   $(CINTDIRM)/*.lib $(CINTDIRS)/v6_loadfile_tmp.cxx
+		   $(CINTDIRM)/*.lib $(CINTDIRS)/v6_loadfile_tmp.cxx \
+		   $(CINTDIRDLLS)/sys/types.h $(CINTDIRDLLS)/systypes.h
 
 distclean::     distclean-cint
 
