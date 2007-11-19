@@ -2193,6 +2193,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
       unsigned char *mask_bits = gVirtualX->GetColorBits(mask, 0, 0, w, h);
       fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
       delete [] mask_bits;
+      delete [] bits;
    }
 }
 

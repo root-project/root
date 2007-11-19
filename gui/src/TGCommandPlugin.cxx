@@ -28,7 +28,6 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
 
    SetCleanup(kDeepCleanup);
    fHf = new TGHorizontalFrame(this, 100, 20);
-   fCommandBuf = new TGTextBuffer(256);
    fComboCmd   = new TGComboBox(fHf, "", 1);
    fCommand    = fComboCmd->GetTextEntry();
    fCommandBuf = fCommand->GetBuffer();

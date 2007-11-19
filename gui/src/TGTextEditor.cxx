@@ -401,7 +401,6 @@ void TGTextEditor::Build()
       fToolBar->AddButton(this, &fTbData[i], spacing);
       spacing = 0;
    }
-   fCommandBuf = new TGTextBuffer(256);
    fComboCmd   = new TGComboBox(fToolBar, "");
    fCommand    = fComboCmd->GetTextEntry();
    fCommandBuf = fCommand->GetBuffer();

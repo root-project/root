@@ -1248,10 +1248,11 @@ HRGN BitmapToRegion(HBITMAP hBmp)
     * structure on entry. We will add rectangles by amount of
     * ALLOC_UNIT number in this structure.
     */
-#define ALLOC_UNIT  100
+#define ALLOC_UNIT  200
    maxRects = ALLOC_UNIT;
 
    pData = g_malloc(sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
+   memset(pData, 0, sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
    pData->rdh.dwSize = sizeof(RGNDATAHEADER);
    pData->rdh.iType = RDH_RECTANGLES;
    pData->rdh.nCount = pData->rdh.nRgnSize = 0;
