@@ -382,7 +382,7 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
    //(this can work incorrectly now, because of wrong code in TF2).
    //For TF3 no info now.
    //For box info is: bin numbers (i, j, k), bin content.
-   static char *errMsg = "TGLHistPainter::GetObjectInfo: Error in a hist painter\n";
+   static char *errMsg = (char*)"TGLHistPainter::GetObjectInfo: Error in a hist painter\n";
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
                                    : errMsg;
