@@ -407,7 +407,7 @@ char* TParallelCoordVar::GetObjectInfo(Int_t px, Int_t py) const
 {
    // Returns info about this axis.
 
-   if (!gPad) return "";
+   if (!gPad) return (char*)"";
    static char info[128];
    Double_t xx = gPad->AbsPixeltoX(px);
    Double_t yy = gPad->AbsPixeltoY(py);
