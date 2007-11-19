@@ -279,6 +279,7 @@ void TGTextEdit::Init()
    fCurBlink    = 0;
    fSearch      = 0;
    fEnableMenu  = kTRUE;
+   fEnableCursorWithoutFocus = kTRUE;
 
    gVirtualX->SetCursor(fCanvas->GetId(), fClient->GetResourcePool()->GetTextCursor());
 
@@ -1503,7 +1504,10 @@ Bool_t TGTextEdit::HandleCrossing(Event_t *event)
          gSystem->AddTimer(fCurBlink);
       } else {
          if (fCurBlink) fCurBlink->Remove();
-         if (fCursorState == 2) {
+         if (!fEnableCursorWithoutFocus && (fCursorState == 1)) {
+            DrawCursor(2);
+            fCursorState = 2;
+         } else if (fCursorState == 2) {
             DrawCursor(1);
             fCursorState = 1;
          }

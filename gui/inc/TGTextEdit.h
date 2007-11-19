@@ -56,6 +56,8 @@ protected:
    EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
    Bool_t           fEnableMenu;    // enable context menu with editor actions
    TGTextEditHist  *fHistory;       // undo manager
+   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from 
+                                               // text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -111,6 +113,8 @@ public:
    virtual void   EnableMenu(Bool_t on = kTRUE) { fEnableMenu = on; } //*TOGGLE* *GETTER=IsMenuEnabled
    virtual Bool_t IsMenuEnabled() const { return fEnableMenu; }
    TList         *GetHistory() const { return (TList *)fHistory; }
+   virtual void   EnableCursorWithoutFocus(Bool_t on = kTRUE) { fEnableCursorWithoutFocus = on; }
+   virtual Bool_t IsCursorEnabledithoutFocus() const { return fEnableCursorWithoutFocus; }
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
