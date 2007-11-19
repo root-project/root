@@ -6014,7 +6014,7 @@ void TASImage::Streamer(TBuffer &b)
          Double_t *vec = new Double_t[size];
          b.ReadFastArray(vec, size);
          SetImage(vec, w, h, &fPalette);
-         delete vec;
+         delete [] vec;
       }
       b.CheckByteCount(R__s, R__c, TASImage::IsA());
    } else {
