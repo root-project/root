@@ -32,7 +32,7 @@ TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
 char *TGLTF3Painter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
    //Coords for point on surface under cursor.
-   return "fun3";
+   return (char *)"fun3";
 }
 
 namespace {
@@ -436,7 +436,7 @@ TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinat
 char *TGLIsoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
    //Return info for plot part under cursor.
-   return "iso";
+   return (char *)"iso";
 }
 
 namespace {
