@@ -129,8 +129,8 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
             next(); i++;
          }
 
-   // change tab and generate event
-   main->SetTab(c);
+         // change tab and generate event
+         main->SetTab(c);
       }
    }
    return kTRUE;
