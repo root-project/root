@@ -1708,7 +1708,7 @@ void TGeoManager::GetBranchNames(Int_t *names) const
 const char *TGeoManager::GetPdgName(Int_t pdg) const
 {
 // Get name for given pdg code;
-   static char *defaultname = "XXX";
+   static char defaultname[5] = "XXX";
    if (!fPdgNames || !pdg) return defaultname;
    for (Int_t i=0; i<fNpdg; i++) {
       if (fPdgId[i]==pdg) return fPdgNames->At(i)->GetName();
