@@ -9,7 +9,7 @@ if [ "x$1" = "x-h" -o "x$1" = "x--help" ]; then
     exit
 fi
 
-if [ "x$1" != "x" -a "x${1/--leakoffset=/}" != "x$1" [; then
+if [ "x$1" != "x" -a "x${1/--leakoffset=/}" != "x$1" ]; then
     LEAKOFFSET=${1:13}
     shift
 fi
@@ -23,7 +23,7 @@ if [ "x$INFILE" = "x" ]; then
     echo 'ERROR: cannot find valgrind log in ./, and no log file specified.'
     exit 1
 fi
-if [ ! -r "x$INFILE"]; then
+if [ ! -r "$INFILE" ]; then
     echo 'ERROR: Cannot open input file '$INFILE
     exit 1
 fi

@@ -20,6 +20,7 @@ valgrind: scripts/analyze_valgrind
 	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) CALLROOTEXE="valgrind --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
 	killall valgrind-listener; \
 	grep '==[[:digit:]]\+==' $$valgrindlogfile | scripts/analyze_valgrind \
+	&& scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
 	)
 
 # The user directory should define
