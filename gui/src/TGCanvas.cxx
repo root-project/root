@@ -1107,7 +1107,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
 
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
-                        TGDNDManager::GetDNDactionCopy(), event->fTime);
+                        TGDNDManager::GetDNDActionCopy(), event->fTime);
    } else if (fDragging) {
 
       fX0 =  TMath::Min(fXp,x);
@@ -1192,7 +1192,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          }
          if (gDNDManager->IsDragging()) {
             gDNDManager->Drag(event->fXRoot, event->fYRoot,
-                              TGDNDManager::GetDNDactionCopy(), event->fTime);
+                              TGDNDManager::GetDNDActionCopy(), event->fTime);
          } else {
             OnMouseOver(over_frame);
             gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));

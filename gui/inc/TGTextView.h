@@ -133,11 +133,11 @@ public:
    Bool_t IsReadOnly() const { return fReadOnly; }
    Bool_t IsMarked() const { return fIsMarked; }
 
-   virtual Bool_t HandleDNDdrop(TDNDdata *data);
-   virtual Atom_t HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+   virtual Bool_t HandleDNDDrop(TDNDData *data);
+   virtual Atom_t HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
                                     Int_t xroot, Int_t yroot);
-   virtual Atom_t HandleDNDenter(Atom_t * typelist);
-   virtual Bool_t HandleDNDleave();
+   virtual Atom_t HandleDNDEnter(Atom_t * typelist);
+   virtual Bool_t HandleDNDLeave();
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);

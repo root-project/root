@@ -256,7 +256,7 @@ public:
                 const TGPicture *spic, TGString *name,
                 TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
 
-   virtual TDNDdata *GetDNDdata(Atom_t) {
+   virtual TDNDData *GetDNDData(Atom_t) {
       TObject *object = 0;
       if (fObj->IsA() == TKey::Class())
          object = ((TKey *)fObj)->ReadObj();
@@ -272,15 +272,15 @@ public:
       return &fDNDData;
    }
 
-   virtual Bool_t HandleDNDfinished() {
+   virtual Bool_t HandleDNDFinished() {
       if (GetParent())
-         return ((TGFrame *)GetParent())->HandleDNDfinished();
+         return ((TGFrame *)GetParent())->HandleDNDFinished();
       return kFALSE;
    }
 
 protected:
    TObject     *fObj;
-   TDNDdata     fDNDData;
+   TDNDData     fDNDData;
 };
 
 //______________________________________________________________________________
@@ -602,14 +602,14 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
          fi->SetUserData(obj);
          if (obj->IsA() == TSystemFile::Class()) {
             TString str;
-            TDNDdata data;
+            TDNDData data;
             str = Form("file://%s/%s\r\n",
                     gSystem->UnixPathName(obj->GetTitle()),
                     obj->GetName());
             data.fData = (void *)strdup(str.Data());
             data.fDataLength = str.Length()+1;
             data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
-            fi->SetDNDdata(&data);
+            fi->SetDNDData(&data);
             fi->SetDNDSource(kTRUE);
          }
       }

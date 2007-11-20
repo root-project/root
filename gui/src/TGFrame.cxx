@@ -1545,7 +1545,7 @@ Bool_t TGMainFrame::HandleMotion(Event_t *event)
 
    if (gDNDManager && gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
-                        TGDNDManager::GetDNDactionCopy(), event->fTime);
+                        TGDNDManager::GetDNDActionCopy(), event->fTime);
    }
    return TGCompositeFrame::HandleMotion(event);
 }
@@ -1555,7 +1555,7 @@ Bool_t TGMainFrame::HandleSelection(Event_t *event)
 {
    // Handle primary selection event.
 
-   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
+   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDSelection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelection(event);
    }
@@ -1567,7 +1567,7 @@ Bool_t TGMainFrame::HandleSelectionRequest(Event_t *event)
 {
    // Handle selection request event.
 
-   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDselection()) {
+   if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDSelection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelectionRequest(event);
    }

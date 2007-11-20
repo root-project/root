@@ -138,7 +138,7 @@ public:
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
-   virtual Bool_t HandleDNDfinished() { fBdown = kFALSE; return kTRUE; }
+   virtual Bool_t HandleDNDFinished() { fBdown = kFALSE; return kTRUE; }
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);

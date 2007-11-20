@@ -648,7 +648,7 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Atom_t TGListTree::HandleDNDposition(Int_t /*x*/, Int_t y, Atom_t action,
+Atom_t TGListTree::HandleDNDPosition(Int_t /*x*/, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
    // Handle dragging position events.
@@ -674,7 +674,7 @@ Atom_t TGListTree::HandleDNDposition(Int_t /*x*/, Int_t y, Atom_t action,
 }
 
 //______________________________________________________________________________
-Atom_t TGListTree::HandleDNDenter(Atom_t *typelist)
+Atom_t TGListTree::HandleDNDEnter(Atom_t *typelist)
 {
    // Handle drag enter events.
 
@@ -689,7 +689,7 @@ Atom_t TGListTree::HandleDNDenter(Atom_t *typelist)
 }
 
 //______________________________________________________________________________
-Bool_t TGListTree::HandleDNDleave()
+Bool_t TGListTree::HandleDNDLeave()
 {
    // Handle drag leave events.
 
@@ -697,7 +697,7 @@ Bool_t TGListTree::HandleDNDleave()
 }
 
 //______________________________________________________________________________
-Bool_t TGListTree::HandleDNDdrop(TDNDdata *data)
+Bool_t TGListTree::HandleDNDDrop(TDNDData *data)
 {
    // Handle drop events.
 
@@ -708,7 +708,7 @@ Bool_t TGListTree::HandleDNDdrop(TDNDdata *data)
 }
 
 //______________________________________________________________________________
-void TGListTree::DataDropped(TGListTreeItem *item, TDNDdata *data)
+void TGListTree::DataDropped(TGListTreeItem *item, TDNDData *data)
 {
    // Emit DataDropped() signal.
 
@@ -717,7 +717,7 @@ void TGListTree::DataDropped(TGListTreeItem *item, TDNDdata *data)
    args[0] = (Long_t)item;
    args[1] = (Long_t)data;
 
-   Emit("DataDropped(TGListTreeItem*,TDNDdata*)", args);
+   Emit("DataDropped(TGListTreeItem*,TDNDData*)", args);
 }
 
 //______________________________________________________________________________
@@ -731,7 +731,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
 
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
-                        TGDNDManager::GetDNDactionCopy(), event->fTime);
+                        TGDNDManager::GetDNDActionCopy(), event->fTime);
    } else if ((item = FindItem(event->fY)) != 0) {
 
       if (item->HasCheckBox()) {
@@ -771,7 +771,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
       }
       if (gDNDManager->IsDragging()) {
          gDNDManager->Drag(event->fXRoot, event->fYRoot,
-                           TGDNDManager::GetDNDactionCopy(), event->fTime);
+                           TGDNDManager::GetDNDActionCopy(), event->fTime);
       } else {
          if (fTipItem == item) return kTRUE;
          OnMouseOver(item);

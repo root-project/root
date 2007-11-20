@@ -50,7 +50,7 @@
 class TGResourcePool;
 class TGTextButton;
 class TGVFileSplitter;
-class TDNDdata;
+class TDNDData;
 
 //---- frame states
 
@@ -331,13 +331,13 @@ public:
    Bool_t              IsDNDSource() const { return fDNDState & kIsDNDSource; }
    Bool_t              IsDNDTarget() const { return fDNDState & kIsDNDTarget; }
 
-   virtual TDNDdata   *GetDNDdata(Atom_t /*dataType*/) { return 0; }
-   virtual Bool_t      HandleDNDdrop(TDNDdata * /*DNDdata*/) { return kFALSE; }
-   virtual Atom_t      HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t /*action*/,
+   virtual TDNDData   *GetDNDData(Atom_t /*dataType*/) { return 0; }
+   virtual Bool_t      HandleDNDDrop(TDNDData * /*DNDData*/) { return kFALSE; }
+   virtual Atom_t      HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t /*action*/,
                                          Int_t /*xroot*/, Int_t /*yroot*/) { return kNone; }
-   virtual Atom_t      HandleDNDenter(Atom_t * /*typelist*/) { return kNone; }
-   virtual Bool_t      HandleDNDleave() { return kFALSE; }
-   virtual Bool_t      HandleDNDfinished() { return kFALSE; }
+   virtual Atom_t      HandleDNDEnter(Atom_t * /*typelist*/) { return kNone; }
+   virtual Bool_t      HandleDNDLeave() { return kFALSE; }
+   virtual Bool_t      HandleDNDFinished() { return kFALSE; }
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };

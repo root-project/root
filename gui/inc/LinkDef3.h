@@ -74,7 +74,7 @@
 #pragma link C++ class TGPasswdDialog;
 #pragma link C++ class TGTextEditor;
 #pragma link C++ class TGSpeedo;
-#pragma link C++ class TDNDdata;
+#pragma link C++ class TDNDData;
 #pragma link C++ class TGDNDManager;
 #pragma link C++ class TGDragWindow;
 

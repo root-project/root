@@ -166,7 +166,7 @@ protected:
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
    TBufferFile     *fBuf;            // buffer used for Drag and Drop
-   TDNDdata         fDNDData;        // Drag and Drop data
+   TDNDData         fDNDData;        // Drag and Drop data
    Atom_t          *fDNDTypeList;    // handles DND types
    TGListTreeItem  *fDropItem;       // item on which DND is over
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
@@ -322,15 +322,15 @@ public:
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check);  //*SIGNAL*
-   virtual void DataDropped(TGListTreeItem *item, TDNDdata *data);  //*SIGNAL*
+   virtual void DataDropped(TGListTreeItem *item, TDNDData *data);  //*SIGNAL*
 
-   Bool_t   HandleDNDdrop(TDNDdata *data);
-   Atom_t   HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+   Bool_t   HandleDNDDrop(TDNDData *data);
+   Atom_t   HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
                               Int_t xroot, Int_t yroot);
-   Atom_t   HandleDNDenter(Atom_t * typelist);
-   Bool_t   HandleDNDleave();
+   Atom_t   HandleDNDEnter(Atom_t * typelist);
+   Bool_t   HandleDNDLeave();
 
-   virtual TDNDdata *GetDNDdata(Atom_t) {
+   virtual TDNDData *GetDNDData(Atom_t) {
       return &fDNDData;
    }
 

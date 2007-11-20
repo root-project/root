@@ -29,7 +29,7 @@
 
 class TCanvas;
 class TRootEmbeddedContainer;
-class TDNDdata;
+class TDNDData;
 
 class TRootEmbeddedCanvas : public TGCanvas {
 
@@ -68,11 +68,11 @@ public:
    void       SetAutoFit(Bool_t fit = kTRUE) { fAutoFit = fit; }
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
-   virtual Bool_t HandleDNDdrop(TDNDdata *data);
-   virtual Atom_t HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
+   virtual Bool_t HandleDNDDrop(TDNDData *data);
+   virtual Atom_t HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
                                     Int_t /*xroot*/, Int_t /*yroot*/);
-   virtual Atom_t HandleDNDenter(Atom_t * typelist);
-   virtual Bool_t HandleDNDleave();
+   virtual Atom_t HandleDNDEnter(Atom_t * typelist);
+   virtual Bool_t HandleDNDLeave();
 
    ClassDef(TRootEmbeddedCanvas,0)  //A ROOT TCanvas that can be embedded in a TGFrame
 };

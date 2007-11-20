@@ -1077,7 +1077,7 @@ static Bool_t IsTextFile(const char *candidate)
 }
 
 //______________________________________________________________________________
-Bool_t TGTextView::HandleDNDdrop(TDNDdata *data)
+Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
 {
    // Handle Drop event
 
@@ -1126,7 +1126,7 @@ Bool_t TGTextView::HandleDNDdrop(TDNDdata *data)
 }
 
 //______________________________________________________________________________
-Atom_t TGTextView::HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
+Atom_t TGTextView::HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
    // Handle Drag position event
@@ -1135,7 +1135,7 @@ Atom_t TGTextView::HandleDNDposition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
 }
 
 //______________________________________________________________________________
-Atom_t TGTextView::HandleDNDenter(Atom_t *typelist)
+Atom_t TGTextView::HandleDNDEnter(Atom_t *typelist)
 {
    // Handle Drag Enter event
 
@@ -1152,7 +1152,7 @@ Atom_t TGTextView::HandleDNDenter(Atom_t *typelist)
 }
 
 //______________________________________________________________________________
-Bool_t TGTextView::HandleDNDleave()
+Bool_t TGTextView::HandleDNDLeave()
 {
    // Handle Drag Leave event
 

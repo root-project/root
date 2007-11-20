@@ -102,11 +102,11 @@ private:
    Bool_t   HandleContainerExpose(Event_t *ev);
    Bool_t   HandleContainerCrossing(Event_t *ev);
 
-   Bool_t   HandleDNDdrop(TDNDdata *data);
-   Atom_t   HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+   Bool_t   HandleDNDDrop(TDNDData *data);
+   Atom_t   HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
                               Int_t xroot, Int_t yroot);
-   Atom_t   HandleDNDenter(Atom_t * typelist);
-   Bool_t   HandleDNDleave();
+   Atom_t   HandleDNDEnter(Atom_t * typelist);
+   Bool_t   HandleDNDLeave();
 
 public:
    TRootCanvas(TCanvas *c = 0, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);

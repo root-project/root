@@ -63,7 +63,7 @@ protected:
    Long_t            fModTime;      // modification time
    Long64_t          fSize;         // file size
    TBufferFile      *fBuf;          // buffer used for Drag and Drop
-   TDNDdata          fDNDData;      // Drag and Drop data
+   TDNDData          fDNDData;      // Drag and Drop data
 
    virtual void DoRedraw();
 
@@ -88,29 +88,29 @@ public:
    Int_t    GetUid() const { return fUid; }
    Int_t    GetGid() const { return fGid; }
 
-   virtual TDNDdata *GetDNDdata(Atom_t) {
+   virtual TDNDData *GetDNDdata(Atom_t) {
       return &fDNDData;
    }
 
-   virtual Atom_t HandleDNDenter(Atom_t *) {
+   virtual Atom_t HandleDNDEnter(Atom_t *) {
       if (!IsDNDTarget()) return kNone;
       return gVirtualX->InternAtom("application/root", kFALSE);
    }
 
-   virtual Bool_t HandleDNDleave() {
+   virtual Bool_t HandleDNDLeave() {
       return kTRUE;
    }
 
-   virtual Atom_t HandleDNDposition(int, int, Atom_t action, int, int) {
-      if (action == TGDNDManager::GetDNDactionCopy()) return action;
+   virtual Atom_t HandleDNDPosition(int, int, Atom_t action, int, int) {
+      if (action == TGDNDManager::GetDNDActionCopy()) return action;
       return kNone;
    }
 
-   virtual Bool_t HandleDNDfinished() {
-      return ((TGFrame *)GetParent())->HandleDNDfinished();
+   virtual Bool_t HandleDNDFinished() {
+      return ((TGFrame *)GetParent())->HandleDNDFinished();
    }
 
-   void SetDNDdata(TDNDdata *data) {
+   void SetDNDData(TDNDData *data) {
       if (fDNDData.fDataLength > 0)
          free(fDNDData.fData);
       fDNDData.fData = calloc(sizeof(unsigned char), data->fDataLength);

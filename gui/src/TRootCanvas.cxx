@@ -1659,7 +1659,7 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
+Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
 {
    // Handle drop events.
 
@@ -1709,7 +1709,7 @@ Bool_t TRootCanvas::HandleDNDdrop(TDNDdata *data)
 }
 
 //______________________________________________________________________________
-Atom_t TRootCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+Atom_t TRootCanvas::HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
    // Handle dragging position events.
@@ -1723,7 +1723,7 @@ Atom_t TRootCanvas::HandleDNDposition(Int_t x, Int_t y, Atom_t action,
 }
 
 //______________________________________________________________________________
-Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
+Atom_t TRootCanvas::HandleDNDEnter(Atom_t *typelist)
 {
    // Handle drag enter events.
 
@@ -1740,7 +1740,7 @@ Atom_t TRootCanvas::HandleDNDenter(Atom_t *typelist)
 }
 
 //______________________________________________________________________________
-Bool_t TRootCanvas::HandleDNDleave()
+Bool_t TRootCanvas::HandleDNDLeave()
 {
    // Handle drag leave events.
 
