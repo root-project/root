@@ -333,6 +333,11 @@ Bool_t TRootEmbeddedCanvas::HandleDNDdrop(TDNDdata *data)
       gPad->Clear();
       if (obj->InheritsFrom("TGraph"))
          obj->Draw("ACP");
+      else if (obj->InheritsFrom("TKey")) {
+         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->ReadObj();", obj));
+         if (object && object->IsA()->GetMethodAllAny("Draw"))
+            object->Draw();
+      }
       else if (obj->IsA()->GetMethodAllAny("Draw"))
          obj->Draw();
       gPad->Modified();
