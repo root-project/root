@@ -232,6 +232,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          if (current_sourcedir == target) break;
          //keep only the highest cycle number for each key
          if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
+         if (!strcmp(key->GetClassName(),"TProcessID")) {key->ReadObj(); continue;}
          if (allNames.FindObject(key->GetName())) continue;
          allNames.Add(new TObjString(key->GetName()));
 
