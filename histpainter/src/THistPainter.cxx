@@ -3016,6 +3016,7 @@ theEND:
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
    fH->SetFillColor(fillsav);
+   if (np) delete [] np;
    delete [] xarr;
    delete [] yarr;
    delete [] itarr;
