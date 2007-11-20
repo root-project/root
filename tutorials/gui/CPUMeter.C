@@ -91,6 +91,8 @@ TGShapedMain::~TGShapedMain()
 {
    // Destructor.
 
+   delete fTimer;
+   delete fSpeedo;
 }
 
 //______________________________________________________________________________
@@ -100,9 +102,7 @@ void TGShapedMain::CloseWindow()
 
    if (fTimer)
       fTimer->TurnOff();
-   delete fTimer;
-   delete fSpeedo;
-   delete this;
+   DestroyWindow();
 }
 
 void Update()
