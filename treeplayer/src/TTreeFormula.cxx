@@ -856,7 +856,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             maininfo = clonesinfo;
 
             // We skip some cases because we can assume we have an object.
-            Int_t offset;
+            Int_t offset=0;
             info->GetStreamerElement(element->GetName(),offset);
             if (type == TStreamerInfo::kObjectp ||
                   type == TStreamerInfo::kObjectP ||
@@ -908,7 +908,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             maininfo = collectioninfo;
 
             // We skip some cases because we can assume we have an object.
-            Int_t offset;
+            Int_t offset=0;
             info->GetStreamerElement(element->GetName(),offset);
             if (type == TStreamerInfo::kObjectp ||
                   type == TStreamerInfo::kObjectP ||
@@ -1123,7 +1123,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             previnfo = multi->fNext;
          }
       }
-      Int_t offset;
+      Int_t offset=0;
       Int_t nchname = strlen(right);
       TFormLeafInfo *leafinfo = 0;
       TStreamerElement* element = 0;
