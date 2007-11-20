@@ -510,6 +510,8 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
+   fPos = TMath::Max(fPos, 0);
+   fPos = TMath::Min(fPos, fRange-fPsize);
 
    fSliderSize = TMath::Max(fPsize * (fWidth - (fgScrollBarWidth << 1)) /
                             fRange, (UInt_t) 6);
@@ -526,9 +528,6 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
    fSlider->Resize(fSliderSize, fgScrollBarWidth);
 
    //  fPos = (fX0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
-
-   fPos = TMath::Max(fPos, 0);
-   fPos = TMath::Min(fPos, fRange-fPsize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);
@@ -765,6 +764,8 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
+   fPos = TMath::Max(fPos, 0);
+   fPos = TMath::Min(fPos, fRange-fPsize);
 
    fSliderSize = TMath::Max(fPsize * (fHeight - (fgScrollBarWidth << 1)) /
                             fRange, (UInt_t) 6);
@@ -782,8 +783,6 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 
    //  fPos = (fY0 - fgScrollBarWidth) * (fRange-fPsize) / fSliderRange;
 
-   fPos = TMath::Max(fPos, 0);
-   fPos = TMath::Min(fPos, fRange-fPsize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);
