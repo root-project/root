@@ -391,7 +391,7 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
          return;
       }
 
-      if (acoln+n >= this->fNcols || nr < 0) {
+      if (acoln+nr >= this->fNcols || nr < 0) {
          Error("ExtractRow","row length %d out of range",nr);
          return;
       }
@@ -405,7 +405,7 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
    const Element * const pData     = GetMatrixArray();
    for (Int_t index = sIndex; index < eIndex; index++) {
       const Int_t icol = pColIndex[index];
-      if (icol < acoln || icol >= acoln+n) continue;
+      if (icol < acoln || icol >= acoln+nr) continue;
        v[icol-acoln] = pData[index];
    }
 }
