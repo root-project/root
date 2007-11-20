@@ -1224,7 +1224,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    TGTextButton *ok = new TGTextButton(hf, new TGHotString("OK"), kCDLG_OK);
    TGTextButton *cancel = new TGTextButton(hf, new TGHotString("Cancel"), kCDLG_CANCEL);
-   TGTextButton *fPreview = new TGTextButton(hf, new TGHotString("&Preview"), kCDLG_PREVIEW);
+   fPreview = new TGTextButton(hf, new TGHotString("&Preview"), kCDLG_PREVIEW);
    fPreview->Connect("Clicked()", "TGColorDialog", this, "DoPreview()");
    
    hf->AddFrame(ok, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 3, 0, 0));
