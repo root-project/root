@@ -1961,7 +1961,8 @@ Int_t TGListTree::ReparentChildren(TGListTreeItem *item,
 }
 
 //______________________________________________________________________________
-static Int_t Compare(const void *item1, const void *item2)
+extern "C"
+Int_t Compare(const void *item1, const void *item2)
 {
    return strcmp((*((TGListTreeItem **) item1))->GetText(),
                  (*((TGListTreeItem **) item2))->GetText());
