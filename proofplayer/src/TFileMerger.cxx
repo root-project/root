@@ -87,7 +87,7 @@ Bool_t TFileMerger::AddFile(const char *url)
 
    TFile *newfile;
    TUUID uuid;
-   TString localcopy = "file:/tmp/";
+   TString localcopy = Form("file:%s/", gSystem->TempDirectory());
    localcopy += "ROOTMERGE-";
    localcopy += uuid.AsString();
    localcopy += ".root";
@@ -132,7 +132,7 @@ Bool_t TFileMerger::OutputFile(const char *outputfile)
    fOutputFilename = outputfile;
 
    TUUID uuid;
-   TString localcopy = "file:/tmp/";
+   TString localcopy = Form("file:%s/", gSystem->TempDirectory());
    localcopy += "ROOTMERGED-";
    localcopy += uuid.AsString();
    localcopy += ".root";
