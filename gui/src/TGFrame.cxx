@@ -536,7 +536,8 @@ void TGFrame::Resize(UInt_t w, UInt_t h)
    // If w=0 && h=0 - Resize to deafult size
 
    if (w != fWidth || h != fHeight) {
-      TGDimension siz = GetDefaultSize();
+      TGDimension siz(0,0);
+      siz = GetDefaultSize();
       fWidth = w ? w : siz.fWidth;
       fHeight = h ? h : siz.fHeight;
       TGWindow::Resize(fWidth, fHeight);
@@ -559,7 +560,8 @@ void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
    // If w=0 && h=0 - Resize to deafult size
 
    // we do it anyway as we don't know if it's only a move or only a resize
-   TGDimension siz = GetDefaultSize();
+   TGDimension siz(0,0);
+   siz = GetDefaultSize();
    fWidth = w ? w : siz.fWidth;
    fHeight = h ? h : siz.fHeight;
    fX = x; fY = y;

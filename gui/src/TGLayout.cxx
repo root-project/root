@@ -226,7 +226,7 @@ void TGVerticalLayout::Layout()
    Int_t    remain;
    Int_t    x = 0, y = 0;
    Int_t    bw = fMain->GetBorderWidth();
-   TGDimension size, csize;
+   TGDimension size(0,0), csize(0,0);
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
    Int_t size_expand=0, esize_expand=0, rem_expand=0, tmp_expand = 0;
