@@ -252,8 +252,10 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
             }
          }
          else {
-            if (!fListTree->FindChildByName(fListLevel, name))
-               fListTree->AddItem(fListLevel, name, obj, pic, pic);
+            if (!fListTree->FindChildByName(fListLevel, name)) {
+               TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj, pic, pic);
+               item->SetDNDSource(kTRUE);
+            }
          }
       }
    }
@@ -486,6 +488,7 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
          item->Rename(newname.Data());
       }
       item = fListTree->AddItem(itm, name);
+      item->SetDNDSource(kTRUE);
    }
    if ((fCnt > fGroupSize) && (fCnt >= fNKeys-1)) {
       TString newname = Form("%s-%s", item->GetText(), name);
@@ -494,7 +497,8 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
    GetObjPicture(&pic, obj);
    if (!pic) pic = pic2;
    if (!fListTree->FindChildByName(item, name)) {
-      fListTree->AddItem(item, name, obj, pic, pic);
+      TGListTreeItem *it = fListTree->AddItem(item, name, obj, pic, pic);
+      it->SetDNDSource(kTRUE);
    }
    fCnt++;
 }
@@ -656,7 +660,12 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
       fListTree->ClearViewPort();
    }
    else {
-      if (!item->GetUserData()) {
+      if (item->GetUserData()) {
+         TObject *obj = (TObject *) item->GetUserData();
+         if (obj && obj->InheritsFrom("TKey"))
+            Chdir(item);
+      }
+      else {
          fListTree->GetPathnameFromItem(item, path);
          if (strlen(path) > 1) {
             TString dirname = DirName(item);
@@ -833,6 +842,9 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                if ((fname!="..") && (fname!=".")) { // skip it
                   if (!fListTree->FindChildByName(item, fname)) {
                      itm = fListTree->AddItem(item, fname);
+                     // uncomment line below to set directories as 
+                     // DND targets
+                     //itm->SetDNDTarget(kTRUE);
                      itm->SetUserData(0);
                   }
                }
@@ -857,6 +869,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                if (!fListTree->FindChildByName(item, fname)) {
                   itm = fListTree->AddItem(item,fname,pic,pic);
                   itm->SetUserData(0);
+                  itm->SetDNDSource(kTRUE);
                   if (size && modtime) {
                      char *tiptext = FormatFileInfo(fname.Data(), size, modtime);
                      itm->SetTipText(tiptext);
@@ -920,7 +933,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          XXExecuteDefaultAction(&f);
       }
    }
-   gSystem->ChangeDirectory(savdir.Data());
+   //gSystem->ChangeDirectory(savdir.Data());
    fListTree->ClearViewPort();
 }
 
