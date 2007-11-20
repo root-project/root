@@ -313,6 +313,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    --help  : print usage
    //    -config : print ./configure options
 
+   static char null[1] = { "" };
+
    fNoLog = kFALSE;
    fQuit  = kFALSE;
    fFiles = 0;
@@ -344,21 +346,21 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
-         argv[i] = "";
+         argv[i] = null;
       } else if (!strcmp(argv[i], "-n")) {
          fNoLog = kTRUE;
-         argv[i] = "";
+         argv[i] = null;
       } else if (!strcmp(argv[i], "-q")) {
          fQuit = kTRUE;
-         argv[i] = "";
+         argv[i] = null;
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
          fNoLogo = kTRUE;
-         argv[i] = "";
+         argv[i] = null;
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
-         argv[i] = "";
+         argv[i] = null;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
          Long_t id, flags, modtime;
@@ -387,7 +389,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
             }
-            argv[i] = "";
+            argv[i] = null;
          } else {
             char *mac, *s = strtok(dir, "+(");
             if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
@@ -395,7 +397,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
-               argv[i] = "";
+               argv[i] = null;
                delete [] mac;
             } else
                // only warn if we're plain root,

@@ -407,8 +407,10 @@ char* TParallelCoordVar::GetObjectInfo(Int_t px, Int_t py) const
 {
    // Returns info about this axis.
 
-   if (!gPad) return (char*)"";
    static char info[128];
+   info[0] = 0;
+
+   if (!gPad) return info;
    Double_t xx = gPad->AbsPixeltoX(px);
    Double_t yy = gPad->AbsPixeltoY(py);
    if (fX1 == fX2) {
@@ -679,7 +681,7 @@ void TParallelCoordVar::PaintHistogram()
    Int_t i;
 
    TFrame *frame = gPad->GetFrame();
-   
+
    if (!fHistogram) GetHistogram();
 
    // Paint the axis body.
@@ -844,7 +846,7 @@ void TParallelCoordVar::Print(Option_t* /*option*/) const
 void TParallelCoordVar::SavePrimitive(ostream & out, Option_t* options)
 {
    // Save the TParallelCoordVar as a macro. Can be used only in the context
-   // of TParallelCoord::SavePrimitive (pointer "TParallelCoord* para" is 
+   // of TParallelCoord::SavePrimitive (pointer "TParallelCoord* para" is
    // defined in TParallelCoord::SavePrimitive) with the option "pcalled".
 
    TString opt = options;

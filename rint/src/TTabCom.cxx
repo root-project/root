@@ -440,7 +440,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       const char *tmpfilename = tmpnam(0);
       FILE *fout = fopen(tmpfilename, "w");
       if (!fout) return 0;
-      G__display_class(fout,"",0,0);
+      G__display_class(fout, (char*)"", 0, 0);
       fclose(fout);
 
       // open the file

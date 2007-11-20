@@ -548,8 +548,9 @@ void TMapFile::Add(const TObject *obj, const char *name)
    else
       n = obj->GetName();
 
-   if (Remove(n, kFALSE))
-      ; //Warning("Add", "replaced object with same name %s", n);
+   if (Remove(n, kFALSE)) {
+      //Warning("Add", "replaced object with same name %s", n);
+   }
 
    TMapRec *mr = new TMapRec(n, obj, 0, 0);
    if (!fFirst) {

@@ -1507,7 +1507,7 @@ void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
          }
       }
    }
-  
+
    TClass *cl = gROOT->GetClass(item, load);
    if (cl) cl->ResetClassInfo(tagnum);
 }

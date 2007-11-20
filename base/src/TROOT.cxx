@@ -1293,8 +1293,9 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    if (err == 0 && !check)
       GetListOfTypes(kTRUE);
 
-   if (err == -1)
-      ;  //Error("LoadClass", "library %s could not be loaded", libname);
+   if (err == -1) {
+      //Error("LoadClass", "library %s could not be loaded", libname);
+   }
 
    if (err == 1) {
       //Error("LoadClass", "library %s already loaded, but class %s unknown",

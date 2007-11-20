@@ -4968,7 +4968,7 @@ Int_t TAuthenticate::ProofAuthSetup(TSocket *sock, Bool_t client)
          sndsrp = kTRUE;
    } else {
       if (srp && pwdctx) {
-         if (pwdctx->GetPasswd() != "" && remoteOffSet > -1)
+         if (strcmp(pwdctx->GetPasswd(), "") && remoteOffSet > -1)
             sndsrp = kTRUE;
       }
    }
@@ -5223,7 +5223,7 @@ Int_t OldSlaveAuthSetup(TSocket *sock,
          sndsrp = kTRUE;
    } else {
       if (srp && pwdctx) {
-         if (pwdctx->GetPasswd() != "" && remoteOffSet > -1)
+         if (strcmp(pwdctx->GetPasswd(), "") && remoteOffSet > -1)
             sndsrp = kTRUE;
       }
    }
