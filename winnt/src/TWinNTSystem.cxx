@@ -1013,6 +1013,7 @@ void TWinNTSystem::SetProgname(const char *name)
       gProgName = StrDup(progname);
       if (which) delete [] which;
       delete[] fullname;
+      delete[] progname;
    }
 }
 
@@ -1775,6 +1776,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       }
       if (_stati64(entry, &finfo) < 0) {
          delete [] entry;
+         delete [] dir;
          return 0;
       }
    }
@@ -1786,6 +1788,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       }
       if (_stati64(entry, &finfo) < 0) {
          delete [] entry;
+         delete [] dir;
          return 0;
       }
    }
@@ -1802,12 +1805,15 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       if (searchFile == INVALID_HANDLE_VALUE) {
          ((TWinNTSystem *)gSystem)->Error( "Unable to find' for reading:", entry);
          delete [] entry;
+         delete [] dir;
          return 0;
       }
       delete [] entry;
+      delete [] dir;
       return searchFile;
    } else {
       delete [] entry;
+      delete [] dir;
       return 0;
    }
 }
@@ -2479,6 +2485,7 @@ needshell:
                                );
       patbuf0 = cmd;
       patbuf0.ReplaceAll(replacement, "~");
+      delete [] cmd;
       return kFALSE;
    }
    return kTRUE;
@@ -3525,15 +3532,18 @@ const char *TWinNTSystem::GetLinkedLibraries()
    void *basepointer;
 
    if((hFile = CreateFile(exe,GENERIC_READ,0,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
+      delete [] exe;
       return 0;
    }
    if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) {
       CloseHandle(hFile);
+      delete [] exe;
       return 0;
    }
    if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) {
       CloseHandle(hMapping);
       CloseHandle(hFile);
+      delete [] exe;
       return 0;
    }
 
@@ -3549,23 +3559,29 @@ const char *TWinNTSystem::GetLinkedLibraries()
    const IMAGE_SECTION_HEADER * section_header;
 
    if(dos_head->e_magic!='ZM') {
+      delete [] exe;
       return 0;
    }  // verify DOS-EXE-Header
    // after end of DOS-EXE-Header: offset to PE-Header
    pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew);
 
    if(IsBadReadPtr(pheader,sizeof(struct header))) { // start of PE-Header
+      delete [] exe;
       return 0;
    }
    if(pheader->signature!=IMAGE_NT_SIGNATURE) {      // verify PE format
       switch((unsigned short)pheader->signature) {
          case IMAGE_DOS_SIGNATURE:
+            delete [] exe;
             return 0;
          case IMAGE_OS2_SIGNATURE:
+            delete [] exe;
             return 0;
          case IMAGE_OS2_SIGNATURE_LE:
+            delete [] exe;
             return 0;
          default: // unknown signature
+            delete [] exe;
             return 0;
       }
    }
