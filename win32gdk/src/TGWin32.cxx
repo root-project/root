@@ -639,12 +639,14 @@ TGWin32MainThread::~TGWin32MainThread()
    if (fCritSec) {
       ::LeaveCriticalSection(fCritSec);
       ::DeleteCriticalSection(fCritSec);
+      delete fCritSec;
    }
    fCritSec = 0;
 
    if (fMessageMutex) {
       ::LeaveCriticalSection(fMessageMutex);
       ::DeleteCriticalSection(fMessageMutex);
+      delete fMessageMutex;
    }
    fMessageMutex = 0;
 
@@ -997,6 +999,10 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       gdk_debug_level = 0;
    }
 
+   fore.red = fore.green = fore.blue = 0;
+   back.red = back.green = back.blue = 0;
+   color.red = color.green = color.blue = 0;
+      
    fScreenNumber = 0;           //DefaultScreen(fDisplay);
    fVisual = gdk_visual_get_best();
    fColormap = gdk_colormap_get_system();
