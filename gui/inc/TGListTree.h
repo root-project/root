@@ -36,11 +36,15 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
+#ifndef ROOT_TDNDManager
+#include "TGDNDManager.h"
+#endif
 
 class TGPicture;
 class TGToolTip;
 class TGCanvas;
 class TList;
+class TBufferFile;
 
 class TGListTreeItem {
 
@@ -63,6 +67,7 @@ private:
    Int_t            fYtext;        // y position of item text
    UInt_t           fHeight;       // item height
    UInt_t           fPicWidth;     // width of item icon
+   Int_t            fDNDState;     // EDNDFlags
    const TGPicture *fOpenPic;      // icon for open state
    const TGPicture *fClosedPic;    // icon for closed state
    const TGPicture *fCheckedPic;   // icon for checked item
@@ -113,6 +118,14 @@ public:
    void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    void            ClearColor() { fHasColor = false; }
 
+   // drag and drop...
+   void            SetDNDSource(Bool_t onoff)
+                   { if (onoff) fDNDState |= kIsDNDSource; else fDNDState &= ~kIsDNDSource; }
+   void            SetDNDTarget(Bool_t onoff)
+                   { if (onoff) fDNDState |= kIsDNDTarget; else fDNDState &= ~kIsDNDTarget; }
+   Bool_t          IsDNDSource() const { return fDNDState & kIsDNDSource; }
+   Bool_t          IsDNDTarget() const { return fDNDState & kIsDNDTarget; }
+
    void            SavePrimitive(ostream &out, Option_t *option, Int_t n);
 
    ClassDef(TGListTreeItem,0)  //Item that goes into a TGListTree container
@@ -152,6 +165,10 @@ protected:
    Int_t            fExposeBottom;   // bottom y position of visible region
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
+   TBufferFile     *fBuf;            // buffer used for Drag and Drop
+   TDNDdata         fDNDData;        // Drag and Drop data
+   Atom_t          *fDNDTypeList;    // handles DND types
+   TGListTreeItem  *fDropItem;       // item on which DND is over
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
    Bool_t           fAutoCheckBoxPic;// change check box picture if parent and children have diffrent state
    Bool_t           fDisableOpen;    // disable branch opening on double-clicks
@@ -305,6 +322,17 @@ public:
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check);  //*SIGNAL*
+   virtual void DataDropped(TGListTreeItem *item, TDNDdata *data);  //*SIGNAL*
+
+   Bool_t   HandleDNDdrop(TDNDdata *data);
+   Atom_t   HandleDNDposition(Int_t x, Int_t y, Atom_t action,
+                              Int_t xroot, Int_t yroot);
+   Atom_t   HandleDNDenter(Atom_t * typelist);
+   Bool_t   HandleDNDleave();
+
+   virtual TDNDdata *GetDNDdata(Atom_t) {
+      return &fDNDData;
+   }
 
    EColorMarkupMode GetColorMode() const { return fColorMode; }
    void SetColorMode(EColorMarkupMode colorMode) { fColorMode = colorMode; }
