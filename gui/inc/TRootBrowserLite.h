@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TRootBrowserLite                                                         //
+// TRootBrowserLite                                                     //
 //                                                                      //
 // This class creates a ROOT object browser (looking like Windows       //
 // Explorer). The widgets used are the new native ROOT GUI widgets.     //

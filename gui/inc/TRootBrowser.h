@@ -2,7 +2,7 @@
 // Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -35,11 +35,11 @@ public:
    Int_t    fSubTab;          // Tab element number
    TString  fCommand;         // Command to be executed
 
-   TBrowserPlugin(const char *name, const char *cmd = "", Int_t tab = 1, 
+   TBrowserPlugin(const char *name, const char *cmd = "", Int_t tab = 1,
                   Int_t sub = -1) : TNamed(name, cmd), fTab(tab),
       fSubTab(sub), fCommand(cmd) { }
    virtual ~TBrowserPlugin() {}
-   
+
    void     SetTab(Int_t tab) { fTab = tab; }
    void     SetSubTab(Int_t sub) { fSubTab = sub; }
    void     SetCommand(const char *cmd) { fCommand = cmd; }
@@ -127,8 +127,8 @@ public:
    virtual void      Show() { MapRaised(); }
    Option_t         *GetDrawOption() const;
 
-   virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0, 
-                                const char *cmd = 0, Int_t pos = kRight, 
+   virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0,
+                                const char *cmd = 0, Int_t pos = kRight,
                                 Int_t subpos = -1);
    virtual void      SetStatusText(const char *txt, Int_t col);
    virtual Bool_t    HandleKey(Event_t *event);
