@@ -1,6 +1,14 @@
 // @(#)root/gui:$Id$
 // Author: Bertrand Bellenot   26/09/2007
 
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGFileBrowser
 #define ROOT_TGFileBrowser
 
@@ -82,7 +90,7 @@ public:
    void        GetObjPicture(const TGPicture **pic, TObject *obj);
    void        GotoDir(const char *path);
    void        Selected(char *);
-   
+
    ClassDef(TGFileBrowser, 0) // File browser.
 };
 
