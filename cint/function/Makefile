@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += longArgTest overloadResolution
+TEST_TARGETS += defaultParams longArgTest overloadResolution
 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -24,3 +24,14 @@ overloadResolution.log: TheClass_h.$(DllSuf)
 
 overloadResolution: overloadResolution.log
 	$(TestDiff)
+
+defaultParams.log: Params_h.$(DllSuf)
+
+# This will skip the test (if there is a known failure)
+ifeq ($(FAIL),)
+defaultParams:
+	$(WarnFailTest)
+else
+defaultParams: defaultParams.log
+	$(TestDiff)
+endif
