@@ -172,6 +172,7 @@ TColor::~TColor()
    // Color destructor.
 
    gROOT->GetListOfColors()->Remove(this);
+   if (gROOT->GetListOfColors()->GetEntries() == 0) {fgPalette.Set(0); fgPalette=0;}
 }
 
 
