@@ -674,7 +674,7 @@ Bool_t TGDNDManager::HandleDNDposition(Window_t source, Int_t x_root, Int_t y_ro
    TGWindow *w = 0;
    Window_t wtarget = 0;
 
-   wtarget = FindWindow(gVirtualX->GetDefaultRootWindow(), x_root, y_root, 10);
+   wtarget = FindWindow(gVirtualX->GetDefaultRootWindow(), x_root, y_root, 15);
 
    if (wtarget) {
       gVirtualX->TranslateCoordinates(gVirtualX->GetDefaultRootWindow(),
@@ -967,7 +967,7 @@ Bool_t TGDNDManager::Drag(int x_root, int y_root, Atom_t action, Time_t timestam
    if (!fDragging) return kFALSE;
 
    Window_t newTarget = FindWindow(gVirtualX->GetDefaultRootWindow(),
-                                   x_root, y_root, 10);
+                                   x_root, y_root, 15);
 
    if (newTarget == kNone) {
       Window_t t = GetRootProxy();
