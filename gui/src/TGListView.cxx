@@ -1152,6 +1152,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
       }
       delete [] fColHeader;
       delete [] fSplitHeader;
+      delete [] fColNames;
    }
 
    fNColumns  = ncolumns+1;    // one extra for the blank filler header
