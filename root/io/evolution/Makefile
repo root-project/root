@@ -76,7 +76,7 @@ Missing: Missing.log
 fixarr1_C.$(DllSuf) : fixarr.h
 fixarr2_C.$(DllSuf) : fixarr.h
 fixarr3_C.$(DllSuf) : fixarr.h
- 
+
 fixarr.log: fixarr1_C.$(DllSuf) fixarr2_C.$(DllSuf) fixarr3_C.$(DllSuf)
 	$(CMDECHO) ( $(CALLROOTEXE) -q -b -l fixarr1.C+ && \
 		$(CALLROOTEXE) -q -b -l fixarr2.C+ && \
@@ -128,12 +128,12 @@ NumericalTypeEvolution: $(patsubst %.root,check%.success,$(FILES))
 
 $(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h
 	$(CMDECHO) root.exe -b -l -q 'compile.C("$*")' > $*.log 2>&1
-	
+
 %.root: lib%.$(DllSuf) rootalias.C
 	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
 
 check.%.log: %.root files
-	$(CMDECHO) root.exe -b -l -q 'read.C("$*")' 2>&1 | grep -v Processing > $@ 
-	
+	$(CMDECHO) root.exe -b -l -q 'read.C("$*")' 2>&1 | grep -v Processing > $@
+
 check%.success: check.%.log
-	$(CMDECHO) diff check.ref $< && touch $@
+	$(CMDECHO) diff -b check.ref $< && touch $@
