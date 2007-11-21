@@ -2731,7 +2731,7 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
       return TMath::Min(safe, safphi);
    }
    for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(5,saf)];
+   safe = saf[TMath::LocMax(4,saf)];
    if (isseg) return TMath::Max(safe, safphi);
    return safe;
 }
