@@ -184,7 +184,8 @@ void ReadRef(Int_t kexp) {
    TStopwatch sw;
    char fname[24];
    sprintf(fname, "http://root.cern.ch/files/%s_ref.root", exps[kexp]);
-   TFile *f = TFile::Open(fname);
+   TFile::SetCacheFileDir(".");   
+   TFile *f = TFile::Open(fname, "CACHEREAD");
    if (!f) return;
    printf("Reference file %s found\n", fname);
    TTree *TD = new TTree("TD","TGeo stress diff");
@@ -255,6 +256,7 @@ void ReadRef(Int_t kexp) {
       TD->Print();
    }   
    delete TD;
+   delete f;
    
    Double_t cp = sw.CpuTime();
    tpstot += cp;
