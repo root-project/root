@@ -35,7 +35,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   pythia/pythiaExample \
   sql/sqlcanvas \
   sql/sqlcreatedb sql/sqlfilldb sql/sqlselect \
-  tree/hsimpleProxy tree/tree0 tree/tree2a \
+  tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
   tree/copytree2 tree/copytree3 tree/copytree
 
 TUTORIALSTESTS_NEEDS_MIUNIT2 := fit/fit2dHist fit/fit2dHist \
@@ -107,7 +107,7 @@ $(TUTORIALSSTUBS): %_call.C:
 
 
 $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > /dev/null 2>&1 && touch $@
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && echo "" > $@
 
 
 # Remember that sometest.log can be made automatically from
