@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$    
-// Author: Marcin .... 
+// @(#)root/tmva $Id$
+// Author: Marcin ....
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -26,7 +26,7 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
+//
 // ... description of bayesian classifiers ...
 //_______________________________________________________________________
 
@@ -36,7 +36,7 @@
 ClassImp(TMVA::MethodBayesClassifier)
 
 //_______________________________________________________________________
-TMVA::MethodBayesClassifier::MethodBayesClassifier( TString jobName, TString methodTitle, DataSet& theData, 
+TMVA::MethodBayesClassifier::MethodBayesClassifier( TString jobName, TString methodTitle, DataSet& theData,
                                                     TString theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
@@ -45,10 +45,10 @@ TMVA::MethodBayesClassifier::MethodBayesClassifier( TString jobName, TString met
 }
 
 //_______________________________________________________________________
-TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSet& theData, 
-                                                    TString theWeightFile,  
+TMVA::MethodBayesClassifier::MethodBayesClassifier( DataSet& theData,
+                                                    TString theWeightFile,
                                                     TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
+   : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
 {
    // constructor from weight file
    InitBayesClassifier();
@@ -64,13 +64,13 @@ void TMVA::MethodBayesClassifier::InitBayesClassifier( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBayesClassifier::DeclareOptions() 
+void TMVA::MethodBayesClassifier::DeclareOptions()
 {
-   // define the options (their key words) that can be set in the option string 
+   // define the options (their key words) that can be set in the option string
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBayesClassifier::ProcessOptions() 
+void TMVA::MethodBayesClassifier::ProcessOptions()
 {
    // the option string is decoded, for availabel options see "DeclareOptions"
    MethodBase::ProcessOptions();
@@ -85,7 +85,7 @@ TMVA::MethodBayesClassifier::~MethodBayesClassifier( void )
 //_______________________________________________________________________
 void TMVA::MethodBayesClassifier::Train( void )
 {
-   // some training 
+   // some training
 
    // default sanity checks
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
@@ -93,16 +93,16 @@ void TMVA::MethodBayesClassifier::Train( void )
 
 //_______________________________________________________________________
 void  TMVA::MethodBayesClassifier::WriteWeightsToStream( ostream & o ) const
-{  
+{
    // write the weight from the training to a file (stream)
    o << "whatever" << endl;
 }
-  
+
 //_______________________________________________________________________
 void  TMVA::MethodBayesClassifier::ReadWeightsFromStream( istream & istr )
 {
    // read back the training results from a file (stream)
-   if (istr.eof());
+   if (istr.eof()) { }
 }
 
 //_______________________________________________________________________
@@ -127,7 +127,7 @@ void TMVA::MethodBayesClassifier::GetHelpMessage() const
 {
    // get help message text
    //
-   // typical length of text line: 
+   // typical length of text line:
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
    fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
