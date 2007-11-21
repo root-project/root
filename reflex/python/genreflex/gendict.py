@@ -478,6 +478,10 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def add_template_defaults (self, c, selection):
     tlist = []
+    klist= []
+    m = self.xref[selection['id']]
+    name = m['attrs']['name']
+    parent_args = getTemplateArgs (name)
     for f in self.get_fields (selection):
         tid = f['type']
         tname = self.genTypeName (tid)
@@ -490,15 +494,18 @@ class genDictionary(object) :
             if not arg:
               break
             if arg == nodefault_tid:
+              if tlist and tlist[-1] != '=':
+                break
               tlist.append ('=')
+              klist.append (normalizeClassAllTempl (parent_args[i-1]))
             else:
-              tlist.append (self.genTypeName (arg))
+              tlist.append (self.genTypeName (arg, alltempl=True))
             i += 1
     if tlist:
       name = self.xref[c['id']]['attrs']['name']
       i = name.find ('<')
       if i>=0 : name = name[:i]
-      stldeftab[name] = tuple (tlist)
+      stldeftab.setdefault(name, {})[tuple (klist)] = tuple (tlist)
     return
 #----------------------------------------------------------------------------------
   def isUnnamedType(self, name) :
@@ -1739,17 +1746,31 @@ def normalizeFragment(name,alltempl=False) :
   if name.rfind('>') == -1 : suffix = ''
   else                     : suffix = name[name.rfind('>')+1:]
   args = getTemplateArgs(name)
-  if alltempl :
-    nor = clname + '<' + string.join(map(normalizeClassAllTempl,args),',')
-  else :     
-    if clname in stldeftab :
+  sargs = [normalizeClass(a, alltempl) for a in args]
+
+  if not alltempl :
+    defargs = stldeftab.get (clname)
+    if defargs and type(defargs) == type({}):
+      args = [normalizeClass(a, True) for a in args]
+      defargs_tup = None
+      for i in range (1, len (args)):
+        defargs_tup = defargs.get (tuple (args[:i]))
+        if defargs_tup:
+          lastdiff = i-1
+          for j in range (i, len(args)):
+            if defargs_tup[j] != args[j]:
+              lastdiff = j
+          sargs = args[:lastdiff+1]
+          break
+    elif defargs:
       # select only the template parameters different from default ones
+      args = sargs
       sargs = []
       for i in range(len(args)) :  
-        if args[i].find(stldeftab[clname][i]) == -1 : sargs.append(args[i])
-      nor = clname + '<' + string.join(map(normalizeClassNoDefTempl,sargs),',')
-    else :
-      nor = clname + '<' + string.join(map(normalizeClassNoDefTempl,args),',')
+        if args[i].find(defargs[i]) == -1 : sargs.append(args[i])
+      sargs = [normalizeClass(a, alltempl) for a in sargs]
+
+  nor = clname + '<' + string.join(sargs,',')
   if nor[-1] == '>' : nor += ' >' + suffix
   else              : nor += '>' + suffix
   return nor
