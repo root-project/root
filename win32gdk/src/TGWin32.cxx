@@ -7351,8 +7351,6 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
    // Get Clipboard data.
 
    HGLOBAL hdata;
-   UChar_t *ptr, *data;
-   UInt_t i, length;
 
    static UINT gdk_selection_notify_msg = 
       RegisterWindowMessage("gdk-selection-notify");
@@ -7361,19 +7359,13 @@ void TGWin32::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
       return;
    }
    hdata = GetClipboardData(CF_PRIVATEFIRST);
-   ptr = (UChar_t *)GlobalLock(hdata);
-   length = GlobalSize(hdata);
-   data = (UChar_t *)malloc(length + 1);
-   for (i = 0; i < length; i++) {
-      *data++ = *ptr++;
-   }
-   GlobalUnlock(hdata);
    CloseClipboard();
+   if (hdata == 0)
+      return;
    /* Send ourselves an ersatz selection notify message so that we actually
     * fetch the data.
     */
    PostMessage(hWnd, gdk_selection_notify_msg, sel, target);
-   free(data);
 }
 
 //______________________________________________________________________________
